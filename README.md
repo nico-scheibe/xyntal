@@ -201,3 +201,12 @@ parallel zur Absage wartende Zusage. **Nie gegen das produktive Projekt ausführ
 Die Browserabläufe wurden mit lokal simulierten Daten für Admins, Mitglieder
 und Gäste sowie bei 375 px und Desktop geprüft. Echte Termine werden vom Betreiber
 angelegt; ein echter zweiter Teilnehmer war für diesen Test nicht verfügbar.
+
+Live-Nachprüfung der Event-Migration: alle acht SQL-Checks bestanden; anonyme
+REST-Anfragen auf die Terminliste und Zählfunktion erfolgreich, Teilnehmerdaten
+für Gäste mit HTTP 401 gesperrt. Der Security Advisor zeigte keine Fehler.
+Er markiert die beiden bewusst aufrufbaren `SECURITY DEFINER`-RPCs als Warnungen:
+`event_counts` liefert ausschließlich gefilterte Summen, `set_event_attendance`
+prüft den angemeldeten Nutzer und dessen Freigabe. Diese Aufrufrechte sind für
+die beschriebenen Funktionen erforderlich; die Berechtigungen und Schutzfälle
+sind durch die SQL-Tests abgedeckt.
