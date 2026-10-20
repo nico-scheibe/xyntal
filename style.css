@@ -167,7 +167,7 @@ main > section, .post, .listing, .member, .card, .feature, .plan { animation: ri
 .nav-links a.btn { color: var(--on-accent); padding: 9px 16px; margin-left: 6px; }
 .nav-links a.btn:hover { background: var(--grad); }
 .nav-links .hide-sm { display: none; }
-@media (min-width: 900px) { .nav-links .hide-sm { display: inline-block; } }
+@media (min-width: 1100px) { .nav-links .hide-sm { display: inline-block; } }
 
 .nav-toggle {
   display: none;
@@ -183,7 +183,7 @@ main > section, .post, .listing, .member, .card, .feature, .plan { animation: ri
   margin-left: auto;
   margin-right: 10px;
 }
-@media (max-width: 899px) {
+@media (max-width: 1099px) {
   .nav-toggle { display: inline-block; }
   .nav-links.open {
     position: absolute;
@@ -1051,7 +1051,7 @@ main section[id] { scroll-margin-top: 64px; }
 .notification-item small { color: #A4A8B4; font-size: 12px; }
 .notification-panel .form-status:empty { display: none; }
 .post:focus { outline: 2px solid #7B84FF; outline-offset: 4px; }
-@media (max-width: 899px) {
+@media (max-width: 1099px) {
   .nav-links:not(.open) .notifications { display: none; }
   .nav-links.open .notifications { width: 100%; }
   .notification-panel { position: static; width: 100%; margin-top: 8px; box-shadow: none; }
@@ -1074,3 +1074,28 @@ main section[id] { scroll-margin-top: 64px; }
   .avatar-editor-row { flex-direction: column; align-items: flex-start; }
   .avatar-editor-row > div:last-child { width: 100%; }
 }
+
+/* Treffen: Termine, Zusagen und Admin-Verwaltung. */
+.events-list { display: grid; gap: 20px; margin: 24px 0; }
+.events-preview { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,290px),1fr)); gap: 16px; }
+.event-card { padding: 24px; border: 1px solid var(--border); border-radius: 16px; background: var(--panel); overflow-wrap: anywhere; }
+.event-card h2 { font-size: 26px; line-height: 1.2; margin: 18px 0 12px; }
+.event-card p { margin: 10px 0; }
+.event-card-top, .event-card-bottom { display: flex; gap: 12px; flex-wrap: wrap; justify-content: space-between; align-items: center; }
+.event-card-bottom { border-top: 1px solid var(--border); margin-top: 20px; padding-top: 18px; font-size: 13px; color: var(--text-2); }
+.event-card-bottom .row-actions { flex-wrap: wrap; gap: 10px; }
+.event-date { color: var(--text); font-weight: 500; }
+.event-location span { color: var(--text-2); font-size: 14px; }
+.event-description { font-size: 15px; margin-top: 20px; }
+.event-cancelled { color: #FF6B81; background: rgba(255,107,129,.1); }
+.event-attendees { margin-top: 20px; border-top: 1px solid var(--border); padding-top: 16px; font-size: 14px; }
+.event-attendees summary, .event-admin > summary { cursor: pointer; color: var(--text); }
+.event-admin { padding: 20px; border: 1px solid var(--border-2); border-radius: 16px; background: var(--panel); margin-bottom: 28px; }
+.event-admin form { margin-top: 24px; }
+.event-admin h2 { font-size: 24px; margin: 0 0 16px; }
+.event-admin .btn-row { justify-content: flex-start; }
+.event-card:focus { outline: 2px solid #7B84FF; outline-offset: 3px; }
+.event-card .form-status:empty { display: none; }
+@media (max-width: 559px) { .event-card { padding: 18px; } .event-card h2 { font-size: 24px; } }
+.feed-filter button[aria-pressed="true"] { background: var(--accent-soft); color: var(--text); border-color: rgba(123,132,255,.45); }
+.event-card-bottom .row-actions .btn, .event-card-bottom .row-actions .btn:hover { background: var(--grad); color: var(--on-accent); border-color: transparent; }

@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Treffen – Xyntal</title>
+  <meta name="description" content="Die nächsten Xyntal-Treffen: Termine entdecken und als Mitglied zusagen.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%237B84FF'/%3E%3Cstop offset='1' stop-color='%23A68BFF'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='url(%23g)'/%3E%3Ctext x='16' y='22.5' font-family='Arial' font-size='18' font-weight='700' fill='%230C0D11' text-anchor='middle'%3EX%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=6">
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="logo" href="./" aria-label="Xyntal Startseite"><span class="logo-mark" aria-hidden="true"><span>X</span></span>Xyntal</a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="main-nav">Menü</button>
+    <nav class="nav-links" id="main-nav" aria-label="Hauptnavigation">
+      <a class="hide-sm" href="community">Community</a>
+      <a class="hide-sm" href="boerse">Börse</a>
+      <a class="hide-sm" href="events">Treffen</a>
+      <a class="hide-sm" href="mitglieder">Mitglieder</a>
+      <a class="hide-sm" href="nachrichten" data-messages hidden>Nachrichten</a>
+      <a class="hide-sm" href="login" data-account>Login</a>
+      <a class="btn btn-small" href="mitglied-werden">Kostenlos starten</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="page-head" id="top"><div class="wrap">
+    <div class="eyebrow"><b>xyntal</b> / treffen</div>
+    <h1>Aus Kontakten werden <em>Begegnungen.</em></h1>
+    <p>Tausch dich aus, zeig dein Projekt und lern die Menschen hinter den Profilen kennen. Hier findest du unsere nächsten Treffen.</p>
+  </div></section>
+  <section class="page-body"><div class="wrap narrow">
+    <div id="events-notice"></div>
+    <details id="event-admin" class="event-admin" hidden>
+      <summary>Treffen verwalten</summary>
+      <form id="event-editor" class="dark-form" novalidate>
+        <h2 id="event-editor-title">Neues Treffen</h2>
+        <label>Titel <input name="title" maxlength="120" required placeholder="z. B. Gründerabend: Zeig dein Projekt"></label>
+        <label>Datum und Uhrzeit <span class="hint" id="event-timezone"></span><input type="datetime-local" name="starts_at" required></label>
+        <label>Ort <input name="place" maxlength="120" required placeholder="z. B. Café in Regensburg"></label>
+        <label>Adresse <input name="address" maxlength="200" placeholder="Straße, Hausnummer, Ort"></label>
+        <label>Was erwartet euch? <textarea name="description" maxlength="3000" placeholder="Ablauf, Thema und was ihr mitbringen könnt."></textarea></label>
+        <label class="check"><input type="checkbox" name="is_public" checked><span>Termin auch Gästen zeigen. Zusagen können freigeschaltete Mitglieder. Namen der Teilnehmenden siehst nur du als Admin.</span></label>
+        <p class="hint">Änderungen gelten sofort. Bereits zugesagten Mitgliedern bitte Änderungen persönlich mitteilen; es wird keine automatische E-Mail verschickt.</p>
+        <div class="btn-row"><button type="submit" class="btn" id="event-save">Treffen anlegen</button><button type="button" class="btn btn-ghost" id="event-reset">Neues Treffen / verwerfen</button></div>
+        <p class="form-status" id="event-editor-status" role="status" aria-live="polite"></p>
+      </form>
+    </details>
+    <div class="feed-filter" aria-label="Treffen filtern">
+      <button type="button" data-event-filter="upcoming" aria-pressed="true">Kommende</button>
+      <button type="button" data-event-filter="past" aria-pressed="false">Vergangene</button>
+      <button type="button" id="events-refresh">Aktualisieren</button>
+    </div>
+    <p class="hint">Alle Termine werden in deutscher Ortszeit (Europe/Berlin) angezeigt.</p>
+    <div id="events-list" class="events-list" aria-busy="true"><p class="empty">Lade Treffen …</p></div>
+    <button class="btn btn-ghost" id="events-more" type="button" hidden>Weitere Treffen laden</button>
+    <p class="form-status" id="events-status" role="status" aria-live="polite"></p>
+  </div></section>
+</main>
+<footer>
+  <div class="wrap">
+    <div>
+      <a class="logo" href="./"><span class="logo-mark" aria-hidden="true"><span>X</span></span>Xyntal</a>
+      <p style="margin: 10px 0 0">Mentoring, Matching &amp; Workspaces für Gründer – aus Regensburg.</p>
+    </div>
+    <nav class="foot-links" aria-label="Fußzeile">
+      <a href="community">Community</a>
+      <a href="boerse">Börse</a>
+      <a href="events">Treffen</a>
+      <a href="mitglieder">Mitglieder</a>
+      <a href="impressum">Impressum</a>
+      <a href="impressum#datenschutz">Datenschutz</a>
+    </nav>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
+<script src="config.js?v=6"></script>
+<script src="app.js?v=6"></script>
+<script src="avatars.js?v=6"></script>
+<script src="notifications.js?v=6"></script>
+<script src="effects.js?v=6"></script>
+<script src="events.js?v=6"></script>
+</body>
+</html>
