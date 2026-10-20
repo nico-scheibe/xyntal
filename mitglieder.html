@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mitglieder – Xyntal</title>
+  <meta name="description" content="Die Mitglieder von Xyntal – Gründer, Selbstständige und Macher aus Regensburg und woran sie arbeiten.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%237B84FF'/%3E%3Cstop offset='1' stop-color='%23A68BFF'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='url(%23g)'/%3E%3Ctext x='16' y='22.5' font-family='Arial' font-size='18' font-weight='700' fill='%230C0D11' text-anchor='middle'%3EX%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="logo" href="./" aria-label="Xyntal Startseite"><span class="logo-mark" aria-hidden="true"><span>X</span></span>Xyntal</a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="main-nav">Menü</button>
+    <nav class="nav-links" id="main-nav" aria-label="Hauptnavigation">
+      <a class="hide-sm" href="community">Community</a>
+      <a class="hide-sm" href="boerse">Börse</a>
+      <a class="hide-sm" href="mitglieder">Mitglieder</a>
+      <a class="hide-sm" href="nachrichten" data-messages hidden>Nachrichten</a>
+      <a class="hide-sm" href="login" data-account>Login</a>
+      <a class="btn btn-small" href="mitglied-werden">Kostenlos starten</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="page-head">
+    <div class="wrap">
+      <div class="eyebrow">Mitglieder</div>
+      <h1>Die Leute hinter <em>Xyntal.</em></h1>
+      <p>Gründer, Selbstständige und Macher aus Regensburg – und woran sie gerade arbeiten.</p>
+    </div>
+  </section>
+
+  <section class="page-body">
+    <div class="wrap">
+      <div id="notice"></div>
+      <div class="members-grid" id="grid"></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <a class="logo" href="./"><span class="logo-mark" aria-hidden="true"><span>X</span></span>Xyntal</a>
+      <p style="margin: 10px 0 0">Mentoring, Matching &amp; Workspaces für Gründer – aus Regensburg.</p>
+    </div>
+    <nav class="foot-links" aria-label="Fußzeile">
+      <a href="community">Community</a>
+      <a href="boerse">Börse</a>
+      <a href="mitglieder">Mitglieder</a>
+      <a href="impressum">Impressum</a>
+      <a href="impressum#datenschutz">Datenschutz</a>
+    </nav>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+  (async () => {
+    const grid = document.getElementById("grid");
+    try {
+      const me = await currentMember();
+      const viewerIsMember = me && me.status === "approved";
+      // Welche Profile sichtbar sind, regelt die Datenbank (Row Level Security)
+      let members = unwrap(await sb.from("profiles").select("*").eq("status", "approved").order("created_at", { ascending: false }));
+      if (!viewerIsMember) {
+        document.getElementById("notice").innerHTML = `
+          <div class="notice">Du siehst hier die öffentlichen Profile. Freigeschaltete Mitglieder sehen alle.
+          <a class="text-link" href="mitglied-werden">Werde Mitglied</a> oder <a class="text-link" href="login">logg dich ein</a>.</div>`;
+      }
+      grid.innerHTML = members.length
+        ? members.map((m) => memberCard(m, { message: viewerIsMember && m.id !== me.id })).join("")
+        : `<p class="empty" style="grid-column: 1 / -1">Die ersten Profile entstehen gerade. <a class="text-link" href="mitglied-werden">Sei eines der ersten Mitglieder.</a></p>`;
+    } catch (err) {
+      grid.innerHTML = `<p class="empty">${esc(friendlyError(err))}</p>`;
+    }
+  })();
+</script>
+</body>
+</html>

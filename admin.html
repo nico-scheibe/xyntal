@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin – Xyntal</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%237B84FF'/%3E%3Cstop offset='1' stop-color='%23A68BFF'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='url(%23g)'/%3E%3Ctext x='16' y='22.5' font-family='Arial' font-size='18' font-weight='700' fill='%230C0D11' text-anchor='middle'%3EX%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="logo" href="./" aria-label="Xyntal Startseite"><span class="logo-mark" aria-hidden="true"><span>X</span></span>Xyntal</a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="main-nav">Menü</button>
+    <nav class="nav-links" id="main-nav" aria-label="Hauptnavigation">
+      <a class="hide-sm" href="community">Community</a>
+      <a class="hide-sm" href="boerse">Börse</a>
+      <a class="hide-sm" href="mitglieder">Mitglieder</a>
+      <a class="hide-sm" href="nachrichten" data-messages hidden>Nachrichten</a>
+      <a class="hide-sm" href="login" data-account>Login</a>
+      <a class="btn btn-small" href="mitglied-werden">Kostenlos starten</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="page-head" style="padding-bottom: 40px">
+    <div class="wrap">
+      <div class="eyebrow">Admin</div>
+      <h1>Admin-<em>Bereich.</em></h1>
+    </div>
+  </section>
+
+  <section class="page-body" style="padding-top: 24px">
+    <!-- Kein Zugriff -->
+    <div class="wrap narrow-sm" id="login-view" hidden>
+      <div class="notice" id="login-msg">Bitte melde dich mit deinem Admin-Konto an.</div>
+      <a class="btn" href="login">Zum Login</a>
+    </div>
+
+    <!-- Verwaltung -->
+    <div class="wrap" id="admin-view" hidden>
+      <div class="admin-tabs" role="tablist">
+        <button role="tab" data-tab="members" aria-selected="true">Mitglieder <span id="c-members"></span></button>
+        <button role="tab" data-tab="signups" aria-selected="false">Anmeldungen <span id="c-signups"></span></button>
+        <button role="tab" data-tab="newsletter" aria-selected="false">Newsletter <span id="c-newsletter"></span></button>
+        <button role="tab" data-tab="event" aria-selected="false">Nächstes Treffen</button>
+        <button id="admin-logout" style="margin-left: auto">Ausloggen</button>
+      </div>
+
+      <div data-panel="members"></div>
+      <div data-panel="signups" hidden></div>
+      <div data-panel="newsletter" hidden></div>
+      <div data-panel="event" hidden>
+        <form id="event-form" class="dark-form narrow" novalidate style="max-width: 640px">
+          <div class="form-grid two">
+            <label>Datum <input type="text" name="date" placeholder="z. B. Donnerstag, 13. November 2026"></label>
+            <label>Uhrzeit <input type="text" name="time" placeholder="z. B. 19:00 Uhr"></label>
+          </div>
+          <label>Ort <input type="text" name="place" placeholder="z. B. Café Lila"></label>
+          <label>Adresse <input type="text" name="address" placeholder="Straße, 93047 Regensburg"></label>
+          <button class="btn" type="submit">Speichern</button>
+          <p class="form-status" id="event-status" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+  const loginView = document.getElementById("login-view");
+  const adminView = document.getElementById("admin-view");
+  let lastData = null;
+  const PROVIDER_LABELS = { google: "Google", apple: "Apple", linkedin_oidc: "LinkedIn", phone: "Handynummer" };
+  const fmt = (ts) => new Date(ts).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" });
+  const statusLabel = { pending: "Wartet", approved: "Freigeschaltet", rejected: "Abgelehnt" };
+
+  async function load() {
+    const me = await currentMember();
+    if (!me || !me.is_admin) {
+      document.getElementById("login-msg").textContent = me
+        ? "Dein Konto hat keine Admin-Rechte."
+        : "Bitte melde dich mit deinem Admin-Konto an.";
+      loginView.hidden = false;
+      adminView.hidden = true;
+      return;
+    }
+    let data;
+    try {
+      const [members, signups, newsletter, event] = await Promise.all([
+        sb.rpc("admin_members").then(unwrap),
+        sb.from("event_signups").select("*").order("created_at", { ascending: false }).then(unwrap),
+        sb.from("newsletter").select("*").order("created_at", { ascending: false }).then(unwrap),
+        sb.from("next_event").select("*").eq("id", 1).single().then(unwrap),
+      ]);
+      data = { members, signups, newsletter, event: { date: event.date_text, time: event.time_text, place: event.place, address: event.address } };
+      lastData = data;
+    } catch (err) {
+      document.querySelector('[data-panel="members"]').innerHTML = `<p class="empty">${esc(err.message)}</p>`;
+      loginView.hidden = true;
+      adminView.hidden = false;
+      return;
+    }
+    loginView.hidden = true;
+    adminView.hidden = false;
+
+    const pending = data.members.filter((m) => m.status === "pending").length;
+    document.getElementById("c-members").textContent = `(${data.members.length}${pending ? `, ${pending} neu` : ""})`;
+    document.getElementById("c-signups").textContent = `(${data.signups.length})`;
+    document.getElementById("c-newsletter").textContent = `(${data.newsletter.length})`;
+
+    document.querySelector('[data-panel="members"]').innerHTML = data.members.length ? `
+      <div class="table-wrap"><table>
+        <thead><tr><th>Name</th><th>Vorhaben</th><th>Status</th><th>Aktionen</th></tr></thead>
+        <tbody>${data.members.map((m) => `
+          <tr>
+            <td>${esc(m.name || "(noch kein Name)")}<br><small>${esc(m.email || m.phone || "")}${m.provider && m.provider !== "email" ? ` · via ${esc(PROVIDER_LABELS[m.provider] || m.provider)}` : ""}</small><br><small>${fmt(m.created_at)}${m.is_public ? " · öffentlich" : ""}</small></td>
+            <td>${esc(m.headline)}<br><small>${esc([PHASES[m.phase], m.category].filter(Boolean).join(" · "))}</small></td>
+            <td><span class="status-pill status-${m.status}">${statusLabel[m.status]}</span></td>
+            <td><div class="row-actions">
+              ${m.status !== "approved" ? `<button data-act="approve" data-id="${m.id}">Freischalten</button>` : ""}
+              ${m.status !== "rejected" && !m.is_admin ? `<button data-act="reject" data-id="${m.id}">Ablehnen</button>` : ""}
+              ${m.is_admin ? "" : `<button data-act="delete" data-id="${m.id}">Löschen</button>`}
+            </div></td>
+          </tr>`).join("")}
+        </tbody></table></div>` : `<p class="empty">Noch keine Mitglieder.</p>`;
+
+    document.querySelector('[data-panel="signups"]').innerHTML = `
+      <p><a class="text-link" href="#" data-csv="signups">Als CSV herunterladen</a></p>
+      ${data.signups.length ? `<div class="table-wrap"><table>
+        <thead><tr><th>Name</th><th>Woran arbeitest du?</th><th>Angemeldet</th></tr></thead>
+        <tbody>${data.signups.map((s) => `
+          <tr><td>${esc(s.name)}<br><small>${esc(s.email)}</small></td><td>${esc(s.project)}</td><td><small>${fmt(s.created_at)}</small></td></tr>`).join("")}
+        </tbody></table></div>` : `<p class="empty">Noch keine Anmeldungen.</p>`}`;
+
+    document.querySelector('[data-panel="newsletter"]').innerHTML = `
+      <p><a class="text-link" href="#" data-csv="newsletter">Als CSV herunterladen</a></p>
+      ${data.newsletter.length ? `<div class="table-wrap"><table>
+        <thead><tr><th>E-Mail</th><th>Eingetragen</th></tr></thead>
+        <tbody>${data.newsletter.map((n) => `<tr><td>${esc(n.email)}</td><td><small>${fmt(n.created_at)}</small></td></tr>`).join("")}
+        </tbody></table></div>` : `<p class="empty">Noch keine Abonnenten.</p>`}`;
+
+    fillForm(document.getElementById("event-form"), data.event);
+  }
+
+  // Tabs
+  document.querySelectorAll("[data-tab]").forEach((btn) => btn.addEventListener("click", () => {
+    document.querySelectorAll("[data-tab]").forEach((b) => b.setAttribute("aria-selected", b === btn));
+    document.querySelectorAll("[data-panel]").forEach((p) => { p.hidden = p.dataset.panel !== btn.dataset.tab; });
+  }));
+
+  // Mitglieder-Aktionen
+  document.querySelector('[data-panel="members"]').addEventListener("click", async (e) => {
+    const btn = e.target.closest("button[data-act]");
+    if (!btn) return;
+    const { act, id } = btn.dataset;
+    try {
+      if (act === "delete") {
+        // Zweistufig statt Browser-Dialog
+        if (!btn.dataset.armed) {
+          btn.dataset.armed = "1";
+          btn.textContent = "Sicher? Nochmal klicken";
+          return;
+        }
+        unwrap(await sb.rpc("admin_delete_member", { p_id: id }));
+      } else {
+        unwrap(await sb.rpc("admin_set_status", { p_id: id, p_status: act === "approve" ? "approved" : "rejected" }));
+      }
+    } catch (err) {
+      alertBox(err.message);
+    }
+    load();
+  });
+
+  const eventForm = document.getElementById("event-form");
+  eventForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    submitWith(eventForm, document.getElementById("event-status"), async (data) => {
+      unwrap(await sb.from("next_event").update({ date_text: data.date, time_text: data.time, place: data.place, address: data.address, updated_at: new Date().toISOString() }).eq("id", 1));
+      setStatus(document.getElementById("event-status"), "Gespeichert – steht jetzt auf der Startseite.", "ok");
+    });
+  });
+
+  document.getElementById("admin-logout").addEventListener("click", async () => {
+    await sb.auth.signOut();
+    location.href = "./";
+  });
+
+  function alertBox(text) {
+    const panel = document.querySelector('[data-panel="members"]');
+    panel.insertAdjacentHTML("afterbegin", `<div class="notice">${esc(text)}</div>`);
+  }
+
+  function downloadCsv(filename, header, rows) {
+    const cell = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const csv = "\ufeff" + [header, ...rows].map((r) => r.map(cell).join(";")).join("\n");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  adminView.addEventListener("click", (e) => {
+    const link = e.target.closest("[data-csv]");
+    if (!link || !lastData) return;
+    e.preventDefault();
+    if (link.dataset.csv === "signups") {
+      downloadCsv("xyntal-anmeldungen.csv", ["Name", "E-Mail", "Projekt", "Angemeldet"],
+        lastData.signups.map((s) => [s.name, s.email, s.project, fmt(s.created_at)]));
+    } else {
+      downloadCsv("xyntal-newsletter.csv", ["E-Mail", "Eingetragen"],
+        lastData.newsletter.map((n) => [n.email, fmt(n.created_at)]));
+    }
+  });
+
+  load();
+</script>
+</body>
+</html>
