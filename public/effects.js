@@ -14,6 +14,7 @@
     { label: "Startseite", href: "./", glyph: "~", keys: "home start" },
     { label: "Community", href: "community", glyph: "#", keys: "feed beiträge fragen erfolge" },
     { label: "Gesuche & Angebote", href: "boerse", glyph: "⇄", keys: "börse suche biete mitgründer" },
+    { label: "Treffen", href: "events", glyph: "▦", keys: "events termine zusagen veranstaltungen" },
     { label: "Mitglieder", href: "mitglieder", glyph: "@", keys: "profile menschen leute" },
     { label: "Nachrichten", href: "nachrichten", glyph: "✉", keys: "chat dm inbox" },
     { label: "Mein Profil", href: "profil", glyph: "◐", keys: "konto account bearbeiten" },

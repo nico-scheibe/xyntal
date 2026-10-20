@@ -1,6 +1,6 @@
 # Xyntal – Website
 
-Website des Gründer-Clubs Xyntal in Regensburg mit Mitgliederprofilen, Newsletter und Anmeldung zu Treffen.
+Website des Gründer-Clubs Xyntal in Regensburg mit Mitgliederprofilen, Newsletter und Treffen mit Zusagen.
 Daten und Login laufen über **Supabase** (Projekt „Xyntal“, Organisation „noxi“).
 
 ## Lokal ansehen
@@ -22,22 +22,24 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 | `supabase/003_community.sql` | Community: Feed, Kommentare, Likes, Börse, Direktnachrichten (bereits ausgeführt) |
 | `supabase/004_notifications.sql` | Benachrichtigungen mit RLS und Triggern; nach 003 im SQL Editor ausführen |
 | `supabase/005_profile_avatars.sql` | Privater Profilbild-Speicher und Sichtbarkeitsregeln; am 20.10.2026 ausgeführt |
+| `supabase/006_events.sql` | Mehrere Treffen, private Zusagen und RPCs; am 20.10.2026 ausgeführt |
 | `ANMELDUNG-EINRICHTEN.md` | Anleitung: Brevo-SMTP einrichten; Google, Apple, LinkedIn und SMS einschalten |
 
 ## Seiten
 
 | Adresse | Inhalt |
 |---|---|
-| `/` | Startseite mit Treffen-Anmeldung und Newsletter |
+| `/` | Startseite mit den nächsten Treffen und Newsletter |
 | `/mitglied-werden` | Konto und Profil anlegen (mit E-Mail-Bestätigung) |
 | `/login` | Einloggen per E-Mail, Google, Apple, LinkedIn oder Handynummer, „Passwort vergessen?“ |
 | `/passwort-neu` | Neues Passwort setzen (Link aus der E-Mail) |
 | `/profil` | Profil bearbeiten, Passwort ändern, Konto löschen |
 | `/community` | Feed: Updates, Fragen, Erfolge mit Kommentaren und Likes (Gäste sehen nur öffentliche Beiträge) |
 | `/boerse` | Gesuche & Angebote mit Kontaktaufnahme (Gäste sehen nur öffentliche Einträge) |
+| `/events` | Kommende und vergangene Treffen, Zu- und Absagen; Admins verwalten Termine und Teilnehmerlisten |
 | `/nachrichten` | Direktnachrichten zwischen Mitgliedern, mit Live-Updates |
 | `/mitglieder` | Freigeschaltete Profile (Gäste sehen nur öffentliche) |
-| `/admin` | Mitglieder freischalten, Anmeldungen & Newsletter (CSV), nächstes Treffen eintragen |
+| `/admin` | Mitglieder freischalten, frühere Anmeldungen & Newsletter (CSV), Link zur Treffen-Verwaltung |
 
 ## Admin werden
 
@@ -152,3 +154,50 @@ Tabellen/Funktionen, keine zum neuen Profilbild-Speicher.
 PostgreSQL-Datenbank mit den Rollen `anon` und `authenticated`:
 `psql -v ON_ERROR_STOP=1 -d AVATAR_TESTDATENBANK -f tests/avatars.sql`.
 Der Test simuliert Storage-Tabellen; niemals im produktiven Projekt ausführen.
+
+## Mehrere Treffen und Zusagen
+
+Auf `/events` können Gäste öffentliche Treffen ansehen. Freigeschaltete Mitglieder
+sehen auch interne Treffen, können **Ich bin dabei** wählen und die Zusage wieder
+zurücknehmen. Pro Mitglied und Treffen gibt es maximal eine Zusage. Nach Beginn
+oder Absage des Treffens lässt der Server keine neuen Zusagen zu; bestehende
+Zusagen lassen sich weiterhin zurücknehmen. Andere Besucher sehen nur die Anzahl
+zusagender Mitglieder, keine Namen.
+
+Als Admin unter `/admin` im Reiter **Treffen** auf **Treffen verwalten** klicken
+(oder `/events?verwalten=1` öffnen). Dort lassen sich Titel, Datum/Uhrzeit, Ort,
+Adresse, Beschreibung und öffentliche Sichtbarkeit bearbeiten. **Zusagen ansehen**
+zeigt die Teilnehmerliste ausschließlich Admins. **Treffen absagen** braucht zwei
+Klicks; Termine und Zusagen werden dabei als Historie behalten. Kein endgültiges
+Löschen und kein automatischer E-Mail-Versand für Terminänderungen/Absagen.
+Der Hinweis im Editor erinnert daran, Teilnehmende persönlich zu informieren.
+
+Die Datumseingabe nutzt die dort angezeigte Geräte-Zeitzone und speichert UTC;
+die Terminliste zeigt konsequent `Europe/Berlin` (mit Sommer-/Winterzeit).
+Die Seite lädt 30 Termine je Seite und bietet weitere Seiten an. Eine manuelle
+Aktualisierung ist vorhanden. Auf der Startseite erscheinen die nächsten drei
+sichtbaren, nicht abgesagten Treffen. In Produktion werden keine Demo-Termine
+angelegt. Die Beispieltermine in den Screenshots sind ausschließlich lokale Testdaten.
+
+`006_events.sql` wurde am 20.10.2026 ausgeführt. Beide Tabellen haben RLS und
+gezielte Grants. `set_event_attendance` prüft Freigabe und Terminstatus selbst,
+schreibt nur für `auth.uid()` und sperrt die Eventzeile gegen parallele Absagen.
+`event_counts` liefert nur Summen zu den für den Aufrufer sichtbaren Treffen.
+Client-Rollen dürfen `event_rsvps` nicht direkt beschreiben; Teilnehmerlisten
+sind per RLS auf den eigenen Datensatz bzw. Admins eingeschränkt.
+
+`next_event` und `event_signups` bleiben als Altbestand erhalten. Die neue Seite
+schreibt nicht mehr in diese Tabellen. Frühere Anmeldungen sind im Admin-Bereich
+als Archiv verfügbar. Bei der Umstellung war kein konkreter Alttermin eingetragen
+und es gab keine alten Anmeldungen. Ein unbekanntes Textdatum wird grundsätzlich
+nicht automatisch als neuer Termin interpretiert.
+
+Prüfung: `tests/events.sql` in einer **separaten leeren lokalen PostgreSQL-DB**
+mit vorhandenen Rollen `anon`/`authenticated` ausführen. Der Test prüft Sichtbarkeit,
+Adminrechte, Schutz der Teilnehmernamen, doppelte Zusagen, Zurücknehmen sowie
+abgesagte/vergangene Treffen. Anschließend kann `tests/events-race.py` in derselben
+lokalen Testumgebung laufen (`127.0.0.1:55439`, Datenbank `events_test`): es prüft eine
+parallel zur Absage wartende Zusage. **Nie gegen das produktive Projekt ausführen.**
+Die Browserabläufe wurden mit lokal simulierten Daten für Admins, Mitglieder
+und Gäste sowie bei 375 px und Desktop geprüft. Echte Termine werden vom Betreiber
+angelegt; ein echter zweiter Teilnehmer war für diesen Test nicht verfügbar.

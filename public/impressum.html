@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=5">
+  <link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
 
@@ -20,6 +20,7 @@
     <nav class="nav-links" id="main-nav" aria-label="Hauptnavigation">
       <a class="hide-sm" href="community">Community</a>
       <a class="hide-sm" href="boerse">Börse</a>
+      <a class="hide-sm" href="events">Treffen</a>
       <a class="hide-sm" href="mitglieder">Mitglieder</a>
       <a class="hide-sm" href="nachrichten" data-messages hidden>Nachrichten</a>
       <a class="hide-sm" href="login" data-account>Login</a>
@@ -48,7 +49,7 @@
     <h2 id="datenschutz">Datenschutz</h2>
     <p>Ich speichere nur die Daten, die du selbst angibst:</p>
     <ul>
-      <li><strong>Anmeldung zu einem Treffen:</strong> Name, E-Mail und woran du arbeitest – zur Organisation der Treffen und um dich persönlich zu kontaktieren.</li>
+      <li><strong>Treffen und Zusagen:</strong> Wenn du als Mitglied zusagst, speichere ich die Zuordnung deines Profils zum jeweiligen Termin und den Zeitpunkt deiner Zusage. Die Teilnehmerliste sieht nur der Admin zur Organisation des Treffens; andere sehen die Anzahl der Zusagen. Du kannst deine Zusage auf der Treffen-Seite zurücknehmen. Frühere Anmeldungen mit Name, E-Mail und Projekt bleiben im Admin-Archiv.</li>
       <li><strong>Mitgliedschaft:</strong> Name, E-Mail, Passwort (nur verschlüsselt gespeichert) und deine Profilangaben. Dein Profil sehen freigeschaltete Mitglieder; öffentlich erscheint es nur, wenn du das ausdrücklich erlaubst. Deine E-Mail-Adresse ist nie für andere sichtbar. Optional kannst du ein Profilbild hochladen. Es wird auf 512 × 512 Pixel verkleinert und in einem privaten Supabase-Speicher abgelegt. Für den Zugriff gelten dieselben Sichtbarkeitsregeln wie für dein Profil. Du kannst das Bild im Profil ersetzen oder entfernen.</li>
       <li><strong>Newsletter:</strong> deine E-Mail-Adresse, um dir einmal im Monat Neuigkeiten zu schicken. Du kannst dich jederzeit abmelden.</li>
     </ul>
@@ -58,10 +59,10 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
-<script src="config.js?v=5"></script>
-<script src="app.js?v=5"></script>
-<script src="avatars.js?v=5"></script>
-<script src="notifications.js?v=5"></script>
-<script src="effects.js?v=5"></script>
+<script src="config.js?v=6"></script>
+<script src="app.js?v=6"></script>
+<script src="avatars.js?v=6"></script>
+<script src="notifications.js?v=6"></script>
+<script src="effects.js?v=6"></script>
 </body>
 </html>
