@@ -1033,3 +1033,27 @@ main > section, .card, .feature, .plan { animation: none; }
 main section[id] { scroll-margin-top: 64px; }
 .split > * { min-width: 0; }
 @media (hover: none) { .hero-meta .kbd-hint { display: none; } }
+
+/* Persönliche Benachrichtigungen */
+.notifications { position: relative; }
+.notifications[hidden] { display: none; }
+.notifications summary { display: flex; align-items: center; gap: 5px; cursor: pointer; list-style: none; padding: 10px; border-radius: 10px; color: var(--text); }
+.notifications summary::-webkit-details-marker { display: none; }
+.notifications summary:hover, .notifications[open] summary { background: var(--panel-2); }
+.notifications summary:focus-visible { outline: 2px solid #7B84FF; outline-offset: 2px; }
+.notification-panel { position: absolute; right: 0; top: calc(100% + 12px); width: min(380px, calc(100vw - 32px)); padding: 16px; background: #131419; border: 1px solid #2F323B; border-radius: 18px; box-shadow: 0 18px 50px #0008; max-height: min(70vh, 560px); overflow-y: auto; z-index: 60; }
+.notification-head { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.notification-head strong { font-size: 14px; }
+.notification-head button { color: #A68BFF; background: none; border: 0; cursor: pointer; font: inherit; font-size: 12px; }
+.notification-head button:disabled { color: #6C707D; cursor: default; }
+.nav-links .notification-item { display: grid; gap: 4px; padding: 12px; margin-top: 4px; white-space: normal; overflow-wrap: anywhere; border-radius: 10px; }
+.notification-item.unread { background: rgba(123,132,255,.14); }
+.notification-item small { color: #A4A8B4; font-size: 12px; }
+.notification-panel .form-status:empty { display: none; }
+.post:focus { outline: 2px solid #7B84FF; outline-offset: 4px; }
+@media (max-width: 899px) {
+  .nav-links:not(.open) .notifications { display: none; }
+  .nav-links.open .notifications { width: 100%; }
+  .notification-panel { position: static; width: 100%; margin-top: 8px; box-shadow: none; }
+  .nav-links.open { max-height: calc(100dvh - 90px); overflow-y: auto; }
+}

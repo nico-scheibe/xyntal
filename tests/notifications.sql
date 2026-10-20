@@ -1,0 +1,41 @@
+\set ON_ERROR_STOP on
+create role anon;
+create role authenticated;
+create schema auth;
+create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub', true),'')::uuid $$;
+grant usage on schema auth to authenticated;
+create table public.profiles(id uuid primary key, status text);
+create table public.posts(id bigint primary key, author_id uuid references public.profiles(id));
+create table public.messages(id bigint primary key, sender_id uuid, recipient_id uuid, read_at timestamptz);
+create table public.post_comments(id bigint primary key, post_id bigint references public.posts(id) on delete cascade, author_id uuid);
+create function public.is_approved_member() returns boolean language sql security definer set search_path='' as $$ select exists(select 1 from public.profiles where id=auth.uid() and status='approved') $$;
+\i supabase/004_notifications.sql
+insert into profiles values ('00000000-0000-0000-0000-000000000001','approved'),('00000000-0000-0000-0000-000000000002','approved'),('00000000-0000-0000-0000-000000000003','pending');
+insert into posts values(1,'00000000-0000-0000-0000-000000000001');
+insert into post_comments values(1,1,'00000000-0000-0000-0000-000000000001');
+do $$ begin if (select count(*) from notifications) <> 0 then raise exception 'Self notification'; end if; end $$;
+insert into post_comments values(2,1,'00000000-0000-0000-0000-000000000002');
+insert into messages values(1,'00000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000002',null);
+set role authenticated;
+select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000002',false);
+do $$ begin
+ if (select count(*) from notifications) <> 1 then raise exception 'Recipient isolation'; end if;
+ begin insert into notifications(recipient_id,kind,message_id) values(auth.uid(),'message',1); raise exception 'Insert permitted'; exception when insufficient_privilege then null; end;
+ begin update notifications set recipient_id='00000000-0000-0000-0000-000000000001'; raise exception 'Recipient update permitted'; exception when insufficient_privilege then null; end;
+ update notifications set read_at=now() where kind='comment';
+ if found then raise exception 'Other recipient updated'; end if;
+ update notifications set read_at=now();
+ if (select count(*) from notifications where read_at is null) <> 0 then raise exception 'Read update'; end if;
+end $$;
+select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000003',false);
+do $$ begin if (select count(*) from notifications) <> 0 then raise exception 'Pending visibility'; end if; end $$;
+reset role;
+update notifications set read_at=null where message_id=1;
+update messages set read_at=now() where id=1;
+do $$ begin if exists(select 1 from notifications where message_id=1 and read_at is null) then raise exception 'Message sync'; end if; end $$;
+delete from posts where id=1;
+do $$ begin if exists(select 1 from notifications where kind='comment') then raise exception 'Cascade'; end if; end $$;
+set role anon;
+do $$ begin begin perform * from notifications; raise exception 'Guest permitted'; exception when insufficient_privilege then null; end; end $$;
+reset role;
+select 'PASS: triggers, isolation, grants, read sync, cascades' as result;

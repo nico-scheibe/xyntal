@@ -20,6 +20,7 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 | `supabase/schema.sql` | Datenbank: Tabellen, Zugriffsregeln, Funktionen (bereits ausgeführt) |
 | `supabase/002_login_methods.sql` | Ergänzung für Google/Apple/LinkedIn/Handy-Login (bereits ausgeführt) |
 | `supabase/003_community.sql` | Community: Feed, Kommentare, Likes, Börse, Direktnachrichten (bereits ausgeführt) |
+| `supabase/004_notifications.sql` | Benachrichtigungen mit RLS und Triggern; nach 003 im SQL Editor ausführen |
 | `ANMELDUNG-EINRICHTEN.md` | Anleitung: Brevo-SMTP einrichten; Google, Apple, LinkedIn und SMS einschalten |
 
 ## Seiten
@@ -84,3 +85,29 @@ Alle Links in `public/` sind relativ (`community` statt `/community`), damit die
 - Instagram- und LinkedIn-Links im Footer von `public/index.html`
 - Impressum und vollständige Datenschutzerklärung in `public/impressum.html` (Supabase als Dienstleister nennen)
 - Newsletter versenden: Adressen im Admin als CSV exportieren und z. B. in Brevo oder MailerLite importieren
+
+## Benachrichtigungen aktivieren
+
+`supabase/004_notifications.sql` nach den bestehenden Migrationen einmal komplett
+im Supabase SQL Editor ausführen. Sie läuft als Transaktion. Nicht erneut ausführen,
+wenn sie schon erfolgreich war. Die Website blendet die Glocke aus, solange die
+Tabelle noch fehlt. Es werden nur neue Aktivitäten nach der Migration erfasst.
+
+Freigeschaltete Mitglieder erhalten Hinweise für Direktnachrichten und Kommentare
+anderer Mitglieder unter ihren eigenen Beiträgen. Die Glocke zeigt die letzten 30
+Hinweise sowie die Gesamtzahl ungelesener Hinweise. Aktualisierung beim Öffnen,
+beim Zurückkehren in den Tab und alle 30 Sekunden bei sichtbarem Tab. Keine
+Browser-Push- oder E-Mail-Benachrichtigungen. Nachrichteninhalte werden nicht
+zusätzlich in der Hinweistabelle gespeichert. „Alle gelesen“ markiert die Hinweise;
+die Unterhaltung selbst wird erst beim Öffnen in Nachrichten als gelesen markiert.
+
+SQL-Regressionstest: in einer **leeren, separaten lokalen PostgreSQL-Datenbank**
+aus dem Repository-Ordner mit `psql -v ON_ERROR_STOP=1 -d TESTDATENBANK -f tests/notifications.sql`
+ausführen. Niemals gegen das produktive Supabase-Projekt ausführen: Der Test
+legt vereinfachte Tabellen und Testrollen an.
+
+Mailversand: Am 20.10.2026 wurde Brevo-SMTP in Supabase gespeichert und der Empfang
+einer Passwort-Reset-Mail vom Betreiber bestätigt. Eine Neuregistrierung mit
+Bestätigung und das vollständige Zurücksetzen eines Passworts sind separat noch
+zu prüfen. Die Gmail-Absenderadresse ist bei Brevo verifiziert; eine eigene
+Absenderdomain ist noch nicht eingerichtet.
