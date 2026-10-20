@@ -63,6 +63,8 @@ git subtree push --prefix public origin gh-pages
 
 Nach ein bis zwei Minuten ist die neue Version online.
 
+Wenn du `style.css` oder eine `.js`-Datei änderst, erhöhe die Versionsnummer `?v=…` in den HTML-Dateien (z. B. von `?v=3` auf `?v=4`), damit Browser die neue Datei laden statt der zwischengespeicherten.
+
 In Supabase (Authentication → URL Configuration) sind `https://nico-scheibe.github.io/xyntal/` als Site URL
 sowie `https://nico-scheibe.github.io/xyntal/**` und `http://localhost:4173/**` als Redirect URLs eingetragen.
 Bei einer eigenen Domain beides dort ergänzen.
