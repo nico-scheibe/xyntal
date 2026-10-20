@@ -88,8 +88,10 @@ Alle Links in `public/` sind relativ (`community` statt `/community`), damit die
 
 ## Benachrichtigungen aktivieren
 
-`supabase/004_notifications.sql` nach den bestehenden Migrationen einmal komplett
-im Supabase SQL Editor ausführen. Sie läuft als Transaktion. Nicht erneut ausführen,
+`supabase/004_notifications.sql` wurde am 20.10.2026 im Xyntal-Projekt erfolgreich
+ausgeführt. RLS, beide Policies, alle drei Trigger und die eingeschränkten
+Client-Rechte wurden danach per SQL geprüft. Für weitere Umgebungen nach den
+bestehenden Migrationen einmal komplett im Supabase SQL Editor ausführen. Sie läuft als Transaktion. Nicht erneut ausführen,
 wenn sie schon erfolgreich war. Die Website blendet die Glocke aus, solange die
 Tabelle noch fehlt. Es werden nur neue Aktivitäten nach der Migration erfasst.
 
