@@ -48,11 +48,26 @@ set is_admin = true, status = 'approved'
 where id = (select id from auth.users where email = 'deine@email.de');
 ```
 
-## Online stellen
+## Online
 
-Den Ordner `public/` bei Netlify, Vercel oder Cloudflare Pages hochladen (kostenlos, mit HTTPS).
-Danach in Supabase unter **Authentication → URL Configuration** die Site URL auf die echte Domain setzen
-und `https://deine-domain.de/**` als Redirect URL ergänzen.
+Live unter **https://nico-scheibe.github.io/xyntal/** (GitHub Pages, Repository `nico-scheibe/xyntal`).
+
+GitHub Pages veröffentlicht den Branch `gh-pages`, der genau den Inhalt von `public/` enthält.
+Änderungen veröffentlichen:
+
+```sh
+git add -A && git commit -m "Beschreibung der Änderung"
+git push
+git subtree push --prefix public origin gh-pages
+```
+
+Nach ein bis zwei Minuten ist die neue Version online.
+
+In Supabase (Authentication → URL Configuration) sind `https://nico-scheibe.github.io/xyntal/` als Site URL
+sowie `https://nico-scheibe.github.io/xyntal/**` und `http://localhost:4173/**` als Redirect URLs eingetragen.
+Bei einer eigenen Domain beides dort ergänzen.
+
+Alle Links in `public/` sind relativ (`community` statt `/community`), damit die Seite auch im Unterordner `/xyntal/` funktioniert.
 
 ## Wichtig
 
