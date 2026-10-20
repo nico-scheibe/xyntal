@@ -1099,3 +1099,13 @@ main section[id] { scroll-margin-top: 64px; }
 @media (max-width: 559px) { .event-card { padding: 18px; } .event-card h2 { font-size: 24px; } }
 .feed-filter button[aria-pressed="true"] { background: var(--accent-soft); color: var(--text); border-color: rgba(123,132,255,.45); }
 .event-card-bottom .row-actions .btn, .event-card-bottom .row-actions .btn:hover { background: var(--grad); color: var(--on-accent); border-color: transparent; }
+
+/* Rechtliche Informationen */
+.legal h1 { font-size: clamp(2rem, 6vw, 3.3rem); }
+.legal h3 { margin-top: 2em; font-size: 1.08rem; line-height: 1.45; }
+.legal a { color: var(--accent-2); text-underline-offset: 3px; overflow-wrap: anywhere; }
+.legal [id] { scroll-margin-top: 100px; }
+.legal-index { display: flex; flex-wrap: wrap; gap: 12px 24px; margin: 28px 0; padding: 18px 0; border-block: 1px solid var(--border); }
+.legal-pending { padding: 16px 20px; border: 1px solid var(--amber); border-radius: var(--r-ctl); color: var(--text-2); }
+.legal-pending strong { color: var(--amber); }
+.legal section { padding: 0; }

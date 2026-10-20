@@ -3,13 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Impressum – Xyntal</title>
+  <title>Impressum &amp; Datenschutz – Xyntal</title>
   <meta name="robots" content="noindex">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%237B84FF'/%3E%3Cstop offset='1' stop-color='%23A68BFF'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='url(%23g)'/%3E%3Ctext x='16' y='22.5' font-family='Arial' font-size='18' font-weight='700' fill='%230C0D11' text-anchor='middle'%3EX%3C/text%3E%3C/svg%3E">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=6">
+  <link rel="stylesheet" href="fonts/fonts.css?v=7">
+  <link rel="stylesheet" href="style.css?v=7">
 </head>
 <body>
 
@@ -31,38 +29,77 @@
 
 <main class="legal">
   <div class="wrap">
-    <h1>Impressum</h1>
+    <div class="eyebrow">Xyntal · Rechtliches</div>
+    <h1>Impressum &amp; Datenschutz</h1>
+    <p>Informationen zum Betreiber und zum Umgang mit deinen Daten. Stand: 20. Oktober 2026.</p>
+    <nav class="legal-index" aria-label="Inhalt dieser Seite">
+      <a href="#impressum">Impressum</a><a href="#datenschutz">Datenschutz</a><a href="#deine-rechte">Deine Rechte</a>
+    </nav>
+    <aside class="legal-pending" role="note"><strong>Impressum noch unvollständig.</strong> Die nach § 5 DDG erforderliche Anschrift des Betreibers ist noch nicht hinterlegt.</aside>
 
-    <h2>Angaben gemäß § 5 DDG</h2>
-    <p>
-      <span class="todo">[Vor- und Nachname]</span><br>
-      <span class="todo">[Straße und Hausnummer]</span><br>
-      <span class="todo">[PLZ] Regensburg</span>
-    </p>
+    <section aria-labelledby="impressum">
+      <h2 id="impressum">Impressum</h2>
+      <h3>Angaben gemäß § 5 DDG</h3>
+      <p>Nico Scheibe<br>Betreiber von Xyntal</p>
+      <h3>Kontakt</h3>
+      <p>E-Mail: <a href="mailto:nico.scheibe18@gmail.com">nico.scheibe18@gmail.com</a></p>
+    </section>
 
-    <h2>Kontakt</h2>
-    <p>E-Mail: <span class="todo">[deine E-Mail-Adresse]</span></p>
+    <section aria-labelledby="datenschutz">
+      <h2 id="datenschutz">Datenschutzerklärung</h2>
+      <h3>1. Verantwortlicher und Geltungsbereich</h3>
+      <p>Verantwortlich für die Verarbeitung auf dieser Website ist der im Impressum genannte Betreiber. Die dort angegebene E-Mail-Adresse ist auch der Kontakt für Datenschutzanfragen. Diese Erklärung gilt für die Xyntal-Website und ihre Community-Funktionen. Die angekündigte macOS-App ist davon nicht umfasst.</p>
 
-    <h2>Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h2>
-    <p><span class="todo">[Vor- und Nachname, Anschrift wie oben]</span></p>
+      <h3>2. Besuch der Website und Hosting</h3>
+      <p>Die Website wird über GitHub Pages von GitHub, Inc. (USA) bereitgestellt. Beim Abruf werden insbesondere deine IP-Adresse, Zeitpunkt, angeforderte Adresse sowie technische Browser- und Verbindungsinformationen verarbeitet. GitHub protokolliert IP-Adressen auch bei Besuchern ohne GitHub-Konto für Sicherheitszwecke. Das dient der Auslieferung, Stabilität und Absicherung der Website (Art. 6 Abs. 1 lit. f DSGVO). Die Dauer der technischen Protokollierung wird durch den Hosting-Anbieter bestimmt.</p>
+      <p>Informationen: <a href="https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages">GitHub Pages</a> und <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">GitHub-Datenschutzerklärung</a>.</p>
 
-    <h2 id="datenschutz">Datenschutz</h2>
-    <p>Ich speichere nur die Daten, die du selbst angibst:</p>
-    <ul>
-      <li><strong>Treffen und Zusagen:</strong> Wenn du als Mitglied zusagst, speichere ich die Zuordnung deines Profils zum jeweiligen Termin und den Zeitpunkt deiner Zusage. Die Teilnehmerliste sieht nur der Admin zur Organisation des Treffens; andere sehen die Anzahl der Zusagen. Du kannst deine Zusage auf der Treffen-Seite zurücknehmen. Frühere Anmeldungen mit Name, E-Mail und Projekt bleiben im Admin-Archiv.</li>
-      <li><strong>Mitgliedschaft:</strong> Name, E-Mail, Passwort (nur verschlüsselt gespeichert) und deine Profilangaben. Dein Profil sehen freigeschaltete Mitglieder; öffentlich erscheint es nur, wenn du das ausdrücklich erlaubst. Deine E-Mail-Adresse ist nie für andere sichtbar. Optional kannst du ein Profilbild hochladen. Es wird auf 512 × 512 Pixel verkleinert und in einem privaten Supabase-Speicher abgelegt. Für den Zugriff gelten dieselben Sichtbarkeitsregeln wie für dein Profil. Du kannst das Bild im Profil ersetzen oder entfernen.</li>
-      <li><strong>Newsletter:</strong> deine E-Mail-Adresse, um dir einmal im Monat Neuigkeiten zu schicken. Du kannst dich jederzeit abmelden.</li>
-    </ul>
-    <p>Gespeichert werden die Daten bei Supabase (Server in der EU, Irland). Für den Login speichert dein Browser technisch notwendige Anmeldedaten. Es gibt kein Tracking und keine Werbe-Cookies. Die Daten werden nicht an Dritte weitergegeben. Du kannst dein Konto in deinem Profil jederzeit selbst löschen und per E-Mail Auskunft, Berichtigung oder Löschung verlangen.</p>
-    <p><span class="todo">[Vollständige Datenschutzerklärung ergänzen – z. B. mit einem kostenlosen Generator. Darin auch Hosting-Anbieter und Google Fonts nennen.]</span></p>
+      <h3>3. Mitgliedschaft, Anmeldung und Profil</h3>
+      <p>Für dein Konto verarbeiten wir deine E-Mail-Adresse, eine Nutzerkennung, Anmelde- und Sicherheitsdaten sowie die von dir angegebenen Profilinformationen. Dazu gehören Name, Kurzbeschreibung, Gründungsphase, Themenbereich, Angebote, Gesuche und freiwillige Links. Passwörter werden durch den Authentifizierungsdienst als Hash gespeichert. Die Mitgliedschaft wird durch den Admin freigeschaltet. Grundlage ist die Durchführung bzw. Anbahnung der von dir angefragten Mitgliedschaft (Art. 6 Abs. 1 lit. b DSGVO); Sicherheitsmaßnahmen beruhen auf Art. 6 Abs. 1 lit. f DSGVO.</p>
+      <p>Freigeschaltete Mitglieder können andere freigeschaltete Profile sehen. Wenn du „Mein Profil darf öffentlich erscheinen“ aktivierst, können auch nicht angemeldete Besucher dein Profil und Profilbild sehen. Diese freiwillige Veröffentlichung beruht auf deiner Einwilligung (Art. 6 Abs. 1 lit. a DSGVO). Du kannst sie jederzeit in deinem Profil ausschalten. Bereits von anderen angefertigte Kopien oder Suchmaschinen-Caches werden dadurch nicht automatisch entfernt. Deine Konto-E-Mail wird anderen Mitgliedern nicht angezeigt; der Admin kann sie zur Verwaltung sehen.</p>
+      <p>Ein freiwilliges Profilbild wird vor dem Upload im Browser quadratisch zugeschnitten, auf 512 × 512 Pixel verkleinert und als neues JPEG ohne die Metadaten der Originaldatei gespeichert. Der private Bildspeicher folgt der Sichtbarkeit deines Profils. Du kannst dein Bild ersetzen oder entfernen.</p>
+      <p>Für Konten, Datenbank und Bildspeicher wird Supabase Pte. Ltd. (Singapur) eingesetzt. Dabei werden auch technische Verbindungsdaten verarbeitet. Eine regionale Datenbank allein schließt internationale Verarbeitung, etwa für Support und Unterauftragnehmer, nicht aus. Informationen zu Empfängern und Übermittlungsmechanismen einschließlich Standardvertragsklauseln stehen in den <a href="https://supabase.com/legal/privacy-resources/data-residency-and-transfers-faq">Supabase-Informationen zu Datenstandorten</a>, der <a href="https://supabase.com/privacy">Datenschutzerklärung</a> und dem <a href="https://supabase.com/legal/customer-resources/data-processing-addendum">Auftragsverarbeitungsvertrag</a>.</p>
+      <p>Wenn du eine angebotene Anmeldung über Google auswählst, wirst du zu Google weitergeleitet. Xyntal erhält die zur Anmeldung freigegebenen Kontodaten, insbesondere Kennung, E-Mail-Adresse und gegebenenfalls Name. Google erhält die mit dem Anmeldevorgang verbundenen Verbindungsdaten. Dieser Vorgang beginnt erst mit deiner Auswahl; alternativ kannst du E-Mail und Passwort verwenden. Für die Verarbeitung durch Google gilt die <a href="https://policies.google.com/privacy?hl=de">Google-Datenschutzerklärung</a>.</p>
+
+      <h3>4. Community, Börse und Nachrichten</h3>
+      <p>Beiträge, Kommentare, Likes und Börseneinträge werden mit deinem Profil, ihrem Inhalt und Zeitangaben gespeichert und innerhalb der freigeschalteten Community angezeigt. Der Admin kann Inhalte moderieren. Bitte veröffentliche nur Informationen, die für diesen Personenkreis bestimmt sind.</p>
+      <p>Direktnachrichten enthalten Absender, Empfänger, Nachrichtentext, Versandzeit und gegebenenfalls einen Gelesen-Zeitpunkt. Über die Anwendung können nur Absender und Empfänger auf ihre Nachrichten zugreifen. Die Nachrichten sind nicht Ende-zu-Ende-verschlüsselt; technische Zugriffsrechte des Betreibers und der Infrastruktur-Dienstleister bestehen zur Administration.</p>
+      <p>Benachrichtigungen zu Nachrichten und Kommentaren speichern Empfänger, Auslöser, Verweise auf die zugehörigen Inhalte sowie Erstellungs- und Gelesen-Zeitpunkt. Sie werden nur dem jeweiligen Empfänger angezeigt. Diese Funktionen dienen der gewünschten Community-Nutzung (Art. 6 Abs. 1 lit. b DSGVO); Moderation und Missbrauchsschutz beruhen auf Art. 6 Abs. 1 lit. f DSGVO.</p>
+
+      <h3>5. Treffen und Zusagen</h3>
+      <p>Bei einer Zusage speichern wir die Zuordnung deines Profils zum Termin und den Zeitpunkt deiner Zusage. Der Admin sieht die Teilnehmerliste zur Organisation, andere Besucher bzw. Mitglieder sehen je nach Sichtbarkeit des Termins nur die Anzahl der Zusagen. Du kannst deine Zusage zurücknehmen. Grundlage ist die Organisation deiner gewünschten Teilnahme (Art. 6 Abs. 1 lit. b DSGVO). Eine Terminabsage löscht bestehende Zusagen nicht automatisch.</p>
+      <p>Frühere Anmeldungen aus dem alten Treffen-Formular enthalten gegebenenfalls Name, E-Mail und Projektbeschreibung und sind ausschließlich im Admin-Archiv zugänglich.</p>
+
+      <h3>6. E-Mails, Newsletter und Kontakt</h3>
+      <p>Bestätigungs- und Passwort-zurücksetzen-E-Mails werden über Brevo versendet. Dabei werden Empfängeradresse, Nachrichteninhalt sowie Versand- und Zustellinformationen verarbeitet. Diese Konto-E-Mails ermöglichen die Anmeldung und Kontosicherheit (Art. 6 Abs. 1 lit. b und f DSGVO). Weitere Angaben: <a href="https://www.brevo.com/de/legal/privacypolicy/">Brevo-Datenschutzerklärung</a> und <a href="https://www.brevo.com/legal/termsofuse/">Vertrags- und Datenschutzbedingungen</a>.</p>
+      <p>Wenn du den Newsletter bestellst, speichern wir deine E-Mail-Adresse und den Eintragungszeitpunkt für Neuigkeiten aus der Community und zur angekündigten App. Grundlage ist deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO). Sie ist freiwillig und keine Voraussetzung für die Mitgliedschaft. Du kannst sie jederzeit für die Zukunft durch Nachricht an die Kontaktadresse im Impressum widerrufen. Aktuell ist kein automatischer Newsletterversand eingerichtet.</p>
+      <p>Die Kontaktadresse wird über Gmail (Google) bereitgestellt. Bei einer Kontaktanfrage verarbeiten wir und der E-Mail-Dienst deine Absenderdaten, den Inhalt und gegebenenfalls Anhänge zur Bearbeitung. Grundlage ist bei mitgliedschaftsbezogenen Anfragen Art. 6 Abs. 1 lit. b DSGVO, ansonsten unser berechtigtes Interesse an der Beantwortung von Anfragen (Art. 6 Abs. 1 lit. f DSGVO).</p>
+
+      <h3>7. Browser-Speicher, Schriften und externe Dateien</h3>
+      <p>Der Login speichert Sitzungsdaten im lokalen Speicher deines Browsers, damit du angemeldet bleibst und sich deine Sitzung erneuern lässt. Beim Abmelden wird die lokale Sitzung entfernt. Diese Speicherung ist für die ausdrücklich gewünschte Anmeldung erforderlich (§ 25 Abs. 2 Nr. 2 TDDDG); die zugehörige Verarbeitung beruht auf Art. 6 Abs. 1 lit. b DSGVO.</p>
+      <p>Die Schriften Inter, Space Grotesk und JetBrains Mono werden lokal über das Hosting dieser Website ausgeliefert. Zum Laden der Schriften findet keine Verbindung zu Google Fonts statt.</p>
+      <p>Die technische Supabase-JavaScript-Bibliothek wird von jsDelivr geladen. Dabei erhält der CDN-Anbieter unter anderem deine IP-Adresse und technische Abrufdaten. Dies dient der Bereitstellung der Website-Funktionen (Art. 6 Abs. 1 lit. f DSGVO). Informationen: <a href="https://www.jsdelivr.com/terms/privacy-policy">jsDelivr-Datenschutzerklärung</a>. Es werden auf der Website keine Analyse- oder Werbetracker eingesetzt. Links zu anderen Websites öffnen deren Angebote erst bei deiner Auswahl; dort gelten die jeweiligen Datenschutzhinweise.</p>
+
+      <h3>8. Speicherdauer und Löschung</h3>
+      <p>Kontodaten und Profil werden für die Dauer deiner Mitgliedschaft gespeichert. Du kannst dein Konto im Profil selbst löschen. Dabei werden die mit deinem Konto verknüpften Beiträge, Kommentare, Likes, Börseneinträge, Nachrichten und Zusagen sowie deine Newsletter-Adresse entfernt; das Profilbild wird über den Löschablauf ebenfalls entfernt. Benachrichtigungen werden abhängig von ihren verknüpften Inhalten gelöscht oder verlieren den Absenderbezug.</p>
+      <p>Einzelne selbst veröffentlichte Inhalte und dein Profilbild kannst du über die jeweils angebotenen Funktionen entfernen. Zusagen bleiben bis zu ihrer Rücknahme oder Kontolöschung gespeichert; es gibt noch keine automatische Löschung nach dem Veranstaltungstermin. Für alte Veranstaltungsanmeldungen und eigenständige Newsletter-Einträge kannst du die Löschung beim Betreiber anfordern. Newsletter-Daten werden bis zum Widerruf oder der Einstellung des Newsletters benötigt.</p>
+      <p>Kontaktanfragen werden so lange aufbewahrt, wie die Bearbeitung und gegebenenfalls die Durchsetzung oder Abwehr konkreter Ansprüche dies erfordern. Gesetzliche Aufbewahrungspflichten bleiben unberührt. Technische Protokolle und Sicherungskopien bei den Dienstleistern unterliegen deren Aufbewahrungs- und Überschreibungszyklen; eine Löschung aus der laufenden Anwendung entfernt diese nicht sofort.</p>
+
+      <h3 id="deine-rechte">9. Deine Rechte</h3>
+      <p>Du hast nach den gesetzlichen Voraussetzungen Rechte auf Auskunft (Art. 15 DSGVO), Berichtigung (Art. 16), Löschung (Art. 17), Einschränkung der Verarbeitung (Art. 18) und Datenübertragbarkeit (Art. 20). Einwilligungen kannst du jederzeit mit Wirkung für die Zukunft widerrufen; die Rechtmäßigkeit der bisherigen Verarbeitung bleibt davon unberührt.</p>
+      <p><strong>Widerspruch:</strong> Soweit eine Verarbeitung auf Art. 6 Abs. 1 lit. f DSGVO beruht, kannst du aus Gründen deiner besonderen Situation widersprechen (Art. 21 DSGVO). Gegen Direktwerbung kannst du jederzeit ohne Begründung widersprechen.</p>
+      <p>Wende dich hierzu an den Kontakt im Impressum. Außerdem kannst du dich bei einer Datenschutzaufsichtsbehörde beschweren, insbesondere an deinem Aufenthaltsort, Arbeitsplatz oder am Ort des vermuteten Verstoßes. Für private Anbieter in Bayern ist das <a href="https://www.lda.bayern.de/de/beschwerde.html">Bayerische Landesamt für Datenschutzaufsicht</a> zuständig.</p>
+      <p>Eine automatisierte Entscheidungsfindung einschließlich Profiling im Sinne von Art. 22 DSGVO findet auf Xyntal nicht statt. Ohne die für Anmeldung und Mitgliedschaft erforderlichen Daten können wir kein Konto bereitstellen; freiwillige Profilangaben, öffentliche Sichtbarkeit und Newsletter sind optional.</p>
+    </section>
+    <p><a class="text-link" href="./">Zurück zur Startseite</a></p>
   </div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
-<script src="config.js?v=6"></script>
-<script src="app.js?v=6"></script>
-<script src="avatars.js?v=6"></script>
-<script src="notifications.js?v=6"></script>
-<script src="effects.js?v=6"></script>
+<script src="config.js?v=7"></script>
+<script src="app.js?v=7"></script>
+<script src="avatars.js?v=7"></script>
+<script src="notifications.js?v=7"></script>
+<script src="effects.js?v=7"></script>
 </body>
 </html>
