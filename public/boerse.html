@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gesuche & Angebote – Xyntal</title>
+  <meta name="description" content="Gesuche und Angebote der Xyntal-Community in Regensburg: Mitgründer, Kunden, Know-how und mehr.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%237B84FF'/%3E%3Cstop offset='1' stop-color='%23A68BFF'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='url(%23g)'/%3E%3Ctext x='16' y='22.5' font-family='Arial' font-size='18' font-weight='700' fill='%230C0D11' text-anchor='middle'%3EX%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="logo" href="./" aria-label="Xyntal Startseite"><span class="logo-mark" aria-hidden="true"><span>X</span></span>Xyntal</a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="main-nav">Menü</button>
+    <nav class="nav-links" id="main-nav" aria-label="Hauptnavigation">
+      <a class="hide-sm" href="community">Community</a>
+      <a class="hide-sm" href="boerse">Börse</a>
+      <a class="hide-sm" href="mitglieder">Mitglieder</a>
+      <a class="hide-sm" href="nachrichten" data-messages hidden>Nachrichten</a>
+      <a class="hide-sm" href="login" data-account>Login</a>
+      <a class="btn btn-small" href="mitglied-werden">Kostenlos starten</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="page-head">
+    <div class="wrap">
+      <div class="eyebrow">Gesuche &amp; Angebote</div>
+      <h1>Finde, was dich <em>weiterbringt.</em></h1>
+      <p>Mitgründer, erste Kunden, Know-how oder ein offenes Ohr – sag, was du suchst oder bietest, und die richtigen Leute melden sich.</p>
+    </div>
+  </section>
+
+  <section class="page-body">
+    <div class="wrap">
+      <div id="notice"></div>
+
+      <div class="board-bar">
+        <div class="feed-filter" role="tablist" aria-label="Einträge filtern">
+          <button type="button" data-filter="" aria-selected="true">Alle</button>
+          <button type="button" data-filter="suche" aria-selected="false">Suche</button>
+          <button type="button" data-filter="biete" aria-selected="false">Biete</button>
+        </div>
+        <button class="btn btn-small" id="new-listing" type="button" hidden>Eintrag erstellen</button>
+      </div>
+
+      <form id="listing-form" class="dark-form listing-form" hidden novalidate>
+        <div class="form-grid two">
+          <label>Ich …
+            <select name="type">
+              <option value="suche">suche</option>
+              <option value="biete">biete</option>
+            </select>
+          </label>
+          <label>Kategorie
+            <input type="text" name="category" maxlength="60" list="categories" placeholder="z. B. Mitgründer, Design, Marketing">
+            <datalist id="categories">
+              <option value="Mitgründer"><option value="Kunden &amp; Aufträge"><option value="Design"><option value="Entwicklung">
+              <option value="Marketing &amp; Social Media"><option value="Finanzen &amp; Recht"><option value="Feedback"><option value="Räume &amp; Equipment">
+            </datalist>
+          </label>
+        </div>
+        <label>Titel
+          <input type="text" name="title" maxlength="120" placeholder="z. B. Suche Mitgründer:in mit Tech-Hintergrund" required>
+        </label>
+        <label>Beschreibung
+          <textarea name="body" maxlength="2000" placeholder="Worum geht es genau? Was bringst du mit, was erwartest du?"></textarea>
+        </label>
+        <label class="check"><input type="checkbox" name="is_public"><span>Auch Gästen zeigen</span></label>
+        <div class="btn-row" style="justify-content: flex-start">
+          <button class="btn" type="submit">Veröffentlichen</button>
+          <button class="btn btn-ghost" type="button" id="cancel-listing">Abbrechen</button>
+        </div>
+        <p class="form-status" id="listing-status" role="status" aria-live="polite"></p>
+      </form>
+
+      <div id="board" class="board"><p class="empty">Lade Einträge …</p></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <a class="logo" href="./"><span class="logo-mark" aria-hidden="true"><span>X</span></span>Xyntal</a>
+      <p style="margin: 10px 0 0">Mentoring, Matching &amp; Workspaces für Gründer – aus Regensburg.</p>
+    </div>
+    <nav class="foot-links" aria-label="Fußzeile">
+      <a href="community">Community</a>
+      <a href="boerse">Börse</a>
+      <a href="mitglieder">Mitglieder</a>
+      <a href="impressum">Impressum</a>
+      <a href="impressum#datenschutz">Datenschutz</a>
+    </nav>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+  let v = { me: null, isMember: false, isAdmin: false };
+  let listings = [];
+  let filter = "";
+
+  function listingHtml(l) {
+    const author = l.author || { name: "Mitglied", headline: "" };
+    const mine = v.me && l.author_id === v.me.id;
+    return `
+      <article class="listing ${l.closed ? "closed" : ""}" data-id="${l.id}">
+        <div class="listing-top">
+          <span class="tag tag-${l.type}">${l.type === "suche" ? "Suche" : "Biete"}</span>
+          ${l.category ? `<span class="tag">${esc(l.category)}</span>` : ""}
+          ${l.closed ? `<span class="tag">Erledigt</span>` : ""}
+        </div>
+        <h3>${esc(l.title)}</h3>
+        ${l.body ? `<p class="listing-body">${richText(l.body)}</p>` : ""}
+        <div class="listing-foot">
+          <div class="listing-author">${avatar(author.name, "avatar-sm")}<div><strong>${esc(author.name)}</strong><span>${timeAgo(l.created_at)}${l.is_public ? " · öffentlich" : ""}</span></div></div>
+          <div class="post-actions">
+            ${v.isMember && !mine && l.author && !l.closed ? `<a class="btn btn-small" href="nachrichten?an=${l.author_id}">Kontakt aufnehmen</a>` : ""}
+            ${mine ? `<button type="button" data-act="toggle">${l.closed ? "Wieder öffnen" : "Als erledigt markieren"}</button>` : ""}
+            ${mine || v.isAdmin ? `<button type="button" data-act="delete">Löschen</button>` : ""}
+          </div>
+        </div>
+      </article>`;
+  }
+
+  function render() {
+    const list = listings.filter((l) => !filter || l.type === filter);
+    document.getElementById("board").innerHTML = list.length
+      ? list.map(listingHtml).join("")
+      : `<p class="empty">${filter ? "Hier ist noch nichts." : "Noch keine Einträge – was suchst oder bietest du?"}</p>`;
+  }
+
+  async function load() {
+    try {
+      listings = unwrap(await sb.from("listings")
+        .select("id, type, category, title, body, is_public, closed, created_at, author_id, author:profiles!listings_author_id_fkey(id, name, headline)")
+        .order("closed").order("created_at", { ascending: false }).limit(200));
+      render();
+    } catch (err) {
+      document.getElementById("board").innerHTML = `<p class="empty">${esc(friendlyError(err))}</p>`;
+    }
+  }
+
+  const form = document.getElementById("listing-form");
+  const newBtn = document.getElementById("new-listing");
+  newBtn.addEventListener("click", () => { form.hidden = false; newBtn.hidden = true; form.elements.title.focus(); });
+  document.getElementById("cancel-listing").addEventListener("click", () => { form.hidden = true; newBtn.hidden = false; form.reset(); });
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    submitWith(form, document.getElementById("listing-status"), async (data) => {
+      if (!data.title) throw new Error("Bitte gib einen Titel an.");
+      unwrap(await sb.from("listings").insert({
+        type: data.type, category: data.category, title: data.title, body: data.body, is_public: data.is_public,
+      }));
+      form.reset();
+      form.hidden = true;
+      newBtn.hidden = false;
+      setStatus(document.getElementById("listing-status"), "");
+      await load();
+    });
+  });
+
+  document.querySelectorAll("[data-filter]").forEach((b) => b.addEventListener("click", () => {
+    filter = b.dataset.filter;
+    document.querySelectorAll("[data-filter]").forEach((x) => x.setAttribute("aria-selected", x === b));
+    render();
+  }));
+
+  document.getElementById("board").addEventListener("click", async (e) => {
+    const btn = e.target.closest("button[data-act]");
+    if (!btn) return;
+    const id = Number(btn.closest(".listing").dataset.id);
+    const l = listings.find((x) => x.id === id);
+    try {
+      if (btn.dataset.act === "toggle") {
+        unwrap(await sb.from("listings").update({ closed: !l.closed }).eq("id", id));
+        l.closed = !l.closed;
+        render();
+      } else if (btn.dataset.act === "delete") {
+        if (!btn.dataset.armed) { btn.dataset.armed = "1"; btn.textContent = "Wirklich löschen?"; return; }
+        unwrap(await sb.from("listings").delete().eq("id", id));
+        listings = listings.filter((x) => x.id !== id);
+        render();
+      }
+    } catch (err) {
+      btn.closest(".listing").insertAdjacentHTML("beforeend", `<p class="post-error">${esc(friendlyError(err))}</p>`);
+    }
+  });
+
+  (async () => {
+    v = await viewer();
+    document.getElementById("notice").innerHTML = accessNotice(v, "Einträge erstellen, Mitglieder kontaktieren");
+    if (v.isMember) newBtn.hidden = false;
+    await load();
+  })();
+</script>
+</body>
+</html>

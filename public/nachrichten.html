@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nachrichten – Xyntal</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%237B84FF'/%3E%3Cstop offset='1' stop-color='%23A68BFF'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='url(%23g)'/%3E%3Ctext x='16' y='22.5' font-family='Arial' font-size='18' font-weight='700' fill='%230C0D11' text-anchor='middle'%3EX%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="logo" href="./" aria-label="Xyntal Startseite"><span class="logo-mark" aria-hidden="true"><span>X</span></span>Xyntal</a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="main-nav">Menü</button>
+    <nav class="nav-links" id="main-nav" aria-label="Hauptnavigation">
+      <a class="hide-sm" href="community">Community</a>
+      <a class="hide-sm" href="boerse">Börse</a>
+      <a class="hide-sm" href="mitglieder">Mitglieder</a>
+      <a class="hide-sm" href="nachrichten" data-messages hidden>Nachrichten</a>
+      <a class="hide-sm" href="login" data-account>Login</a>
+      <a class="btn btn-small" href="mitglied-werden">Kostenlos starten</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="page-head" style="padding-bottom: 40px">
+    <div class="wrap">
+      <div class="eyebrow">Nachrichten</div>
+      <h1>Direkt <em>vernetzen.</em></h1>
+    </div>
+  </section>
+
+  <section class="page-body" style="padding-top: 32px">
+    <div class="wrap">
+      <div id="notice"></div>
+
+      <div class="inbox" id="inbox" hidden>
+        <aside class="inbox-list">
+          <label class="new-chat">Neue Nachricht an …
+            <select id="new-chat"><option value="">Mitglied wählen</option></select>
+          </label>
+          <div id="conversations"></div>
+        </aside>
+
+        <section class="thread" id="thread">
+          <p class="empty">Wähle links ein Gespräch oder schreib einem Mitglied.</p>
+        </section>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <a class="logo" href="./"><span class="logo-mark" aria-hidden="true"><span>X</span></span>Xyntal</a>
+      <p style="margin: 10px 0 0">Mentoring, Matching &amp; Workspaces für Gründer – aus Regensburg.</p>
+    </div>
+    <nav class="foot-links" aria-label="Fußzeile">
+      <a href="community">Community</a>
+      <a href="boerse">Börse</a>
+      <a href="mitglieder">Mitglieder</a>
+      <a href="impressum">Impressum</a>
+      <a href="impressum#datenschutz">Datenschutz</a>
+    </nav>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+  let v = { me: null, isMember: false };
+  let messages = [];          // alle eigenen Nachrichten (gesendet + empfangen)
+  const people = new Map();   // id -> Profil
+  let active = null;          // id des Gesprächspartners
+
+  const partnerOf = (m) => (m.sender_id === v.me.id ? m.recipient_id : m.sender_id);
+
+  function conversations() {
+    const byPartner = new Map();
+    for (const m of messages) {
+      const p = partnerOf(m);
+      const c = byPartner.get(p) || { partner: p, last: m, unread: 0 };
+      if (new Date(m.created_at) > new Date(c.last.created_at)) c.last = m;
+      if (m.recipient_id === v.me.id && !m.read_at) c.unread++;
+      byPartner.set(p, c);
+    }
+    return [...byPartner.values()].sort((a, b) => new Date(b.last.created_at) - new Date(a.last.created_at));
+  }
+
+  function renderList() {
+    const list = conversations();
+    if (active && !list.some((c) => c.partner === active)) list.unshift({ partner: active, last: null, unread: 0 });
+    document.getElementById("conversations").innerHTML = list.length ? list.map((c) => {
+      const p = people.get(c.partner) || { name: "Mitglied" };
+      return `
+        <button type="button" class="conv ${c.partner === active ? "active" : ""}" data-partner="${c.partner}">
+          ${avatar(p.name, "avatar-sm")}
+          <span class="conv-text">
+            <strong>${esc(p.name)}</strong>
+            <span>${c.last ? esc((c.last.sender_id === v.me.id ? "Du: " : "") + c.last.body).slice(0, 60) : "Neues Gespräch"}</span>
+          </span>
+          ${c.unread ? `<span class="badge">${c.unread}</span>` : ""}
+        </button>`;
+    }).join("") : `<p class="empty-small">Noch keine Gespräche.</p>`;
+  }
+
+  function renderThread() {
+    const box = document.getElementById("thread");
+    if (!active) {
+      box.innerHTML = `<p class="empty">Wähle links ein Gespräch oder schreib einem Mitglied.</p>`;
+      return;
+    }
+    const p = people.get(active) || { name: "Mitglied", headline: "" };
+    const thread = messages.filter((m) => partnerOf(m) === active)
+      .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    box.innerHTML = `
+      <header class="thread-head">
+        <button type="button" class="thread-back" aria-label="Zurück zur Liste">←</button>
+        ${avatar(p.name, "avatar-sm")}
+        <div><strong>${esc(p.name)}</strong><span>${esc(p.headline || "")}</span></div>
+      </header>
+      <div class="thread-messages" id="thread-messages">
+        ${thread.length ? thread.map((m) => `
+          <div class="bubble ${m.sender_id === v.me.id ? "mine" : ""}">
+            <div>${richText(m.body)}</div>
+            <time>${timeAgo(m.created_at)}</time>
+          </div>`).join("") : `<p class="empty-small">Schreib die erste Nachricht – stell dich kurz vor.</p>`}
+      </div>
+      <form class="thread-form" id="thread-form" novalidate>
+        <textarea name="body" rows="2" maxlength="2000" placeholder="Nachricht schreiben …" aria-label="Nachricht"></textarea>
+        <button class="btn btn-small" type="submit">Senden</button>
+      </form>
+      <p class="form-status" id="thread-status" role="status" aria-live="polite"></p>`;
+    const list = document.getElementById("thread-messages");
+    list.scrollTop = list.scrollHeight;
+    document.getElementById("inbox").classList.add("show-thread");
+  }
+
+  async function ensurePeople(ids) {
+    const missing = [...new Set(ids)].filter((id) => !people.has(id));
+    if (!missing.length) return;
+    const rows = unwrap(await sb.from("profiles").select("id, name, headline").in("id", missing));
+    rows.forEach((r) => people.set(r.id, r));
+  }
+
+  async function markRead(partner) {
+    const unread = messages.filter((m) => m.sender_id === partner && m.recipient_id === v.me.id && !m.read_at);
+    if (!unread.length) return;
+    const now = new Date().toISOString();
+    await sb.from("messages").update({ read_at: now }).in("id", unread.map((m) => m.id));
+    unread.forEach((m) => (m.read_at = now));
+    const left = messages.filter((m) => m.recipient_id === v.me.id && !m.read_at).length;
+    const link = document.querySelector("[data-messages]");
+    if (link) link.innerHTML = left ? `Nachrichten <span class="badge">${left}</span>` : "Nachrichten";
+  }
+
+  async function open(partner) {
+    active = partner;
+    await ensurePeople([partner]);
+    renderList();
+    renderThread();
+    await markRead(partner);
+    renderList();
+    history.replaceState(null, "", `nachrichten?an=${partner}`);
+  }
+
+  document.getElementById("conversations").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-partner]");
+    if (b) open(b.dataset.partner);
+  });
+
+  document.getElementById("new-chat").addEventListener("change", (e) => {
+    if (e.target.value) open(e.target.value);
+    e.target.value = "";
+  });
+
+  document.getElementById("thread").addEventListener("click", (e) => {
+    if (e.target.closest(".thread-back")) document.getElementById("inbox").classList.remove("show-thread");
+  });
+
+  document.getElementById("thread").addEventListener("submit", async (e) => {
+    const form = e.target.closest("#thread-form");
+    if (!form) return;
+    e.preventDefault();
+    const body = form.elements.body.value.trim();
+    if (!body) return;
+    const btn = form.querySelector("button");
+    btn.disabled = true;
+    try {
+      const [msg] = unwrap(await sb.from("messages").insert({ recipient_id: active, body }).select());
+      messages.push(msg);
+      renderList();
+      renderThread();
+      document.querySelector("#thread-form textarea").focus();
+    } catch (err) {
+      setStatus(document.getElementById("thread-status"), friendlyError(err), "error");
+      btn.disabled = false;
+    }
+  });
+
+  // Enter sendet, Shift+Enter macht eine neue Zeile
+  document.getElementById("thread").addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey && e.target.matches("#thread-form textarea")) {
+      e.preventDefault();
+      e.target.form.requestSubmit();
+    }
+  });
+
+  (async () => {
+    v = await viewer();
+    if (!v.me) { location.href = "login"; return; }
+    if (!v.isMember) {
+      document.getElementById("notice").innerHTML = accessNotice(v, "Nachrichten schreiben");
+      return;
+    }
+    document.getElementById("inbox").hidden = false;
+
+    // Alle freigeschalteten Mitglieder für "Neue Nachricht"
+    const members = unwrap(await sb.from("profiles").select("id, name, headline").eq("status", "approved").order("name"));
+    members.forEach((m) => people.set(m.id, m));
+    document.getElementById("new-chat").insertAdjacentHTML("beforeend",
+      members.filter((m) => m.id !== v.me.id).map((m) => `<option value="${m.id}">${esc(m.name || "Mitglied")}</option>`).join(""));
+
+    messages = unwrap(await sb.from("messages").select("*")
+      .or(`sender_id.eq.${v.me.id},recipient_id.eq.${v.me.id}`)
+      .order("created_at", { ascending: false }).limit(1000));
+    await ensurePeople(messages.map(partnerOf));
+
+    const target = new URLSearchParams(location.search).get("an");
+    if (target && target !== v.me.id) await open(target);
+    else renderList();
+
+    // Live: neue Nachrichten an mich sofort anzeigen
+    sb.channel("inbox")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `recipient_id=eq.${v.me.id}` }, async ({ new: msg }) => {
+        if (messages.some((m) => m.id === msg.id)) return;
+        messages.push(msg);
+        await ensurePeople([msg.sender_id]);
+        if (active === msg.sender_id) { renderThread(); await markRead(active); }
+        renderList();
+      })
+      .subscribe();
+  })();
+</script>
+</body>
+</html>

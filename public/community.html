@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Community – Xyntal</title>
+  <meta name="description" content="Die Xyntal-Community: Gründer und Selbstständige aus Regensburg teilen Fragen, Fortschritte und Erfolge.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%237B84FF'/%3E%3Cstop offset='1' stop-color='%23A68BFF'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='url(%23g)'/%3E%3Ctext x='16' y='22.5' font-family='Arial' font-size='18' font-weight='700' fill='%230C0D11' text-anchor='middle'%3EX%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="logo" href="./" aria-label="Xyntal Startseite"><span class="logo-mark" aria-hidden="true"><span>X</span></span>Xyntal</a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="main-nav">Menü</button>
+    <nav class="nav-links" id="main-nav" aria-label="Hauptnavigation">
+      <a class="hide-sm" href="community">Community</a>
+      <a class="hide-sm" href="boerse">Börse</a>
+      <a class="hide-sm" href="mitglieder">Mitglieder</a>
+      <a class="hide-sm" href="nachrichten" data-messages hidden>Nachrichten</a>
+      <a class="hide-sm" href="login" data-account>Login</a>
+      <a class="btn btn-small" href="mitglied-werden">Kostenlos starten</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="page-head">
+    <div class="wrap">
+      <div class="eyebrow">Community</div>
+      <h1>Was die Community <em>bewegt.</em></h1>
+      <p>Fragen, Fortschritte, Erfolge – teile, woran du arbeitest, und hol dir Feedback von Leuten, die genauso bauen wie du.</p>
+    </div>
+  </section>
+
+  <section class="page-body">
+    <div class="wrap narrow">
+      <div id="notice"></div>
+
+      <form id="composer" class="composer dark-form" hidden novalidate>
+        <div class="composer-head">
+          <div id="composer-avatar"></div>
+          <div class="kind-picker" role="radiogroup" aria-label="Art des Beitrags">
+            <label><input type="radio" name="kind" value="update" checked><span>Update</span></label>
+            <label><input type="radio" name="kind" value="frage"><span>Frage</span></label>
+            <label><input type="radio" name="kind" value="erfolg"><span>Erfolg</span></label>
+          </div>
+        </div>
+        <textarea name="body" maxlength="3000" placeholder="Woran arbeitest du gerade? Wobei brauchst du Hilfe?" required></textarea>
+        <div class="composer-foot">
+          <label class="check"><input type="checkbox" name="is_public"><span>Auch Gästen zeigen</span></label>
+          <button class="btn" type="submit">Teilen</button>
+        </div>
+        <p class="form-status" id="composer-status" role="status" aria-live="polite"></p>
+      </form>
+
+      <div class="feed-filter" role="tablist" aria-label="Beiträge filtern">
+        <button type="button" data-filter="" aria-selected="true">Alle</button>
+        <button type="button" data-filter="frage" aria-selected="false">Fragen</button>
+        <button type="button" data-filter="erfolg" aria-selected="false">Erfolge</button>
+        <button type="button" data-filter="update" aria-selected="false">Updates</button>
+      </div>
+
+      <div id="feed" class="feed"><p class="empty">Lade Beiträge …</p></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <a class="logo" href="./"><span class="logo-mark" aria-hidden="true"><span>X</span></span>Xyntal</a>
+      <p style="margin: 10px 0 0">Mentoring, Matching &amp; Workspaces für Gründer – aus Regensburg.</p>
+    </div>
+    <nav class="foot-links" aria-label="Fußzeile">
+      <a href="community">Community</a>
+      <a href="boerse">Börse</a>
+      <a href="mitglieder">Mitglieder</a>
+      <a href="impressum">Impressum</a>
+      <a href="impressum#datenschutz">Datenschutz</a>
+    </nav>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+  const KIND = { update: "Update", frage: "Frage", erfolg: "Erfolg" };
+  let v = { me: null, isMember: false, isAdmin: false };
+  let posts = [];
+  let liked = new Set();
+  let filter = "";
+
+  function postHtml(p) {
+    const author = p.author || { name: "Mitglied", headline: "" };
+    const mine = v.me && p.author_id === v.me.id;
+    const canDelete = mine || v.isAdmin;
+    const canMessage = v.isMember && !mine && p.author;
+    return `
+      <article class="post" data-id="${p.id}">
+        <header class="post-head">
+          ${avatar(author.name)}
+          <div class="post-meta">
+            <strong>${esc(author.name)}</strong>
+            <span>${esc(author.headline || "")}</span>
+          </div>
+          <span class="tag tag-${p.kind}">${KIND[p.kind]}</span>
+        </header>
+        <div class="post-body">${richText(p.body)}</div>
+        <footer class="post-foot">
+          <span class="post-time">${timeAgo(p.created_at)}${p.is_public ? " · öffentlich" : ""}</span>
+          <div class="post-actions">
+            ${v.isMember ? `<button type="button" data-act="like" class="${liked.has(p.id) ? "active" : ""}" aria-pressed="${liked.has(p.id)}">♥ <span>${p.like_count}</span></button>` : `<span class="count">♥ ${p.like_count}</span>`}
+            ${v.isMember ? `<button type="button" data-act="comments">Kommentare (${p.comment_count})</button>` : `<span class="count">${p.comment_count} Kommentare</span>`}
+            ${canMessage ? `<a href="nachrichten?an=${p.author_id}">Nachricht</a>` : ""}
+            ${canDelete ? `<button type="button" data-act="delete">Löschen</button>` : ""}
+          </div>
+        </footer>
+        <div class="comments" hidden></div>
+      </article>`;
+  }
+
+  function render() {
+    const list = posts.filter((p) => !filter || p.kind === filter);
+    document.getElementById("feed").innerHTML = list.length
+      ? list.map(postHtml).join("")
+      : `<p class="empty">${filter ? "Hier ist noch nichts." : "Noch keine Beiträge – mach den Anfang!"}</p>`;
+  }
+
+  async function load() {
+    try {
+      posts = unwrap(await sb.from("posts")
+        .select("id, kind, body, is_public, like_count, comment_count, created_at, author_id, author:profiles!posts_author_id_fkey(id, name, headline)")
+        .order("created_at", { ascending: false }).limit(100));
+      if (v.isMember) {
+        const likes = unwrap(await sb.from("post_likes").select("post_id").eq("user_id", v.me.id));
+        liked = new Set(likes.map((l) => l.post_id));
+      }
+      render();
+    } catch (err) {
+      document.getElementById("feed").innerHTML = `<p class="empty">${esc(friendlyError(err))}</p>`;
+    }
+  }
+
+  async function loadComments(article) {
+    const id = Number(article.dataset.id);
+    const box = article.querySelector(".comments");
+    box.innerHTML = `<p class="empty-small">Lade Kommentare …</p>`;
+    const comments = unwrap(await sb.from("post_comments")
+      .select("id, body, created_at, author_id, author:profiles!post_comments_author_id_fkey(id, name)")
+      .eq("post_id", id).order("created_at"));
+    box.innerHTML = `
+      ${comments.map((c) => `
+        <div class="comment" data-comment="${c.id}">
+          ${avatar(c.author?.name, "avatar-sm")}
+          <div>
+            <div class="comment-meta"><strong>${esc(c.author?.name || "Mitglied")}</strong> · ${timeAgo(c.created_at)}
+              ${c.author_id === v.me.id || v.isAdmin ? `<button type="button" data-act="delete-comment">Löschen</button>` : ""}</div>
+            <div>${richText(c.body)}</div>
+          </div>
+        </div>`).join("")}
+      <form class="comment-form" novalidate>
+        <input type="text" name="body" maxlength="1500" placeholder="Kommentar schreiben …" aria-label="Kommentar">
+        <button class="btn btn-small" type="submit">Senden</button>
+      </form>`;
+  }
+
+  // Beitrag teilen
+  const composer = document.getElementById("composer");
+  composer.addEventListener("submit", (e) => {
+    e.preventDefault();
+    submitWith(composer, document.getElementById("composer-status"), async (data) => {
+      if (!data.body) throw new Error("Schreib erst etwas.");
+      const kind = composer.querySelector('input[name="kind"]:checked').value;
+      unwrap(await sb.from("posts").insert({ kind, body: data.body, is_public: data.is_public }));
+      composer.elements.body.value = "";
+      composer.elements.is_public.checked = false;
+      setStatus(document.getElementById("composer-status"), "");
+      await load();
+    });
+  });
+
+  // Filter
+  document.querySelectorAll("[data-filter]").forEach((b) => b.addEventListener("click", () => {
+    filter = b.dataset.filter;
+    document.querySelectorAll("[data-filter]").forEach((x) => x.setAttribute("aria-selected", x === b));
+    render();
+  }));
+
+  // Aktionen an Beiträgen
+  const feed = document.getElementById("feed");
+  feed.addEventListener("click", async (e) => {
+    const btn = e.target.closest("button[data-act]");
+    if (!btn) return;
+    const article = btn.closest(".post");
+    const id = Number(article.dataset.id);
+    const post = posts.find((p) => p.id === id);
+    try {
+      if (btn.dataset.act === "like") {
+        btn.disabled = true;
+        if (liked.has(id)) {
+          unwrap(await sb.from("post_likes").delete().eq("post_id", id).eq("user_id", v.me.id));
+          liked.delete(id); post.like_count--;
+        } else {
+          unwrap(await sb.from("post_likes").insert({ post_id: id }));
+          liked.add(id); post.like_count++;
+        }
+        btn.classList.toggle("active", liked.has(id));
+        btn.setAttribute("aria-pressed", liked.has(id));
+        btn.querySelector("span").textContent = post.like_count;
+        btn.disabled = false;
+      } else if (btn.dataset.act === "comments") {
+        const box = article.querySelector(".comments");
+        box.hidden = !box.hidden;
+        if (!box.hidden) await loadComments(article);
+      } else if (btn.dataset.act === "delete") {
+        if (!btn.dataset.armed) { btn.dataset.armed = "1"; btn.textContent = "Wirklich löschen?"; return; }
+        unwrap(await sb.from("posts").delete().eq("id", id));
+        posts = posts.filter((p) => p.id !== id);
+        render();
+      } else if (btn.dataset.act === "delete-comment") {
+        const cid = Number(btn.closest("[data-comment]").dataset.comment);
+        unwrap(await sb.from("post_comments").delete().eq("id", cid));
+        post.comment_count--;
+        article.querySelector('[data-act="comments"]').textContent = `Kommentare (${post.comment_count})`;
+        await loadComments(article);
+      }
+    } catch (err) {
+      btn.disabled = false;
+      alertIn(article, friendlyError(err));
+    }
+  });
+
+  // Kommentar senden
+  feed.addEventListener("submit", async (e) => {
+    const form = e.target.closest(".comment-form");
+    if (!form) return;
+    e.preventDefault();
+    const article = form.closest(".post");
+    const id = Number(article.dataset.id);
+    const body = form.elements.body.value.trim();
+    if (!body) return;
+    try {
+      form.querySelector("button").disabled = true;
+      unwrap(await sb.from("post_comments").insert({ post_id: id, body }));
+      const post = posts.find((p) => p.id === id);
+      post.comment_count++;
+      article.querySelector('[data-act="comments"]').textContent = `Kommentare (${post.comment_count})`;
+      await loadComments(article);
+      article.querySelector(".comment-form input").focus();
+    } catch (err) {
+      form.querySelector("button").disabled = false;
+      alertIn(article, friendlyError(err));
+    }
+  });
+
+  function alertIn(article, text) {
+    article.querySelector(".post-error")?.remove();
+    article.insertAdjacentHTML("beforeend", `<p class="post-error">${esc(text)}</p>`);
+  }
+
+  (async () => {
+    v = await viewer();
+    document.getElementById("notice").innerHTML = accessNotice(v, "Beiträge schreiben, kommentieren und liken");
+    if (v.isMember) {
+      composer.hidden = false;
+      document.getElementById("composer-avatar").innerHTML = avatar(v.me.name);
+    }
+    await load();
+  })();
+</script>
+</body>
+</html>

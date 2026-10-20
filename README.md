@@ -1,0 +1,69 @@
+# Xyntal – Website
+
+Website des Gründer-Clubs Xyntal in Regensburg mit Mitgliederprofilen, Newsletter und Anmeldung zu Treffen.
+Daten und Login laufen über **Supabase** (Projekt „Xyntal“, Organisation „noxi“).
+
+## Lokal ansehen
+
+```sh
+python3 server.py
+```
+
+Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `public/` aus.
+
+## Aufbau
+
+| Datei / Ordner | Inhalt |
+|---|---|
+| `public/` | Die komplette Website (HTML, CSS, JS) – das ist alles, was online muss |
+| `public/config.js` | Supabase-Adresse und öffentlicher Schlüssel |
+| `supabase/schema.sql` | Datenbank: Tabellen, Zugriffsregeln, Funktionen (bereits ausgeführt) |
+| `supabase/002_login_methods.sql` | Ergänzung für Google/Apple/LinkedIn/Handy-Login (bereits ausgeführt) |
+| `supabase/003_community.sql` | Community: Feed, Kommentare, Likes, Börse, Direktnachrichten (bereits ausgeführt) |
+| `ANMELDUNG-EINRICHTEN.md` | Anleitung: Google, Apple, LinkedIn und SMS in Supabase einschalten |
+
+## Seiten
+
+| Adresse | Inhalt |
+|---|---|
+| `/` | Startseite mit Treffen-Anmeldung und Newsletter |
+| `/mitglied-werden` | Konto und Profil anlegen (mit E-Mail-Bestätigung) |
+| `/login` | Einloggen per E-Mail, Google, Apple, LinkedIn oder Handynummer, „Passwort vergessen?“ |
+| `/passwort-neu` | Neues Passwort setzen (Link aus der E-Mail) |
+| `/profil` | Profil bearbeiten, Passwort ändern, Konto löschen |
+| `/community` | Feed: Updates, Fragen, Erfolge mit Kommentaren und Likes (Gäste sehen nur öffentliche Beiträge) |
+| `/boerse` | Gesuche & Angebote mit Kontaktaufnahme (Gäste sehen nur öffentliche Einträge) |
+| `/nachrichten` | Direktnachrichten zwischen Mitgliedern, mit Live-Updates |
+| `/mitglieder` | Freigeschaltete Profile (Gäste sehen nur öffentliche) |
+| `/admin` | Mitglieder freischalten, Anmeldungen & Newsletter (CSV), nächstes Treffen eintragen |
+
+## Admin werden
+
+1. Auf `/mitglied-werden` ein Konto anlegen und die E-Mail bestätigen.
+2. Im Supabase-Dashboard → SQL Editor ausführen:
+
+```sql
+update public.profiles
+set is_admin = true, status = 'approved'
+where id = (select id from auth.users where email = 'deine@email.de');
+```
+
+## Online stellen
+
+Den Ordner `public/` bei Netlify, Vercel oder Cloudflare Pages hochladen (kostenlos, mit HTTPS).
+Danach in Supabase unter **Authentication → URL Configuration** die Site URL auf die echte Domain setzen
+und `https://deine-domain.de/**` als Redirect URL ergänzen.
+
+## Wichtig
+
+- Den **secret / service_role key** von Supabase nie in die Website einbauen.
+- Der eingebaute Mailversand von Supabase ist nur zum Testen gedacht: wenige Mails pro Stunde und
+  laut Supabase nur an Mitglieder deines Supabase-Teams. Vor dem Start einen eigenen Mail-Dienst
+  (z. B. Brevo, Resend) unter **Authentication → Emails → SMTP Settings** eintragen.
+
+## Noch offen
+
+- Foto als `public/nico.jpg` ablegen und in `public/index.html` einbinden (Kommentar im Abschnitt „Wer steckt dahinter?“)
+- Instagram- und LinkedIn-Links im Footer von `public/index.html`
+- Impressum und vollständige Datenschutzerklärung in `public/impressum.html` (Supabase als Dienstleister nennen)
+- Newsletter versenden: Adressen im Admin als CSV exportieren und z. B. in Brevo oder MailerLite importieren
