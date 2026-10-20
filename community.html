@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
 
@@ -87,9 +87,10 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
-<script src="config.js?v=3"></script>
-<script src="app.js?v=3"></script>
-<script src="effects.js?v=3"></script>
+<script src="config.js?v=4"></script>
+<script src="app.js?v=4"></script>
+<script src="notifications.js?v=4"></script>
+<script src="effects.js?v=4"></script>
 <script>
   const KIND = { update: "Update", frage: "Frage", erfolg: "Erfolg" };
   let v = { me: null, isMember: false, isAdmin: false };
@@ -103,7 +104,7 @@
     const canDelete = mine || v.isAdmin;
     const canMessage = v.isMember && !mine && p.author;
     return `
-      <article class="post" data-id="${p.id}">
+      <article class="post" id="beitrag-${p.id}" tabindex="-1" data-id="${p.id}">
         <header class="post-head">
           ${avatar(author.name)}
           <div class="post-meta">
@@ -133,16 +134,33 @@
       : `<p class="empty">${filter ? "Hier ist noch nichts." : "Noch keine Beiträge – mach den Anfang!"}</p>`;
   }
 
+  let linkedPostOpened = false;
   async function load() {
     try {
       posts = unwrap(await sb.from("posts")
         .select("id, kind, body, is_public, like_count, comment_count, created_at, author_id, author:profiles!posts_author_id_fkey(id, name, headline)")
         .order("created_at", { ascending: false }).limit(100));
+      const target = new URLSearchParams(location.search).get("beitrag");
+      if (target && /^\d+$/.test(target) && !posts.some(p => String(p.id) === target)) {
+        const linked = unwrap(await sb.from("posts")
+          .select("id, kind, body, is_public, like_count, comment_count, created_at, author_id, author:profiles!posts_author_id_fkey(id, name, headline)")
+          .eq("id", target).maybeSingle());
+        if (linked) posts.unshift(linked);
+      }
       if (v.isMember) {
         const likes = unwrap(await sb.from("post_likes").select("post_id").eq("user_id", v.me.id));
         liked = new Set(likes.map((l) => l.post_id));
       }
       render();
+      if (target && /^\d+$/.test(target) && !linkedPostOpened) {
+        linkedPostOpened = true;
+        const article = document.getElementById(`beitrag-${target}`);
+        if (article) {
+          if (v.isMember) { article.querySelector(".comments").hidden = false; await loadComments(article); }
+          article.focus({ preventScroll: true });
+          article.scrollIntoView({ block: "center", behavior: "instant" });
+        } else document.getElementById("notice").insertAdjacentHTML("beforeend", '<div class="notice">Dieser Beitrag ist nicht mehr verfügbar oder für dich nicht sichtbar.</div>');
+      }
     } catch (err) {
       document.getElementById("feed").innerHTML = `<p class="empty">${esc(friendlyError(err))}</p>`;
     }
