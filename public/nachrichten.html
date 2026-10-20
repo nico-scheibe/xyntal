@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=4">
+  <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
 
@@ -73,10 +73,11 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
-<script src="config.js?v=4"></script>
-<script src="app.js?v=4"></script>
-<script src="notifications.js?v=4"></script>
-<script src="effects.js?v=4"></script>
+<script src="config.js?v=5"></script>
+<script src="app.js?v=5"></script>
+<script src="avatars.js?v=5"></script>
+<script src="notifications.js?v=5"></script>
+<script src="effects.js?v=5"></script>
 <script>
   let v = { me: null, isMember: false };
   let messages = [];          // alle eigenen Nachrichten (gesendet + empfangen)
@@ -104,7 +105,7 @@
       const p = people.get(c.partner) || { name: "Mitglied" };
       return `
         <button type="button" class="conv ${c.partner === active ? "active" : ""}" data-partner="${c.partner}">
-          ${avatar(p.name, "avatar-sm")}
+          ${avatar(p.name, "avatar-sm", p.avatar_path)}
           <span class="conv-text">
             <strong>${esc(p.name)}</strong>
             <span>${c.last ? esc((c.last.sender_id === v.me.id ? "Du: " : "") + c.last.body).slice(0, 60) : "Neues Gespräch"}</span>
@@ -126,7 +127,7 @@
     box.innerHTML = `
       <header class="thread-head">
         <button type="button" class="thread-back" aria-label="Zurück zur Liste">←</button>
-        ${avatar(p.name, "avatar-sm")}
+        ${avatar(p.name, "avatar-sm", p.avatar_path)}
         <div><strong>${esc(p.name)}</strong><span>${esc(p.headline || "")}</span></div>
       </header>
       <div class="thread-messages" id="thread-messages">
@@ -149,7 +150,7 @@
   async function ensurePeople(ids) {
     const missing = [...new Set(ids)].filter((id) => !people.has(id));
     if (!missing.length) return;
-    const rows = unwrap(await sb.from("profiles").select("id, name, headline").in("id", missing));
+    const rows = unwrap(await sb.from("profiles").select("id, name, headline, avatar_path").in("id", missing));
     rows.forEach((r) => people.set(r.id, r));
   }
 
@@ -226,7 +227,7 @@
     document.getElementById("inbox").hidden = false;
 
     // Alle freigeschalteten Mitglieder für "Neue Nachricht"
-    const members = unwrap(await sb.from("profiles").select("id, name, headline").eq("status", "approved").order("name"));
+    const members = unwrap(await sb.from("profiles").select("id, name, headline, avatar_path").eq("status", "approved").order("name"));
     members.forEach((m) => people.set(m.id, m));
     document.getElementById("new-chat").insertAdjacentHTML("beforeend",
       members.filter((m) => m.id !== v.me.id).map((m) => `<option value="${m.id}">${esc(m.name || "Mitglied")}</option>`).join(""));

@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=4">
+  <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
 
@@ -49,7 +49,7 @@
     <p>Ich speichere nur die Daten, die du selbst angibst:</p>
     <ul>
       <li><strong>Anmeldung zu einem Treffen:</strong> Name, E-Mail und woran du arbeitest – zur Organisation der Treffen und um dich persönlich zu kontaktieren.</li>
-      <li><strong>Mitgliedschaft:</strong> Name, E-Mail, Passwort (nur verschlüsselt gespeichert) und deine Profilangaben. Dein Profil sehen freigeschaltete Mitglieder; öffentlich erscheint es nur, wenn du das ausdrücklich erlaubst. Deine E-Mail-Adresse ist nie für andere sichtbar.</li>
+      <li><strong>Mitgliedschaft:</strong> Name, E-Mail, Passwort (nur verschlüsselt gespeichert) und deine Profilangaben. Dein Profil sehen freigeschaltete Mitglieder; öffentlich erscheint es nur, wenn du das ausdrücklich erlaubst. Deine E-Mail-Adresse ist nie für andere sichtbar. Optional kannst du ein Profilbild hochladen. Es wird auf 512 × 512 Pixel verkleinert und in einem privaten Supabase-Speicher abgelegt. Für den Zugriff gelten dieselben Sichtbarkeitsregeln wie für dein Profil. Du kannst das Bild im Profil ersetzen oder entfernen.</li>
       <li><strong>Newsletter:</strong> deine E-Mail-Adresse, um dir einmal im Monat Neuigkeiten zu schicken. Du kannst dich jederzeit abmelden.</li>
     </ul>
     <p>Gespeichert werden die Daten bei Supabase (Server in der EU, Irland). Für den Login speichert dein Browser technisch notwendige Anmeldedaten. Es gibt kein Tracking und keine Werbe-Cookies. Die Daten werden nicht an Dritte weitergegeben. Du kannst dein Konto in deinem Profil jederzeit selbst löschen und per E-Mail Auskunft, Berichtigung oder Löschung verlangen.</p>
@@ -58,9 +58,10 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
-<script src="config.js?v=4"></script>
-<script src="app.js?v=4"></script>
-<script src="notifications.js?v=4"></script>
-<script src="effects.js?v=4"></script>
+<script src="config.js?v=5"></script>
+<script src="app.js?v=5"></script>
+<script src="avatars.js?v=5"></script>
+<script src="notifications.js?v=5"></script>
+<script src="effects.js?v=5"></script>
 </body>
 </html>

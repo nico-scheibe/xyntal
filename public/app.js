@@ -9,6 +9,9 @@ const PROFILE_FIELDS = ["name", "headline", "about", "phase", "category", "offer
 function friendlyError(err) {
   const msg = (err && (err.message || err.error_description)) || String(err || "");
   const map = [
+    [/bucket not found/i, "Der Bildspeicher ist noch nicht eingerichtet. Bitte versuch es später erneut."],
+    [/payload too large|maximum allowed size|exceeded.*size/i, "Das Bild ist zu groß. Bitte wähle eine kleinere Datei."],
+    [/mime type.*not supported|invalid.*mime/i, "Dieses Bildformat wird nicht unterstützt. Bitte wähle JPG, PNG oder WebP."],
     [/invalid login credentials/i, "E-Mail oder Passwort stimmt nicht."],
     [/email not confirmed/i, "Bitte bestätige zuerst deine E-Mail-Adresse – schau in dein Postfach."],
     [/user already registered|already been registered/i, "Mit dieser E-Mail gibt es schon ein Konto. Melde dich einfach an."],
@@ -116,7 +119,7 @@ function memberCard(m, opts = {}) {
   return `
     <article class="member">
       <div class="member-head">
-        ${avatar(m.name)}
+        ${avatar(m.name, "", m.avatar_path)}
         <div>
           <h3>${esc(m.name)}</h3>
           <p class="member-headline">${esc(m.headline)}</p>
@@ -293,8 +296,9 @@ function avatarTone(name) {
   return "av-" + ((h % 6) + 1);
 }
 
-function avatar(name, cls = "") {
-  return `<div class="avatar ${avatarTone(name)} ${cls}" aria-hidden="true">${esc(initials(name))}</div>`;
+function avatar(name, cls = "", path = "") {
+  const safePath = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.jpg$/.test(path || "") ? path : "";
+  return `<div class="avatar ${avatarTone(name)} ${esc(cls)}" ${safePath ? `data-avatar-path="${esc(safePath)}"` : ""} aria-hidden="true"><span>${esc(initials(name))}</span></div>`;
 }
 
 // Wer schaut gerade? { me, isMember, isAdmin }

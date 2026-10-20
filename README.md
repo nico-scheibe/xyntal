@@ -21,6 +21,7 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 | `supabase/002_login_methods.sql` | Ergänzung für Google/Apple/LinkedIn/Handy-Login (bereits ausgeführt) |
 | `supabase/003_community.sql` | Community: Feed, Kommentare, Likes, Börse, Direktnachrichten (bereits ausgeführt) |
 | `supabase/004_notifications.sql` | Benachrichtigungen mit RLS und Triggern; nach 003 im SQL Editor ausführen |
+| `supabase/005_profile_avatars.sql` | Privater Profilbild-Speicher und Sichtbarkeitsregeln; am 20.10.2026 ausgeführt |
 | `ANMELDUNG-EINRICHTEN.md` | Anleitung: Brevo-SMTP einrichten; Google, Apple, LinkedIn und SMS einschalten |
 
 ## Seiten
@@ -113,3 +114,41 @@ einer Passwort-Reset-Mail vom Betreiber bestätigt. Eine Neuregistrierung mit
 Bestätigung und das vollständige Zurücksetzen eines Passworts sind separat noch
 zu prüfen. Die Gmail-Absenderadresse ist bei Brevo verifiziert; eine eigene
 Absenderdomain ist noch nicht eingerichtet.
+
+## Profilbilder
+
+Unter **Mein Profil → Dein Profilbild** ein JPG, PNG oder WebP bis 8 MB wählen,
+den mittigen quadratischen Ausschnitt prüfen und mit **Bild speichern** hochladen.
+Die Website kodiert das Bild neu als JPEG (512 × 512 Pixel, ohne ursprüngliche
+Dateimetadaten). Der private Storage-Bucket `avatars` akzeptiert nur JPEG bis 1 MB.
+Die Website nutzt Downloads mit RLS und lokale Blob-URLs, keine öffentlichen
+Storage-URLs oder weitergebbaren Signed URLs. Bereits heruntergeladene Bilder
+lassen sich beim Empfänger nicht nachträglich zurückholen.
+
+`005_profile_avatars.sql` wurde am 20.10.2026 im Xyntal-Projekt ausgeführt;
+Bucket-Einstellungen, RLS, Policies und Spaltenrechte wurden per SQL geprüft.
+Öffentliche freigeschaltete Profile haben öffentlich sichtbare Bilder. Bei
+privaten Profilen dürfen nur freigeschaltete Mitglieder, der Eigentümer und
+Admins zugreifen. Nicht freigeschaltete Nutzer können ihr eigenes Bild bearbeiten.
+Eigene, nicht mehr verknüpfte Uploads bleiben ausschließlich dem Eigentümer und
+Admins zugänglich. Jeder Upload bekommt einen neuen Dateinamen; Überschreiben
+ist nicht erlaubt. Fehlerhafte oder nicht erreichbare Bilder zeigen Initialen.
+
+Ersetzen und Entfernen räumt die alte Datei über die Storage-API auf. Bei einem
+Aufräumfehler bietet der Editor einen erneuten Versuch an. Vor einer Konto-
+oder Admin-Mitgliedslöschung räumt die Website alle Bilder des Mitglieds auf.
+Bei Löschungen direkt im Supabase-Dashboard müssen die Storage-Dateien ebenfalls
+zuerst über Storage entfernt werden; SQL-DELETE auf `storage.objects` löscht
+keine eigentlichen Dateien. Falls ein Kontolöschen nach der Dateibereinigung
+fehlschlägt, bleibt das Konto erhalten, die Bilder sind jedoch bereits entfernt.
+
+Prüfung: Browserabläufe mit lokal simuliertem Speicher (Auswahl, Speichern,
+Ersetzen, Dateiaufräumen, Entfernen, ungültiger Dateityp), Desktop und 375 px,
+keine Konsolenfehler. Ein echtes Nutzerfoto wurde dafür nicht hochgeladen.
+Der Security Advisor zeigte keine Fehler und Warnungen zu bestehenden
+Tabellen/Funktionen, keine zum neuen Profilbild-Speicher.
+
+`tests/avatars.sql` prüft die Rechte in einer **separaten leeren lokalen**
+PostgreSQL-Datenbank mit den Rollen `anon` und `authenticated`:
+`psql -v ON_ERROR_STOP=1 -d AVATAR_TESTDATENBANK -f tests/avatars.sql`.
+Der Test simuliert Storage-Tabellen; niemals im produktiven Projekt ausführen.
