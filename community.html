@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=4">
+  <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
 
@@ -87,10 +87,11 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
-<script src="config.js?v=4"></script>
-<script src="app.js?v=4"></script>
-<script src="notifications.js?v=4"></script>
-<script src="effects.js?v=4"></script>
+<script src="config.js?v=5"></script>
+<script src="app.js?v=5"></script>
+<script src="avatars.js?v=5"></script>
+<script src="notifications.js?v=5"></script>
+<script src="effects.js?v=5"></script>
 <script>
   const KIND = { update: "Update", frage: "Frage", erfolg: "Erfolg" };
   let v = { me: null, isMember: false, isAdmin: false };
@@ -106,7 +107,7 @@
     return `
       <article class="post" id="beitrag-${p.id}" tabindex="-1" data-id="${p.id}">
         <header class="post-head">
-          ${avatar(author.name)}
+          ${avatar(author.name, "", author.avatar_path)}
           <div class="post-meta">
             <strong>${esc(author.name)}</strong>
             <span>${esc(author.headline || "")}</span>
@@ -138,12 +139,12 @@
   async function load() {
     try {
       posts = unwrap(await sb.from("posts")
-        .select("id, kind, body, is_public, like_count, comment_count, created_at, author_id, author:profiles!posts_author_id_fkey(id, name, headline)")
+        .select("id, kind, body, is_public, like_count, comment_count, created_at, author_id, author:profiles!posts_author_id_fkey(id, name, headline, avatar_path)")
         .order("created_at", { ascending: false }).limit(100));
       const target = new URLSearchParams(location.search).get("beitrag");
       if (target && /^\d+$/.test(target) && !posts.some(p => String(p.id) === target)) {
         const linked = unwrap(await sb.from("posts")
-          .select("id, kind, body, is_public, like_count, comment_count, created_at, author_id, author:profiles!posts_author_id_fkey(id, name, headline)")
+          .select("id, kind, body, is_public, like_count, comment_count, created_at, author_id, author:profiles!posts_author_id_fkey(id, name, headline, avatar_path)")
           .eq("id", target).maybeSingle());
         if (linked) posts.unshift(linked);
       }
@@ -171,12 +172,12 @@
     const box = article.querySelector(".comments");
     box.innerHTML = `<p class="empty-small">Lade Kommentare …</p>`;
     const comments = unwrap(await sb.from("post_comments")
-      .select("id, body, created_at, author_id, author:profiles!post_comments_author_id_fkey(id, name)")
+      .select("id, body, created_at, author_id, author:profiles!post_comments_author_id_fkey(id, name, avatar_path)")
       .eq("post_id", id).order("created_at"));
     box.innerHTML = `
       ${comments.map((c) => `
         <div class="comment" data-comment="${c.id}">
-          ${avatar(c.author?.name, "avatar-sm")}
+          ${avatar(c.author?.name, "avatar-sm", c.author?.avatar_path)}
           <div>
             <div class="comment-meta"><strong>${esc(c.author?.name || "Mitglied")}</strong> · ${timeAgo(c.created_at)}
               ${c.author_id === v.me.id || v.isAdmin ? `<button type="button" data-act="delete-comment">Löschen</button>` : ""}</div>
@@ -288,7 +289,7 @@
     document.getElementById("notice").innerHTML = accessNotice(v, "Beiträge schreiben, kommentieren und liken");
     if (v.isMember) {
       composer.hidden = false;
-      document.getElementById("composer-avatar").innerHTML = avatar(v.me.name);
+      document.getElementById("composer-avatar").innerHTML = avatar(v.me.name, "", v.me.avatar_path);
     }
     await load();
   })();

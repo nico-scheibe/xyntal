@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=4">
+  <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
 
@@ -102,10 +102,11 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
-<script src="config.js?v=4"></script>
-<script src="app.js?v=4"></script>
-<script src="notifications.js?v=4"></script>
-<script src="effects.js?v=4"></script>
+<script src="config.js?v=5"></script>
+<script src="app.js?v=5"></script>
+<script src="avatars.js?v=5"></script>
+<script src="notifications.js?v=5"></script>
+<script src="effects.js?v=5"></script>
 <script>
   let v = { me: null, isMember: false, isAdmin: false };
   let listings = [];
@@ -124,7 +125,7 @@
         <h3>${esc(l.title)}</h3>
         ${l.body ? `<p class="listing-body">${richText(l.body)}</p>` : ""}
         <div class="listing-foot">
-          <div class="listing-author">${avatar(author.name, "avatar-sm")}<div><strong>${esc(author.name)}</strong><span>${timeAgo(l.created_at)}${l.is_public ? " · öffentlich" : ""}</span></div></div>
+          <div class="listing-author">${avatar(author.name, "avatar-sm", author.avatar_path)}<div><strong>${esc(author.name)}</strong><span>${timeAgo(l.created_at)}${l.is_public ? " · öffentlich" : ""}</span></div></div>
           <div class="post-actions">
             ${v.isMember && !mine && l.author && !l.closed ? `<a class="btn btn-small" href="nachrichten?an=${l.author_id}">Kontakt aufnehmen</a>` : ""}
             ${mine ? `<button type="button" data-act="toggle">${l.closed ? "Wieder öffnen" : "Als erledigt markieren"}</button>` : ""}
@@ -144,7 +145,7 @@
   async function load() {
     try {
       listings = unwrap(await sb.from("listings")
-        .select("id, type, category, title, body, is_public, closed, created_at, author_id, author:profiles!listings_author_id_fkey(id, name, headline)")
+        .select("id, type, category, title, body, is_public, closed, created_at, author_id, author:profiles!listings_author_id_fkey(id, name, headline, avatar_path)")
         .order("closed").order("created_at", { ascending: false }).limit(200));
       render();
     } catch (err) {

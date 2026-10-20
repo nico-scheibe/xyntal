@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=4">
+  <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
 
@@ -46,6 +46,22 @@
 
   <section class="alt page-body" style="margin-top: 64px">
     <div class="wrap narrow">
+      <form id="avatar-form" class="avatar-editor" novalidate>
+        <h2>Dein Profilbild</h2>
+        <div class="avatar-editor-row"><div data-avatar-preview></div><div>
+          <label for="avatar-file">Bild auswählen</label>
+          <input id="avatar-file" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="avatar-hint">
+          <p class="hint" id="avatar-hint">JPG, PNG oder WebP · bis 8 MB. Dein Bild wird mittig quadratisch zugeschnitten. Sichtbar für dieselben Personen wie dein Profil.</p>
+        </div></div>
+        <div class="btn-row">
+          <button class="btn btn-small" type="submit" data-avatar-save disabled>Bild speichern</button>
+          <button class="btn btn-small btn-ghost" type="button" data-avatar-cancel hidden>Auswahl verwerfen</button>
+          <button class="btn btn-small btn-ghost" type="button" data-avatar-remove disabled>Bild entfernen</button>
+          <button class="btn btn-small btn-ghost" type="button" data-avatar-cleanup hidden>Alte Dateien aufräumen</button>
+        </div>
+        <p class="form-status" role="status" aria-live="polite"></p>
+      </form>
+      <div class="form-divider"></div>
       <form id="profile" novalidate>
         <fieldset>
           <legend>Profil bearbeiten</legend>
@@ -144,10 +160,11 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
-<script src="config.js?v=4"></script>
-<script src="app.js?v=4"></script>
-<script src="notifications.js?v=4"></script>
-<script src="effects.js?v=4"></script>
+<script src="config.js?v=5"></script>
+<script src="app.js?v=5"></script>
+<script src="avatars.js?v=5"></script>
+<script src="notifications.js?v=5"></script>
+<script src="effects.js?v=5"></script>
 <script>
   const form = document.getElementById("profile");
   const status = document.getElementById("status");
@@ -177,6 +194,7 @@
     if (!me) { location.href = "login"; return; }
     fillForm(form, me);
     render(me);
+    setupAvatarEditor(me, updated => { me = updated; render(me); });
   }, 300);
 
   form.addEventListener("submit", (e) => {
@@ -211,6 +229,7 @@
       return;
     }
     try {
+      await deleteMemberAvatars(me.id);
       unwrap(await sb.rpc("delete_my_account"));
       await sb.auth.signOut();
       location.href = "./";
