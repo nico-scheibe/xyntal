@@ -1,4 +1,4 @@
-# Anmeldung mit Google, Apple, LinkedIn und Handynummer einrichten
+# Anmeldung und E-Mail-Versand einrichten
 
 Die Website ist fertig vorbereitet: Sobald ein Anbieter in Supabase eingeschaltet ist, erscheint
 sein Button automatisch auf **/login** und **/mitglied-werden**. Du musst nur die Zugangsdaten beim
@@ -12,6 +12,81 @@ https://rralgrlujoupprwlvoyo.supabase.co/auth/v1/callback
 
 Eingetragen wird alles in Supabase unter
 **Authentication → Sign In / Providers** → Anbieter anklicken → einschalten → Daten einfügen → **Save**.
+
+---
+
+## E-Mail-Bestätigung und Passwort-Reset mit Brevo
+
+**Stand:** Die Website unterstützt beide Abläufe bereits. SMTP ist erst aktiv,
+wenn die folgenden Einstellungen im Dashboard gespeichert und getestet wurden.
+Ein Repository-Update allein schaltet den Versand nicht frei.
+
+### 1. Konto und Absender vorbereiten
+
+1. Ein [Brevo-Konto](https://www.brevo.com/de/) anlegen. Prüfe vor der Auswahl
+   eines Tarifs dessen aktuelle Versandgrenzen; für diesen Schritt keinen kostenpflichtigen Tarif buchen.
+2. In Brevo unter **Einstellungen → Absender, Domains & dedizierte IPs** einen
+   Absender einrichten. Absendername: **Xyntal**. Die Absenderadresse muss dir gehören
+   und von Brevo bestätigt sein.
+3. Wenn du eine eigene Domain hast, diese in Brevo hinzufügen und die dort
+   angezeigten DNS-Einträge bei deinem Domainanbieter setzen. Verwende genau die
+   Werte aus deinem Brevo-Konto. Ohne Domain erst prüfen, welche Absender Brevo
+   für dein Konto zulässt; die GitHub-Pages-Adresse ist keine E-Mail-Domain,
+   deren DNS du verwalten kannst.
+4. In **SMTP & API → SMTP** den angezeigten **SMTP-Login** kopieren und einen
+   **SMTP-Schlüssel** erstellen. Dieser Schlüssel ist das SMTP-Passwort,
+   nicht dein Brevo-Kontopasswort und nicht ein API-Schlüssel.
+
+### 2. In Supabase eintragen
+
+[SMTP-Einstellungen für Xyntal öffnen](https://supabase.com/dashboard/project/rralgrlujoupprwlvoyo/auth/smtp)
+und **Enable custom SMTP** aktivieren:
+
+| Feld | Wert |
+|---|---|
+| Sender email address | Deine in Brevo verifizierte Absenderadresse |
+| Sender name | `Xyntal` |
+| Host | `smtp-relay.brevo.com` |
+| Port number | `587` (STARTTLS) |
+| Username | Der SMTP-Login, den Brevo anzeigt |
+| Password | Dein Brevo-SMTP-Schlüssel |
+| Minimum interval per user | Zunächst `60` Sekunden |
+
+Speichern. SMTP-Schlüssel ausschließlich hier eintragen, niemals in `config.js`,
+Git, Screenshots oder Chat. Unter **Authentication → Rate Limits** die
+Versandgrenzen prüfen und passend zu den verfügbaren Brevo-Kontingenten setzen.
+
+### 3. Weiterleitungen prüfen
+
+Unter **Authentication → URL Configuration**:
+
+- **Site URL:** `https://nico-scheibe.github.io/xyntal/`
+- **Redirect URLs:** `https://nico-scheibe.github.io/xyntal/**`
+- Für lokale Tests zusätzlich: `http://localhost:4173/**`
+
+E-Mail-Bestätigung unter dem E-Mail-Anbieter aktiviert lassen. Link-Tracking
+beim Maildienst für Auth-Mails deaktivieren, falls aktiv: Bestätigungslinks
+sollen unverändert bleiben.
+
+### 4. Versand wirklich testen
+
+1. Auf der Live-Seite ein neues Konto mit einer eigenen Testadresse anlegen,
+   die **nicht** zum Supabase-Team gehört. Nicht die bestehende Admin-Adresse verwenden.
+2. Bestätigungsmail auch im Spamordner suchen, Link öffnen und prüfen, ob
+   das neue Profil erscheint. Das Profil muss zunächst auf Freigabe warten.
+3. Ausloggen, auf **Login → Passwort vergessen?** die Testadresse eintragen.
+   Den neuesten Reset-Link öffnen, neues Passwort setzen und damit einloggen.
+4. In Brevo die Transaktionslogs und in Supabase die Auth-Logs prüfen, wenn
+   keine Mail ankommt. Keine wiederholten Versuche in kurzer Folge auslösen.
+5. Das Testkonto anschließend über sein Profil löschen, wenn es nicht mehr gebraucht wird.
+
+Erst nach beiden erfolgreichen Tests gilt der Mailversand als eingerichtet.
+Typische Fehler: nicht verifizierter Absender, API- statt SMTP-Schlüssel,
+falscher SMTP-Login, nicht aktivierter SMTP-Versand oder erreichte Versandlimits.
+
+Quellen: [Supabase Custom SMTP](https://supabase.com/docs/guides/auth/auth-smtp),
+[Brevo: Supabase-SMTP-Anbindung](https://developers.brevo.com/docs/supabase-smtp-integration),
+[Brevo SMTP](https://help.brevo.com/hc/en-us/articles/7924908994450-Send-transactional-emails-using-Brevo-SMTP).
 
 ---
 

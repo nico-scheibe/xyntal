@@ -20,7 +20,7 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 | `supabase/schema.sql` | Datenbank: Tabellen, Zugriffsregeln, Funktionen (bereits ausgeführt) |
 | `supabase/002_login_methods.sql` | Ergänzung für Google/Apple/LinkedIn/Handy-Login (bereits ausgeführt) |
 | `supabase/003_community.sql` | Community: Feed, Kommentare, Likes, Börse, Direktnachrichten (bereits ausgeführt) |
-| `ANMELDUNG-EINRICHTEN.md` | Anleitung: Google, Apple, LinkedIn und SMS in Supabase einschalten |
+| `ANMELDUNG-EINRICHTEN.md` | Anleitung: Brevo-SMTP einrichten; Google, Apple, LinkedIn und SMS einschalten |
 
 ## Seiten
 
