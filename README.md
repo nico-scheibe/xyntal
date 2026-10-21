@@ -17,6 +17,7 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 |---|---|
 | `public/` | Die komplette Website (HTML, CSS, JS) – das ist alles, was online muss |
 | `public/config.js` | Supabase-Adresse und öffentlicher Schlüssel |
+| `public/landing.css`, `public/landing.js` | Startseite: eigenes Design (Anthrazit + Eisblau) und interaktive Demo mit Beispieldaten, ohne Supabase |
 | `supabase/schema.sql` | Datenbank: Tabellen, Zugriffsregeln, Funktionen (bereits ausgeführt) |
 | `supabase/002_login_methods.sql` | Ergänzung für Google/Apple/LinkedIn/Handy-Login (bereits ausgeführt) |
 | `supabase/003_community.sql` | Community: Feed, Kommentare, Likes, Börse, Direktnachrichten (bereits ausgeführt) |
@@ -29,7 +30,7 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 
 | Adresse | Inhalt |
 |---|---|
-| `/` | Startseite mit den nächsten Treffen und Newsletter |
+| `/` | Startseite: Hero, interaktive Team-Demo (Beispieldaten, nichts wird gespeichert), Geschichte „Idee → Verbindungen → Team → Fortschritt“, Einstieg |
 | `/mitglied-werden` | Konto und Profil anlegen (mit E-Mail-Bestätigung) |
 | `/login` | Einloggen per E-Mail, Google, Apple, LinkedIn oder Handynummer, „Passwort vergessen?“ |
 | `/passwort-neu` | Neues Passwort setzen (Link aus der E-Mail) |
