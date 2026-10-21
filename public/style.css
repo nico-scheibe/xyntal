@@ -1108,4 +1108,7 @@ main section[id] { scroll-margin-top: 64px; }
 .legal-index { display: flex; flex-wrap: wrap; gap: 12px 24px; margin: 28px 0; padding: 18px 0; border-block: 1px solid var(--border); }
 .legal-pending { padding: 16px 20px; border: 1px solid var(--amber); border-radius: var(--r-ctl); color: var(--text-2); }
 .legal-pending strong { color: var(--amber); }
+.newsletter-cta { display: grid; gap: 14px; align-content: center; }
+.newsletter-cta p { margin: 0; color: var(--text-2); }
+.newsletter-cta .btn { justify-self: start; }
 .legal section { padding: 0; }

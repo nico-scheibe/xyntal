@@ -8,13 +8,14 @@
 - Pflichtfeld bei Anmeldung bestätigt Kenntnisnahme der Datenschutzhinweise; freiwillige Veröffentlichung und Newsletter bleiben separat.
 - Alle zwölf Seiten laden Inter, Space Grotesk und JetBrains Mono lokal. 16 WOFF2-Dateien mit Unicode-Subsets, SIL-OFL-Lizenzen und Herkunft in public/fonts. Asset-Version 8.
 - Supabase-JavaScript 2.117.2 lokal in public/vendor; npm-Tarball-Integrität überprüft, Bundle bytegleich zur bisherigen CDN-Datei. Alle zwölf Seiten ohne externe Script-URLs. Keine jsDelivr-Verbindung mehr für die Bibliothek.
+- Newsletter: Brevo-Formular mit verpflichtender Einwilligung und Double-Opt-in. Neue Abonnenten werden erst nach E-Mail-Bestätigung in die separate Brevo-Liste „Xyntal Newsletter – bestätigt“ aufgenommen. Abmeldung erfolgt über den Link in jeder Newsletter-Mail. Die frühere lokale Tabelle bleibt nur als Archiv bestehen.
 
 ## Offen vor einem vollständigen rechtlichen Abschluss
 - Ladungsfähige Anschrift gemäß § 5 DDG fehlt auf ausdrücklichen Nutzerwunsch. Keine Adresse aus anderen Quellen ermitteln oder veröffentlichen.
 - Rechtsform/Firma, Registerangaben, USt-IdNr. sind nicht bestätigt; nicht erfinden. Anwendbarkeit redaktioneller Verantwortlichkeit § 18 Abs. 2 MStV bei entsprechender Ausrichtung klären.
 - Tatsächliche Vertragsparteien, AV-Verträge, Drittlandgarantien, Supabase-Projektregion sowie konkrete Provider-Log-/Backupfristen anhand der Kontoverträge bestätigen. Bisher nicht als abgeschlossen verifiziert.
 - Brevo-Öffnungs-/Klicktracking der Kontomails im Konto prüfen. Auf der Website keine Analytics/Werbetracker; keine pauschale Aussage zu Mailtracking ergänzt.
-- Newsletter hat noch kein Double-Opt-in und keine automatisierte Abmeldung/Versandstrecke; vor Newsletterversand einrichten. Aktuell nur Eintragung, Widerruf per Kontaktadresse; keine Massenmails versendet.
+- Vor dem ersten Newsletterversand: Brevo-Kampagne mit Abmeldelink verwenden und Versand/Abmeldung einmal an einer eigenen Testadresse prüfen. Keine Massenmails versendet.
 - Automatische Löschfristen für alte Zusagen, Alteinträge und abgelehnte Anmeldungen fehlen; aktuelle Aufbewahrung transparent beschrieben. Löschkonzept implementieren, bevor konkrete automatische Fristen zugesichert werden.
 
 ## Quellen

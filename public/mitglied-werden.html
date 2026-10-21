@@ -6,8 +6,8 @@
   <title>Mitglied werden – Xyntal</title>
   <meta name="description" content="Werde Mitglied im Xyntal: Profil anlegen, Gründer und Selbstständige kennenlernen, monatliche Treffen.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%237B84FF'/%3E%3Cstop offset='1' stop-color='%23A68BFF'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='url(%23g)'/%3E%3Ctext x='16' y='22.5' font-family='Arial' font-size='18' font-weight='700' fill='%230C0D11' text-anchor='middle'%3EX%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="fonts/fonts.css?v=8">
-  <link rel="stylesheet" href="style.css?v=8">
+  <link rel="stylesheet" href="fonts/fonts.css?v=9">
+  <link rel="stylesheet" href="style.css?v=9">
 </head>
 <body>
 
@@ -109,10 +109,7 @@
             <input type="checkbox" name="is_public">
             <span>Mein Profil darf öffentlich auf der Website erscheinen. Ohne Haken sehen es nur freigeschaltete Mitglieder. Deine E-Mail-Adresse ist nie sichtbar.</span>
           </label>
-        <label class="check">
-          <input type="checkbox" name="newsletter">
-          <span>Schick mir den monatlichen Newsletter.</span>
-        </label>
+        <p class="hint">Den monatlichen Newsletter kannst du nach der Mitgliedschaft über die Startseite separat mit E-Mail-Bestätigung abonnieren.</p>
         <label class="check">
           <input type="checkbox" name="consent" required>
           <span>Ich habe die Hinweise zur Verarbeitung meiner Angaben für die Mitgliedschaft gelesen. Mehr in der <a class="text-link" href="impressum#datenschutz">Datenschutzerklärung</a>.</span>
@@ -152,12 +149,12 @@
   </div>
 </footer>
 
-<script src="vendor/supabase.js?v=8"></script>
-<script src="config.js?v=8"></script>
-<script src="app.js?v=8"></script>
-<script src="avatars.js?v=8"></script>
-<script src="notifications.js?v=8"></script>
-<script src="effects.js?v=8"></script>
+<script src="vendor/supabase.js?v=9"></script>
+<script src="config.js?v=9"></script>
+<script src="app.js?v=9"></script>
+<script src="avatars.js?v=9"></script>
+<script src="notifications.js?v=9"></script>
+<script src="effects.js?v=9"></script>
 <script>
   const form = document.getElementById("register");
   const status = document.getElementById("status");
@@ -181,7 +178,7 @@
         email: data.email,
         password: data.password,
         options: {
-          data: { ...profileFrom(data), newsletter: data.newsletter },
+          data: profileFrom(data),
           emailRedirectTo: new URL("profil?neu=1", location.href).href,
         },
       }));
