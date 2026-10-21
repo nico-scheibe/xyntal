@@ -14,12 +14,12 @@
     { label: "Startseite", href: "./", glyph: "~", keys: "home start" },
     { label: "Community", href: "community", glyph: "#", keys: "feed beiträge fragen erfolge" },
     { label: "Gesuche & Angebote", href: "boerse", glyph: "⇄", keys: "börse suche biete mitgründer" },
-    { label: "Treffen", href: "events", glyph: "▦", keys: "events termine zusagen veranstaltungen" },
     { label: "Mitglieder", href: "mitglieder", glyph: "@", keys: "profile menschen leute" },
     { label: "Nachrichten", href: "nachrichten", glyph: "✉", keys: "chat dm inbox" },
     { label: "Mein Profil", href: "profil", glyph: "◐", keys: "konto account bearbeiten" },
     { label: "Login", href: "login", glyph: "→", keys: "anmelden einloggen" },
-    { label: "Kostenlos starten", href: "mitglied-werden", glyph: "+", keys: "registrieren mitglied werden konto anlegen" },
+    { label: "Profil anlegen", href: "mitglied-werden", glyph: "+", keys: "registrieren mitglied werden konto anlegen" },
+    { label: "Warteliste", href: "./#warteliste", glyph: "✉", keys: "waitlist newsletter anmelden email" },
     { label: "Impressum & Datenschutz", href: "impressum", glyph: "§", keys: "rechtliches datenschutz" },
   ];
 
@@ -220,15 +220,15 @@
     }
     requestAnimationFrame(frame);
   }
-  if (!still) document.querySelectorAll("[data-scramble]").forEach((el) => {
+  if (!still && !document.body.classList.contains("home")) document.querySelectorAll("[data-scramble]").forEach((el) => {
     if (document.fonts?.ready) document.fonts.ready.then(() => scramble(el)); else scramble(el);
   });
 
   /* ---------------------------------------------------------------
      Scroll-Reveal mit Staffelung innerhalb eines Rasters
      --------------------------------------------------------------- */
-  const revealables = document.querySelectorAll(
-    ".section-head, .feature, .card, .plan, .perk, .list li, .event-info, .event form, .mac, .about, .code, .preview-stage"
+  const revealables = document.body.classList.contains("home") ? [] : document.querySelectorAll(
+    ".section-head, .feature, .card, .plan, .perk, .list li, .rail li, .matrix-cell, .event-info, .event form, .mac, .quote, .code, .preview-stage"
   );
   revealables.forEach((el) => {
     el.classList.add("reveal");

@@ -11,8 +11,8 @@
   <meta property="og:locale" content="de_DE">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23101113'/%3E%3Cpath d='M9 9l14 14' stroke='%23ECEAE4' stroke-width='3.2' stroke-linecap='round'/%3E%3Cpath d='M23 9l-5.2 5.2M14.2 17.8L9 23' stroke='%239BD3EE' stroke-width='3.2' stroke-linecap='round'/%3E%3C/svg%3E">
   <link rel="preload" href="fonts/bricolage-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="fonts/fonts.css?v=10">
-  <link rel="stylesheet" href="landing.css?v=10">
+  <link rel="stylesheet" href="fonts/fonts.css?v=23">
+  <link rel="stylesheet" href="landing.css?v=23">
 </head>
 <body>
 <a class="skip" href="#inhalt">Zum Inhalt springen</a>
@@ -315,6 +315,27 @@
         </a>
       </div>
       <p class="closing-note">Kostenlos. Profil anlegen dauert etwa fünf Minuten. Persönlich kennenlernen kannst du die Community bei unseren <a href="events">Treffen in Regensburg</a>.</p>
+
+      <div class="waitlist" id="warteliste">
+        <div class="waitlist-copy">
+          <h3 class="waitlist-title">Noch nicht so weit?</h3>
+          <p>Trag dich auf die Warteliste ein. Du erfährst als Erstes, wenn Rollen-Vorschläge und Workspaces wie in der Demo verfügbar sind.</p>
+        </div>
+        <form class="waitlist-form" data-waitlist novalidate>
+          <div class="waitlist-row">
+            <label class="sr-only" for="wl-email">E-Mail-Adresse</label>
+            <input id="wl-email" type="email" name="EMAIL" autocomplete="email" inputmode="email" maxlength="254" required placeholder="du@beispiel.de">
+            <button class="btn btn-quiet" type="submit">Eintragen</button>
+          </div>
+          <label class="waitlist-check">
+            <input type="checkbox" name="OPT_IN" value="1" required>
+            <span class="check-box" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7"/></svg></span>
+            <span>Ja, sag mir Bescheid, wenn es losgeht. Abmeldung jederzeit. <a href="impressum#datenschutz">Datenschutz</a></span>
+          </label>
+          <div class="waitlist-hp" aria-hidden="true"><input type="text" name="email_address_check" tabindex="-1" autocomplete="off"></div>
+          <p class="waitlist-status" role="status" aria-live="polite"></p>
+        </form>
+      </div>
     </div>
   </section>
 
@@ -341,7 +362,7 @@
         <h2 class="footer-head">Konto</h2>
         <a href="login">Anmelden</a>
         <a href="mitglied-werden">Mitglied werden</a>
-        <a href="https://67406864.sibforms.com/serve/MUIFAP_vKT3wGvb_oCMmNCfxk9r4kS47ziUcgIjOp7ibD-hlikkWAA_l-Wo4pedNGsTJEc-yCsM1TIj41aX0dzDASKRcDC_ZxNn9envMBdU_zWmo7HHDj-FKtvyCz63RuFRQHleImiTRDarw8DCC1sKXSfU6F-RoppW0XftCBPzMdF-ch3vutYeokCLF5_Fzn5uooz6XScdhsGQS2w==" target="_blank" rel="noopener">Newsletter<span class="sr-only"> (öffnet Brevo-Formular in neuem Tab)</span></a>
+        <a href="#warteliste">Warteliste</a>
       </div>
       <div>
         <h2 class="footer-head">Rechtliches</h2>
@@ -352,6 +373,6 @@
   </div>
 </footer>
 
-<script src="landing.js?v=10" defer></script>
+<script src="landing.js?v=23" defer></script>
 </body>
 </html>
