@@ -4,10 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Gesuche & Angebote – Xyntal</title>
-  <meta name="description" content="Gesuche und Angebote der Xyntal-Community in Regensburg: Mitgründer, Kunden, Know-how und mehr.">
+  <meta name="description" content="Gesuche und Angebote der Xyntal-Community: Mitgründer, Kunden, Know-how und mehr.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23101113'/%3E%3Cpath d='M9 9l14 14' stroke='%23ECEAE4' stroke-width='3.2' stroke-linecap='round'/%3E%3Cpath d='M23 9l-5.2 5.2M14.2 17.8L9 23' stroke='%239BD3EE' stroke-width='3.2' stroke-linecap='round'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="fonts/fonts.css?v=10">
-  <link rel="stylesheet" href="style.css?v=10">
+  <link rel="stylesheet" href="fonts/fonts.css?v=23">
+  <link rel="stylesheet" href="style.css?v=23">
 </head>
 <body>
 
@@ -18,11 +18,10 @@
     <nav class="nav-links" id="main-nav" aria-label="Hauptnavigation">
       <a class="hide-sm" href="community">Community</a>
       <a class="hide-sm" href="boerse">Börse</a>
-      <a class="hide-sm" href="events">Treffen</a>
       <a class="hide-sm" href="mitglieder">Mitglieder</a>
       <a class="hide-sm" href="nachrichten" data-messages hidden>Nachrichten</a>
       <a class="hide-sm" href="login" data-account>Login</a>
-      <a class="btn btn-small" href="mitglied-werden">Kostenlos starten</a>
+      <a class="btn btn-small" href="./#warteliste">Auf die Warteliste</a>
     </nav>
   </div>
 </header>
@@ -32,7 +31,7 @@
     <div class="wrap">
       <div class="eyebrow"><b>xyntal</b> / gesuche &amp; angebote</div>
       <h1>Finde, was dich <em>weiterbringt.</em></h1>
-      <p>Mitgründer, erste Kunden, Know-how oder ein offenes Ohr – sag, was du suchst oder bietest, und die richtigen Leute melden sich.</p>
+      <p>Trag ein, was du suchst oder bietest. Antworten kommen erst, wenn Mitglieder da sind. Bisher gibt es keine Zusagen, auf die du zählen kannst.</p>
     </div>
   </section>
 
@@ -66,7 +65,7 @@
           </label>
         </div>
         <label>Titel
-          <input type="text" name="title" maxlength="120" placeholder="z. B. Suche Mitgründer:in mit Tech-Hintergrund" required>
+          <input type="text" name="title" maxlength="120" placeholder="Suche kreativen Mitgründer:in" required>
         </label>
         <label>Beschreibung
           <textarea name="body" maxlength="2000" placeholder="Worum geht es genau? Was bringst du mit, was erwartest du?"></textarea>
@@ -88,12 +87,11 @@
   <div class="wrap">
     <div>
       <a class="logo" href="./"><svg class="logo-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14" class="bm-a"/><path d="M19 5l-5.3 5.3M10.3 13.7L5 19" class="bm-b"/></svg>xyntal</a>
-      <p style="margin: 10px 0 0">Mentoring, Matching &amp; Workspaces für Gründer – aus Regensburg.</p>
+      <p style="margin: 10px 0 0">Für Gründer und Leute, die gründen wollen.</p>
     </div>
     <nav class="foot-links" aria-label="Fußzeile">
       <a href="community">Community</a>
       <a href="boerse">Börse</a>
-      <a href="events">Treffen</a>
       <a href="mitglieder">Mitglieder</a>
       <a href="impressum">Impressum</a>
       <a href="impressum#datenschutz">Datenschutz</a>
@@ -101,20 +99,27 @@
   </div>
 </footer>
 
-<script src="vendor/supabase.js?v=10"></script>
-<script src="config.js?v=10"></script>
-<script src="app.js?v=10"></script>
-<script src="avatars.js?v=10"></script>
-<script src="notifications.js?v=10"></script>
-<script src="effects.js?v=10"></script>
+<script src="vendor/supabase.js?v=23"></script>
+<script src="config.js?v=23"></script>
+<script src="app.js?v=23"></script>
+<script src="avatars.js?v=23"></script>
+<script src="notifications.js?v=23"></script>
+<script src="effects.js?v=23"></script>
 <script>
   let v = { me: null, isMember: false, isAdmin: false };
   let listings = [];
+  let liked = new Set();
   let filter = "";
+  let likesReady = true;
 
   function listingHtml(l) {
     const author = l.author || { name: "Mitglied", headline: "" };
     const mine = v.me && l.author_id === v.me.id;
+    const count = Number(l.like_count) || 0;
+    const react = !likesReady ? ""
+      : v.isMember
+        ? `<button type="button" data-act="like" class="${liked.has(l.id) ? "active" : ""}" aria-pressed="${liked.has(l.id)}">♥ <span>${count}</span></button>`
+        : `<span class="count">♥ ${count}</span>`;
     return `
       <article class="listing ${l.closed ? "closed" : ""}" data-id="${l.id}">
         <div class="listing-top">
@@ -127,6 +132,7 @@
         <div class="listing-foot">
           <div class="listing-author">${avatar(author.name, "avatar-sm", author.avatar_path)}<div><strong>${esc(author.name)}</strong><span>${timeAgo(l.created_at)}${l.is_public ? " · öffentlich" : ""}</span></div></div>
           <div class="post-actions">
+            ${react}
             ${v.isMember && !mine && l.author && !l.closed ? `<a class="btn btn-small" href="nachrichten?an=${l.author_id}">Kontakt aufnehmen</a>` : ""}
             ${mine ? `<button type="button" data-act="toggle">${l.closed ? "Wieder öffnen" : "Als erledigt markieren"}</button>` : ""}
             ${mine || v.isAdmin ? `<button type="button" data-act="delete">Löschen</button>` : ""}
@@ -145,10 +151,32 @@
   async function load() {
     try {
       listings = unwrap(await sb.from("listings")
-        .select("id, type, category, title, body, is_public, closed, created_at, author_id, author:profiles!listings_author_id_fkey(id, name, headline, avatar_path)")
+        .select("id, type, category, title, body, is_public, closed, like_count, created_at, author_id, author:profiles!listings_author_id_fkey(id, name, headline, avatar_path)")
         .order("closed").order("created_at", { ascending: false }).limit(200));
+      likesReady = true;
+      if (v.isMember) {
+        const likes = unwrap(await sb.from("listing_likes").select("listing_id").eq("user_id", v.me.id));
+        liked = new Set(likes.map((row) => row.listing_id));
+      } else {
+        liked = new Set();
+      }
       render();
     } catch (err) {
+      // Migration 008 noch nicht ausgeführt: Börse ohne Reaktionen weiter nutzbar.
+      if (String(err?.message || err).includes("like_count") || String(err?.message || err).includes("listing_likes")) {
+        likesReady = false;
+        try {
+          listings = unwrap(await sb.from("listings")
+            .select("id, type, category, title, body, is_public, closed, created_at, author_id, author:profiles!listings_author_id_fkey(id, name, headline, avatar_path)")
+            .order("closed").order("created_at", { ascending: false }).limit(200));
+          liked = new Set();
+          render();
+          return;
+        } catch (fallbackErr) {
+          document.getElementById("board").innerHTML = `<p class="empty">${esc(friendlyError(fallbackErr))}</p>`;
+          return;
+        }
+      }
       document.getElementById("board").innerHTML = `<p class="empty">${esc(friendlyError(err))}</p>`;
     }
   }
@@ -185,7 +213,23 @@
     const id = Number(btn.closest(".listing").dataset.id);
     const l = listings.find((x) => x.id === id);
     try {
-      if (btn.dataset.act === "toggle") {
+      if (btn.dataset.act === "like") {
+        if (!v.isMember || !likesReady) return;
+        btn.disabled = true;
+        if (liked.has(id)) {
+          unwrap(await sb.from("listing_likes").delete().eq("listing_id", id).eq("user_id", v.me.id));
+          liked.delete(id);
+          l.like_count = Math.max(0, (Number(l.like_count) || 0) - 1);
+        } else {
+          unwrap(await sb.from("listing_likes").insert({ listing_id: id }));
+          liked.add(id);
+          l.like_count = (Number(l.like_count) || 0) + 1;
+        }
+        btn.classList.toggle("active", liked.has(id));
+        btn.setAttribute("aria-pressed", liked.has(id));
+        btn.querySelector("span").textContent = Number(l.like_count) || 0;
+        btn.disabled = false;
+      } else if (btn.dataset.act === "toggle") {
         unwrap(await sb.from("listings").update({ closed: !l.closed }).eq("id", id));
         l.closed = !l.closed;
         render();
@@ -196,13 +240,14 @@
         render();
       }
     } catch (err) {
+      btn.disabled = false;
       btn.closest(".listing").insertAdjacentHTML("beforeend", `<p class="post-error">${esc(friendlyError(err))}</p>`);
     }
   });
 
   (async () => {
     v = await viewer();
-    document.getElementById("notice").innerHTML = accessNotice(v, "Einträge erstellen, Mitglieder kontaktieren");
+    document.getElementById("notice").innerHTML = accessNotice(v, "Einträge erstellen, reagieren und Mitglieder kontaktieren");
     if (v.isMember) newBtn.hidden = false;
     await load();
   })();

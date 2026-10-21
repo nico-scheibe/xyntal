@@ -4,10 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Mitglied werden – Xyntal</title>
-  <meta name="description" content="Werde Mitglied im Xyntal: Profil anlegen, Gründer und Selbstständige kennenlernen, monatliche Treffen.">
+  <meta name="description" content="Werde Mitglied bei Xyntal: Profil anlegen und Gründer sowie Selbstständige kennenlernen.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23101113'/%3E%3Cpath d='M9 9l14 14' stroke='%23ECEAE4' stroke-width='3.2' stroke-linecap='round'/%3E%3Cpath d='M23 9l-5.2 5.2M14.2 17.8L9 23' stroke='%239BD3EE' stroke-width='3.2' stroke-linecap='round'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="fonts/fonts.css?v=10">
-  <link rel="stylesheet" href="style.css?v=10">
+  <link rel="stylesheet" href="fonts/fonts.css?v=23">
+  <link rel="stylesheet" href="style.css?v=23">
 </head>
 <body>
 
@@ -18,11 +18,10 @@
     <nav class="nav-links" id="main-nav" aria-label="Hauptnavigation">
       <a class="hide-sm" href="community">Community</a>
       <a class="hide-sm" href="boerse">Börse</a>
-      <a class="hide-sm" href="events">Treffen</a>
       <a class="hide-sm" href="mitglieder">Mitglieder</a>
       <a class="hide-sm" href="nachrichten" data-messages hidden>Nachrichten</a>
       <a class="hide-sm" href="login" data-account>Login</a>
-      <a class="btn btn-small" href="mitglied-werden">Kostenlos starten</a>
+      <a class="btn btn-small" href="./#warteliste">Auf die Warteliste</a>
     </nav>
   </div>
 </header>
@@ -32,7 +31,7 @@
     <div class="wrap">
       <div class="eyebrow"><b>xyntal</b> / mitglied werden</div>
       <h1>Zeig, was du <em>aufbaust.</em></h1>
-      <p>Leg dein Profil an und werde Teil von Xyntal. Nach einer kurzen Prüfung schalte ich dich persönlich frei – dann siehst du alle Mitglieder und bekommst Zugang zur WhatsApp-Gruppe.</p>
+      <p>Leg dein Profil an. Nach einer kurzen Prüfung schalte ich dich frei. Danach kannst du Community, Börse und Mitglieder nutzen, soweit sie schon da sind. Eine WhatsApp-Gruppe gibt es nicht. Matching und Treffen sind noch nicht gebaut.</p>
     </div>
   </section>
 
@@ -109,7 +108,7 @@
             <input type="checkbox" name="is_public">
             <span>Mein Profil darf öffentlich auf der Website erscheinen. Ohne Haken sehen es nur freigeschaltete Mitglieder. Deine E-Mail-Adresse ist nie sichtbar.</span>
           </label>
-        <p class="hint">Den monatlichen Newsletter kannst du nach der Mitgliedschaft über die Startseite separat mit E-Mail-Bestätigung abonnieren.</p>
+        <p class="hint">Die Warteliste mit E-Mail-Bestätigung findest du auf der Startseite. Die Mitgliedschaft ist davon unabhängig.</p>
         <label class="check">
           <input type="checkbox" name="consent" required>
           <span>Ich habe die Hinweise zur Verarbeitung meiner Angaben für die Mitgliedschaft gelesen. Mehr in der <a class="text-link" href="impressum#datenschutz">Datenschutzerklärung</a>.</span>
@@ -136,12 +135,11 @@
   <div class="wrap">
     <div>
       <a class="logo" href="./"><svg class="logo-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14" class="bm-a"/><path d="M19 5l-5.3 5.3M10.3 13.7L5 19" class="bm-b"/></svg>xyntal</a>
-      <p style="margin: 10px 0 0">Mentoring, Matching &amp; Workspaces für Gründer – aus Regensburg.</p>
+      <p style="margin: 10px 0 0">Für Gründer und Leute, die gründen wollen.</p>
     </div>
     <nav class="foot-links" aria-label="Fußzeile">
       <a href="community">Community</a>
       <a href="boerse">Börse</a>
-      <a href="events">Treffen</a>
       <a href="mitglieder">Mitglieder</a>
       <a href="impressum">Impressum</a>
       <a href="impressum#datenschutz">Datenschutz</a>
@@ -149,12 +147,12 @@
   </div>
 </footer>
 
-<script src="vendor/supabase.js?v=10"></script>
-<script src="config.js?v=10"></script>
-<script src="app.js?v=10"></script>
-<script src="avatars.js?v=10"></script>
-<script src="notifications.js?v=10"></script>
-<script src="effects.js?v=10"></script>
+<script src="vendor/supabase.js?v=23"></script>
+<script src="config.js?v=23"></script>
+<script src="app.js?v=23"></script>
+<script src="avatars.js?v=23"></script>
+<script src="notifications.js?v=23"></script>
+<script src="effects.js?v=23"></script>
 <script>
   const form = document.getElementById("register");
   const status = document.getElementById("status");

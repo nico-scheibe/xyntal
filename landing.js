@@ -485,6 +485,50 @@
   });
 
   /* ---------------------------------------------------------------
+     Warteliste: Brevo mit Double-Opt-in, Eingabe bleibt auf der Seite
+     --------------------------------------------------------------- */
+  const WAITLIST_URL = "https://67406864.sibforms.com/serve/MUIFAP_vKT3wGvb_oCMmNCfxk9r4kS47ziUcgIjOp7ibD-hlikkWAA_l-Wo4pedNGsTJEc-yCsM1TIj41aX0dzDASKRcDC_ZxNn9envMBdU_zWmo7HHDj-FKtvyCz63RuFRQHleImiTRDarw8DCC1sKXSfU6F-RoppW0XftCBPzMdF-ch3vutYeokCLF5_Fzn5uooz6XScdhsGQS2w==?isAjax=1";
+  const SENT = "Danke. Bitte prüfe dein Postfach und bestätige deine E-Mail-Adresse. Erst danach stehst du auf der Warteliste.";
+  $$("[data-waitlist]").forEach((form) => {
+    const status = $(".waitlist-status", form);
+    const button = $("button", form);
+    const setStatus = (text, kind = "") => { status.textContent = text; status.className = "waitlist-status" + (kind ? ` is-${kind}` : ""); };
+    form.EMAIL.addEventListener("input", () => form.EMAIL.removeAttribute("aria-invalid"));
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const email = form.EMAIL.value.trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        form.EMAIL.setAttribute("aria-invalid", "true");
+        setStatus("Bitte gib eine gültige E-Mail-Adresse ein.", "error");
+        form.EMAIL.focus();
+        return;
+      }
+      if (!form.OPT_IN.checked) {
+        setStatus("Bitte bestätige, dass du Bescheid bekommen möchtest.", "error");
+        form.OPT_IN.focus();
+        return;
+      }
+      if (form.email_address_check.value) { setStatus(SENT, "ok"); return; } // Bots
+      button.disabled = true;
+      button.textContent = "Wird gesendet …";
+      setStatus("");
+      try {
+        const body = new URLSearchParams({ EMAIL: email, OPT_IN: "1", email_address_check: "", locale: "de" });
+        const res = await fetch(WAITLIST_URL, { method: "POST", headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" }, body });
+        const data = await res.json().catch(() => null);
+        if (!res.ok || !data || data.success !== true) throw new Error("waitlist");
+        setStatus(SENT, "ok");
+        form.reset();
+      } catch {
+        setStatus("Das hat gerade nicht geklappt. Bitte versuch es noch einmal.", "error");
+      } finally {
+        button.disabled = false;
+        button.textContent = "Eintragen";
+      }
+    });
+  });
+
+  /* ---------------------------------------------------------------
      Einmaliges Einblenden und Linien zeichnen
      --------------------------------------------------------------- */
   const reveal = $$(".reveal, [data-draw]");
