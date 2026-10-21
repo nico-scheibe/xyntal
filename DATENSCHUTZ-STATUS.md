@@ -1,12 +1,13 @@
-# Impressum und Datenschutz – Stand 20.10.2026
+# Impressum und Datenschutz – Stand 21.10.2026
 
 ## Umgesetzt
 - Name Nico Scheibe und bestehende Kontaktadresse auf ausdrücklichen Wunsch eingetragen.
 - Keine Anschrift veröffentlicht: Nutzer wünscht ausdrücklich deren Ausschluss. Hinweis auf unvollständiges Impressum bleibt sichtbar; nicht als rechtlich fertig bezeichnen.
-- Datenschutzhinweise an vorhandene Funktionen angepasst: GitHub Pages, Supabase, Brevo, Gmail, Google-Login, jsDelivr, Community/DM, Avatare, Events, Benachrichtigungen, Browser-Sitzungen, Rechte und tatsächliche Löschfunktionen.
+- Datenschutzhinweise an vorhandene Funktionen angepasst: GitHub Pages, Supabase, Brevo, Gmail, Google-Login, Community/DM, Avatare, Events, Benachrichtigungen, Browser-Sitzungen, Rechte und tatsächliche Löschfunktionen.
 - Keine unbelegte Zusicherung ausschließlicher EU-Verarbeitung oder angeblich abgeschlossener AV-Verträge.
 - Pflichtfeld bei Anmeldung bestätigt Kenntnisnahme der Datenschutzhinweise; freiwillige Veröffentlichung und Newsletter bleiben separat.
-- Alle zwölf Seiten laden Inter, Space Grotesk und JetBrains Mono lokal. 16 WOFF2-Dateien mit Unicode-Subsets, SIL-OFL-Lizenzen und Herkunft in public/fonts. Asset-Version 7.
+- Alle zwölf Seiten laden Inter, Space Grotesk und JetBrains Mono lokal. 16 WOFF2-Dateien mit Unicode-Subsets, SIL-OFL-Lizenzen und Herkunft in public/fonts. Asset-Version 8.
+- Supabase-JavaScript 2.117.2 lokal in public/vendor; npm-Tarball-Integrität überprüft, Bundle bytegleich zur bisherigen CDN-Datei. Alle zwölf Seiten ohne externe Script-URLs. Keine jsDelivr-Verbindung mehr für die Bibliothek.
 
 ## Offen vor einem vollständigen rechtlichen Abschluss
 - Ladungsfähige Anschrift gemäß § 5 DDG fehlt auf ausdrücklichen Nutzerwunsch. Keine Adresse aus anderen Quellen ermitteln oder veröffentlichen.
@@ -29,4 +30,4 @@
 - https://www.lda.bayern.de/de/beschwerde.html
 
 ## Prüfung
-Statische Prüfung aller zwölf Seiten: keine Google-Fonts-URLs oder Preconnects, korrekte lokale Pfade, Fontdateien als WOFF2 und HTTP 200. Browserprüfung 1280 px und 375 px ohne horizontalen Überlauf und ohne Konsolenfehler. Keine Datenbankänderung.
+Statische Prüfung aller zwölf Seiten: keine Google-Fonts-URLs oder Preconnects, korrekte lokale Pfade, Fontdateien als WOFF2 und HTTP 200. Browserprüfung 1280 px und 375 px ohne horizontalen Überlauf und ohne Konsolenfehler. Keine Datenbankänderung. Am 21.10.2026 Syntaxprüfung des lokalen Bundles und Browser-Datenabruf der Treffen-Seite erfolgreich; keine Konsolenfehler.
