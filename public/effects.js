@@ -220,7 +220,7 @@
     }
     requestAnimationFrame(frame);
   }
-  if (!still) document.querySelectorAll("[data-scramble]").forEach((el) => {
+  if (!still && !document.body.classList.contains("home")) document.querySelectorAll("[data-scramble]").forEach((el) => {
     if (document.fonts?.ready) document.fonts.ready.then(() => scramble(el)); else scramble(el);
   });
 

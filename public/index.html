@@ -8,10 +8,10 @@
   <meta property="og:title" content="Xyntal – Finde die Menschen, mit denen du gründest">
   <meta property="og:description" content="Ich baue Xyntal gerade auf. Trag dich ein und sei bei den Ersten, die ihr Team finden.">
   <meta property="og:locale" content="de_DE">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230A0A0A'/%3E%3Crect x='1' y='1' width='30' height='30' fill='none' stroke='%23C6FF3D'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='16' font-weight='700' fill='%23C6FF3D' text-anchor='middle'%3EX%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="fonts/fonts.css?v=21">
-  <link rel="stylesheet" href="style.css?v=21">
-  <link rel="stylesheet" href="home.css?v=21">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2305070D'/%3E%3Crect x='1' y='1' width='30' height='30' fill='none' stroke='%2300D4FF'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='16' font-weight='700' fill='%2300D4FF' text-anchor='middle'%3EX%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="fonts/fonts.css?v=22">
+  <link rel="stylesheet" href="style.css?v=22">
+  <link rel="stylesheet" href="home.css?v=24">
 </head>
 <body class="home">
 <div class="grain" aria-hidden="true"></div>
@@ -36,13 +36,16 @@
 </header>
 
 <main id="top">
+  <svg class="spine" viewBox="0 0 48 100" preserveAspectRatio="none" aria-hidden="true">
+    <line x1="24" y1="0" x2="24" y2="100" pathLength="1"></line>
+  </svg>
 
   <section class="hero stage" id="warteliste" aria-label="Warteliste">
     <canvas id="graph" aria-hidden="true"></canvas>
     <div class="stage-scrim" aria-hidden="true"></div>
     <div class="guides" aria-hidden="true"></div>
-    <p class="kicker kicker-left"><b>[00]</b> Warteliste</p>
-    <p class="kicker kicker-right">Im Aufbau · keine Nutzer</p>
+    <p class="kicker kicker-left"><b>Xyntal</b> Warteliste</p>
+    <p class="kicker kicker-right">Im Aufbau</p>
     <div class="wrap stage-grid">
       <div class="stage-copy">
         <h1 class="display">
@@ -52,13 +55,13 @@
           <span class="line"><span><em>gründest.</em></span></span>
         </h1>
         <p class="lede">Ich baue Xyntal gerade auf. Trag dich ein und sei bei den Ersten, die ihr Team finden.</p>
-        <p class="stamp"><span data-coord>x ----  y ----</span><span>v0.9</span></p>
+        <p class="stamp"><span data-coord>x ----  y ----</span></p>
       </div>
       <div class="stage-side">
         <form class="waitlist join" data-waitlist novalidate>
           <div class="join-row">
             <label class="mail">
-              <span>Email</span>
+              <span>E-Mail</span>
               <input type="email" name="EMAIL" autocomplete="email" inputmode="email" maxlength="254" required placeholder="du@example.com">
             </label>
             <button class="btn roll" type="submit">
@@ -88,26 +91,88 @@
     </div>
   </div>
 
+  <section class="block" id="problem">
+    <div class="wrap problem">
+      <p class="idx" data-rise><b>[01]</b> Das Problem</p>
+      <h2 data-rise>Viele Ideen scheitern nicht an der Idee.</h2>
+      <p data-rise>Sie scheitern am fehlenden Team. Mitgründer findet man heute meist zufällig über das eigene Netzwerk. Wer niemanden kennt, der ähnlich denkt, fängt allein an oder lässt es bleiben.</p>
+    </div>
+  </section>
+
+  <section class="block how" id="ablauf">
+    <div class="wrap how-grid">
+      <div>
+        <p class="idx"><b>[02]</b> So funktioniert's</p>
+        <h2>So ist Xyntal geplant.</h2>
+        <p class="lede">Noch nicht gebaut. Niemand wird heute gematcht.</p>
+      </div>
+      <ol class="how-steps">
+        <li data-step>
+          <span class="idx">01</span>
+          <h3 data-scramble>Profil anlegen</h3>
+          <p>Du schreibst Idee, Skills, Ziele und wie viel Zeit du hast. Ohne Profil gibt es später nichts zum Vergleichen.</p>
+        </li>
+        <li data-step>
+          <span class="idx">02</span>
+          <h3 data-scramble>Vorschläge</h3>
+          <p>Die KI soll passende Menschen vorschlagen. Nicht nur nach Skills, sondern nach Zielen, Zeit und Commitment.</p>
+        </li>
+        <li data-step>
+          <span class="idx">03</span>
+          <h3 data-scramble>Workspace</h3>
+          <p>Ihr lernt euch kennen und startet gemeinsam in einem Workspace. Der Workspace ist Teil des Plans, nicht der heutigen Seite.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="block" id="anders">
+    <div class="wrap differ-grid">
+      <div data-rise>
+        <p class="idx"><b>[03]</b> Der Unterschied</p>
+        <h2>Was Xyntal anders machen soll.</h2>
+        <p class="note">Drei Absichten. Noch kein fertiges Produkt.</p>
+      </div>
+      <div class="differ">
+        <article class="tilt" data-rise>
+          <span class="idx">01</span>
+          <h3>Commitment, nicht nur Lebenslauf</h3>
+          <p>Matching soll nach Zielen, Zeit und Commitment suchen. Ein Skill-Stichwort allein reicht nicht.</p>
+        </article>
+        <article class="tilt" data-rise>
+          <span class="idx">02</span>
+          <h3>Frühe Gründer</h3>
+          <p>Gedacht für Leute am Anfang, nicht für fertige Firmen, die eine weitere Plattform suchen.</p>
+        </article>
+        <article class="tilt" data-rise>
+          <span class="idx">03</span>
+          <h3>Ehrlich im Aufbau</h3>
+          <p>Was fehlt, steht so da. Keine erfundenen Teams, keine Treffen, keine Zahlen.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
   <section class="block" id="fuer-wen">
     <div class="wrap sheet">
       <div data-rise>
-        <p class="idx"><b>[01]</b> Für wen</p>
-        <h2>Für Gründer und Leute, die gründen wollen.</h2>
+        <p class="idx"><b>[04]</b> Für wen</p>
+        <h2>Zwei Seiten, ein fehlendes Team.</h2>
       </div>
       <div>
         <ol>
-          <li data-rise>
+          <li class="tilt" data-rise>
             <span class="idx">01</span>
             <div>
-              <h3>Du willst gründen</h3>
-              <p>Du hast eine Richtung und suchst Menschen, die mitbauen.</p>
+              <h3>Du hast eine Idee</h3>
+              <p>Du suchst Leute, die mitbauen. Richtung und Commitment zählen mehr als ein fertiger Businessplan.</p>
             </div>
           </li>
-          <li data-rise>
+          <li class="tilt" data-rise>
             <span class="idx">02</span>
             <div>
-              <h3>Du suchst ein Team</h3>
-              <p>Du willst nicht allein anfangen und suchst ein Vorhaben, zu dem du passt.</p>
+              <h3>Du hast noch keine eigene Idee</h3>
+              <p>Du willst bei einem Startup mitbauen und suchst ein Vorhaben, zu dem du passt.</p>
             </div>
           </li>
         </ol>
@@ -116,35 +181,78 @@
     </div>
   </section>
 
-  <section class="block" id="entsteht">
+  <section class="block" id="roadmap">
     <div class="wrap band">
       <div class="band-copy" data-rise>
-        <p class="idx"><b>[02]</b> In Entwicklung</p>
+        <p class="idx"><b>[05]</b> Roadmap</p>
         <h2>Was danach entsteht.</h2>
-        <p>Geplant. Noch nicht fertig. Noch niemand nutzt es.</p>
+        <p>Ein Plan. Keine Termine. Nichts davon ist ein Versprechen mit Datum.</p>
       </div>
-      <ol class="spec" aria-label="Geplante Produktteile und Apps">
-        <li data-rise><span class="tag">[01]</span><strong>Matching</strong><em>in Entwicklung</em></li>
-        <li data-rise><span class="tag">[02]</span><strong>Workspaces</strong><em>in Entwicklung</em></li>
-        <li data-rise><span class="tag">[03]</span><strong>KI</strong><em>in Entwicklung</em></li>
-        <li data-rise><span class="tag">[04]</span><strong>macOS</strong><em>in Entwicklung</em></li>
-        <li data-rise><span class="tag">[05]</span><strong>Windows</strong><em>in Entwicklung</em></li>
-        <li data-rise><span class="tag">[06]</span><strong>iOS</strong><em>in Entwicklung</em></li>
-        <li data-rise><span class="tag">[07]</span><strong>Android</strong><em>in Entwicklung</em></li>
+      <ol class="spec" aria-label="Geplanter Ablauf">
+        <li data-rise><span class="tag">Jetzt</span><strong>Warteliste, erste Profile</strong><em>als Nächstes</em></li>
+        <li class="is-focus" data-rise><span class="tag">Danach</span><strong data-scramble>Matching</strong><em>geplant</em></li>
+        <li data-rise><span class="tag">Später</span><strong>Workspaces, KI-Assistent</strong><em>geplant</em></li>
+        <li data-rise><span class="tag">Apps</span><strong>macOS · Windows · iOS · Android</strong><em>geplant</em></li>
       </ol>
+    </div>
+  </section>
+
+  <section class="block" id="faq">
+    <div class="wrap">
+      <p class="idx" data-rise><b>[06]</b> FAQ</p>
+      <h2 data-rise>Kurz und ohne Ausflüchte.</h2>
+      <div class="faq">
+        <details data-rise>
+          <summary>Was kostet Xyntal?</summary>
+          <p>Die Warteliste ist kostenlos. Preise gibt es noch nicht.</p>
+        </details>
+        <details data-rise>
+          <summary>Wann geht es los?</summary>
+          <p>Es gibt kein Datum. Als Nächstes kommen die Warteliste und erste Profile. Einen Starttermin lege ich fest, wenn der nächste Schritt steht.</p>
+        </details>
+        <details data-rise>
+          <summary>Für wen ist es?</summary>
+          <p>Für Leute mit einer Idee, die ein Team suchen, und für Leute ohne eigene Idee, die bei einem Startup mitbauen wollen.</p>
+        </details>
+        <details data-rise>
+          <summary>Was passiert mit meinen Daten?</summary>
+          <p>Deine E-Mail für die Warteliste geht an Brevo. Du stehst erst auf der Liste, wenn du den Bestätigungslink klickst. Mehr steht im <a href="impressum#datenschutz">Datenschutz</a>.</p>
+        </details>
+        <details data-rise>
+          <summary>Wie kann ich mithelfen?</summary>
+          <p>Schreib mir über <a href="https://www.linkedin.com/in/nico-scheibe-781a20445" target="_blank" rel="noopener">LinkedIn</a> oder die E-Mail im Impressum, wenn du mitdenken oder testen willst. Es gibt noch kein offenes Team und keine offenen Rollen.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="ueber">
+    <div class="wrap who">
+      <div class="portrait" data-rise>
+        <img src="nico.jpg" alt="Nico" width="240" height="300" onerror="this.remove()">
+        <p>Foto<span>public/nico.jpg</span></p>
+      </div>
+      <figure class="pull" data-rise>
+        <p class="idx"><b>[07]</b> Wer steckt dahinter</p>
+        <blockquote>Ich bin Nico. Ich arbeite Vollzeit und will bis Ende 2027 etwas Eigenes aufbauen. Dafür fehlen mir die Menschen, die genauso denken. Also baue ich Xyntal, damit Gründer und Leute, die gründen wollen, ihr Team finden.</blockquote>
+        <figcaption>
+          <span>Nico, Gründer von Xyntal</span>
+          <a href="https://www.linkedin.com/in/nico-scheibe-781a20445" target="_blank" rel="noopener">LinkedIn ↗</a>
+        </figcaption>
+      </figure>
     </div>
   </section>
 
   <section class="block" id="eintragen">
     <div class="wrap closer">
       <div data-rise>
-        <p class="idx"><b>[03]</b> Warteliste</p>
+        <p class="idx"><b>[08]</b> Warteliste</p>
         <h2>Sei bei den Ersten.</h2>
       </div>
       <form class="waitlist join" data-waitlist novalidate data-rise>
         <div class="join-row">
           <label class="mail">
-            <span>Email</span>
+            <span>E-Mail</span>
             <input type="email" name="EMAIL" autocomplete="email" inputmode="email" maxlength="254" required placeholder="du@example.com">
           </label>
           <button class="btn roll" type="submit">
@@ -166,19 +274,6 @@
     </div>
   </section>
 
-  <section class="block" id="ueber">
-    <div class="wrap">
-      <figure class="pull" data-rise>
-        <p class="idx"><b>[04]</b> Nico</p>
-        <blockquote>Ich bin Nico. Ich arbeite Vollzeit und will bis Ende 2027 etwas Eigenes aufbauen. Dafür fehlen mir die Menschen, die genauso denken. Also baue ich Xyntal, damit Gründer und Leute, die gründen wollen, ihr Team finden.</blockquote>
-        <figcaption>
-          <span>Nico, Gründer von Xyntal</span>
-          <a href="https://www.linkedin.com/in/nico-scheibe-781a20445" target="_blank" rel="noopener">LinkedIn ↗</a>
-        </figcaption>
-      </figure>
-    </div>
-  </section>
-
 </main>
 
 <footer>
@@ -197,20 +292,17 @@
   </div>
 </footer>
 
-<script src="vendor/supabase.js?v=21"></script>
-<script src="config.js?v=21"></script>
-<script src="app.js?v=21"></script>
-<script src="avatars.js?v=21"></script>
-<script src="notifications.js?v=21"></script>
-<script src="effects.js?v=21"></script>
-<script src="graph.js?v=21"></script>
-<script src="vendor/gsap.min.js?v=21"></script>
-<script src="vendor/ScrollTrigger.min.js?v=21"></script>
-<script src="vendor/lenis.min.js?v=21"></script>
-<script src="home.js?v=21"></script>
+<script src="config.js?v=22"></script>
+<script src="app.js?v=22"></script>
+<script src="effects.js?v=22"></script>
+<script src="graph.js?v=22"></script>
+<script src="vendor/gsap.min.js?v=22"></script>
+<script src="vendor/ScrollTrigger.min.js?v=22"></script>
+<script src="vendor/lenis.min.js?v=22"></script>
+<script src="home.js?v=22"></script>
 <script>
 (() => {
-  const url = "https://67406864.sibforms.com/serve/MUIFAP_vKT3wGvb_oCMmNCfxk9r4kS47ziUcgIjOp7ibD-hlikkWAA_l-Wo4pedNGsTJEc-yCsM1TIj41aX0dzDASKRcDC_ZxNn9envMBdU_zWmo7HHDj-FKtvyCz63RuFRQHleImiTRDarw8DCC1sKXSfU6F-RoppW0XftCBPzMdF-ch3vutYeokCLF5_Fzn5uooz6XScdhsGQS2w==";
+  const url = "https://67406864.sibforms.com/serve/MUIFAP_vKT3wGvb_oCMmNCfxk9r4kS47ziUcgIjOp7ibD-hlikkWAA_l-Wo4pedNGsTJEc-yCsM1TIj41aX0dzDASKRcDC_ZxNn9envMBdU_zWmo7HHDj-FKtvyCz63RuFRQHleImiTRDarw8DCC1sKXSfU6F-RoppW0XftCBPzMdF-ch3vutYeokCLF5_Fzn5uooz6XScdhsGQS2w==?isAjax=1";
   const emailOk = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
   document.querySelectorAll("[data-waitlist]").forEach((form) => {
     const status = form.querySelector(".form-status");
