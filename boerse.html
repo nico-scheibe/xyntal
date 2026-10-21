@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Gesuche & Angebote – Xyntal</title>
   <meta name="description" content="Gesuche und Angebote der Xyntal-Community: Mitgründer, Kunden, Know-how und mehr.">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%237B84FF'/%3E%3Cstop offset='1' stop-color='%23A68BFF'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='url(%23g)'/%3E%3Ctext x='16' y='22.5' font-family='Arial' font-size='18' font-weight='700' fill='%230C0D11' text-anchor='middle'%3EX%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="fonts/fonts.css?v=15">
-  <link rel="stylesheet" href="style.css?v=15">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2305070D'/%3E%3Crect x='1' y='1' width='30' height='30' fill='none' stroke='%2300D4FF'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='16' font-weight='700' fill='%2300D4FF' text-anchor='middle'%3EX%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="fonts/fonts.css?v=22">
+  <link rel="stylesheet" href="style.css?v=22">
 </head>
 <body>
 
@@ -21,7 +21,7 @@
       <a class="hide-sm" href="mitglieder">Mitglieder</a>
       <a class="hide-sm" href="nachrichten" data-messages hidden>Nachrichten</a>
       <a class="hide-sm" href="login" data-account>Login</a>
-      <a class="btn btn-small" href="mitglied-werden">Kostenlos starten</a>
+      <a class="btn btn-small" href="./#warteliste">Auf die Warteliste</a>
     </nav>
   </div>
 </header>
@@ -31,7 +31,7 @@
     <div class="wrap">
       <div class="eyebrow"><b>xyntal</b> / gesuche &amp; angebote</div>
       <h1>Finde, was dich <em>weiterbringt.</em></h1>
-      <p>Mitgründer, erste Kunden, Know-how oder ein offenes Ohr – sag, was du suchst oder bietest, und die richtigen Leute melden sich.</p>
+      <p>Trag ein, was du suchst oder bietest. Antworten kommen erst, wenn Mitglieder da sind. Bisher gibt es keine Zusagen, auf die du zählen kannst.</p>
     </div>
   </section>
 
@@ -65,7 +65,7 @@
           </label>
         </div>
         <label>Titel
-          <input type="text" name="title" maxlength="120" placeholder="z. B. Suche Mitgründer:in mit Tech-Hintergrund" required>
+          <input type="text" name="title" maxlength="120" placeholder="Suche kreativen Mitgründer:in" required>
         </label>
         <label>Beschreibung
           <textarea name="body" maxlength="2000" placeholder="Worum geht es genau? Was bringst du mit, was erwartest du?"></textarea>
@@ -87,7 +87,7 @@
   <div class="wrap">
     <div>
       <a class="logo" href="./"><span class="logo-mark" aria-hidden="true"><span>X</span></span>Xyntal</a>
-      <p style="margin: 10px 0 0">Mentoring, Matching &amp; Workspaces für Gründer.</p>
+      <p style="margin: 10px 0 0">Für Gründer und Leute, die gründen wollen.</p>
     </div>
     <nav class="foot-links" aria-label="Fußzeile">
       <a href="community">Community</a>
@@ -99,12 +99,12 @@
   </div>
 </footer>
 
-<script src="vendor/supabase.js?v=15"></script>
-<script src="config.js?v=15"></script>
-<script src="app.js?v=15"></script>
-<script src="avatars.js?v=15"></script>
-<script src="notifications.js?v=15"></script>
-<script src="effects.js?v=15"></script>
+<script src="vendor/supabase.js?v=22"></script>
+<script src="config.js?v=22"></script>
+<script src="app.js?v=22"></script>
+<script src="avatars.js?v=22"></script>
+<script src="notifications.js?v=22"></script>
+<script src="effects.js?v=22"></script>
 <script>
   let v = { me: null, isMember: false, isAdmin: false };
   let listings = [];

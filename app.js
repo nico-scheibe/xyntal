@@ -1,6 +1,8 @@
 // Gemeinsame Helfer für alle Xyntal-Seiten (Daten & Login über Supabase)
 
-const sb = window.supabase.createClient(window.XYNTAL_CONFIG.supabaseUrl, window.XYNTAL_CONFIG.supabaseKey);
+const sb = window.supabase
+  ? window.supabase.createClient(window.XYNTAL_CONFIG.supabaseUrl, window.XYNTAL_CONFIG.supabaseKey)
+  : null;
 
 const PHASES = { idee: "Idee", nebenberuflich: "Nebenberuflich", vollzeit: "Vollzeit selbstständig", team: "Mit Team / Firma" };
 const PROFILE_FIELDS = ["name", "headline", "about", "phase", "category", "offer", "seek", "linkedin", "instagram", "website", "is_public"];
@@ -137,13 +139,13 @@ function memberCard(m, opts = {}) {
 // Navigation: "Login" bzw. "Mein Profil" anzeigen
 (async () => {
   const slot = document.querySelector("[data-account]");
-  if (!slot) return;
+  if (!slot || !sb) return;
   const { data: { session } } = await sb.auth.getSession();
   if (session) {
     slot.textContent = "Mein Profil";
     slot.href = "profil";
     slot.classList.remove("hide-sm");
-    document.querySelectorAll('.nav-links a.btn[href="mitglied-werden"], .nav-links a.btn[href="#warteliste"]').forEach((a) => a.remove());
+    document.querySelectorAll('.nav-links a.btn[href="mitglied-werden"], .nav-links a.btn[href="#warteliste"], .nav-links a.btn[href="./#warteliste"]').forEach((a) => a.remove());
   }
 })();
 
@@ -319,7 +321,7 @@ function accessNotice(v, what) {
 // Navigation: Link zu Nachrichten mit Zähler ungelesener Nachrichten
 (async () => {
   const link = document.querySelector("[data-messages]");
-  if (!link) return;
+  if (!link || !sb) return;
   const { data: { session } } = await sb.auth.getSession();
   if (!session) return;
   link.hidden = false;
