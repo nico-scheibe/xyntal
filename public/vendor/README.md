@@ -8,3 +8,8 @@ Integrity: sha512-eSG2VKnHR+Clp1PmidZ1/weJ8PJwoybjva3L2GgKqFG4YDS1Iqmc61psKGZP5x
 Bundle SHA-256: 59d39487c3589843b410322d8a3d562ce022aba1e5ccb16898ef3fb2a0da2ecd
 
 MIT license and bundled notices included. To update, verify npm tarball integrity, retain notices and test login/data reads before deploying.
+
+Homepage motion, local only (no CDN at runtime):
+
+- `gsap.min.js` and `ScrollTrigger.min.js` — GSAP 3.12.7, https://gsap.com
+- `lenis.min.js` — Lenis 1.1.18, MIT, https://github.com/darkroomengineering/lenis

@@ -282,6 +282,7 @@ main > section, .post, .listing, .member, .card, .feature, .plan { animation: ri
 }
 .cards { display: grid; gap: 16px; margin-top: 40px; }
 @media (min-width: 760px) { .cards { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 760px) { .cards.two { grid-template-columns: repeat(2, 1fr); } }
 .card { padding: 24px; }
 .card .num, .perk .num {
   display: inline-grid;
@@ -576,25 +577,114 @@ legend { font-family: "Space Grotesk", sans-serif; font-size: 18px; font-weight:
 @media (min-width: 860px) { .newsletter { grid-template-columns: 1fr 1fr; gap: 64px; } }
 .newsletter p { color: var(--text-2); }
 
-/* Über mich */
-.about { display: grid; gap: 32px; align-items: center; }
-@media (min-width: 760px) { .about { grid-template-columns: 240px 1fr; gap: 56px; } }
-.photo {
-  aspect-ratio: 1;
-  max-width: 240px;
-  border-radius: 50%;
-  background: var(--grad);
-  padding: 3px;
-  display: grid;
-  place-items: center;
-  text-align: center;
-  color: var(--text-2);
-  font-size: 13px;
+/* Zitat am Seitenende */
+.quote {
+  margin: 0;
+  max-width: 44rem;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
 }
-.photo > span { width: 100%; height: 100%; border-radius: 50%; background: var(--panel); display: grid; place-items: center; padding: 20px; }
-.photo img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
-.about blockquote { margin: 0; font-family: "Space Grotesk", sans-serif; font-size: clamp(1.3rem, 2.6vw, 1.8rem); font-weight: 500; line-height: 1.4; letter-spacing: -0.015em; }
-.about .sig { margin-top: 16px; color: var(--text-3); font-size: 14px; }
+.quote blockquote {
+  margin: 28px 0 0;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: clamp(1.45rem, 3.2vw, 2.15rem);
+  font-weight: 500;
+  line-height: 1.28;
+  letter-spacing: -0.025em;
+}
+.quote figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 20px;
+  margin-top: 28px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-3);
+}
+.quote figcaption a {
+  color: var(--text-2);
+  text-decoration: none;
+  border-bottom: 1px solid var(--border-2);
+}
+.quote figcaption a:hover { color: var(--text); }
+
+/* Abschnitte 01–02: Schiene statt Kartenraster */
+.rail-head { max-width: 40rem; margin-bottom: 36px; }
+.rail-head h2 { margin: 0 0 12px; font-size: clamp(2.2rem, 4.5vw, 3.4rem); line-height: 0.98; letter-spacing: -0.04em; }
+.rail-head p { margin: 0; color: var(--text-2); }
+.rail {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0;
+  border-top: 1px solid var(--border);
+}
+.rail li {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: 20px;
+  align-items: start;
+  padding: 28px 0;
+  border-bottom: 1px solid var(--border);
+}
+.rail-idx {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--accent);
+  padding-top: 6px;
+}
+.rail h3 {
+  margin: 0 0 8px;
+  font-size: clamp(1.25rem, 2.4vw, 1.55rem);
+  letter-spacing: -0.02em;
+}
+.rail p { margin: 0; color: var(--text-2); max-width: 42ch; }
+.rail-note {
+  margin: 28px 0 0;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-3);
+}
+.stack {
+  display: grid;
+  gap: 20px;
+}
+@media (min-width: 800px) { .stack { grid-template-columns: 1fr 1fr; gap: 28px; } }
+.stack-block {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  padding: 8px 0;
+}
+.stack-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  padding: 10px 18px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.stack-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.stack-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border);
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.stack-list li:last-child { border-bottom: 0; }
+.stack-list .soon { margin-left: 0; flex: none; }
 
 /* Perks (Mitgliedschaft) */
 .perks { display: grid; gap: 16px; margin-top: 40px; }
@@ -887,7 +977,7 @@ kbd {
 .hero::before { display: none; }
 #graph { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .hero .wrap { pointer-events: none; }
-.hero .wrap a, .hero .wrap button, .hero .app-preview { pointer-events: auto; }
+.hero .wrap a, .hero .wrap button, .hero .wrap form, .hero .app-preview { pointer-events: auto; }
 .hero h1 { max-width: 13ch; margin: 0 0 24px; font-size: clamp(2.8rem, 8vw, 6rem); line-height: 0.98; letter-spacing: -0.045em; }
 .hero h1 em { background: none; color: var(--accent); -webkit-text-fill-color: currentColor; }
 .hero .lead { margin: 0 0 32px; max-width: 34rem; }
@@ -1111,4 +1201,119 @@ main section[id] { scroll-margin-top: 64px; }
 .newsletter-cta { display: grid; gap: 14px; align-content: center; }
 .newsletter-cta p { margin: 0; color: var(--text-2); }
 .newsletter-cta .btn { justify-self: start; }
+
+/* Warteliste auf der Startseite */
+.waitlist { position: relative; max-width: 34rem; }
+.waitlist .form-status:empty { display: none; }
+.waitlist-next { margin: 0; font-size: 0.93rem; }
+.waitlist-hp {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+/* Abschluss: Überschrift, darunter das Feld über die ganze Breite */
+#eintragen { padding-top: 8px; }
+.close { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; }
+#eintragen .close-form,
+.close-row { width: 100%; }
+.close-copy .eyebrow { margin-bottom: 12px; }
+#eintragen h2 {
+  margin: 0 0 12px;
+  font-size: clamp(2.8rem, 6vw, 4.6rem);
+  line-height: 0.92;
+  letter-spacing: -0.045em;
+}
+.close-copy p { max-width: 42ch; margin: 0; color: var(--text-2); }
+#eintragen .close-form {
+  max-width: none;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+.close-row {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  height: 56px;
+  background: var(--panel);
+  border: 1px solid var(--border-2);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.close-row:focus-within { border-color: var(--accent); }
+.close-field {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0;
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--text-2);
+}
+.close-field span {
+  display: grid;
+  align-items: center;
+  height: 100%;
+  padding: 0 14px;
+  border-right: 1px solid var(--border);
+  color: var(--text-3);
+}
+.close-field input {
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0 16px;
+  font-family: var(--mono);
+  font-size: 14px;
+  letter-spacing: 0;
+  caret-color: var(--accent);
+}
+.close-field input:focus { border: 0; box-shadow: none; }
+#eintragen .close-row .btn {
+  flex: none;
+  align-self: stretch;
+  height: 100%;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0 22px;
+  white-space: nowrap;
+}
+#eintragen .close-row .btn:hover { transform: none; }
+.close-foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px 24px;
+}
+#eintragen .check {
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+#eintragen .check a { color: var(--text); text-decoration: none; border-bottom: 1px solid var(--border-2); }
+#eintragen .waitlist-next { margin: 0; font-family: var(--mono); font-size: 12px; }
+#eintragen .waitlist-next a { color: var(--text-2); text-decoration: none; }
+#eintragen .waitlist-next a:hover { color: var(--text); }
+@media (max-width: 559px) {
+  .close-row { height: auto; flex-direction: column; }
+  .close-field { height: 52px; }
+  #eintragen .close-row .btn { height: 48px; padding: 0 18px; }
+}
 .legal section { padding: 0; }
+
+/* Startseiten-Layout: public/home.css, nur body.home. */

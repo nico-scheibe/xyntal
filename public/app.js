@@ -143,7 +143,7 @@ function memberCard(m, opts = {}) {
     slot.textContent = "Mein Profil";
     slot.href = "profil";
     slot.classList.remove("hide-sm");
-    document.querySelectorAll('.nav-links a.btn[href="mitglied-werden"]').forEach((a) => a.remove());
+    document.querySelectorAll('.nav-links a.btn[href="mitglied-werden"], .nav-links a.btn[href="#warteliste"]').forEach((a) => a.remove());
   }
 })();
 

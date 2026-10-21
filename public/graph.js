@@ -1,6 +1,5 @@
-// Xyntal – Matching-Netzwerk im Hero.
-// Jeder Punkt ist eine Person mit Kategorien. Der Mauszeiger ist „du“:
-// Personen in der Nähe verbinden sich mit dir, die besten drei zeigen ihren Match-Score.
+// Xyntal – abstraktes Netz im Hero.
+// Punkte und Linien sind nur eine Grafik, keine Personen und keine Matches.
 // Ohne Abhängigkeiten, ein Canvas, pausiert außerhalb des Sichtfelds.
 (() => {
   const canvas = document.getElementById("graph");
@@ -8,9 +7,7 @@
   const ctx = canvas.getContext("2d", { alpha: true });
   const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  const CATS = ["Design", "Entwicklung", "Marketing", "KI", "Vertrieb", "Finanzen"];
-  const NAMES = ["Lena", "Jonas", "Max", "Elif", "Aylin", "Mia", "Tim", "Sophie", "David", "Noah", "Clara", "Ben", "Hanna", "Luis", "Emma", "Paul"];
-  const ME = [1, 0, 1, 1, 0, 0]; // Interessen von „dir“ – Entwicklung, KI, Marketing … (Index wie CATS)
+  const CATS = [0, 1, 2, 3, 4, 5];
 
   let W = 0, H = 0, dpr = 1, nodes = [], raf = 0, visible = true, t0 = performance.now();
   const mouse = { x: -1e4, y: -1e4, active: false, sx: -1e4, sy: -1e4 };
@@ -18,13 +15,6 @@
   // Deterministischer Zufall, damit das Netz bei jedem Laden gleich „gewachsen“ aussieht
   let seed = 7;
   const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-
-  function score(n) {
-    // Überschneidung der Kategorien + persönlicher Bonus → 62–98 %
-    let overlap = 0;
-    for (let i = 0; i < CATS.length; i++) overlap += n.cats[i] && ME[i] ? 1 : 0;
-    return Math.min(98, Math.round(62 + overlap * 11 + n.bonus));
-  }
 
   function build() {
     seed = 7;
@@ -38,12 +28,9 @@
         vy: (rnd() - 0.5) * 0.22,
         r: 1.2 + rnd() * 1.6,
         cats,
-        bonus: rnd() * 9,
-        name: NAMES[i % NAMES.length],
         phase: rnd() * Math.PI * 2,
         hot: 0, // 0..1, weich animierte Hervorhebung
       };
-      n.score = score(n);
       return n;
     });
   }
@@ -80,10 +67,9 @@
         n.y += n.vy * dt * 0.06;
         if (n.x < -20) n.x = W + 20; else if (n.x > W + 20) n.x = -20;
         if (n.y < -20) n.y = H + 20; else if (n.y > H + 20) n.y = -20;
-        // Leichte Anziehung zur Maus für passende Personen
         if (mouse.active) {
           const dx = mouse.sx - n.x, dy = mouse.sy - n.y, d2 = dx * dx + dy * dy;
-          if (d2 < REACH * REACH && n.score > 80) { n.x += dx * 0.0009 * dt; n.y += dy * 0.0009 * dt; }
+          if (d2 < REACH * REACH) { n.x += dx * 0.0004 * dt; n.y += dy * 0.0004 * dt; }
         }
       }
     }
@@ -95,7 +81,7 @@
       (grid.get(k) || grid.set(k, []).get(k)).push(n);
     }
 
-    // Verbindungen zwischen Personen mit gemeinsamer Kategorie
+    // Verbindungen zwischen benachbarten Punkten derselben Gruppe
     ctx.lineWidth = 1;
     for (const n of nodes) {
       const gx = (n.x / LINK) | 0, gy = (n.y / LINK) | 0;
@@ -117,25 +103,24 @@
       }
     }
 
-    // Personen in Reichweite der Maus, sortiert nach Match-Score
     const near = [];
     if (mouse.active) {
       for (const n of nodes) {
         const d = Math.hypot(n.x - mouse.sx, n.y - mouse.sy);
         if (d < REACH) near.push({ n, d });
       }
-      near.sort((a, b) => b.n.score - a.n.score);
+      near.sort((a, b) => a.d - b.d);
     }
     const top = new Set(near.slice(0, 3).map((o) => o.n));
     const inReach = new Set(near.map((o) => o.n));
 
-    // Linien von „dir“ zu den Personen in Reichweite
+    // Linien vom Mauszeiger zu nahen Punkten
     for (const { n, d } of near) {
       const isTop = top.has(n);
       const a = (1 - d / REACH) * (isTop ? 0.9 : 0.28);
       const g = ctx.createLinearGradient(mouse.sx, mouse.sy, n.x, n.y);
-      g.addColorStop(0, `rgba(123,132,255,${a.toFixed(3)})`);
-      g.addColorStop(1, `rgba(166,139,255,${(a * 0.6).toFixed(3)})`);
+      g.addColorStop(0, `rgba(198,255,61,${a.toFixed(3)})`);
+      g.addColorStop(1, `rgba(243,240,231,${(a * 0.45).toFixed(3)})`);
       ctx.strokeStyle = g;
       ctx.lineWidth = isTop ? 1.4 : 1;
       if (isTop) ctx.setLineDash([]); else ctx.setLineDash([2, 4]);
@@ -150,54 +135,15 @@
       const pulse = still ? 0 : Math.sin(now / 900 + n.phase) * 0.3;
       const r = n.r + pulse + n.hot * 2.2;
       ctx.fillStyle = n.hot > 0.05
-        ? `rgba(123,132,255,${(0.55 + n.hot * 0.45).toFixed(3)})`
-        : "rgba(140,145,160,0.7)";
+        ? `rgba(198,255,61,${(0.45 + n.hot * 0.5).toFixed(3)})`
+        : "rgba(243,240,231,0.45)";
       ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, Math.PI * 2); ctx.fill();
-      if (n.hot > 0.6) {
-        ctx.strokeStyle = `rgba(123,132,255,${((n.hot - 0.6) * 0.8).toFixed(3)})`;
-        ctx.beginPath(); ctx.arc(n.x, n.y, r + 5, 0, Math.PI * 2); ctx.stroke();
-      }
-    }
-
-    // Labels für die Top 3: „Lena · 94 %“
-    ctx.font = '500 11px "JetBrains Mono", ui-monospace, monospace';
-    ctx.textBaseline = "middle";
-    for (const n of top) {
-      if (n.hot < 0.4) continue;
-      const label = `${n.name} · ${n.score} %`;
-      const w = ctx.measureText(label).width + 14;
-      const lx = Math.min(W - w - 4, n.x + 10), ly = n.y - 14;
-      ctx.globalAlpha = Math.min(1, (n.hot - 0.4) * 2.5);
-      ctx.fillStyle = "rgba(19,20,25,0.92)";
-      ctx.strokeStyle = "rgba(123,132,255,0.45)";
-      roundRect(lx, ly - 10, w, 20, 6); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = "#ECEDF1";
-      ctx.fillText(label, lx + 7, ly);
-      ctx.globalAlpha = 1;
-    }
-
-    // „du“
-    if (mouse.active) {
-      ctx.fillStyle = "#ECEDF1";
-      ctx.beginPath(); ctx.arc(mouse.sx, mouse.sy, 3, 0, Math.PI * 2); ctx.fill();
-      ctx.strokeStyle = "rgba(123,132,255,0.35)";
-      ctx.beginPath(); ctx.arc(mouse.sx, mouse.sy, REACH, 0, Math.PI * 2); ctx.stroke();
     }
 
     if (!still && visible) raf = requestAnimationFrame(draw);
   }
 
-  function roundRect(x, y, w, h, r) {
-    ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.arcTo(x + w, y, x + w, y + h, r);
-    ctx.arcTo(x + w, y + h, x, y + h, r);
-    ctx.arcTo(x, y + h, x, y, r);
-    ctx.arcTo(x, y, x + w, y, r);
-    ctx.closePath();
-  }
-
-  // Maus relativ zum Canvas; auf Touch-Geräten wandert „du“ langsam selbst
+  // Maus relativ zum Canvas; auf Touch-Geräten wandert der Zeiger langsam selbst
   const host = canvas.parentElement;
   host.addEventListener("pointermove", (e) => {
     const r = canvas.getBoundingClientRect();
