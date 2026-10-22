@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Projekte – Xyntal</title>
+  <meta name="description" content="Projekte der Xyntal-Community mit offenen Rollen: Wer baut was, und wer fehlt noch?">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Xyntal">
+  <meta property="og:image" content="https://nico-scheibe.github.io/xyntal/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Xyntal: Große Ideen beginnen mit den richtigen Menschen.">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23101113'/%3E%3Cpath d='M9 9l14 14' stroke='%23ECEAE4' stroke-width='3.2' stroke-linecap='round'/%3E%3Cpath d='M23 9l-5.2 5.2M14.2 17.8L9 23' stroke='%239BD3EE' stroke-width='3.2' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="fonts/fonts.css?v=24">
+  <link rel="stylesheet" href="style.css?v=24">
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="logo" href="./" aria-label="Xyntal Startseite"><svg class="logo-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14" class="bm-a"/><path d="M19 5l-5.3 5.3M10.3 13.7L5 19" class="bm-b"/></svg>xyntal</a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="main-nav">Menü</button>
+    <nav class="nav-links" id="main-nav" aria-label="Hauptnavigation">
+      <a class="hide-sm" href="projekte">Projekte</a>
+      <a class="hide-sm" href="community">Community</a>
+      <a class="hide-sm" href="boerse">Börse</a>
+      <a class="hide-sm" href="mitglieder">Mitglieder</a>
+      <a class="hide-sm" href="nachrichten" data-messages hidden>Nachrichten</a>
+      <a class="hide-sm" href="login" data-account>Login</a>
+      <a class="btn btn-small" href="mitglied-werden">Projekt starten</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="page-head" id="top">
+    <div class="wrap">
+      <div class="eyebrow"><b>xyntal</b> / projekte</div>
+      <h1>Wer baut was – und wer <em>fehlt noch?</em></h1>
+      <p>Projekte aus der Community mit ihren offenen Rollen. Wenn du irgendwo einsteigen würdest, sag es mit einem Klick. Die Projektinhaber sehen deine Meldung und melden sich bei dir.</p>
+    </div>
+  </section>
+
+  <section class="page-body">
+    <div class="wrap">
+      <div id="notice"></div>
+
+      <div class="board-bar">
+        <div class="feed-filter" role="group" aria-label="Projekte filtern">
+          <button type="button" data-filter="" aria-pressed="true">Alle</button>
+          <button type="button" data-filter="offen" aria-pressed="false">Mit offenen Rollen</button>
+          <button type="button" data-filter="meine" aria-pressed="false" hidden>Meine</button>
+        </div>
+        <button class="btn btn-small" id="new-project" type="button" hidden>Projekt anlegen</button>
+      </div>
+
+      <form id="project-form" class="dark-form project-form" hidden novalidate aria-labelledby="project-form-head">
+        <h2 class="project-form-head" id="project-form-head">Neues Projekt</h2>
+        <p class="notice" id="from-demo" hidden>Aus der Demo übernommen: Die Rollen deines Demo-Teams stehen unten als Vorschlag. Passe sie an dein Vorhaben an.</p>
+        <label>Name des Projekts
+          <input type="text" name="title" maxlength="80" placeholder="z. B. Feldnah" required>
+        </label>
+        <label>Worum geht es, in einem Satz? <span class="hint">So, dass jemand ohne Vorwissen versteht, was ihr baut.</span>
+          <input type="text" name="pitch" maxlength="200" placeholder="Eine App, mit der Stammkundschaft bei Hofläden vorbestellt." required>
+        </label>
+        <div class="form-grid two">
+          <label>Wo steht ihr?
+            <select name="phase">
+              <option value="idee">Idee</option>
+              <option value="prototyp">Prototyp</option>
+              <option value="erste_kunden">Erste Kunden</option>
+              <option value="wachstum">Wachstum</option>
+            </select>
+          </label>
+          <label>Ort &amp; Arbeitsweise
+            <input type="text" name="place" maxlength="80" placeholder="z. B. Regensburg & remote, abends">
+          </label>
+        </div>
+        <label>Mehr dazu <span class="hint">optional: Was gibt es schon, was ist der nächste Schritt?</span>
+          <textarea name="body" maxlength="2000"></textarea>
+        </label>
+
+        <fieldset class="roles-editor">
+          <legend>Offene Rollen <span class="hint">1 bis 8</span></legend>
+          <div id="role-rows"></div>
+          <button class="btn btn-ghost btn-small" type="button" id="add-role">Rolle hinzufügen</button>
+        </fieldset>
+
+        <label class="check"><input type="checkbox" name="is_public"><span>Auch Gästen zeigen. Ohne Haken sehen das Projekt nur freigeschaltete Mitglieder.</span></label>
+        <div class="btn-row" style="justify-content: flex-start">
+          <button class="btn" type="submit">Projekt veröffentlichen</button>
+          <button class="btn btn-ghost" type="button" id="cancel-project">Abbrechen</button>
+        </div>
+        <p class="form-status" id="project-status" role="status" aria-live="polite"></p>
+      </form>
+
+      <div id="projects" class="projects" aria-live="polite" aria-busy="true"><p class="empty">Lade Projekte …</p></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <a class="logo" href="./"><svg class="logo-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14" class="bm-a"/><path d="M19 5l-5.3 5.3M10.3 13.7L5 19" class="bm-b"/></svg>xyntal</a>
+      <p style="margin: 10px 0 0">Für Gründer und Leute, die gründen wollen.</p>
+    </div>
+    <nav class="foot-links" aria-label="Fußzeile">
+      <a href="projekte">Projekte</a>
+      <a href="community">Community</a>
+      <a href="boerse">Börse</a>
+      <a href="mitglieder">Mitglieder</a>
+      <a href="impressum">Impressum</a>
+      <a href="impressum#datenschutz">Datenschutz</a>
+    </nav>
+  </div>
+</footer>
+
+<script src="vendor/supabase.js?v=24"></script>
+<script src="config.js?v=24"></script>
+<script src="app.js?v=24"></script>
+<script src="avatars.js?v=24"></script>
+<script src="notifications.js?v=24"></script>
+<script src="effects.js?v=24"></script>
+<script src="projects.js?v=24"></script>
+</body>
+</html>

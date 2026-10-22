@@ -9,10 +9,18 @@
   <meta property="og:title" content="Xyntal – Große Ideen beginnen mit den richtigen Menschen">
   <meta property="og:description" content="Finde die Menschen, mit denen du dein Projekt aufbaust – mit nachvollziehbaren Vorschlägen und einem gemeinsamen Workspace.">
   <meta property="og:locale" content="de_DE">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Xyntal">
+  <meta property="og:image" content="https://nico-scheibe.github.io/xyntal/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Xyntal: Große Ideen beginnen mit den richtigen Menschen.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta property="og:url" content="https://nico-scheibe.github.io/xyntal/">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23101113'/%3E%3Cpath d='M9 9l14 14' stroke='%23ECEAE4' stroke-width='3.2' stroke-linecap='round'/%3E%3Cpath d='M23 9l-5.2 5.2M14.2 17.8L9 23' stroke='%239BD3EE' stroke-width='3.2' stroke-linecap='round'/%3E%3C/svg%3E">
   <link rel="preload" href="fonts/bricolage-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="fonts/fonts.css?v=23">
-  <link rel="stylesheet" href="landing.css?v=23">
+  <link rel="stylesheet" href="fonts/fonts.css?v=24">
+  <link rel="stylesheet" href="landing.css?v=24">
 </head>
 <body>
 <a class="skip" href="#inhalt">Zum Inhalt springen</a>
@@ -30,7 +38,7 @@
       <a href="#entdecken">Entdecken</a>
       <a href="#so-funktionierts">So funktioniert’s</a>
       <a href="login" data-account>Anmelden</a>
-      <a class="btn btn-primary btn-sm" href="mitglied-werden">Projekt starten</a>
+      <a class="btn btn-primary btn-sm" href="mitglied-werden" data-start>Projekt starten</a>
     </nav>
   </div>
 </header>
@@ -49,7 +57,7 @@
       <div class="hero-side">
         <p class="hero-lead">Xyntal bringt Entwickler, Designer, Gründer und alle zusammen, die etwas aufbauen wollen. Du beschreibst dein Vorhaben und wer dir fehlt – wir zeigen dir, wer passt und warum.</p>
         <div class="hero-actions">
-          <a class="btn btn-primary" href="mitglied-werden">Projekt starten</a>
+          <a class="btn btn-primary" href="mitglied-werden" data-start>Projekt starten</a>
           <a class="btn btn-quiet" href="#entdecken">Demo ausprobieren <span aria-hidden="true">↓</span></a>
         </div>
       </div>
@@ -157,12 +165,16 @@
               <ol class="feed" data-feed></ol>
             </section>
           </div>
+          <div class="ws-bridge">
+            <p><strong>Du hast selbst ein Vorhaben?</strong> Leg es als Projekt an. Die Rollen aus diesem Demo-Team übernehmen wir als Vorschlag, du kannst sie danach ändern.</p>
+            <a class="btn btn-primary" href="mitglied-werden" data-bridge data-start>So ein Team für meine Idee finden <span aria-hidden="true">→</span></a>
+          </div>
         </div>
 
         <p class="sr-only" aria-live="polite" data-announce></p>
       </div>
 
-      <p class="demo-honest">Heute auf Xyntal schon nutzbar: Profile, Community, Gesuche &amp; Angebote und Treffen in Regensburg. Rollen-Vorschläge und Workspaces wie in dieser Demo bauen wir gerade.</p>
+      <p class="demo-honest">Heute auf Xyntal nutzbar: Profile, Community, Gesuche &amp; Angebote und Projekte mit offenen Rollen. Automatische Vorschläge und gemeinsame Workspaces wie in dieser Demo sind noch nicht gebaut.</p>
     </div>
   </section>
 
@@ -298,23 +310,38 @@
     </div>
   </section>
 
+  <!-- Wer dahintersteht -->
+  <section class="founder" aria-labelledby="founder-head">
+    <div class="shell founder-grid">
+      <h2 class="label founder-label" id="founder-head">Wer dahintersteht</h2>
+      <figure class="founder-quote">
+        <blockquote><p>„Ich bin Nico. Ich arbeite Vollzeit und will bis Ende 2027 etwas Eigenes aufbauen. Dafür fehlen mir die Menschen, die genauso denken. Also baue ich Xyntal, damit Gründer und Leute, die gründen wollen, ihr Team finden.“</p></blockquote>
+        <figcaption>
+          <span class="founder-mark" aria-hidden="true">NS</span>
+          <span><strong>Nico Scheibe</strong><span>Gründer von Xyntal, Regensburg</span></span>
+          <a href="https://www.linkedin.com/in/nico-scheibe-781a20445" target="_blank" rel="noopener">LinkedIn<span class="sr-only"> (öffnet in neuem Tab)</span> <span aria-hidden="true">↗</span></a>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
   <!-- 4 · Abschluss -->
   <section class="closing" aria-labelledby="closing-title">
     <div class="shell">
       <h2 id="closing-title" class="closing-title">Was möchtest du <span class="ice">bauen?</span></h2>
       <div class="paths">
-        <a class="path" href="mitglied-werden">
+        <a class="path" href="mitglied-werden" data-start>
           <span class="path-label">Ich habe eine Idee</span>
           <span class="path-text">Profil anlegen, Vorhaben beschreiben und sagen, wer dir fehlt.</span>
           <span class="path-cta">Projekt starten <span aria-hidden="true">→</span></span>
         </a>
-        <a class="path" href="boerse">
+        <a class="path" href="projekte">
           <span class="path-label">Ich will mitbauen</span>
-          <span class="path-text">In Gesuchen &amp; Angeboten Projekte finden, die deine Fähigkeiten brauchen.</span>
-          <span class="path-cta">Projekte ansehen <span aria-hidden="true">→</span></span>
+          <span class="path-text">Projekte mit offenen Rollen ansehen und zeigen, wo du einsteigen würdest.</span>
+          <span class="path-cta">Offene Rollen ansehen <span aria-hidden="true">→</span></span>
         </a>
       </div>
-      <p class="closing-note">Kostenlos. Profil anlegen dauert etwa fünf Minuten. Persönlich kennenlernen kannst du die Community bei unseren <a href="events">Treffen in Regensburg</a>.</p>
+      <p class="closing-note">Kostenlos. Profil anlegen dauert etwa fünf Minuten, danach schalten wir dich nach einer kurzen Prüfung frei. Schon dabei? <a href="login">Anmelden</a></p>
 
       <div class="waitlist" id="warteliste">
         <div class="waitlist-copy">
@@ -355,8 +382,8 @@
         <h2 class="footer-head">Plattform</h2>
         <a href="community">Community</a>
         <a href="boerse">Gesuche &amp; Angebote</a>
+        <a href="projekte">Projekte</a>
         <a href="mitglieder">Mitglieder</a>
-        <a href="events">Treffen</a>
       </div>
       <div>
         <h2 class="footer-head">Konto</h2>
@@ -373,6 +400,6 @@
   </div>
 </footer>
 
-<script src="landing.js?v=23" defer></script>
+<script src="landing.js?v=24" defer></script>
 </body>
 </html>

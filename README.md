@@ -24,6 +24,9 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 | `supabase/004_notifications.sql` | Benachrichtigungen mit RLS und Triggern; nach 003 im SQL Editor ausführen |
 | `supabase/005_profile_avatars.sql` | Privater Profilbild-Speicher und Sichtbarkeitsregeln; am 20.10.2026 ausgeführt |
 | `supabase/006_events.sql` | Mehrere Treffen, private Zusagen und RPCs; am 20.10.2026 ausgeführt |
+| `supabase/007_newsletter_double_opt_in.sql` | Anmeldung schreibt nicht mehr direkt in den Newsletter; **noch auszuführen** (siehe `UEBERGABE-NEWSLETTER.md`) |
+| `supabase/008_listing_likes.sql` | Reaktionen auf Börsen-Einträge |
+| `supabase/009_projects.sql` | Projekte mit offenen Rollen und „Ich wäre dabei“-Meldungen; **noch auszuführen** |
 | `ANMELDUNG-EINRICHTEN.md` | Anleitung: Brevo-SMTP einrichten; Google, Apple, LinkedIn und SMS einschalten |
 
 ## Seiten
@@ -36,6 +39,7 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 | `/passwort-neu` | Neues Passwort setzen (Link aus der E-Mail) |
 | `/profil` | Profil bearbeiten, Passwort ändern, Konto löschen |
 | `/community` | Feed: Updates, Fragen, Erfolge mit Kommentaren und Likes (Gäste sehen nur öffentliche Beiträge) |
+| `/projekte` | Projekte mit offenen Rollen; Mitglieder melden sich für Rollen, Inhaber sehen die Meldungen und markieren Rollen als besetzt (`?neu=1` öffnet das Formular) |
 | `/boerse` | Gesuche & Angebote mit Kontaktaufnahme (Gäste sehen nur öffentliche Einträge) |
 | `/events` | Kommende und vergangene Treffen, Zu- und Absagen; Admins verwalten Termine und Teilnehmerlisten |
 | `/nachrichten` | Direktnachrichten zwischen Mitgliedern, mit Live-Updates |
@@ -89,6 +93,25 @@ Alle Links in `public/` sind relativ (`community` statt `/community`), damit die
 - Instagram- und LinkedIn-Links im Footer von `public/index.html`
 - Impressum und vollständige Datenschutzerklärung in `public/impressum.html` (Supabase als Dienstleister nennen)
 - Newsletter versenden: Adressen im Admin als CSV exportieren und z. B. in Brevo oder MailerLite importieren
+
+## Projekte aktivieren
+
+`supabase/009_projects.sql` einmal komplett im Supabase SQL Editor ausführen (läuft als Transaktion).
+Bis dahin zeigt `/projekte` den Hinweis „Projekte werden gerade eingerichtet“, der Rest der Seite
+funktioniert normal.
+
+- Gäste sehen öffentliche Projekte, freigeschaltete Mitglieder alle.
+- Projekte und Rollen anlegen dürfen nur freigeschaltete Mitglieder, höchstens acht Rollen pro Projekt.
+- Meldungen („Ich wäre dabei“) sehen nur die meldende Person und der Projektinhaber; für eigene Projekte,
+  besetzte Rollen und geschlossene Projekte sind keine Meldungen möglich.
+- Wird ein Konto gelöscht, verschwinden seine Projekte, Rollen und Meldungen mit.
+
+SQL-Regressionstest in einer **leeren, separaten lokalen PostgreSQL-Datenbank** (mit Rollen `anon` und
+`authenticated`): `psql -v ON_ERROR_STOP=1 -d TESTDATENBANK -f tests/projects.sql`. Erwartete letzte Ausgabe: `projects ok`.
+
+Die Demo auf der Startseite gibt die Rollen des Demo-Teams über den lokalen Browser-Speicher
+(`xyntal-wunschrollen`) als Vorschlag an `/mitglied-werden` und das Projektformular weiter.
+Das Vorschaubild für geteilte Links ist `public/og-image.png` (1200 × 630).
 
 ## Benachrichtigungen aktivieren
 

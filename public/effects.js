@@ -18,7 +18,7 @@
     { label: "Nachrichten", href: "nachrichten", glyph: "✉", keys: "chat dm inbox" },
     { label: "Mein Profil", href: "profil", glyph: "◐", keys: "konto account bearbeiten" },
     { label: "Login", href: "login", glyph: "→", keys: "anmelden einloggen" },
-    { label: "Profil anlegen", href: "mitglied-werden", glyph: "+", keys: "registrieren mitglied werden konto anlegen" },
+    { label: "Projekt starten", href: "mitglied-werden", glyph: "+", keys: "registrieren mitglied werden konto profil anlegen projekt" },
     { label: "Warteliste", href: "./#warteliste", glyph: "✉", keys: "waitlist newsletter anmelden email" },
     { label: "Impressum & Datenschutz", href: "impressum", glyph: "§", keys: "rechtliches datenschutz" },
   ];

@@ -606,6 +606,18 @@ button { font: inherit; color: inherit; }
 .feed li p { color: var(--text-2); }
 .feed .is-new p { color: var(--text); }
 
+.ws-bridge {
+  display: grid; gap: 16px; align-items: center;
+  padding: 20px; border-top: 1px solid var(--line);
+  background: var(--s2);
+}
+.ws-bridge p { font-size: 14.5px; color: var(--text-2); max-width: 44rem; }
+.ws-bridge strong { color: var(--text); font-weight: 600; }
+.ws-bridge .btn { justify-self: start; }
+@media (min-width: 900px) {
+  .ws-bridge { grid-template-columns: 1fr auto; gap: 32px; padding: 22px 24px; }
+}
+
 .demo-honest { margin-top: 18px; font-size: 13.5px; color: var(--text-3); max-width: 48rem; }
 
 /* ---------- Geschichte ---------- */
@@ -788,6 +800,43 @@ button { font: inherit; color: inherit; }
   .timeline li.tl-next::after { border-color: var(--text-3); }
   .tl-week { padding-top: 0; }
   .timeline strong { font-size: 21px; margin-top: 8px; }
+}
+
+/* ---------- Wer dahintersteht ---------- */
+.founder { padding: clamp(72px, 9vw, 128px) 0; border-top: 1px solid var(--line); }
+.founder-grid { display: grid; gap: 28px; }
+.founder-label { align-self: start; }
+.founder-quote blockquote { margin: 0; }
+.founder-quote p {
+  font-family: var(--f-display);
+  font-variation-settings: "opsz" 48;
+  font-weight: 500;
+  font-size: clamp(1.45rem, 2.9vw, 2.35rem);
+  line-height: 1.22;
+  letter-spacing: -0.025em;
+  text-wrap: pretty;
+  max-width: 34ch;
+}
+.founder-quote figcaption { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 32px; font-size: 14px; }
+.founder-quote figcaption > span:nth-child(2) { display: grid; line-height: 1.35; }
+.founder-quote figcaption strong { font-weight: 600; }
+.founder-quote figcaption > span:nth-child(2) span { color: var(--text-3); font-size: 13px; }
+.founder-mark {
+  display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%;
+  background: var(--s3); border: 1px solid var(--line-2);
+  font-family: var(--f-display); font-weight: 600; font-size: 14px;
+}
+.founder-quote figcaption a {
+  margin-left: auto; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line-2);
+  text-decoration: none; color: var(--text); font-weight: 500;
+  transition: border-color var(--t-fast) ease, background-color var(--t-fast) ease;
+}
+.founder-quote figcaption a:hover { border-color: var(--ice-line); background: var(--ice-soft); }
+@media (min-width: 900px) {
+  .founder-grid { grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px; }
+  .founder-label { grid-column: 1 / 4; padding-top: 12px; }
+  .founder-quote { grid-column: 4 / 12; }
+  .founder-quote figcaption a { margin-left: 24px; }
 }
 
 /* ---------- Abschluss ---------- */
