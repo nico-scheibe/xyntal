@@ -9,8 +9,12 @@ Only the public directory is exposed; database migrations and server state are n
 Every push to `main` is detected within 30 seconds. Other branches do not publish.
 Check `/__deployment` or the `X-Xyntal-Commit` response header for the deployed revision.
 
-Daki startup: `cd /home/container/xyntal && node auto-server.cjs`
+Daki startup (downloads the server from this repository before starting):
 
-Runtime changes to `hosting/daki/server.cjs` require replacing Daki's
-`auto-server.cjs` and restarting. Website files update automatically.
+```sh
+cd /home/container/xyntal && curl -fsSL https://raw.githubusercontent.com/nico-scheibe/xyntal/main/hosting/daki/server.cjs -o auto-server.cjs.next && mv auto-server.cjs.next auto-server.cjs && node auto-server.cjs
+```
+
+Runtime changes to `hosting/daki/server.cjs` take effect after restarting Daki.
+Website files update automatically, without a restart.
 The generated `.deploy/` directory belongs on the server only.
