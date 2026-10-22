@@ -19,8 +19,8 @@
   <meta property="og:url" content="https://nico-scheibe.github.io/xyntal/">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23101113'/%3E%3Cpath d='M9 9l14 14' stroke='%23ECEAE4' stroke-width='3.2' stroke-linecap='round'/%3E%3Cpath d='M23 9l-5.2 5.2M14.2 17.8L9 23' stroke='%239BD3EE' stroke-width='3.2' stroke-linecap='round'/%3E%3C/svg%3E">
   <link rel="preload" href="fonts/bricolage-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="fonts/fonts.css?v=24">
-  <link rel="stylesheet" href="landing.css?v=24">
+  <link rel="stylesheet" href="fonts/fonts.css?v=25">
+  <link rel="stylesheet" href="landing.css?v=25">
 </head>
 <body>
 <a class="skip" href="#inhalt">Zum Inhalt springen</a>
@@ -175,6 +175,20 @@
       </div>
 
       <p class="demo-honest">Heute auf Xyntal nutzbar: Profile, Community, Gesuche &amp; Angebote und Projekte mit offenen Rollen. Automatische Vorschläge und gemeinsame Workspaces wie in dieser Demo sind noch nicht gebaut.</p>
+    </div>
+  </section>
+
+  <!-- Echte offene Rollen aus der Community (nur sichtbar, wenn es welche gibt) -->
+  <section class="live-roles" id="offene-rollen" aria-labelledby="live-title" hidden data-live-roles>
+    <div class="shell">
+      <div class="live-head">
+        <div>
+          <p class="label"><span class="label-dot" aria-hidden="true"></span>Echt, nicht Demo</p>
+          <h2 id="live-title" class="h2">Gerade gesucht.</h2>
+        </div>
+        <a class="btn btn-quiet btn-sm" href="projekte">Alle Projekte <span aria-hidden="true">→</span></a>
+      </div>
+      <ul class="live-list" data-live-list></ul>
     </div>
   </section>
 
@@ -341,7 +355,7 @@
           <span class="path-cta">Offene Rollen ansehen <span aria-hidden="true">→</span></span>
         </a>
       </div>
-      <p class="closing-note">Kostenlos. Profil anlegen dauert etwa fünf Minuten, danach schalten wir dich nach einer kurzen Prüfung frei. Schon dabei? <a href="login">Anmelden</a></p>
+      <p class="closing-note">Kostenlos. Konto anlegen dauert eine Minute, danach schalten wir dich nach einer kurzen Prüfung frei. Schon dabei? <a href="login">Anmelden</a></p>
 
       <div class="waitlist" id="warteliste">
         <div class="waitlist-copy">
@@ -400,6 +414,6 @@
   </div>
 </footer>
 
-<script src="landing.js?v=24" defer></script>
+<script src="landing.js?v=25" defer></script>
 </body>
 </html>

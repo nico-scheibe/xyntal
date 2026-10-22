@@ -492,6 +492,30 @@
   });
 
   /* ---------------------------------------------------------------
+     Echte offene Rollen (öffentliche Projekte) – ohne die große Supabase-Bibliothek
+     --------------------------------------------------------------- */
+  (async () => {
+    const box = $("[data-live-roles]");
+    if (!box) return;
+    const SUPA = "https://rralgrlujoupprwlvoyo.supabase.co";
+    const KEY = "sb_publishable_YxSngs1ePBoxqI6f26GRww_2_kNaLfh";   // öffentlich, Schutz über Row-Level-Security
+    try {
+      const url = `${SUPA}/rest/v1/project_roles?select=id,name,need,hours,project:projects!inner(id,title,closed)&filled=eq.false&project.closed=eq.false&order=created_at.desc&limit=6`;
+      const res = await fetch(url, { headers: { apikey: KEY, Authorization: `Bearer ${KEY}` } });
+      if (!res.ok) return;                  // z. B. solange die Projekte-Tabellen noch fehlen
+      const roles = await res.json();
+      if (!Array.isArray(roles) || !roles.length) return;
+      $("[data-live-list]", box).innerHTML = roles.map((r) => `<li><a class="live-role" href="projekte#p-${Number(r.project.id)}">
+        <span class="live-role-name">${esc(r.name)}</span>
+        ${r.need ? `<span class="live-role-need">${esc(r.need)}</span>` : ""}
+        ${r.hours ? `<span class="live-role-hours">≈ ${Number(r.hours)} Std./Woche</span>` : ""}
+        <span class="live-role-project">für <b>${esc(r.project.title)}</b></span>
+      </a></li>`).join("");
+      box.hidden = false;
+    } catch { /* ohne Verbindung bleibt der Bereich einfach weg */ }
+  })();
+
+  /* ---------------------------------------------------------------
      Warteliste: Brevo mit Double-Opt-in, Eingabe bleibt auf der Seite
      --------------------------------------------------------------- */
   const WAITLIST_URL = "https://67406864.sibforms.com/serve/MUIFAP_vKT3wGvb_oCMmNCfxk9r4kS47ziUcgIjOp7ibD-hlikkWAA_l-Wo4pedNGsTJEc-yCsM1TIj41aX0dzDASKRcDC_ZxNn9envMBdU_zWmo7HHDj-FKtvyCz63RuFRQHleImiTRDarw8DCC1sKXSfU6F-RoppW0XftCBPzMdF-ch3vutYeokCLF5_Fzn5uooz6XScdhsGQS2w==?isAjax=1";

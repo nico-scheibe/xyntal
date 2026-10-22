@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Seite nicht gefunden – Xyntal</title>
+  <script>
+    // GitHub Pages zeigt diese Seite unter jeder falschen Adresse. Basis selbst bestimmen,
+    // damit Schriften, Styles und Links unter /xyntal/ wie auf einer eigenen Domain funktionieren.
+    document.write('<base href="' + (location.pathname.startsWith("/xyntal/") || location.pathname === "/xyntal" ? "/xyntal/" : "/") + '">');
+  </script>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23101113'/%3E%3Cpath d='M9 9l14 14' stroke='%23ECEAE4' stroke-width='3.2' stroke-linecap='round'/%3E%3Cpath d='M23 9l-5.2 5.2M14.2 17.8L9 23' stroke='%239BD3EE' stroke-width='3.2' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="fonts/fonts.css?v=25">
+  <link rel="stylesheet" href="landing.css?v=25">
+  <style>
+    .lost { min-height: calc(100vh - 68px - 160px); display: grid; align-content: center; padding-top: 64px; padding-bottom: 96px; }
+    .lost-code { font-family: var(--f-display); font-weight: 760; font-size: clamp(6rem, 26vw, 15rem); line-height: 0.85; letter-spacing: -0.06em; color: var(--text); margin-left: -0.04em; }
+    .lost-code span { color: var(--ice); }
+    .lost h1 { margin-top: 28px; font-family: var(--f-display); font-weight: 700; font-size: clamp(1.8rem, 4vw, 2.8rem); letter-spacing: -0.035em; line-height: 1.05; max-width: 18ch; }
+    .lost p { margin-top: 16px; color: var(--text-2); max-width: 34rem; }
+    .lost-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 32px; }
+  </style>
+</head>
+<body>
+<header class="topbar">
+  <div class="shell topbar-inner">
+    <a class="brand" href="./" aria-label="Xyntal – Startseite">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14" class="bm-a"/><path d="M19 5l-5.3 5.3M10.3 13.7L5 19" class="bm-b"/></svg>
+      <span>xyntal</span>
+    </a>
+  </div>
+</header>
+<main class="shell lost">
+  <p class="lost-code" aria-hidden="true">404<span>.</span></p>
+  <h1>Diese Seite gibt es nicht – noch nicht.</h1>
+  <p>Vielleicht ist der Link veraltet oder hat einen Tippfehler. Von hier aus geht es weiter:</p>
+  <div class="lost-actions">
+    <a class="btn btn-primary" href="./">Zur Startseite</a>
+    <a class="btn btn-quiet" href="projekte">Projekte ansehen</a>
+    <a class="btn btn-quiet" href="login">Anmelden</a>
+  </div>
+</main>
+<footer class="footer">
+  <div class="shell footer-inner">
+    <nav class="footer-nav" aria-label="Rechtliches">
+      <div><a href="impressum">Impressum</a><a href="impressum#datenschutz">Datenschutz</a></div>
+    </nav>
+  </div>
+</footer>
+</body>
+</html>

@@ -256,6 +256,9 @@
     els.notice.innerHTML = accessNotice(v, "Projekte anlegen und dich für Rollen melden");
     els.mine.hidden = !v.me;
     await load();
+    // Sprung von der Startseite zu einem bestimmten Projekt
+    const target = location.hash && document.getElementById(location.hash.slice(1));
+    if (target) { target.closest(".project")?.scrollIntoView({ block: "start" }); target.closest(".project")?.setAttribute("tabindex", "-1"); target.closest(".project")?.focus({ preventScroll: true }); }
     if (v.isMember && ready) {
       els.newBtn.hidden = false;
       if (new URLSearchParams(location.search).get("neu") === "1") openForm();

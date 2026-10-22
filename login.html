@@ -13,8 +13,8 @@
   <meta property="og:image:alt" content="Xyntal: Große Ideen beginnen mit den richtigen Menschen.">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23101113'/%3E%3Cpath d='M9 9l14 14' stroke='%23ECEAE4' stroke-width='3.2' stroke-linecap='round'/%3E%3Cpath d='M23 9l-5.2 5.2M14.2 17.8L9 23' stroke='%239BD3EE' stroke-width='3.2' stroke-linecap='round'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="fonts/fonts.css?v=24">
-  <link rel="stylesheet" href="style.css?v=24">
+  <link rel="stylesheet" href="fonts/fonts.css?v=25">
+  <link rel="stylesheet" href="style.css?v=25">
 </head>
 <body>
 
@@ -42,23 +42,30 @@
     </div>
   </section>
 
-  <section class="alt page-body">
-    <div class="wrap narrow-sm">
-      <form id="login" novalidate>
-        <label>E-Mail
-          <input type="email" name="email" autocomplete="email" required>
-        </label>
-        <label>Passwort
-          <input type="password" name="password" autocomplete="current-password" required>
-        </label>
-        <button class="btn" type="submit">Einloggen</button>
-        <p class="form-status" id="status" role="status" aria-live="polite"></p>
-        <p style="margin: 0; font-size: 0.93rem">Noch kein Mitglied? <a class="text-link" href="mitglied-werden">Jetzt Profil anlegen</a><br>
-        <a class="text-link" href="#" id="forgot">Passwort vergessen?</a></p>
-      </form>
-      <div class="auth-divider" id="auth-divider" hidden><span>oder</span></div>
-      <div class="auth-options" id="auth-options" hidden></div>
-      <p class="auth-note" id="auth-note" hidden>Neu hier? Bei der Anmeldung über diese Buttons wird automatisch ein Konto angelegt – es gilt unsere <a class="text-link" href="impressum#datenschutz">Datenschutzerklärung</a>.</p>
+  <section class="page-body join-body">
+    <div class="wrap join-layout">
+      <aside class="join-aside" aria-labelledby="login-side-head">
+        <h2 class="join-section-head" id="login-side-head">Noch kein Konto?</h2>
+        <p class="side-text">Name, E-Mail, Passwort und ein Satz zu dir – mehr braucht es nicht. Danach schalte ich dich nach einer kurzen Prüfung frei.</p>
+        <a class="btn btn-ghost" href="mitglied-werden">Konto anlegen</a>
+      </aside>
+      <div class="join-main">
+        <form id="login" class="card-form" novalidate>
+          <h2 class="form-title">Mit E-Mail einloggen</h2>
+          <label>E-Mail
+            <input type="email" name="email" autocomplete="email" required>
+          </label>
+          <label>Passwort
+            <input type="password" name="password" autocomplete="current-password" required>
+          </label>
+          <button class="btn" type="submit">Einloggen</button>
+          <p class="form-status" id="status" role="status" aria-live="polite"></p>
+          <p class="join-login"><a class="text-link" href="#" id="forgot">Passwort vergessen?</a></p>
+        </form>
+        <div class="auth-divider" id="auth-divider" hidden><span>oder</span></div>
+        <div class="auth-options" id="auth-options" hidden></div>
+        <p class="auth-note" id="auth-note" hidden>Neu hier? Bei der Anmeldung über diese Buttons wird automatisch ein Konto angelegt – es gilt unsere <a class="text-link" href="impressum#datenschutz">Datenschutzerklärung</a>.</p>
+      </div>
     </div>
   </section>
 </main>
@@ -80,12 +87,12 @@
   </div>
 </footer>
 
-<script src="vendor/supabase.js?v=24"></script>
-<script src="config.js?v=24"></script>
-<script src="app.js?v=24"></script>
-<script src="avatars.js?v=24"></script>
-<script src="notifications.js?v=24"></script>
-<script src="effects.js?v=24"></script>
+<script src="vendor/supabase.js?v=25"></script>
+<script src="config.js?v=25"></script>
+<script src="app.js?v=25"></script>
+<script src="avatars.js?v=25"></script>
+<script src="notifications.js?v=25"></script>
+<script src="effects.js?v=25"></script>
 <script>
   const form = document.getElementById("login");
   const status = document.getElementById("status");
