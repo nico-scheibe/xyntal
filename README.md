@@ -59,20 +59,24 @@ where id = (select id from auth.users where email = 'deine@email.de');
 
 ## Online
 
-Live unter **https://xyntal.de/** (GitHub Pages, Repository `nico-scheibe/xyntal`, eigene Domain über `public/CNAME`).
-xyntal.com, xyntal.info und xyntal.store leiten beim Domain-Anbieter dauerhaft (301) auf xyntal.de weiter.
-Der Umzug von `nico-scheibe.github.io/xyntal/` ist in `DOMAIN-UMZUG.md` beschrieben.
+Die Website wird bei **Daki** gehostet. **https://xyntal.de/** und **https://www.xyntal.de/**
+sind über den verschlüsselten Cloudflare-Tunnel `xyntal-daki` mit Daki verbunden.
+IONOS bleibt der Domain-Registrar; DNS liegt bei Cloudflare. Nach der erstmaligen Umstellung
+müssen DNS-Verteilung und die automatische Ausstellung des Cloudflare-Zertifikats abgeschlossen sein.
+Details zum Betrieb stehen in `hosting/daki/README.md`.
 
-GitHub Pages veröffentlicht den Branch `gh-pages`, der genau den Inhalt von `public/` enthält.
-Änderungen veröffentlichen:
+Daki prüft den öffentlichen Branch `main` alle 30 Sekunden und übernimmt `public/`
+automatisch. Bei einem Abruffehler bleibt die bisherige Version online.
+Änderungen veröffentlichen (auf `main`):
 
 ```sh
 git add -A && git commit -m "Beschreibung der Änderung"
 git push
-git subtree push --prefix public origin gh-pages
 ```
 
-Nach ein bis zwei Minuten ist die neue Version online.
+Nach etwa 30 Sekunden plus Übertragungszeit ist die neue Version online.
+Der Endpunkt `/__deployment` zeigt den veröffentlichten Git-Commit.
+Ein Push nach `gh-pages` ist für die Daki-Website nicht erforderlich.
 
 Wenn du `style.css` oder eine `.js`-Datei änderst, erhöhe die Versionsnummer `?v=…` in den HTML-Dateien (z. B. von `?v=3` auf `?v=4`), damit Browser die neue Datei laden statt der zwischengespeicherten.
 

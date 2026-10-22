@@ -22,3 +22,11 @@ The generated `.deploy/` directory belongs on the server only.
 Cloudflare tunnel `xyntal-daki` connects to `http://localhost:4129` inside Daki.
 The launcher verifies a pinned Cloudflared binary and reads the tunnel token
 from `.cloudflared-token` (permissions 0600). Never commit this file.
+
+Domain configuration (22 October 2026): IONOS delegates `xyntal.de` to
+`haley.ns.cloudflare.com` and `steven.ns.cloudflare.com`. Proxied CNAME records
+for `@` and `www` target tunnel `7740193b-a9bb-4a15-a4b9-ee4b62d0859d.cfargotunnel.com`.
+Both hostnames route to `http://localhost:4129` inside the encrypted tunnel.
+Cloudflare Always Use HTTPS is enabled. MX, SPF, DMARC, autodiscover and both
+IONOS DKIM selectors are preserved as DNS-only records. IONOS email stays in use.
+Initial Cloudflare activation and certificate issuance can take time after the nameserver change.
