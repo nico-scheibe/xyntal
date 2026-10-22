@@ -1,1 +1,4 @@
 .deploy/
+.cloudflared-token
+.tunnel-command
+cloudflared*
