@@ -12,9 +12,13 @@ Check `/__deployment` or the `X-Xyntal-Commit` response header for the deployed 
 Daki startup (downloads the server from this repository before starting):
 
 ```sh
-cd /home/container/xyntal && curl -fsSL https://raw.githubusercontent.com/nico-scheibe/xyntal/main/hosting/daki/server.cjs -o auto-server.cjs.next && mv auto-server.cjs.next auto-server.cjs && node auto-server.cjs
+cd /home/container/xyntal && curl -fsSL https://raw.githubusercontent.com/nico-scheibe/xyntal/main/hosting/daki/start.cjs -o start.cjs && node start.cjs
 ```
 
 Runtime changes to `hosting/daki/server.cjs` take effect after restarting Daki.
 Website files update automatically, without a restart.
 The generated `.deploy/` directory belongs on the server only.
+
+Cloudflare tunnel `xyntal-daki` connects to `http://localhost:4129` inside Daki.
+The launcher verifies a pinned Cloudflared binary and reads the tunnel token
+from `.cloudflared-token` (permissions 0600). Never commit this file.

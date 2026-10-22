@@ -26,6 +26,10 @@ async function start() {
     fs.renameSync(binary + '.next',binary);
   }
   fs.chmodSync(binary,0o700);
+  const serverResponse = await fetch('https://raw.githubusercontent.com/nico-scheibe/xyntal/main/hosting/daki/server.cjs', {signal:AbortSignal.timeout(30000)});
+  if (!serverResponse.ok) throw new Error('Website server download failed');
+  fs.writeFileSync(path.join(__dirname,'auto-server.cjs.next'), await serverResponse.text());
+  fs.renameSync(path.join(__dirname,'auto-server.cjs.next'), path.join(__dirname,'auto-server.cjs'));
   require('./auto-server.cjs');
   let tunnel;
   let shuttingDown = false;
