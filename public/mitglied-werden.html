@@ -13,8 +13,8 @@
   <meta property="og:image:alt" content="Xyntal: Große Ideen beginnen mit den richtigen Menschen.">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23101113'/%3E%3Cpath d='M9 9l14 14' stroke='%23ECEAE4' stroke-width='3.2' stroke-linecap='round'/%3E%3Cpath d='M23 9l-5.2 5.2M14.2 17.8L9 23' stroke='%239BD3EE' stroke-width='3.2' stroke-linecap='round'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="fonts/fonts.css?v=24">
-  <link rel="stylesheet" href="style.css?v=24">
+  <link rel="stylesheet" href="fonts/fonts.css?v=25">
+  <link rel="stylesheet" href="style.css?v=25">
 </head>
 <body>
 
@@ -48,7 +48,7 @@
       <aside class="join-aside" aria-labelledby="join-steps-head">
         <h2 class="join-section-head" id="join-steps-head">So geht es weiter</h2>
         <ol class="join-steps">
-          <li><span>1</span><div><strong>Profil anlegen</strong><p>Wer du bist, woran du arbeitest und was du suchst. Dauert etwa fünf Minuten.</p></div></li>
+          <li><span>1</span><div><strong>Konto anlegen</strong><p>Name, E-Mail, Passwort und ein Satz zu dir. Dauert eine Minute.</p></div></li>
           <li><span>2</span><div><strong>E-Mail bestätigen</strong><p>Danach prüfe ich dein Profil kurz und schalte dich frei.</p></div></li>
           <li><span>3</span><div><strong>Projekt anlegen oder einsteigen</strong><p>Beschreib dein Vorhaben mit offenen Rollen oder melde dich bei Projekten anderer.</p></div></li>
         </ol>
@@ -82,15 +82,15 @@
             </div>
           </fieldset>
 
-          <div class="form-divider"></div>
+          <label>Woran arbeitest du – oder wobei willst du mitmachen? <span class="hint">Ein Satz reicht, z. B. „Ich baue eine App für Handwerksbetriebe“ oder „Ich entwickle gern mit“.</span>
+            <input type="text" name="headline" maxlength="120" required>
+          </label>
 
-            <fieldset>
-              <legend>Dein Vorhaben</legend>
-              <label>Woran arbeitest du? <span class="hint">Ein Satz, der neugierig macht – z. B. „Ich baue eine App für Handwerksbetriebe“.</span>
-                <input type="text" name="headline" maxlength="120" required>
-              </label>
+          <details class="join-more" id="join-more">
+            <summary>Mehr über dich <span class="hint">optional – geht auch später im Profil</span></summary>
+            <div class="join-more-body">
               <label>Erzähl mehr <span class="hint">Was treibt dich an, wo stehst du, wo willst du hin?</span>
-                <textarea name="about" maxlength="1500" required></textarea>
+                <textarea name="about" maxlength="1500"></textarea>
               </label>
               <div class="form-grid two">
                 <label>Wo stehst du?
@@ -106,12 +106,6 @@
                   <input type="text" name="category" maxlength="60" placeholder="z. B. E-Commerce, Software, Handwerk">
                 </label>
               </div>
-            </fieldset>
-
-            <div class="form-divider"></div>
-
-            <fieldset>
-              <legend>Geben &amp; Nehmen</legend>
               <label>Wobei kannst du anderen helfen?
                 <textarea name="offer" maxlength="600" style="min-height: 72px" placeholder="z. B. Marketing, Webdesign, Steuern, Vertrieb"></textarea>
               </label>
@@ -119,31 +113,23 @@
               <label>Was suchst du gerade?
                 <textarea name="seek" maxlength="600" style="min-height: 72px" placeholder="z. B. Mitgründer, erste Kunden, Feedback zu meiner Idee"></textarea>
               </label>
-            </fieldset>
-
-            <div class="form-divider"></div>
-
-            <fieldset>
-              <legend>Links <span class="hint">(optional)</span></legend>
               <div class="form-grid two">
                 <label>LinkedIn <input type="url" name="linkedin" placeholder="linkedin.com/in/…"></label>
                 <label>Instagram <input type="url" name="instagram" placeholder="instagram.com/…"></label>
               </div>
               <label>Website <input type="url" name="website" placeholder="deine-seite.de"></label>
-            </fieldset>
+              <label class="check">
+                <input type="checkbox" name="is_public">
+                <span>Mein Profil darf öffentlich auf der Website erscheinen. Ohne Haken sehen es nur freigeschaltete Mitglieder. Deine E-Mail-Adresse ist nie sichtbar.</span>
+              </label>
+            </div>
+          </details>
 
-            <div class="form-divider"></div>
-
-            <label class="check">
-              <input type="checkbox" name="is_public">
-              <span>Mein Profil darf öffentlich auf der Website erscheinen. Ohne Haken sehen es nur freigeschaltete Mitglieder. Deine E-Mail-Adresse ist nie sichtbar.</span>
-            </label>
-          <p class="hint">Die Warteliste mit E-Mail-Bestätigung findest du auf der Startseite. Die Mitgliedschaft ist davon unabhängig.</p>
           <label class="check">
             <input type="checkbox" name="consent" required>
             <span>Ich habe die Hinweise zur Verarbeitung meiner Angaben für die Mitgliedschaft gelesen. Mehr in der <a class="text-link" href="impressum#datenschutz">Datenschutzerklärung</a>.</span>
           </label>
-          <button class="btn" type="submit">Mitgliedschaft beantragen</button>
+          <button class="btn" type="submit">Konto anlegen</button>
           <p class="form-status" id="status" role="status" aria-live="polite"></p>
           <p class="join-login">Schon dabei? <a class="text-link" href="login">Hier einloggen</a></p>
         </form>
@@ -169,12 +155,12 @@
   </div>
 </footer>
 
-<script src="vendor/supabase.js?v=24"></script>
-<script src="config.js?v=24"></script>
-<script src="app.js?v=24"></script>
-<script src="avatars.js?v=24"></script>
-<script src="notifications.js?v=24"></script>
-<script src="effects.js?v=24"></script>
+<script src="vendor/supabase.js?v=25"></script>
+<script src="config.js?v=25"></script>
+<script src="app.js?v=25"></script>
+<script src="avatars.js?v=25"></script>
+<script src="notifications.js?v=25"></script>
+<script src="effects.js?v=25"></script>
 <script>
   const form = document.getElementById("register");
   const status = document.getElementById("status");
@@ -185,6 +171,7 @@
     if (Array.isArray(roles) && roles.length && !form.elements.seek.value) {
       form.elements.seek.value = `Für mein Projekt suche ich Menschen für: ${roles.map((r) => r.name).join(", ")}.`;
       document.getElementById("from-demo").hidden = false;
+      document.getElementById("join-more").open = true;
     }
   } catch { /* ohne Speicher einfach leer */ }
 
@@ -199,7 +186,7 @@
     e.preventDefault();
     submitWith(form, status, async (data) => {
       requireFields(data, ["name", "email", "password"], "Bitte fülle Name, E-Mail und Passwort aus.");
-      requireFields(data, ["headline", "about"], "Erzähl uns kurz, woran du arbeitest.");
+      requireFields(data, ["headline"], "Schreib kurz, woran du arbeitest oder wobei du mitmachen willst.");
       if (data.password.length < 8) throw new Error("Dein Passwort braucht mindestens 8 Zeichen.");
       if (!data.consent) throw new Error("Bitte bestätige die Datenschutz-Einwilligung.");
 

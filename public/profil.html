@@ -13,8 +13,8 @@
   <meta property="og:image:alt" content="Xyntal: Große Ideen beginnen mit den richtigen Menschen.">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23101113'/%3E%3Cpath d='M9 9l14 14' stroke='%23ECEAE4' stroke-width='3.2' stroke-linecap='round'/%3E%3Cpath d='M23 9l-5.2 5.2M14.2 17.8L9 23' stroke='%239BD3EE' stroke-width='3.2' stroke-linecap='round'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="fonts/fonts.css?v=24">
-  <link rel="stylesheet" href="style.css?v=24">
+  <link rel="stylesheet" href="fonts/fonts.css?v=25">
+  <link rel="stylesheet" href="style.css?v=25">
 </head>
 <body>
 
@@ -39,20 +39,24 @@
     <div class="wrap">
       <div class="eyebrow"><b>xyntal</b> / mein profil</div>
       <h1 id="hello">Dein <em>Profil.</em></h1>
-      <p>So sieht dein Profil aus. Andere sehen es erst nach der Freigabe, und nur so, wie du die Sichtbarkeit einstellst. Matching gibt es noch nicht, und Treffen lassen sich hier nicht organisieren.</p>
+      <p>So sehen dich andere – erst nach der Freigabe und nur so, wie du die Sichtbarkeit einstellst.</p>
     </div>
   </section>
 
-  <section class="page-body" style="padding-bottom: 0">
-    <div class="wrap narrow">
-      <div id="notice"></div>
-      <div id="preview"></div>
-    </div>
-  </section>
-
-  <section class="alt page-body" style="margin-top: 64px">
-    <div class="wrap narrow">
-      <form id="avatar-form" class="avatar-editor" novalidate>
+  <section class="page-body join-body">
+    <div class="wrap join-layout profile-layout">
+      <aside class="join-aside" aria-labelledby="steps-head">
+        <div id="notice"></div>
+        <h2 class="join-section-head" id="steps-head">Nächste Schritte</h2>
+        <ol class="next-steps" id="next-steps"></ol>
+        <div class="side-actions">
+          <button class="btn btn-ghost btn-small" id="logout" type="button">Ausloggen</button>
+          <button class="btn btn-ghost btn-small" id="delete" type="button">Konto löschen</button>
+        </div>
+      </aside>
+      <div class="join-main profile-main">
+        <div id="preview"></div>
+      <form id="avatar-form" class="avatar-editor card-form" novalidate>
         <h2>Dein Profilbild</h2>
         <div class="avatar-editor-row"><div data-avatar-preview></div><div>
           <label for="avatar-file">Bild auswählen</label>
@@ -67,8 +71,7 @@
         </div>
         <p class="form-status" role="status" aria-live="polite"></p>
       </form>
-      <div class="form-divider"></div>
-      <form id="profile" novalidate>
+      <form id="profile" class="card-form" novalidate>
         <fieldset>
           <legend>Profil bearbeiten</legend>
           <label>Name
@@ -84,7 +87,7 @@
               <input type="text" name="headline" maxlength="120" required>
             </label>
             <label>Erzähl mehr <span class="hint">Was treibt dich an, wo stehst du, wo willst du hin?</span>
-              <textarea name="about" maxlength="1500" required></textarea>
+              <textarea name="about" maxlength="1500"></textarea>
             </label>
             <div class="form-grid two">
               <label>Wo stehst du?
@@ -117,7 +120,7 @@
           <div class="form-divider"></div>
 
           <fieldset>
-            <legend>Links <span class="hint" style="font-family: Manrope, sans-serif; font-size: 0.9rem">(optional)</span></legend>
+            <legend>Links <span class="hint">(optional)</span></legend>
             <div class="form-grid two">
               <label>LinkedIn <input type="url" name="linkedin" placeholder="linkedin.com/in/…"></label>
               <label>Instagram <input type="url" name="instagram" placeholder="instagram.com/…"></label>
@@ -141,9 +144,6 @@
         <p class="form-status" id="status" role="status" aria-live="polite"></p>
       </form>
 
-      <div class="btn-row" style="justify-content: flex-start; margin-top: 32px">
-        <button class="btn btn-ghost" id="logout" type="button">Ausloggen</button>
-        <button class="btn btn-ghost" id="delete" type="button">Konto löschen</button>
       </div>
     </div>
   </section>
@@ -166,12 +166,12 @@
   </div>
 </footer>
 
-<script src="vendor/supabase.js?v=24"></script>
-<script src="config.js?v=24"></script>
-<script src="app.js?v=24"></script>
-<script src="avatars.js?v=24"></script>
-<script src="notifications.js?v=24"></script>
-<script src="effects.js?v=24"></script>
+<script src="vendor/supabase.js?v=25"></script>
+<script src="config.js?v=25"></script>
+<script src="app.js?v=25"></script>
+<script src="avatars.js?v=25"></script>
+<script src="notifications.js?v=25"></script>
+<script src="effects.js?v=25"></script>
 <script>
   const form = document.getElementById("profile");
   const status = document.getElementById("status");
@@ -188,10 +188,22 @@
     } else if (m.status === "rejected") {
       notice = `<div class="notice">Dein Profil wurde nicht freigeschaltet. Bei Fragen melde dich gern per E-Mail.</div>`;
     }
-    if (!m.headline || !m.about) {
-      notice = `<div class="notice"><strong>Fast fertig:</strong> Erzähl den anderen unten, woran du arbeitest – dann kann ich dein Profil freischalten.</div>` + notice;
+    if (!m.headline) {
+      notice = `<div class="notice"><strong>Fast fertig:</strong> Schreib unten in einem Satz, woran du arbeitest – dann kann ich dein Profil freischalten.</div>` + notice;
     }
     document.getElementById("notice").innerHTML = notice;
+    // Nächste Schritte: was schon erledigt ist, was noch fehlt
+    const steps = [
+      [!!m.headline, "Ein Satz zu dir", "#profile"],
+      [!!(m.about && (m.offer || m.seek)), "Profil ergänzen: was du kannst und suchst", "#profile"],
+      [!!m.avatar_path, "Profilbild hinzufügen", "#avatar-form"],
+      [m.status === "approved", m.status === "approved" ? "Freigeschaltet" : "Freischaltung abwarten", null],
+      [false, m.status === "approved" ? "Erstes Projekt anlegen oder bei einem einsteigen" : "Danach: Projekt anlegen oder einsteigen", m.status === "approved" ? "projekte?neu=1" : null],
+    ];
+    document.getElementById("next-steps").innerHTML = steps.map(([done, label, href]) => `<li class="${done ? "done" : ""}">
+      <span class="step-mark" aria-hidden="true"></span>
+      ${href && !done ? `<a class="text-link" href="${href}">${label}</a>` : `<span>${label}</span>`}${done ? '<span class="sr-only"> – erledigt</span>' : ""}
+    </li>`).join("");
     document.getElementById("preview").innerHTML = `<div class="members-grid" style="grid-template-columns: 1fr; margin-top: 0">${memberCard(m)}</div>`;
   }
 
@@ -207,7 +219,7 @@
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     submitWith(form, status, async (data) => {
-      requireFields(data, ["name", "headline", "about"], "Name und „Woran arbeitest du?“ dürfen nicht leer sein.");
+      requireFields(data, ["name", "headline"], "Name und „Woran arbeitest du?“ dürfen nicht leer sein.");
       const updated = unwrap(await sb.from("profiles").update(profileFrom(data)).eq("id", me.id).select().single());
       if (data.new_password) {
         if (data.new_password.length < 8) throw new Error("Das neue Passwort braucht mindestens 8 Zeichen.");

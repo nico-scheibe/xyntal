@@ -1395,3 +1395,48 @@ main section[id] { scroll-margin-top: 64px; }
 .listing-more { justify-self: start; font: inherit; font-size: 13.5px; font-weight: 600; color: var(--accent); background: none; border: 0; padding: 4px 0; cursor: pointer; }
 .listing-more:hover { text-decoration: underline; text-underline-offset: 3px; }
 .listing .listing-title { margin: 0; font-size: 19px; letter-spacing: -0.02em; line-height: 1.25; }
+
+/* Anmeldung: optionale Angaben eingeklappt */
+.join-more { border: 1px solid var(--border); border-radius: 14px; background: var(--panel-2); }
+.join-more summary { cursor: pointer; padding: 16px 18px; font-weight: 600; font-size: 15px; list-style: none; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.join-more summary::-webkit-details-marker { display: none; }
+.join-more summary::before { content: "+"; color: var(--accent); font-weight: 700; width: 12px; }
+.join-more[open] summary::before { content: "–"; }
+.join-more summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 14px; }
+.join-more-body { display: grid; gap: 18px; padding: 4px 18px 20px; }
+
+/* ---------- Login & Profil: gleicher Aufbau wie die Anmeldung ---------- */
+.side-text { margin: 0 0 18px; color: var(--text-2); font-size: 15px; line-height: 1.55; }
+.card-form { display: grid; gap: 18px; padding: 28px; border: 1px solid var(--border); border-radius: var(--r-card); background: var(--panel); }
+@media (max-width: 559px) { .card-form { padding: 20px 16px; } }
+.form-title { margin: 0; font-size: 22px; letter-spacing: -0.02em; }
+.profile-main { display: grid; gap: 24px; }
+.profile-main #preview .members-grid { margin: 0; }
+.next-steps { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--border); }
+.next-steps li { display: grid; grid-template-columns: 24px 1fr; gap: 12px; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); font-size: 14.5px; color: var(--text); }
+.next-steps li.done { color: var(--text-3); }
+.step-mark { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--border-2); display: grid; place-items: center; }
+.next-steps li.done .step-mark { background: var(--accent); border-color: var(--accent); }
+.next-steps li.done .step-mark::after { content: ""; width: 9px; height: 5px; border: solid var(--on-accent); border-width: 0 0 2px 2px; transform: translateY(-1px) rotate(-45deg); }
+.side-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 24px; }
+.join-aside #notice .notice { margin: 0 0 24px; }
+
+/* ---------- Unterseiten angleichen ---------- */
+/* Hinweise linksbündig wie der Rest der Seite */
+.page-body .notice, #notice .notice { margin-left: 0; margin-right: 0; max-width: 760px; text-align: left; }
+/* Leere Zustände als ruhige, gestrichelte Fläche statt verlorener Zeile */
+.empty { padding: 48px 24px; border: 1px dashed var(--border-2); border-radius: var(--r-card); color: var(--text-2); font-size: 15px; }
+.board > .empty, .projects > .empty, .members-grid > .empty, #feed > .empty, #events-list > .empty { grid-column: 1 / -1; }
+/* Mitgliederkarten: klare Kanten, ruhiger Text, lange Texte gekürzt */
+.member { border: 1px solid var(--border); border-radius: var(--r-card); background: var(--panel); transition: border-color 0.15s ease; }
+.member:hover { border-color: var(--border-2); }
+.member h3 { font-size: 19px; letter-spacing: -0.02em; }
+.member-headline { font-size: 14px; }
+.member-about { display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.6; }
+.member-kv { line-height: 1.5; }
+/* Beiträge und Treffen im selben Kartenstil */
+.post, .event-card { border: 1px solid var(--border); border-radius: var(--r-card); background: var(--panel); }
+.post:hover, .event-card:hover { border-color: var(--border-2); }
+/* nur für Screenreader */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.join-more summary .hint { font-weight: 400; }
