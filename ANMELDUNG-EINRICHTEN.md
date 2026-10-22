@@ -60,8 +60,8 @@ Versandgrenzen prüfen und passend zu den verfügbaren Brevo-Kontingenten setzen
 
 Unter **Authentication → URL Configuration**:
 
-- **Site URL:** `https://nico-scheibe.github.io/xyntal/`
-- **Redirect URLs:** `https://nico-scheibe.github.io/xyntal/**`
+- **Site URL:** `https://xyntal.de/`
+- **Redirect URLs:** `https://xyntal.de/**`, `https://www.xyntal.de/**`
 - Für lokale Tests zusätzlich: `http://localhost:4173/**`
 
 E-Mail-Bestätigung unter dem E-Mail-Anbieter aktiviert lassen. Link-Tracking

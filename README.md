@@ -59,7 +59,9 @@ where id = (select id from auth.users where email = 'deine@email.de');
 
 ## Online
 
-Live unter **https://nico-scheibe.github.io/xyntal/** (GitHub Pages, Repository `nico-scheibe/xyntal`).
+Live unter **https://xyntal.de/** (GitHub Pages, Repository `nico-scheibe/xyntal`, eigene Domain über `public/CNAME`).
+xyntal.com, xyntal.info und xyntal.store leiten beim Domain-Anbieter dauerhaft (301) auf xyntal.de weiter.
+Der Umzug von `nico-scheibe.github.io/xyntal/` ist in `DOMAIN-UMZUG.md` beschrieben.
 
 GitHub Pages veröffentlicht den Branch `gh-pages`, der genau den Inhalt von `public/` enthält.
 Änderungen veröffentlichen:
@@ -74,8 +76,8 @@ Nach ein bis zwei Minuten ist die neue Version online.
 
 Wenn du `style.css` oder eine `.js`-Datei änderst, erhöhe die Versionsnummer `?v=…` in den HTML-Dateien (z. B. von `?v=3` auf `?v=4`), damit Browser die neue Datei laden statt der zwischengespeicherten.
 
-In Supabase (Authentication → URL Configuration) sind `https://nico-scheibe.github.io/xyntal/` als Site URL
-sowie `https://nico-scheibe.github.io/xyntal/**` und `http://localhost:4173/**` als Redirect URLs eingetragen.
+In Supabase (Authentication → URL Configuration) sind `https://xyntal.de/` als Site URL
+sowie `https://xyntal.de/**`, `https://www.xyntal.de/**` und `http://localhost:4173/**` als Redirect URLs eingetragen.
 Bei einer eigenen Domain beides dort ergänzen.
 
 Alle Links in `public/` sind relativ (`community` statt `/community`), damit die Seite auch im Unterordner `/xyntal/` funktioniert.
