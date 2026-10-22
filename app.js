@@ -145,7 +145,8 @@ function memberCard(m, opts = {}) {
     slot.textContent = "Mein Profil";
     slot.href = "profil";
     slot.classList.remove("hide-sm");
-    document.querySelectorAll('.nav-links a.btn[href="mitglied-werden"], .nav-links a.btn[href="#warteliste"], .nav-links a.btn[href="./#warteliste"]').forEach((a) => a.remove());
+    // Angemeldet: „Projekt starten“ führt direkt zum Projektformular statt zur Anmeldung
+    document.querySelectorAll('.nav-links a.btn[href="mitglied-werden"]').forEach((a) => { a.href = "projekte?neu=1"; a.textContent = "Projekt anlegen"; });
   }
 })();
 

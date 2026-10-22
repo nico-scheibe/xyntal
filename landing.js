@@ -130,12 +130,14 @@
   });
 
   // Angemeldet? Die Supabase-Sitzung liegt im localStorage – dafür muss die große Bibliothek nicht laden.
+  // Angemeldete landen bei „Projekt starten“ direkt im Projektformular statt in der Anmeldung.
   try {
     const ref = "rralgrlujoupprwlvoyo";
     if (localStorage.getItem(`sb-${ref}-auth-token`)) {
       const slot = $("[data-account]");
       slot.textContent = "Mein Profil";
       slot.href = "profil";
+      $$("[data-start]").forEach((a) => { a.href = "projekte?neu=1"; });
     }
   } catch { /* privat surfen o. Ä. */ }
 
@@ -374,6 +376,11 @@
     if (!box) return;
     if (box.checked) state.done.add(box.dataset.task); else state.done.delete(box.dataset.task);
     renderProgress($$("[data-task]", els.workspace).length);
+  });
+  // Brücke zur echten Seite: Rollen des Demo-Teams als Vorschlag mitnehmen (bleibt nur in diesem Browser, auch über die Bestätigungsmail hinweg)
+  $("[data-bridge]", els.workspace).addEventListener("click", () => {
+    const roles = ROLES.filter((r) => state.team[r.id]).map((r) => ({ name: r.name, need: r.need, hours: r.hours }));
+    try { localStorage.setItem("xyntal-wunschrollen", JSON.stringify(roles)); } catch { /* geht auch ohne */ }
   });
   $("[data-kickoff]", els.workspace).addEventListener("click", () => {
     state.kickoff = true;
