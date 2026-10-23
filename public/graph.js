@@ -98,7 +98,7 @@
           for (let i = 0; i < CATS.length; i++) if (n.cats[i] && m.cats[i]) { shared = true; break; }
           if (!shared) continue;
           const a = (1 - d / LINK) * 0.2 + (n.flash + m.flash) * 0.28;
-          ctx.strokeStyle = `rgba(0,212,255,${a.toFixed(3)})`;
+          ctx.strokeStyle = `rgba(45,226,206,${a.toFixed(3)})`;
           ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(m.x, m.y); ctx.stroke();
         }
       }
@@ -120,8 +120,8 @@
       const isTop = top.has(n);
       const a = (1 - d / REACH) * (isTop ? 0.9 : 0.28);
       const g = ctx.createLinearGradient(mouse.sx, mouse.sy, n.x, n.y);
-      g.addColorStop(0, `rgba(0,212,255,${a.toFixed(3)})`);
-      g.addColorStop(1, `rgba(47,107,255,${(a * 0.55).toFixed(3)})`);
+      g.addColorStop(0, `rgba(45,226,206,${a.toFixed(3)})`);
+      g.addColorStop(1, `rgba(14,159,146,${(a * 0.55).toFixed(3)})`);
       ctx.strokeStyle = g;
       ctx.lineWidth = isTop ? 1.4 : 1;
       if (isTop) ctx.setLineDash([]); else ctx.setLineDash([2, 4]);
@@ -138,8 +138,8 @@
       const pulse = still ? 0 : Math.sin(now / 900 + n.phase) * 0.3;
       const r = n.r + pulse + n.flash * 2.4;
       ctx.fillStyle = n.flash > 0.08
-        ? `rgba(0,212,255,${(0.4 + n.flash * 0.6).toFixed(3)})`
-        : "rgba(234,242,255,0.42)";
+        ? `rgba(45,226,206,${(0.4 + n.flash * 0.6).toFixed(3)})`
+        : "rgba(228,236,235,0.42)";
       ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, Math.PI * 2); ctx.fill();
     }
 

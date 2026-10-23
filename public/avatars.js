@@ -73,7 +73,7 @@ async function prepareAvatar(file) {
     if (!bitmap.width || !bitmap.height || bitmap.width * bitmap.height > 40000000) throw new Error('Das Bild ist zu groß. Bitte verkleinere es vor dem Hochladen.');
     const canvas = document.createElement('canvas'); canvas.width = canvas.height = 512;
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#131419'; ctx.fillRect(0, 0, 512, 512);
+    ctx.fillStyle = '#0A0C0D'; ctx.fillRect(0, 0, 512, 512);
     const side = Math.min(bitmap.width, bitmap.height);
     ctx.drawImage(bitmap, (bitmap.width - side) / 2, (bitmap.height - side) / 2, side, side, 0, 0, 512, 512);
     const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));

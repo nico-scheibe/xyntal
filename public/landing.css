@@ -1,28 +1,28 @@
 /* =====================================================================
    Xyntal – Startseite
-   Anthrazit, gebrochenes Weiß, Eisblau als einzige Signalfarbe.
+   Schwarz, kühles Grau, Türkis als Signalfarbe – Terminal- und Weltraum-Look.
    Eigenständig von style.css, damit die Unterseiten unverändert bleiben.
    ===================================================================== */
 :root {
   /* Flächen */
-  --bg: #101113;
-  --s1: #15161a;
-  --s2: #1b1c21;
-  --s3: #23252b;
-  --line: #25272d;
-  --line-2: #33363d;
+  --bg: #050607;
+  --s1: #0A0C0D;
+  --s2: #101314;
+  --s3: #171B1D;
+  --line: #1C2224;
+  --line-2: #2A3234;
 
   /* Text */
-  --text: #eceae4;
-  --text-2: #a7a59e;
-  --text-3: #8a8882;
+  --text: #E4ECEB;
+  --text-2: #9AA6A5;
+  --text-3: #7C8988;
 
-  /* Eisblau */
-  --ice: #9bd3ee;
-  --ice-hi: #bfe4f6;
-  --ice-ink: #0b1820;
-  --ice-soft: rgba(155, 211, 238, 0.09);
-  --ice-line: rgba(155, 211, 238, 0.38);
+  /* Türkis */
+  --ice: #2DE2CE;
+  --ice-hi: #8AF3E6;
+  --ice-ink: #02110F;
+  --ice-soft: rgba(45, 226, 206, 0.09);
+  --ice-line: rgba(45, 226, 206, 0.38);
 
   /* Schrift */
   --f-display: "Bricolage Grotesque", "Inter", system-ui, sans-serif;
@@ -66,7 +66,7 @@ main { overflow-x: clip; }
 ul, ol { padding: 0; list-style: none; }
 a { color: inherit; }
 button { font: inherit; color: inherit; }
-::selection { background: rgba(155, 211, 238, 0.28); color: var(--text); }
+::selection { background: rgba(45, 226, 206, 0.28); color: var(--text); }
 
 :focus-visible { outline: 2px solid var(--ice); outline-offset: 3px; border-radius: 6px; }
 
