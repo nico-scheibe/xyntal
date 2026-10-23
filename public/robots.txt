@@ -1,0 +1,8 @@
+# Xyntal – Hinweise für Suchmaschinen
+User-agent: *
+Disallow: /admin
+Disallow: /profil
+Disallow: /nachrichten
+Disallow: /passwort-neu
+
+Sitemap: https://xyntal.de/sitemap.xml

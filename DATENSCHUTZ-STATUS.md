@@ -12,6 +12,8 @@
 
 - Beta-Programm (23.10.2026): Bewerbung ohne Konto mit Pflicht-Einwilligung, Abschnitt 6 der Datenschutzerklärung, nur Admins lesen die Bewerbungen. Keine automatische Löschung; Löschung auf Anfrage beschrieben.
 
+- Hosting (23.10.2026): Abschnitt 2 von GitHub Pages auf Daki mit Cloudflare (DNS, HTTPS, Tunnel) umgestellt; IONOS nur Registrar und E-Mail. Firmierung und Sitz von Daki sowie Protokollierung bei Daki und Cloudflare noch nicht bestätigt.
+
 ## Offen vor einem vollständigen rechtlichen Abschluss
 - Ladungsfähige Anschrift gemäß § 5 DDG fehlt auf ausdrücklichen Nutzerwunsch. Keine Adresse aus anderen Quellen ermitteln oder veröffentlichen.
 - Rechtsform/Firma, Registerangaben, USt-IdNr. sind nicht bestätigt; nicht erfinden. Anwendbarkeit redaktioneller Verantwortlichkeit § 18 Abs. 2 MStV bei entsprechender Ausrichtung klären.
