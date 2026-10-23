@@ -22,11 +22,34 @@ body::before {
 }
 
 /* Blur über dem animierten Hintergrund müsste jedes Bild neu berechnet werden: deckende Flächen statt backdrop-filter */
-.topbar, .nav { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(5, 6, 7, 0.94); }
+.topbar, .nav { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(5, 6, 7, 0.97); }
 .cmdk { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(2, 3, 4, 0.82); }
 @media (max-width: 759px) {
   .demo-team { -webkit-backdrop-filter: none; backdrop-filter: none; background: rgba(10, 12, 13, 0.98); }
 }
+
+/* ---------- HUD-Flächen: Karten und Panels lassen den Weltraum durchscheinen ----------
+   Leicht durchsichtig statt deckend grau, türkiser Rand und eine Leuchtlinie oben links.
+   Bewusst ohne backdrop-filter, damit nichts über dem animierten Hintergrund weichgezeichnet wird. */
+.demo, .idea-card, .assembly-panel, .live-role, .ws-bridge,
+.card, .feature, .perk, .plan, .member, .post, .listing, .event-card,
+.inbox, .card-form, .join-main #register, .table-wrap, .avatar-editor, .phone-login, .event-admin {
+  --hud-fill: rgba(9, 12, 13, 0.8);
+  background:
+    linear-gradient(90deg, rgba(45, 226, 206, 0.75), rgba(45, 226, 206, 0) 38%) top / 100% 1px no-repeat,
+    linear-gradient(180deg, rgba(45, 226, 206, 0.045), rgba(45, 226, 206, 0) 140px),
+    var(--hud-fill);
+  border-color: rgba(45, 226, 206, 0.16);
+}
+.demo, .idea-card, .assembly-panel, .inbox, .card-form, .join-main #register {
+  box-shadow: 0 0 0 1px rgba(45, 226, 206, 0.04), 0 0 60px -28px rgba(45, 226, 206, 0.45), 0 40px 80px -48px rgba(0, 0, 0, 0.8);
+}
+.card:hover, .feature:hover, .perk:hover, .plan:hover, .member:hover, .listing:hover, .live-role:hover {
+  border-color: rgba(45, 226, 206, 0.38);
+  box-shadow: 0 0 40px -18px rgba(45, 226, 206, 0.45);
+}
+/* Volle Bänder auf Unterseiten: Sterne sollen durchscheinen */
+.alt { background: rgba(10, 12, 13, 0.6); border-color: rgba(45, 226, 206, 0.1); }
 
 /* ---------- Terminal-Prompt mit blinkendem Cursor ---------- */
 .prompt { white-space: nowrap; color: var(--ice, var(--accent)); font-family: "JetBrains Mono", ui-monospace, monospace; }

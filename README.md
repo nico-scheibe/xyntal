@@ -117,7 +117,7 @@ SQL-Regressionstest in einer **leeren, separaten lokalen PostgreSQL-Datenbank** 
 
 Die Demo auf der Startseite gibt die Rollen des Demo-Teams über den lokalen Browser-Speicher
 (`xyntal-wunschrollen`) als Vorschlag an `/mitglied-werden` und das Projektformular weiter.
-Das Vorschaubild für geteilte Links ist `public/og-image.png` (1200 × 630).
+Das Vorschaubild für geteilte Links ist `public/og-image.jpg` (1200 × 630).
 
 ## Benachrichtigungen aktivieren
 

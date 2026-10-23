@@ -63,7 +63,10 @@
       }
     }
 
-    const R = Math.max(140, Math.min(w, h) * 0.34);
+    // Auf der Startseite hat der Hero schon einen Planeten: der Hintergrund-Planet ist dort kleiner,
+    // blasser und startet unter dem Bildrand, sodass er erst beim Scrollen hochsteigt
+    const home = !!document.querySelector(".hero-cosmos");
+    const R = home ? Math.max(110, Math.min(w, h) * 0.22) : Math.max(140, Math.min(w, h) * 0.34);
     const halo = ctx.createRadialGradient(0, 0, R * 0.85, 0, 0, R * 1.5);
     halo.addColorStop(0, `rgba(${TQ}, 0.10)`);
     halo.addColorStop(1, `rgba(${TQ}, 0)`);
@@ -71,7 +74,7 @@
     body.addColorStop(0, "rgba(16, 40, 38, 0.95)");
     body.addColorStop(0.6, "rgba(6, 14, 14, 0.96)");
     body.addColorStop(1, "rgba(3, 6, 7, 0.98)");
-    globe = { R, halo, body, cx: w * (w < 720 ? 0.1 : 0.06), baseY: h * 1.08 };
+    globe = { R, halo, body, cx: w * (w < 720 ? 0.1 : 0.06), baseY: home ? h + R * 1.15 : h * 1.08, alpha: home ? 0.6 : 1 };
     ctx.font = '12px "JetBrains Mono", ui-monospace, monospace';
     ctx.textAlign = "center";
   }
@@ -84,6 +87,7 @@
     const spin = t * 0.00012;
 
     ctx.save();
+    ctx.globalAlpha = globe.alpha;
     ctx.translate(cx, cy);
     ctx.fillStyle = halo;
     ctx.beginPath(); ctx.arc(0, 0, R * 1.5, 0, Math.PI * 2); ctx.fill();
