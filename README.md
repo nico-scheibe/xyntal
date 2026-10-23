@@ -27,6 +27,7 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 | `supabase/007_newsletter_double_opt_in.sql` | Anmeldung schreibt nicht mehr direkt in den Newsletter; **noch auszuführen** (siehe `UEBERGABE-NEWSLETTER.md`) |
 | `supabase/008_listing_likes.sql` | Reaktionen auf Börsen-Einträge |
 | `supabase/009_projects.sql` | Projekte mit offenen Rollen und „Ich wäre dabei“-Meldungen; **noch auszuführen** |
+| `supabase/010_beta_applications.sql` | Beta-Programm: Bewerbungen ohne Konto (nur über `apply_for_beta`), lesen und bewerten nur Admins; **noch auszuführen** |
 | `ANMELDUNG-EINRICHTEN.md` | Anleitung: Brevo-SMTP einrichten; Google, Apple, LinkedIn und SMS einschalten |
 
 ## Seiten
@@ -35,6 +36,7 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 |---|---|
 | `/` | Startseite: Hero, interaktive Team-Demo (Beispieldaten, nichts wird gespeichert), Geschichte „Idee → Verbindungen → Team → Fortschritt“, Einstieg |
 | `/mitglied-werden` | Konto und Profil anlegen (mit E-Mail-Bestätigung) |
+| `/beta` | Beta-Programm: was Tester bekommen, Bewerbung mit „Warum sollte ich dich nehmen?“; Bewerbungen erscheinen im Admin-Bereich |
 | `/login` | Einloggen per E-Mail, Google, Apple, LinkedIn oder Handynummer, „Passwort vergessen?“ |
 | `/passwort-neu` | Neues Passwort setzen (Link aus der E-Mail) |
 | `/profil` | Profil bearbeiten, Passwort ändern, Konto löschen |

@@ -20,6 +20,7 @@
     { label: "Login", href: "login", glyph: "→", keys: "anmelden einloggen" },
     { label: "Projekt starten", href: "mitglied-werden", glyph: "+", keys: "registrieren mitglied werden konto profil anlegen projekt" },
     { label: "Warteliste", href: "./#warteliste", glyph: "✉", keys: "waitlist newsletter anmelden email" },
+    { label: "Beta-Programm", href: "beta", glyph: "β", keys: "beta tester testen bewerben bewerbung früher zugang" },
     { label: "Impressum & Datenschutz", href: "impressum", glyph: "§", keys: "rechtliches datenschutz" },
   ];
 

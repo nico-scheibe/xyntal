@@ -152,6 +152,7 @@
     peopleCount: $("[data-people-count]", demo),
     team: $("[data-team]", demo),
     teamCount: $("[data-team-count]", demo),
+    teamMeter: $("[data-team-meter]", demo),
     open: $("[data-open-workspace]", demo),
     wsHint: $("[data-ws-hint]", demo),
     select: $('[data-view="select"]', demo),
@@ -199,6 +200,7 @@
           <h5 class="person-name" id="pn-${p.id}">${esc(p.name)}</h5>
           <p class="person-sub">${esc(p.title)} · ${esc(p.place)}</p>
         </div>
+        <span class="match" aria-hidden="true">${p.c.map(([s]) => `<i class="m-${s}"></i>`).join("")}</span>
       </div>
       <div>
         <ul class="skills" aria-label="Fähigkeiten">${p.skills.map((s) => `<li>${esc(s)}</li>`).join("")}</ul>
@@ -238,7 +240,8 @@
     els.peopleTitle.innerHTML = `Passend für <b>${esc(role.name)}</b>`;
     els.peopleCount.textContent = "Suche …";
     els.people.setAttribute("aria-busy", "true");
-    els.people.innerHTML = '<div class="skeleton" aria-hidden="true"><i></i><i></i><i></i></div>'.repeat(3);
+    els.people.innerHTML = `<p class="scan-note" aria-hidden="true">&gt; scanne Profile für ${esc(role.name)} …</p>`
+      + '<div class="skeleton" aria-hidden="true"><i></i><i></i><i></i></div>'.repeat(3);
     clearTimeout(loadTimer);
     loadTimer = setTimeout(() => {
       renderPeople();
@@ -281,6 +284,7 @@
     }).join("");
     justFilled = null;
     els.teamCount.textContent = `${n} von ${ROLES.length}`;
+    [...els.teamMeter.children].forEach((seg, i) => seg.classList.toggle("on", i < n));
     els.open.disabled = n < 2;
     els.wsHint.textContent = n < 2
       ? (n === 0 ? "Hol mindestens zwei Menschen ins Team." : "Noch eine Person, dann kann es losgehen.")

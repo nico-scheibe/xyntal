@@ -1440,3 +1440,57 @@ main section[id] { scroll-margin-top: 64px; }
 /* nur für Screenreader */
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .join-more summary .hint { font-weight: 400; }
+
+/* ---------- Beta-Programm ---------- */
+.beta-term {
+  max-width: 560px;
+  border: 1px solid rgba(45, 226, 206, 0.35);
+  border-radius: 12px;
+  background: rgba(5, 8, 9, 0.94);
+  box-shadow: 0 0 40px -12px rgba(45, 226, 206, 0.45);
+  font: 12.5px/1.7 "JetBrains Mono", ui-monospace, monospace;
+  color: var(--text-2);
+  overflow: hidden;
+}
+.beta-term-bar { display: flex; align-items: center; gap: 6px; padding: 8px 12px; border-bottom: 1px solid rgba(45, 226, 206, 0.18); font-size: 11px; color: var(--text-3); }
+.beta-term-bar i { width: 8px; height: 8px; border-radius: 50%; background: var(--border-2); }
+.beta-term-bar i:first-child { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+.beta-term-bar span { margin-left: auto; }
+.beta-term pre { margin: 0; padding: 12px 16px 16px; white-space: pre-wrap; font: inherit; }
+.beta-term .cmd { color: var(--text); }
+.beta-term .ok { color: var(--accent); }
+
+.beta-cards { margin-top: 28px; }
+.beta-cards h3 { font-size: 17px; margin: 0 0 14px; }
+.beta-list, .beta-steps { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; font-size: 14px; color: var(--text-2); }
+.beta-list li { position: relative; padding-left: 18px; }
+.beta-list li::before { content: ">"; position: absolute; left: 0; color: var(--accent); font-family: "JetBrains Mono", ui-monospace, monospace; }
+.beta-steps { counter-reset: beta; }
+.beta-steps li { counter-increment: beta; display: grid; grid-template-columns: 26px 1fr; column-gap: 10px; }
+.beta-steps li::before {
+  content: counter(beta);
+  grid-row: span 2;
+  display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%;
+  border: 1px solid rgba(45, 226, 206, 0.45); color: var(--accent);
+  font: 12px "JetBrains Mono", ui-monospace, monospace;
+}
+.beta-steps b { color: var(--text); font-weight: 600; }
+
+.beta-apply { margin-top: 40px; max-width: 760px; }
+.beta-form-head { font-size: clamp(1.4rem, 3vw, 1.8rem); margin: 0; }
+.beta-form-head .prompt { margin-right: 4px; }
+.beta-why textarea { min-height: 170px; }
+.why-count { font-weight: 400; font-size: 12px; color: var(--text-3); font-family: "JetBrains Mono", ui-monospace, monospace; justify-self: end; }
+.why-count.is-ok { color: var(--accent); }
+.beta-hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.beta-done { gap: 10px; }
+.beta-done:focus { outline: none; }
+.beta-done h2 { margin: 0; }
+.beta-done p { margin: 0; color: var(--text-2); }
+.beta-done-line { font-family: "JetBrains Mono", ui-monospace, monospace; color: var(--accent) !important; }
+
+/* Admin: Beta-Bewerbungen */
+.beta-why-text { max-width: 46ch; white-space: pre-wrap; color: var(--text-2); font-size: 13px; }
+.status-neu { color: var(--amber); background: rgba(245, 180, 84, 0.12); }
+.status-angenommen { color: var(--green); background: rgba(60, 207, 142, 0.12); }
+.status-abgelehnt { color: var(--pink); background: rgba(255, 107, 129, 0.1); }
