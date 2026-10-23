@@ -513,24 +513,32 @@ button { font: inherit; color: inherit; }
 @media (max-width: 759px) {
   .demo-team {
     position: sticky; bottom: 0; z-index: 2;
-    display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 4px 12px;
+    /* Überschrift und Avatare links übereinander, Button rechts: nebeneinander passt alles erst ab ~410 px */
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "head foot" "slots foot";
+    align-items: center; gap: 6px 12px;
     padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
     background: rgba(21, 22, 26, 0.94);
     -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
     border-top: 1px solid var(--line-2);
   }
-  .team-head { display: grid; margin: 0; gap: 0; white-space: nowrap; }
+  .team-head { grid-area: head; display: grid; margin: 0; gap: 0; white-space: nowrap; }
   .team-head .mini-head { font-size: 10.5px; }
   .team-count { color: var(--text); font-size: 13px; }
-  .team-slots { display: flex; gap: 0; }
+  .team-slots { grid-area: slots; display: flex; gap: 0; }
   .slot { min-height: 0; padding: 0; border: 0; background: none !important; margin-left: -6px; }
   .slot:first-child { margin-left: 0; }
   .slot-text, .slot-remove { display: none; }
   .slot-ph { width: 30px; height: 30px; background: var(--s1); font-size: 13px; }
   .slot .avatar { box-shadow: 0 0 0 2px var(--s1); }
-  .team-foot { margin: 0; }
+  .team-foot { grid-area: foot; margin: 0; }
   .team-foot .btn { --h: 40px; padding: 0 16px; font-size: 14px; width: auto; }
   .team-foot .hint { display: none; }
+}
+/* Sehr schmale Handys: Button bekommt eine eigene Zeile über die volle Breite */
+@media (max-width: 350px) {
+  .demo-team { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "head slots" "foot foot"; }
+  .team-slots { justify-content: flex-end; }
+  .team-foot .btn { width: 100%; }
 }
 
 @media (prefers-reduced-motion: no-preference) {
