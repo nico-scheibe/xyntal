@@ -323,6 +323,11 @@ window.XYNTAL_EN = {
   "– passt": "– fits",
   "– passt teilweise": "– partly fits",
 
+  "> gleiche Fähigkeiten ab": "> matching skills",
+  "> prüfe Zeit & Arbeitsweise": "> checking time & way of working",
+  "> sortiere nach Passung …": "> ranking by fit …",
+  "Team-Abdeckung": "Team coverage",
+
   /* ---------- 404 ---------- */
   "Seite nicht gefunden – Xyntal": "Page not found – Xyntal",
   "Diese Seite gibt es nicht – noch nicht.": "This page doesn't exist – not yet.",

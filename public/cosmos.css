@@ -170,7 +170,7 @@ body::after {
   }
 }
 .btn-primary:hover { background-position: 100% 0 !important; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14) inset, 0 0 36px -4px rgba(255, 79, 216, 0.7), 0 0 44px -8px rgba(34, 229, 255, 0.75); }
-.btn-primary:disabled, .btn:disabled { background: #181624 !important; color: #827F9C !important; box-shadow: none; }
+.btn.btn-primary:disabled, .btn:not(.btn-quiet):not(.btn-ghost):disabled { background: #181624 !important; color: #827F9C !important; box-shadow: none; }
 .btn-primary:disabled::after { content: none; }
 .btn-quiet, .btn-ghost {
   font-family: var(--f-hack); font-weight: 500; font-size: 14px; letter-spacing: -0.02em;

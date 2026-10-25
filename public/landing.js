@@ -188,6 +188,9 @@
     }).join("");
   }
 
+  // Passung als Zahl: „passt“ zählt voll, „passt teilweise“ knapp zur Hälfte
+  const score = (p) => Math.round(55 + 44 * (p.c.reduce((n, [st]) => n + (st === "ok" ? 1 : 0.45), 0) / p.c.length));
+
   function personCard(p) {
     const picked = state.team[p.role] === p.id;
     const role = roleById[p.role];
@@ -200,7 +203,7 @@
           <h5 class="person-name" id="pn-${p.id}">${esc(p.name)}</h5>
           <p class="person-sub">${esc(p.title)} · ${esc(p.place)}</p>
         </div>
-        <span class="match" aria-hidden="true">${p.c.map(([s]) => `<i class="m-${s}"></i>`).join("")}</span>
+        <span class="score" style="--p:${score(p)}" aria-hidden="true"><b>${score(p)}<small>%</small></b><span class="match">${p.c.map(([s]) => `<i class="m-${s}"></i>`).join("")}</span></span>
       </div>
       <div>
         <ul class="skills" aria-label="Fähigkeiten">${p.skills.map((s) => `<li>${esc(s)}</li>`).join("")}</ul>
@@ -211,7 +214,7 @@
       </div>
       <p class="reason"><span class="reason-k">Warum das passt</span>${esc(p.reason)}</p>
       <ul class="criteria" aria-label="Abgleich">
-        ${p.c.map(([s, t], i) => `<li><span class="crit crit-${s}" aria-hidden="true"></span><b>${CRIT_LABELS[i]}</b><span>${esc(t)}<span class="sr-only"> – ${s === "ok" ? "passt" : "passt teilweise"}</span></span></li>`).join("")}
+        ${p.c.map(([s, t], i) => `<li><span class="crit crit-${s}" aria-hidden="true">${s === "ok" ? "OK" : "~"}</span><b>${CRIT_LABELS[i]}</b><span>${esc(t)}<span class="sr-only"> – ${s === "ok" ? "passt" : "passt teilweise"}</span></span></li>`).join("")}
       </ul>
       <div class="person-actions">
         <button type="button" class="pick" data-pick="${p.id}" aria-pressed="${picked}" aria-describedby="pn-${p.id}">
@@ -240,14 +243,17 @@
     els.peopleTitle.innerHTML = `Passend für <b>${esc(role.name)}</b>`;
     els.peopleCount.textContent = "Suche …";
     els.people.setAttribute("aria-busy", "true");
-    els.people.innerHTML = `<p class="scan-note" aria-hidden="true">&gt; scanne Profile für ${esc(role.name)} …</p>`
-      + '<div class="skeleton" aria-hidden="true"><i></i><i></i><i></i></div>'.repeat(3);
+    els.people.innerHTML = `<div class="scan-log" aria-hidden="true"><p class="scan-note">&gt; scanne Profile für ${esc(role.name)} …</p>`
+      + '<p class="scan-line" style="--d:0">&gt; gleiche Fähigkeiten ab <b>[ok]</b></p>'
+      + '<p class="scan-line" style="--d:1">&gt; prüfe Zeit &amp; Arbeitsweise <b>[ok]</b></p>'
+      + '<p class="scan-line" style="--d:2">&gt; sortiere nach Passung …</p></div>'
+      + '<div class="skeleton" aria-hidden="true"><i></i><i></i><i></i></div>'.repeat(2);
     clearTimeout(loadTimer);
     loadTimer = setTimeout(() => {
       renderPeople();
       els.people.setAttribute("aria-busy", "false");
       announce(`${PEOPLE[id].length} Vorschläge für ${role.name}.`);
-    }, still ? 0 : 420);
+    }, still ? 0 : 780);
     // Mobil liegen die Vorschläge unter den Rollen: einmal sanft hinführen
     const head = $(".people-head", demo);
     if (matchMedia("(max-width: 759px)").matches && head.getBoundingClientRect().top > innerHeight * 0.6) {
@@ -284,6 +290,11 @@
     }).join("");
     justFilled = null;
     els.teamCount.textContent = `${n} von ${ROLES.length}`;
+    const need = ROLES.reduce((sum, r) => sum + r.hours, 0);
+    const have = ROLES.reduce((sum, r) => sum + (state.team[r.id] ? Math.min(personById[state.team[r.id]].hours, r.hours) : 0), 0);
+    const cover = Math.round((have / need) * 100);
+    const power = $("[data-team-power]", demo);
+    if (power) { power.style.setProperty("--p", cover); $("b", power).textContent = `${cover}%`; }
     [...els.teamMeter.children].forEach((seg, i) => seg.classList.toggle("on", i < n));
     els.open.disabled = n < 2;
     els.wsHint.textContent = n < 2
