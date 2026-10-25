@@ -24,7 +24,7 @@
 .admin-app .admin-summary b { font-size:44px; font-variant-numeric:tabular-nums; letter-spacing:-.05em; }
 .admin-app .admin-summary small { font-size:11px; }
 .admin-app .row-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-.admin-app button:not(.nav-toggle):not(.admin-tabs button):not(.beta-metrics button), .admin-link { min-height:38px; padding:9px 13px; border:1px solid var(--admin-line); border-radius:10px; background:rgba(255,255,255,.035); color:var(--text); font:500 12px/1.3 var(--f-text); cursor:pointer; text-decoration:none; }
+#admin-view button:not(.admin-tabs button):not(.beta-metrics button), .admin-link { min-height:38px; padding:9px 13px; border:1px solid var(--admin-line); border-radius:10px; background:rgba(255,255,255,.035); color:var(--text); font:500 12px/1.3 var(--f-text); cursor:pointer; text-decoration:none; }
 .admin-app button:disabled { opacity:.4; cursor:default; }
 .admin-app .text-link { color:#D3B5F7; overflow-wrap:anywhere; }
 .admin-app .table-wrap { overflow-x:auto; border:1px solid var(--admin-line); border-radius:16px; margin-top:16px; }
@@ -76,3 +76,5 @@
 @media(max-width:1100px) { .beta-metrics { grid-template-columns:repeat(3,minmax(0,1fr)); } .beta-applications { grid-template-columns:1fr; } }
 @media(max-width:800px) { #admin-view { grid-template-columns:minmax(0,1fr); gap:22px; } .admin-app .admin-tabs { position:static; flex-direction:row; overflow-x:auto; border-radius:16px; padding:7px; } .admin-app .admin-tabs button { flex-shrink:0; white-space:nowrap; min-height:44px; } .admin-app #admin-logout { margin:0 !important; border:0; } .admin-app [data-panel] { grid-column:1; grid-row:auto; } .admin-app .page-head { padding-top:35px; } }
 @media(max-width:480px) { .panel-heading { flex-direction:column; } .admin-filters { padding:12px; } .admin-filters label { flex:1 1 40%; min-width:0; } .admin-filters .admin-search { flex-basis:100%; } .beta-application { padding:18px; } .admin-listbar { align-items:flex-start; } .admin-app .admin-summary { grid-template-columns:1fr; } }
+
+@media(max-width:600px) { .admin-app .nav-links:not(.open) [data-account] { display:none; } }
