@@ -30,6 +30,7 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 | `supabase/011_waitlist_cards.sql` | Xyntal-Karten von der Warteliste, nur für Admins lesbar; ausgeführt am 25.10.2026 |
 | `supabase/012_waitlist_cards_more.sql` | Karten: Stadt, Arbeitsweise, Erfahrung, Link (Foto und Gestaltung bleiben im Browser) |
 | `supabase/013_waitlist_perks.sql` | Wunsch-Link (xyntal.de/name, eindeutig) und Einladungen: Code pro Adresse, geworbene Adressen; nur Admins lesen |
+| `supabase/014_admin_actions.sql` | Admins können Einladungen gutschreiben (nur `credited_at`) |
 | `supabase/010_beta_applications.sql` | Beta-Programm: Bewerbungen ohne Konto (nur über `apply_for_beta`), lesen und bewerten nur Admins; **noch auszuführen** |
 | `ANMELDUNG-EINRICHTEN.md` | Anleitung: Brevo-SMTP einrichten; Google, Apple, LinkedIn und SMS einschalten |
 

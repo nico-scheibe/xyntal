@@ -80,3 +80,27 @@
 @media(max-width:600px) { .admin-app .nav-links:not(.open) [data-account] { display:none; } }
 .invites-admin { margin-top: 32px; display: grid; gap: 12px; }
 .invites-admin h3 small { font-weight: 400; color: var(--text-3, #8A8A95); }
+
+/* Mehr Aktionen: Sammelleiste, Vorschläge, Wunsch-Link, Einladungen, Aufgaben */
+.bulk-bar { display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px; margin:14px 0 4px; padding:10px 12px; border:1px solid var(--admin-line); border-radius:14px; background:#12121B; font-size:13px; color:var(--text-2); }
+.bulk-bar > span:first-child { font-weight:600; color:var(--text); margin-right:auto; }
+.bulk-bar label { display:inline-flex; align-items:center; gap:6px; }
+.admin-app select { min-height:38px; padding:0 10px; border:1px solid var(--admin-line); border-radius:10px; background:#16161F; color:var(--text); font:500 13px/1 var(--f-text); }
+.admin-app td select { margin-bottom:8px; }
+.admin-app td input[type="checkbox"], .admin-app th input[type="checkbox"] { width:18px; height:18px; accent-color:#B95CFF; }
+.card-more { margin-top:10px; }
+.card-more summary { cursor:pointer; font-size:12.5px; color:#D3B5F7; }
+.match-list { list-style:none; margin:8px 0 0; padding:0; display:grid; gap:8px; }
+.match-list li { padding:10px 12px; border:1px solid var(--admin-line); border-radius:12px; background:rgba(185,92,255,.05); }
+.match-list button { margin-top:8px; }
+.handle-edit { display:flex; align-items:center; margin:8px 0; border:1px solid var(--admin-line); border-radius:10px; padding-left:10px; background:#16161F; }
+.handle-edit span { color:#9693A5; font-size:13px; }
+.handle-edit input { flex:1; min-width:0; height:36px; border:0; background:transparent; color:var(--text); font:500 13px/1 var(--f-text); outline:none; }
+.ref-list { list-style:none; margin:0; padding:0; display:grid; gap:8px; }
+.ref-list li { display:flex; flex-wrap:wrap; justify-content:space-between; gap:6px 12px; align-items:center; }
+.admin-message:empty { display:none; }
+.admin-message { margin:10px 0; padding:10px 12px; border-radius:10px; background:rgba(52,211,153,.08); border:1px solid rgba(52,211,153,.25); font-size:13px; }
+.todo-list { display:grid; gap:8px; max-width:640px; }
+.todo-list button { display:grid !important; grid-template-columns:auto 1fr auto; align-items:center; gap:14px; text-align:left; min-height:56px !important; padding:12px 16px !important; }
+.todo-list b { font-size:22px; font-variant-numeric:tabular-nums; color:#E4B4FF; }
+.todo-list i { font-style:normal; color:#9693A5; }

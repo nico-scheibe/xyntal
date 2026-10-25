@@ -1,4 +1,4 @@
--- Regressionstest für supabase/011_waitlist_cards.sql, 012_waitlist_cards_more.sql und 013_waitlist_perks.sql
+-- Regressionstest für supabase/011_waitlist_cards.sql, 012_waitlist_cards_more.sql 013_waitlist_perks.sql und 014_admin_actions.sql
 -- Nur in einer LEEREN, SEPARATEN lokalen PostgreSQL-Datenbank mit den Rollen anon und authenticated ausführen,
 -- aus dem Repository-Ordner:  psql -v ON_ERROR_STOP=1 -d TESTDATENBANK -f tests/waitlist_cards.sql
 -- Simuliert auth.uid() und eine vereinfachte profiles-Tabelle. Niemals im produktiven Projekt ausführen.
@@ -139,4 +139,29 @@ do $$ begin if (select count(*) from public.waitlist_referrals) <> 0 then raise 
 set test.uid = '00000000-0000-0000-0000-000000000001';
 do $$ begin if (select count(*) from public.waitlist_referrals) <> 2 then raise exception 'Admin sieht Einladungen nicht'; end if; end $$;
 reset role;
+-- 10) Migration 014: Gutschreiben nur durch Admins, nur credited_at
+\i supabase/014_admin_actions.sql
+set role authenticated;
+set test.uid = '00000000-0000-0000-0000-000000000002';
+update public.waitlist_referrals set credited_at = now();
+reset role;
+do $$ begin if (select count(*) from public.waitlist_referrals where credited_at is not null) <> 0 then raise exception 'Mitglied konnte gutschreiben'; end if; end $$;
+set role authenticated;
+set test.uid = '00000000-0000-0000-0000-000000000001';
+update public.waitlist_referrals set credited_at = now() where email = 'neu1@example.com';
+do $$ begin
+  update public.waitlist_referrals set email = 'fake@example.com' where email = 'neu3@example.com';
+  raise exception 'Admin durfte Adresse ändern';
+exception when insufficient_privilege then null; end $$;
+-- Admin ändert Wunsch-Link; doppelte Vergabe scheitert am eindeutigen Index
+update public.waitlist_cards set handle = 'neuer-name' where email = 'h1@example.com';
+do $$ begin
+  update public.waitlist_cards set handle = 'neuer-name' where email = 'h5@example.com';
+  raise exception 'doppelter Wunsch-Link durch Admin';
+exception when unique_violation then null; end $$;
+reset role;
+do $$ begin
+  if (select count(*) from public.waitlist_referrals where credited_at is not null) <> 1 then raise exception 'Gutschrift nicht gespeichert'; end if;
+  if (select handle from public.waitlist_cards where email = 'h1@example.com') <> 'neuer-name' then raise exception 'Admin-Linkänderung fehlt'; end if;
+end $$;
 \echo 'waitlist cards ok'
