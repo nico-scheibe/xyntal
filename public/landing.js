@@ -646,18 +646,34 @@
   /* ---------------------------------------------------------------
      Zähler der Warteliste: echte Zahl vom Server (Brevo), auch bei einem einzelnen Eintrag sichtbar
      --------------------------------------------------------------- */
-  (async () => {
+  (() => {
     const box = $("[data-waitlist-count]");
     if (!box) return;
-    try {
-      const res = await fetch("/api/waitlist-count", { headers: { Accept: "application/json" } });
-      if (!res.ok) return;
-      const { count } = await res.json();
-      if (!Number.isSafeInteger(count) || count < 0) return;
-      const num = $("[data-waitlist-number]", box);
-      num.textContent = count.toLocaleString("de-DE");
-      box.hidden = false;
-    } catch { /* ohne Zahl bleibt der Bereich einfach weg */ }
+    let pending = false;
+    async function refreshWaitlistCount() {
+      if (pending || document.hidden) return;
+      pending = true;
+      try {
+        const res = await fetch("/api/waitlist-count", {
+          headers: { Accept: "application/json" }, cache: "no-store",
+          signal: AbortSignal.timeout(15000),
+        });
+        if (!res.ok) return;
+        const { count } = await res.json();
+        if (!Number.isSafeInteger(count) || count < 0) return;
+        const num = $("[data-waitlist-number]", box);
+        const value = count.toLocaleString("de-DE");
+        if (num.textContent !== value) num.textContent = value;
+        box.hidden = false;
+      } catch { /* Bei Ausfällen bleibt die letzte bestätigte Zahl stehen. */ }
+      finally { pending = false; }
+    }
+    refreshWaitlistCount();
+    setInterval(refreshWaitlistCount, 60000);
+    document.addEventListener("visibilitychange", refreshWaitlistCount);
+    window.addEventListener("focus", refreshWaitlistCount);
+    window.addEventListener("pageshow", refreshWaitlistCount);
+    window.addEventListener("online", refreshWaitlistCount);
   })();
 
   /* ---------------------------------------------------------------
