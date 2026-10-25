@@ -50,6 +50,34 @@ async function update() {
   } catch (error) { console.error('Deployment failed; keeping previous website:', error.message); }
   finally { updating = false; }
 }
+// Zähler der Warteliste: liest nur die Anzahl der Kontakte einer Brevo-Liste.
+// Schlüssel und Listen-ID liegen nur auf dem Server (.brevo-key / .brevo-list oder BREVO_API_KEY / BREVO_LIST_ID).
+const readSecret = (file, env) => {
+  if (process.env[env]) return process.env[env].trim();
+  try { return fs.readFileSync(path.join(__dirname, file), 'utf8').trim(); } catch { return ''; }
+};
+let waitlist = { count: null, at: 0, pending: null };
+async function waitlistCount() {
+  if (Date.now() - waitlist.at < 10 * 60 * 1000) return waitlist.count;
+  if (waitlist.pending) return waitlist.pending;
+  const key = readSecret('.brevo-key', 'BREVO_API_KEY');
+  const list = readSecret('.brevo-list', 'BREVO_LIST_ID');
+  if (!key || !/^\d+$/.test(list)) return null;
+  waitlist.pending = (async () => {
+    try {
+      const response = await fetch('https://api.brevo.com/v3/contacts/lists/' + list, { headers: { 'api-key': key, accept: 'application/json' }, signal: AbortSignal.timeout(8000) });
+      if (!response.ok) throw new Error('Brevo HTTP ' + response.status);
+      const data = await response.json();
+      const count = Number(data.uniqueSubscribers ?? data.totalSubscribers);
+      if (Number.isFinite(count)) waitlist.count = count;
+    } catch (error) { console.error('Waitlist count failed:', error.message); }
+    waitlist.at = Date.now();
+    waitlist.pending = null;
+    return waitlist.count;
+  })();
+  return waitlist.pending;
+}
+
 const types = { '.html':'text/html; charset=utf-8', '.css':'text/css; charset=utf-8', '.js':'text/javascript; charset=utf-8', '.json':'application/json', '.png':'image/png', '.jpg':'image/jpeg', '.svg':'image/svg+xml', '.webp':'image/webp', '.woff2':'font/woff2', '.woff':'font/woff', '.ico':'image/x-icon', '.txt':'text/plain; charset=utf-8', '.xml':'application/xml; charset=utf-8' };
 http.createServer((req,res) => {
   if (!['GET','HEAD'].includes(req.method)) { res.writeHead(405); return res.end(); }
@@ -59,6 +87,13 @@ http.createServer((req,res) => {
   if (pathname === '/__deployment') {
     res.writeHead(root ? 200 : 503, {'Content-Type':'application/json','Cache-Control':'no-store'});
     return res.end(JSON.stringify({commit, branch:'main', updating}));
+  }
+  if (pathname === '/api/waitlist-count') {
+    waitlistCount().then((count) => {
+      res.writeHead(count === null ? 404 : 200, {'Content-Type':'application/json','Cache-Control':'public, max-age=300'});
+      res.end(req.method === 'HEAD' ? undefined : JSON.stringify(count === null ? {error:'not configured'} : {count}));
+    });
+    return;
   }
   if (!root) { res.writeHead(503, {'Retry-After':'10'}); return res.end('Website is starting'); }
   const currentRoot = root;

@@ -223,8 +223,7 @@
   const wait = (ms) => new Promise((r) => setTimeout(r, still ? 0 : ms));
 
   const PAGES = {
-    join: "START", start: "START", projekt: "START", login: "login", projekte: "projekte", projects: "projekte",
-    community: "community", boerse: "boerse", market: "boerse", beta: "beta", events: "events", mitglieder: "mitglieder", members: "mitglieder",
+    login: "login", beta: "beta",
   };
   const T = {
     boot: { de: "xyntal os v2.0 · build-netzwerk", en: "xyntal os v2.0 · build network" },
@@ -235,14 +234,14 @@
     roles: { de: ["entwicklung", "design", "gründung", "vertrieb"], en: ["engineering", "design", "founding", "sales"] },
     linked: { de: "> 4 Verbindungen hergestellt. Dein Team wartet.", en: "> 4 connections established. Your team is waiting." },
     help: {
-      de: [["about", "was ist xyntal?"], ["join", "projekt starten / mitglied werden"], ["demo", "interaktive demo öffnen"], ["projekte", "offene rollen ansehen"], ["community", "zur community"], ["beta", "beta-programm"], ["login", "anmelden"], ["whoami", "wer bist du?"], ["nico", "wer steckt dahinter?"], ["lang en", "switch to english"], ["clear", "konsole leeren"]],
-      en: [["about", "what is xyntal?"], ["join", "start a project / become a member"], ["demo", "open the interactive demo"], ["projects", "browse open roles"], ["community", "go to the community"], ["beta", "beta program"], ["login", "sign in"], ["whoami", "who are you?"], ["nico", "who is behind this?"], ["lang de", "auf deutsch wechseln"], ["clear", "clear the console"]],
+      de: [["about", "was ist xyntal?"], ["join", "auf die warteliste"], ["demo", "team-demo öffnen"], ["whoami", "wer bist du?"], ["nico", "wer steckt dahinter?"], ["lang en", "switch to english"], ["clear", "konsole leeren"]],
+      en: [["about", "what is xyntal?"], ["join", "join the waitlist"], ["demo", "open the team demo"], ["whoami", "who are you?"], ["nico", "who is behind this?"], ["lang de", "auf deutsch wechseln"], ["clear", "clear the console"]],
     },
     about: {
       de: "Xyntal ist die Plattform, auf der Entwickler, Designer, Gründer und alle, die etwas aufbauen wollen, ihr Team finden. Du beschreibst deine Idee und wer dir fehlt – Xyntal zeigt dir Menschen, die passen, und warum.\n<span class=\"c-pk\">Stop swiping. Start building.</span>",
       en: "Xyntal is the platform where developers, designers, founders and everyone who wants to build something find their team. Describe your idea and who you're missing – Xyntal shows you people who fit, and why.\n<span class=\"c-pk\">Stop swiping. Start building.</span>",
     },
-    whoami: { de: "gast@xyntal – noch ohne Konto. Tippe <span class=\"c-hi\">join</span>, um das zu ändern.", en: "guest@xyntal – no account yet. Type <span class=\"c-hi\">join</span> to change that." },
+    whoami: { de: "gast@xyntal – noch nicht auf der Warteliste. Tippe <span class=\"c-hi\">join</span>, um das zu ändern.", en: "guest@xyntal – not on the waitlist yet. Type <span class=\"c-hi\">join</span> to change that." },
     nico: { de: "Nico Scheibe · Gründer von Xyntal\nbaut Xyntal, damit Gründer und Leute, die gründen wollen, ihr Team finden.", en: "Nico Scheibe · founder of Xyntal\nbuilding Xyntal so founders and future founders can find their team." },
     open: { de: "> öffne", en: "> opening" },
     sudo: { de: "Zugriff verweigert. Hier wird gebaut, nicht gehackt. ;)", en: "Permission denied. We build here, we don't hack. ;)" },
@@ -308,6 +307,12 @@
       case "ls": case "dir": print(tr(T.ls), "c-hi"); break;
       case "date": case "datum": print(new Date().toLocaleString(lang() === "en" ? "en-GB" : "de-DE", { timeZone: "Europe/Berlin" })); break;
       case "clear": case "cls": out.innerHTML = ""; break;
+      case "join": case "start": case "warteliste": case "waitlist": {
+        print(`${tr(T.open)} <span class="c-hi">warteliste</span> …`, "c-dim");
+        document.getElementById("warteliste")?.scrollIntoView({ behavior: still ? "auto" : "smooth" });
+        setTimeout(() => document.getElementById("wl-email")?.focus({ preventScroll: true }), still ? 0 : 700);
+        break;
+      }
       case "demo": {
         print(`${tr(T.open)} <span class="c-hi">demo</span> …`, "c-dim");
         document.getElementById("entdecken")?.scrollIntoView({ behavior: still ? "auto" : "smooth" });
@@ -328,7 +333,7 @@
     }
   }
 
-  const COMMANDS = ["help", "about", "join", "demo", "projekte", "projects", "community", "boerse", "beta", "events", "login", "whoami", "nico", "lang", "ls", "date", "clear"];
+  const COMMANDS = ["help", "about", "join", "demo", "whoami", "nico", "lang", "ls", "date", "clear"];
   form.addEventListener("submit", (e) => { e.preventDefault(); run(input.value); input.value = ""; });
   input.addEventListener("keydown", (e) => {
     if (e.key === "ArrowUp" && history.length) { e.preventDefault(); hIdx = Math.max(0, hIdx - 1); input.value = history[hIdx]; }

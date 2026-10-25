@@ -135,8 +135,7 @@
     const ref = "rralgrlujoupprwlvoyo";
     if (localStorage.getItem(`sb-${ref}-auth-token`)) {
       const slot = $("[data-account]");
-      slot.textContent = "Mein Profil";
-      slot.href = "profil";
+      if (slot) { slot.textContent = "Mein Profil"; slot.href = "profil"; }
       $$("[data-start]").forEach((a) => { a.href = "projekte?neu=1"; });
     }
   } catch { /* privat surfen o. Ä. */ }
@@ -488,93 +487,96 @@
   /* ---------------------------------------------------------------
      Team-Moment: Profile verbinden sich zur Projektansicht
      --------------------------------------------------------------- */
+  if ($("[data-assembly]")) (() => {
   const asm = $("[data-assembly]");
-  const asmList = $("[data-assembly-list]", asm);
-  const asmSource = $("[data-assembly-source]");
-  const asmStatus = $("[data-assembly-status]", asm);
-  const asmHours = $("[data-assembly-hours]", asm);
-  // Wohin die Karten vor dem Verbinden verstreut liegen (Anteil der Bühne, Drehung)
-  const SCATTER = [[-0.30, -0.36, -5], [0.32, -0.16, 4], [-0.26, 0.20, 3], [0.30, 0.40, -4]];
-  let played = false;
+    const asmList = $("[data-assembly-list]", asm);
+    const asmSource = $("[data-assembly-source]");
+    const asmStatus = $("[data-assembly-status]", asm);
+    const asmHours = $("[data-assembly-hours]", asm);
+    // Wohin die Karten vor dem Verbinden verstreut liegen (Anteil der Bühne, Drehung)
+    const SCATTER = [[-0.30, -0.36, -5], [0.32, -0.16, 4], [-0.26, 0.20, 3], [0.30, 0.40, -4]];
+    let played = false;
 
-  function asmMembers() {
-    const own = teamList();
-    if (own.length) return { own: true, list: own };
-    return { own: false, list: ROLES.map((r) => personById[PEOPLE[r.id][0].id]) };
-  }
+    function asmMembers() {
+      const own = teamList();
+      if (own.length) return { own: true, list: own };
+      return { own: false, list: ROLES.map((r) => personById[PEOPLE[r.id][0].id]) };
+    }
 
-  function renderAssembly() {
-    const { own, list } = asmMembers();
-    asmList.innerHTML = list.map((p) => `<li class="a-card">
-      <span class="avatar is-ice" aria-hidden="true">${initials(p.name)}</span>
-      <div><b>${esc(p.name)}</b><span>${esc(roleById[p.role].name)} · ${esc(p.place)}</span></div>
-      <em>${p.hours} Std.</em>
-    </li>`).join("");
-    const hours = list.reduce((s, p) => s + p.hours, 0);
-    asmHours.textContent = `${hours} Std./Woche gemeinsam`;
-    const open = ROLES.length - list.length;
-    asmStatus.textContent = open ? `${list.length} von ${ROLES.length} Rollen besetzt` : "Team steht";
-    asmSource.classList.toggle("is-own", own);
-    asmSource.textContent = own
-      ? `Dein Demo-Team aus der Auswahl oben: ${list.map((p) => p.name.split(" ")[0]).join(", ")}.`
-      : "Ein Vorschlagsteam für Feldnah. Stell oben in der Demo dein eigenes zusammen – dann erscheint es hier.";
-  }
+    function renderAssembly() {
+      const { own, list } = asmMembers();
+      asmList.innerHTML = list.map((p) => `<li class="a-card">
+        <span class="avatar is-ice" aria-hidden="true">${initials(p.name)}</span>
+        <div><b>${esc(p.name)}</b><span>${esc(roleById[p.role].name)} · ${esc(p.place)}</span></div>
+        <em>${p.hours} Std.</em>
+      </li>`).join("");
+      const hours = list.reduce((s, p) => s + p.hours, 0);
+      asmHours.textContent = `${hours} Std./Woche gemeinsam`;
+      const open = ROLES.length - list.length;
+      asmStatus.textContent = open ? `${list.length} von ${ROLES.length} Rollen besetzt` : "Team steht";
+      asmSource.classList.toggle("is-own", own);
+      asmSource.textContent = own
+        ? `Dein Demo-Team aus der Auswahl oben: ${list.map((p) => p.name.split(" ")[0]).join(", ")}.`
+        : "Ein Vorschlagsteam für Feldnah. Stell oben in der Demo dein eigenes zusammen – dann erscheint es hier.";
+    }
 
-  function scatter() {
-    asm.classList.remove("is-joined");
-    asm.classList.add("is-scattered");
-    const cards = $$(".a-card", asm);
-    cards.forEach((c) => { c.getAnimations().forEach((a) => a.cancel()); c.style.transform = ""; });
-    const stage = asm.getBoundingClientRect();
-    const view = document.documentElement.clientWidth;
-    cards.forEach((c, i) => {
-      const r = c.getBoundingClientRect();
-      const [fx, fy, rot] = SCATTER[i % SCATTER.length];
-      let dx = stage.left + stage.width * (0.5 + fx) - (r.left + r.width / 2);
-      const dy = stage.top + stage.height * (0.5 + fy) - (r.top + r.height / 2);
-      // nie über den Bildschirmrand hinaus
-      dx = Math.max(12 - r.left, Math.min(view - 12 - r.right, dx));
-      c.style.transform = `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px) rotate(${rot}deg) scale(0.96)`;
-    });
-  }
-
-  function join() {
-    played = true;
-    const cards = $$(".a-card", asm);
-    const from = cards.map((c) => c.style.transform);
-    asm.classList.remove("is-scattered");
-    asm.classList.add("is-joined");
-    cards.forEach((c, i) => {
-      c.style.transform = "";
-      if (!from[i] || still) return;
-      c.animate([{ transform: from[i] }, { transform: "none" }], {
-        duration: 680, delay: i * 70, easing: "cubic-bezier(0.2, 0.7, 0.1, 1)", fill: "backwards",
+    function scatter() {
+      asm.classList.remove("is-joined");
+      asm.classList.add("is-scattered");
+      const cards = $$(".a-card", asm);
+      cards.forEach((c) => { c.getAnimations().forEach((a) => a.cancel()); c.style.transform = ""; });
+      const stage = asm.getBoundingClientRect();
+      const view = document.documentElement.clientWidth;
+      cards.forEach((c, i) => {
+        const r = c.getBoundingClientRect();
+        const [fx, fy, rot] = SCATTER[i % SCATTER.length];
+        let dx = stage.left + stage.width * (0.5 + fx) - (r.left + r.width / 2);
+        const dy = stage.top + stage.height * (0.5 + fy) - (r.top + r.height / 2);
+        // nie über den Bildschirmrand hinaus
+        dx = Math.max(12 - r.left, Math.min(view - 12 - r.right, dx));
+        c.style.transform = `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px) rotate(${rot}deg) scale(0.96)`;
       });
-    });
-  }
+    }
 
-  renderAssembly();
-  if (still || !("IntersectionObserver" in window)) {
-    asm.classList.add("is-joined");
-  } else {
-    scatter();
-    const io = new IntersectionObserver((entries) => {
-      for (const e of entries) if (e.isIntersecting && !played) join();
-    }, { threshold: 0.55 });
-    io.observe(asm);
-    addEventListener("resize", () => { if (!played) scatter(); });
-  }
-  onTeamChange(() => {
+    function join() {
+      played = true;
+      const cards = $$(".a-card", asm);
+      const from = cards.map((c) => c.style.transform);
+      asm.classList.remove("is-scattered");
+      asm.classList.add("is-joined");
+      cards.forEach((c, i) => {
+        c.style.transform = "";
+        if (!from[i] || still) return;
+        c.animate([{ transform: from[i] }, { transform: "none" }], {
+          duration: 680, delay: i * 70, easing: "cubic-bezier(0.2, 0.7, 0.1, 1)", fill: "backwards",
+        });
+      });
+    }
+
     renderAssembly();
-    // Mit dem neuen Team spielt der Moment beim nächsten Hinsehen erneut.
-    if (!still && "IntersectionObserver" in window) { played = false; scatter(); }
-    else asm.classList.add("is-joined");
-  });
-  $("[data-replay]").addEventListener("click", () => {
-    if (still) return;
-    scatter();
-    requestAnimationFrame(() => requestAnimationFrame(join));
-  });
+    if (still || !("IntersectionObserver" in window)) {
+      asm.classList.add("is-joined");
+    } else {
+      scatter();
+      const io = new IntersectionObserver((entries) => {
+        for (const e of entries) if (e.isIntersecting && !played) join();
+      }, { threshold: 0.55 });
+      io.observe(asm);
+      addEventListener("resize", () => { if (!played) scatter(); });
+    }
+    onTeamChange(() => {
+      renderAssembly();
+      // Mit dem neuen Team spielt der Moment beim nächsten Hinsehen erneut.
+      if (!still && "IntersectionObserver" in window) { played = false; scatter(); }
+      else asm.classList.add("is-joined");
+    });
+    $("[data-replay]").addEventListener("click", () => {
+      if (still) return;
+      scatter();
+      requestAnimationFrame(() => requestAnimationFrame(join));
+    });
+
+  })();
 
   /* ---------------------------------------------------------------
      Echte offene Rollen (öffentliche Projekte) – ohne die große Supabase-Bibliothek
@@ -598,6 +600,30 @@
       </a></li>`).join("");
       box.hidden = false;
     } catch { /* ohne Verbindung bleibt der Bereich einfach weg */ }
+  })();
+
+  /* ---------------------------------------------------------------
+     Zähler der Warteliste: echte Zahl vom Server (Brevo), erst ab 10 Einträgen sichtbar
+     --------------------------------------------------------------- */
+  (async () => {
+    const box = $("[data-waitlist-count]");
+    if (!box) return;
+    try {
+      const res = await fetch("/api/waitlist-count", { headers: { Accept: "application/json" } });
+      if (!res.ok) return;
+      const { count } = await res.json();
+      if (!Number.isFinite(count) || count < 10) return;
+      const num = $("[data-waitlist-number]", box);
+      box.hidden = false;
+      if (still) { num.textContent = count.toLocaleString("de-DE"); return; }
+      const t0 = performance.now();
+      const tick = (now) => {
+        const k = Math.min(1, (now - t0) / 1200);
+        num.textContent = Math.round(count * (1 - Math.pow(1 - k, 3))).toLocaleString("de-DE");
+        if (k < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    } catch { /* ohne Zahl bleibt der Bereich einfach weg */ }
   })();
 
   /* ---------------------------------------------------------------

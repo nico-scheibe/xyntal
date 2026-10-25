@@ -438,3 +438,62 @@ body::after {
 .cmdk-trigger { font-family: var(--f-hack); font-size: 12px; gap: 8px; }
 .nav .wrap .lang-switch { margin-left: 12px; margin-right: 6px; }
 @media (max-width: 1240px) and (min-width: 1100px) { .nav-links a:not(.btn) { padding-left: 8px; padding-right: 8px; } }
+
+/* =====================================================================
+   Launch-Seite: Gründer-Satz, Warteliste mit Zähler, schlanker Footer
+   ===================================================================== */
+.launch-founder { border-top: 1px solid rgba(166, 164, 189, 0.12); }
+.founder-photo {
+  position: relative; display: grid; place-items: center; flex: none;
+  width: 64px; height: 64px; border-radius: 50%;
+  padding: 2px;
+  background: conic-gradient(from 200deg, var(--x-violet), var(--x-pink), var(--x-blue), var(--x-cyan), var(--x-violet));
+  box-shadow: 0 0 24px -6px rgba(198, 75, 255, 0.7);
+}
+.founder-photo > span, .founder-photo img {
+  grid-area: 1 / 1; width: 100%; height: 100%; border-radius: 50%;
+}
+.founder-photo > span { display: grid; place-items: center; background: #110F1B; font: 800 18px/1 var(--f-hack); letter-spacing: -0.05em; color: #fff; }
+.founder-photo img { object-fit: cover; z-index: 1; }
+
+.launch {
+  position: relative; overflow: hidden;
+  padding: clamp(96px, 12vw, 168px) 0 clamp(88px, 10vw, 140px);
+  border-top: 1px solid rgba(166, 164, 189, 0.12);
+  text-align: center;
+}
+.launch::before {
+  content: ""; position: absolute; left: 50%; top: 52%; z-index: -1;
+  width: min(1100px, 140vw); aspect-ratio: 2 / 1; transform: translate(-50%, -50%);
+  background: radial-gradient(closest-side, rgba(198, 75, 255, 0.22), rgba(79, 123, 255, 0.10) 55%, transparent);
+  pointer-events: none;
+}
+.launch-inner { display: grid; justify-items: center; gap: 22px; }
+.launch .closing-title { margin: 0; font-size: clamp(2.4rem, 6.6vw, 5.6rem) !important; max-width: 14ch; text-wrap: balance; }
+.launch-lead { max-width: 34rem; font-size: clamp(1rem, 1.4vw, 1.15rem); color: #A6A4BD; }
+.launch-count {
+  display: inline-flex; align-items: baseline; gap: 10px; flex-wrap: wrap; justify-content: center;
+  padding: 10px 18px; border-radius: 999px;
+  border: 1px solid rgba(60, 242, 166, 0.35); background: rgba(60, 242, 166, 0.06);
+  font: 500 14px/1.2 var(--f-hack); color: #C9FBE4;
+}
+.launch-count b { font-size: 22px; font-weight: 800; letter-spacing: -0.04em; color: #fff; font-variant-numeric: tabular-nums; }
+.launch-form { width: 100%; max-width: 560px; margin-top: 8px; text-align: left; }
+.launch-form .waitlist-row { flex-wrap: nowrap; padding: 6px; border-radius: 16px; border: 1px solid transparent;
+  background: linear-gradient(rgba(9, 8, 17, 0.95), rgba(9, 8, 17, 0.95)) padding-box, linear-gradient(110deg, var(--x-violet), var(--x-pink) 35%, var(--x-blue) 65%, var(--x-cyan)) border-box;
+  box-shadow: 0 0 60px -22px rgba(198, 75, 255, 0.8); }
+.launch-form .waitlist-row input { flex: 1; min-width: 0; height: 54px; border: 0 !important; background: transparent !important; font: 500 16px/1 var(--f-hack); color: #fff; padding: 0 14px; outline: none !important; }
+.launch-form .waitlist-row .btn { --h: 54px; flex: none; }
+.launch-form .waitlist-check { margin-top: 6px; }
+.launch-form .waitlist-status { text-align: center; }
+.launch-note { font: 500 12.5px/1.4 var(--f-hack); color: #827F9C; }
+@media (max-width: 520px) {
+  .launch-form .waitlist-row { flex-wrap: wrap; }
+  .launch-form .waitlist-row input { flex-basis: 100%; }
+  .launch-form .waitlist-row .btn { width: 100%; }
+}
+
+.footer-nav-min { display: flex !important; gap: 22px; flex-wrap: wrap; align-items: center; }
+.footer-nav-min a { font: 500 13px/1 var(--f-hack); color: #A6A4BD; text-decoration: none; }
+.footer-nav-min a:hover { color: #fff; }
+.launch-form { justify-self: center !important; margin-inline: auto !important; grid-column: auto !important; }

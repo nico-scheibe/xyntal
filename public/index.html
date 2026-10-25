@@ -21,11 +21,11 @@
   <link rel="preload" href="fonts/bricolage-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="fonts/fonts.css?v=31">
   <link rel="stylesheet" href="landing.css?v=31">
-  <link rel="stylesheet" href="cosmos.css?v=32">
-  <link rel="stylesheet" href="demo.css?v=33">
-  <script src="i18n-en.js?v=33" defer></script>
+  <link rel="stylesheet" href="cosmos.css?v=33">
+  <link rel="stylesheet" href="demo.css?v=34">
+  <script src="i18n-en.js?v=34" defer></script>
   <script src="i18n.js?v=31" defer></script>
-  <script src="cosmos.js?v=32" defer></script>
+  <script src="cosmos.js?v=33" defer></script>
 </head>
 <body>
 <a class="skip" href="#inhalt">Zum Inhalt springen</a>
@@ -40,11 +40,9 @@
       <span class="menu-toggle-bars" aria-hidden="true"></span><span class="menu-toggle-label">Menü</span>
     </button>
     <nav id="hauptnavigation" class="mainnav" aria-label="Hauptnavigation">
-      <a href="#entdecken">Entdecken</a>
-      <a href="#so-funktionierts">So funktioniert’s</a>
-      <a href="beta">Beta</a>
-      <a href="login" data-account>Anmelden</a>
-      <a class="btn btn-primary btn-sm" href="mitglied-werden" data-start>Projekt starten</a>
+      <a href="#entdecken">Demo</a>
+      <a href="#warum">Warum Xyntal</a>
+      <a class="btn btn-primary btn-sm" href="#warteliste">Auf die Warteliste</a>
     </nav>
   </div>
 </header>
@@ -63,7 +61,7 @@
         <p class="hero-sub">Große Ideen beginnen mit den richtigen Menschen.</p>
         <p class="hero-lead">Xyntal bringt Entwickler, Designer, Gründer und alle zusammen, die etwas aufbauen wollen. Du beschreibst dein Vorhaben und wer dir fehlt – wir zeigen dir, wer passt und warum.</p>
         <div class="hero-actions">
-          <a class="btn btn-primary" href="mitglied-werden" data-start>Projekt starten <span aria-hidden="true">→</span></a>
+          <a class="btn btn-primary" href="#warteliste">Auf die Warteliste <span aria-hidden="true">→</span></a>
           <a class="btn btn-quiet" href="#entdecken">Demo ausprobieren <span aria-hidden="true">↓</span></a>
         </div>
       </div>
@@ -207,172 +205,26 @@
             </section>
           </div>
           <div class="ws-bridge">
-            <p><strong>Du hast selbst ein Vorhaben?</strong> Leg es als Projekt an. Die Rollen aus diesem Demo-Team übernehmen wir als Vorschlag, du kannst sie danach ändern.</p>
-            <a class="btn btn-primary" href="mitglied-werden" data-bridge data-start>So ein Team für meine Idee finden <span aria-hidden="true">→</span></a>
+            <p><strong>Du hast selbst ein Vorhaben?</strong> Trag dich auf die Warteliste ein. Sobald Xyntal startet, bist du unter den Ersten, die ihr Team so finden.</p>
+            <a class="btn btn-primary" href="#warteliste" data-bridge>Ich will das für meine Idee <span aria-hidden="true">→</span></a>
           </div>
         </div>
 
         <p class="sr-only" aria-live="polite" data-announce></p>
       </div>
 
-      <p class="demo-honest">Heute auf Xyntal nutzbar: Profile, Community, Gesuche &amp; Angebote und Projekte mit offenen Rollen. Automatische Vorschläge und gemeinsame Workspaces wie in dieser Demo sind noch nicht gebaut.</p>
+      <p class="demo-honest">So wird Xyntal funktionieren. Die Demo zeigt Beispieldaten – Vorschläge und gemeinsame Workspaces sind gerade im Bau. <a href="#warteliste">Auf die Warteliste</a>, um sie als Erste:r zu nutzen.</p>
     </div>
   </section>
 
-  <!-- Echte offene Rollen aus der Community (nur sichtbar, wenn es welche gibt) -->
-  <section class="live-roles" id="offene-rollen" aria-labelledby="live-title" hidden data-live-roles>
-    <div class="shell">
-      <div class="live-head">
-        <div>
-          <p class="label"><span class="label-dot" aria-hidden="true"></span>Echt, nicht Demo</p>
-          <h2 id="live-title" class="h2">Gerade gesucht.</h2>
-        </div>
-        <a class="btn btn-quiet btn-sm" href="projekte">Alle Projekte <span aria-hidden="true">→</span></a>
-      </div>
-      <ul class="live-list" data-live-list></ul>
-    </div>
-  </section>
-
-  <!-- 3 · Geschichte: Idee → Verbindungen → Team → Fortschritt -->
-  <section class="story" id="so-funktionierts" aria-labelledby="story-title">
-    <div class="shell">
-      <header class="story-intro">
-        <p class="label">So funktioniert’s</p>
-        <h2 id="story-title" class="h2">Von einem Satz zum ersten gemeinsamen Fortschritt.</h2>
-      </header>
-
-      <!-- 01 Idee -->
-      <article class="chapter chapter-idea" aria-labelledby="ch1">
-        <div class="chapter-text reveal">
-          <p class="chapter-no"><span>01</span>Idee</p>
-          <h3 id="ch1" class="h3">Alles beginnt mit drei Antworten.</h3>
-          <p>Was willst du bauen, was gibt es schon, und wer fehlt dir? Kein Pitch-Deck und kein Businessplan – eine ehrliche Beschreibung reicht, damit andere einschätzen können, ob sie dabei sein wollen.</p>
-        </div>
-        <figure class="idea-card reveal" aria-label="Beispiel einer Projektbeschreibung">
-          <figcaption class="idea-card-top"><span>Neues Projekt</span><span class="tag tag-sample">Beispiel</span></figcaption>
-          <div class="idea-field">
-            <span class="idea-q">Was willst du bauen?</span>
-            <p class="idea-a">Eine App, mit der Stammkundschaft bei Hofläden vorbestellt und zu festen Zeiten abholt.</p>
-          </div>
-          <div class="idea-field">
-            <span class="idea-q">Was gibt es schon?</span>
-            <p class="idea-a">Gespräche mit 14 Höfen, eine Warteliste auf Papier und ein klickbarer Entwurf.</p>
-          </div>
-          <div class="idea-field">
-            <span class="idea-q">Wer fehlt dir?</span>
-            <ul class="chips"><li>Mobile-Entwicklung</li><li>Produktdesign</li><li>Backend &amp; Daten</li><li>Vertrieb &amp; Höfe</li></ul>
-          </div>
-        </figure>
-      </article>
-
-      <!-- 02 Verbindungen -->
-      <article class="chapter chapter-links" aria-labelledby="ch2">
-        <figure class="links-figure reveal" data-draw>
-          <svg viewBox="0 0 640 380" role="img" aria-labelledby="links-desc">
-            <title id="links-desc">Ein Projekt verbindet sich mit vier Rollen, jede Rolle mit passenden Menschen. Eine Verbindung ist hervorgehoben und begründet.</title>
-            <g class="lk-lines">
-              <path pathLength="1" d="M92 190 C 170 190, 170 70, 250 70"/>
-              <path pathLength="1" d="M92 190 C 170 190, 170 150, 250 150"/>
-              <path pathLength="1" d="M92 190 C 170 190, 170 230, 250 230"/>
-              <path pathLength="1" d="M92 190 C 170 190, 170 310, 250 310"/>
-              <path pathLength="1" d="M330 70 C 400 70, 400 40, 470 40"/>
-              <path pathLength="1" d="M330 150 C 400 150, 400 130, 470 130"/>
-              <path pathLength="1" d="M330 150 C 400 150, 400 180, 470 180"/>
-              <path pathLength="1" d="M330 230 C 400 230, 400 250, 470 250"/>
-              <path pathLength="1" d="M330 310 C 400 310, 400 340, 470 340"/>
-            </g>
-            <g class="lk-hot">
-              <path pathLength="1" d="M92 190 C 170 190, 170 70, 250 70"/>
-              <path pathLength="1" d="M330 70 C 400 70, 400 90, 470 90"/>
-            </g>
-            <g class="lk-nodes">
-              <rect x="20" y="166" width="72" height="48" rx="10" class="n-project"/>
-              <text x="56" y="195" text-anchor="middle" class="t-strong">Idee</text>
-              <rect x="250" y="54" width="80" height="32" rx="8"/><text x="290" y="75" text-anchor="middle">Mobile</text>
-              <rect x="250" y="134" width="80" height="32" rx="8"/><text x="290" y="155" text-anchor="middle">Design</text>
-              <rect x="250" y="214" width="80" height="32" rx="8"/><text x="290" y="235" text-anchor="middle">Backend</text>
-              <rect x="250" y="294" width="80" height="32" rx="8"/><text x="290" y="315" text-anchor="middle">Vertrieb</text>
-              <circle cx="482" cy="40" r="12"/><circle cx="482" cy="130" r="12"/><circle cx="482" cy="180" r="12"/>
-              <circle cx="482" cy="250" r="12"/><circle cx="482" cy="340" r="12"/>
-              <circle cx="482" cy="90" r="14" class="n-hot"/>
-              <text x="482" y="94" text-anchor="middle" class="t-ink">LB</text>
-            </g>
-            <g class="lk-reason">
-              <rect x="506" y="62" width="122" height="56" rx="8"/>
-              <text x="516" y="82">Offline-Sync</text>
-              <text x="516" y="97">10 Std./Woche</text>
-              <text x="516" y="112">Regensburg</text>
-            </g>
-          </svg>
-        </figure>
-        <div class="chapter-text reveal">
-          <p class="chapter-no"><span>02</span>Verbindungen</p>
-          <h3 id="ch2" class="h3">Vorschläge, die du nachvollziehen kannst.</h3>
-          <p>Für jede offene Rolle siehst du Menschen, deren Fähigkeiten, Zeit und Arbeitsweise zu deinem Vorhaben passen – und zu jedem Vorschlag einen Satz, warum. Keine Punktzahl ohne Begründung. Wen du ansprichst, entscheidest du.</p>
-          <ul class="criteria-legend">
-            <li><span class="crit crit-ok" aria-hidden="true"></span>passt</li>
-            <li><span class="crit crit-part" aria-hidden="true"></span>passt teilweise – mit Hinweis, woran es hängt</li>
-          </ul>
-        </div>
-      </article>
-
-      <!-- 03 Team: besonderer Moment -->
-      <article class="chapter chapter-team" aria-labelledby="ch3">
-        <div class="team-intro">
-          <p class="chapter-no"><span>03</span>Team</p>
-          <h3 id="ch3" class="h-moment">Aus einer Idee wird ein Team.</h3>
-          <p class="team-source" data-assembly-source>Ein Vorschlagsteam für Feldnah. Stell oben in der Demo dein eigenes zusammen – dann erscheint es hier.</p>
-        </div>
-        <div class="assembly" data-assembly>
-          <div class="assembly-panel">
-            <div class="assembly-top">
-              <span class="project-glyph" aria-hidden="true">F</span>
-              <div>
-                <strong>Feldnah</strong>
-                <span>Gemeinsame Projektansicht</span>
-              </div>
-              <span class="tag tag-ice assembly-status" data-assembly-status>Team steht</span>
-            </div>
-            <span class="assembly-spine" aria-hidden="true"></span>
-            <ul class="assembly-list" data-assembly-list></ul>
-            <div class="assembly-foot">
-              <span data-assembly-hours></span>
-              <span>Nächster Schritt: Kickoff</span>
-            </div>
-          </div>
-        </div>
-        <div class="assembly-actions">
-          <button class="btn btn-quiet btn-sm" type="button" data-replay>Noch einmal verbinden</button>
-          <a class="btn btn-quiet btn-sm" href="#entdecken">Team in der Demo ändern</a>
-        </div>
-      </article>
-
-      <!-- 04 Fortschritt -->
-      <article class="chapter chapter-progress" aria-labelledby="ch4">
-        <div class="chapter-text reveal">
-          <p class="chapter-no"><span>04</span>Fortschritt</p>
-          <h3 id="ch4" class="h3">Und dann: gemeinsam vorankommen.</h3>
-          <p>Im Workspace verteilt ihr Aufgaben, haltet Entscheidungen fest und seht jederzeit, wo ihr steht. So könnten die ersten acht Wochen von Feldnah aussehen.</p>
-        </div>
-        <ol class="timeline reveal" aria-label="Beispielverlauf über acht Wochen">
-          <li><span class="tl-week">Woche 1</span><strong>Kickoff</strong><span>Rollen, Ziele und feste Abende geklärt.</span></li>
-          <li><span class="tl-week">Woche 2</span><strong>Fünf Hofbesuche</strong><span>Bestellabläufe vor Ort beobachtet.</span></li>
-          <li><span class="tl-week">Woche 4</span><strong>Prototyp</strong><span>Vorbestellen und Abholfenster klickbar.</span></li>
-          <li><span class="tl-week">Woche 6</span><strong>Testbestellungen</strong><span>Zwei Höfe, echte Kundschaft, Papier als Rückfallebene.</span></li>
-          <li class="tl-next"><span class="tl-week">Woche 8</span><strong>Entscheidung</strong><span>Weiterbauen, anpassen oder ehrlich aufhören.</span></li>
-        </ol>
-      </article>
-    </div>
-  </section>
-
-  <!-- Wer dahintersteht -->
-  <section class="founder" aria-labelledby="founder-head">
+  <!-- 3 · Wer dahintersteht -->
+  <section class="founder launch-founder" id="warum" aria-labelledby="founder-head">
     <div class="shell founder-grid">
-      <h2 class="label founder-label" id="founder-head">Wer dahintersteht</h2>
+      <h2 class="label founder-label" id="founder-head">Warum Xyntal</h2>
       <figure class="founder-quote">
-        <blockquote><p>„Ich bin Nico. Ich arbeite Vollzeit und will bis Ende 2027 etwas Eigenes aufbauen. Dafür fehlen mir die Menschen, die genauso denken. Also baue ich Xyntal, damit Gründer und Leute, die gründen wollen, ihr Team finden.“</p></blockquote>
+        <blockquote><p>„Ich bin Nico. Ich will etwas Eigenes aufbauen – aber die richtigen Leute dafür findet man nicht durch Zufall. Also baue ich Xyntal: damit Ideen nicht an fehlenden Mitstreitern scheitern.“</p></blockquote>
         <figcaption>
-          <span class="founder-mark" aria-hidden="true">NS</span>
+          <span class="founder-photo" aria-hidden="true"><img src="nico.jpg" alt="" width="64" height="64" loading="lazy" onerror="this.remove()"><span>NS</span></span>
           <span><strong>Nico Scheibe</strong><span>Gründer von Xyntal</span></span>
           <a href="https://www.linkedin.com/in/nico-scheibe-781a20445" target="_blank" rel="noopener">LinkedIn<span class="sr-only"> (öffnet in neuem Tab)</span> <span aria-hidden="true">↗</span></a>
         </figcaption>
@@ -380,49 +232,29 @@
     </div>
   </section>
 
-  <!-- 4 · Abschluss -->
-  <section class="closing" aria-labelledby="closing-title">
-    <div class="shell">
-      <h2 id="closing-title" class="closing-title">Was möchtest du <span class="ice">bauen?</span></h2>
-      <div class="paths">
-        <a class="path" href="mitglied-werden" data-start>
-          <span class="path-label">Ich habe eine Idee</span>
-          <span class="path-text">Profil anlegen, Vorhaben beschreiben und sagen, wer dir fehlt.</span>
-          <span class="path-cta">Projekt starten <span aria-hidden="true">→</span></span>
-        </a>
-        <a class="path" href="projekte">
-          <span class="path-label">Ich will mitbauen</span>
-          <span class="path-text">Projekte mit offenen Rollen ansehen und zeigen, wo du einsteigen würdest.</span>
-          <span class="path-cta">Offene Rollen ansehen <span aria-hidden="true">→</span></span>
-        </a>
-      </div>
-      <a class="beta-teaser" href="beta">
-        <span class="beta-teaser-tag"><span class="label-dot" aria-hidden="true"></span>Beta-Programm</span>
-        <span class="beta-teaser-text"><strong>Neue Funktionen als Erstes testen.</strong> Bewirb dich und sag, warum du dabei sein solltest.</span>
-        <span class="beta-teaser-cta">Jetzt bewerben <span aria-hidden="true">→</span></span>
-      </a>
-      <p class="closing-note">Kostenlos. Konto anlegen dauert eine Minute, danach schalten wir dich nach einer kurzen Prüfung frei. Schon dabei? <a href="login">Anmelden</a></p>
+  <!-- 4 · Warteliste -->
+  <section class="launch" id="warteliste" aria-labelledby="launch-title">
+    <div class="shell launch-inner">
+      <p class="label">Early Access</p>
+      <h2 id="launch-title" class="closing-title">Sei dabei, <span class="ice">wenn es losgeht.</span></h2>
+      <p class="launch-lead">Trag dich ein und du erfährst als Erstes, wenn Xyntal startet – und bekommst als einer der Ersten Zugang.</p>
+      <p class="launch-count" data-waitlist-count hidden><b data-waitlist-number>0</b> <span>Leute warten schon auf den Start.</span></p>
 
-      <div class="waitlist" id="warteliste">
-        <div class="waitlist-copy">
-          <h3 class="waitlist-title">Noch nicht so weit?</h3>
-          <p>Trag dich auf die Warteliste ein. Du erfährst als Erstes, wenn Rollen-Vorschläge und Workspaces wie in der Demo verfügbar sind.</p>
+      <form class="waitlist-form launch-form" data-waitlist novalidate>
+        <div class="waitlist-row">
+          <label class="sr-only" for="wl-email">E-Mail-Adresse</label>
+          <input id="wl-email" type="email" name="EMAIL" autocomplete="email" inputmode="email" maxlength="254" required placeholder="du@beispiel.de">
+          <button class="btn btn-primary" type="submit">Eintragen</button>
         </div>
-        <form class="waitlist-form" data-waitlist novalidate>
-          <div class="waitlist-row">
-            <label class="sr-only" for="wl-email">E-Mail-Adresse</label>
-            <input id="wl-email" type="email" name="EMAIL" autocomplete="email" inputmode="email" maxlength="254" required placeholder="du@beispiel.de">
-            <button class="btn btn-quiet" type="submit">Eintragen</button>
-          </div>
-          <label class="waitlist-check">
-            <input type="checkbox" name="OPT_IN" value="1" required>
-            <span class="check-box" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7"/></svg></span>
-            <span>Ja, sag mir Bescheid, wenn es losgeht. Abmeldung jederzeit. <a href="impressum#datenschutz">Datenschutz</a></span>
-          </label>
-          <div class="waitlist-hp" aria-hidden="true"><input type="text" name="email_address_check" tabindex="-1" autocomplete="off"></div>
-          <p class="waitlist-status" role="status" aria-live="polite"></p>
-        </form>
-      </div>
+        <label class="waitlist-check">
+          <input type="checkbox" name="OPT_IN" value="1" required>
+          <span class="check-box" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7"/></svg></span>
+          <span>Ja, sag mir Bescheid, wenn es losgeht. Abmeldung jederzeit. <a href="impressum#datenschutz">Datenschutz</a></span>
+        </label>
+        <div class="waitlist-hp" aria-hidden="true"><input type="text" name="email_address_check" tabindex="-1" autocomplete="off"></div>
+        <p class="waitlist-status" role="status" aria-live="polite"></p>
+      </form>
+      <p class="launch-note">Kostenlos. Kein Spam – nur eine Mail zum Start.</p>
     </div>
   </section>
 
@@ -437,30 +269,14 @@
       </a>
       <p>Finde die Menschen, mit denen du etwas aufbaust – egal, wo du bist.</p>
     </div>
-    <nav class="footer-nav" aria-label="Weitere Seiten">
-      <div>
-        <h2 class="footer-head">Plattform</h2>
-        <a href="community">Community</a>
-        <a href="boerse">Gesuche &amp; Angebote</a>
-        <a href="projekte">Projekte</a>
-        <a href="mitglieder">Mitglieder</a>
-      </div>
-      <div>
-        <h2 class="footer-head">Konto</h2>
-        <a href="login">Anmelden</a>
-        <a href="mitglied-werden">Mitglied werden</a>
-        <a href="#warteliste">Warteliste</a>
-        <a href="beta">Beta-Programm</a>
-      </div>
-      <div>
-        <h2 class="footer-head">Rechtliches</h2>
-        <a href="impressum">Impressum</a>
-        <a href="impressum#datenschutz">Datenschutz</a>
-      </div>
+    <nav class="footer-nav footer-nav-min" aria-label="Rechtliches">
+      <a href="impressum">Impressum</a>
+      <a href="impressum#datenschutz">Datenschutz</a>
+      <a href="login">Login</a>
     </nav>
   </div>
 </footer>
 
-<script src="landing.js?v=33" defer></script>
+<script src="landing.js?v=34" defer></script>
 </body>
 </html>

@@ -340,6 +340,20 @@ window.XYNTAL_EN = {
   "Zeit für den gemeinsamen Workspace.": "Time for the shared workspace.",
   "Karte nach rechts ziehen = ins Team, nach links = nächste Person. Geht auch mit den Pfeiltasten ← →.": "Drag the card right = add to team, left = next person. Arrow keys ← → work too.",
 
+  "Warum Xyntal": "Why Xyntal",
+  "Auf die Warteliste": "Join the waitlist",
+  "Ich will das für meine Idee": "I want this for my idea",
+  "Trag dich auf die Warteliste ein. Sobald Xyntal startet, bist du unter den Ersten, die ihr Team so finden.": "Join the waitlist. When Xyntal launches, you'll be among the first to find your team like this.",
+  "„Ich bin Nico. Ich will etwas Eigenes aufbauen – aber die richtigen Leute dafür findet man nicht durch Zufall. Also baue ich Xyntal: damit Ideen nicht an fehlenden Mitstreitern scheitern.“": "“I'm Nico. I want to build something of my own – but you don't find the right people for that by chance. So I'm building Xyntal: so ideas don't die for lack of teammates.”",
+  "Early Access": "Early access",
+  "So wird Xyntal funktionieren. Die Demo zeigt Beispieldaten – Vorschläge und gemeinsame Workspaces sind gerade im Bau.": "This is how Xyntal will work. The demo uses sample data – suggestions and shared workspaces are being built right now.",
+  ", um sie als Erste:r zu nutzen.": " to be among the first to use them.",
+  "Sei dabei,": "Be there",
+  "wenn es losgeht.": "when it launches.",
+  "Trag dich ein und du erfährst als Erstes, wenn Xyntal startet – und bekommst als einer der Ersten Zugang.": "Sign up and you'll be the first to know when Xyntal launches – and among the first to get access.",
+  "Leute warten schon auf den Start.": "people are already waiting for launch.",
+  "Kostenlos. Kein Spam – nur eine Mail zum Start.": "Free. No spam – just one email at launch.",
+
   /* ---------- 404 ---------- */
   "Seite nicht gefunden – Xyntal": "Page not found – Xyntal",
   "Diese Seite gibt es nicht – noch nicht.": "This page doesn't exist – not yet.",

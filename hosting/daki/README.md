@@ -30,3 +30,14 @@ Both hostnames route to `http://localhost:4129` inside the encrypted tunnel.
 Cloudflare Always Use HTTPS is enabled. MX, SPF, DMARC, autodiscover and both
 IONOS DKIM selectors are preserved as DNS-only records. IONOS email stays in use.
 Initial Cloudflare activation and certificate issuance can take time after the nameserver change.
+
+## Zähler der Warteliste
+
+`/api/waitlist-count` liefert die Anzahl der bestätigten Kontakte der Brevo-Warteliste
+(zwischengespeichert für 10 Minuten). Die Startseite zeigt die Zahl erst ab 10 Einträgen.
+Einrichtung in Daki (Ordner `/home/container/xyntal`, beide Dateien nie committen):
+
+- `.brevo-key`: ein Brevo-API-Schlüssel (Brevo → SMTP & API → API-Schlüssel)
+- `.brevo-list`: die ID der Warteliste (Brevo → Kontakte → Listen, Spalte „ID“)
+
+Danach Daki einmal neu starten, damit der neue Server-Code geladen wird.
