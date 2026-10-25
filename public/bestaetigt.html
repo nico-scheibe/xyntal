@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#07070B">
+<title>Du bist dabei – Xyntal</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/home.css?v=6">
+<style>
+.confirm-page { min-height: 100dvh; display: flex; flex-direction: column; }
+.confirm-header { padding: 28px 0; }
+.confirm-main { flex: 1; display: grid; place-items: center; padding: 24px 20px 64px; }
+.confirm-card { position: relative; width: 100%; max-width: 620px; text-align: center; padding: 48px; border: 1px solid transparent; border-radius: 32px; background: linear-gradient(145deg,#17121f,#10121b) padding-box,linear-gradient(130deg,rgba(185,92,255,.6),rgba(63,216,255,.22)) border-box; box-shadow: 0 24px 100px rgba(185,92,255,.1); }
+.confirm-check { width: 76px; height: 76px; margin: 0 auto 28px; display: grid; place-items: center; border-radius: 50%; color: #8DE8CD; background: rgba(52,211,153,.09); border: 1px solid rgba(52,211,153,.25); box-shadow: 0 0 0 10px rgba(52,211,153,.025); }
+.confirm-check svg { width: 32px; height: 32px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.confirm-kicker { color: #8DE8CD; font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
+.confirm-card h1 { margin: 12px 0 18px; font: 700 clamp(40px,8vw,64px)/1.06 var(--f); letter-spacing: -.055em; }
+.confirm-copy { max-width: 420px; margin: auto; color: var(--text-2); font-size: 17px; }
+.confirm-next { margin: 28px 0; padding: 20px; text-align: left; border: 1px solid var(--line); border-radius: 18px; background: rgba(255,255,255,.025); }
+.confirm-next b { display: block; font-size: 15px; margin-bottom: 5px; }
+.confirm-next p { color: var(--text-2); font-size: 14px; }
+.confirm-actions { display: grid; gap: 14px; }
+.confirm-secondary { font-size: 14px; color: var(--text-2); text-underline-offset: 4px; }
+.confirm-foot { padding: 0 20px 26px; display: flex; justify-content: center; gap: 22px; color: var(--text-3); font-size: 12px; }
+@media(max-width:480px) { .confirm-header { padding: 22px 0; } .confirm-main { padding: 18px 20px 40px; } .confirm-card { padding: 32px 22px; border-radius: 24px; } .confirm-copy { font-size: 16px; } .confirm-check { width: 64px; height: 64px; } }
+</style>
+</head>
+<body class="confirm-page">
+<a class="skip" href="#inhalt">Zum Inhalt springen</a>
+<div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div>
+<header class="shell confirm-header">    <a class="brand" href="/" aria-label="Xyntal – Startseite">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="bm-g" x1="4" y1="4" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#B95CFF"/><stop offset=".45" stop-color="#FF5FD2"/><stop offset="1" stop-color="#3FD8FF"/></linearGradient></defs><path d="M5 5l14 14M19 5l-5.3 5.3M10.3 13.7L5 19" stroke="url(#bm-g)"/></svg>
+      <span>xyntal</span>
+    </a>
+</header>
+<main class="confirm-main" id="inhalt">
+<section class="confirm-card" aria-labelledby="confirm-title">
+<div class="confirm-check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></div>
+<p class="confirm-kicker">E-Mail bestätigt</p>
+<h1 id="confirm-title">Du bist <span class="grad-soft">dabei.</span></h1>
+<p class="confirm-copy">Dein Platz auf der Xyntal-Warteliste ist gesichert. Schön, dass du von Anfang an dabei bist.</p>
+<div class="confirm-next"><b>Wie geht’s weiter?</b><p>Wir melden uns per E-Mail, sobald der Early Access startet. Bis dahin kannst du schon deine Xyntal-Karte bauen.</p></div>
+<div class="confirm-actions"><a class="btn btn-primary" href="/#karte">Meine Xyntal-Karte bauen <span aria-hidden="true">→</span></a><a class="confirm-secondary" href="/#entdecken">Erst mal die Demo entdecken</a></div>
+</section>
+</main>
+<footer class="confirm-foot"><a href="/impressum">Impressum</a><a href="/impressum#datenschutz">Datenschutz</a></footer>
+</body>
+</html>
