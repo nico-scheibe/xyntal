@@ -31,6 +31,7 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 | `supabase/012_waitlist_cards_more.sql` | Karten: Stadt, Arbeitsweise, Erfahrung, Link (Foto und Gestaltung bleiben im Browser) |
 | `supabase/013_waitlist_perks.sql` | Wunsch-Link (xyntal.de/name, eindeutig) und Einladungen: Code pro Adresse, geworbene Adressen; nur Admins lesen |
 | `supabase/014_admin_actions.sql` | Admins können Einladungen gutschreiben (nur `credited_at`) |
+| `supabase/015_public_cards.sql` | Wunsch-Links öffnen: `xyntal.de/name` zeigt die Karte nur mit Zustimmung (`is_public`), sonst „reserviert“; `get_public_card` liefert nur öffentliche Felder |
 | `supabase/010_beta_applications.sql` | Beta-Programm: Bewerbungen ohne Konto (nur über `apply_for_beta`), lesen und bewerten nur Admins; **noch auszuführen** |
 | `ANMELDUNG-EINRICHTEN.md` | Anleitung: Brevo-SMTP einrichten; Google, Apple, LinkedIn und SMS einschalten |
 
@@ -50,6 +51,7 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 | `/events` | Kommende und vergangene Treffen, Zu- und Absagen; Admins verwalten Termine und Teilnehmerlisten |
 | `/nachrichten` | Direktnachrichten zwischen Mitgliedern, mit Live-Updates |
 | `/mitglieder` | Freigeschaltete Profile (Gäste sehen nur öffentliche) |
+| `/name` | Öffentliche Karte unter dem Wunsch-Link (`u.html`); vor einem Daki-Neustart leitet `404.html` dorthin weiter |
 | `/admin` | Mitglieder freischalten, frühere Anmeldungen & Newsletter (CSV), Link zur Treffen-Verwaltung |
 
 ## Design und Sprachen

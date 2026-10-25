@@ -22,8 +22,8 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="stylesheet" href="fonts/fonts.css?v=31">
-  <link rel="stylesheet" href="home.css?v=8">
-  <script src="i18n-en.js?v=42" defer></script>
+  <link rel="stylesheet" href="home.css?v=9">
+  <script src="i18n-en.js?v=43" defer></script>
   <script src="i18n.js?v=31" defer></script>
 </head>
 <body class="home">
@@ -428,6 +428,11 @@
           <span class="check-box" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7"/></svg></span>
           <span><b>Meine Karte mitschicken</b> – damit ich dich vor dem Start mit passenden Leuten verbinden kann und dein Wunsch-Link reserviert wird. Gespeichert wird sie mit deiner E-Mail-Adresse. <a href="impressum#datenschutz">Mehr dazu</a></span>
         </label>
+        <label class="waitlist-check share-check" data-public-card hidden>
+          <input type="checkbox" name="PUBLIC_CARD" value="1">
+          <span class="check-box" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7"/></svg></span>
+          <span><b>Karte öffentlich zeigen</b> – unter <span data-public-handle data-no-i18n>xyntal.de/deinname</span> kann jede:r deine Karte sehen (ohne Foto und ohne E-Mail-Adresse). Ohne Haken steht dort nur „reserviert“.</span>
+        </label>
         <div class="waitlist-hp" aria-hidden="true"><input type="text" name="email_address_check" tabindex="-1" autocomplete="off"></div>
         <p class="waitlist-status" role="status" aria-live="polite"></p>
       </form>
@@ -455,6 +460,6 @@
   </div>
 </footer>
 
-<script src="landing.js?v=44" defer></script>
+<script src="landing.js?v=45" defer></script>
 </body>
 </html>

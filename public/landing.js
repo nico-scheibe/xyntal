@@ -689,7 +689,7 @@
   });
   // Karte zusammen mit der Anmeldung speichern (Supabase, nur für den Admin lesbar).
   // Rückgabe: null (nicht gespeichert) oder der Stand des Wunsch-Links: "", "ok", "taken", "invalid".
-  async function sendCard(email, card) {
+  async function sendCard(email, card, isPublic) {
     if (!card || !card.touched) return null;
     try {
       const res = await rpc("submit_waitlist_card", {
@@ -699,6 +699,7 @@
         p_lang: document.documentElement.lang === "en" ? "en" : "de",
         p_city: (card.city || "").trim().slice(0, 40), p_mode: card.mode || "", p_level: card.level || "", p_link: card.link || "",
         p_handle: card.handle || "",
+        p_public: !!(isPublic && card.handle), p_design: card.design || null,
       });
       if (!res.ok) return null;
       const out = await res.json().catch(() => "");
@@ -786,10 +787,11 @@
         const parts = [SENT];
         if (form.SHARE_CARD?.checked && window.XyntalCard) {
           const card = window.XyntalCard();
-          const res = await sendCard(email, card);
+          const isPublic = !!form.PUBLIC_CARD?.checked;
+          const res = await sendCard(email, card, isPublic);
           if (res !== null) {
             parts.push("Deine Karte ist gespeichert.");
-            if (res === "ok") parts.push(`Dein Link xyntal.de/${card.handle} ist reserviert.`);
+            if (res === "ok") parts.push(isPublic ? `Deine Karte ist jetzt unter xyntal.de/${card.handle} zu sehen.` : `Dein Link xyntal.de/${card.handle} ist reserviert.`);
             else if (res === "taken") parts.push(`xyntal.de/${card.handle} ist leider schon vergeben. Du kannst dir nach dem Start einen anderen aussuchen.`);
             else if (res === "invalid") parts.push("Dieser Wunsch-Link ist nicht verfügbar. Du kannst dir nach dem Start einen anderen aussuchen.");
           }
@@ -1120,6 +1122,12 @@
 
     // Formular mit gespeicherten Werten füllen
     el.name.value = data.name; el.city.value = data.city; el.pitch.value = data.pitch; el.link.value = data.link; el.hours.value = data.hours;
+    // Kommt man über einen freien Link (xyntal.de/name → „Diesen Link sichern“), ist der Name schon eingetragen
+    try {
+      const params = new URLSearchParams(location.search), wanted = cleanHandle(params.get("handle") || "");
+      if (validHandle(wanted)) { data.handle = wanted; data.touched = true; persist(); }
+      if (params.has("handle")) { params.delete("handle"); history.replaceState(null, "", location.pathname + (params.toString() ? `?${params}` : "") + location.hash); }
+    } catch { /* egal */ }
     el.handle.value = data.handle;
     form.c1.value = data.c1; form.c2.value = data.c2;
     for (const key of ["role", "level", "mode", "looking", "theme", "surface", "shape", "layout"]) $$(`input[name="${key}"]`, form).forEach((r) => { r.checked = r.value === data[key]; });
@@ -1300,10 +1308,19 @@
 
     // Für die Warteliste: nur die Angaben – Foto und Gestaltung bleiben auf dem Gerät
     window.XyntalCard = () => ({ name: data.name, city: data.city, role: data.role, level: data.level, skills: data.skills.slice(), hours: data.hours,
-      mode: data.mode, looking: data.looking, pitch: data.pitch, link: linkUrl(data.link), handle: validHandle(data.handle) ? data.handle : "", touched: data.touched });
+      mode: data.mode, looking: data.looking, pitch: data.pitch, link: linkUrl(data.link), handle: validHandle(data.handle) ? data.handle : "", touched: data.touched,
+      design: { theme: data.theme, c1: data.c1, c2: data.c2, surface: data.surface, shape: data.shape, layout: data.layout, order: data.order.slice(), off: data.off.slice() } });
     window.XyntalCardDraw = drawCard;
-    const shareBox = $("[data-share-card]");
-    const showShare = () => { if (shareBox) shareBox.hidden = !data.touched; };
+    const shareBox = $("[data-share-card]"), publicBox = $("[data-public-card]");
+    const showShare = () => {
+      if (shareBox) shareBox.hidden = !data.touched;
+      if (publicBox) {
+        const ok = data.touched && validHandle(data.handle);
+        publicBox.hidden = !ok;
+        if (!ok) { const cb = $("input", publicBox); if (cb) cb.checked = false; }
+        const label = $("[data-public-handle]", publicBox); if (label) label.textContent = `xyntal.de/${ok ? data.handle : "deinname"}`;
+      }
+    };
     form.addEventListener("input", showShare);
     form.addEventListener("change", showShare);
     renderChips(); renderPhoto(); renderOrder(); render(); showShare();

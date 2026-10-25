@@ -7,6 +7,13 @@
   <meta property="og:title" content="Seite nicht gefunden – Xyntal">
   <title>Seite nicht gefunden – Xyntal</title>
   <script>
+    // xyntal.de/name: Wunsch-Link zur Karte weiterleiten (bis der Server die Adresse selbst kennt)
+    (function () {
+      var h = location.pathname.replace(/^\/+|\/+$/g, "").toLowerCase();
+      if (/^[a-z0-9][a-z0-9_-]{2,19}$/.test(h)) location.replace("/u#" + h);
+    })();
+  </script>
+  <script>
     // GitHub Pages zeigt diese Seite unter jeder falschen Adresse. Basis selbst bestimmen,
     // damit Schriften, Styles und Links unter /xyntal/ wie auf einer eigenen Domain funktionieren.
     document.write('<base href="' + (location.pathname.startsWith("/xyntal/") || location.pathname === "/xyntal" ? "/xyntal/" : "/") + '">');

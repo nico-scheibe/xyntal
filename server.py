@@ -10,6 +10,7 @@ nur aus und unterstützt schöne Adressen wie /profil statt /profil.html
 """
 
 import os
+import re
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
 
@@ -26,7 +27,23 @@ class Handler(SimpleHTTPRequestHandler):
             candidate = super().translate_path(parsed.rstrip("/") + ".html")
             if os.path.isfile(candidate):
                 return candidate
+            # xyntal.de/name → öffentliche Karte (wie hosting/daki/server.cjs)
+            if re.fullmatch(r"/[a-zA-Z0-9][a-zA-Z0-9_-]{2,19}/?", parsed) and not os.environ.get("XYNTAL_NO_HANDLE_ROUTE"):
+                return os.path.join(PUBLIC, "u.html")
         return super().translate_path(path)
+
+    def send_error(self, code, message=None, explain=None):
+        # Wie Daki: unbekannte Adressen zeigen 404.html
+        page = os.path.join(PUBLIC, "404.html")
+        if code == 404 and os.path.isfile(page):
+            body = open(page, "rb").read()
+            self.send_response(404)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+            return
+        super().send_error(code, message, explain)
 
     def end_headers(self):
         self.send_header("Cache-Control", "no-cache")

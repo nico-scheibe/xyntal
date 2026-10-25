@@ -1,4 +1,4 @@
--- Regressionstest für supabase/011_waitlist_cards.sql, 012_waitlist_cards_more.sql 013_waitlist_perks.sql und 014_admin_actions.sql
+-- Regressionstest für supabase/011_waitlist_cards.sql, 012_waitlist_cards_more.sql 013_waitlist_perks.sql 014_admin_actions.sql und 015_public_cards.sql
 -- Nur in einer LEEREN, SEPARATEN lokalen PostgreSQL-Datenbank mit den Rollen anon und authenticated ausführen,
 -- aus dem Repository-Ordner:  psql -v ON_ERROR_STOP=1 -d TESTDATENBANK -f tests/waitlist_cards.sql
 -- Simuliert auth.uid() und eine vereinfachte profiles-Tabelle. Niemals im produktiven Projekt ausführen.
@@ -164,4 +164,27 @@ do $$ begin
   if (select count(*) from public.waitlist_referrals where credited_at is not null) <> 1 then raise exception 'Gutschrift nicht gespeichert'; end if;
   if (select handle from public.waitlist_cards where email = 'h1@example.com') <> 'neuer-name' then raise exception 'Admin-Linkänderung fehlt'; end if;
 end $$;
+-- 11) Migration 015: öffentliche Karten nur mit Zustimmung
+\i supabase/015_public_cards.sql
+set role anon;
+do $$ declare j jsonb; r text; begin
+  r := public.submit_waitlist_card('pub@example.com', 'Pia', 'Design', array['Figma'], 6, 'Mitgründer:in', 'Hallo', 'de',
+       'Berlin', 'Remote', 'Profi', 'https://pia.dev', 'pia', true, '{"theme":"ocean","layout":"center"}'::jsonb);
+  if r <> 'ok' then raise exception 'öffentliche Karte nicht gespeichert: %', r; end if;
+  j := public.get_public_card('PIA');
+  if (j->>'name') is distinct from 'Pia' or (j->'design'->>'theme') is distinct from 'ocean' then raise exception 'öffentliche Karte falsch: %', j; end if;
+  if j ? 'email' or j ? 'note' or j ? 'status' then raise exception 'private Felder sichtbar: %', j; end if;
+  j := public.get_public_card('neuer-name');                 -- reserviert, aber ohne Zustimmung
+  if (j->>'reserved') is distinct from 'true' or j ? 'name' then raise exception 'Karte ohne Zustimmung sichtbar: %', j; end if;
+  if public.get_public_card('frei-name') is not null then raise exception 'freier Name liefert Daten'; end if;
+  if public.get_public_card('<x>') is not null then raise exception 'ungültiger Name liefert Daten'; end if;
+  -- alte Aufrufform bleibt privat
+  r := public.submit_waitlist_card('old@example.com', 'O', 'Design', '{}', 5, 'Mitgründer:in', '', 'de', '', '', '', '', 'olaf');
+  if (public.get_public_card('olaf')->>'reserved') is distinct from 'true' then raise exception 'Standard sollte privat sein'; end if;
+  -- zu große Gestaltung wird verworfen, nicht gespeichert
+  r := public.submit_waitlist_card('big@example.com', 'B', 'Design', '{}', 5, 'Mitgründer:in', '', 'de', '', '', '', '', 'bigdesign', true,
+       jsonb_build_object('x', repeat('a', 2000)));
+  if (public.get_public_card('bigdesign')->'design') is distinct from '{}'::jsonb then raise exception 'zu große Gestaltung gespeichert'; end if;
+end $$;
+reset role;
 \echo 'waitlist cards ok'

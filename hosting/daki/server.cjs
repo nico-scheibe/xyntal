@@ -101,6 +101,8 @@ http.createServer((req,res) => {
   if (file !== currentRoot && !file.startsWith(currentRoot + path.sep)) { res.writeHead(403); return res.end(); }
   if (file === currentRoot || pathname.endsWith('/')) file = path.join(file, 'index.html');
   if (!path.extname(file) && fs.existsSync(file + '.html')) file += '.html';
+  // xyntal.de/name: Wunsch-Link zeigt die öffentliche Karte (die Seite fragt Supabase selbst)
+  if ((!fs.existsSync(file) || !fs.statSync(file).isFile()) && /^\/[a-z0-9][a-z0-9_-]{2,19}\/?$/i.test(pathname) && fs.existsSync(path.join(currentRoot, 'u.html'))) file = path.join(currentRoot, 'u.html');
   if (!fs.existsSync(file) || !fs.statSync(file).isFile()) {
     res.writeHead(404, {'Content-Type':'text/html; charset=utf-8'});
     return res.end(req.method === 'HEAD' ? undefined : fs.readFileSync(path.join(currentRoot,'404.html')));

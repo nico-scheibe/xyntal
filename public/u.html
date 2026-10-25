@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cut">
+  <meta name="theme-color" content="#07070B">
+  <meta name="robots" content="noindex">
+  <title>Xyntal-Karte</title>
+  <meta name="description" content="Eine Karte auf Xyntal – der Plattform, auf der aus Ideen Teams werden.">
+  <meta property="og:title" content="Xyntal-Karte">
+  <meta property="og:description" content="Stop swiping. Start building. – Finde Leute für deine Idee auf xyntal.de">
+  <meta property="og:image" content="https://xyntal.de/og-image.jpg">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="stylesheet" href="/fonts/fonts.css?v=31">
+  <link rel="stylesheet" href="/home.css?v=9">
+  <script src="/i18n-en.js?v=43" defer></script>
+  <script src="/i18n.js?v=31" defer></script>
+  <style>
+    .profile { min-height: calc(100vh - 200px); display: grid; align-content: center; justify-items: center; gap: 22px; padding: 48px 0 72px; text-align: center; }
+    .profile .bp-stage { max-width: 440px; }
+    .profile .my-card { transform: none; }
+    .profile-msg { display: grid; gap: 12px; justify-items: center; max-width: 30rem; }
+    .profile-msg h1 { font: 700 clamp(28px, 5vw, 40px)/1.1 var(--f); letter-spacing: -0.03em; }
+    .profile-msg h1 b { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .profile-msg p { color: var(--text-2); }
+    .profile-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+    .profile-loading { color: var(--text-3); }
+    @media (max-width: 480px) { .profile-actions .btn { width: 100%; } }
+  </style>
+</head>
+<body class="home">
+<div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div>
+<header class="topbar">
+  <div class="shell topbar-inner">
+    <a class="brand" href="/" aria-label="Xyntal – Startseite">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="bm-g" x1="4" y1="4" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#B95CFF"/><stop offset=".45" stop-color="#FF5FD2"/><stop offset="1" stop-color="#3FD8FF"/></linearGradient></defs><path d="M5 5l14 14M19 5l-5.3 5.3M10.3 13.7L5 19" stroke="url(#bm-g)"/></svg>
+      <span>xyntal</span>
+    </a>
+    <nav class="mainnav" aria-label="Hauptnavigation" style="display:flex">
+      <a class="btn btn-primary btn-sm" href="/#warteliste">Auf die Warteliste</a>
+    </nav>
+  </div>
+</header>
+<main class="shell profile" id="inhalt" data-profile aria-live="polite">
+  <p class="profile-loading">Karte wird geladen …</p>
+</main>
+<footer class="footer">
+  <div class="shell footer-inner">
+    <nav class="footer-nav" aria-label="Rechtliches">
+      <div><a href="/impressum">Impressum</a><a href="/impressum#datenschutz">Datenschutz</a></div>
+    </nav>
+  </div>
+</footer>
+<script src="/u.js?v=1" defer></script>
+</body>
+</html>
