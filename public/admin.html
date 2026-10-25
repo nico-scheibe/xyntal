@@ -182,6 +182,7 @@
         </tbody></table></div></details>` : `<p class="empty">Keine früheren lokalen Einträge.</p>`}`;
 
 
+    ['members','cards','signups','newsletter'].forEach(enhanceTablePanel);
   }
 
   let summaryRequest = false;
@@ -226,6 +227,25 @@
   }
   setInterval(refreshConfirmedCount, 15000);
   document.addEventListener("visibilitychange", refreshConfirmedCount);
+
+  const panelSearch = {};
+  function enhanceTablePanel(key) {
+    const panel = document.querySelector(`[data-panel="${key}"]`);
+    const table = panel.querySelector('table');
+    if (!table) return;
+    panel.querySelector('[data-table-tools]')?.remove();
+    const tools = document.createElement('div');tools.className='admin-filters';tools.dataset.tableTools=key;
+    tools.innerHTML=`<label class="admin-search">${key==='members'?'Mitglieder':key==='cards'?'Karten':'Einträge'} durchsuchen<input type="search" data-panel-search="${key}" placeholder="Name, E-Mail oder Inhalt" value="${esc(panelSearch[key]||'')}"></label>${key==='members'?'<label>Status<select data-member-filter><option value="">Alle Status</option><option value="Wartet">Wartet</option><option value="Freigeschaltet">Freigeschaltet</option><option value="Abgelehnt">Abgelehnt</option></select></label>':''}<span class="hint" data-table-count></span>`;
+    table.closest('.table-wrap').before(tools); filterTablePanel(key);
+  }
+  function filterTablePanel(key) {
+    const panel=document.querySelector(`[data-panel="${key}"]`),query=(panelSearch[key]||'').trim().toLocaleLowerCase('de'),status=panel.querySelector('[data-member-filter]')?.value;
+    const rows=[...panel.querySelectorAll('tbody tr')];let count=0;
+    for(const row of rows){row.hidden=!(row.textContent.toLocaleLowerCase('de').includes(query)&&(!status||row.querySelector('.status-pill')?.textContent===status));if(!row.hidden)count++;}
+    const info=panel.querySelector('[data-table-count]');if(info)info.textContent=`${count} von ${rows.length} sichtbar`;
+  }
+  adminView.addEventListener('input',e=>{if(e.target.matches('[data-panel-search]')){const key=e.target.dataset.panelSearch;panelSearch[key]=e.target.value;filterTablePanel(key);}});
+  adminView.addEventListener('change',e=>{if(e.target.matches('[data-member-filter]'))filterTablePanel('members');});
 
   // Karten von der Warteliste – zum Matchen von Hand
   const CARD_STATUS = { neu: "Neu", kontaktiert: "Kontaktiert", gematcht: "Gematcht" };
@@ -272,7 +292,7 @@
   }
   document.querySelector('[data-panel="cards"]').addEventListener("click", async (e) => {
     const f = e.target.closest("[data-cfilter]");
-    if (f) { cardFilter = f.dataset.cfilter; renderCards(lastData.cards); return; }
+    if (f) { cardFilter = f.dataset.cfilter; renderCards(lastData.cards); enhanceTablePanel("cards"); return; }
     const btn = e.target.closest("button[data-card]");
     if (!btn) return;
     const { card: act, id } = btn.dataset;
