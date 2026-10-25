@@ -268,3 +268,23 @@ Bis dahin funktioniert die Warteliste normal; die Karte wird nur nicht gespeiche
 
 SQL-Regressionstest in einer **leeren, separaten lokalen PostgreSQL-Datenbank** mit den Rollen `anon` und `authenticated`:
 `psql -v ON_ERROR_STOP=1 -d TESTDATENBANK -f tests/waitlist_cards.sql`. Erwartete letzte Ausgabe: `waitlist cards ok`.
+
+## Admin und Beta-Verwaltung
+
+`/admin` ist ausschließlich für bestehende Admin-Konten zugänglich. Die neue Übersicht
+zeigt die bestätigte Brevo-Gesamtzahl getrennt von Karten und Beta-Bewerbungen.
+Mitglieder und Karten sind durchsuchbar. Beta-Bewerbungen bieten Suche, Bereichs-
+und Statusfilter, Sortierung, 15 Einträge pro Seite, interne Notizen und CSV-Export.
+Statuswechsel verschicken keine E-Mails und vergeben keine Kontorechte.
+
+Die Erweiterung für Beta-Bewerbungen steht unter
+`supabase/migrations/20261025210417_beta_admin_workflow.sql`. Lesen, Bearbeiten und
+Löschen sind per RLS auf Admins beschränkt; direkte anonyme Tabellenzugriffe sind
+gesperrt. `apply_for_beta` ist absichtlich ein öffentlich aufrufbarer, validierender
+Schreib-Endpunkt für Bewerbungen ohne Konto. Der Supabase Advisor markiert den
+SECURITY-DEFINER-Endpunkt deshalb als Warnung; er liefert keine Bewerberdaten
+zurück. Das entspricht dem bisherigen Formularmodell und wird nicht durch eine
+öffentlich lesbare Tabelle ersetzt.
+
+UI-Logik prüfen: `node tests/admin-ui.cjs` (Beispieldaten, keine Live-Datenbank).
+Öffentlicher Testablauf und Feedback: `/beta#testen`.
