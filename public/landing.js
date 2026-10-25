@@ -654,7 +654,7 @@
       if (pending || document.hidden) return;
       pending = true;
       try {
-        const res = await fetch("/api/waitlist-count", {
+        const res = await fetch("/api/waitlist-count?v=2", {
           headers: { Accept: "application/json" }, cache: "no-store",
           signal: AbortSignal.timeout(15000),
         });
@@ -669,7 +669,7 @@
       finally { pending = false; }
     }
     refreshWaitlistCount();
-    setInterval(refreshWaitlistCount, 60000);
+    setInterval(refreshWaitlistCount, 15000);
     document.addEventListener("visibilitychange", refreshWaitlistCount);
     window.addEventListener("focus", refreshWaitlistCount);
     window.addEventListener("pageshow", refreshWaitlistCount);
@@ -736,7 +736,7 @@
         // Echte Platznummer: bestätigte Einträge laut Brevo + 1 (nur, wenn der Server eine Zahl liefert)
         let place = "";
         try {
-          const r = await fetch("/api/waitlist-count", { headers: { Accept: "application/json" } });
+          const r = await fetch("/api/waitlist-count?v=2", { headers: { Accept: "application/json" } });
           const n = r.ok ? (await r.json()).count : null;
           if (Number.isFinite(n) && n >= 0) place = ` Nach deiner Bestätigung bist du Nr. ${(n + 1).toLocaleString("de-DE")} auf der Warteliste.`;
         } catch { /* ohne Zahl kein Hinweis */ }

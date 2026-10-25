@@ -58,7 +58,7 @@ const readSecret = (file, env) => {
 };
 let waitlist = { count: null, at: 0, pending: null };
 async function waitlistCount() {
-  if (Date.now() - waitlist.at < 10 * 60 * 1000) return waitlist.count;
+  if (Date.now() - waitlist.at < 20 * 1000) return waitlist.count;
   if (waitlist.pending) return waitlist.pending;
   const key = readSecret('.brevo-key', 'BREVO_API_KEY');
   const list = readSecret('.brevo-list', 'BREVO_LIST_ID');
@@ -90,7 +90,7 @@ http.createServer((req,res) => {
   }
   if (pathname === '/api/waitlist-count') {
     waitlistCount().then((count) => {
-      res.writeHead(count === null ? 404 : 200, {'Content-Type':'application/json','Cache-Control':'public, max-age=300'});
+      res.writeHead(count === null ? 404 : 200, {'Content-Type':'application/json','Cache-Control':'no-store'});
       res.end(req.method === 'HEAD' ? undefined : JSON.stringify(count === null ? {error:'not configured'} : {count}));
     });
     return;
