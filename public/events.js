@@ -1,6 +1,6 @@
 // Treffen: Datenrechte und Zusagen werden zusätzlich serverseitig geprüft.
 const EVENT_FIELDS = 'id,title,description,starts_at,place,address,is_public,cancelled,created_at';
-function eventDate(ts) { return new Date(ts).toLocaleString('de-DE', { timeZone: 'Europe/Berlin', weekday: 'short', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+function eventDate(ts) { return new Date(ts).toLocaleString(document.documentElement.lang === 'en' ? 'en-GB' : 'de-DE', { timeZone: 'Europe/Berlin', weekday: 'short', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
 function eventLocalInput(ts) {
   const d = new Date(ts); const pad = n => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;

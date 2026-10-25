@@ -282,7 +282,7 @@ function timeAgo(ts) {
   if (s < 3600) return `vor ${Math.floor(s / 60)} Min.`;
   if (s < 86400) return `vor ${Math.floor(s / 3600)} Std.`;
   if (s < 7 * 86400) { const d = Math.floor(s / 86400); return d === 1 ? "gestern" : `vor ${d} Tagen`; }
-  return new Date(ts).toLocaleDateString("de-DE", { day: "numeric", month: "short", year: "numeric" });
+  return new Date(ts).toLocaleDateString(document.documentElement.lang === "en" ? "en-GB" : "de-DE", { day: "numeric", month: "short", year: "numeric" });
 }
 
 // Text sicher ausgeben, Zeilenumbrüche und Links erhalten

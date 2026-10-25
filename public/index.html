@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Xyntal – Große Ideen beginnen mit den richtigen Menschen</title>
   <meta name="description" content="Xyntal verbindet Entwickler, Designer, Gründer und ambitionierte Menschen, die gemeinsam Projekte und Unternehmen aufbauen wollen. Beschreibe dein Vorhaben – Xyntal zeigt dir, wer passt und warum.">
-  <meta name="theme-color" content="#050607">
+  <meta name="theme-color" content="#05040A">
   <meta property="og:title" content="Xyntal – Große Ideen beginnen mit den richtigen Menschen">
   <meta property="og:description" content="Finde die Menschen, mit denen du dein Projekt aufbaust – mit nachvollziehbaren Vorschlägen und einem gemeinsamen Workspace.">
   <meta property="og:locale" content="de_DE">
@@ -17,12 +17,14 @@
   <meta property="og:image:alt" content="Xyntal: Große Ideen beginnen mit den richtigen Menschen.">
   <meta name="twitter:card" content="summary_large_image">
   <meta property="og:url" content="https://xyntal.de/">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23050607'/%3E%3Cpath d='M9 9l14 14' stroke='%23E4ECEB' stroke-width='3.2' stroke-linecap='round'/%3E%3Cpath d='M23 9l-5.2 5.2M14.2 17.8L9 23' stroke='%232DE2CE' stroke-width='3.2' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2305040A'/%3E%3Cpath d='M9 9l14 14' stroke='%23ECEBF7' stroke-width='3.2' stroke-linecap='round'/%3E%3Cpath d='M23 9l-5.2 5.2M14.2 17.8L9 23' stroke='%2322E5FF' stroke-width='3.2' stroke-linecap='round'/%3E%3C/svg%3E">
   <link rel="preload" href="fonts/bricolage-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="fonts/fonts.css?v=30">
-  <link rel="stylesheet" href="landing.css?v=30">
-  <link rel="stylesheet" href="cosmos.css?v=30">
-  <script src="cosmos.js?v=30" defer></script>
+  <link rel="stylesheet" href="fonts/fonts.css?v=31">
+  <link rel="stylesheet" href="landing.css?v=31">
+  <link rel="stylesheet" href="cosmos.css?v=31">
+  <script src="i18n-en.js?v=31" defer></script>
+  <script src="i18n.js?v=31" defer></script>
+  <script src="cosmos.js?v=31" defer></script>
 </head>
 <body>
 <a class="skip" href="#inhalt">Zum Inhalt springen</a>
@@ -50,93 +52,66 @@
 
   <!-- 1 · Hero -->
   <section class="hero" aria-labelledby="hero-title">
-    <div class="hero-cosmos" aria-hidden="true">
-      <svg viewBox="0 0 600 600" focusable="false">
-        <defs>
-          <radialGradient id="hc-body" cx="34%" cy="30%" r="78%">
-            <stop offset="0" stop-color="#8AF3E6"/>
-            <stop offset=".16" stop-color="#2DE2CE"/>
-            <stop offset=".42" stop-color="#0E6F66"/>
-            <stop offset=".72" stop-color="#062221"/>
-            <stop offset="1" stop-color="#020707"/>
-          </radialGradient>
-          <radialGradient id="hc-atmo" r="50%">
-            <stop offset=".62" stop-color="#2DE2CE" stop-opacity=".32"/>
-            <stop offset="1" stop-color="#2DE2CE" stop-opacity="0"/>
-          </radialGradient>
-          <linearGradient id="hc-ring-grad" x1="0" x2="1">
-            <stop offset="0" stop-color="#2DE2CE" stop-opacity=".08"/>
-            <stop offset=".5" stop-color="#8AF3E6" stop-opacity=".9"/>
-            <stop offset="1" stop-color="#2DE2CE" stop-opacity=".12"/>
-          </linearGradient>
-          <clipPath id="hc-clip"><circle cx="300" cy="300" r="150"/></clipPath>
-          <clipPath id="hc-front"><rect x="0" y="300" width="600" height="300"/></clipPath>
-          <g id="hc-rings">
-            <ellipse class="hc-ring" cx="300" cy="300" rx="262" ry="56" stroke-width="7" opacity=".55"/>
-            <ellipse class="hc-ring" cx="300" cy="300" rx="238" ry="50" stroke-width="2"/>
-            <ellipse class="hc-ring" cx="300" cy="300" rx="214" ry="44" stroke-width="1" opacity=".7"/>
-          </g>
-        </defs>
-
-        <circle class="hc-orbit" cx="300" cy="300" r="228" stroke-dasharray="1 10"/>
-        <circle cx="300" cy="300" r="205" fill="url(#hc-atmo)"/>
-
-        <g transform="rotate(-18 300 300)"><use href="#hc-rings"/></g>
-        <circle cx="300" cy="300" r="150" fill="url(#hc-body)"/>
-        <g clip-path="url(#hc-clip)">
-          <g transform="rotate(-18 300 300)">
-            <ellipse class="hc-band" cx="300" cy="250" rx="160" ry="18"/>
-            <ellipse class="hc-band" cx="300" cy="300" rx="160" ry="26"/>
-            <ellipse class="hc-band" cx="300" cy="350" rx="160" ry="18"/>
-            <ellipse class="hc-band" cx="300" cy="300" rx="60" ry="160"/>
-            <ellipse class="hc-band" cx="300" cy="300" rx="120" ry="160"/>
-          </g>
-          <circle cx="372" cy="362" r="170" fill="#020606" opacity=".55"/>
-        </g>
-        <g transform="rotate(-18 300 300)" clip-path="url(#hc-front)"><use href="#hc-rings"/></g>
-
-        <path class="hc-hud" d="M128 158v-30h30M472 158v-30h-30M128 442v30h30M472 442v30h-30"/>
-        <path class="hc-hud" d="M392 196l24-64h90" opacity=".7"/>
-        <circle class="hc-sat" cx="392" cy="196" r="3"/>
-        <text class="hc-text hc-text-hi" x="420" y="124">XYN-01</text>
-        <text class="hc-text" x="420" y="148">49.0134N 12.1016E</text>
-      </svg>
-      <svg class="hc-layer hc-spin" viewBox="0 0 600 600" focusable="false">
-        <circle class="hc-orbit" cx="300" cy="300" r="286"/>
-        <circle class="hc-sat" cx="586" cy="300" r="3"/>
-        <circle class="hc-sat" cx="98" cy="98" r="2"/>
-      </svg>
-      <svg class="hc-layer hc-spin-rev" viewBox="0 0 600 600" focusable="false">
-        <circle class="hc-hud" cx="300" cy="300" r="172" stroke-dasharray="40 14 4 14"/>
-        <circle class="hc-moon-glow" cx="300" cy="104" r="12"/>
-        <circle class="hc-moon" cx="300" cy="104" r="5"/>
-      </svg>
-    </div>
     <div class="shell hero-grid">
-      <p class="label hero-kicker"><span class="prompt" aria-hidden="true">~/xyntal $</span>Für Menschen, die gemeinsam bauen<span class="caret" aria-hidden="true"></span></p>
-      <h1 id="hero-title" class="hero-title">
-        <span class="ht-line ht-dim">Große Ideen</span>
-        <span class="ht-line ht-dim">beginnen mit den</span>
-        <span class="ht-line glitch" data-text="richtigen Menschen.">richtigen Menschen<span class="ht-dot">.</span></span>
-      </h1>
-      <div class="hero-term" aria-hidden="true">
-        <div class="hero-term-bar"><i></i><i></i><i></i><span>xyntal — zsh</span></div>
-        <pre data-term></pre>
-      </div>
-      <div class="hero-side">
+      <div class="hero-main">
+        <p class="hero-kicker"><span class="hk-tag">xyntal://regensburg</span><span class="hk-status"><i aria-hidden="true"></i>System online</span></p>
+        <h1 id="hero-title" class="hero-title">
+          <span class="ht-line ht-dim" data-scramble>Stop swiping.</span>
+          <span class="ht-line ht-grad" data-scramble>Start building.</span>
+        </h1>
+        <p class="hero-sub">Große Ideen beginnen mit den richtigen Menschen.</p>
         <p class="hero-lead">Xyntal bringt Entwickler, Designer, Gründer und alle zusammen, die etwas aufbauen wollen. Du beschreibst dein Vorhaben und wer dir fehlt – wir zeigen dir, wer passt und warum.</p>
         <div class="hero-actions">
-          <a class="btn btn-primary" href="mitglied-werden" data-start>Projekt starten</a>
+          <a class="btn btn-primary" href="mitglied-werden" data-start>Projekt starten <span aria-hidden="true">→</span></a>
           <a class="btn btn-quiet" href="#entdecken">Demo ausprobieren <span aria-hidden="true">↓</span></a>
         </div>
       </div>
-      <ol class="hero-disciplines" aria-label="Wer sich auf Xyntal findet">
-        <li><span>01</span>Entwicklung</li>
-        <li><span>02</span>Design</li>
-        <li><span>03</span>Gründung</li>
-        <li><span>04</span>Vertrieb &amp; Wachstum</li>
-      </ol>
+
+      <div class="hero-console">
+        <svg class="hero-x" viewBox="0 0 200 200" aria-hidden="true" focusable="false">
+          <defs>
+            <linearGradient id="hx-grad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#C64BFF"/>
+              <stop offset=".35" stop-color="#FF4FD8"/>
+              <stop offset=".62" stop-color="#4F7BFF"/>
+              <stop offset="1" stop-color="#22E5FF"/>
+            </linearGradient>
+            <linearGradient id="hx-shine" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stop-color="#fff" stop-opacity="0"/>
+              <stop offset=".5" stop-color="#fff" stop-opacity=".9"/>
+              <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <circle class="hx-ring" cx="100" cy="100" r="96"/>
+          <circle class="hx-ring hx-ring-2" cx="100" cy="100" r="82"/>
+          <path class="hx-mark" d="M52 52l96 96M148 52l-36 36M88 112l-36 36"/>
+          <path class="hx-glint" d="M52 52l96 96"/>
+        </svg>
+        <div class="console" data-console data-no-i18n>
+          <div class="console-bar">
+            <i></i><i></i><i></i>
+            <span>nico@xyntal: ~</span>
+            <span class="console-live"><b aria-hidden="true"></b><span data-clock>--:--:--</span></span>
+          </div>
+          <div class="console-out" data-console-out aria-live="polite"></div>
+          <form class="console-in" data-console-form autocomplete="off">
+            <label class="sr-only" for="console-cmd">Befehl eingeben</label>
+            <span class="console-prompt" aria-hidden="true">$</span>
+            <input id="console-cmd" name="cmd" type="text" spellcheck="false" autocapitalize="off" placeholder="help eingeben …" data-console-input>
+          </form>
+        </div>
+      </div>
     </div>
+
+    <div class="ticker" aria-hidden="true">
+      <div class="ticker-track">
+        <span>&gt; entwicklung</span><span>&gt; design</span><span>&gt; gründung</span><span>&gt; vertrieb</span><span>&gt; marketing</span><span>&gt; produkt</span><span>&gt; daten</span><span>&gt; ki</span>
+        <span>&gt; entwicklung</span><span>&gt; design</span><span>&gt; gründung</span><span>&gt; vertrieb</span><span>&gt; marketing</span><span>&gt; produkt</span><span>&gt; daten</span><span>&gt; ki</span>
+      </div>
+    </div>
+    <ol class="sr-only" aria-label="Wer sich auf Xyntal findet">
+      <li>Entwicklung</li><li>Design</li><li>Gründung</li><li>Vertrieb &amp; Wachstum</li>
+    </ol>
   </section>
 
   <!-- 2 · Interaktive Produktdemo -->
@@ -490,6 +465,6 @@
   </div>
 </footer>
 
-<script src="landing.js?v=30" defer></script>
+<script src="landing.js?v=31" defer></script>
 </body>
 </html>

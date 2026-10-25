@@ -7,7 +7,7 @@
   const ctx = canvas.getContext("2d", { alpha: true });
   const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  const CATS = [0, 1, 2, 3, 4, 5];
+  const CATS = [0, 1, 3, 2, 8, 5];
 
   let W = 0, H = 0, dpr = 1, nodes = [], raf = 0, visible = true, t0 = performance.now();
   const mouse = { x: -1e4, y: -1e4, active: false, sx: -1e4, sy: -1e4 };
@@ -98,7 +98,7 @@
           for (let i = 0; i < CATS.length; i++) if (n.cats[i] && m.cats[i]) { shared = true; break; }
           if (!shared) continue;
           const a = (1 - d / LINK) * 0.2 + (n.flash + m.flash) * 0.28;
-          ctx.strokeStyle = `rgba(45,226,206,${a.toFixed(3)})`;
+          ctx.strokeStyle = `rgba(34,229,255,${a.toFixed(3)})`;
           ctx.beginPath(); ctx.moveTo(n.x, n.y); ctx.lineTo(m.x, m.y); ctx.stroke();
         }
       }
@@ -120,7 +120,7 @@
       const isTop = top.has(n);
       const a = (1 - d / REACH) * (isTop ? 0.9 : 0.28);
       const g = ctx.createLinearGradient(mouse.sx, mouse.sy, n.x, n.y);
-      g.addColorStop(0, `rgba(45,226,206,${a.toFixed(3)})`);
+      g.addColorStop(0, `rgba(34,229,255,${a.toFixed(3)})`);
       g.addColorStop(1, `rgba(14,159,146,${(a * 0.55).toFixed(3)})`);
       ctx.strokeStyle = g;
       ctx.lineWidth = isTop ? 1.4 : 1;
@@ -138,7 +138,7 @@
       const pulse = still ? 0 : Math.sin(now / 900 + n.phase) * 0.3;
       const r = n.r + pulse + n.flash * 2.4;
       ctx.fillStyle = n.flash > 0.08
-        ? `rgba(45,226,206,${(0.4 + n.flash * 0.6).toFixed(3)})`
+        ? `rgba(34,229,255,${(0.4 + n.flash * 0.6).toFixed(3)})`
         : "rgba(228,236,235,0.42)";
       ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, Math.PI * 2); ctx.fill();
     }

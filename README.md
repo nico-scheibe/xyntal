@@ -48,6 +48,12 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 | `/mitglieder` | Freigeschaltete Profile (Gäste sehen nur öffentliche) |
 | `/admin` | Mitglieder freischalten, frühere Anmeldungen & Newsletter (CSV), Link zur Treffen-Verwaltung |
 
+## Design und Sprachen
+
+- **Look:** „Xyntal OS“ – dunkles Terminal mit dem Logo-Verlauf Lila/Pink → Blau → Cyan. Die gemeinsame Ebene für alle Seiten steckt in `public/cosmos.css` und `public/cosmos.js` (Neon-Netzwerk im Hintergrund, Entschlüsseln von Überschriften, interaktive Konsole im Hero der Startseite mit Befehlen wie `help`, `join`, `demo`, `lang en`).
+- **Deutsch/Englisch:** Umschalter DE/EN oben in der Kopfzeile, Standard ist Deutsch, die Wahl merkt sich der Browser (`localStorage` „xyntal-lang“). `public/i18n.js` tauscht Texte aus, `public/i18n-en.js` ist das Wörterbuch (deutscher Text → englischer Text, plus Muster für Texte mit Zahlen/Namen).
+- **Neue Texte:** Wer einen deutschen Text ändert oder neu einbaut, ergänzt die englische Fassung in `i18n-en.js` – sonst bleibt er in der englischen Ansicht deutsch. Bereiche mit `data-no-i18n` werden nicht übersetzt.
+
 ## Admin werden
 
 1. Auf `/mitglied-werden` ein Konto anlegen und die E-Mail bestätigen.
