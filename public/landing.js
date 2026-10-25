@@ -176,6 +176,9 @@
   }
 
   /* ---------- Swipe-Stapel ---------- */
+  const appClock = $("[data-app-clock]");
+  const setClock = () => { if (appClock) appClock.textContent = new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Berlin" }); };
+  setClock(); setInterval(setClock, 30000);
   // Passung als Zahl: „passt“ zählt voll, „passt teilweise“ knapp zur Hälfte
   const score = (p) => Math.round(55 + 44 * (p.c.reduce((n, [st]) => n + (st === "ok" ? 1 : 0.45), 0) / p.c.length));
   state.idx = {};
@@ -219,7 +222,7 @@
       </div>
       <p class="reason"><span class="reason-k">Warum das passt</span>${esc(p.reason)}</p>
       <ul class="criteria" aria-label="Abgleich">
-        ${p.c.map(([st, t], i) => `<li><span class="crit crit-${st}" aria-hidden="true">${st === "ok" ? "OK" : "~"}</span><b>${CRIT_LABELS[i]}</b><span>${esc(t)}<span class="sr-only"> – ${st === "ok" ? "passt" : "passt teilweise"}</span></span></li>`).join("")}
+        ${p.c.map(([st, t], i) => `<li class="c-${st}" title="${esc(t)}"><span class="crit crit-${st}" aria-hidden="true">${st === "ok" ? "OK" : "~"}</span><b>${CRIT_LABELS[i]}</b><span class="sr-only">: ${esc(t)} – ${st === "ok" ? "passt" : "passt teilweise"}</span></li>`).join("")}
       </ul>
     </article>`;
   }
@@ -263,7 +266,7 @@
   }
 
   function decide(yes) {
-    if (busy || els.select.classList.contains("is-done")) return;
+    if (busy || matchOpen() || els.select.classList.contains("is-done")) return;
     const top = $(".swipe-card.is-top", els.people);
     if (!top) return;
     const p = personById[top.dataset.card];
@@ -280,10 +283,10 @@
           justFilled = p.role;
           announce(prev ? `${p.name} ersetzt ${personById[prev].name} für ${role.name}.` : `${p.name} ist jetzt im Team für ${role.name}.`);
         }
-        flashMatch(p);
         const next = ROLES.find((r) => !state.team[r.id]);
         if (next) state.role = next.id; else state.showDone = true;
         teamChanged();
+        showMatch(p);
       } else {
         state.idx[state.role] = currentIndex() + 1;
         renderPeople();
@@ -291,14 +294,49 @@
     }, still ? 0 : 300);
   }
 
-  function flashMatch(p) {
-    const el = document.createElement("div");
-    el.className = "match-flash";
-    el.setAttribute("aria-hidden", "true");
-    el.innerHTML = `<b>Match!</b><span>${esc(p.name)} ist im Team</span>`;
-    els.select.append(el);
-    setTimeout(() => el.remove(), still ? 600 : 1300);
+  // Gegenseitiges Match: erst Anfrage, dann Antwort – wie in der echten App geplant
+  const matchScreen = $("[data-match-screen]", demo);
+  let matchTimer = 0;
+  function showMatch(p) {
+    clearTimeout(matchTimer);
+    const first = p.name.split(" ")[0];
+    matchScreen.hidden = false;
+    matchScreen.className = "match-screen is-waiting";
+    matchScreen.innerHTML = `<div class="ms-wait">
+        <span class="ms-ping" aria-hidden="true"><span class="avatar is-ice">${initials(p.name)}</span></span>
+        <p>Anfrage an ${esc(first)} gesendet …</p>
+      </div>`;
+    const reveal = () => {
+      const canOpen = teamList().length >= 2;
+      matchScreen.className = "match-screen is-match";
+      matchScreen.innerHTML = `<div class="ms-match" role="dialog" aria-modal="false" aria-labelledby="ms-title">
+          <p class="ms-kicker">Beide haben Ja gesagt</p>
+          <h5 class="ms-title" id="ms-title">It's a Match!</h5>
+          <div class="ms-pair" aria-hidden="true">
+            <span class="avatar ms-a">${initials(FOUNDER.name)}</span>
+            <span class="ms-spark">✦</span>
+            <span class="avatar is-ice ms-b">${initials(p.name)}</span>
+          </div>
+          <p class="ms-text">${esc(first)} will bei Feldnah als ${esc(roleById[p.role].name)} mitmachen.</p>
+          <div class="ms-actions">
+            ${canOpen ? '<button type="button" class="ms-btn ms-primary" data-match-ws>Workspace öffnen</button>' : ""}
+            <button type="button" class="ms-btn${canOpen ? "" : " ms-primary"}" data-match-close>Weiter swipen</button>
+          </div>
+        </div>`;
+      $("[data-match-close]", matchScreen).addEventListener("click", closeMatch);
+      $("[data-match-ws]", matchScreen)?.addEventListener("click", () => { closeMatch(); showView("workspace"); });
+      $(".ms-btn", matchScreen).focus({ preventScroll: true });
+      announce(`Match mit ${p.name}.`);
+    };
+    matchTimer = setTimeout(reveal, still ? 0 : 900);
   }
+  function closeMatch() {
+    clearTimeout(matchTimer);
+    matchScreen.hidden = true;
+    matchScreen.innerHTML = "";
+    els.people.focus({ preventScroll: true });
+  }
+  const matchOpen = () => !matchScreen.hidden;
 
   // Ziehen mit Maus oder Finger
   function bindDrag() {
@@ -355,6 +393,8 @@
     }).join("");
     justFilled = null;
     els.teamCount.textContent = `${n} von ${ROLES.length}`;
+    const badge = $("[data-match-badge]", demo);
+    if (badge) { badge.hidden = n === 0; badge.textContent = n; }
     const need = ROLES.reduce((sum, r) => sum + r.hours, 0);
     const have = ROLES.reduce((sum, r) => sum + (state.team[r.id] ? Math.min(personById[state.team[r.id]].hours, r.hours) : 0), 0);
     const cover = Math.round((have / need) * 100);

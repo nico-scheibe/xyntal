@@ -22,8 +22,8 @@
   <link rel="stylesheet" href="fonts/fonts.css?v=31">
   <link rel="stylesheet" href="landing.css?v=31">
   <link rel="stylesheet" href="cosmos.css?v=33">
-  <link rel="stylesheet" href="demo.css?v=34">
-  <script src="i18n-en.js?v=34" defer></script>
+  <link rel="stylesheet" href="demo.css?v=35">
+  <script src="i18n-en.js?v=35" defer></script>
   <script src="i18n.js?v=31" defer></script>
   <script src="cosmos.js?v=33" defer></script>
 </head>
@@ -134,45 +134,69 @@
           </ol>
         </div>
 
-        <!-- Auswahl: Swipe-Stapel -->
+        <!-- Auswahl: App-Vorschau im Handy -->
         <div class="demo-body swipe" data-view="select">
-          <div class="swipe-top">
-            <div class="project-id">
-              <span class="project-glyph" aria-hidden="true">F</span>
-              <div>
-                <h3 class="project-name">Feldnah</h3>
-                <p class="project-line">Bestell- und Abhol-App für Hofläden in der Oberpfalz</p>
+          <div class="phone-wrap">
+            <div class="phone">
+              <span class="phone-btn phone-btn-a" aria-hidden="true"></span><span class="phone-btn phone-btn-b" aria-hidden="true"></span>
+              <div class="phone-screen">
+                <div class="app-status" aria-hidden="true"><b data-app-clock>9:41</b><span class="island"></span><span class="app-signal"><i></i><i></i><i></i><i></i> 5G <em></em></span></div>
+                <div class="app-head">
+                  <span class="app-brand"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14" class="bm-a"/><path d="M19 5l-5.3 5.3M10.3 13.7L5 19" class="bm-b"/></svg>xyntal</span>
+                  <span class="app-proj"><span class="app-proj-dot" aria-hidden="true">F</span>Feldnah</span>
+                </div>
+                <div class="swipe-roles" role="group" aria-label="Offene Rollen" data-roles></div>
+                <div class="people-head">
+                  <h4 class="mini-head" id="people-head" data-people-title>Passende Menschen</h4>
+                  <span class="people-count" data-people-count></span>
+                </div>
+                <div class="deck" data-people tabindex="0" aria-describedby="swipe-hint" aria-labelledby="people-head"></div>
+                <div class="swipe-actions" data-swipe-actions>
+                  <button type="button" class="swipe-btn swipe-no" data-swipe="no" aria-label="Weiter"><span aria-hidden="true">✕</span></button>
+                  <button type="button" class="swipe-btn swipe-yes" data-swipe="yes" aria-label="Ins Team"><span aria-hidden="true">♥</span></button>
+                </div>
+                <nav class="app-tabs" aria-hidden="true">
+                  <span class="is-on"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg>Entdecken</span>
+                  <span><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>Matches<b data-match-badge hidden>0</b></span>
+                  <span><svg viewBox="0 0 24 24"><circle cx="9" cy="9" r="3"/><circle cx="17" cy="10" r="2.5"/><path d="M3 19c.8-3 3.2-5 6-5s5.2 2 6 5M15 15.5c2.6-.6 5 .9 6 3.5"/></svg>Team</span>
+                  <span><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.2-4 4.4-6 8-6s6.8 2 8 6"/></svg>Profil</span>
+                </nav>
+                <div class="match-screen" data-match-screen hidden></div>
               </div>
             </div>
-            <div class="swipe-roles" role="group" aria-label="Offene Rollen" data-roles></div>
           </div>
 
-          <div class="swipe-stage" aria-labelledby="people-head">
-            <div class="people-head">
-              <h4 class="mini-head" id="people-head" data-people-title>Passende Menschen</h4>
-              <span class="people-count" data-people-count></span>
+          <div class="swipe-side">
+            <div class="side-intro">
+              <div class="project-id">
+                <span class="project-glyph" aria-hidden="true">F</span>
+                <div>
+                  <h3 class="project-name">Feldnah</h3>
+                  <p class="project-line">Bestell- und Abhol-App für Hofläden in der Oberpfalz</p>
+                </div>
+              </div>
+              <ul class="side-points">
+                <li><span aria-hidden="true">3</span><div><b>Wenige, passende Vorschläge</b>Pro Rolle nur die Leute, die wirklich passen – mit Begründung statt Endlos-Feed.</div></li>
+                <li><span aria-hidden="true">♥</span><div><b>Match nur, wenn beide Ja sagen</b>Kein Spam: Kontakt entsteht erst, wenn die andere Person auch will.</div></li>
+                <li><span aria-hidden="true">→</span><div><b>Danach: gemeinsamer Workspace</b>Aufgaben, Entscheidungen, Fortschritt – damit aus dem Match ein Team wird.</div></li>
+              </ul>
+              <p class="hint swipe-hint" id="swipe-hint">Wisch im Handy: rechts = ins Team, links = nächste Person. Geht auch mit ← → oder den Buttons. Ein Match gibt es nur, wenn beide Ja sagen.</p>
             </div>
-            <div class="deck" data-people tabindex="0" aria-describedby="swipe-hint"></div>
-            <div class="swipe-actions" data-swipe-actions>
-              <button type="button" class="swipe-btn swipe-no" data-swipe="no"><span aria-hidden="true">✕</span> Weiter</button>
-              <button type="button" class="swipe-btn swipe-yes" data-swipe="yes"><span aria-hidden="true">♥</span> Ins Team</button>
-            </div>
-            <p class="hint swipe-hint" id="swipe-hint">Karte nach rechts ziehen = ins Team, nach links = nächste Person. Geht auch mit den Pfeiltasten ← →.</p>
-          </div>
 
-          <aside class="demo-team" aria-labelledby="team-head">
-            <div class="team-head">
-              <h4 class="mini-head" id="team-head">Dein Demo-Team</h4>
-              <span class="team-count" data-team-count>0 von 4</span>
-            </div>
-            <div class="team-power" aria-hidden="true" data-team-power><span>Team-Abdeckung</span><b>0%</b><i></i></div>
-            <div class="team-meter" aria-hidden="true" data-team-meter><i></i><i></i><i></i><i></i></div>
-            <ul class="team-slots" data-team></ul>
-            <div class="team-foot">
-              <button class="btn btn-primary btn-block" type="button" data-open-workspace disabled aria-describedby="ws-hint">Workspace öffnen</button>
-              <p class="hint" id="ws-hint" data-ws-hint>Hol mindestens zwei Menschen ins Team.</p>
-            </div>
-          </aside>
+            <aside class="demo-team" aria-labelledby="team-head">
+              <div class="team-head">
+                <h4 class="mini-head" id="team-head">Dein Demo-Team</h4>
+                <span class="team-count" data-team-count>0 von 4</span>
+              </div>
+              <div class="team-power" aria-hidden="true" data-team-power><span>Team-Abdeckung</span><b>0%</b><i></i></div>
+              <div class="team-meter" aria-hidden="true" data-team-meter><i></i><i></i><i></i><i></i></div>
+              <ul class="team-slots" data-team></ul>
+              <div class="team-foot">
+                <button class="btn btn-primary btn-block" type="button" data-open-workspace disabled aria-describedby="ws-hint">Workspace öffnen</button>
+                <p class="hint" id="ws-hint" data-ws-hint>Hol mindestens zwei Menschen ins Team.</p>
+              </div>
+            </aside>
+          </div>
         </div>
 
         <!-- Workspace -->
@@ -277,6 +301,6 @@
   </div>
 </footer>
 
-<script src="landing.js?v=34" defer></script>
+<script src="landing.js?v=35" defer></script>
 </body>
 </html>

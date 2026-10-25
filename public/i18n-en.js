@@ -8,7 +8,12 @@ window.XYNTAL_EN = {
   "Menü": "Menu",
   "Schließen": "Close",
   "Hauptnavigation": "Main navigation",
-  "Entdecken": "Explore",
+  "Wenige, passende Vorschläge": "A few great suggestions",
+  "Pro Rolle nur die Leute, die wirklich passen – mit Begründung statt Endlos-Feed.": "Only the people who really fit each role – with a reason, not an endless feed.",
+  "Match nur, wenn beide Ja sagen": "A match only when both say yes",
+  "Kein Spam: Kontakt entsteht erst, wenn die andere Person auch will.": "No spam: you only connect when the other person wants to as well.",
+  "Danach: gemeinsamer Workspace": "Then: a shared workspace",
+  "Aufgaben, Entscheidungen, Fortschritt – damit aus dem Match ein Team wird.": "Tasks, decisions, progress – so a match turns into a team.",
   "So funktioniert’s": "How it works",
   "Anmelden": "Sign in",
   "Login": "Sign in",
@@ -353,6 +358,14 @@ window.XYNTAL_EN = {
   "Trag dich ein und du erfährst als Erstes, wenn Xyntal startet – und bekommst als einer der Ersten Zugang.": "Sign up and you'll be the first to know when Xyntal launches – and among the first to get access.",
   "Leute warten schon auf den Start.": "people are already waiting for launch.",
   "Kostenlos. Kein Spam – nur eine Mail zum Start.": "Free. No spam – just one email at launch.",
+
+  "Wisch im Handy: rechts = ins Team, links = nächste Person. Geht auch mit ← → oder den Buttons. Ein Match gibt es nur, wenn beide Ja sagen.": "Swipe on the phone: right = add to team, left = next person. Arrow keys ← → or the buttons work too. It's only a match when both say yes.",
+  "Entdecken": "Explore",
+  "Matches": "Matches",
+  "Profil": "Profile",
+  "Beide haben Ja gesagt": "You both said yes",
+  "It's a Match!": "It's a Match!",
+  "Weiter swipen": "Keep swiping",
 
   /* ---------- 404 ---------- */
   "Seite nicht gefunden – Xyntal": "Page not found – Xyntal",
@@ -887,7 +900,15 @@ window.XYNTAL_EN = {
 // Texte mit eingesetzten Werten (Zahlen, Namen). Gruppen werden selbst wieder übersetzt.
 (() => {
   const D = window.XYNTAL_EN;
-  const t = (s) => D[s] ?? s;
+  // Teile übersetzen: erst Wörterbuch, dann die einfachen Muster (ohne das allgemeine „A · B“-Muster)
+  const t = (s) => {
+    if (D[s] !== undefined) return D[s];
+    for (const [re, rep] of window.XYNTAL_EN_PATTERNS.slice(0, -1)) {
+      const m = s.match(re);
+      if (m && re.source.startsWith("^(\\d+)")) return rep(...m);
+    }
+    return s;
+  };
   const plural = (n, one, many) => `${n} ${Number(n) === 1 ? one : many}`;
   window.XYNTAL_EN_PATTERNS = [
     [/^Woche (\d+)$/, (_, a) => `Week ${a}`],
@@ -905,6 +926,10 @@ window.XYNTAL_EN = {
     [/^(\d+) Vorschläge für (.+)\.$/, (_, a, b) => `${a} suggestions for ${t(b)}.`],
     [/^> scanne Profile für (.+) …$/, (_, a) => `> scanning profiles for ${t(a)} …`],
     [/^(.+) ist im Team$/, (_, a) => `${a} is on the team`],
+    [/^Anfrage an (.+) gesendet …$/, (_, a) => `Request sent to ${a} …`],
+    [/^(.+) will bei Feldnah als (.+) mitmachen\.$/, (_, a, b) => `${a} wants to join Feldnah as ${t(b)}.`],
+    [/^Match mit (.+)\.$/, (_, a) => `Match with ${a}.`],
+    [/^: (.+) – (passt teilweise|passt)$/, (_, a, b) => `: ${t(a)} – ${b === "passt" ? "fits" : "partly fits"}`],
     [/^Besetzt: (.+)$/, (_, a) => `Filled: ${a}`],
     [/^Ersetzt (.+)$/, (_, a) => `Replaces ${a}`],
     [/^(.+) aus dem Team entfernen$/, (_, a) => `Remove ${a} from the team`],
