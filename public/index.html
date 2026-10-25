@@ -2,38 +2,39 @@
 <html lang="de">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Xyntal – Große Ideen beginnen mit den richtigen Menschen</title>
-  <meta name="description" content="Xyntal verbindet Entwickler, Designer, Gründer und ambitionierte Menschen, die gemeinsam Projekte und Unternehmen aufbauen wollen. Beschreibe dein Vorhaben – Xyntal zeigt dir, wer passt und warum.">
-  <meta name="theme-color" content="#05040A">
-  <meta property="og:title" content="Xyntal – Große Ideen beginnen mit den richtigen Menschen">
-  <meta property="og:description" content="Finde die Menschen, mit denen du dein Projekt aufbaust – mit nachvollziehbaren Vorschlägen und einem gemeinsamen Workspace.">
+  <meta name="description" content="Xyntal verbindet Entwickler, Designer, Gründer und alle, die etwas aufbauen wollen. Beschreibe dein Vorhaben – Xyntal zeigt dir, wer passt und warum.">
+  <meta name="theme-color" content="#07070B">
+  <meta name="color-scheme" content="dark">
+  <meta name="format-detection" content="telephone=no">
+  <meta property="og:title" content="Xyntal – Stop swiping. Start building.">
+  <meta property="og:description" content="Finde die Menschen, mit denen du dein Projekt aufbaust – wenige, passende Vorschläge und ein Match nur, wenn beide Ja sagen.">
   <meta property="og:locale" content="de_DE">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Xyntal">
   <meta property="og:image" content="https://xyntal.de/og-image.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="Xyntal: Große Ideen beginnen mit den richtigen Menschen.">
+  <meta property="og:image:alt" content="Xyntal: Stop swiping. Start building.">
   <meta name="twitter:card" content="summary_large_image">
   <meta property="og:url" content="https://xyntal.de/">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2305040A'/%3E%3Cpath d='M9 9l14 14' stroke='%23ECEBF7' stroke-width='3.2' stroke-linecap='round'/%3E%3Cpath d='M23 9l-5.2 5.2M14.2 17.8L9 23' stroke='%2322E5FF' stroke-width='3.2' stroke-linecap='round'/%3E%3C/svg%3E">
-  <link rel="preload" href="fonts/bricolage-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="stylesheet" href="fonts/fonts.css?v=31">
-  <link rel="stylesheet" href="landing.css?v=31">
-  <link rel="stylesheet" href="cosmos.css?v=33">
-  <link rel="stylesheet" href="demo.css?v=35">
-  <script src="i18n-en.js?v=35" defer></script>
+  <link rel="stylesheet" href="home.css?v=1">
+  <script src="i18n-en.js?v=36" defer></script>
   <script src="i18n.js?v=31" defer></script>
-  <script src="cosmos.js?v=33" defer></script>
 </head>
-<body>
+<body class="home">
 <a class="skip" href="#inhalt">Zum Inhalt springen</a>
+
+<div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div>
 
 <header class="topbar">
   <div class="shell topbar-inner">
     <a class="brand" href="./" aria-label="Xyntal – Startseite">
-      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14" class="bm-a"/><path d="M19 5l-5.3 5.3M10.3 13.7L5 19" class="bm-b"/></svg>
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="bm-g" x1="4" y1="4" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#B95CFF"/><stop offset=".45" stop-color="#FF5FD2"/><stop offset="1" stop-color="#3FD8FF"/></linearGradient></defs><path d="M5 5l14 14M19 5l-5.3 5.3M10.3 13.7L5 19" stroke="url(#bm-g)"/></svg>
       <span>xyntal</span>
     </a>
     <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="hauptnavigation">
@@ -49,164 +50,80 @@
 
 <main id="inhalt">
 
-  <!-- 1 · Hero -->
+  <!-- Hero -->
   <section class="hero" aria-labelledby="hero-title">
-    <div class="shell hero-grid">
-      <div class="hero-main">
-        <p class="hero-kicker"><span class="hk-tag">xyntal://build</span><span class="hk-status"><i aria-hidden="true"></i>System online</span></p>
-        <h1 id="hero-title" class="hero-title">
-          <span class="ht-line ht-dim" data-scramble>Stop swiping.</span>
-          <span class="ht-line ht-grad" data-scramble>Start building.</span>
-        </h1>
-        <p class="hero-sub">Große Ideen beginnen mit den richtigen Menschen.</p>
-        <p class="hero-lead">Xyntal bringt Entwickler, Designer, Gründer und alle zusammen, die etwas aufbauen wollen. Du beschreibst dein Vorhaben und wer dir fehlt – wir zeigen dir, wer passt und warum.</p>
-        <div class="hero-actions">
-          <a class="btn btn-primary" href="#warteliste">Auf die Warteliste <span aria-hidden="true">→</span></a>
-          <a class="btn btn-quiet" href="#entdecken">Demo ausprobieren <span aria-hidden="true">↓</span></a>
-        </div>
+    <div class="shell hero-inner">
+      <p class="pill"><span class="pill-dot" aria-hidden="true"></span>Early Access startet bald</p>
+      <h1 id="hero-title" class="hero-title">
+        <span class="ht-dim">Stop swiping.</span>
+        <span class="ht-grad">Start building.</span>
+      </h1>
+      <p class="hero-lead">Große Ideen beginnen mit den richtigen Menschen. Xyntal bringt Entwickler, Designer, Gründer und alle zusammen, die etwas aufbauen wollen – und zeigt dir, wer zu deinem Vorhaben passt und warum.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary btn-lg" href="#warteliste">Auf die Warteliste</a>
+        <a class="btn btn-glass btn-lg" href="#entdecken">Demo ansehen <span aria-hidden="true">↓</span></a>
       </div>
-
-      <div class="hero-console">
-        <svg class="hero-x" viewBox="0 0 200 200" aria-hidden="true" focusable="false">
-          <defs>
-            <linearGradient id="hx-grad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stop-color="#C64BFF"/>
-              <stop offset=".35" stop-color="#FF4FD8"/>
-              <stop offset=".62" stop-color="#4F7BFF"/>
-              <stop offset="1" stop-color="#22E5FF"/>
-            </linearGradient>
-            <linearGradient id="hx-shine" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0" stop-color="#fff" stop-opacity="0"/>
-              <stop offset=".5" stop-color="#fff" stop-opacity=".9"/>
-              <stop offset="1" stop-color="#fff" stop-opacity="0"/>
-            </linearGradient>
-          </defs>
-          <circle class="hx-ring" cx="100" cy="100" r="96"/>
-          <circle class="hx-ring hx-ring-2" cx="100" cy="100" r="82"/>
-          <path class="hx-mark" d="M52 52l96 96M148 52l-36 36M88 112l-36 36"/>
-          <path class="hx-glint" d="M52 52l96 96"/>
-        </svg>
-        <div class="console" data-console data-no-i18n>
-          <div class="console-bar">
-            <i></i><i></i><i></i>
-            <span>nico@xyntal: ~</span>
-            <span class="console-live"><b aria-hidden="true"></b><span data-clock>--:--:--</span></span>
-          </div>
-          <div class="console-out" data-console-out aria-live="polite"></div>
-          <form class="console-in" data-console-form autocomplete="off">
-            <label class="sr-only" for="console-cmd">Befehl eingeben</label>
-            <span class="console-prompt" aria-hidden="true">$</span>
-            <input id="console-cmd" name="cmd" type="text" spellcheck="false" autocapitalize="off" placeholder="help eingeben …" data-console-input>
-          </form>
-        </div>
-      </div>
+      <ul class="hero-tags" aria-label="Wer sich auf Xyntal findet">
+        <li>Entwicklung</li><li>Design</li><li>Gründung</li><li>Vertrieb</li><li>Marketing</li><li>Daten &amp; KI</li>
+      </ul>
     </div>
-
-    <div class="ticker" aria-hidden="true">
-      <div class="ticker-track">
-        <span>&gt; entwicklung</span><span>&gt; design</span><span>&gt; gründung</span><span>&gt; vertrieb</span><span>&gt; marketing</span><span>&gt; produkt</span><span>&gt; daten</span><span>&gt; ki</span>
-        <span>&gt; entwicklung</span><span>&gt; design</span><span>&gt; gründung</span><span>&gt; vertrieb</span><span>&gt; marketing</span><span>&gt; produkt</span><span>&gt; daten</span><span>&gt; ki</span>
-      </div>
-    </div>
-    <ol class="sr-only" aria-label="Wer sich auf Xyntal findet">
-      <li>Entwicklung</li><li>Design</li><li>Gründung</li><li>Vertrieb &amp; Wachstum</li>
-    </ol>
   </section>
 
-  <!-- 2 · Interaktive Produktdemo -->
+  <!-- Demo -->
   <section class="demo-section" id="entdecken" aria-labelledby="demo-title">
     <div class="shell">
-      <div class="demo-head">
-        <div>
-          <p class="label">Entdecken · Interaktive Demo</p>
-          <h2 id="demo-title" class="h2">Stell ein Team für ein echtes Vorhaben zusammen.</h2>
-        </div>
-        <p class="demo-note"><span class="tag tag-sample">Beispieldaten</span> Projekt und Personen sind erfunden. Nichts, was du hier auswählst, wird gespeichert oder verschickt.</p>
-      </div>
+      <header class="section-head">
+        <p class="eyebrow">Interaktive Demo</p>
+        <h2 id="demo-title" class="h2">Finde dein Team.<br><span class="grad-soft">Ein Swipe nach dem anderen.</span></h2>
+        <p class="section-lead">Probier es aus: Wisch Karten nach rechts, um jemanden ins Team zu holen, oder nach links für die nächste Person. <span class="tag">Beispieldaten</span></p>
+      </header>
 
-      <div class="demo" data-demo>
-        <div class="demo-bar">
-          <p class="demo-crumb"><span class="demo-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="demo-live" aria-hidden="true"><i></i>match-engine</span><span class="demo-path"><span aria-hidden="true">~/</span>projekte<span aria-hidden="true">/</span><strong>feldnah</strong></span></p>
-          <ol class="demo-steps" aria-label="Fortschritt in der Demo">
-            <li data-step="1" class="is-current"><span>1</span>Swipen</li>
-            <li data-step="2"><span>2</span>Team steht</li>
-            <li data-step="3"><span>3</span>Workspace öffnen</li>
-          </ol>
-        </div>
-
-        <!-- Auswahl: App-Vorschau im Handy -->
+      <div class="demo glass" data-demo>
+        <!-- Auswahl -->
         <div class="demo-body swipe" data-view="select">
-          <div class="phone-wrap">
-            <div class="phone">
-              <span class="phone-btn phone-btn-a" aria-hidden="true"></span><span class="phone-btn phone-btn-b" aria-hidden="true"></span>
-              <div class="phone-screen">
-                <div class="app-status" aria-hidden="true"><b data-app-clock>9:41</b><span class="island"></span><span class="app-signal"><i></i><i></i><i></i><i></i> 5G <em></em></span></div>
-                <div class="app-head">
-                  <span class="app-brand"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14" class="bm-a"/><path d="M19 5l-5.3 5.3M10.3 13.7L5 19" class="bm-b"/></svg>xyntal</span>
-                  <span class="app-proj"><span class="app-proj-dot" aria-hidden="true">F</span>Feldnah</span>
-                </div>
-                <div class="swipe-roles" role="group" aria-label="Offene Rollen" data-roles></div>
-                <div class="people-head">
-                  <h4 class="mini-head" id="people-head" data-people-title>Passende Menschen</h4>
-                  <span class="people-count" data-people-count></span>
-                </div>
-                <div class="deck" data-people tabindex="0" aria-describedby="swipe-hint" aria-labelledby="people-head"></div>
-                <div class="swipe-actions" data-swipe-actions>
-                  <button type="button" class="swipe-btn swipe-no" data-swipe="no" aria-label="Weiter"><span aria-hidden="true">✕</span></button>
-                  <button type="button" class="swipe-btn swipe-yes" data-swipe="yes" aria-label="Ins Team"><span aria-hidden="true">♥</span></button>
-                </div>
-                <nav class="app-tabs" aria-hidden="true">
-                  <span class="is-on"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg>Entdecken</span>
-                  <span><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>Matches<b data-match-badge hidden>0</b></span>
-                  <span><svg viewBox="0 0 24 24"><circle cx="9" cy="9" r="3"/><circle cx="17" cy="10" r="2.5"/><path d="M3 19c.8-3 3.2-5 6-5s5.2 2 6 5M15 15.5c2.6-.6 5 .9 6 3.5"/></svg>Team</span>
-                  <span><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.2-4 4.4-6 8-6s6.8 2 8 6"/></svg>Profil</span>
-                </nav>
-                <div class="match-screen" data-match-screen hidden></div>
-              </div>
+          <div class="swipe-stage">
+            <div class="stage-top">
+              <div class="project-chip"><span class="project-glyph" aria-hidden="true">F</span><span><b>Feldnah</b><small>Bestell- und Abhol-App für Hofläden</small></span></div>
+              <div class="swipe-roles" role="group" aria-label="Offene Rollen" data-roles></div>
             </div>
+            <div class="people-head">
+              <h4 class="mini-head" id="people-head" data-people-title>Passende Menschen</h4>
+              <span class="people-count" data-people-count></span>
+            </div>
+            <div class="deck-wrap">
+              <div class="deck" data-people tabindex="0" aria-describedby="swipe-hint" aria-labelledby="people-head"></div>
+              <div class="match-screen" data-match-screen hidden></div>
+            </div>
+            <div class="swipe-actions" data-swipe-actions>
+              <button type="button" class="swipe-btn swipe-no" data-swipe="no" aria-label="Weiter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+              <button type="button" class="swipe-btn swipe-yes" data-swipe="yes" aria-label="Ins Team"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-7.5-10.4A4.3 4.3 0 0 1 12 7.4a4.3 4.3 0 0 1 7.5 2.7c0 5.8-7.5 10.4-7.5 10.4z"/></svg></button>
+            </div>
+            <p class="hint swipe-hint" id="swipe-hint">Ziehen, tippen oder Pfeiltasten ← →. Ein Match gibt es nur, wenn beide Ja sagen.</p>
           </div>
 
-          <div class="swipe-side">
-            <div class="side-intro">
-              <div class="project-id">
-                <span class="project-glyph" aria-hidden="true">F</span>
-                <div>
-                  <h3 class="project-name">Feldnah</h3>
-                  <p class="project-line">Bestell- und Abhol-App für Hofläden in der Oberpfalz</p>
-                </div>
-              </div>
-              <ul class="side-points">
-                <li><span aria-hidden="true">3</span><div><b>Wenige, passende Vorschläge</b>Pro Rolle nur die Leute, die wirklich passen – mit Begründung statt Endlos-Feed.</div></li>
-                <li><span aria-hidden="true">♥</span><div><b>Match nur, wenn beide Ja sagen</b>Kein Spam: Kontakt entsteht erst, wenn die andere Person auch will.</div></li>
-                <li><span aria-hidden="true">→</span><div><b>Danach: gemeinsamer Workspace</b>Aufgaben, Entscheidungen, Fortschritt – damit aus dem Match ein Team wird.</div></li>
-              </ul>
-              <p class="hint swipe-hint" id="swipe-hint">Wisch im Handy: rechts = ins Team, links = nächste Person. Geht auch mit ← → oder den Buttons. Ein Match gibt es nur, wenn beide Ja sagen.</p>
+          <aside class="demo-team" aria-labelledby="team-head">
+            <div class="team-head">
+              <h4 class="mini-head" id="team-head">Dein Demo-Team</h4>
+              <span class="team-count" data-team-count>0 von 4</span>
             </div>
-
-            <aside class="demo-team" aria-labelledby="team-head">
-              <div class="team-head">
-                <h4 class="mini-head" id="team-head">Dein Demo-Team</h4>
-                <span class="team-count" data-team-count>0 von 4</span>
-              </div>
-              <div class="team-power" aria-hidden="true" data-team-power><span>Team-Abdeckung</span><b>0%</b><i></i></div>
-              <div class="team-meter" aria-hidden="true" data-team-meter><i></i><i></i><i></i><i></i></div>
-              <ul class="team-slots" data-team></ul>
-              <div class="team-foot">
-                <button class="btn btn-primary btn-block" type="button" data-open-workspace disabled aria-describedby="ws-hint">Workspace öffnen</button>
-                <p class="hint" id="ws-hint" data-ws-hint>Hol mindestens zwei Menschen ins Team.</p>
-              </div>
-            </aside>
-          </div>
+            <div class="team-power" aria-hidden="true" data-team-power><span>Team-Abdeckung</span><b>0%</b><i></i></div>
+            <div class="team-meter" aria-hidden="true" data-team-meter><i></i><i></i><i></i><i></i></div>
+            <ul class="team-slots" data-team></ul>
+            <div class="team-foot">
+              <button class="btn btn-primary btn-block" type="button" data-open-workspace disabled aria-describedby="ws-hint">Workspace öffnen</button>
+              <p class="hint" id="ws-hint" data-ws-hint>Hol mindestens zwei Menschen ins Team.</p>
+            </div>
+          </aside>
         </div>
 
         <!-- Workspace -->
         <div class="demo-body workspace" data-view="workspace" hidden tabindex="-1" aria-labelledby="ws-title">
           <div class="ws-head">
             <div>
-              <p class="label">Gemeinsamer Workspace <span class="tag tag-sample">Demo</span></p>
+              <p class="eyebrow">Gemeinsamer Workspace <span class="tag">Demo</span></p>
               <h3 class="ws-title" id="ws-title">Feldnah · Erste sechs Wochen</h3>
             </div>
-            <button class="btn btn-quiet btn-sm" type="button" data-back><span aria-hidden="true">←</span> Team bearbeiten</button>
+            <button class="btn btn-glass btn-sm" type="button" data-back><span aria-hidden="true">←</span> Team bearbeiten</button>
           </div>
           <div class="ws-grid">
             <section class="ws-panel ws-tasks" aria-labelledby="ws-tasks-head">
@@ -220,7 +137,7 @@
             <section class="ws-panel ws-team" aria-labelledby="ws-team-head">
               <h4 class="mini-head" id="ws-team-head">Team</h4>
               <ul class="ws-members" data-ws-members></ul>
-              <button class="btn btn-ghost btn-block" type="button" data-kickoff>Kickoff-Termin vorschlagen</button>
+              <button class="btn btn-glass btn-block" type="button" data-kickoff>Kickoff-Termin vorschlagen</button>
               <p class="hint" data-kickoff-status role="status" aria-live="polite" tabindex="-1"></p>
             </section>
             <section class="ws-panel ws-feed" aria-labelledby="ws-feed-head">
@@ -230,44 +147,61 @@
           </div>
           <div class="ws-bridge">
             <p><strong>Du hast selbst ein Vorhaben?</strong> Trag dich auf die Warteliste ein. Sobald Xyntal startet, bist du unter den Ersten, die ihr Team so finden.</p>
-            <a class="btn btn-primary" href="#warteliste" data-bridge>Ich will das für meine Idee <span aria-hidden="true">→</span></a>
+            <a class="btn btn-primary" href="#warteliste" data-bridge>Ich will das für meine Idee</a>
           </div>
         </div>
 
         <p class="sr-only" aria-live="polite" data-announce></p>
       </div>
 
-      <p class="demo-honest">So wird Xyntal funktionieren. Die Demo zeigt Beispieldaten – Vorschläge und gemeinsame Workspaces sind gerade im Bau. <a href="#warteliste">Auf die Warteliste</a>, um sie als Erste:r zu nutzen.</p>
+      <ul class="features">
+        <li class="feature glass">
+          <span class="f-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h10M4 17h6"/></svg></span>
+          <h3>Wenige, passende Vorschläge</h3>
+          <p>Pro Rolle nur die Leute, die wirklich passen – mit Begründung statt Endlos-Feed.</p>
+        </li>
+        <li class="feature glass">
+          <span class="f-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 20.5s-7.5-4.6-7.5-10.4A4.3 4.3 0 0 1 12 7.4a4.3 4.3 0 0 1 7.5 2.7c0 5.8-7.5 10.4-7.5 10.4z"/></svg></span>
+          <h3>Match nur, wenn beide Ja sagen</h3>
+          <p>Kein Spam: Kontakt entsteht erst, wenn die andere Person auch will.</p>
+        </li>
+        <li class="feature glass">
+          <span class="f-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8 12l3 3 5-6"/></svg></span>
+          <h3>Danach: gemeinsamer Workspace</h3>
+          <p>Aufgaben, Entscheidungen, Fortschritt – damit aus dem Match ein Team wird.</p>
+        </li>
+      </ul>
+      <p class="demo-honest">So wird Xyntal funktionieren. Die Demo zeigt Beispieldaten – Vorschläge und gemeinsame Workspaces sind gerade im Bau.</p>
     </div>
   </section>
 
-  <!-- 3 · Wer dahintersteht -->
-  <section class="founder launch-founder" id="warum" aria-labelledby="founder-head">
-    <div class="shell founder-grid">
-      <h2 class="label founder-label" id="founder-head">Warum Xyntal</h2>
-      <figure class="founder-quote">
+  <!-- Warum -->
+  <section class="founder" id="warum" aria-labelledby="founder-head">
+    <div class="shell">
+      <figure class="founder-card glass">
+        <h2 class="eyebrow" id="founder-head">Warum Xyntal</h2>
         <blockquote><p>„Ich bin Nico. Ich will etwas Eigenes aufbauen – aber die richtigen Leute dafür findet man nicht durch Zufall. Also baue ich Xyntal: damit Ideen nicht an fehlenden Mitstreitern scheitern.“</p></blockquote>
         <figcaption>
-          <span class="founder-photo" aria-hidden="true"><img src="nico.jpg" alt="" width="64" height="64" loading="lazy" onerror="this.remove()"><span>NS</span></span>
-          <span><strong>Nico Scheibe</strong><span>Gründer von Xyntal</span></span>
-          <a href="https://www.linkedin.com/in/nico-scheibe-781a20445" target="_blank" rel="noopener">LinkedIn<span class="sr-only"> (öffnet in neuem Tab)</span> <span aria-hidden="true">↗</span></a>
+          <span class="founder-photo" aria-hidden="true"><img src="nico.jpg" alt="" width="56" height="56" loading="lazy" onerror="this.remove()"><span>NS</span></span>
+          <span class="founder-name"><strong>Nico Scheibe</strong><span>Gründer von Xyntal</span></span>
+          <a class="btn btn-glass btn-sm" href="https://www.linkedin.com/in/nico-scheibe-781a20445" target="_blank" rel="noopener">LinkedIn<span class="sr-only"> (öffnet in neuem Tab)</span> <span aria-hidden="true">↗</span></a>
         </figcaption>
       </figure>
     </div>
   </section>
 
-  <!-- 4 · Warteliste -->
+  <!-- Warteliste -->
   <section class="launch" id="warteliste" aria-labelledby="launch-title">
     <div class="shell launch-inner">
-      <p class="label">Early Access</p>
-      <h2 id="launch-title" class="closing-title">Sei dabei, <span class="ice">wenn es losgeht.</span></h2>
-      <p class="launch-lead">Trag dich ein und du erfährst als Erstes, wenn Xyntal startet – und bekommst als einer der Ersten Zugang.</p>
+      <p class="eyebrow">Early Access</p>
+      <h2 id="launch-title" class="h2 launch-title">Sei dabei, <span class="grad-soft">wenn es losgeht.</span></h2>
+      <p class="section-lead">Trag dich ein und du erfährst als Erstes, wenn Xyntal startet – und bekommst als einer der Ersten Zugang.</p>
       <p class="launch-count" data-waitlist-count hidden><b data-waitlist-number>0</b> <span>Leute warten schon auf den Start.</span></p>
 
-      <form class="waitlist-form launch-form" data-waitlist novalidate>
-        <div class="waitlist-row">
+      <form class="waitlist-form" data-waitlist novalidate>
+        <div class="waitlist-row glass">
           <label class="sr-only" for="wl-email">E-Mail-Adresse</label>
-          <input id="wl-email" type="email" name="EMAIL" autocomplete="email" inputmode="email" maxlength="254" required placeholder="du@beispiel.de">
+          <input id="wl-email" type="email" name="EMAIL" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" maxlength="254" required placeholder="du@beispiel.de">
           <button class="btn btn-primary" type="submit">Eintragen</button>
         </div>
         <label class="waitlist-check">
@@ -288,12 +222,12 @@
   <div class="shell footer-inner">
     <div class="footer-brand">
       <a class="brand" href="./" aria-label="Xyntal – Startseite">
-        <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14" class="bm-a"/><path d="M19 5l-5.3 5.3M10.3 13.7L5 19" class="bm-b"/></svg>
+        <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14M19 5l-5.3 5.3M10.3 13.7L5 19" stroke="url(#bm-g)"/></svg>
         <span>xyntal</span>
       </a>
       <p>Finde die Menschen, mit denen du etwas aufbaust – egal, wo du bist.</p>
     </div>
-    <nav class="footer-nav footer-nav-min" aria-label="Rechtliches">
+    <nav class="footer-nav" aria-label="Rechtliches">
       <a href="impressum">Impressum</a>
       <a href="impressum#datenschutz">Datenschutz</a>
       <a href="login">Login</a>
@@ -301,6 +235,6 @@
   </div>
 </footer>
 
-<script src="landing.js?v=35" defer></script>
+<script src="landing.js?v=36" defer></script>
 </body>
 </html>
