@@ -167,7 +167,7 @@
   const announce = (text) => { els.announce.textContent = ""; requestAnimationFrame(() => { els.announce.textContent = text; }); };
 
   function renderSteps() {
-    const current = state.view === "workspace" ? 3 : state.role ? 2 : 1;
+    const current = state.view === "workspace" ? 3 : teamList().length >= 2 ? 2 : 1;
     els.steps.forEach((li) => {
       const n = Number(li.dataset.step);
       li.classList.toggle("is-current", n === current);
@@ -176,105 +176,171 @@
     });
   }
 
+  /* ---------- Swipe-Stapel ---------- */
+  // Passung als Zahl: „passt“ zählt voll, „passt teilweise“ knapp zur Hälfte
+  const score = (p) => Math.round(55 + 44 * (p.c.reduce((n, [st]) => n + (st === "ok" ? 1 : 0.45), 0) / p.c.length));
+  state.idx = {};
+  if (!state.role) state.role = (ROLES.find((r) => !state.team[r.id]) || ROLES[0]).id;
+  let busy = false;
+
   function renderRoles() {
     els.roles.innerHTML = ROLES.map((r) => {
       const filled = !!state.team[r.id];
-      const who = filled ? personById[state.team[r.id]].name : "";
-      return `<button type="button" class="role${filled ? " is-filled" : ""}" data-role="${r.id}" aria-pressed="${state.role === r.id}" aria-controls="people-head">
-        <span class="role-name">${esc(r.name)}</span>
-        <span class="role-need">${filled ? `Besetzt: ${esc(who)}` : `${esc(r.need)} · ${r.hours} Std./Woche`}</span>
-        <span class="role-state" aria-hidden="true">${ICON_CHECK}</span>
+      const who = filled ? personById[state.team[r.id]] : null;
+      return `<button type="button" class="role-tab${filled ? " is-filled" : ""}" data-role="${r.id}" aria-pressed="${state.role === r.id}">
+        <span class="role-tab-dot" aria-hidden="true">${filled ? initials(who.name) : ""}</span>
+        <span class="role-tab-name">${esc(r.short)}</span>
       </button>`;
     }).join("");
   }
 
-  // Passung als Zahl: „passt“ zählt voll, „passt teilweise“ knapp zur Hälfte
-  const score = (p) => Math.round(55 + 44 * (p.c.reduce((n, [st]) => n + (st === "ok" ? 1 : 0.45), 0) / p.c.length));
+  const candidates = () => PEOPLE[state.role].map((p) => personById[p.id]);
+  const currentIndex = () => state.idx[state.role] || 0;
 
-  function personCard(p) {
-    const picked = state.team[p.role] === p.id;
+  function card(p, depth) {
     const role = roleById[p.role];
+    const picked = state.team[p.role] === p.id;
     const pct = Math.min(100, Math.round((p.hours / role.hours) * 100));
-    const other = state.team[p.role] && !picked ? personById[state.team[p.role]].name : "";
-    return `<article class="person${picked ? " is-picked" : ""}" aria-labelledby="pn-${p.id}">
+    return `<article class="swipe-card${depth ? " is-under" : " is-top"}${picked ? " is-picked" : ""}" style="--depth:${depth}" data-card="${p.id}" ${depth ? 'aria-hidden="true"' : `aria-labelledby="pn-${p.id}"`}>
+      <span class="stamp stamp-yes" aria-hidden="true">REIN</span>
+      <span class="stamp stamp-no" aria-hidden="true">WEITER</span>
       <div class="person-top">
         <span class="avatar${picked ? " is-ice" : ""}" aria-hidden="true">${initials(p.name)}</span>
         <div>
-          <h5 class="person-name" id="pn-${p.id}">${esc(p.name)}</h5>
+          <h5 class="person-name" id="${depth ? "" : "pn-"}${p.id}">${esc(p.name)}</h5>
           <p class="person-sub">${esc(p.title)} · ${esc(p.place)}</p>
         </div>
-        <span class="score" style="--p:${score(p)}" aria-hidden="true"><b>${score(p)}<small>%</small></b><span class="match">${p.c.map(([s]) => `<i class="m-${s}"></i>`).join("")}</span></span>
+        <span class="score" style="--p:${score(p)}" aria-hidden="true"><b>${score(p)}<small>%</small></b></span>
       </div>
-      <div>
-        <ul class="skills" aria-label="Fähigkeiten">${p.skills.map((s) => `<li>${esc(s)}</li>`).join("")}</ul>
-      </div>
+      ${picked ? '<p class="card-badge">Im Team</p>' : ""}
+      <ul class="skills" aria-label="Fähigkeiten">${p.skills.map((sk) => `<li>${esc(sk)}</li>`).join("")}</ul>
       <div class="avail">
         <div class="avail-row"><span>Verfügbar</span><b>${p.hours} Std./Woche · ${esc(p.from)}</b></div>
         <div class="meter" aria-hidden="true"><i class="${pct >= 100 ? "is-full" : ""}" style="width:${pct}%"></i></div>
       </div>
       <p class="reason"><span class="reason-k">Warum das passt</span>${esc(p.reason)}</p>
       <ul class="criteria" aria-label="Abgleich">
-        ${p.c.map(([s, t], i) => `<li><span class="crit crit-${s}" aria-hidden="true">${s === "ok" ? "OK" : "~"}</span><b>${CRIT_LABELS[i]}</b><span>${esc(t)}<span class="sr-only"> – ${s === "ok" ? "passt" : "passt teilweise"}</span></span></li>`).join("")}
+        ${p.c.map(([st, t], i) => `<li><span class="crit crit-${st}" aria-hidden="true">${st === "ok" ? "OK" : "~"}</span><b>${CRIT_LABELS[i]}</b><span>${esc(t)}<span class="sr-only"> – ${st === "ok" ? "passt" : "passt teilweise"}</span></span></li>`).join("")}
       </ul>
-      <div class="person-actions">
-        <button type="button" class="pick" data-pick="${p.id}" aria-pressed="${picked}" aria-describedby="pn-${p.id}">
-          ${picked ? `${ICON_CHECK}Im Team` : `${ICON_PLUS}Ins Team holen`}
-        </button>
-        ${picked ? '<span class="hint">Erneut klicken zum Entfernen</span>' : other ? `<span class="hint">Ersetzt ${esc(other)}</span>` : ""}
-      </div>
     </article>`;
   }
 
   function renderPeople() {
     const role = roleById[state.role];
-    if (!role) return;
-    els.peopleTitle.innerHTML = `Passend für <b>${esc(role.name)}</b>`;
-    els.peopleCount.textContent = `${PEOPLE[role.id].length} Vorschläge`;
-    els.people.innerHTML = PEOPLE[role.id].map((p) => personCard(personById[p.id])).join("");
+    const list = candidates();
+    const i = currentIndex() % list.length;
+    els.peopleTitle.innerHTML = `Gesucht: <b>${esc(role.name)}</b>`;
+    els.peopleCount.textContent = `${i + 1} von ${list.length}`;
+    const order = [0, 1, 2].map((k) => list[(i + k) % list.length]);
+    // unterste Karte zuerst, damit die oberste im DOM zuletzt liegt
+    els.people.innerHTML = order.map((p, d) => card(p, d)).reverse().join("");
+    bindDrag();
   }
 
-  let loadTimer = 0;
+  function renderDone() {
+    els.peopleTitle.textContent = "Team komplett.";
+    els.peopleCount.textContent = "";
+    els.people.innerHTML = `<div class="deck-done">
+      <div class="done-avatars" aria-hidden="true">${teamList().map((p) => `<span class="avatar is-ice">${initials(p.name)}</span>`).join("")}</div>
+      <p><strong>Alle vier Rollen sind besetzt.</strong><br>Zeit für den gemeinsamen Workspace.</p>
+      <button type="button" class="btn btn-primary" data-done-open>Workspace öffnen <span aria-hidden="true">→</span></button>
+    </div>`;
+    $("[data-done-open]", els.people).addEventListener("click", () => showView("workspace"));
+  }
+
+  function renderDeck() {
+    const done = teamList().length === ROLES.length && state.showDone;
+    els.select.classList.toggle("is-done", !!done);
+    if (done) renderDone(); else renderPeople();
+  }
+
   function selectRole(id) {
-    if (state.role === id) return;
     state.role = id;
+    state.showDone = false;
     renderRoles();
     renderSteps();
-    const role = roleById[id];
-    els.peopleTitle.innerHTML = `Passend für <b>${esc(role.name)}</b>`;
-    els.peopleCount.textContent = "Suche …";
-    els.people.setAttribute("aria-busy", "true");
-    els.people.innerHTML = `<div class="scan-log" aria-hidden="true"><p class="scan-note">&gt; scanne Profile für ${esc(role.name)} …</p>`
-      + '<p class="scan-line" style="--d:0">&gt; gleiche Fähigkeiten ab <b>[ok]</b></p>'
-      + '<p class="scan-line" style="--d:1">&gt; prüfe Zeit &amp; Arbeitsweise <b>[ok]</b></p>'
-      + '<p class="scan-line" style="--d:2">&gt; sortiere nach Passung …</p></div>'
-      + '<div class="skeleton" aria-hidden="true"><i></i><i></i><i></i></div>'.repeat(2);
-    clearTimeout(loadTimer);
-    loadTimer = setTimeout(() => {
-      renderPeople();
-      els.people.setAttribute("aria-busy", "false");
-      announce(`${PEOPLE[id].length} Vorschläge für ${role.name}.`);
-    }, still ? 0 : 780);
-    // Mobil liegen die Vorschläge unter den Rollen: einmal sanft hinführen
-    const head = $(".people-head", demo);
-    if (matchMedia("(max-width: 759px)").matches && head.getBoundingClientRect().top > innerHeight * 0.6) {
-      head.scrollIntoView({ behavior: still ? "auto" : "smooth", block: "start" });
-    }
+    renderDeck();
+    els.people.classList.remove("is-shuffling"); void els.people.offsetWidth; els.people.classList.add("is-shuffling");
+  }
+
+  function decide(yes) {
+    if (busy || els.select.classList.contains("is-done")) return;
+    const top = $(".swipe-card.is-top", els.people);
+    if (!top) return;
+    const p = personById[top.dataset.card];
+    busy = true;
+    top.classList.add(yes ? "fly-right" : "fly-left");
+    top.style.transform = "";
+    setTimeout(() => {
+      busy = false;
+      if (yes) {
+        const role = roleById[p.role];
+        const prev = state.team[p.role];
+        if (prev !== p.id) {
+          state.team[p.role] = p.id;
+          justFilled = p.role;
+          announce(prev ? `${p.name} ersetzt ${personById[prev].name} für ${role.name}.` : `${p.name} ist jetzt im Team für ${role.name}.`);
+        }
+        flashMatch(p);
+        const next = ROLES.find((r) => !state.team[r.id]);
+        if (next) state.role = next.id; else state.showDone = true;
+        teamChanged();
+      } else {
+        state.idx[state.role] = currentIndex() + 1;
+        renderPeople();
+      }
+    }, still ? 0 : 300);
+  }
+
+  function flashMatch(p) {
+    const el = document.createElement("div");
+    el.className = "match-flash";
+    el.setAttribute("aria-hidden", "true");
+    el.innerHTML = `<b>Match!</b><span>${esc(p.name)} ist im Team</span>`;
+    els.select.append(el);
+    setTimeout(() => el.remove(), still ? 600 : 1300);
+  }
+
+  // Ziehen mit Maus oder Finger
+  function bindDrag() {
+    const top = $(".swipe-card.is-top", els.people);
+    if (!top) return;
+    let x0 = 0, y0 = 0, dx = 0, dragging = false, id = null;
+    top.addEventListener("pointerdown", (e) => {
+      if (busy || e.button > 0) return;
+      dragging = true; id = e.pointerId; x0 = e.clientX; y0 = e.clientY; dx = 0;
+      top.setPointerCapture(id);
+      top.classList.add("is-dragging");
+    });
+    top.addEventListener("pointermove", (e) => {
+      if (!dragging || e.pointerId !== id) return;
+      dx = e.clientX - x0;
+      const dy = (e.clientY - y0) * 0.15;
+      top.style.transform = `translate(${dx}px, ${dy}px) rotate(${dx / 18}deg)`;
+      top.style.setProperty("--yes", Math.max(0, Math.min(1, dx / 110)));
+      top.style.setProperty("--no", Math.max(0, Math.min(1, -dx / 110)));
+    });
+    const end = (e) => {
+      if (!dragging || e.pointerId !== id) return;
+      dragging = false;
+      top.classList.remove("is-dragging");
+      if (Math.abs(dx) > 110) decide(dx > 0);
+      else { top.style.transform = ""; top.style.setProperty("--yes", 0); top.style.setProperty("--no", 0); }
+    };
+    top.addEventListener("pointerup", end);
+    top.addEventListener("pointercancel", end);
   }
 
   let justFilled = null;
   function togglePick(pid) {
     const p = personById[pid];
     const role = roleById[p.role];
-    const prev = state.team[p.role];
-    if (prev === pid) {
+    if (state.team[p.role] === pid) {
       delete state.team[p.role];
+      state.showDone = false;
       announce(`${p.name} ist nicht mehr im Team. ${role.name} ist wieder offen.`);
-    } else {
-      state.team[p.role] = pid;
-      justFilled = p.role;
-      announce(prev ? `${p.name} ersetzt ${personById[prev].name} für ${role.name}.` : `${p.name} ist jetzt im Team für ${role.name}.`);
+      teamChanged();
     }
-    teamChanged();
   }
 
   function renderTeam() {
@@ -370,11 +436,13 @@
     const b = e.target.closest("[data-role]");
     if (b) selectRole(b.dataset.role);
   });
-  els.people.addEventListener("click", (e) => {
-    const b = e.target.closest("[data-pick]");
-    if (!b) return;
-    togglePick(b.dataset.pick);
-    $(`[data-pick="${b.dataset.pick}"]`, els.people)?.focus();
+  $("[data-swipe-actions]", demo).addEventListener("click", (e) => {
+    const b = e.target.closest("[data-swipe]");
+    if (b) decide(b.dataset.swipe === "yes");
+  });
+  els.people.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowRight") { e.preventDefault(); decide(true); }
+    else if (e.key === "ArrowLeft") { e.preventDefault(); decide(false); }
   });
   els.team.addEventListener("click", (e) => {
     const b = e.target.closest("[data-remove]");
@@ -408,12 +476,14 @@
   onTeamChange(() => {
     renderRoles();
     renderTeam();
-    if (state.role) renderPeople();
+    renderSteps();
+    renderDeck();
   });
 
   renderRoles();
   renderTeam();
   renderSteps();
+  renderDeck();
 
   /* ---------------------------------------------------------------
      Team-Moment: Profile verbinden sich zur Projektansicht

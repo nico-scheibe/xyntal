@@ -22,8 +22,8 @@
   <link rel="stylesheet" href="fonts/fonts.css?v=31">
   <link rel="stylesheet" href="landing.css?v=31">
   <link rel="stylesheet" href="cosmos.css?v=32">
-  <link rel="stylesheet" href="demo.css?v=32">
-  <script src="i18n-en.js?v=32" defer></script>
+  <link rel="stylesheet" href="demo.css?v=33">
+  <script src="i18n-en.js?v=33" defer></script>
   <script src="i18n.js?v=31" defer></script>
   <script src="cosmos.js?v=31" defer></script>
 </head>
@@ -130,15 +130,15 @@
         <div class="demo-bar">
           <p class="demo-crumb"><span class="demo-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="demo-live" aria-hidden="true"><i></i>match-engine</span><span class="demo-path"><span aria-hidden="true">~/</span>projekte<span aria-hidden="true">/</span><strong>feldnah</strong></span></p>
           <ol class="demo-steps" aria-label="Fortschritt in der Demo">
-            <li data-step="1" class="is-current"><span>1</span>Rolle wählen</li>
-            <li data-step="2"><span>2</span>Menschen ansehen</li>
+            <li data-step="1" class="is-current"><span>1</span>Swipen</li>
+            <li data-step="2"><span>2</span>Team steht</li>
             <li data-step="3"><span>3</span>Workspace öffnen</li>
           </ol>
         </div>
 
-        <!-- Auswahl -->
-        <div class="demo-body" data-view="select">
-          <aside class="demo-project" aria-label="Projekt">
+        <!-- Auswahl: Swipe-Stapel -->
+        <div class="demo-body swipe" data-view="select">
+          <div class="swipe-top">
             <div class="project-id">
               <span class="project-glyph" aria-hidden="true">F</span>
               <div>
@@ -146,26 +146,20 @@
                 <p class="project-line">Bestell- und Abhol-App für Hofläden in der Oberpfalz</p>
               </div>
             </div>
-            <dl class="project-meta">
-              <div><dt>Phase</dt><dd>Idee geprüft, Prototyp geplant</dd></div>
-              <div><dt>Gegründet von</dt><dd>Jana Weiß <span class="muted">(Beispiel)</span></dd></div>
-              <div><dt>Arbeitsweise</dt><dd>Regensburg &amp; remote, abends</dd></div>
-            </dl>
-            <h4 class="mini-head" id="roles-head">Offene Rollen</h4>
-            <div class="roles" role="group" aria-labelledby="roles-head" data-roles></div>
-          </aside>
+            <div class="swipe-roles" role="group" aria-label="Offene Rollen" data-roles></div>
+          </div>
 
-          <div class="demo-people" aria-labelledby="people-head">
+          <div class="swipe-stage" aria-labelledby="people-head">
             <div class="people-head">
               <h4 class="mini-head" id="people-head" data-people-title>Passende Menschen</h4>
               <span class="people-count" data-people-count></span>
             </div>
-            <div class="people" data-people>
-              <div class="empty-state">
-                <div class="radar" aria-hidden="true"><i></i><i></i><i></i></div>
-                <p><strong>Wähle eine offene Rolle.</strong><br>Dann siehst du, wer dafür infrage kommt – mit Fähigkeiten, verfügbarer Zeit und einer Begründung.</p>
-              </div>
+            <div class="deck" data-people tabindex="0" aria-describedby="swipe-hint"></div>
+            <div class="swipe-actions" data-swipe-actions>
+              <button type="button" class="swipe-btn swipe-no" data-swipe="no"><span aria-hidden="true">✕</span> Weiter</button>
+              <button type="button" class="swipe-btn swipe-yes" data-swipe="yes"><span aria-hidden="true">♥</span> Ins Team</button>
             </div>
+            <p class="hint swipe-hint" id="swipe-hint">Karte nach rechts ziehen = ins Team, nach links = nächste Person. Geht auch mit den Pfeiltasten ← →.</p>
           </div>
 
           <aside class="demo-team" aria-labelledby="team-head">
@@ -467,6 +461,6 @@
   </div>
 </footer>
 
-<script src="landing.js?v=32" defer></script>
+<script src="landing.js?v=33" defer></script>
 </body>
 </html>

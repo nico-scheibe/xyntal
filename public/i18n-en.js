@@ -328,6 +328,18 @@ window.XYNTAL_EN = {
   "> sortiere nach Passung …": "> ranking by fit …",
   "Team-Abdeckung": "Team coverage",
 
+  "Swipen": "Swipe",
+  "Weiter": "Next",
+  "Ins Team": "Add to team",
+  "REIN": "IN",
+  "WEITER": "NEXT",
+  "Match!": "Match!",
+  "Gesucht:": "Wanted:",
+  "Team komplett.": "Team complete.",
+  "Alle vier Rollen sind besetzt.": "All four roles are filled.",
+  "Zeit für den gemeinsamen Workspace.": "Time for the shared workspace.",
+  "Karte nach rechts ziehen = ins Team, nach links = nächste Person. Geht auch mit den Pfeiltasten ← →.": "Drag the card right = add to team, left = next person. Arrow keys ← → work too.",
+
   /* ---------- 404 ---------- */
   "Seite nicht gefunden – Xyntal": "Page not found – Xyntal",
   "Diese Seite gibt es nicht – noch nicht.": "This page doesn't exist – not yet.",
@@ -878,6 +890,7 @@ window.XYNTAL_EN = {
     [/^(\d+) Vorschläge$/, (_, a) => `${a} suggestions`],
     [/^(\d+) Vorschläge für (.+)\.$/, (_, a, b) => `${a} suggestions for ${t(b)}.`],
     [/^> scanne Profile für (.+) …$/, (_, a) => `> scanning profiles for ${t(a)} …`],
+    [/^(.+) ist im Team$/, (_, a) => `${a} is on the team`],
     [/^Besetzt: (.+)$/, (_, a) => `Filled: ${a}`],
     [/^Ersetzt (.+)$/, (_, a) => `Replaces ${a}`],
     [/^(.+) aus dem Team entfernen$/, (_, a) => `Remove ${a} from the team`],
