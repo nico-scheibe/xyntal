@@ -9,82 +9,83 @@
   const initials = (name) => name.split(/\s+/).map((p) => p[0]).slice(0, 2).join("").toUpperCase();
 
   /* ---------------------------------------------------------------
-     Beispieldaten: Projekt „Feldnah“ (erfunden)
+     Beispieldaten: Projekt „Loopr“ (erfunden) – KI-App, die aus Summen einen Song macht
      --------------------------------------------------------------- */
+  const PROJECT = "Loopr";
   const FOUNDER = { name: "Jana Weiß", title: "Gründerin" };
 
   const ROLES = [
-    { id: "mobile", name: "Mobile-Entwicklung", short: "Mobile", need: "App für iOS und Android, offline-fähig", hours: 10,
-      task: { text: "Offline-Warenkorb prototypen", note: "Bestellen ohne Netz, später synchronisieren" },
-      hello: "Ich schaue mir zuerst an, wie schlecht das Netz in den Hofläden wirklich ist." },
-    { id: "design", name: "Produktdesign", short: "Design", need: "Bestellablauf, der für alle Generationen funktioniert", hours: 8,
-      task: { text: "Bestellablauf mit drei Hofläden testen", note: "Papierprototyp, je 20 Minuten" },
-      hello: "Ich kann Donnerstagabend für den Kickoff. Bringe erste Skizzen mit." },
-    { id: "backend", name: "Backend & Daten", short: "Backend", need: "Bestellungen, Abholfenster, Bestand", hours: 8,
-      task: { text: "Datenmodell für Abholfenster entwerfen", note: "Kapazität pro Hof und Zeitfenster" },
-      hello: "Abholfenster sind im Kern Reservierungen. Ich skizziere das Modell bis Sonntag." },
-    { id: "sales", name: "Vertrieb & Höfe", short: "Vertrieb", need: "Die ersten zehn Höfe gewinnen", hours: 6,
-      task: { text: "Gesprächsleitfaden für Höfe schreiben", note: "Was überzeugt, was schreckt ab?" },
-      hello: "Drei Höfe aus meinem Netzwerk würden einen Test mitmachen." },
+    { id: "mobile", name: "Mobile-Entwicklung", short: "Mobile", need: "App für iOS und Android mit sauberer Audioaufnahme", hours: 10,
+      task: { text: "Aufnahme-Screen prototypen", note: "Summen rein, Beat raus – in unter 10 Sekunden" },
+      hello: "Bis Sonntag steht ein Aufnahme-Prototyp, den wir am Handy testen können." },
+    { id: "design", name: "Produktdesign", short: "Design", need: "Ein Studio, das sich wie ein Spiel anfühlt", hours: 8,
+      task: { text: "Onboarding mit fünf Musiker:innen testen", note: "Klickdummy, je 15 Minuten" },
+      hello: "Ich kann Donnerstagabend für den Kickoff. Bringe erste Screens mit." },
+    { id: "backend", name: "KI & Audio", short: "KI", need: "Melodie erkennen, passenden Beat erzeugen", hours: 8,
+      task: { text: "Melodie-Erkennung mit 50 Sprachmemos testen", note: "Wie oft trifft die KI den Ton?" },
+      hello: "Ich vergleiche zuerst drei offene Modelle für die Tonhöhenerkennung." },
+    { id: "sales", name: "Community & Creator", short: "Community", need: "Die ersten 1.000 Nutzer:innen über TikTok", hours: 6,
+      task: { text: "Creator-Liste für die Beta anlegen", note: "20 Musik-Creator, die Loopr zeigen" },
+      hello: "Zwei Musik-Creator aus meinem Netzwerk würden die Beta in ihren Videos zeigen." },
   ];
 
   // c: [Fähigkeiten, Zeit, Arbeitsweise] – "ok" passt, "part" passt teilweise
   const PEOPLE = {
     mobile: [
-      { id: "lukas", name: "Lukas Brandl", title: "Flutter-Entwickler, Werkstudent", place: "Regensburg", hours: 10, from: "ab sofort",
-        skills: ["Flutter", "Firebase", "Offline-Sync"],
-        reason: "Hat für einen Wochenmarkt-Verein eine Vorbestell-App gebaut. Offline-Sync kennt er genau aus dem Problem, das Höfe mit schwachem Netz haben.",
-        c: [["ok", "Flutter, Offline-Sync"], ["ok", "10 von 10 Std."], ["ok", "vor Ort, abends"]] },
+      { id: "lukas", name: "Lukas Brandl", title: "Swift-Entwickler, Werkstudent", place: "Regensburg", hours: 10, from: "ab sofort",
+        skills: ["Swift", "AVFoundation", "Core ML"],
+        reason: "Hat eine Stimmgeräte-App mit 20.000 Downloads gebaut und kennt Audioaufnahme auf dem iPhone in- und auswendig.",
+        c: [["ok", "Swift, Audio"], ["ok", "10 von 10 Std."], ["ok", "vor Ort, abends"]] },
       { id: "sara", name: "Sara Öztürk", title: "React-Native-Entwicklerin, sechs Jahre Erfahrung", place: "Nürnberg · remote", hours: 6, from: "ab Dezember",
-        skills: ["React Native", "TypeScript", "Zahlungen"],
-        reason: "Bringt Erfahrung mit Zahlungen in Apps mit und kann die Architektur von Anfang an sauber aufsetzen. Hat weniger Zeit, als die Rolle braucht.",
-        c: [["ok", "React Native, Zahlungen"], ["part", "6 von 10 Std."], ["ok", "remote, feste Termine"]] },
-      { id: "tim", name: "Tim Hofer", title: "iOS-Entwickler, Quereinsteiger", place: "Cham", hours: 12, from: "ab sofort",
-        skills: ["Swift", "SwiftUI", "MapKit"],
-        reason: "Entwickelt bisher nur für iOS, kennt aber die Zielgruppe: Seine Familie betreibt selbst einen Hofladen.",
-        c: [["part", "nur iOS"], ["ok", "12 von 10 Std."], ["ok", "hybrid"]] },
+        skills: ["React Native", "TypeScript", "In-App-Käufe"],
+        reason: "Baut iOS und Android mit einer Codebasis und kennt In-App-Käufe. Hat weniger Zeit, als die Rolle braucht.",
+        c: [["ok", "React Native, In-App-Käufe"], ["part", "6 von 10 Std."], ["ok", "remote, feste Termine"]] },
+      { id: "tim", name: "Tim Hofer", title: "Spieleentwickler, Quereinsteiger", place: "Cham", hours: 12, from: "ab sofort",
+        skills: ["Unity", "C#", "Sounddesign"],
+        reason: "Baut Rhythmusspiele und versteht Timing auf die Millisekunde. In native Apps müsste er sich erst einarbeiten.",
+        c: [["part", "Unity statt App"], ["ok", "12 von 10 Std."], ["ok", "hybrid"]] },
     ],
     design: [
       { id: "mira", name: "Mira Schreiner", title: "UX/UI-Designerin", place: "Regensburg", hours: 8, from: "ab sofort",
-        skills: ["Figma", "Nutzertests", "Barrierefreiheit"],
-        reason: "Hat Formulare für eine Plattform für ältere Menschen gestaltet und getestet – genau die Erfahrung, die ein Bestellablauf für Stammkundschaft vom Land braucht.",
-        c: [["ok", "Abläufe, Nutzertests"], ["ok", "8 von 8 Std."], ["ok", "vor Ort"]] },
+        skills: ["Figma", "Nutzertests", "Motion"],
+        reason: "Hat eine Musik-Lern-App gestaltet und mit Jugendlichen getestet – genau die Zielgruppe von Loopr.",
+        c: [["ok", "UI, Nutzertests"], ["ok", "8 von 8 Std."], ["ok", "vor Ort"]] },
       { id: "jonas", name: "Jonas Wirth", title: "Brand- und Produktdesigner", place: "München · remote", hours: 5, from: "ab sofort",
-        skills: ["Figma", "Branding", "Illustration"],
-        reason: "Starke visuelle Handschrift für Marke und Verpackung. Mit App-Abläufen hat er bisher weniger gearbeitet.",
+        skills: ["Figma", "Branding", "Albumcover"],
+        reason: "Gestaltet Albumcover für Indie-Bands und hat eine starke Handschrift. Mit App-Abläufen hat er bisher weniger gearbeitet.",
         c: [["part", "eher Marke als App"], ["part", "5 von 8 Std."], ["ok", "remote"]] },
-      { id: "elena", name: "Elena Kraus", title: "Service-Designerin", place: "Landshut", hours: 10, from: "ab Januar",
-        skills: ["Interviews", "Prototyping", "Workshops"],
-        reason: "Könnte die Gespräche mit den Höfen strukturieren und daraus die ersten Abläufe ableiten. Startet erst im Januar.",
-        c: [["ok", "Interviews, Prototypen"], ["ok", "10 von 8 Std."], ["part", "erst ab Januar"]] },
+      { id: "elena", name: "Elena Kraus", title: "Motion-Designerin", place: "Landshut", hours: 10, from: "ab Januar",
+        skills: ["After Effects", "Rive", "Prototyping"],
+        reason: "Könnte die Animationen bauen, die Loopr verspielt machen. Startet erst im Januar.",
+        c: [["ok", "Animation, Prototypen"], ["ok", "10 von 8 Std."], ["part", "erst ab Januar"]] },
     ],
     backend: [
-      { id: "felix", name: "Felix Raab", title: "Backend-Entwickler", place: "Regensburg", hours: 8, from: "ab sofort",
-        skills: ["Node.js", "PostgreSQL", "Supabase"],
-        reason: "Hat ein Buchungssystem für einen Kletterverein gebaut: Zeitfenster, Kapazitäten, Erinnerungen – fast dasselbe Modell wie Abholfenster.",
-        c: [["ok", "Zeitfenster, PostgreSQL"], ["ok", "8 von 8 Std."], ["ok", "vor Ort, abends"]] },
+      { id: "felix", name: "Felix Raab", title: "ML-Engineer", place: "Regensburg", hours: 8, from: "ab sofort",
+        skills: ["Python", "PyTorch", "Audio-KI"],
+        reason: "Hat in seiner Masterarbeit Melodien aus Summen erkannt – fast genau das Herzstück von Loopr.",
+        c: [["ok", "Audio-KI, PyTorch"], ["ok", "8 von 8 Std."], ["ok", "vor Ort, abends"]] },
       { id: "ana", name: "Ana Petrović", title: "Data Engineer", place: "Ingolstadt · remote", hours: 4, from: "ab sofort",
         skills: ["Python", "dbt", "Dashboards"],
-        reason: "Für den Start zu wenig Zeit, aber ideal, sobald Höfe Auswertungen zu Absatz und Saison sehen wollen.",
-        c: [["part", "Daten statt Backend"], ["part", "4 von 8 Std."], ["ok", "remote"]] },
-      { id: "moritz", name: "Moritz Lang", title: "Full-Stack-Entwickler", place: "Regensburg", hours: 15, from: "ab Februar",
-        skills: ["Django", "PostgreSQL", "Docker"],
-        reason: "Hätte viel Zeit und passende Erfahrung – allerdings erst ab Februar, wenn der Prototyp schon stehen soll.",
-        c: [["ok", "Python, PostgreSQL"], ["ok", "15 von 8 Std."], ["part", "erst ab Februar"]] },
+        reason: "Für den Start zu wenig Zeit, aber ideal, sobald ihr auswerten wollt, welche Songs geteilt werden.",
+        c: [["part", "Daten statt KI"], ["part", "4 von 8 Std."], ["ok", "remote"]] },
+      { id: "moritz", name: "Moritz Lang", title: "Musikproduzent und Entwickler", place: "Regensburg", hours: 15, from: "ab Februar",
+        skills: ["Ableton", "Python", "Docker"],
+        reason: "Produziert selbst Beats und programmiert – allerdings erst ab Februar, wenn der Prototyp schon stehen soll.",
+        c: [["ok", "Beats, Python"], ["ok", "15 von 8 Std."], ["part", "erst ab Februar"]] },
     ],
     sales: [
-      { id: "katharina", name: "Katharina Bauer", title: "Beraterin für Direktvermarktung", place: "Oberpfalz", hours: 6, from: "ab sofort",
-        skills: ["Direktvermarktung", "Netzwerk", "Workshops"],
-        reason: "Berät seit Jahren landwirtschaftliche Betriebe zur Direktvermarktung und kennt viele Höfe in der Region persönlich.",
-        c: [["ok", "Höfe, Direktvermarktung"], ["ok", "6 von 6 Std."], ["ok", "vor Ort"]] },
-      { id: "david", name: "David Neumann", title: "B2B-Vertrieb", place: "Regensburg", hours: 10, from: "ab sofort",
-        skills: ["Akquise", "CRM", "Verhandlung"],
-        reason: "Strukturiert und erfahren im Vertrieb, hat aber noch keine Kontakte in die Landwirtschaft.",
-        c: [["part", "Vertrieb, keine Höfe"], ["ok", "10 von 6 Std."], ["ok", "hybrid"]] },
+      { id: "nina", name: "Nina Berger", title: "Musik-Creatorin, 80.000 Follower", place: "Regensburg · remote", hours: 6, from: "ab sofort",
+        skills: ["TikTok", "Songwriting", "Community"],
+        reason: "Postet täglich eigene Songs auf TikTok und kennt die Szene. Genau die Reichweite, die Loopr zum Start braucht.",
+        c: [["ok", "TikTok, Musik"], ["ok", "6 von 6 Std."], ["ok", "remote"]] },
+      { id: "david", name: "David Neumann", title: "Growth-Marketer", place: "Regensburg", hours: 10, from: "ab sofort",
+        skills: ["Ads", "Analytics", "A/B-Tests"],
+        reason: "Erfahren mit bezahlter Werbung und Zahlen, hat aber noch keine Kontakte in die Musikszene.",
+        c: [["part", "Ads, keine Creator"], ["ok", "10 von 6 Std."], ["ok", "hybrid"]] },
       { id: "lea", name: "Lea Zimmer", title: "Marketing-Studentin", place: "Regensburg", hours: 12, from: "ab sofort",
-        skills: ["Social Media", "Fotografie", "Texte"],
-        reason: "Kann die Geschichten der Höfe erzählen und Kundschaft erreichen. Beim direkten Verkauf an Höfe bräuchte sie Unterstützung.",
-        c: [["part", "Marketing statt Vertrieb"], ["ok", "12 von 6 Std."], ["ok", "vor Ort"]] },
+        skills: ["Social Media", "Video", "Texte"],
+        reason: "Schneidet Kurzvideos, die zeigen, wie Loopr klingt. Kontakte zu großen Creatorn fehlen ihr noch.",
+        c: [["part", "Video statt Creator-Netzwerk"], ["ok", "12 von 6 Std."], ["ok", "vor Ort"]] },
     ],
   };
   const CRIT_LABELS = ["Fähigkeiten", "Zeit", "Arbeitsweise"];
@@ -317,7 +318,7 @@
             <span class="ms-spark">✦</span>
             <span class="avatar is-ice ms-b">${initials(p.name)}</span>
           </div>
-          <p class="ms-text">${esc(first)} will bei Feldnah als ${esc(roleById[p.role].name)} mitmachen.</p>
+          <p class="ms-text">${esc(first)} will bei ${PROJECT} als ${esc(roleById[p.role].name)} mitmachen.</p>
           <div class="ms-actions">
             ${canOpen ? '<button type="button" class="ms-btn ms-primary" data-match-ws>Workspace öffnen</button>' : ""}
             <button type="button" class="ms-btn${canOpen ? "" : " ms-primary"}" data-match-close>Weiter swipen</button>
@@ -557,7 +558,7 @@
       asmSource.classList.toggle("is-own", own);
       asmSource.textContent = own
         ? `Dein Demo-Team aus der Auswahl oben: ${list.map((p) => p.name.split(" ")[0]).join(", ")}.`
-        : "Ein Vorschlagsteam für Feldnah. Stell oben in der Demo dein eigenes zusammen – dann erscheint es hier.";
+        : "Ein Vorschlagsteam für Loopr. Stell oben in der Demo dein eigenes zusammen – dann erscheint es hier.";
     }
 
     function scatter() {
@@ -723,7 +724,14 @@
         if (form.SHARE_CARD?.checked && window.XyntalCard) {
           note = (await sendCard(email, window.XyntalCard())) ? " Deine Karte ist gespeichert." : "";
         }
-        setStatus(SENT + note, "ok");
+        // Echte Platznummer: bestätigte Einträge laut Brevo + 1 (nur, wenn der Server eine Zahl liefert)
+        let place = "";
+        try {
+          const r = await fetch("/api/waitlist-count", { headers: { Accept: "application/json" } });
+          const n = r.ok ? (await r.json()).count : null;
+          if (Number.isFinite(n) && n >= 0) place = ` Nach deiner Bestätigung bist du Nr. ${(n + 1).toLocaleString("de-DE")} auf der Warteliste.`;
+        } catch { /* ohne Zahl kein Hinweis */ }
+        setStatus(SENT + note + place, "ok");
         form.reset();
       } catch {
         setStatus("Das hat gerade nicht geklappt. Bitte versuch es noch einmal.", "error");
@@ -763,13 +771,13 @@
     const toastName = $("[data-hs-toast-name]", show);
     const slots = $$("[data-hs-slots] i", show);
     const CARDS = [
-      { n: "Lukas Brandl", r: "Mobile-Entwicklung", s: ["Flutter", "Offline-Sync"], h: 10, m: 99, yes: true },
-      { n: "Jonas Wirth", r: "Brand-Design", s: ["Figma", "Branding"], h: 5, m: 86, yes: false },
-      { n: "Mira Schreiner", r: "Produktdesign", s: ["Figma", "Nutzertests"], h: 8, m: 99, yes: true },
+      { n: "Lukas Brandl", r: "Mobile-Entwicklung", s: ["Swift", "Core ML"], h: 10, m: 99, yes: true },
+      { n: "Jonas Wirth", r: "Brand-Design", s: ["Figma", "Albumcover"], h: 5, m: 86, yes: false },
+      { n: "Mira Schreiner", r: "Produktdesign", s: ["Figma", "Motion"], h: 8, m: 99, yes: true },
       { n: "Ana Petrović", r: "Data Engineer", s: ["Python", "dbt"], h: 4, m: 79, yes: false },
-      { n: "Felix Raab", r: "Backend & Daten", s: ["PostgreSQL", "Supabase"], h: 8, m: 99, yes: true },
-      { n: "David Neumann", r: "B2B-Vertrieb", s: ["Akquise", "CRM"], h: 10, m: 92, yes: false },
-      { n: "Katharina Bauer", r: "Vertrieb & Höfe", s: ["Direktvermarktung", "Netzwerk"], h: 6, m: 99, yes: true },
+      { n: "Felix Raab", r: "KI & Audio", s: ["PyTorch", "Audio-KI"], h: 8, m: 99, yes: true },
+      { n: "David Neumann", r: "Growth-Marketing", s: ["Ads", "Analytics"], h: 10, m: 92, yes: false },
+      { n: "Nina Berger", r: "Community & Creator", s: ["TikTok", "Songwriting"], h: 6, m: 99, yes: true },
     ];
     let i = 0, filled = 0, timer = 0, running = false;
     const card = (c, depth) => `<div class="hs-card" style="--d:${depth}">
@@ -863,7 +871,7 @@
       el.mcHours.textContent = `${data.hours} Std./Woche`;
       el.mcBar.style.width = `${Math.min(100, (data.hours / 20) * 100)}%`;
       el.hoursOut.textContent = `${data.hours} Std.`;
-      el.mcPitch.textContent = data.pitch.trim() || "Ich baue eine App für Hofläden.";
+      el.mcPitch.textContent = data.pitch.trim() || "Ich baue eine KI-App für Musiker:innen.";
       el.mcPitch.classList.toggle("is-ghost", !data.pitch.trim());
       el.mcLooking.textContent = data.looking;
       el.card.classList.remove("pulse"); void el.card.offsetWidth; el.card.classList.add("pulse");
@@ -948,7 +956,7 @@
       roundRect(g, x + 60, cy + 36, Math.max(30, (w - 120) * Math.min(1, data.hours / 20)), 14, 7); g.fillStyle = grad(x, 0, x + w, 0); g.fill();
       // Satz
       cy += 130; g.font = `600 44px ${FONT}`; g.fillStyle = "#F5F5F7";
-      for (const line of wrap(g, data.pitch.trim() || t("Ich baue eine App für Hofläden."), w - 120)) { g.fillText(line, x + 60, cy); cy += 58; }
+      for (const line of wrap(g, data.pitch.trim() || t("Ich baue eine KI-App für Musiker:innen."), w - 120)) { g.fillText(line, x + 60, cy); cy += 58; }
       // Sucht
       cy += 40; g.font = `500 34px ${FONT}`; g.fillStyle = "#A1A1AA"; const sl = t("Sucht") + " "; g.fillText(sl, x + 60, cy);
       g.font = `700 34px ${FONT}`; g.fillStyle = grad(x + 60, 0, x + 600, 0); g.fillText(t(data.looking), x + 60 + g.measureText(sl).width + 10, cy);
