@@ -680,32 +680,85 @@
      Warteliste: Brevo mit Double-Opt-in, Eingabe bleibt auf der Seite
      --------------------------------------------------------------- */
   const WAITLIST_URL = "https://67406864.sibforms.com/serve/MUIFAP_vKT3wGvb_oCMmNCfxk9r4kS47ziUcgIjOp7ibD-hlikkWAA_l-Wo4pedNGsTJEc-yCsM1TIj41aX0dzDASKRcDC_ZxNn9envMBdU_zWmo7HHDj-FKtvyCz63RuFRQHleImiTRDarw8DCC1sKXSfU6F-RoppW0XftCBPzMdF-ch3vutYeokCLF5_Fzn5uooz6XScdhsGQS2w==?isAjax=1";
+  const SUPA = "https://rralgrlujoupprwlvoyo.supabase.co";
+  const SUPA_KEY = "sb_publishable_YxSngs1ePBoxqI6f26GRww_2_kNaLfh";
+  const rpc = (fn, args) => fetch(`${SUPA}/rest/v1/rpc/${fn}`, {
+    method: "POST",
+    headers: { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify(args),
+  });
   // Karte zusammen mit der Anmeldung speichern (Supabase, nur für den Admin lesbar).
-  // Fehlt die Tabelle noch, bleibt es still – die Anmeldung selbst hat ja geklappt.
+  // Rückgabe: null (nicht gespeichert) oder der Stand des Wunsch-Links: "", "ok", "taken", "invalid".
   async function sendCard(email, card) {
-    if (!card || !card.touched) return false;
-    const SUPA = "https://rralgrlujoupprwlvoyo.supabase.co";
-    const KEY = "sb_publishable_YxSngs1ePBoxqI6f26GRww_2_kNaLfh";
+    if (!card || !card.touched) return null;
     try {
-      const res = await fetch(`${SUPA}/rest/v1/rpc/submit_waitlist_card`, {
-        method: "POST",
-        headers: { apikey: KEY, Authorization: `Bearer ${KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          p_email: email, p_name: (card.name || "").trim().slice(0, 24) || "Anonym", p_role: card.role,
-          p_skills: (card.skills || []).slice(0, 4), p_hours: Math.max(1, Math.min(40, Number(card.hours) || 1)),
-          p_looking: card.looking, p_pitch: (card.pitch || "").trim().slice(0, 120),
-          p_lang: document.documentElement.lang === "en" ? "en" : "de",
-          p_city: (card.city || "").trim().slice(0, 40), p_mode: card.mode || "", p_level: card.level || "", p_link: card.link || "",
-        }),
+      const res = await rpc("submit_waitlist_card", {
+        p_email: email, p_name: (card.name || "").trim().slice(0, 24) || "Anonym", p_role: card.role,
+        p_skills: (card.skills || []).slice(0, 4), p_hours: Math.max(1, Math.min(40, Number(card.hours) || 1)),
+        p_looking: card.looking, p_pitch: (card.pitch || "").trim().slice(0, 120),
+        p_lang: document.documentElement.lang === "en" ? "en" : "de",
+        p_city: (card.city || "").trim().slice(0, 40), p_mode: card.mode || "", p_level: card.level || "", p_link: card.link || "",
+        p_handle: card.handle || "",
       });
-      return res.ok;
-    } catch { return false; }
+      if (!res.ok) return null;
+      const out = await res.json().catch(() => "");
+      return typeof out === "string" ? out : "";
+    } catch { return null; }
   }
+
+  // Einladungen: ?ref=code aus dem Link merken, nach dem Eintragen gutschreiben
+  const REF_KEY = "xyntal-ref", INVITE_KEY = "xyntal-einladung";
+  try {
+    const params = new URLSearchParams(location.search);
+    const ref = (params.get("ref") || "").toLowerCase();
+    if (/^[a-z0-9]{8}$/.test(ref)) localStorage.setItem(REF_KEY, ref);
+    if (params.has("ref")) { params.delete("ref"); history.replaceState(null, "", location.pathname + (params.toString() ? `?${params}` : "") + location.hash); }
+  } catch { /* geht auch ohne */ }
+  const inviteBox = $("[data-invite]");
+  function showInvite(code) {
+    if (!inviteBox || !/^[a-z0-9]{8}$/.test(code || "")) return;
+    const url = `https://xyntal.de/?ref=${code}`;
+    inviteBox.innerHTML = `
+      <div class="invite-head"><span class="lp-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 12v8H4v-8M2 7h20v5H2zM12 22V7M12 7H8a2.5 2.5 0 1 1 0-5c3 0 4 5 4 5zM12 7h4a2.5 2.5 0 1 0 0-5c-3 0-4 5-4 5z"/></svg></span><b>Lade Freunde ein</b></div>
+      <p>Für jede Person, die sich über deinen Link einträgt und bestätigt, bekommst du 1 Woche gratis, sobald es Abos gibt.</p>
+      <div class="invite-row"><input type="text" readonly value="${url}" aria-label="Dein Einladungslink" data-no-i18n><button type="button" class="btn btn-primary" data-invite-share>Link teilen</button></div>
+      <p class="invite-count" data-invite-status role="status" aria-live="polite"></p>`;
+    inviteBox.hidden = false;
+    const input = $("input", inviteBox), out = $("[data-invite-status]", inviteBox);
+    input.addEventListener("focus", () => input.select());
+    $("[data-invite-share]", inviteBox).addEventListener("click", async () => {
+      const text = "Ich bin auf der Warteliste von Xyntal – der Plattform, auf der aus Ideen Teams werden. Trag dich auch ein:";
+      try {
+        if (navigator.share && matchMedia("(pointer: coarse)").matches) { await navigator.share({ title: "Xyntal", text, url }); return; }
+      } catch (err) { if (err && err.name === "AbortError") return; }
+      try { await navigator.clipboard.writeText(url); out.textContent = "Link kopiert."; }
+      catch { input.focus(); input.select(); out.textContent = "Markiert – jetzt kopieren."; }
+    });
+  }
+  try { showInvite(localStorage.getItem(INVITE_KEY)); } catch { /* egal */ }
+  async function afterSignup(email) {
+    let ref = ""; try { ref = localStorage.getItem(REF_KEY) || ""; } catch { /* egal */ }
+    if (ref) rpc("track_referral", { p_email: email, p_code: ref }).catch(() => {});
+    try {
+      const res = await rpc("get_referral_code", { p_email: email });
+      const code = res.ok ? await res.json() : "";
+      if (typeof code === "string" && /^[a-z0-9]{8}$/.test(code)) {
+        try { localStorage.setItem(INVITE_KEY, code); } catch { /* egal */ }
+        showInvite(code);
+      }
+    } catch { /* ohne Einladungslink geht es auch */ }
+  }
+
   const SENT = "Danke. Bitte prüfe dein Postfach und bestätige deine E-Mail-Adresse. Erst danach stehst du auf der Warteliste.";
   $$("[data-waitlist]").forEach((form) => {
     const status = $(".waitlist-status", form);
     const button = $("button", form);
-    const setStatus = (text, kind = "") => { status.textContent = text; status.className = "waitlist-status" + (kind ? ` is-${kind}` : ""); };
+    // Mehrere Sätze als eigene Teile, damit jeder für sich übersetzt werden kann
+    const setStatus = (text, kind = "") => {
+      const parts = (Array.isArray(text) ? text : [text]).filter(Boolean);
+      status.innerHTML = parts.map((p) => `<span>${esc(p)}</span>`).join(" ");
+      status.className = "waitlist-status" + (kind ? ` is-${kind}` : "");
+    };
     form.EMAIL.addEventListener("input", () => form.EMAIL.removeAttribute("aria-invalid"));
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
@@ -730,18 +783,25 @@
         const res = await fetch(WAITLIST_URL, { method: "POST", headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" }, body });
         const data = await res.json().catch(() => null);
         if (!res.ok || !data || data.success !== true) throw new Error("waitlist");
-        let note = "";
+        const parts = [SENT];
         if (form.SHARE_CARD?.checked && window.XyntalCard) {
-          note = (await sendCard(email, window.XyntalCard())) ? " Deine Karte ist gespeichert." : "";
+          const card = window.XyntalCard();
+          const res = await sendCard(email, card);
+          if (res !== null) {
+            parts.push("Deine Karte ist gespeichert.");
+            if (res === "ok") parts.push(`Dein Link xyntal.de/${card.handle} ist reserviert.`);
+            else if (res === "taken") parts.push(`xyntal.de/${card.handle} ist leider schon vergeben. Du kannst dir nach dem Start einen anderen aussuchen.`);
+            else if (res === "invalid") parts.push("Dieser Wunsch-Link ist nicht verfügbar. Du kannst dir nach dem Start einen anderen aussuchen.");
+          }
         }
         // Echte Platznummer: bestätigte Einträge laut Brevo + 1 (nur, wenn der Server eine Zahl liefert)
-        let place = "";
         try {
           const r = await fetch("/api/waitlist-count?v=2", { headers: { Accept: "application/json" } });
           const n = r.ok ? (await r.json()).count : null;
-          if (Number.isFinite(n) && n >= 0) place = ` Nach deiner Bestätigung bist du Nr. ${(n + 1).toLocaleString("de-DE")} auf der Warteliste.`;
+          if (Number.isFinite(n) && n >= 0) parts.push(`Nach deiner Bestätigung bist du Nr. ${(n + 1).toLocaleString("de-DE")} auf der Warteliste.`);
         } catch { /* ohne Zahl kein Hinweis */ }
-        setStatus(SENT + note + place, "ok");
+        setStatus(parts, "ok");
+        afterSignup(email);
         form.reset();
       } catch {
         setStatus("Das hat gerade nicht geklappt. Bitte versuch es noch einmal.", "error");
@@ -854,6 +914,7 @@
     const isHex = (s) => typeof s === "string" && /^#[0-9a-f]{6}$/i.test(s);
     const el = {
       name: $("#bf-name"), city: $("#bf-city"), skill: $("#bf-skill"), hours: $("#bf-hours"), pitch: $("#bf-pitch"), link: $("#bf-link"),
+      handle: $("#bf-handle"), handleHint: $("[data-bf-handle-hint]"), mcSite: $("[data-mc-site]"),
       skills: $("[data-bf-skills]"), suggest: $("[data-bf-suggest]"), hoursOut: $("[data-bf-hours-out]"),
       photo: $("[data-bf-photo]"), photoPick: $("[data-bf-photo-pick]"), photoPreview: $("[data-bf-photo-preview]"),
       photoLabel: $("[data-bf-photo-label]"), photoRemove: $("[data-bf-photo-remove]"),
@@ -865,7 +926,7 @@
       status: $("[data-card-status]"), save: $("[data-card-save]"), launch: $("[data-launch-card]"),
     };
     let data = { name: "", city: "", role: "Entwicklung", level: "Fortgeschritten", skills: [], hours: 8, mode: "Hybrid",
-      looking: "Mitgründer:in", pitch: "", link: "", photo: "", touched: false,
+      looking: "Mitgründer:in", pitch: "", link: "", handle: "", photo: "", touched: false,
       theme: "aurora", c1: "#FF5FD2", c2: "#3FD8FF", surface: "dark", shape: "circle", layout: "left", order: DEFAULT_ORDER.slice(), off: [] };
     try { const saved = JSON.parse(localStorage.getItem(STORE) || "null"); if (saved && typeof saved === "object") data = { ...data, ...saved }; } catch { /* egal */ }
     // Gespeicherte Werte absichern
@@ -880,6 +941,12 @@
     data.order = data.order.filter((b) => BLOCKS[b]).concat(DEFAULT_ORDER).filter((b, i, a) => a.indexOf(b) === i);
     data.off = Array.isArray(data.off) ? data.off.filter((b) => BLOCKS[b]) : [];
     if (typeof data.photo !== "string" || !data.photo.startsWith("data:image/")) data.photo = "";
+    if (typeof data.handle !== "string") data.handle = "";
+    // Wunsch-Link: nur a–z, 0–9, - und _, 3–20 Zeichen, beginnt mit Buchstabe oder Zahl
+    const cleanHandle = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9_-]/g, "").replace(/^[-_]+/, "").slice(0, 20);
+    const validHandle = (s) => /^[a-z0-9][a-z0-9_-]{2,19}$/.test(s);
+    data.handle = cleanHandle(data.handle);
+    const siteText = () => (validHandle(data.handle) ? `xyntal.de/${data.handle}` : "xyntal.de");
 
     const colors = () => (data.theme === "custom" ? [data.c1, data.c2] : THEMES[data.theme]);
     const cssGrad = () => `linear-gradient(120deg, ${colors().map((c, k, a) => `${c} ${Math.round((k / (a.length - 1)) * 100)}%`).join(", ")})`;
@@ -971,6 +1038,10 @@
       el.mcLink.hidden = !href;
       el.mcLink.textContent = href ? linkLabel(href) : "";
       el.link.toggleAttribute("aria-invalid", !!data.link.trim() && !href);
+      el.mcSite.textContent = siteText();
+      const badHandle = !!data.handle && !validHandle(data.handle);
+      el.handle.toggleAttribute("aria-invalid", badHandle);
+      el.handleHint.classList.toggle("is-error", badHandle);
       c.classList.remove("pulse"); void c.offsetWidth; c.classList.add("pulse");
       // kleine Vorschau in der Warteliste
       if (el.launch && data.touched) {
@@ -982,6 +1053,9 @@
 
     function sync() {
       data.name = el.name.value; data.city = el.city.value; data.pitch = el.pitch.value; data.link = el.link.value;
+      const h = cleanHandle(el.handle.value);
+      if (el.handle.value !== h) el.handle.value = h;
+      data.handle = h;
       data.hours = Number(el.hours.value);
       for (const key of ["role", "level", "mode", "looking", "theme", "surface", "shape", "layout"]) data[key] = radio(key) || data[key];
       const c1 = form.c1.value, c2 = form.c2.value;
@@ -1046,6 +1120,7 @@
 
     // Formular mit gespeicherten Werten füllen
     el.name.value = data.name; el.city.value = data.city; el.pitch.value = data.pitch; el.link.value = data.link; el.hours.value = data.hours;
+    el.handle.value = data.handle;
     form.c1.value = data.c1; form.c2.value = data.c2;
     for (const key of ["role", "level", "mode", "looking", "theme", "surface", "shape", "layout"]) $$(`input[name="${key}"]`, form).forEach((r) => { r.checked = r.value === data[key]; });
 
@@ -1161,7 +1236,7 @@
       cy += 52; g.textBaseline = "middle"; g.font = `500 30px ${FONT}`; g.textAlign = "left";
       const href = linkUrl(data.link);
       if (href) { g.fillStyle = P.text2; g.fillText(linkLabel(href), pad, cy); }
-      g.textAlign = "right"; g.fillStyle = P.text3; g.fillText("xyntal.de", CW - pad, cy); g.textAlign = "left";
+      g.textAlign = "right"; g.fillStyle = validHandle(data.handle) ? P.text2 : P.text3; g.fillText(siteText(), CW - pad, cy); g.textAlign = "left";
       return cy + 50;
     }
 
@@ -1225,7 +1300,7 @@
 
     // Für die Warteliste: nur die Angaben – Foto und Gestaltung bleiben auf dem Gerät
     window.XyntalCard = () => ({ name: data.name, city: data.city, role: data.role, level: data.level, skills: data.skills.slice(), hours: data.hours,
-      mode: data.mode, looking: data.looking, pitch: data.pitch, link: linkUrl(data.link), touched: data.touched });
+      mode: data.mode, looking: data.looking, pitch: data.pitch, link: linkUrl(data.link), handle: validHandle(data.handle) ? data.handle : "", touched: data.touched });
     window.XyntalCardDraw = drawCard;
     const shareBox = $("[data-share-card]");
     const showShare = () => { if (shareBox) shareBox.hidden = !data.touched; };

@@ -1,4 +1,4 @@
--- Regressionstest für supabase/011_waitlist_cards.sql und 012_waitlist_cards_more.sql
+-- Regressionstest für supabase/011_waitlist_cards.sql, 012_waitlist_cards_more.sql und 013_waitlist_perks.sql
 -- Nur in einer LEEREN, SEPARATEN lokalen PostgreSQL-Datenbank mit den Rollen anon und authenticated ausführen,
 -- aus dem Repository-Ordner:  psql -v ON_ERROR_STOP=1 -d TESTDATENBANK -f tests/waitlist_cards.sql
 -- Simuliert auth.uid() und eine vereinfachte profiles-Tabelle. Niemals im produktiven Projekt ausführen.
@@ -95,4 +95,48 @@ do $$ declare r record; begin
   if (select link from public.waitlist_cards where email = 'link@example.com') <> '' then raise exception 'unsicherer Link gespeichert'; end if;
   if (select mode from public.waitlist_cards where email = 'alt@example.com') <> '' then raise exception 'Standardwert fehlt'; end if;
 end $$;
+-- 9) Migration 013: Wunsch-Link und Einladungen
+\i supabase/013_waitlist_perks.sql
+set role anon;
+do $$ declare r text; begin
+  r := public.submit_waitlist_card('h1@example.com', 'A', 'Design', '{}', 5, 'Mitgründer:in', '', 'de', '', '', '', '', 'Alex');
+  if r <> 'ok' then raise exception 'Wunsch-Link nicht ok: %', r; end if;
+  r := public.submit_waitlist_card('h2@example.com', 'B', 'Design', '{}', 5, 'Mitgründer:in', '', 'de', '', '', '', '', 'alex');
+  if r <> 'taken' then raise exception 'doppelter Wunsch-Link nicht erkannt: %', r; end if;
+  r := public.submit_waitlist_card('h3@example.com', 'C', 'Design', '{}', 5, 'Mitgründer:in', '', 'de', '', '', '', '', 'admin');
+  if r <> 'invalid' then raise exception 'reservierter Name angenommen: %', r; end if;
+  r := public.submit_waitlist_card('h4@example.com', 'D', 'Design', '{}', 5, 'Mitgründer:in', '', 'de', '', '', '', '', '<script>');
+  if r <> 'invalid' then raise exception 'ungültiger Name angenommen: %', r; end if;
+  r := public.submit_waitlist_card('h1@example.com', 'A2', 'Design', '{}', 5, 'Mitgründer:in', '', 'de', '', '', '', '', 'alex');
+  if r <> 'ok' then raise exception 'eigener Link beim Aktualisieren abgelehnt: %', r; end if;
+  -- alte Aufrufform ohne Wunsch-Link
+  r := public.submit_waitlist_card('h5@example.com', 'E', 'Design', '{}', 5, 'Mitgründer:in', '', 'de');
+  if r <> '' then raise exception 'ohne Link sollte leer zurückkommen: %', r; end if;
+end $$;
+do $$ declare c1 text; c2 text; begin
+  c1 := public.get_referral_code('Werber@Example.com');
+  c2 := public.get_referral_code('werber@example.com');
+  if c1 !~ '^[a-z0-9]{8}$' or c1 <> c2 then raise exception 'Code falsch oder nicht stabil: % %', c1, c2; end if;
+  perform public.track_referral('neu1@example.com', c1);
+  perform public.track_referral('neu1@example.com', c1);          -- doppelt zählt nicht
+  perform public.track_referral('werber@example.com', c1);        -- sich selbst zählt nicht
+  perform public.track_referral('neu2@example.com', 'zzzzzzzz');  -- unbekannter Code
+  perform public.track_referral('neu3@example.com', c1);
+end $$;
+do $$ begin
+  perform count(*) from public.waitlist_referrals;
+  raise exception 'anon darf Einladungen nicht lesen';
+exception when insufficient_privilege then null; end $$;
+reset role;
+do $$ begin
+  if (select handle from public.waitlist_cards where email = 'h1@example.com') <> 'alex' then raise exception 'Link nicht gespeichert'; end if;
+  if (select handle from public.waitlist_cards where email = 'h2@example.com') is not null then raise exception 'vergebener Link übernommen'; end if;
+  if (select count(*) from public.waitlist_referrals) <> 2 then raise exception 'Einladungen falsch gezählt: %', (select count(*) from public.waitlist_referrals); end if;
+end $$;
+set role authenticated;
+set test.uid = '00000000-0000-0000-0000-000000000002';
+do $$ begin if (select count(*) from public.waitlist_referrals) <> 0 then raise exception 'Mitglied sieht Einladungen'; end if; end $$;
+set test.uid = '00000000-0000-0000-0000-000000000001';
+do $$ begin if (select count(*) from public.waitlist_referrals) <> 2 then raise exception 'Admin sieht Einladungen nicht'; end if; end $$;
+reset role;
 \echo 'waitlist cards ok'

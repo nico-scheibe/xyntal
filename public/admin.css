@@ -78,3 +78,5 @@
 @media(max-width:480px) { .panel-heading { flex-direction:column; } .admin-filters { padding:12px; } .admin-filters label { flex:1 1 40%; min-width:0; } .admin-filters .admin-search { flex-basis:100%; } .beta-application { padding:18px; } .admin-listbar { align-items:flex-start; } .admin-app .admin-summary { grid-template-columns:1fr; } }
 
 @media(max-width:600px) { .admin-app .nav-links:not(.open) [data-account] { display:none; } }
+.invites-admin { margin-top: 32px; display: grid; gap: 12px; }
+.invites-admin h3 small { font-weight: 400; color: var(--text-3, #8A8A95); }
