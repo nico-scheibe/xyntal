@@ -727,4 +727,233 @@
     }, { threshold: 0.2, rootMargin: "0px 0px -8% 0px" });
     reveal.forEach((el) => ro.observe(el));
   }
+
+  /* ---------------------------------------------------------------
+     Hero: Kartenstapel, der von selbst wischt
+     --------------------------------------------------------------- */
+  (() => {
+    const show = $("[data-hero-show]");
+    if (!show) return;
+    const deck = $("[data-hs-deck]", show);
+    const toast = $("[data-hs-toast]", show);
+    const toastName = $("[data-hs-toast-name]", show);
+    const slots = $$("[data-hs-slots] i", show);
+    const CARDS = [
+      { n: "Lukas Brandl", r: "Mobile-Entwicklung", s: ["Flutter", "Offline-Sync"], h: 10, m: 99, yes: true },
+      { n: "Jonas Wirth", r: "Brand-Design", s: ["Figma", "Branding"], h: 5, m: 86, yes: false },
+      { n: "Mira Schreiner", r: "Produktdesign", s: ["Figma", "Nutzertests"], h: 8, m: 99, yes: true },
+      { n: "Ana Petrović", r: "Data Engineer", s: ["Python", "dbt"], h: 4, m: 79, yes: false },
+      { n: "Felix Raab", r: "Backend & Daten", s: ["PostgreSQL", "Supabase"], h: 8, m: 99, yes: true },
+      { n: "David Neumann", r: "B2B-Vertrieb", s: ["Akquise", "CRM"], h: 10, m: 92, yes: false },
+      { n: "Katharina Bauer", r: "Vertrieb & Höfe", s: ["Direktvermarktung", "Netzwerk"], h: 6, m: 99, yes: true },
+    ];
+    let i = 0, filled = 0, timer = 0, running = false;
+    const card = (c, depth) => `<div class="hs-card" style="--d:${depth}">
+        <span class="hs-stamp hs-yes">Ins Team</span><span class="hs-stamp hs-no">Weiter</span>
+        <div class="hs-top"><span class="hs-av">${initials(c.n)}</span><div><b>${esc(c.n)}</b><span>${esc(c.r)}</span></div><em style="--p:${c.m}">${c.m}</em></div>
+        <div class="hs-chips">${c.s.map((x) => `<i>${esc(x)}</i>`).join("")}</div>
+        <div class="hs-meter"><span>Verfügbar</span><b>${c.h} Std./Woche</b></div>
+        <div class="hs-bar"><i style="width:${Math.min(100, c.h * 10)}%"></i></div>
+      </div>`;
+    const render = () => {
+      deck.innerHTML = [2, 1, 0].map((d) => card(CARDS[(i + d) % CARDS.length], d)).join("");
+    };
+    const step = () => {
+      const top = deck.lastElementChild;
+      const c = CARDS[i % CARDS.length];
+      top.classList.add(c.yes ? "go-yes" : "go-no");
+      if (c.yes) {
+        setTimeout(() => {
+          toastName.textContent = c.n.split(" ")[0];
+          toast.classList.remove("on"); void toast.offsetWidth; toast.classList.add("on");
+          if (filled >= slots.length) { slots.forEach((s) => { s.className = ""; s.textContent = ""; }); filled = 0; }
+          const slot = slots[filled++];
+          slot.textContent = initials(c.n); slot.className = "on";
+        }, 280);
+      }
+      setTimeout(() => { i++; render(); }, 620);
+    };
+    render();
+    if (still) { slots.slice(0, 2).forEach((s, k) => { s.className = "on"; s.textContent = initials(CARDS[k * 2].n); }); return; }
+    const start = () => { if (running) return; running = true; timer = setInterval(step, 2300); };
+    const stop = () => { running = false; clearInterval(timer); };
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver((es) => es.forEach((e) => (e.isIntersecting && !document.hidden ? start() : stop())), { threshold: 0.2 }).observe(show);
+    } else start();
+    document.addEventListener("visibilitychange", () => (document.hidden ? stop() : start()));
+  })();
+
+  /* ---------------------------------------------------------------
+     Profil-Builder: eigene Karte, live – bleibt nur in diesem Browser
+     --------------------------------------------------------------- */
+  (() => {
+    const form = $("[data-builder]");
+    if (!form) return;
+    const STORE = "xyntal-karte";
+    const t = (de) => (window.XyntalI18n ? window.XyntalI18n.t(de) : de);
+    const SUGGEST = {
+      "Entwicklung": ["Swift", "React", "Python", "Flutter", "Node.js"],
+      "Design": ["Figma", "UX", "Branding", "Prototyping"],
+      "Gründung": ["Strategie", "Finanzen", "Pitch", "Produkt"],
+      "Vertrieb": ["Akquise", "Verhandlung", "CRM", "B2B"],
+      "Marketing": ["TikTok", "Content", "SEO", "Ads"],
+      "Daten & KI": ["Python", "LLMs", "SQL", "Machine Learning"],
+    };
+    const el = {
+      name: $("#bf-name"), skill: $("#bf-skill"), hours: $("#bf-hours"), pitch: $("#bf-pitch"),
+      skills: $("[data-bf-skills]"), suggest: $("[data-bf-suggest]"), hoursOut: $("[data-bf-hours-out]"),
+      card: $("[data-my-card]"), mcInitial: $("[data-mc-initial]"), mcName: $("[data-mc-name]"), mcRole: $("[data-mc-role]"),
+      mcSkills: $("[data-mc-skills]"), mcHours: $("[data-mc-hours]"), mcBar: $("[data-mc-bar]"), mcPitch: $("[data-mc-pitch]"), mcLooking: $("[data-mc-looking]"),
+      status: $("[data-card-status]"), save: $("[data-card-save]"), saveLabel: $("[data-card-save-label]"), launch: $("[data-launch-card]"),
+    };
+    let data = { name: "", role: "Entwicklung", skills: [], hours: 8, looking: "Mitgründer:in", pitch: "", touched: false };
+    try { const saved = JSON.parse(localStorage.getItem(STORE) || "null"); if (saved && typeof saved === "object") data = { ...data, ...saved }; } catch { /* egal */ }
+
+    const radio = (name) => $(`input[name="${name}"]:checked`, form)?.value;
+    const persist = () => { if (!data.touched) return; try { localStorage.setItem(STORE, JSON.stringify(data)); } catch { /* egal */ } };
+
+    function renderChips() {
+      $$(".bf-chip", el.skills).forEach((c) => c.remove());
+      data.skills.forEach((s, k) => {
+        const b = document.createElement("button");
+        b.type = "button"; b.className = "bf-chip"; b.dataset.k = k;
+        b.innerHTML = `${esc(s)}<span aria-hidden="true">×</span><span class="sr-only"> entfernen</span>`;
+        el.skills.insertBefore(b, el.skill);
+      });
+      el.skill.hidden = data.skills.length >= 4;
+      const opts = (SUGGEST[data.role] || []).filter((s) => !data.skills.includes(s)).slice(0, 4);
+      el.suggest.innerHTML = data.skills.length >= 4 ? "" : opts.map((s) => `<button type="button" data-add="${esc(s)}">+ ${esc(s)}</button>`).join("");
+    }
+
+    function render() {
+      const name = data.name.trim() || "Alex";
+      el.mcName.textContent = name;
+      el.mcInitial.textContent = name[0].toUpperCase();
+      el.mcRole.textContent = data.role;
+      el.mcSkills.innerHTML = (data.skills.length ? data.skills : (SUGGEST[data.role] || []).slice(0, 2)).map((s) => `<li>${esc(s)}</li>`).join("");
+      el.mcSkills.classList.toggle("is-ghost", !data.skills.length);
+      el.mcHours.textContent = `${data.hours} Std./Woche`;
+      el.mcBar.style.width = `${Math.min(100, (data.hours / 20) * 100)}%`;
+      el.hoursOut.textContent = `${data.hours} Std.`;
+      el.mcPitch.textContent = data.pitch.trim() || "Ich baue eine App für Hofläden.";
+      el.mcPitch.classList.toggle("is-ghost", !data.pitch.trim());
+      el.mcLooking.textContent = data.looking;
+      el.card.classList.remove("pulse"); void el.card.offsetWidth; el.card.classList.add("pulse");
+      // kleine Vorschau in der Warteliste
+      if (el.launch && data.touched) {
+        el.launch.hidden = false;
+        el.launch.innerHTML = `<span class="mc-avatar">${esc(name[0].toUpperCase())}</span><span><b>${esc(name)}</b> · ${esc(data.role)}</span><span class="lc-ok">Karte bereit</span>`;
+      }
+    }
+
+    function sync() {
+      data.name = el.name.value; data.pitch = el.pitch.value; data.hours = Number(el.hours.value);
+      data.role = radio("role") || data.role; data.looking = radio("looking") || data.looking;
+      data.touched = true;
+      persist(); render();
+    }
+    function addSkill(raw) {
+      const s = raw.trim().replace(/\s+/g, " ").slice(0, 20);
+      if (!s || data.skills.length >= 4 || data.skills.some((x) => x.toLowerCase() === s.toLowerCase())) return;
+      data.skills.push(s); data.touched = true;
+      persist(); renderChips(); render();
+    }
+
+    // Formular mit gespeicherten Werten füllen
+    el.name.value = data.name; el.pitch.value = data.pitch; el.hours.value = data.hours;
+    $$(`input[name="role"]`, form).forEach((r) => { r.checked = r.value === data.role; });
+    $$(`input[name="looking"]`, form).forEach((r) => { r.checked = r.value === data.looking; });
+
+    form.addEventListener("input", (e) => { if (e.target !== el.skill) sync(); });
+    form.addEventListener("change", (e) => { if (e.target.type === "radio") { sync(); renderChips(); } });
+    form.addEventListener("submit", (e) => e.preventDefault());
+    el.skill.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addSkill(el.skill.value); el.skill.value = ""; }
+      else if (e.key === "Backspace" && !el.skill.value && data.skills.length) { data.skills.pop(); persist(); renderChips(); render(); }
+    });
+    el.skill.addEventListener("blur", () => { if (el.skill.value.trim()) { addSkill(el.skill.value); el.skill.value = ""; } });
+    el.skills.addEventListener("click", (e) => {
+      const chip = e.target.closest(".bf-chip");
+      if (chip) { data.skills.splice(Number(chip.dataset.k), 1); persist(); renderChips(); render(); el.skill.focus(); }
+      else if (e.target === el.skills) el.skill.focus();
+    });
+    el.suggest.addEventListener("click", (e) => { const b = e.target.closest("[data-add]"); if (b) addSkill(b.dataset.add); });
+
+    /* ---- Karte als Bild (PNG) zeichnen ---- */
+    const FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Arial, sans-serif';
+    function roundRect(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+    function wrap(g, text, maxW) {
+      const words = text.split(" "), lines = []; let line = "";
+      for (const w of words) { const test = line ? line + " " + w : w; if (g.measureText(test).width > maxW && line) { lines.push(line); line = w; } else line = test; }
+      if (line) lines.push(line); return lines.slice(0, 3);
+    }
+    function drawCard() {
+      const W = 1080, H = 1350, c = document.createElement("canvas");
+      c.width = W; c.height = H; const g = c.getContext("2d");
+      const grad = (x0, y0, x1, y1) => { const gr = g.createLinearGradient(x0, y0, x1, y1); gr.addColorStop(0, "#B95CFF"); gr.addColorStop(0.4, "#FF5FD2"); gr.addColorStop(0.7, "#5B8CFF"); gr.addColorStop(1, "#3FD8FF"); return gr; };
+      g.fillStyle = "#07070B"; g.fillRect(0, 0, W, H);
+      const glow = g.createRadialGradient(200, 120, 0, 200, 120, 900); glow.addColorStop(0, "rgba(185,92,255,0.45)"); glow.addColorStop(1, "rgba(185,92,255,0)"); g.fillStyle = glow; g.fillRect(0, 0, W, H);
+      const glow2 = g.createRadialGradient(W, H, 0, W, H, 800); glow2.addColorStop(0, "rgba(63,216,255,0.3)"); glow2.addColorStop(1, "rgba(63,216,255,0)"); g.fillStyle = glow2; g.fillRect(0, 0, W, H);
+      // Karte
+      const x = 90, y = 150, w = W - 180, h = 1000;
+      g.save(); roundRect(g, x, y, w, h, 64); g.fillStyle = "#14141C"; g.fill(); g.lineWidth = 4; g.strokeStyle = grad(x, y, x + w, y + h); g.stroke(); g.restore();
+      // Badge
+      g.font = `600 30px ${FONT}`; const badge = t("Early Access"); const bw = g.measureText(badge).width + 56;
+      roundRect(g, x + w - bw - 50, y + 50, bw, 58, 29); g.fillStyle = grad(x + w - bw, 0, x + w, 0); g.fill();
+      g.fillStyle = "#fff"; g.textBaseline = "middle"; g.fillText(badge, x + w - bw - 22, y + 80);
+      // Avatar
+      roundRect(g, x + 60, y + 150, 170, 170, 48); g.fillStyle = grad(x + 60, y + 150, x + 230, y + 320); g.fill();
+      const name = data.name.trim() || "Alex";
+      g.fillStyle = "#fff"; g.font = `700 84px ${FONT}`; g.textAlign = "center"; g.fillText(name[0].toUpperCase(), x + 145, y + 238); g.textAlign = "left";
+      g.font = `700 76px ${FONT}`; g.fillStyle = "#F5F5F7"; g.fillText(name, x + 270, y + 210);
+      g.font = `500 40px ${FONT}`; g.fillStyle = "#A1A1AA"; g.fillText(t(data.role), x + 272, y + 285);
+      // Skills
+      let cx = x + 60, cy = y + 400; g.font = `500 36px ${FONT}`;
+      for (const s of (data.skills.length ? data.skills : (SUGGEST[data.role] || []).slice(0, 2))) {
+        const sw = g.measureText(s).width + 56; if (cx + sw > x + w - 60) { cx = x + 60; cy += 84; }
+        roundRect(g, cx, cy, sw, 66, 33); g.fillStyle = "rgba(255,255,255,0.08)"; g.fill(); g.fillStyle = "#F5F5F7"; g.fillText(s, cx + 28, cy + 34); cx += sw + 16;
+      }
+      // Zeit
+      cy += 130; g.font = `500 34px ${FONT}`; g.fillStyle = "#A1A1AA"; g.fillText(t("Zeit"), x + 60, cy);
+      g.textAlign = "right"; g.fillStyle = "#F5F5F7"; g.font = `700 36px ${FONT}`; g.fillText(t(`${data.hours} Std./Woche`), x + w - 60, cy); g.textAlign = "left";
+      roundRect(g, x + 60, cy + 36, w - 120, 14, 7); g.fillStyle = "rgba(255,255,255,0.08)"; g.fill();
+      roundRect(g, x + 60, cy + 36, Math.max(30, (w - 120) * Math.min(1, data.hours / 20)), 14, 7); g.fillStyle = grad(x, 0, x + w, 0); g.fill();
+      // Satz
+      cy += 130; g.font = `600 44px ${FONT}`; g.fillStyle = "#F5F5F7";
+      for (const line of wrap(g, data.pitch.trim() || t("Ich baue eine App für Hofläden."), w - 120)) { g.fillText(line, x + 60, cy); cy += 58; }
+      // Sucht
+      cy += 40; g.font = `500 34px ${FONT}`; g.fillStyle = "#A1A1AA"; const sl = t("Sucht") + " "; g.fillText(sl, x + 60, cy);
+      g.font = `700 34px ${FONT}`; g.fillStyle = grad(x + 60, 0, x + 600, 0); g.fillText(t(data.looking), x + 60 + g.measureText(sl).width + 10, cy);
+      // Fuß
+      g.font = `700 44px ${FONT}`; g.fillStyle = "#F5F5F7"; g.fillText("xyntal", x + 120, y + h - 70);
+      g.save(); g.translate(x + 60, y + h - 92); g.scale(1.9, 1.9); g.strokeStyle = grad(0, 0, 24, 24); g.lineWidth = 2.8; g.lineCap = "round";
+      g.beginPath(); g.moveTo(5, 5); g.lineTo(19, 19); g.moveTo(19, 5); g.lineTo(13.7, 10.3); g.moveTo(10.3, 13.7); g.lineTo(5, 19); g.stroke(); g.restore();
+      g.textAlign = "right"; g.font = `500 34px ${FONT}`; g.fillStyle = "#A1A1AA"; g.fillText("xyntal.de", x + w - 60, y + h - 70); g.textAlign = "left";
+      g.font = `700 54px ${FONT}`; g.fillStyle = grad(0, 0, W, 0); g.textAlign = "center"; g.fillText("Stop swiping. Start building.", W / 2, H - 90);
+      return c;
+    }
+
+    el.save.addEventListener("click", async () => {
+      const canvas = drawCard();
+      const blob = await new Promise((r) => canvas.toBlob(r, "image/png"));
+      if (!blob) return;
+      const file = new File([blob], "meine-xyntal-karte.png", { type: "image/png" });
+      try {
+        if (navigator.canShare && navigator.canShare({ files: [file] }) && matchMedia("(pointer: coarse)").matches) {
+          await navigator.share({ files: [file], title: "Meine Xyntal-Karte", text: "Stop swiping. Start building. – xyntal.de" });
+          el.status.textContent = t("Geteilt!");
+          return;
+        }
+      } catch (err) { if (err && err.name === "AbortError") return; }
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob); a.download = "meine-xyntal-karte.png";
+      document.body.append(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+      el.status.textContent = t("Bild gespeichert: meine-xyntal-karte.png");
+    });
+    $("[data-card-join]").addEventListener("click", () => setTimeout(() => $("#wl-email")?.focus({ preventScroll: true }), still ? 0 : 600));
+
+    renderChips(); render();
+    document.addEventListener("xyntal:lang", render);
+  })();
 })();

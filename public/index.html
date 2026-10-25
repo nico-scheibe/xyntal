@@ -22,8 +22,8 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="stylesheet" href="fonts/fonts.css?v=31">
-  <link rel="stylesheet" href="home.css?v=1">
-  <script src="i18n-en.js?v=36" defer></script>
+  <link rel="stylesheet" href="home.css?v=2">
+  <script src="i18n-en.js?v=37" defer></script>
   <script src="i18n.js?v=31" defer></script>
 </head>
 <body class="home">
@@ -42,6 +42,7 @@
     </button>
     <nav id="hauptnavigation" class="mainnav" aria-label="Hauptnavigation">
       <a href="#entdecken">Demo</a>
+      <a href="#karte">Deine Karte</a>
       <a href="#warum">Warum Xyntal</a>
       <a class="btn btn-primary btn-sm" href="#warteliste">Auf die Warteliste</a>
     </nav>
@@ -52,20 +53,29 @@
 
   <!-- Hero -->
   <section class="hero" aria-labelledby="hero-title">
-    <div class="shell hero-inner">
-      <p class="pill"><span class="pill-dot" aria-hidden="true"></span>Early Access startet bald</p>
-      <h1 id="hero-title" class="hero-title">
-        <span class="ht-dim">Stop swiping.</span>
-        <span class="ht-grad">Start building.</span>
-      </h1>
-      <p class="hero-lead">Große Ideen beginnen mit den richtigen Menschen. Xyntal bringt Entwickler, Designer, Gründer und alle zusammen, die etwas aufbauen wollen – und zeigt dir, wer zu deinem Vorhaben passt und warum.</p>
-      <div class="hero-actions">
-        <a class="btn btn-primary btn-lg" href="#warteliste">Auf die Warteliste</a>
-        <a class="btn btn-glass btn-lg" href="#entdecken">Demo ansehen <span aria-hidden="true">↓</span></a>
+    <div class="shell hero-grid">
+      <div class="hero-inner">
+        <p class="pill"><span class="pill-dot" aria-hidden="true"></span>Early Access startet bald</p>
+        <h1 id="hero-title" class="hero-title">
+          <span class="ht-dim">Stop swiping.</span>
+          <span class="ht-grad">Start building.</span>
+        </h1>
+        <p class="hero-lead">Große Ideen beginnen mit den richtigen Menschen. Xyntal bringt Entwickler, Designer, Gründer und alle zusammen, die etwas aufbauen wollen – und zeigt dir, wer zu deinem Vorhaben passt und warum.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary btn-lg" href="#warteliste">Auf die Warteliste</a>
+          <a class="btn btn-glass btn-lg" href="#karte">Deine Karte bauen</a>
+        </div>
       </div>
-      <ul class="hero-tags" aria-label="Wer sich auf Xyntal findet">
-        <li>Entwicklung</li><li>Design</li><li>Gründung</li><li>Vertrieb</li><li>Marketing</li><li>Daten &amp; KI</li>
-      </ul>
+
+      <div class="hero-show" aria-hidden="true" data-hero-show>
+        <div class="hs-glow"></div>
+        <div class="hs-toast" data-hs-toast><span class="hs-toast-dot"></span><b>Match!</b> <span data-hs-toast-name></span></div>
+        <div class="hs-deck" data-hs-deck></div>
+        <div class="hs-team">
+          <span class="hs-team-label">Team Feldnah</span>
+          <span class="hs-slots" data-hs-slots><i></i><i></i><i></i><i></i></span>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -190,12 +200,93 @@
     </div>
   </section>
 
+  <!-- Profil-Builder -->
+  <section class="builder" id="karte" aria-labelledby="builder-title">
+    <div class="shell">
+      <header class="section-head">
+        <p class="eyebrow">In 30 Sekunden</p>
+        <h2 id="builder-title" class="h2">Bau deine <span class="grad-soft">Xyntal-Karte.</span></h2>
+        <p class="section-lead">So sehen dich andere, wenn Xyntal startet. Speicher sie als Bild, teil sie – und sichere dir deinen Platz auf der Warteliste.</p>
+      </header>
+
+      <div class="builder-grid">
+        <form class="builder-form glass" data-builder novalidate>
+          <div class="bf-field">
+            <label for="bf-name">Dein Vorname</label>
+            <input id="bf-name" name="name" type="text" maxlength="24" autocomplete="given-name" placeholder="z. B. Alex">
+          </div>
+          <fieldset class="bf-field">
+            <legend>Was machst du?</legend>
+            <div class="bf-chips" data-bf-roles>
+              <label><input type="radio" name="role" value="Entwicklung" checked><span>Entwicklung</span></label>
+              <label><input type="radio" name="role" value="Design"><span>Design</span></label>
+              <label><input type="radio" name="role" value="Gründung"><span>Gründung</span></label>
+              <label><input type="radio" name="role" value="Vertrieb"><span>Vertrieb</span></label>
+              <label><input type="radio" name="role" value="Marketing"><span>Marketing</span></label>
+              <label><input type="radio" name="role" value="Daten & KI"><span>Daten &amp; KI</span></label>
+            </div>
+          </fieldset>
+          <div class="bf-field">
+            <label for="bf-skill">Deine Skills <span class="bf-opt">bis zu 4, mit Enter hinzufügen</span></label>
+            <div class="bf-skills" data-bf-skills>
+              <input id="bf-skill" type="text" maxlength="20" placeholder="z. B. Swift" enterkeyhint="done" autocomplete="off">
+            </div>
+            <div class="bf-suggest" data-bf-suggest></div>
+          </div>
+          <div class="bf-field">
+            <label for="bf-hours">Zeit pro Woche <b data-bf-hours-out>8 Std.</b></label>
+            <input id="bf-hours" name="hours" type="range" min="2" max="40" step="1" value="8">
+          </div>
+          <fieldset class="bf-field">
+            <legend>Ich suche …</legend>
+            <div class="bf-chips" data-bf-looking>
+              <label><input type="radio" name="looking" value="Mitgründer:in" checked><span>Mitgründer:in</span></label>
+              <label><input type="radio" name="looking" value="ein Team für meine Idee"><span>Team für meine Idee</span></label>
+              <label><input type="radio" name="looking" value="ein Projekt zum Mitbauen"><span>Projekt zum Mitbauen</span></label>
+            </div>
+          </fieldset>
+          <div class="bf-field">
+            <label for="bf-pitch">Dein Satz <span class="bf-opt">woran du arbeitest oder was dich antreibt</span></label>
+            <input id="bf-pitch" name="pitch" type="text" maxlength="90" placeholder="z. B. Ich baue eine App für Hofläden.">
+          </div>
+        </form>
+
+        <div class="builder-preview">
+          <div class="bp-stage">
+            <article class="my-card" data-my-card>
+              <span class="mc-badge">Early Access</span>
+              <div class="mc-top">
+                <span class="mc-avatar" data-mc-initial>A</span>
+                <div>
+                  <h3 class="mc-name" data-mc-name>Alex</h3>
+                  <p class="mc-role" data-mc-role>Entwicklung</p>
+                </div>
+              </div>
+              <ul class="mc-skills" data-mc-skills></ul>
+              <div class="mc-row"><span>Zeit</span><b data-mc-hours>8 Std./Woche</b></div>
+              <div class="mc-bar"><i data-mc-bar></i></div>
+              <p class="mc-pitch" data-mc-pitch>Ich baue eine App für Hofläden.</p>
+              <p class="mc-looking"><span>Sucht</span> <b data-mc-looking>Mitgründer:in</b></p>
+              <div class="mc-foot"><span class="mc-logo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14M19 5l-5.3 5.3M10.3 13.7L5 19" stroke="url(#bm-g)"/></svg>xyntal</span><span>xyntal.de</span></div>
+            </article>
+          </div>
+          <div class="bp-actions">
+            <button type="button" class="btn btn-glass" data-card-save><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg><span data-card-save-label>Als Bild speichern</span></button>
+            <a class="btn btn-primary" href="#warteliste" data-card-join>Mit dieser Karte auf die Warteliste</a>
+          </div>
+          <p class="hint bp-note" data-card-status role="status" aria-live="polite">Deine Karte bleibt nur in diesem Browser. Nichts wird verschickt.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- Warteliste -->
   <section class="launch" id="warteliste" aria-labelledby="launch-title">
     <div class="shell launch-inner">
       <p class="eyebrow">Early Access</p>
       <h2 id="launch-title" class="h2 launch-title">Sei dabei, <span class="grad-soft">wenn es losgeht.</span></h2>
       <p class="section-lead">Trag dich ein und du erfährst als Erstes, wenn Xyntal startet – und bekommst als einer der Ersten Zugang.</p>
+      <div class="launch-card" data-launch-card hidden></div>
       <p class="launch-count" data-waitlist-count hidden><b data-waitlist-number>0</b> <span>Leute warten schon auf den Start.</span></p>
 
       <form class="waitlist-form" data-waitlist novalidate>
@@ -235,6 +326,6 @@
   </div>
 </footer>
 
-<script src="landing.js?v=36" defer></script>
+<script src="landing.js?v=37" defer></script>
 </body>
 </html>
