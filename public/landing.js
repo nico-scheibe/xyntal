@@ -670,6 +670,26 @@
      Warteliste: Brevo mit Double-Opt-in, Eingabe bleibt auf der Seite
      --------------------------------------------------------------- */
   const WAITLIST_URL = "https://67406864.sibforms.com/serve/MUIFAP_vKT3wGvb_oCMmNCfxk9r4kS47ziUcgIjOp7ibD-hlikkWAA_l-Wo4pedNGsTJEc-yCsM1TIj41aX0dzDASKRcDC_ZxNn9envMBdU_zWmo7HHDj-FKtvyCz63RuFRQHleImiTRDarw8DCC1sKXSfU6F-RoppW0XftCBPzMdF-ch3vutYeokCLF5_Fzn5uooz6XScdhsGQS2w==?isAjax=1";
+  // Karte zusammen mit der Anmeldung speichern (Supabase, nur für den Admin lesbar).
+  // Fehlt die Tabelle noch, bleibt es still – die Anmeldung selbst hat ja geklappt.
+  async function sendCard(email, card) {
+    if (!card || !card.touched) return false;
+    const SUPA = "https://rralgrlujoupprwlvoyo.supabase.co";
+    const KEY = "sb_publishable_YxSngs1ePBoxqI6f26GRww_2_kNaLfh";
+    try {
+      const res = await fetch(`${SUPA}/rest/v1/rpc/submit_waitlist_card`, {
+        method: "POST",
+        headers: { apikey: KEY, Authorization: `Bearer ${KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          p_email: email, p_name: (card.name || "").trim().slice(0, 24) || "Anonym", p_role: card.role,
+          p_skills: (card.skills || []).slice(0, 4), p_hours: Math.max(1, Math.min(40, Number(card.hours) || 1)),
+          p_looking: card.looking, p_pitch: (card.pitch || "").trim().slice(0, 120),
+          p_lang: document.documentElement.lang === "en" ? "en" : "de",
+        }),
+      });
+      return res.ok;
+    } catch { return false; }
+  }
   const SENT = "Danke. Bitte prüfe dein Postfach und bestätige deine E-Mail-Adresse. Erst danach stehst du auf der Warteliste.";
   $$("[data-waitlist]").forEach((form) => {
     const status = $(".waitlist-status", form);
@@ -699,7 +719,11 @@
         const res = await fetch(WAITLIST_URL, { method: "POST", headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" }, body });
         const data = await res.json().catch(() => null);
         if (!res.ok || !data || data.success !== true) throw new Error("waitlist");
-        setStatus(SENT, "ok");
+        let note = "";
+        if (form.SHARE_CARD?.checked && window.XyntalCard) {
+          note = (await sendCard(email, window.XyntalCard())) ? " Deine Karte ist gespeichert." : "";
+        }
+        setStatus(SENT + note, "ok");
         form.reset();
       } catch {
         setStatus("Das hat gerade nicht geklappt. Bitte versuch es noch einmal.", "error");
@@ -810,7 +834,11 @@
     try { const saved = JSON.parse(localStorage.getItem(STORE) || "null"); if (saved && typeof saved === "object") data = { ...data, ...saved }; } catch { /* egal */ }
 
     const radio = (name) => $(`input[name="${name}"]:checked`, form)?.value;
-    const persist = () => { if (!data.touched) return; try { localStorage.setItem(STORE, JSON.stringify(data)); } catch { /* egal */ } };
+    const persist = () => {
+      if (!data.touched) return;
+      const box = $("[data-share-card]"); if (box) box.hidden = false;
+      try { localStorage.setItem(STORE, JSON.stringify(data)); } catch { /* egal */ }
+    };
 
     function renderChips() {
       $$(".bf-chip", el.skills).forEach((c) => c.remove());
@@ -953,7 +981,12 @@
     });
     $("[data-card-join]").addEventListener("click", () => setTimeout(() => $("#wl-email")?.focus({ preventScroll: true }), still ? 0 : 600));
 
-    renderChips(); render();
+    window.XyntalCard = () => ({ ...data });
+    const shareBox = $("[data-share-card]");
+    const showShare = () => { if (shareBox) shareBox.hidden = !data.touched; };
+    form.addEventListener("input", showShare);
+    form.addEventListener("change", showShare);
+    renderChips(); render(); showShare();
     document.addEventListener("xyntal:lang", render);
   })();
 })();

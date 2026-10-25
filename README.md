@@ -27,6 +27,7 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 | `supabase/007_newsletter_double_opt_in.sql` | Anmeldung schreibt nicht mehr direkt in den Newsletter; **noch auszuführen** (siehe `UEBERGABE-NEWSLETTER.md`) |
 | `supabase/008_listing_likes.sql` | Reaktionen auf Börsen-Einträge |
 | `supabase/009_projects.sql` | Projekte mit offenen Rollen und „Ich wäre dabei“-Meldungen; **noch auszuführen** |
+| `supabase/011_waitlist_cards.sql` | Xyntal-Karten von der Warteliste, nur für Admins lesbar; **noch auszuführen** |
 | `supabase/010_beta_applications.sql` | Beta-Programm: Bewerbungen ohne Konto (nur über `apply_for_beta`), lesen und bewerten nur Admins; **noch auszuführen** |
 | `ANMELDUNG-EINRICHTEN.md` | Anleitung: Brevo-SMTP einrichten; Google, Apple, LinkedIn und SMS einschalten |
 
@@ -248,3 +249,20 @@ Er markiert die beiden bewusst aufrufbaren `SECURITY DEFINER`-RPCs als Warnungen
 prüft den angemeldeten Nutzer und dessen Freigabe. Diese Aufrufrechte sind für
 die beschriebenen Funktionen erforderlich; die Berechtigungen und Schutzfälle
 sind durch die SQL-Tests abgedeckt.
+
+## Xyntal-Karten (Karten-Builder auf der Startseite)
+
+Besucher bauen auf der Startseite ihre Karte (Vorname, Bereich, Skills, Zeit, was sie suchen, ein Satz).
+Die Karte bleibt im Browser (`localStorage` „xyntal-karte“) und lässt sich als Bild speichern oder teilen.
+Wer sich in die Warteliste einträgt und „Meine Karte mitschicken“ anhakt, landet zusätzlich in Supabase.
+
+Einrichten: `supabase/011_waitlist_cards.sql` einmal komplett im Supabase SQL Editor ausführen (läuft als Transaktion).
+Bis dahin funktioniert die Warteliste normal; die Karte wird nur nicht gespeichert.
+
+- Gäste können Karten nur über `submit_waitlist_card()` speichern, nicht lesen.
+- Eine Karte lässt sich nur 30 Minuten nach dem ersten Eintrag noch ändern, damit niemand fremde Karten überschreibt.
+- Im Admin-Bereich gibt es den Reiter **Karten**: Filter nach Bereich bzw. „Haben eine Idee“ / „Wollen mitbauen“,
+  Stand (Neu, Kontaktiert, Gematcht), eine Notiz pro Karte (speichert beim Verlassen des Feldes) und CSV-Export.
+
+SQL-Regressionstest in einer **leeren, separaten lokalen PostgreSQL-Datenbank** mit den Rollen `anon` und `authenticated`:
+`psql -v ON_ERROR_STOP=1 -d TESTDATENBANK -f tests/waitlist_cards.sql`. Erwartete letzte Ausgabe: `waitlist cards ok`.

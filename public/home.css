@@ -677,3 +677,6 @@ html { scrollbar-color: #2A2A33 transparent; }
 /* wegfliegende Karten dürfen die Seite nicht verbreitern (sonst zoomt iOS heraus) */
 .hero, .demo-section { overflow-x: hidden; }
 @supports (overflow: clip) { .hero, .demo-section { overflow-x: clip; overflow-y: visible; } html { overflow-x: clip; } }
+.share-check { padding: 12px 14px; border-radius: 16px; background: rgba(185, 92, 255, 0.08); border: 1px solid rgba(185, 92, 255, 0.25); }
+.share-check b { color: var(--text); font-weight: 600; }
+.share-check input { top: 12px; left: 14px; }
