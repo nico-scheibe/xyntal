@@ -1,6 +1,6 @@
 # Xyntal – Website
 
-Website des Gründer-Clubs Xyntal in Regensburg mit Mitgliederprofilen, Newsletter und Treffen mit Zusagen.
+Website von Xyntal – der Plattform, auf der Entwickler, Designer, Gründer und alle, die etwas aufbauen wollen, ihr Team finden und gemeinsam Projekte starten. Mit Mitgliederprofilen, Projekten mit offenen Rollen, Community, Newsletter und Treffen.
 Daten und Login laufen über **Supabase** (Projekt „Xyntal“, Organisation „noxi“).
 
 ## Lokal ansehen

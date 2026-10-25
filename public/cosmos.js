@@ -227,7 +227,7 @@
     community: "community", boerse: "boerse", market: "boerse", beta: "beta", events: "events", mitglieder: "mitglieder", members: "mitglieder",
   };
   const T = {
-    boot: { de: "xyntal os v2.0 · regensburg-knoten", en: "xyntal os v2.0 · regensburg node" },
+    boot: { de: "xyntal os v2.0 · build-netzwerk", en: "xyntal os v2.0 · build network" },
     b1: { de: "netzwerk", en: "network" }, b2: { de: "profile", en: "profiles" }, b3: { de: "matching-engine", en: "matching engine" },
     online: { de: "online", en: "online" }, ready: { de: "bereit", en: "ready" },
     hint: { de: "Tippe <span class=\"c-hi\">help</span> für Befehle – oder probier einfach was.", en: "Type <span class=\"c-hi\">help</span> for commands – or just try something." },
@@ -239,11 +239,11 @@
       en: [["about", "what is xyntal?"], ["join", "start a project / become a member"], ["demo", "open the interactive demo"], ["projects", "browse open roles"], ["community", "go to the community"], ["beta", "beta program"], ["login", "sign in"], ["whoami", "who are you?"], ["nico", "who is behind this?"], ["lang de", "auf deutsch wechseln"], ["clear", "clear the console"]],
     },
     about: {
-      de: "Xyntal ist ein Gründer-Club aus Regensburg. Du beschreibst deine Idee und wer dir fehlt – Xyntal zeigt dir Menschen, die passen, und warum.\n<span class=\"c-pk\">Stop swiping. Start building.</span>",
-      en: "Xyntal is a founders' club from Regensburg. Describe your idea and who you're missing – Xyntal shows you people who fit, and why.\n<span class=\"c-pk\">Stop swiping. Start building.</span>",
+      de: "Xyntal ist die Plattform, auf der Entwickler, Designer, Gründer und alle, die etwas aufbauen wollen, ihr Team finden. Du beschreibst deine Idee und wer dir fehlt – Xyntal zeigt dir Menschen, die passen, und warum.\n<span class=\"c-pk\">Stop swiping. Start building.</span>",
+      en: "Xyntal is the platform where developers, designers, founders and everyone who wants to build something find their team. Describe your idea and who you're missing – Xyntal shows you people who fit, and why.\n<span class=\"c-pk\">Stop swiping. Start building.</span>",
     },
     whoami: { de: "gast@xyntal – noch ohne Konto. Tippe <span class=\"c-hi\">join</span>, um das zu ändern.", en: "guest@xyntal – no account yet. Type <span class=\"c-hi\">join</span> to change that." },
-    nico: { de: "Nico Scheibe · Gründer · Regensburg\nbaut Xyntal, damit Gründer und Leute, die gründen wollen, ihr Team finden.", en: "Nico Scheibe · founder · Regensburg\nbuilding Xyntal so founders and future founders can find their team." },
+    nico: { de: "Nico Scheibe · Gründer von Xyntal\nbaut Xyntal, damit Gründer und Leute, die gründen wollen, ihr Team finden.", en: "Nico Scheibe · founder of Xyntal\nbuilding Xyntal so founders and future founders can find their team." },
     open: { de: "> öffne", en: "> opening" },
     sudo: { de: "Zugriff verweigert. Hier wird gebaut, nicht gehackt. ;)", en: "Permission denied. We build here, we don't hack. ;)" },
     hack: { de: "Initialisiere … nein. Aber du hast den richtigen Spirit. Tippe <span class=\"c-hi\">join</span>.", en: "Initialising … nope. But you've got the right spirit. Type <span class=\"c-hi\">join</span>." },
