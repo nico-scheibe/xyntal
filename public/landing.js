@@ -644,7 +644,7 @@
   })();
 
   /* ---------------------------------------------------------------
-     Zähler der Warteliste: echte Zahl vom Server (Brevo), erst ab 10 Einträgen sichtbar
+     Zähler der Warteliste: echte Zahl vom Server (Brevo), auch bei einem einzelnen Eintrag sichtbar
      --------------------------------------------------------------- */
   (async () => {
     const box = $("[data-waitlist-count]");
@@ -653,17 +653,10 @@
       const res = await fetch("/api/waitlist-count", { headers: { Accept: "application/json" } });
       if (!res.ok) return;
       const { count } = await res.json();
-      if (!Number.isFinite(count) || count < 10) return;
+      if (!Number.isSafeInteger(count) || count < 0) return;
       const num = $("[data-waitlist-number]", box);
+      num.textContent = count.toLocaleString("de-DE");
       box.hidden = false;
-      if (still) { num.textContent = count.toLocaleString("de-DE"); return; }
-      const t0 = performance.now();
-      const tick = (now) => {
-        const k = Math.min(1, (now - t0) / 1200);
-        num.textContent = Math.round(count * (1 - Math.pow(1 - k, 3))).toLocaleString("de-DE");
-        if (k < 1) requestAnimationFrame(tick);
-      };
-      requestAnimationFrame(tick);
     } catch { /* ohne Zahl bleibt der Bereich einfach weg */ }
   })();
 

@@ -477,6 +477,8 @@ window.XYNTAL_EN = {
   "Sei dabei,": "Be there",
   "wenn es losgeht.": "when it launches.",
   "Trag dich ein und du erfährst als Erstes, wenn Xyntal startet – und bekommst als einer der Ersten Zugang.": "Sign up and you'll be the first to know when Xyntal launches – and among the first to get access.",
+  "Auf der Warteliste": "On the waitlist",
+  "Bestätigt. Bereit für den Start.": "Confirmed. Ready for launch.",
   "Leute warten schon auf den Start.": "people are already waiting for launch.",
   "Kostenlos. Kein Spam – nur eine Mail zum Start.": "Free. No spam – just one email at launch.",
 

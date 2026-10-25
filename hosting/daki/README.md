@@ -34,7 +34,7 @@ Initial Cloudflare activation and certificate issuance can take time after the n
 ## Zähler der Warteliste
 
 `/api/waitlist-count` liefert die Anzahl der bestätigten Kontakte der Brevo-Warteliste
-(zwischengespeichert für 10 Minuten). Die Startseite zeigt die Zahl erst ab 10 Einträgen.
+(zwischengespeichert für 10 Minuten). Die Startseite zeigt jede gültige Anzahl ab 0 an, auch einen einzelnen Eintrag.
 Einrichtung in Daki (Ordner `/home/container/xyntal`, beide Dateien nie committen):
 
 - `.brevo-key`: ein Brevo-API-Schlüssel (Brevo → SMTP & API → API-Schlüssel)
