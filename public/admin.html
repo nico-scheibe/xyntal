@@ -204,7 +204,7 @@
         <thead><tr><th>Person</th><th>Skills & Satz</th><th>Sucht</th><th>Stand</th><th>Aktionen</th></tr></thead>
         <tbody>${shown.map((c) => `
           <tr>
-            <td><b>${esc(c.name)}</b><br><small>${esc(c.role)} · ${c.hours} Std./Woche</small><br><small><a class="text-link" href="mailto:${esc(c.email)}">${esc(c.email)}</a></small><br><small>${fmt(c.created_at)}${c.lang === "en" ? " · EN" : ""}</small></td>
+            <td><b>${esc(c.name)}</b><br><small>${esc(c.role)}${c.level ? ` · ${esc(c.level)}` : ""} · ${c.hours} Std./Woche</small><br>${c.city || c.mode ? `<small>${esc([c.city, c.mode].filter(Boolean).join(" · "))}</small><br>` : ""}${/^https?:\/\//.test(c.link || "") ? `<small><a class="text-link" href="${esc(c.link)}" target="_blank" rel="noopener noreferrer nofollow">${esc(c.link.replace(/^https?:\/\/(www\.)?/, "").slice(0, 40))}</a></small><br>` : ""}<small><a class="text-link" href="mailto:${esc(c.email)}">${esc(c.email)}</a></small><br><small>${fmt(c.created_at)}${c.lang === "en" ? " · EN" : ""}</small></td>
             <td>${(c.skills || []).map((x) => `<span class="skill-tag">${esc(x)}</span>`).join(" ")}${c.pitch ? `<p class="beta-why-text">${esc(c.pitch)}</p>` : ""}</td>
             <td><small>${esc(c.looking)}</small></td>
             <td><span class="status-pill status-${c.status === "neu" ? "pending" : c.status === "gematcht" ? "approved" : "neu"}">${CARD_STATUS[c.status]}</span>
@@ -355,8 +355,8 @@
     if (!link || !lastData) return;
     e.preventDefault();
     if (link.dataset.csv === "cards") {
-      downloadCsv("xyntal-karten.csv", ["Name", "E-Mail", "Bereich", "Skills", "Std./Woche", "Sucht", "Satz", "Stand", "Notiz", "Sprache", "Eingegangen"],
-        lastData.cards.map((c) => [c.name, c.email, c.role, (c.skills || []).join(", "), c.hours, c.looking, c.pitch, CARD_STATUS[c.status], c.note, c.lang, fmt(c.created_at)]));
+      downloadCsv("xyntal-karten.csv", ["Name", "E-Mail", "Bereich", "Erfahrung", "Skills", "Std./Woche", "Stadt", "Arbeitsweise", "Sucht", "Satz", "Link", "Stand", "Notiz", "Sprache", "Eingegangen"],
+        lastData.cards.map((c) => [c.name, c.email, c.role, c.level || "", (c.skills || []).join(", "), c.hours, c.city || "", c.mode || "", c.looking, c.pitch, c.link || "", CARD_STATUS[c.status], c.note, c.lang, fmt(c.created_at)]));
     } else if (link.dataset.csv === "beta") {
       downloadCsv("xyntal-beta-bewerbungen.csv", ["Name", "E-Mail", "Schwerpunkt", "Zeit", "Arbeitet an", "Warum", "Link", "Stand", "Eingegangen"],
         lastData.beta.map((b) => [b.name, b.email, BETA_FOCUS[b.focus] || b.focus, BETA_HOURS[b.hours] || b.hours, b.project, b.why, b.link, BETA_STATUS[b.status], fmt(b.created_at)]));

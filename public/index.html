@@ -22,8 +22,8 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="stylesheet" href="fonts/fonts.css?v=31">
-  <link rel="stylesheet" href="home.css?v=6">
-  <script src="i18n-en.js?v=40" defer></script>
+  <link rel="stylesheet" href="home.css?v=7">
+  <script src="i18n-en.js?v=41" defer></script>
   <script src="i18n.js?v=31" defer></script>
 </head>
 <body class="home">
@@ -204,70 +204,176 @@
   <section class="builder" id="karte" aria-labelledby="builder-title">
     <div class="shell">
       <header class="section-head">
-        <p class="eyebrow">In 30 Sekunden</p>
+        <p class="eyebrow">In einer Minute</p>
         <h2 id="builder-title" class="h2">Bau deine <span class="grad-soft">Xyntal-Karte.</span></h2>
         <p class="section-lead">So sehen dich andere, wenn Xyntal startet. Speicher sie als Bild, teil sie – und sichere dir deinen Platz auf der Warteliste.</p>
       </header>
 
       <div class="builder-grid">
         <form class="builder-form glass" data-builder novalidate>
-          <div class="bf-field">
-            <label for="bf-name">Dein Vorname</label>
-            <input id="bf-name" name="name" type="text" maxlength="24" autocomplete="given-name" placeholder="z. B. Alex">
-          </div>
-          <fieldset class="bf-field">
-            <legend>Was machst du?</legend>
-            <div class="bf-chips" data-bf-roles>
-              <label><input type="radio" name="role" value="Entwicklung" checked><span>Entwicklung</span></label>
-              <label><input type="radio" name="role" value="Design"><span>Design</span></label>
-              <label><input type="radio" name="role" value="Gründung"><span>Gründung</span></label>
-              <label><input type="radio" name="role" value="Vertrieb"><span>Vertrieb</span></label>
-              <label><input type="radio" name="role" value="Marketing"><span>Marketing</span></label>
-              <label><input type="radio" name="role" value="Daten & KI"><span>Daten &amp; KI</span></label>
+          <!-- Über dich -->
+          <div class="bf-group">
+            <p class="bf-step"><span>1</span> Über dich</p>
+            <div class="bf-photo">
+              <button type="button" class="bf-photo-pick" data-bf-photo-pick aria-describedby="bf-photo-note">
+                <span class="bf-photo-img" data-bf-photo-preview aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></span>
+                <span class="bf-photo-text"><b data-bf-photo-label>Foto hinzufügen</b><small id="bf-photo-note">Bleibt auf deinem Gerät – wird nicht hochgeladen.</small></span>
+              </button>
+              <button type="button" class="bf-photo-remove" data-bf-photo-remove hidden>Entfernen</button>
+              <input type="file" accept="image/*" data-bf-photo hidden>
             </div>
-          </fieldset>
-          <div class="bf-field">
-            <label for="bf-skill">Deine Skills <span class="bf-opt">bis zu 4, mit Enter hinzufügen</span></label>
-            <div class="bf-skills" data-bf-skills>
-              <input id="bf-skill" type="text" maxlength="20" placeholder="z. B. Swift" enterkeyhint="done" autocomplete="off">
+            <div class="bf-two">
+              <div class="bf-field">
+                <label for="bf-name">Vorname</label>
+                <input id="bf-name" name="name" type="text" maxlength="24" autocomplete="given-name" placeholder="z. B. Alex">
+              </div>
+              <div class="bf-field">
+                <label for="bf-city">Stadt <span class="bf-opt">optional</span></label>
+                <input id="bf-city" name="city" type="text" maxlength="40" autocomplete="address-level2" placeholder="z. B. Regensburg">
+              </div>
             </div>
-            <div class="bf-suggest" data-bf-suggest></div>
           </div>
-          <div class="bf-field">
-            <label for="bf-hours">Zeit pro Woche <b data-bf-hours-out>8 Std.</b></label>
-            <input id="bf-hours" name="hours" type="range" min="2" max="40" step="1" value="8">
-          </div>
-          <fieldset class="bf-field">
-            <legend>Ich suche …</legend>
-            <div class="bf-chips" data-bf-looking>
-              <label><input type="radio" name="looking" value="Mitgründer:in" checked><span>Mitgründer:in</span></label>
-              <label><input type="radio" name="looking" value="ein Team für meine Idee"><span>Team für meine Idee</span></label>
-              <label><input type="radio" name="looking" value="ein Projekt zum Mitbauen"><span>Projekt zum Mitbauen</span></label>
+
+          <!-- Was du kannst -->
+          <div class="bf-group">
+            <p class="bf-step"><span>2</span> Was du kannst</p>
+            <fieldset class="bf-field">
+              <legend>Dein Bereich</legend>
+              <div class="bf-chips" data-bf-roles>
+                <label><input type="radio" name="role" value="Entwicklung" checked><span>Entwicklung</span></label>
+                <label><input type="radio" name="role" value="Design"><span>Design</span></label>
+                <label><input type="radio" name="role" value="Gründung"><span>Gründung</span></label>
+                <label><input type="radio" name="role" value="Vertrieb"><span>Vertrieb</span></label>
+                <label><input type="radio" name="role" value="Marketing"><span>Marketing</span></label>
+                <label><input type="radio" name="role" value="Daten & KI"><span>Daten &amp; KI</span></label>
+              </div>
+            </fieldset>
+            <fieldset class="bf-field">
+              <legend>Erfahrung</legend>
+              <div class="bf-chips bf-seg" data-bf-level>
+                <label><input type="radio" name="level" value="Einsteiger"><span>Einsteiger</span></label>
+                <label><input type="radio" name="level" value="Fortgeschritten" checked><span>Fortgeschritten</span></label>
+                <label><input type="radio" name="level" value="Profi"><span>Profi</span></label>
+              </div>
+            </fieldset>
+            <div class="bf-field">
+              <label for="bf-skill">Skills <span class="bf-opt">bis zu 4, mit Enter hinzufügen</span></label>
+              <div class="bf-skills" data-bf-skills data-no-i18n>
+                <input id="bf-skill" type="text" maxlength="20" placeholder="z. B. Swift" enterkeyhint="done" autocomplete="off">
+              </div>
+              <div class="bf-suggest" data-bf-suggest></div>
             </div>
-          </fieldset>
-          <div class="bf-field">
-            <label for="bf-pitch">Dein Satz <span class="bf-opt">woran du arbeitest oder was dich antreibt</span></label>
-            <input id="bf-pitch" name="pitch" type="text" maxlength="90" placeholder="z. B. Ich baue eine KI-App für Musiker:innen.">
+          </div>
+
+          <!-- Wie du arbeitest -->
+          <div class="bf-group">
+            <p class="bf-step"><span>3</span> Wie du arbeitest</p>
+            <div class="bf-field">
+              <label for="bf-hours">Zeit pro Woche <b data-bf-hours-out>8 Std.</b></label>
+              <input id="bf-hours" name="hours" type="range" min="2" max="40" step="1" value="8">
+            </div>
+            <fieldset class="bf-field">
+              <legend>Arbeitsweise</legend>
+              <div class="bf-chips bf-seg" data-bf-mode>
+                <label><input type="radio" name="mode" value="Remote"><span>Remote</span></label>
+                <label><input type="radio" name="mode" value="Hybrid" checked><span>Hybrid</span></label>
+                <label><input type="radio" name="mode" value="Vor Ort"><span>Vor Ort</span></label>
+              </div>
+            </fieldset>
+            <fieldset class="bf-field">
+              <legend>Ich suche …</legend>
+              <div class="bf-chips" data-bf-looking>
+                <label><input type="radio" name="looking" value="Mitgründer:in" checked><span>Mitgründer:in</span></label>
+                <label><input type="radio" name="looking" value="ein Team für meine Idee"><span>Team für meine Idee</span></label>
+                <label><input type="radio" name="looking" value="ein Projekt zum Mitbauen"><span>Projekt zum Mitbauen</span></label>
+              </div>
+            </fieldset>
+          </div>
+
+          <!-- Dein Auftritt -->
+          <div class="bf-group">
+            <p class="bf-step"><span>4</span> Dein Auftritt</p>
+            <div class="bf-field">
+              <label for="bf-pitch">Dein Satz <span class="bf-opt">woran du arbeitest oder was dich antreibt</span></label>
+              <input id="bf-pitch" name="pitch" type="text" maxlength="90" placeholder="z. B. Ich baue eine KI-App für Musiker:innen.">
+            </div>
+            <div class="bf-field">
+              <label for="bf-link">Link <span class="bf-opt">optional · LinkedIn, GitHub oder Portfolio</span></label>
+              <input id="bf-link" name="link" type="text" inputmode="url" maxlength="120" autocomplete="url" autocapitalize="off" spellcheck="false" placeholder="z. B. github.com/alex">
+            </div>
+          </div>
+          <!-- Gestaltung -->
+          <div class="bf-group">
+            <p class="bf-step"><span>5</span> Gestaltung</p>
+            <fieldset class="bf-field">
+              <legend>Farbe</legend>
+              <div class="bf-themes" data-bf-theme>
+                <label><input type="radio" name="theme" value="aurora" checked><span class="th-aurora"></span><span class="sr-only">Aurora</span></label>
+                <label><input type="radio" name="theme" value="sunset"><span class="th-sunset"></span><span class="sr-only">Sunset</span></label>
+                <label><input type="radio" name="theme" value="ocean"><span class="th-ocean"></span><span class="sr-only">Ocean</span></label>
+                <label><input type="radio" name="theme" value="mono"><span class="th-mono"></span><span class="sr-only">Mono</span></label>
+                <label><input type="radio" name="theme" value="custom"><span class="th-custom" data-bf-custom-swatch></span><span class="sr-only">Eigene Farben</span></label>
+              </div>
+              <div class="bf-custom" data-bf-custom hidden>
+                <label><input type="color" name="c1" value="#FF5FD2"><span>Farbe 1</span></label>
+                <label><input type="color" name="c2" value="#3FD8FF"><span>Farbe 2</span></label>
+              </div>
+            </fieldset>
+            <div class="bf-two">
+              <fieldset class="bf-field">
+                <legend>Hintergrund</legend>
+                <div class="bf-chips bf-seg" data-bf-surface>
+                  <label><input type="radio" name="surface" value="dark" checked><span>Dunkel</span></label>
+                  <label><input type="radio" name="surface" value="light"><span>Hell</span></label>
+                </div>
+              </fieldset>
+              <fieldset class="bf-field">
+                <legend>Foto</legend>
+                <div class="bf-chips bf-seg" data-bf-shape>
+                  <label><input type="radio" name="shape" value="circle" checked><span>Rund</span></label>
+                  <label><input type="radio" name="shape" value="rounded"><span>Eckig</span></label>
+                </div>
+              </fieldset>
+            </div>
+            <fieldset class="bf-field">
+              <legend>Layout</legend>
+              <div class="bf-chips bf-seg" data-bf-layout>
+                <label><input type="radio" name="layout" value="left" checked><span>Foto links</span></label>
+                <label><input type="radio" name="layout" value="center"><span>Zentriert</span></label>
+              </div>
+            </fieldset>
+            <div class="bf-field">
+              <p class="bf-label" id="bf-order-head">Anordnung <span class="bf-opt">ein- und ausblenden, mit den Pfeilen verschieben</span></p>
+              <ol class="bf-order" data-bf-order aria-labelledby="bf-order-head"></ol>
+            </div>
           </div>
         </form>
 
         <div class="builder-preview">
           <div class="bp-stage">
-            <article class="my-card" data-my-card>
-              <span class="mc-badge">Early Access</span>
-              <div class="mc-top">
-                <span class="mc-avatar" data-mc-initial>A</span>
-                <div>
-                  <h3 class="mc-name" data-mc-name>Alex</h3>
-                  <p class="mc-role" data-mc-role>Entwicklung</p>
+            <article class="my-card" data-my-card data-theme="aurora" data-surface="dark" data-layout="left" data-shape="circle">
+              <div class="mc-cover" aria-hidden="true">
+                <span class="mc-mark"><svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5l-5.3 5.3M10.3 13.7L5 19"/></svg>xyntal</span>
+                <span class="mc-badge">Early Access</span>
+              </div>
+              <div class="mc-head">
+                <span class="mc-avatar" data-mc-avatar><span data-mc-initial>A</span></span>
+              </div>
+              <div class="mc-id">
+                <h3 class="mc-name" data-mc-name data-no-i18n>Alex</h3>
+                <p class="mc-role"><span data-mc-role>Entwicklung</span> · <span data-mc-level>Fortgeschritten</span></p>
+              </div>
+              <div class="mc-blocks" data-mc-blocks>
+                <p class="mc-place" data-block="place"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg><span data-mc-place>Hybrid</span></p>
+                <p class="mc-pitch" data-block="pitch" data-mc-pitch>Ich baue eine KI-App für Musiker:innen.</p>
+                <p class="mc-looking" data-block="looking"><span>Sucht</span> <b data-mc-looking>Mitgründer:in</b></p>
+                <ul class="mc-skills" data-block="skills" data-mc-skills data-no-i18n></ul>
+                <div class="mc-stats" data-block="stats">
+                  <div><span>Zeit</span><b data-mc-hours>8 Std./Woche</b><i class="mc-bar"><i data-mc-bar></i></i></div>
+                  <div><span>Erfahrung</span><b data-mc-level-2>Fortgeschritten</b><i class="mc-dots" data-mc-dots><i></i><i></i><i></i></i></div>
                 </div>
               </div>
-              <ul class="mc-skills" data-mc-skills></ul>
-              <div class="mc-row"><span>Zeit</span><b data-mc-hours>8 Std./Woche</b></div>
-              <div class="mc-bar"><i data-mc-bar></i></div>
-              <p class="mc-pitch" data-mc-pitch>Ich baue eine KI-App für Musiker:innen.</p>
-              <p class="mc-looking"><span>Sucht</span> <b data-mc-looking>Mitgründer:in</b></p>
-              <div class="mc-foot"><span class="mc-logo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14M19 5l-5.3 5.3M10.3 13.7L5 19" stroke="url(#bm-g)"/></svg>xyntal</span><span>xyntal.de</span></div>
+              <div class="mc-foot"><span class="mc-link" data-mc-link data-no-i18n hidden></span><span>xyntal.de</span></div>
             </article>
           </div>
           <div class="bp-actions">
@@ -340,6 +446,6 @@
   </div>
 </footer>
 
-<script src="landing.js?v=42" defer></script>
+<script src="landing.js?v=43" defer></script>
 </body>
 </html>

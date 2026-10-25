@@ -1,4 +1,4 @@
--- Regressionstest für supabase/011_waitlist_cards.sql
+-- Regressionstest für supabase/011_waitlist_cards.sql und 012_waitlist_cards_more.sql
 -- Nur in einer LEEREN, SEPARATEN lokalen PostgreSQL-Datenbank mit den Rollen anon und authenticated ausführen,
 -- aus dem Repository-Ordner:  psql -v ON_ERROR_STOP=1 -d TESTDATENBANK -f tests/waitlist_cards.sql
 -- Simuliert auth.uid() und eine vereinfachte profiles-Tabelle. Niemals im produktiven Projekt ausführen.
@@ -65,9 +65,34 @@ set test.uid = '00000000-0000-0000-0000-000000000002';
 do $$ begin if (select count(*) from public.waitlist_cards) <> 0 then raise exception 'Mitglied sieht Karten'; end if; end $$;
 set test.uid = '00000000-0000-0000-0000-000000000001';
 do $$ begin if (select count(*) from public.waitlist_cards) <> 1 then raise exception 'Admin sieht Karten nicht'; end if; end $$;
-update public.waitlist_cards set status = 'kontaktiert', note = 'passt zu Feldnah';
+update public.waitlist_cards set status = 'kontaktiert', note = 'passt zu Loopr';
 do $$ begin if (select status from public.waitlist_cards) <> 'kontaktiert' then raise exception 'Admin-Update fehlgeschlagen'; end if; end $$;
 delete from public.waitlist_cards;
 reset role;
 do $$ begin if (select count(*) from public.waitlist_cards) <> 0 then raise exception 'Admin-Löschen fehlgeschlagen'; end if; end $$;
+-- 8) Migration 012: Stadt, Arbeitsweise, Erfahrung, Link
+\i supabase/012_waitlist_cards_more.sql
+set role anon;
+-- alte Aufrufform (8 Parameter) funktioniert weiter
+select public.submit_waitlist_card('alt@example.com', 'Alt', 'Design', '{}', 5, 'Mitgründer:in', '', 'de');
+-- neue Felder
+select public.submit_waitlist_card('neu@example.com', 'Neu', 'Entwicklung', array['Swift'], 10, 'Mitgründer:in', 'Hi', 'de',
+  ' Regensburg ', 'Remote', 'Profi', 'https://github.com/neu');
+-- ungültiger Link wird verworfen, nicht abgelehnt
+select public.submit_waitlist_card('link@example.com', 'L', 'Design', '{}', 5, 'Mitgründer:in', '', 'de', '', 'Hybrid', 'Einsteiger', 'javascript:alert(1)');
+do $$ begin
+  perform public.submit_waitlist_card('x2@y.de', 'A', 'Design', '{}', 5, 'Mitgründer:in', '', 'de', '', 'Mond', '', '');
+  raise exception 'ungültige Arbeitsweise angenommen';
+exception when check_violation then null; end $$;
+do $$ begin
+  perform public.submit_waitlist_card('x3@y.de', 'A', 'Design', '{}', 5, 'Mitgründer:in', '', 'de', '', '', 'Gott', '');
+  raise exception 'ungültige Erfahrung angenommen';
+exception when check_violation then null; end $$;
+reset role;
+do $$ declare r record; begin
+  select * into r from public.waitlist_cards where email = 'neu@example.com';
+  if r.city <> 'Regensburg' or r.mode <> 'Remote' or r.level <> 'Profi' or r.link <> 'https://github.com/neu' then raise exception 'neue Felder falsch: % % % %', r.city, r.mode, r.level, r.link; end if;
+  if (select link from public.waitlist_cards where email = 'link@example.com') <> '' then raise exception 'unsicherer Link gespeichert'; end if;
+  if (select mode from public.waitlist_cards where email = 'alt@example.com') <> '' then raise exception 'Standardwert fehlt'; end if;
+end $$;
 \echo 'waitlist cards ok'

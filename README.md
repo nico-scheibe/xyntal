@@ -27,7 +27,8 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 | `supabase/007_newsletter_double_opt_in.sql` | Anmeldung schreibt nicht mehr direkt in den Newsletter; **noch auszuführen** (siehe `UEBERGABE-NEWSLETTER.md`) |
 | `supabase/008_listing_likes.sql` | Reaktionen auf Börsen-Einträge |
 | `supabase/009_projects.sql` | Projekte mit offenen Rollen und „Ich wäre dabei“-Meldungen; **noch auszuführen** |
-| `supabase/011_waitlist_cards.sql` | Xyntal-Karten von der Warteliste, nur für Admins lesbar; **noch auszuführen** |
+| `supabase/011_waitlist_cards.sql` | Xyntal-Karten von der Warteliste, nur für Admins lesbar; ausgeführt am 25.10.2026 |
+| `supabase/012_waitlist_cards_more.sql` | Karten: Stadt, Arbeitsweise, Erfahrung, Link (Foto und Gestaltung bleiben im Browser) |
 | `supabase/010_beta_applications.sql` | Beta-Programm: Bewerbungen ohne Konto (nur über `apply_for_beta`), lesen und bewerten nur Admins; **noch auszuführen** |
 | `ANMELDUNG-EINRICHTEN.md` | Anleitung: Brevo-SMTP einrichten; Google, Apple, LinkedIn und SMS einschalten |
 
@@ -256,7 +257,8 @@ Besucher bauen auf der Startseite ihre Karte (Vorname, Bereich, Skills, Zeit, wa
 Die Karte bleibt im Browser (`localStorage` „xyntal-karte“) und lässt sich als Bild speichern oder teilen.
 Wer sich in die Warteliste einträgt und „Meine Karte mitschicken“ anhakt, landet zusätzlich in Supabase.
 
-Einrichten: `supabase/011_waitlist_cards.sql` einmal komplett im Supabase SQL Editor ausführen (läuft als Transaktion).
+Einrichten: `supabase/011_waitlist_cards.sql` und danach `supabase/012_waitlist_cards_more.sql` je einmal komplett im Supabase SQL Editor ausführen (laufen als Transaktion).
+Die Karte ist frei gestaltbar (Farben, hell/dunkel, Layout, Fotoform, Reihenfolge und Sichtbarkeit der Blöcke) und kann ein Foto enthalten. Foto und Gestaltung bleiben im Browser; mitgeschickt werden nur die Angaben.
 Bis dahin funktioniert die Warteliste normal; die Karte wird nur nicht gespeichert.
 
 - Gäste können Karten nur über `submit_waitlist_card()` speichern, nicht lesen.
