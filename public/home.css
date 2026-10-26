@@ -854,3 +854,10 @@ a.bf-photo-pick { text-decoration: none; }
 .share-check { padding: 12px 14px; border-radius: 16px; background: rgba(185, 92, 255, 0.08); border: 1px solid rgba(185, 92, 255, 0.25); }
 .share-check b { color: var(--text); font-weight: 600; }
 .share-check input { top: 12px; left: 14px; }
+
+/* /meine-karte eingebettet im Profilbereich (Registerkarte „Xyntal-Karte“) */
+html.mk-embed, html.mk-embed body { background: transparent !important; min-height: 0 !important; overflow: visible; }
+.mk-embed .topbar, .mk-embed .footer, .mk-embed .aurora, .mk-embed .builder .section-head { display: none !important; }
+.mk-embed .builder { padding: 0 0 8px; }
+.mk-embed .builder > .shell { padding-left: 0; padding-right: 0; max-width: none; }
+@media (min-width: 960px) { .mk-embed .builder-grid { grid-template-columns: minmax(0, 1fr); } }

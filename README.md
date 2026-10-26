@@ -33,6 +33,7 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 | `supabase/014_admin_actions.sql` | Admins können Einladungen gutschreiben (nur `credited_at`) |
 | `supabase/015_public_cards.sql` | Wunsch-Links öffnen: `xyntal.de/name` zeigt die Karte nur mit Zustimmung (`is_public`), sonst „reserviert“; `get_public_card` liefert nur öffentliche Felder |
 | `supabase/016_account_cards.sql` | Karte mit Konto verknüpfen: nach Login mit derselben (bestätigten) E-Mail Karte laden/ändern (`get_my_card`, `save_my_card`); öffentliches Profil zeigt zusätzlich Über mich, Angebot, Suche, Links und Profilbild |
+| `supabase/017_security.sql` | Sicherheit im Profil: 2FA (Authenticator-App) wird in allen Tabellen, Admin-Rechten und beim Löschen durchgesetzt; `verify_my_password` prüft das aktuelle Passwort (max. 5 Versuche / 15 Min.) |
 | `supabase/010_beta_applications.sql` | Beta-Programm: Bewerbungen ohne Konto (nur über `apply_for_beta`), lesen und bewerten nur Admins; **noch auszuführen** |
 | `ANMELDUNG-EINRICHTEN.md` | Anleitung: Brevo-SMTP einrichten; Google, Apple, LinkedIn und SMS einschalten |
 
@@ -53,7 +54,8 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 | `/nachrichten` | Direktnachrichten zwischen Mitgliedern, mit Live-Updates |
 | `/mitglieder` | Freigeschaltete Profile (Gäste sehen nur öffentliche) |
 | `/name` | Öffentliche Karte unter dem Wunsch-Link (`u.html`); vor einem Daki-Neustart leitet `404.html` dorthin weiter |
-| `/meine-karte` | Eigene Xyntal-Karte ansehen und gestalten, Wunsch-Link und Sichtbarkeit ändern (Login nötig) |
+| `/meine-karte` | Eigene Xyntal-Karte ansehen und gestalten, Wunsch-Link und Sichtbarkeit ändern (Login nötig; eingebettet im Profil mit `?embed=1`) |
+| `/profil` | Registerkarten Profil (Bio, Bild, Links) · Xyntal-Karte · Sicherheit (E-Mail, Passwort, 2FA, Anmeldemethoden, überall abmelden, Konto löschen) |
 | `/admin` | Mitglieder freischalten, frühere Anmeldungen & Newsletter (CSV), Link zur Treffen-Verwaltung |
 
 ## Design und Sprachen

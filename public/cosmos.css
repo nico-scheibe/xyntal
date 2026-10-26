@@ -112,3 +112,42 @@ input, select, textarea { font-family: var(--f-text); font-size: 16px; border-ra
   h1 em, h2 em, .grad-text { background: none; color: LinkText; }
 }
 @media (prefers-reduced-motion: reduce) { .caret { animation: none; } }
+
+/* Profilbereich: Registerkarten Profil · Xyntal-Karte · Sicherheit */
+.ptabs {
+  display: flex; gap: 4px; padding: 4px; border: 1px solid var(--border); border-radius: 999px;
+  background: rgba(16, 16, 22, 0.94); position: sticky; top: 72px; z-index: 5; box-shadow: 0 12px 30px -18px rgba(0, 0, 0, 0.9);
+  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); overflow-x: auto; scrollbar-width: none;
+}
+.ptabs::-webkit-scrollbar { display: none; }
+.ptabs button {
+  flex: 1 0 auto; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font: 600 14px/1 var(--f-text); color: var(--text-2); background: transparent; border: 0; border-radius: 999px;
+  padding: 11px 16px; cursor: pointer; white-space: nowrap; transition: color .2s, background .2s;
+}
+.ptabs button svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.ptabs button:hover { color: var(--text); }
+.ptabs button[aria-selected="true"] { color: #fff; background: var(--grad-btn); box-shadow: 0 8px 22px -12px rgba(236, 72, 153, 0.8); }
+@media (max-width: 420px) { .ptabs button { padding: 10px 12px; gap: 6px; font-size: 13px; } .ptabs button svg { width: 15px; height: 15px; } }
+.ptab-panel { display: grid; gap: 24px; min-width: 0; }
+.ptab-panel[hidden] { display: none; }
+.card-form h2, .sec-box h2 { margin: 0; font-size: 19px; letter-spacing: -0.02em; }
+.sec-row { justify-content: flex-start; gap: 10px; }
+.sec-current { margin: 0; color: var(--text-2); }
+.sec-current b { color: var(--text); font-weight: 600; word-break: break-all; }
+.sec-box .notice { margin: 0; }
+.sec-state { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; color: var(--text-2); }
+.sec-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; letter-spacing: .02em; color: var(--text-2); background: rgba(255, 255, 255, 0.07); border: 1px solid var(--border-2); }
+.sec-badge::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; opacity: .7; }
+.sec-badge.on { color: #34D399; background: rgba(52, 211, 153, 0.12); border-color: rgba(52, 211, 153, 0.35); }
+.sec-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.sec-list li { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 12px 14px; border-radius: 14px; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border); }
+.sec-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--grad); flex: none; }
+.mfa-setup { display: grid; gap: 16px; padding-top: 6px; border-top: 1px solid var(--border); }
+.sec-steps { margin: 0; padding-left: 20px; color: var(--text-2); display: grid; gap: 4px; }
+.mfa-qr { justify-self: start; padding: 12px; background: #fff; border-radius: 16px; line-height: 0; }
+.mfa-qr img { width: 176px; height: 176px; display: block; }
+.mfa-secret { font-family: var(--mono); font-size: 13px; color: var(--text); background: rgba(255, 255, 255, 0.07); padding: 2px 6px; border-radius: 6px; word-break: break-all; }
+.sec-danger { border-color: rgba(248, 113, 113, 0.28) !important; }
+.sec-danger h2 { color: #FCA5A5; }
+.xcard-frame { width: 100%; min-height: 480px; border: 0; display: block; background: transparent; color-scheme: dark; }

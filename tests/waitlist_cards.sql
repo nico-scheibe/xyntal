@@ -1,4 +1,4 @@
--- Regressionstest für supabase/011_waitlist_cards.sql, 012_waitlist_cards_more.sql 013_waitlist_perks.sql 014_admin_actions.sql 015_public_cards.sql und 016_account_cards.sql
+-- Regressionstest für supabase/011_waitlist_cards.sql, 012_waitlist_cards_more.sql 013_waitlist_perks.sql 014_admin_actions.sql 015_public_cards.sql, 016_account_cards.sql und 017_security.sql
 -- Nur in einer LEEREN, SEPARATEN lokalen PostgreSQL-Datenbank mit den Rollen anon und authenticated ausführen,
 -- aus dem Repository-Ordner:  psql -v ON_ERROR_STOP=1 -d TESTDATENBANK -f tests/waitlist_cards.sql
 -- Simuliert auth.uid() und eine vereinfachte profiles-Tabelle. Niemals im produktiven Projekt ausführen.
@@ -188,11 +188,18 @@ do $$ declare j jsonb; r text; begin
 end $$;
 reset role;
 -- 12) Migration 016: Karte gehört zum Konto
-create table if not exists auth.users (id uuid primary key, email text, email_confirmed_at timestamptz);
+create table if not exists auth.users (id uuid primary key, email text, email_confirmed_at timestamptz, encrypted_password text);
+-- wie in Supabase: JWT-Angaben (aal) und eingerichtete 2FA-Faktoren
+create or replace function auth.jwt() returns jsonb language sql stable as $$ select jsonb_build_object('aal', coalesce(nullif(current_setting('test.aal', true), ''), 'aal1')) $$;
+grant execute on function auth.jwt() to anon, authenticated;
+create table if not exists auth.mfa_factors (id uuid primary key default gen_random_uuid(), user_id uuid not null, status text not null);
+create schema if not exists extensions;
+create extension if not exists pgcrypto schema extensions;
 insert into auth.users values
   ('00000000-0000-0000-0000-000000000011', 'Pub@Example.com', now()),      -- hat Warteliste-Karte „pia“
   ('00000000-0000-0000-0000-000000000012', 'neu-konto@example.com', now()), -- noch keine Karte
   ('00000000-0000-0000-0000-000000000013', 'old@example.com', null);      -- E-Mail nicht bestätigt
+update auth.users set encrypted_password = extensions.crypt('richtig-123', extensions.gen_salt('bf')) where id = '00000000-0000-0000-0000-000000000011';
 alter table public.profiles add column if not exists headline text not null default '', add column if not exists about text not null default '',
   add column if not exists offer text not null default '', add column if not exists seek text not null default '',
   add column if not exists linkedin text not null default '', add column if not exists instagram text not null default '',
@@ -261,4 +268,49 @@ do $$ declare j jsonb; begin
   if (public.get_public_card('neu-konto')->>'reserved') is distinct from 'true' then raise exception 'nicht öffentliche Karte sichtbar'; end if;
 end $$;
 reset role;
+-- 13) Migration 017: 2FA durchsetzen und Passwort prüfen
+grant select on public.profiles to authenticated;
+alter table public.profiles enable row level security;
+drop policy if exists "Profile lesen" on public.profiles;
+create policy "Profile lesen" on public.profiles for select to authenticated using (true);
+\i supabase/017_security.sql
+grant select, insert, delete on public.password_checks to authenticated;  -- wie in Supabase: Rechte da, RLS entscheidet
+-- Pia richtet 2FA ein (bestätigter Faktor)
+insert into auth.mfa_factors (user_id, status) values ('00000000-0000-0000-0000-000000000011', 'verified'), ('00000000-0000-0000-0000-000000000012', 'unverified');
+set role authenticated;
+set test.uid = '00000000-0000-0000-0000-000000000011';
+set test.aal = 'aal1';
+do $$ begin
+  if (select count(*) from public.profiles) <> 0 then raise exception 'ohne 2FA-Code Profile lesbar'; end if;
+  begin perform public.get_my_card(); raise exception 'ohne 2FA-Code Karte lesbar'; exception when insufficient_privilege then null; end;
+  begin perform public.verify_my_password('richtig-123'); raise exception 'ohne 2FA-Code Passwort prüfbar'; exception when insufficient_privilege then null; end;
+  begin perform public.delete_my_account(); raise exception 'ohne 2FA-Code Konto löschbar'; exception when raise_exception then
+    if sqlerrm not like '%2FA%' then raise; end if; end;
+end $$;
+set test.aal = 'aal2';
+do $$ begin
+  if (select count(*) from public.profiles) = 0 then raise exception 'mit 2FA-Code keine Profile'; end if;
+  if public.get_my_card() is null then raise exception 'mit 2FA-Code keine Karte'; end if;
+  if public.verify_my_password('falsch') <> 'wrong' then raise exception 'falsches Passwort akzeptiert'; end if;
+  if public.verify_my_password('richtig-123') <> 'ok' then raise exception 'richtiges Passwort abgelehnt'; end if;
+  for i in 1..5 loop perform public.verify_my_password('falsch'); end loop;
+  if public.verify_my_password('richtig-123') <> 'limit' then raise exception 'keine Begrenzung nach 5 Fehlversuchen'; end if;
+end $$;
+-- Konto ohne bestätigten Faktor: aal1 reicht, kein Passwort -> 'none'
+set test.uid = '00000000-0000-0000-0000-000000000012';
+set test.aal = 'aal1';
+do $$ begin
+  if (select count(*) from public.profiles) = 0 then raise exception 'ohne 2FA blockiert'; end if;
+  if public.verify_my_password('x') <> 'none' then raise exception 'Konto ohne Passwort falsch erkannt'; end if;
+  if (select count(*) from public.password_checks) <> 0 then raise exception 'Fehlversuche lesbar'; end if;
+end $$;
+reset role;
+set test.uid = '00000000-0000-0000-0000-000000000001';
+do $$ begin
+  if not public.is_admin() then raise exception 'Admin ohne 2FA verliert Rechte'; end if;
+  insert into auth.mfa_factors (user_id, status) values ('00000000-0000-0000-0000-000000000001', 'verified');
+  if public.is_admin() then raise exception 'Admin mit 2FA ohne Code hat Rechte'; end if;
+  perform set_config('test.aal', 'aal2', true);
+  if not public.is_admin() then raise exception 'Admin mit 2FA-Code ohne Rechte'; end if;
+end $$;
 \echo 'waitlist cards ok'

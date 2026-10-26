@@ -15,6 +15,15 @@ returns text language sql stable security definer set search_path = '' as $$
 $$;
 revoke execute on function public.my_confirmed_email() from public, anon;
 
+-- 2FA: true, wenn die Sitzung den zweiten Faktor bestätigt hat – oder das Konto keine 2FA nutzt
+create or replace function public.mfa_ok()
+returns boolean language sql stable security definer set search_path = '' as $$
+  select auth.uid() is null
+      or coalesce(auth.jwt() ->> 'aal', 'aal1') = 'aal2'
+      or not exists (select 1 from auth.mfa_factors where user_id = auth.uid() and status = 'verified');
+$$;
+grant execute on function public.mfa_ok() to anon, authenticated;
+
 -- Eigene Karte (übernimmt beim ersten Aufruf die Warteliste-Karte mit derselben E-Mail)
 create or replace function public.get_my_card()
 returns jsonb language plpgsql security definer set search_path = '' as $$
@@ -24,6 +33,7 @@ declare
   c       public.waitlist_cards;
 begin
   if v_uid is null then raise exception 'Bitte melde dich an.' using errcode = '42501'; end if;
+  if not public.mfa_ok() then raise exception 'Bitte bestätige zuerst deinen 2FA-Code.' using errcode = '42501'; end if;
   select * into c from public.waitlist_cards where user_id = v_uid;
   if c.id is null and v_email is not null then
     update public.waitlist_cards set user_id = v_uid where email = v_email and user_id is null returning * into c;

@@ -48,6 +48,7 @@
         <p>${t("Nutze am besten dieselbe E-Mail-Adresse wie bei der Warteliste – dann ist deine Karte schon da.")}</p>
         <div class="mk-actions"><a class="btn btn-primary" href="login?next=meine-karte">${t("Einloggen")}</a><a class="btn btn-glass" href="mitglied-werden">${t("Konto anlegen")}</a></div>`);
     }
+    if (await mfaPending()) return mfaRedirect();
     if (!session.user.email || !session.user.email_confirmed_at) {
       return showGate(`<h2>${t("Bitte bestätige zuerst deine E-Mail-Adresse.")}</h2><p>${t("Deine Karte ist mit deiner E-Mail-Adresse verknüpft. Schau in dein Postfach und klick auf den Bestätigungslink.")}</p>`);
     }
@@ -96,6 +97,8 @@
       else if (res === "invalid") say(t("Gespeichert – dieser Wunsch-Link ist nicht verfügbar. Dein bisheriger Link bleibt."), "error");
       else if (fresh && fresh.is_public) say(t(`Gespeichert. Dein Profil ist unter xyntal.de/${fresh.handle} zu sehen.`), "ok");
       else say(t("Gespeichert."), "ok");
+      // eingebettet im Profilbereich: Übersicht oben aktualisieren
+      if (window.parent !== window) window.parent.postMessage({ type: "xyntal-card-saved" }, location.origin);
     } catch (err) {
       say(friendlyError(err), "error");
     } finally { saveBtn.disabled = false; }

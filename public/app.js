@@ -24,6 +24,10 @@ function friendlyError(err) {
     [/same.?password|different from the old/i, "Das neue Passwort muss sich vom alten unterscheiden."],
     [/failed to fetch|network/i, "Keine Verbindung. Bitte prüfe dein Internet."],
     [/check constraint/i, "Ein Feld ist zu lang oder ungültig."],
+    [/invalid totp|totp.*invalid|mfa.*(verification|challenge).*(failed|invalid)/i, "Der Code stimmt nicht. Nimm den aktuellen Code aus deiner Authenticator-App."],
+    [/aal2|insufficient.*(aal|assurance)|2FA-Code/i, "Bitte bestätige zuerst deinen 2FA-Code."],
+    [/reauthenticat|nonce/i, "Zur Sicherheit brauchen wir einen Bestätigungscode – schau in dein Postfach."],
+    [/email.*(exists|taken|registered)|already.*email/i, "Diese E-Mail-Adresse wird schon von einem anderen Konto genutzt."],
     [/token has expired|invalid.*(otp|token)|otp.*(expired|invalid)/i, "Der Code ist falsch oder abgelaufen. Fordere einen neuen an."],
     [/unsupported phone provider|phone.*provider.*(disabled|not enabled)/i, "Die Anmeldung per SMS ist noch nicht eingerichtet."],
     [/provider is not enabled|unsupported provider/i, "Diese Anmeldung ist noch nicht eingerichtet."],
@@ -103,10 +107,26 @@ async function submitWith(form, statusEl, fn) {
   }
 }
 
+// 2FA: Ist angemeldet, braucht aber noch den Code aus der Authenticator-App?
+async function mfaPending() {
+  try {
+    const { data } = await sb.auth.mfa.getAuthenticatorAssuranceLevel();
+    return !!data && data.nextLevel === "aal2" && data.currentLevel !== "aal2";
+  } catch { return false; }
+}
+// Zur Code-Abfrage und danach zurück auf diese Seite
+function mfaRedirect() {
+  const page = location.pathname.replace(/^\/+/, "").replace(/\.html$/, "");
+  if (page === "login") return Promise.resolve(null);  // dort wird der Code abgefragt
+  location.replace(`login?mfa=1&next=${encodeURIComponent(/^[a-z-]{2,30}$/.test(page) ? page : "profil")}`);
+  return new Promise(() => {});
+}
+
 // Eingeloggter Nutzer + Profil (oder null)
 async function currentMember() {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) return null;
+  if (await mfaPending()) return mfaRedirect();
   const { data: profile } = await sb.from("profiles").select("*").eq("id", session.user.id).maybeSingle();
   return profile ? { ...profile, email: session.user.email } : null;
 }
