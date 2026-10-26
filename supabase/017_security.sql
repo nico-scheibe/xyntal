@@ -3,6 +3,40 @@
 -- Wer 2FA eingerichtet hat, kommt ohne Code nur bis zur Code-Abfrage – auch nicht direkt über die API.
 begin;
 
+-- 0) Aus 016 (ältere 016-Fassungen hatten das noch nicht): 2FA-Prüfung, auch beim Lesen der eigenen Karte
+-- 2FA: true, wenn die Sitzung den zweiten Faktor bestätigt hat – oder das Konto keine 2FA nutzt
+create or replace function public.mfa_ok()
+returns boolean language sql stable security definer set search_path = '' as $$
+  select auth.uid() is null
+      or coalesce(auth.jwt() ->> 'aal', 'aal1') = 'aal2'
+      or not exists (select 1 from auth.mfa_factors where user_id = auth.uid() and status = 'verified');
+$$;
+grant execute on function public.mfa_ok() to anon, authenticated;
+
+-- Eigene Karte (übernimmt beim ersten Aufruf die Warteliste-Karte mit derselben E-Mail)
+create or replace function public.get_my_card()
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare
+  v_uid   uuid := auth.uid();
+  v_email text := public.my_confirmed_email();
+  c       public.waitlist_cards;
+begin
+  if v_uid is null then raise exception 'Bitte melde dich an.' using errcode = '42501'; end if;
+  if not public.mfa_ok() then raise exception 'Bitte bestätige zuerst deinen 2FA-Code.' using errcode = '42501'; end if;
+  select * into c from public.waitlist_cards where user_id = v_uid;
+  if c.id is null and v_email is not null then
+    update public.waitlist_cards set user_id = v_uid where email = v_email and user_id is null returning * into c;
+  end if;
+  if c.id is null then return null; end if;
+  return jsonb_build_object(
+    'name', c.name, 'role', c.role, 'level', c.level, 'skills', to_jsonb(c.skills), 'hours', c.hours,
+    'mode', c.mode, 'city', c.city, 'looking', c.looking, 'pitch', c.pitch, 'link', c.link,
+    'handle', c.handle, 'is_public', c.is_public, 'design', coalesce(c.design, '{}'::jsonb), 'lang', c.lang);
+end;
+$$;
+revoke execute on function public.get_my_card() from public, anon;
+grant execute on function public.get_my_card() to authenticated;
+
 -- 1) Jede Tabelle mit Zeilenschutz: angemeldete Konten mit 2FA brauchen eine bestätigte Sitzung (aal2)
 do $$
 declare t record;
