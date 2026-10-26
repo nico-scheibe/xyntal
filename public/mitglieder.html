@@ -18,7 +18,7 @@
   <link rel="stylesheet" href="fonts/fonts.css?v=31">
   <link rel="stylesheet" href="style.css?v=31">
   <link rel="stylesheet" href="cosmos.css?v=40">
-  <script src="i18n-en.js?v=36" defer></script>
+  <script src="i18n-en.js?v=47" defer></script>
   <script src="i18n.js?v=31" defer></script>
   <script src="cosmos.js?v=40" defer></script>
 </head>
@@ -75,19 +75,20 @@
 <script src="config.js?v=31"></script>
 <script src="app.js?v=32"></script>
 <script src="avatars.js?v=31"></script>
-<script src="notifications.js?v=31"></script>
+<script src="notifications.js?v=32"></script>
 <script src="effects.js?v=31"></script>
 <script>
   (async () => {
     const grid = document.getElementById("grid");
     try {
       const me = await currentMember();
-      const viewerIsMember = me && me.status === "approved";
+      // Mit Konto (nicht abgelehnt): alle Profile sehen und anschreiben
+      const viewerIsMember = !!me && me.status !== "rejected";
       // Welche Profile sichtbar sind, regelt die Datenbank (Row Level Security)
-      let members = unwrap(await sb.from("profiles").select("*").eq("status", "approved").order("created_at", { ascending: false }));
+      let members = unwrap(await sb.from("profiles").select("*").neq("status", "rejected").order("created_at", { ascending: false }));
       if (!viewerIsMember) {
         document.getElementById("notice").innerHTML = `
-          <div class="notice">Du siehst hier die öffentlichen Profile. Freigeschaltete Mitglieder sehen alle.
+          <div class="notice">Du siehst hier die öffentlichen Profile. Mit Konto siehst du alle und kannst sie direkt anschreiben.
           <a class="text-link" href="mitglied-werden">Werde Mitglied</a> oder <a class="text-link" href="login">logg dich ein</a>.</div>`;
       }
       grid.innerHTML = members.length

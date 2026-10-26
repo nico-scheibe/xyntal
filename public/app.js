@@ -324,19 +324,24 @@ function avatar(name, cls = "", path = "") {
   return `<div class="avatar ${avatarTone(name)} ${esc(cls)}" ${safePath ? `data-avatar-path="${esc(safePath)}"` : ""} aria-hidden="true"><span>${esc(initials(name))}</span></div>`;
 }
 
-// Wer schaut gerade? { me, isMember, isAdmin }
+// Wer schaut gerade? { me, isMember (freigeschaltet), canAct (Konto, nicht abgelehnt), isAdmin }
+// canAct reicht für Projekte anlegen und Nachrichten schreiben (siehe supabase/018_open_projects_messages.sql)
 async function viewer() {
   const me = await currentMember();
-  return { me, isMember: !!me && me.status === "approved", isAdmin: !!me && me.is_admin };
+  return { me, isMember: !!me && me.status === "approved", canAct: !!me && me.status !== "rejected", isAdmin: !!me && me.is_admin };
 }
 
 // Hinweisbox für Gäste und nicht freigeschaltete Mitglieder
-function accessNotice(v, what) {
-  if (v.isMember) return "";
+// open: true = die Funktion braucht nur ein Konto, keine Freischaltung
+function accessNotice(v, what, { open = false } = {}) {
+  if (v.isMember || (open && v.canAct)) return "";
+  if (v.me && v.me.status === "rejected") {
+    return `<div class="notice">Dein Profil wurde nicht freigeschaltet. Bei Fragen melde dich gern per E-Mail.</div>`;
+  }
   if (v.me) {
     return `<div class="notice">Dein Profil wartet noch auf Freigabe. Danach kannst du ${what} und siehst alle Inhalte.</div>`;
   }
-  return `<div class="notice">Du siehst hier, was Mitglieder öffentlich geteilt haben. <a class="text-link" href="mitglied-werden">Werde Mitglied</a> oder <a class="text-link" href="login">logg dich ein</a>, um ${what} und alles zu sehen.</div>`;
+  return `<div class="notice">Du siehst hier, was Mitglieder öffentlich geteilt haben. <a class="text-link" href="mitglied-werden">Werde Mitglied</a> oder <a class="text-link" href="login">logg dich ein</a>, um ${what}${open ? " zu können" : " und alles zu sehen"}.</div>`;
 }
 
 // Navigation: Link zu Nachrichten mit Zähler ungelesener Nachrichten

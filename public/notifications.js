@@ -2,8 +2,8 @@
 (async () => {
   const nav = document.getElementById('main-nav');
   if (!nav) return;
-  const { me, isMember } = await viewer();
-  if (!me || !isMember) return;
+  const { me, canAct } = await viewer();
+  if (!me || !canAct) return;
   const root = document.createElement('details');
   root.className = 'notifications';
   root.innerHTML = `<summary aria-label="Benachrichtigungen"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z"/><path d="M10 21h4"/></svg><span class="badge" hidden></span></summary>

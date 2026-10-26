@@ -1,4 +1,5 @@
-// Projekte mit offenen Rollen. Rechte prüft zusätzlich die Datenbank (supabase/009_projects.sql).
+// Projekte mit offenen Rollen. Rechte prüft zusätzlich die Datenbank (supabase/009_projects.sql, 018_open_projects_messages.sql).
+// Anlegen, melden und anschreiben geht mit Konto – ohne auf die Freischaltung zu warten.
 (() => {
   const PHASE_LABEL = { idee: "Idee", prototyp: "Prototyp", erste_kunden: "Erste Kunden", wachstum: "Wachstum" };
   const MAX_ROLES = 8;
@@ -15,7 +16,7 @@
     mine: document.querySelector('[data-filter="meine"]'),
   };
 
-  let v = { me: null, isMember: false, isAdmin: false };
+  let v = { me: null, isMember: false, canAct: false, isAdmin: false };
   let projects = [];
   let interest = [];        // eigene Meldungen und Meldungen auf eigene Rollen
   let filter = "";
@@ -39,7 +40,7 @@
         </ul></details>` : `<span class="role-quiet">Noch keine Meldung</span>`}`;
     } else if (r.filled) {
       action = `<span class="tag">Besetzt</span>`;
-    } else if (v.isMember && !p.closed) {
+    } else if (v.canAct && !p.closed) {
       action = myInterest(r.id)
         ? `<button type="button" class="role-join is-on" data-act="leave" aria-pressed="true">Gemeldet · zurückziehen</button>`
         : `<button type="button" class="role-join" data-act="join" aria-pressed="false">Ich wäre dabei</button>`;
@@ -73,7 +74,7 @@
       <div class="listing-foot">
         <div class="listing-author">${avatar(owner.name, "avatar-sm", owner.avatar_path)}<div><strong>${esc(owner.name)}</strong><span>${timeAgo(p.created_at)}${p.is_public ? " · öffentlich" : ""}</span></div></div>
         <div class="post-actions">
-          ${v.isMember && !mine && !p.closed ? `<a class="btn btn-small btn-ghost" href="nachrichten?an=${esc(p.owner_id)}">Nachricht</a>` : ""}
+          ${v.canAct && !mine && !p.closed ? `<a class="btn btn-small btn-ghost" href="nachrichten?an=${esc(p.owner_id)}">Nachricht</a>` : ""}
           ${mine ? `<button type="button" data-act="close">${p.closed ? "Wieder öffnen" : "Projekt schließen"}</button>` : ""}
           ${mine || v.isAdmin ? `<button type="button" data-act="delete">Löschen</button>` : ""}
         </div>
@@ -95,7 +96,7 @@
     els.list.innerHTML = list.length ? list.map(projectHtml).join("") : `<div class="empty-block">${
       filter === "meine" ? "<strong>Du hast noch kein Projekt angelegt.</strong><p>Beschreib dein Vorhaben in einem Satz und sag, wer dir fehlt.</p>"
       : filter === "offen" ? "<strong>Gerade sind keine Rollen offen.</strong><p>Schau später noch einmal vorbei.</p>"
-      : `<strong>Noch keine Projekte.</strong><p>${v.isMember ? "Leg das erste an: Was baust du, und wer fehlt dir?" : "Sobald Mitglieder ihre Projekte teilen, findest du sie hier."}</p>`}</div>`;
+      : `<strong>Noch keine Projekte.</strong><p>${v.canAct ? "Leg das erste an: Was baust du, und wer fehlt dir?" : "Sobald Mitglieder ihre Projekte teilen, findest du sie hier."}</p>`}</div>`;
   }
 
   /* ---------- Laden ---------- */
@@ -157,7 +158,7 @@
   }
   function closeForm() {
     els.form.hidden = true;
-    els.newBtn.hidden = !v.isMember;
+    els.newBtn.hidden = !v.canAct;
     els.form.reset();
     setStatus(els.status, "");
   }
@@ -253,13 +254,13 @@
 
   (async () => {
     v = await viewer();
-    els.notice.innerHTML = accessNotice(v, "Projekte anlegen und dich für Rollen melden");
+    els.notice.innerHTML = accessNotice(v, "Projekte anlegen und dich für Rollen melden", { open: true });
     els.mine.hidden = !v.me;
     await load();
     // Sprung von der Startseite zu einem bestimmten Projekt
     const target = location.hash && document.getElementById(location.hash.slice(1));
     if (target) { target.closest(".project")?.scrollIntoView({ block: "start" }); target.closest(".project")?.setAttribute("tabindex", "-1"); target.closest(".project")?.focus({ preventScroll: true }); }
-    if (v.isMember && ready) {
+    if (v.canAct && ready) {
       els.newBtn.hidden = false;
       if (new URLSearchParams(location.search).get("neu") === "1") openForm();
     }

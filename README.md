@@ -34,6 +34,7 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 | `supabase/015_public_cards.sql` | Wunsch-Links öffnen: `xyntal.de/name` zeigt die Karte nur mit Zustimmung (`is_public`), sonst „reserviert“; `get_public_card` liefert nur öffentliche Felder |
 | `supabase/016_account_cards.sql` | Karte mit Konto verknüpfen: nach Login mit derselben (bestätigten) E-Mail Karte laden/ändern (`get_my_card`, `save_my_card`); öffentliches Profil zeigt zusätzlich Über mich, Angebot, Suche, Links und Profilbild |
 | `supabase/017_security.sql` | Sicherheit im Profil: 2FA (Authenticator-App) wird in allen Tabellen, Admin-Rechten und beim Löschen durchgesetzt; `verify_my_password` prüft das aktuelle Passwort (max. 5 Versuche / 15 Min.) |
+| `supabase/018_open_projects_messages.sql` | Projekte anlegen, für Rollen melden und Nachrichten schreiben schon mit bestätigtem Konto (ohne Freischaltung); Abgelehnte ausgeschlossen; Spam-Grenzen: 5 Projekte/Tag, 30 Nachrichten und 3 neue Gespräche pro Stunde |
 | `supabase/010_beta_applications.sql` | Beta-Programm: Bewerbungen ohne Konto (nur über `apply_for_beta`), lesen und bewerten nur Admins; **noch auszuführen** |
 | `ANMELDUNG-EINRICHTEN.md` | Anleitung: Brevo-SMTP einrichten; Google, Apple, LinkedIn und SMS einschalten |
 

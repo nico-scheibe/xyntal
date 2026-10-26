@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="fonts/fonts.css?v=31">
   <link rel="stylesheet" href="style.css?v=31">
   <link rel="stylesheet" href="cosmos.css?v=40">
-  <script src="i18n-en.js?v=36" defer></script>
+  <script src="i18n-en.js?v=47" defer></script>
   <script src="i18n.js?v=31" defer></script>
   <script src="cosmos.js?v=40" defer></script>
 </head>
@@ -85,10 +85,10 @@
 <script src="config.js?v=31"></script>
 <script src="app.js?v=32"></script>
 <script src="avatars.js?v=31"></script>
-<script src="notifications.js?v=31"></script>
+<script src="notifications.js?v=32"></script>
 <script src="effects.js?v=31"></script>
 <script>
-  let v = { me: null, isMember: false };
+  let v = { me: null, isMember: false, canAct: false };
   let messages = [];          // alle eigenen Nachrichten (gesendet + empfangen)
   const people = new Map();   // id -> Profil
   let active = null;          // id des Gesprächspartners
@@ -229,14 +229,14 @@
   (async () => {
     v = await viewer();
     if (!v.me) { location.href = "login"; return; }
-    if (!v.isMember) {
-      document.getElementById("notice").innerHTML = accessNotice(v, "Nachrichten schreiben");
+    if (!v.canAct) {
+      document.getElementById("notice").innerHTML = accessNotice(v, "Nachrichten schreiben", { open: true });
       return;
     }
     document.getElementById("inbox").hidden = false;
 
-    // Alle freigeschalteten Mitglieder für "Neue Nachricht"
-    const members = unwrap(await sb.from("profiles").select("id, name, headline, avatar_path").eq("status", "approved").order("name"));
+    // Alle Mitglieder mit Konto für "Neue Nachricht" (wer sichtbar ist, regelt die Datenbank)
+    const members = unwrap(await sb.from("profiles").select("id, name, headline, avatar_path").neq("status", "rejected").order("name"));
     members.forEach((m) => people.set(m.id, m));
     document.getElementById("new-chat").insertAdjacentHTML("beforeend",
       members.filter((m) => m.id !== v.me.id).map((m) => `<option value="${m.id}">${esc(m.name || "Mitglied")}</option>`).join(""));
