@@ -1,7 +1,7 @@
 -- Projekte anlegen und andere anschreiben – schon mit Konto, ohne auf die Freischaltung zu warten.
 -- Voraussetzung: angemeldet, E-Mail (oder Handynummer) bestätigt und nicht abgelehnt.
 -- Gegen Spam: höchstens 30 Nachrichten pro Stunde, 3 neue Gespräche pro Stunde und 5 neue Projekte pro Tag.
--- Einmal im Supabase SQL Editor ausführen (nach 009 und 017). Läuft als Transaktion.
+-- Einmal im Supabase SQL Editor ausführen (nach 009 und 017). Läuft als Transaktion. Darf mehrfach laufen.
 begin;
 
 -- 1) Wer darf mitmachen? Konto bestätigt, nicht abgelehnt (Freischaltung nicht nötig)
@@ -99,5 +99,19 @@ drop trigger if exists messages_limit on public.messages;
 create trigger messages_limit before insert on public.messages
   for each row execute function public.limit_messages();
 revoke execute on function public.limit_messages() from public, anon, authenticated;
+
+-- 5) 2FA-Schutz (aus 017) auch für Tabellen, die erst danach angelegt wurden (z. B. Projekte)
+do $$
+declare t record;
+begin
+  for t in select c.relname from pg_class c join pg_namespace n on n.oid = c.relnamespace
+           where n.nspname = 'public' and c.relkind = 'r' and c.relrowsecurity loop
+    execute format('drop policy if exists "2FA erzwingen" on public.%I', t.relname);
+    execute format('create policy "2FA erzwingen" on public.%I as restrictive for all to authenticated using ((select public.mfa_ok())) with check ((select public.mfa_ok()))', t.relname);
+  end loop;
+end $$;
+
+-- Fehlversuche beim Passwort: nur die Prüffunktion greift darauf zu
+revoke all on public.password_checks from anon, authenticated;
 
 commit;

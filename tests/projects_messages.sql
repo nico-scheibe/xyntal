@@ -11,8 +11,25 @@ grant usage on schema public to anon, authenticated;
 create publication supabase_realtime;  -- gibt es in Supabase schon
 \i supabase/schema.sql
 \i supabase/003_community.sql
+-- wie live: 017 (2FA) lief vor 009 – hier nur die Teile, die 018 braucht
+create or replace function auth.jwt() returns jsonb language sql stable as $$ select jsonb_build_object('aal', coalesce(nullif(current_setting('test.aal', true), ''), 'aal1')) $$;
+grant execute on function auth.jwt() to anon, authenticated;
+create table auth.mfa_factors (id uuid primary key default gen_random_uuid(), user_id uuid not null, status text not null);
+create or replace function public.mfa_ok() returns boolean language sql stable security definer set search_path = '' as $$
+  select auth.uid() is null or coalesce(auth.jwt() ->> 'aal', 'aal1') = 'aal2'
+      or not exists (select 1 from auth.mfa_factors where user_id = auth.uid() and status = 'verified'); $$;
+grant execute on function public.mfa_ok() to anon, authenticated;
+create table public.password_checks (id bigint generated always as identity primary key, user_id uuid not null, at timestamptz not null default now());
+alter table public.password_checks enable row level security;
+grant select, insert, delete on public.password_checks to anon, authenticated;  -- Supabase-Standardrechte
 \i supabase/009_projects.sql
 \i supabase/018_open_projects_messages.sql
+-- noch einmal: darf mehrfach laufen
+\i supabase/018_open_projects_messages.sql
+do $$ begin
+  if not exists (select 1 from pg_policies where tablename = 'projects' and policyname = '2FA erzwingen') then raise exception '2FA-Schutz fehlt bei Projekten'; end if;
+  if has_table_privilege('anon', 'public.password_checks', 'select') then raise exception 'password_checks für Gäste lesbar'; end if;
+end $$;
 -- Personen: A freigeschaltet, B neu (bestätigt), C neu (E-Mail nicht bestätigt), D abgelehnt, E neu per Handy
 insert into auth.users (id, email, raw_user_meta_data, email_confirmed_at, phone_confirmed_at) values
   ('00000000-0000-0000-0000-00000000000a', 'a@x.de', '{"name":"Anna","headline":"A"}', now(), null),
