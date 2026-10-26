@@ -1,4 +1,4 @@
--- Regressionstest für supabase/011_waitlist_cards.sql, 012_waitlist_cards_more.sql 013_waitlist_perks.sql 014_admin_actions.sql und 015_public_cards.sql
+-- Regressionstest für supabase/011_waitlist_cards.sql, 012_waitlist_cards_more.sql 013_waitlist_perks.sql 014_admin_actions.sql 015_public_cards.sql und 016_account_cards.sql
 -- Nur in einer LEEREN, SEPARATEN lokalen PostgreSQL-Datenbank mit den Rollen anon und authenticated ausführen,
 -- aus dem Repository-Ordner:  psql -v ON_ERROR_STOP=1 -d TESTDATENBANK -f tests/waitlist_cards.sql
 -- Simuliert auth.uid() und eine vereinfachte profiles-Tabelle. Niemals im produktiven Projekt ausführen.
@@ -185,6 +185,80 @@ do $$ declare j jsonb; r text; begin
   r := public.submit_waitlist_card('big@example.com', 'B', 'Design', '{}', 5, 'Mitgründer:in', '', 'de', '', '', '', '', 'bigdesign', true,
        jsonb_build_object('x', repeat('a', 2000)));
   if (public.get_public_card('bigdesign')->'design') is distinct from '{}'::jsonb then raise exception 'zu große Gestaltung gespeichert'; end if;
+end $$;
+reset role;
+-- 12) Migration 016: Karte gehört zum Konto
+create table if not exists auth.users (id uuid primary key, email text, email_confirmed_at timestamptz);
+insert into auth.users values
+  ('00000000-0000-0000-0000-000000000011', 'Pub@Example.com', now()),      -- hat Warteliste-Karte „pia“
+  ('00000000-0000-0000-0000-000000000012', 'neu-konto@example.com', now()), -- noch keine Karte
+  ('00000000-0000-0000-0000-000000000013', 'old@example.com', null);      -- E-Mail nicht bestätigt
+alter table public.profiles add column if not exists headline text not null default '', add column if not exists about text not null default '',
+  add column if not exists offer text not null default '', add column if not exists seek text not null default '',
+  add column if not exists linkedin text not null default '', add column if not exists instagram text not null default '',
+  add column if not exists website text not null default '', add column if not exists avatar_path text not null default '';
+insert into public.profiles (id, is_admin, headline, about, offer, seek, website, avatar_path) values
+  ('00000000-0000-0000-0000-000000000011', false, 'Design für Apps', 'Ich gestalte seit 5 Jahren.', 'UI, Branding', 'Ein Team', 'https://pia.dev', '00000000-0000-0000-0000-000000000011/a.jpg')
+  on conflict do nothing;
+\i supabase/016_account_cards.sql
+-- Gäste dürfen nichts davon
+set role anon;
+do $$ begin perform public.get_my_card(); raise exception 'anon darf get_my_card'; exception when insufficient_privilege then null; end $$;
+reset role;
+set role authenticated;
+-- a) Konto mit Warteliste-E-Mail übernimmt die Karte
+set test.uid = '00000000-0000-0000-0000-000000000011';
+do $$ declare j jsonb; begin
+  j := public.get_my_card();
+  if (j->>'name') is distinct from 'Pia' or (j->>'handle') is distinct from 'pia' then raise exception 'Karte nicht übernommen: %', j; end if;
+  if j ? 'email' or j ? 'note' or j ? 'status' then raise exception 'Admin-Felder sichtbar: %', j; end if;
+end $$;
+-- b) speichern: Name ändern, Link „mia“ (vergeben) wird abgelehnt, alter Link bleibt
+do $$ declare r text; begin
+  r := public.save_my_card('Pia K', 'Design', array['Figma'], 8, 'Mitgründer:in', 'Neu', 'de', 'Berlin', 'Remote', 'Profi', 'pia.dev', 'pub-taken-test', true, '{"theme":"sunset"}');
+  if r <> 'ok' then raise exception 'Speichern fehlgeschlagen: %', r; end if;
+end $$;
+reset role;
+insert into public.waitlist_cards (email, name, role, hours, looking, handle) values ('x@y.de', 'X', 'Design', 3, 'Mitgründer:in', 'besetzt');
+set role authenticated;
+set test.uid = '00000000-0000-0000-0000-000000000011';
+do $$ declare r text; j jsonb; begin
+  r := public.save_my_card('Pia K', 'Design', array['Figma'], 8, 'Mitgründer:in', 'Neu', 'de', 'Berlin', 'Remote', 'Profi', '', 'besetzt', true, null);
+  if r <> 'taken' then raise exception 'vergebener Link nicht erkannt: %', r; end if;
+  j := public.get_my_card();
+  if (j->>'handle') is distinct from 'pub-taken-test' then raise exception 'alter Link verloren: %', j; end if;
+end $$;
+-- c) Konto ohne Karte legt beim Speichern eine an
+set test.uid = '00000000-0000-0000-0000-000000000012';
+do $$ declare r text; j jsonb; begin
+  if public.get_my_card() is not null then raise exception 'sollte keine Karte haben'; end if;
+  r := public.save_my_card('Neu', 'Entwicklung', array['Go'], 10, 'ein Projekt zum Mitbauen', '', 'de', '', 'Hybrid', 'Einsteiger', '', 'neu-konto', false, null);
+  j := public.get_my_card();
+  if r <> 'ok' or (j->>'name') is distinct from 'Neu' or (j->>'is_public')::boolean then raise exception 'Neuanlage falsch: % %', r, j; end if;
+end $$;
+-- d) unbestätigte E-Mail übernimmt keine fremde Karte
+set test.uid = '00000000-0000-0000-0000-000000000013';
+do $$ begin
+  if public.get_my_card() is not null then raise exception 'unbestätigte E-Mail hat Karte übernommen'; end if;
+  perform public.save_my_card('Hack', 'Design', '{}', 5, 'Mitgründer:in', '', 'de', '', '', '', '', '', false, null);
+  raise exception 'unbestätigte E-Mail durfte speichern';
+exception when insufficient_privilege then null; end $$;
+-- e) Mitglied kann fremde Karten weder lesen noch direkt ändern
+set test.uid = '00000000-0000-0000-0000-000000000012';
+do $$ begin if (select count(*) from public.waitlist_cards) <> 0 then raise exception 'Mitglied sieht Karten'; end if; end $$;
+reset role;
+do $$ begin
+  if (select name from public.waitlist_cards where email = 'old@example.com') <> 'O' then raise exception 'fremde Karte verändert'; end if;
+  if (select user_id from public.waitlist_cards where email = 'old@example.com') is not null then raise exception 'fremde Karte übernommen'; end if;
+  if (select status from public.waitlist_cards where email = 'pub@example.com') <> 'neu' then raise exception 'Stand verändert'; end if;
+end $$;
+-- f) öffentliches Profil mit Profilinfos, ohne private Felder
+set role anon;
+do $$ declare j jsonb; begin
+  j := public.get_public_card('pub-taken-test');
+  if (j->'profile'->>'about') is distinct from 'Ich gestalte seit 5 Jahren.' or (j->'profile'->>'avatar_path') is null then raise exception 'Profilinfos fehlen: %', j; end if;
+  if j ? 'email' or (j->'profile') ? 'status' or (j->'profile') ? 'is_admin' then raise exception 'private Felder sichtbar: %', j; end if;
+  if (public.get_public_card('neu-konto')->>'reserved') is distinct from 'true' then raise exception 'nicht öffentliche Karte sichtbar'; end if;
 end $$;
 reset role;
 \echo 'waitlist cards ok'

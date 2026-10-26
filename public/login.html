@@ -98,8 +98,10 @@
 <script>
   const form = document.getElementById("login");
   const status = document.getElementById("status");
+  // Nach dem Login zurück zur gewünschten Seite – nur bekannte Ziele
+  const NEXT = ["meine-karte", "profil"].includes(new URLSearchParams(location.search).get("next")) ? new URLSearchParams(location.search).get("next") : "profil";
 
-  renderAuthOptions(document.getElementById("auth-options"), { statusEl: status, redirectPath: "profil" }).then((shown) => {
+  renderAuthOptions(document.getElementById("auth-options"), { statusEl: status, redirectPath: NEXT }).then((shown) => {
     document.getElementById("auth-divider").hidden = !shown;
     document.getElementById("auth-note").hidden = !shown;
   });
@@ -108,7 +110,7 @@
     submitWith(form, status, async (data) => {
       requireFields(data, ["email", "password"], "Bitte gib E-Mail und Passwort ein.");
       unwrap(await sb.auth.signInWithPassword({ email: data.email, password: data.password }));
-      location.href = "profil";
+      location.href = NEXT;
     });
   });
 

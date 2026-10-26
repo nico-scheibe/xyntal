@@ -56,6 +56,11 @@
         </div>
       </aside>
       <div class="join-main profile-main">
+        <section class="card-form xcard-box" id="xcard" aria-labelledby="xcard-head">
+          <h2 id="xcard-head">Deine Xyntal-Karte</h2>
+          <p class="hint" data-xcard-text>Wird geladen …</p>
+          <div class="btn-row"><a class="btn btn-small" href="meine-karte">Karte gestalten</a><a class="btn btn-small btn-ghost" data-xcard-view href="#" target="_blank" rel="noopener" hidden>Öffentliches Profil ansehen ↗</a></div>
+        </section>
         <div id="preview"></div>
       <form id="avatar-form" class="avatar-editor card-form" novalidate>
         <h2>Dein Profilbild</h2>
@@ -216,7 +221,25 @@
     fillForm(form, me);
     render(me);
     setupAvatarEditor(me, updated => { me = updated; render(me); });
+    renderXcard();
   }, 300);
+
+  // Xyntal-Karte: Stand und Link zum öffentlichen Profil
+  async function renderXcard() {
+    const text = document.querySelector("[data-xcard-text]"), view = document.querySelector("[data-xcard-view]");
+    try {
+      const card = unwrap(await sb.rpc("get_my_card"));
+      if (!card) { text.textContent = "Du hast noch keine Karte. Gestalte sie – dann kannst du dir auch deinen Link xyntal.de/deinname sichern."; return; }
+      if (card.handle && card.is_public) {
+        text.innerHTML = `Dein öffentliches Profil: <b>xyntal.de/${esc(card.handle)}</b> – mit deiner Karte und den Angaben unten (Über mich, Angebot, Suche, Links, Profilbild).`;
+        view.href = `/${card.handle}`; view.hidden = false;
+      } else if (card.handle) {
+        text.innerHTML = `Dein Link <b>xyntal.de/${esc(card.handle)}</b> ist reserviert, aber nicht öffentlich. Unter „Karte gestalten“ kannst du ihn freischalten.`;
+      } else {
+        text.textContent = "Deine Karte ist gespeichert. Sichere dir unter „Karte gestalten“ noch deinen Link xyntal.de/deinname.";
+      }
+    } catch { text.textContent = "Gestalte deine Karte und sichere dir deinen Link xyntal.de/deinname."; }
+  }
 
   form.addEventListener("submit", (e) => {
     e.preventDefault();

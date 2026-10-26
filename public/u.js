@@ -52,7 +52,7 @@
             <span class="mc-mark"><svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5l-5.3 5.3M10.3 13.7L5 19"/></svg>xyntal</span>
             <span class="mc-badge">${esc(t("Early Access"))}</span>
           </div>
-          <div class="mc-head"><span class="mc-avatar"><span>${esc(name[0].toUpperCase())}</span></span></div>
+          <div class="mc-head"><span class="mc-avatar" data-pub-avatar><span>${esc(name[0].toUpperCase())}</span></span></div>
           <div class="mc-id">
             <h1 class="mc-name" data-no-i18n>${esc(name)}</h1>
             <p class="mc-role">${esc(t(c.role || ""))}${level ? ` · ${esc(t(level))}` : ""}</p>
@@ -61,10 +61,35 @@
           <div class="mc-foot">${link ? `<a class="mc-link" href="${esc(link)}" target="_blank" rel="noopener noreferrer nofollow" data-no-i18n>${esc(link.replace(/^https?:\/\/(www\.)?/i, "").replace(/\/$/, "").slice(0, 40))}</a>` : ""}<span class="mc-site" data-no-i18n>xyntal.de/${esc(c.handle)}</span></div>
         </article>
       </div>
+      ${profileHtml(c.profile)}
       <div class="profile-msg">
         <p>${esc(t("Auf Xyntal finden Entwickler, Designer und Gründer die richtigen Leute für ihre Idee."))}</p>
         ${ctas(`<a class="btn btn-primary" href="/#karte">${esc(t("Bau deine eigene Karte"))}</a>`)}
       </div>`);
+  }
+
+  // Profilinfos aus dem Konto (nur wenn die Person ihr Profil öffentlich gemacht hat)
+  const safeUrl = (u) => (/^https?:\/\/[^\s]+$/i.test(u || "") ? u : "");
+  function profileHtml(p) {
+    if (!p) return "";
+    const block = (title, text) => (text && text.trim() ? `<section class="pp-block"><h2>${esc(t(title))}</h2><p data-no-i18n>${esc(text)}</p></section>` : "");
+    const links = [["LinkedIn", p.linkedin], ["Instagram", p.instagram], ["Website", p.website]].map(([l, u]) => [l, safeUrl(u)]).filter(([, u]) => u);
+    const inner = [
+      p.headline ? `<p class="pp-headline" data-no-i18n>${esc(p.headline)}</p>` : "",
+      block("Über mich", p.about), block("Ich biete", p.offer), block("Ich suche", p.seek),
+      links.length ? `<div class="pp-links">${links.map(([l, u]) => `<a class="btn btn-glass btn-sm" href="${esc(u)}" target="_blank" rel="noopener noreferrer nofollow">${esc(l)} ↗</a>`).join("")}</div>` : "",
+    ].join("");
+    return inner ? `<div class="pp glass">${inner}</div>` : "";
+  }
+  async function loadAvatar(path) {
+    if (!/^[0-9a-f-]{36}\/[0-9a-f-]{36}\.jpg$/.test(path || "")) return;
+    try {
+      const res = await fetch(`${SUPA}/storage/v1/object/authenticated/avatars/${path}`, { headers: { apikey: KEY, Authorization: `Bearer ${KEY}` } });
+      if (!res.ok) return;
+      const url = URL.createObjectURL(await res.blob());
+      const slot = document.querySelector("[data-pub-avatar]");
+      if (slot) slot.innerHTML = `<img src="${url}" alt="">`;
+    } catch { /* Initiale bleibt */ }
   }
 
   async function load() {
@@ -80,7 +105,7 @@
       });
       if (!res.ok) throw new Error(String(res.status));
       const card = await res.json();
-      if (card && card.name) return renderCard(card);
+      if (card && card.name) { renderCard(card); if (card.profile) loadAvatar(card.profile.avatar_path); return; }
       if (card && card.reserved) {
         document.title = `xyntal.de/${handle} – ${t("reserviert")}`;
         return page(`<div class="profile-msg"><h1><b>xyntal.de/${esc(handle)}</b><br>${esc(t("ist reserviert."))}</h1><p>${esc(t("Diese Person ist schon auf der Warteliste. Ihre Karte erscheint hier, sobald Xyntal startet."))}</p>${ctas(`<a class="btn btn-primary" href="/#karte">${esc(t("Eigenen Link sichern"))}</a>`)}</div>`);

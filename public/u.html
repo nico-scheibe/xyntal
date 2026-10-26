@@ -27,6 +27,11 @@
     .profile-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
     .profile-loading { color: var(--text-3); }
     @media (max-width: 480px) { .profile-actions .btn { width: 100%; } }
+    .pp { display: grid; gap: 18px; width: min(100%, 560px); padding: clamp(20px, 4vw, 28px); border-radius: 24px; text-align: left; }
+    .pp-headline { font: 600 19px/1.4 var(--f); letter-spacing: -0.01em; }
+    .pp-block h2 { margin-bottom: 6px; font: 600 12.5px/1 var(--f-text); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-3); }
+    .pp-block p { color: var(--text-2); white-space: pre-line; overflow-wrap: anywhere; }
+    .pp-links { display: flex; flex-wrap: wrap; gap: 8px; }
   </style>
 </head>
 <body class="home">
@@ -48,10 +53,11 @@
 <footer class="footer">
   <div class="shell footer-inner">
     <nav class="footer-nav" aria-label="Rechtliches">
-      <div><a href="/impressum">Impressum</a><a href="/impressum#datenschutz">Datenschutz</a></div>
+      <a href="/impressum">Impressum</a>
+      <a href="/impressum#datenschutz">Datenschutz</a>
     </nav>
   </div>
 </footer>
-<script src="/u.js?v=1" defer></script>
+<script src="/u.js?v=2" defer></script>
 </body>
 </html>
