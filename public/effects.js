@@ -188,6 +188,11 @@
     navWrap.insertBefore(btn, toggle);
     btn.style.marginLeft = "auto";
   }
+  // Seiten mit eigener Kopfzeile setzen den Knopf selbst (data-cmdk)
+  document.querySelectorAll("[data-cmdk]").forEach((btn) => {
+    btn.querySelector("kbd").textContent = MOD;
+    btn.addEventListener("click", open);
+  });
 
   /* ---------------------------------------------------------------
      Entschlüsseln: Text löst sich aus Zeichen auf (Elemente mit data-scramble)

@@ -10,6 +10,7 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="stylesheet" href="fonts/fonts.css?v=31">
   <link rel="stylesheet" href="home.css?v=13">
+  <link rel="stylesheet" href="home-app.css?v=3">
   <script>
     // Im Profilbereich eingebettet: ohne Kopf- und Fußzeile, Links öffnen die ganze Seite
     if (/[?&]embed=1(&|$)/.test(location.search) && window.parent !== window) {
@@ -29,6 +30,7 @@
       <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="bm-g" x1="4" y1="4" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#B95CFF"/><stop offset=".45" stop-color="#FF5FD2"/><stop offset="1" stop-color="#3FD8FF"/></linearGradient></defs><path d="M5 5l14 14M19 5l-5.3 5.3M10.3 13.7L5 19" stroke="url(#bm-g)"/></svg>
       <span>xyntal</span>
     </a>
+    <button type="button" class="cmdk-trigger" data-cmdk aria-label="Befehlspalette öffnen" style="margin-left:auto">Suchen … <kbd>Strg</kbd><kbd>K</kbd></button>
     <nav class="mainnav" aria-label="Hauptnavigation" style="display:flex">
       <a href="profil">Mein Profil</a>
     </nav>
@@ -256,6 +258,7 @@
 <script src="app.js?v=32"></script>
 <script src="card-builder.js?v=3"></script>
 <script src="meine-karte.js?v=2"></script>
+<script src="effects.js?v=32"></script>
 <script src="/account-menu.js?v=4" defer></script>
 </body>
 </html>
