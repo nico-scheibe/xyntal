@@ -6,6 +6,16 @@
   const detailId = new URLSearchParams(location.search).get("projekt");
   const isDetail = /^\d+$/.test(detailId || "");
   const DEMO_KEY = "xyntal-wunschrollen";
+  const detailHref = (id) => `/projekte?projekt=${id}`;
+
+  function projectStatus(p) {
+    if (p.closed) return { key: "done", label: "Abgeschlossen" };
+    if ((p.roles || []).some((r) => !r.filled)) return { key: "hiring", label: "Sucht Mitglieder" };
+    return { key: "active", label: "In Arbeit" };
+  }
+  function projectExtras(p) {
+    return window.XyntalProjectExtras?.for(p) || { goals: [], tags: [], links: [], team: [], timeframe: "" };
+  }
 
   const els = {
     notice: document.getElementById("notice"),
@@ -96,6 +106,8 @@
   function roleHtml(p, r, mine) {
     const { hours, status } = roleBits(r);
     const name = esc(r.name);
+    const slots = r.filled ? 0 : 1;
+    const slotsLabel = r.filled ? "Besetzt" : `${slots} ${slots === 1 ? "Platz" : "Plätze"} offen`;
     if (!isDetail) {
       return `<li class="role-chip${r.filled ? " is-filled" : ""}" data-role="${r.id}"${r.need ? ' tabindex="0"' : ""}>
         ${status}<span class="role-name">${name}</span>${hours}${r.need ? `<span class="role-need">${esc(r.need)}</span>` : ""}
@@ -108,16 +120,16 @@
         ${people.map((i) => `<li>${avatar(i.member?.name || "Mitglied", "avatar-sm", i.member?.avatar_path)}<div><strong>${esc(i.member?.name || "Mitglied")}</strong>${i.member?.headline ? `<span>${esc(i.member.headline)}</span>` : ""}${i.note ? `<p>${esc(i.note)}</p>` : ""}</div><a class="btn btn-small btn-ghost" href="nachrichten?an=${esc(i.member_id)}">Nachricht</a></li>`).join("")}
       </ul></details>` : `<span class="role-quiet">Noch keine Bewerbung</span>`;
     } else if (r.filled) {
-      action = `<span class="tag">Besetzt</span>`;
+      action = `<span class="tag role-full">Besetzt</span>`;
+    } else if (myInterest(r.id)) {
+      action = `<button type="button" class="role-join is-on" disabled aria-disabled="true">Beworben</button>`;
     } else if (v.canAct && !p.closed) {
-      action = myInterest(r.id)
-        ? `<button type="button" class="role-join is-on" data-act="leave" aria-pressed="true">Bewerbung zurückziehen</button>`
-        : `<button type="button" class="role-join" data-act="join" aria-pressed="false">Jetzt bewerben</button>`;
+      action = `<button type="button" class="role-join" data-act="join">Bewerben</button>`;
     } else if (!v.me) {
       action = `<a class="text-link" href="/login?next=${encodeURIComponent(`projekte?projekt=${p.id}`)}">Einloggen, um dich zu bewerben</a>`;
     }
     return `<li class="role-line${r.filled ? " is-filled" : ""}" data-role="${r.id}">
-      <div class="role-line-main">${status}<strong class="role-name">${name}</strong>${hours}</div>
+      <div class="role-line-main">${status}<strong class="role-name">${name}</strong>${hours}<span class="role-slots">${esc(slotsLabel)}</span></div>
       ${r.need ? `<p class="role-need">${esc(r.need)}</p>` : ""}
       ${action ? `<div class="role-action">${action}</div>` : ""}
     </li>`;
@@ -149,7 +161,39 @@
     if (!img && !canEditImage) return "";
     const box = `<div class="project-image${img ? "" : " is-empty"}"${img ? ` data-project-image="${esc(img)}" data-alt="${esc(p.title)}"` : ""}${canEditImage ? ' data-image-drop tabindex="0" aria-label="Titelbild"' : ""}></div>`;
     if (canEditImage || isDetail) return box;
-    return `<a class="project-image-link" href="/projekte?projekt=${p.id}" tabindex="-1" aria-hidden="true">${box}</a>`;
+    return `<a class="project-image-link" href="${detailHref(p.id)}" tabindex="-1" aria-hidden="true">${box}</a>`;
+  }
+
+  function detailMetaHtml(p, owner, mine, extra) {
+    const status = projectStatus(p);
+    const timeframe = extra.timeframe || "";
+    const goals = extra.goals.filter(Boolean);
+    const tags = extra.tags.filter(Boolean);
+    const links = extra.links.filter((l) => l?.url);
+    const team = [
+      { name: owner.name || "Mitglied", role: "Ersteller", avatar_path: owner.avatar_path },
+      ...extra.team.filter((m) => m?.name),
+    ];
+    const created = p.created_at
+      ? new Date(p.created_at).toLocaleDateString(document.documentElement.lang === "en" ? "en-GB" : "de-DE", { dateStyle: "medium" })
+      : "";
+    return `
+      <header class="project-heading">
+        <p class="project-kicker">
+          <span class="project-status status-${status.key}">${esc(status.label)}</span>
+          <span class="phase-label phase-${esc(p.phase || "idee")}">${PHASE_LABEL[p.phase] || "Idee"}</span>
+          ${p.place ? `<span class="project-place">${esc(p.place)}</span>` : ""}
+        </p>
+        <h1 class="project-title" id="p-${p.id}">${esc(p.title)}</h1>
+        <p class="project-pitch">${esc(p.pitch)}</p>
+        <div class="project-meta">${avatar(owner.name, "avatar-sm", owner.avatar_path)}<p><strong>${esc(owner.name)}</strong>${created ? ` · ${esc(created)}` : ""}${p.is_public ? " · öffentlich" : ""}</p>${v.canAct && !mine && !p.closed ? `<a class="text-link" href="nachrichten?an=${esc(p.owner_id)}">Nachricht</a>` : ""}</div>
+      </header>
+      ${p.body ? `<section class="project-section"><h2>Beschreibung</h2><div class="project-body">${richText(p.body)}</div></section>` : ""}
+      ${goals.length ? `<section class="project-section"><h2>Ziele</h2><ul class="project-goals">${goals.map((g) => `<li>${esc(g)}</li>`).join("")}</ul></section>` : ""}
+      ${tags.length ? `<section class="project-section"><h2>Tech-Stack &amp; Tags</h2><div class="tags">${tags.map((t) => `<span class="tag">${esc(t)}</span>`).join("")}</div></section>` : ""}
+      ${timeframe ? `<section class="project-section"><h2>Zeitrahmen</h2><p>${esc(timeframe)}</p></section>` : ""}
+      ${links.length ? `<section class="project-section"><h2>Links</h2><ul class="project-links">${links.map((l) => `<li><a class="text-link" href="${esc(normalizeUrl(l.url))}" target="_blank" rel="noopener">${esc(l.label || l.url)}</a></li>`).join("")}</ul></section>` : ""}
+      <section class="project-section"><h2>Team</h2><ul class="project-team">${team.map((m) => `<li>${avatar(m.name, "avatar-sm", m.avatar_path)}<div><strong>${esc(m.name)}</strong><span>${esc(m.role || "Mitglied")}</span></div></li>`).join("")}</ul></section>`;
   }
 
   function projectHtml(p) {
@@ -160,25 +204,39 @@
     const img = IMG_RE.test(p.image_path || "") ? p.image_path : "";
     const canEditImage = !!(mine && hasImages);
     const apps = roleInterestForProject(p).length;
-    const cta = !isDetail ? `<a class="project-open" href="/projekte?projekt=${p.id}">${mine ? `Bewerbungen ansehen (${apps})` : "Projekt öffnen &amp; bewerben"}</a>` : "";
-    return `<article class="project${p.closed ? " closed" : ""}${img || canEditImage ? " has-banner" : ""}${img ? " has-image" : ""}" data-id="${p.id}" aria-labelledby="p-${p.id}">
+    const extra = projectExtras(p);
+    const rolesBlock = `<div class="project-roles">
+        <h3>${open ? `${open} offene ${open === 1 ? "Rolle" : "Rollen"}` : "Alle Rollen besetzt"}</h3>
+        <ul>${roles.map((r) => roleHtml(p, r, mine)).join("")}</ul>
+      </div>`;
+    if (isDetail) {
+      return `<article class="project${p.closed ? " closed" : ""}${img || canEditImage ? " has-banner" : ""}${img ? " has-image" : ""}" data-id="${p.id}" aria-labelledby="p-${p.id}">
+        ${bannerHtml(p, canEditImage, img)}
+        ${cardMenu(p, mine, img, roles)}
+        <div class="project-detail-layout">
+          <div class="project-detail-main">
+            ${detailMetaHtml(p, owner, mine, extra)}
+            ${mine ? `<div class="applications-heading"><strong>${apps} ${apps === 1 ? "Bewerbung" : "Bewerbungen"}</strong><p>Die Bewerbungen findest du rechts bei der jeweiligen Rolle. Nur du und die jeweilige Person haben Zugriff darauf.</p></div>` : ""}
+            <details class="content-comments" open data-comment-kind="project" data-comment-id="${p.id}" data-comment-owner="${esc(p.owner_id)}" data-comment-closed="${p.closed}"><summary>Kommentare</summary></details>
+          </div>
+          <aside class="project-detail-aside" aria-label="Offene Rollen">${rolesBlock}</aside>
+        </div>
+        <p class="post-error" data-error role="alert" hidden></p>
+      </article>`;
+    }
+    const status = projectStatus(p);
+    return `<article class="project is-clickable${p.closed ? " closed" : ""}${img || canEditImage ? " has-banner" : ""}${img ? " has-image" : ""}" data-id="${p.id}" aria-labelledby="p-${p.id}">
       ${bannerHtml(p, canEditImage, img)}
       ${cardMenu(p, mine, img, roles)}
       <header class="project-heading">
-        <p class="project-kicker"><span class="phase-label phase-${esc(p.phase || "idee")}">${PHASE_LABEL[p.phase] || "Idee"}</span>${p.place ? `<span class="project-place">${esc(p.place)}</span>` : ""}${p.closed ? `<span class="project-state">Geschlossen</span>` : ""}</p>
-        <h2 class="project-title" id="p-${p.id}">${isDetail ? esc(p.title) : `<a href="/projekte?projekt=${p.id}">${esc(p.title)}</a>`}</h2>
+        <p class="project-kicker"><span class="project-status status-${status.key}">${esc(status.label)}</span><span class="phase-label phase-${esc(p.phase || "idee")}">${PHASE_LABEL[p.phase] || "Idee"}</span>${p.place ? `<span class="project-place">${esc(p.place)}</span>` : ""}</p>
+        <h2 class="project-title" id="p-${p.id}"><a href="${detailHref(p.id)}">${esc(p.title)}</a></h2>
       </header>
       <p class="project-pitch">${esc(p.pitch)}</p>
-      <div class="project-meta">${avatar(owner.name, "avatar-sm", owner.avatar_path)}<p>${esc(owner.name)} · ${timeAgo(p.created_at)}${p.is_public ? " · öffentlich" : ""}</p>${isDetail && v.canAct && !mine && !p.closed ? `<a class="text-link" href="nachrichten?an=${esc(p.owner_id)}">Nachricht</a>` : ""}</div>
-      ${isDetail && p.body ? `<div class="project-body">${richText(p.body)}</div>` : ""}
-      ${mine && isDetail ? `<div class="applications-heading"><strong>${apps} ${apps === 1 ? "Bewerbung" : "Bewerbungen"}</strong><p>Die Bewerbungen findest du unten bei der jeweiligen Rolle. Nur du und die jeweilige Person haben Zugriff darauf.</p></div>` : ""}
-      <div class="project-roles">
-        <h3>${open ? `${open} offene ${open === 1 ? "Rolle" : "Rollen"}` : "Alle Rollen besetzt"}</h3>
-        <ul>${roles.map((r) => roleHtml(p, r, mine)).join("")}</ul>
-      </div>
-      ${cta}
+      <div class="project-meta">${avatar(owner.name, "avatar-sm", owner.avatar_path)}<p>${esc(owner.name)} · ${timeAgo(p.created_at)}${p.is_public ? " · öffentlich" : ""}</p></div>
+      ${rolesBlock}
+      <a class="project-open" href="${detailHref(p.id)}">${mine ? `Bewerbungen ansehen (${apps})` : "Projekt öffnen &amp; bewerben"}</a>
       <p class="post-error" data-error role="alert" hidden></p>
-      ${isDetail ? `<details class="content-comments" data-comment-kind="project" data-comment-id="${p.id}" data-comment-owner="${esc(p.owner_id)}" data-comment-closed="${p.closed}"><summary>Kommentare &amp; Fragen</summary></details>` : ""}
     </article>`;
   }
 
@@ -200,9 +258,19 @@
       : `<strong>Noch keine Projekte.</strong><p>${v.canAct ? "Leg das erste an: Was baust du, und wer fehlt dir?" : "Sobald Mitglieder ihre Projekte teilen, findest du sie hier."}</p>`}</div>`;
     if (isDetail) {
       els.list.classList.add("project-detail");
-      els.list.insertAdjacentHTML("afterbegin", '<a class="text-link project-detail-back" href="/projekte">← Alle Projekte</a>');
-      if (!list.length) els.list.innerHTML += '<p class="empty">Dieses Projekt ist nicht verfügbar oder nicht für dich sichtbar.</p>';
-      if (list[0]) document.title = `${list[0].title} – Xyntal`;
+      els.list.insertAdjacentHTML("afterbegin", '<a class="text-link project-detail-back" href="/projekte">← Zurück zur Übersicht</a>');
+      if (!list.length) {
+        document.title = "Projekt nicht gefunden – Xyntal";
+        els.list.innerHTML = `<div class="empty-block project-not-found"><strong>Projekt nicht gefunden</strong><p>Dieses Projekt existiert nicht oder ist für dich nicht sichtbar.</p><p><a class="text-link" href="/projekte">← Zurück zur Übersicht</a></p></div>`;
+      } else {
+        document.title = `${list[0].title} – Xyntal`;
+        const head = document.querySelector(".page-head .wrap");
+        if (head) {
+          head.querySelector(".eyebrow").innerHTML = `<b>xyntal</b> / <a href="/projekte">projekte</a> / detail`;
+          head.querySelector("h1").hidden = true;
+          head.querySelector("p")?.setAttribute("hidden", "");
+        }
+      }
     }
     window.XyntalComments?.mount(els.list);
     hydrateImages(els.list);
@@ -357,21 +425,57 @@
   application.setAttribute("aria-labelledby", "apply-title");
   document.body.append(application);
   function openApplication(project, role, trigger) {
-    application.innerHTML = `<form><p class="hint">${esc(project.title)}</p><h2 id="apply-title">Für ${esc(role.name)} bewerben</h2><p>Erzähl kurz, warum du mitmachen möchtest, was du mitbringst und wie viel Zeit du hast.</p><label>Deine Bewerbung<textarea name="note" required maxlength="500" rows="6" placeholder="Deine Motivation, passende Skills und Verfügbarkeit …"></textarea></label><p class="hint">Maximal 500 Zeichen. Sichtbar für dich und den Projektbesitzer.</p><div class="btn-row"><button class="btn" type="submit">Bewerbung senden</button><button class="btn btn-ghost" type="button" data-cancel-apply>Abbrechen</button></div><p role="status" class="form-status"></p></form>`;
-    application.querySelector('[data-cancel-apply]').addEventListener('click',()=>application.close());
-    application.addEventListener('close',()=>trigger?.isConnected && trigger.focus(),{once:true});
-    application.querySelector('form').addEventListener('submit',async e=>{
-      e.preventDefault(); const form=e.currentTarget,btn=form.querySelector('[type="submit"]'),out=form.querySelector('[role="status"]'),note=form.elements.note.value.trim();
-      if(!note){out.textContent="Bitte beschreibe kurz deine Bewerbung.";return;}
-      btn.disabled=true;out.textContent="Wird gesendet …";
-      try{
-        unwrap(await sb.from('project_interest').insert({role_id:role.id,note}));
-        application.close(); await load();
-        const feedback=els.list.querySelector(`[data-id="${project.id}"] [data-error]`);
-        if(feedback){feedback.hidden=false;feedback.className="form-status";feedback.setAttribute('role','status');feedback.textContent="Deine Bewerbung wurde gesendet. Der Projektbesitzer kann sie jetzt sehen.";feedback.scrollIntoView({block:'nearest'});}
-      }catch(err){out.textContent=err?.code === "23505" ? "Du hast dich bereits für diese Rolle beworben." : friendlyError(err);btn.disabled=false;}
+    const name = v.me?.name || "";
+    const contact = v.me?.email || "";
+    application.innerHTML = `<form novalidate>
+      <p class="hint">${esc(project.title)}</p>
+      <h2 id="apply-title">Für ${esc(role.name)} bewerben</h2>
+      <p>Erzähl kurz, warum du mitmachen möchtest und was du mitbringst.</p>
+      <label>Name <input type="text" name="name" required maxlength="80" value="${esc(name)}" autocomplete="name"></label>
+      <label>E-Mail / Kontakt <input type="text" name="contact" required maxlength="120" value="${esc(contact)}" autocomplete="email" placeholder="E-Mail oder anderer Kontakt"></label>
+      <label>Motivation <textarea name="note" required maxlength="400" rows="5" placeholder="Warum du passt, Skills und Verfügbarkeit …"></textarea></label>
+      <label>Portfolio-Link <span class="hint">optional</span><input type="url" name="portfolio" maxlength="200" placeholder="https://…" inputmode="url"></label>
+      <p class="hint">Motivation max. 400 Zeichen. Sichtbar für dich und den Projektbesitzer.</p>
+      <div class="btn-row"><button class="btn" type="submit">Bewerbung senden</button><button class="btn btn-ghost" type="button" data-cancel-apply>Abbrechen</button></div>
+      <p role="status" class="form-status"></p>
+    </form>`;
+    application.querySelector("[data-cancel-apply]").addEventListener("click", () => application.close());
+    application.addEventListener("close", () => trigger?.isConnected && trigger.focus(), { once: true });
+    application.querySelector("form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const form = e.currentTarget;
+      const btn = form.querySelector('[type="submit"]');
+      const out = form.querySelector('[role="status"]');
+      const applicant = form.elements.name.value.trim();
+      const contactVal = form.elements.contact.value.trim();
+      const motivation = form.elements.note.value.trim();
+      const portfolio = form.elements.portfolio.value.trim();
+      if (!applicant || !contactVal) { out.textContent = "Bitte gib Name und Kontakt an."; return; }
+      if (!motivation) { out.textContent = "Bitte beschreibe kurz deine Motivation."; return; }
+      const parts = [motivation, `Name: ${applicant}`, `Kontakt: ${contactVal}`];
+      if (portfolio) parts.push(`Portfolio: ${portfolio}`);
+      const note = parts.join("\n").slice(0, 500);
+      btn.disabled = true;
+      out.textContent = "Wird gesendet …";
+      try {
+        unwrap(await sb.from("project_interest").insert({ role_id: role.id, note }));
+        application.innerHTML = `<div class="apply-done"><h2 id="apply-title">Bewerbung gesendet</h2><p>Danke! Der Projektbesitzer kann deine Bewerbung jetzt sehen.</p><button class="btn" type="button" data-close-apply>Schließen</button></div>`;
+        application.querySelector("[data-close-apply]").addEventListener("click", () => application.close());
+        await load();
+        const feedback = els.list.querySelector(`[data-id="${project.id}"] [data-error]`);
+        if (feedback) {
+          feedback.hidden = false;
+          feedback.className = "form-status";
+          feedback.setAttribute("role", "status");
+          feedback.textContent = "Deine Bewerbung wurde gesendet. Der Projektbesitzer kann sie jetzt sehen.";
+        }
+      } catch (err) {
+        out.textContent = err?.code === "23505" ? "Du hast dich bereits für diese Rolle beworben." : friendlyError(err);
+        btn.disabled = false;
+      }
     });
     application.showModal();
+    application.querySelector(name ? '[name="note"]' : '[name="name"]')?.focus();
   }
 
   /* ---------- Aktionen in der Liste ---------- */
@@ -488,6 +592,13 @@
   });
 
   els.list.addEventListener("click", async (e) => {
+    if (!isDetail) {
+      const card = e.target.closest(".project.is-clickable");
+      if (card && els.list.contains(card) && !e.target.closest("a, button, .card-menu, [data-image-drop]")) {
+        location.href = detailHref(card.dataset.id);
+        return;
+      }
+    }
     const menuBtn = e.target.closest(".card-menu-btn");
     if (menuBtn && els.list.contains(menuBtn)) {
       const pop = menuBtn.closest(".card-menu").querySelector(".card-menu-pop");
@@ -511,9 +622,6 @@
         openApplication(p, role, btn);
         btn.disabled = false;
         return;
-      } else if (btn.dataset.act === "leave") {
-        unwrap(await sb.from("project_interest").delete().eq("role_id", role.id).eq("member_id", v.me.id));
-        interest = interest.filter((i) => !(i.role_id === role.id && i.member_id === v.me.id));
       } else if (btn.dataset.act === "fill") {
         unwrap(await sb.from("project_roles").update({ filled: !role.filled }).eq("id", role.id));
         role.filled = !role.filled;
@@ -533,7 +641,7 @@
         unwrap(await sb.from("projects").delete().eq("id", id));
         projects = projects.filter((x) => x.id !== id);
       }
-      const focusKey = (btn.dataset.act === "join" || btn.dataset.act === "leave") && roleId
+      const focusKey = btn.dataset.act === "join" && roleId
         ? `[data-id="${id}"] [data-role="${roleId}"] button[data-act]`
         : `[data-id="${id}"] .card-menu-btn`;
       render();
