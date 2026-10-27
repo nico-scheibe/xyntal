@@ -21,7 +21,12 @@
   if (HANDLE.test(handle) && location.pathname !== `/${handle}`) history.replaceState(null, "", `/${handle}`);
 
   const page = (html) => { root.innerHTML = html; };
-  const ctas = (primary) => `<div class="profile-actions">${primary}<a class="btn btn-glass" href="/#warteliste">${esc(t("Auf die Warteliste"))}</a></div>`;
+  // Angemeldete sind schon dabei: statt Warteliste zu den Projekten
+  let member = false;
+  try { member = !!localStorage.getItem("sb-rralgrlujoupprwlvoyo-auth-token"); } catch { /* privat */ }
+  const ctas = (primary) => `<div class="profile-actions">${primary}${member
+    ? `<a class="btn btn-glass" href="/projekte">${esc(t("Projekte entdecken"))}</a>`
+    : `<a class="btn btn-glass" href="/#warteliste">${esc(t("Auf die Warteliste"))}</a>`}</div>`;
   const freeLink = (h) => `/?handle=${encodeURIComponent(h)}#karte`;
 
   function renderCard(c) {
@@ -70,7 +75,9 @@
       <section class="public-activity" aria-label="Projekte und Anzeigen" data-public-activity><p role="status">${esc(t("Projekte und Anzeigen werden geladen …"))}</p></section>
       <div class="profile-msg public-join">
         <p>${esc(t("Auf Xyntal finden Entwickler, Designer und Gründer die richtigen Leute für ihre Idee."))}</p>
-        ${ctas(`<a class="btn btn-primary" href="/#karte">${esc(t("Bau deine eigene Karte"))}</a>`)}
+        ${ctas(member
+          ? `<a class="btn btn-primary" href="/meine-karte">${esc(t("Meine Karte bearbeiten"))}</a>`
+          : `<a class="btn btn-primary" href="/#karte">${esc(t("Bau deine eigene Karte"))}</a>`)}
       </div>`);
   }
 

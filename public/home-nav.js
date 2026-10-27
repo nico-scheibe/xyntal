@@ -67,7 +67,9 @@
   });
   (async () => {
     try {
-      if (!window.supabase) await load("vendor/supabase.js?v=31");
+      if (!window.supabase) await (window.__xyntalSb = window.__xyntalSb || new Promise((res, rej) => {
+      const sc = document.createElement("script"); sc.src = "/vendor/supabase.js?v=31"; sc.onload = res; sc.onerror = rej; document.head.append(sc);
+    }));
       await load("config.js?v=31");
       await load("app.js?v=32");
       await load("notifications.js?v=32");

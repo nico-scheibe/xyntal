@@ -31,9 +31,10 @@
     const c = client();
     if (c) return c;
     if (ownClient) return ownClient;
-    if (!window.supabase) await new Promise((res, rej) => {
+    if (!window.supabase) await (window.__xyntalSb = window.__xyntalSb || new Promise((res, rej) => {
       const sc = document.createElement("script"); sc.src = "/vendor/supabase.js?v=31"; sc.onload = res; sc.onerror = rej; document.head.append(sc);
-    });
+    }));
+    if (client()) return client(); // app.js war schneller
     ownClient = window.supabase.createClient(URL_, KEY);
     return ownClient;
   }
