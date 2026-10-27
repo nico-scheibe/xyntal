@@ -169,7 +169,8 @@
       for (const b of data.order) { const node = $(`[data-block="${b}"]`, el.blocks); node.hidden = !shown(b); el.blocks.append(node); }
       const href = linkUrl(data.link);
       el.mcLink.hidden = !href;
-      el.mcLink.textContent = href ? linkLabel(href) : "";
+      el.mcLink.textContent = href ? ((/(^|\.)linkedin\.com$/i.test(new URL(href).hostname) ? "LinkedIn" : "Website") + " ↗") : "";
+      if (href) el.mcLink.href = href; else el.mcLink.removeAttribute("href");
       el.link.toggleAttribute("aria-invalid", !!data.link.trim() && !href);
       el.mcSite.textContent = siteText();
       const badHandle = !!data.handle && !validHandle(data.handle);

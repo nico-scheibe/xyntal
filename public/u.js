@@ -36,6 +36,7 @@
     const level = LEVELS.includes(c.level) ? c.level : "";
     const place = [c.city, c.mode ? t(c.mode) : ""].filter(Boolean).join(" · ");
     const link = /^https?:\/\//.test(c.link || "") ? c.link : "";
+    const linkText = link && /(^|\.)linkedin\.com$/i.test(new URL(link).hostname) ? "LinkedIn" : "Website";
     const lv = LEVELS.indexOf(level);
     const blocks = {
       place: place ? `<p class="mc-place"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg><span data-no-i18n>${esc(place)}</span></p>` : "",
@@ -58,7 +59,7 @@
             <p class="mc-role">${esc(t(c.role || ""))}${level ? ` · ${esc(t(level))}` : ""}</p>
           </div>
           <div class="mc-blocks">${order.filter((b) => !off.includes(b)).map((b) => blocks[b]).join("")}</div>
-          <div class="mc-foot">${link ? `<a class="mc-link" href="${esc(link)}" target="_blank" rel="noopener noreferrer nofollow" data-no-i18n>${esc(link.replace(/^https?:\/\/(www\.)?/i, "").replace(/\/$/, "").slice(0, 40))}</a>` : ""}<span class="mc-site" data-no-i18n>xyntal.de/${esc(c.handle)}</span></div>
+          <div class="mc-foot">${link ? `<a class="mc-link mc-link-button" href="${esc(link)}" target="_blank" rel="noopener noreferrer nofollow" data-no-i18n>${esc(linkText)} ↗</a>` : ""}<span class="mc-site" data-no-i18n>xyntal.de/${esc(c.handle)}</span></div>
         </article>
       </div>
       ${profileHtml(c.profile)}

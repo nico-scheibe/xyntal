@@ -907,3 +907,8 @@ html.mk-embed, html.mk-embed body { background: transparent !important; min-heig
 .waitlist-status.is-ok span:first-child { font-size: 18px; font-weight: 650; color: var(--ok); }
 .waitlist-form > .signup-hint { order: 4; }
 .waitlist-form > .waitlist-status { order: 5; }
+
+.mc-link-button { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 8px 16px; border: 1px solid var(--mc-text2); border-radius: 999px; color: var(--mc-text); text-decoration: none; font-weight: 600; flex-shrink: 0; }
+.mc-link-button:hover { background: rgba(128,128,128,.12); }
+.mc-link-button:focus-visible { outline: 2px solid var(--mc-text); outline-offset: 3px; }
+.mc-link-button[hidden] { display: none; }
