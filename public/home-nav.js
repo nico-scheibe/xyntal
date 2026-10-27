@@ -10,7 +10,7 @@
 
   document.body.classList.add("is-member");
   const css = document.createElement("link");
-  css.rel = "stylesheet"; css.href = "home-app.css?v=1";
+  css.rel = "stylesheet"; css.href = "home-app.css?v=2";
   document.head.append(css);
 
   // Hauptnavigation wie auf den anderen Seiten: Nachrichten + Warteliste (Demo-Anker entfallen)
@@ -37,6 +37,30 @@
     const sw = bar.querySelector(".lang-switch");
     if (sw && search.nextElementSibling !== sw) bar.insertBefore(search, sw);
   }).observe(bar, { childList: true });
+
+  // Inhalte der Startseite für Mitglieder: statt Warteliste direkt loslegen
+  const hero = document.querySelector(".hero-inner");
+  if (hero) {
+    const pill = hero.querySelector(".pill");
+    if (pill) pill.lastChild.textContent = "Du bist dabei";
+    const lead = hero.querySelector(".hero-lead");
+    if (lead) lead.textContent = "Finde Mitgründer, Entwickler und Designer, die mit dir etwas aufbauen wollen.";
+    const form = hero.querySelector(".hero-signup");
+    if (form) {
+      form.hidden = true;
+      const actions = document.createElement("div");
+      actions.className = "hero-member-actions";
+      actions.innerHTML = '<a class="btn btn-primary" href="/projekte?neu=1">Projekt anlegen</a><a class="btn btn-glass" href="/projekte">Projekte entdecken</a>';
+      form.after(actions);
+    }
+  }
+  const bridge = document.querySelector("[data-bridge]");
+  if (bridge) { bridge.href = "/projekte?neu=1"; bridge.textContent = "Projekt mit diesem Team anlegen"; }
+  const join = document.querySelector("[data-card-join]");
+  if (join) { join.href = "/meine-karte"; join.textContent = "Meine Karte bearbeiten"; }
+  const launch = document.getElementById("warteliste");
+  if (launch) launch.hidden = true;
+  document.querySelectorAll('a[href="#warteliste"]').forEach((a) => { if (!a.closest("header")) a.href = "/projekte?neu=1"; });
 
   const load = (src) => new Promise((res, rej) => {
     const s = document.createElement("script"); s.src = src; s.onload = res; s.onerror = rej; document.body.append(s);

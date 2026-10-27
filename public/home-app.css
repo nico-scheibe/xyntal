@@ -65,3 +65,7 @@ body.is-member .topbar-inner .mainnav { order: 3; }
 @media (max-width: 520px) {
   body.is-member .topbar-inner .home-tools { display: none; }
 }
+
+/* Startseite für Mitglieder: Buttons statt Warteliste im Hero */
+.hero-member-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+@media (max-width: 520px) { .hero-member-actions .btn { flex: 1 1 100%; } }
