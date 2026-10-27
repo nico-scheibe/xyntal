@@ -1494,3 +1494,23 @@ main section[id] { scroll-margin-top: 64px; }
 .status-neu { color: var(--amber); background: rgba(245, 180, 84, 0.12); }
 .status-angenommen { color: var(--green); background: rgba(60, 207, 142, 0.12); }
 .status-abgelehnt { color: var(--pink); background: rgba(255, 107, 129, 0.1); }
+
+/* ---------- Wegweiser: Projekte oder Gesuche & Angebote ---------- */
+.kind-switch { display: grid; gap: 12px; max-width: 760px; margin: 28px auto 0; text-align: left; }
+@media (min-width: 640px) { .kind-switch { grid-template-columns: 1fr 1fr; } }
+.kind-card {
+  display: flex; gap: 14px; align-items: flex-start; padding: 16px 18px; border-radius: 16px;
+  border: 1px solid var(--border); background: rgba(255, 255, 255, 0.03); color: var(--text-2);
+  text-decoration: none; transition: border-color .15s ease, background .15s ease, transform .15s ease;
+}
+.kind-card:hover, .kind-card:focus-visible { border-color: var(--border-2); background: rgba(255, 255, 255, 0.06); transform: translateY(-1px); }
+.kind-card[aria-current="page"] { border-color: rgba(168, 85, 247, 0.55); background: linear-gradient(135deg, rgba(168, 85, 247, 0.14), rgba(99, 102, 241, 0.08)); }
+.kind-icon { flex: none; width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; background: rgba(255, 255, 255, 0.06); color: var(--text); }
+.kind-card[aria-current="page"] .kind-icon { background: linear-gradient(135deg, #A855F7, #EC4899); color: #fff; }
+.kind-icon svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.kind-body { display: grid; gap: 4px; min-width: 0; font-size: 14px; line-height: 1.45; }
+.kind-body strong { color: var(--text); font-size: 15.5px; }
+.kind-body small { color: var(--text-3); font-size: 12.5px; }
+.kind-here { justify-self: start; padding: 2px 8px; border-radius: 999px; background: rgba(168, 85, 247, 0.2); color: #E2B8FF; font-size: 11px; font-weight: 700; letter-spacing: .02em; }
+@media (prefers-reduced-motion: reduce) { .kind-card { transition: none; } .kind-card:hover { transform: none; } }
+.project-detail-page .kind-switch { display: none; }
