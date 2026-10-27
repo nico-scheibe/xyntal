@@ -751,7 +751,7 @@
     } catch { /* ohne Einladungslink geht es auch */ }
   }
 
-  const SENT = "Danke. Bitte prüfe dein Postfach und bestätige deine E-Mail-Adresse. Erst danach stehst du auf der Warteliste.";
+  const SENT = "Fast geschafft – bestätige jetzt deine E-Mail.";
   $$("[data-waitlist]").forEach((form) => {
     const status = $(".waitlist-status", form);
     const button = $('button[type="submit"]', form);
@@ -786,7 +786,7 @@
         const res = await fetch(WAITLIST_URL, { method: "POST", headers: { Accept: "application/json", "Content-Type": "application/x-www-form-urlencoded" }, body });
         const data = await res.json().catch(() => null);
         if (!res.ok || !data || data.success !== true) throw new Error("waitlist");
-        const parts = [SENT];
+        const parts = [SENT, `Öffne die E-Mail an ${email} und klicke auf den Bestätigungslink. Erst dann bist du auf der Warteliste.`, "Keine Mail gefunden? Warte ein paar Minuten und prüfe auch deinen Spam-Ordner."];
         if (form.SHARE_CARD?.checked && window.XyntalCard) {
           const card = window.XyntalCard();
           const isPublic = !!form.PUBLIC_CARD?.checked;
@@ -798,15 +798,12 @@
             else if (res === "invalid") parts.push("Dieser Wunsch-Link ist nicht verfügbar. Du kannst dir nach dem Start einen anderen aussuchen.");
           }
         }
-        // Echte Platznummer: bestätigte Einträge laut Brevo + 1 (nur, wenn der Server eine Zahl liefert)
-        try {
-          const r = await fetch("/api/waitlist-count?v=2", { headers: { Accept: "application/json" } });
-          const n = r.ok ? (await r.json()).count : null;
-          if (Number.isFinite(n) && n >= 0) parts.push(`Nach deiner Bestätigung bist du Nr. ${(n + 1).toLocaleString("de-DE")} auf der Warteliste.`);
-        } catch { /* ohne Zahl kein Hinweis */ }
         setStatus(parts, "ok");
         afterSignup(email);
         form.reset();
+        status.setAttribute("tabindex", "-1");
+        status.focus({ preventScroll: true });
+        status.scrollIntoView({ behavior: still ? "instant" : "smooth", block: "nearest" });
       } catch {
         setStatus("Das hat gerade nicht geklappt. Bitte versuch es noch einmal.", "error");
       } finally {

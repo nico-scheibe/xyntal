@@ -1,6 +1,9 @@
 // Xyntal – englische Texte. Schlüssel = deutscher Originaltext (Leerzeichen zusammengefasst).
 // Neue deutsche Texte auf der Website hier ergänzen, sonst bleiben sie auf Englisch deutsch.
 window.XYNTAL_EN = {
+  "Fast geschafft – bestätige jetzt deine E-Mail.": "Almost there \u2014 confirm your email now.",
+  "Keine Mail gefunden? Warte ein paar Minuten und prüfe auch deinen Spam-Ordner.": "No email yet? Wait a few minutes and check your spam folder too.",
+
   "Deine Idee braucht": "Your idea needs",
   "die richtigen Leute.": "the right people.",
   "Finde Mitgründer, Entwickler und Designer, die mit dir etwas aufbauen wollen. Xyntal ist im Aufbau – trag dich ein und erfahre, wann die Beta startet.": "Find co-founders, developers and designers who want to build with you. Xyntal is in development — sign up to hear when the beta launches.",
@@ -1266,6 +1269,7 @@ window.XYNTAL_EN = {
     [/^(.+) ist im Team$/, (_, a) => `${a} is on the team`],
     [/^Anfrage an (.+) gesendet …$/, (_, a) => `Request sent to ${a} …`],
     [/^(.+) will bei (\S+) als (.+) mitmachen\.$/, (_, a, p, b) => `${a} wants to join ${p} as ${t(b)}.`],
+    [/^Öffne die E-Mail an (.+) und klicke auf den Bestätigungslink\. Erst dann bist du auf der Warteliste\.$/, (_, email) => `Open the email sent to ${email} and click the confirmation link. Only then are you on the waitlist.`],
     [/^(.+?) Nach deiner Bestätigung bist du Nr\. ([\d.]+) auf der Warteliste\.$/, (_, a, n) => `${t(a)} Once you confirm, you're no. ${n.replace(/\./g, ",")} on the waitlist.`],
     [/^(.+): (nach oben|nach unten)$/, (_, a, d) => `${t(a)}: ${d === "nach oben" ? "move up" : "move down"}`],
     [/^Nach deiner Bestätigung bist du Nr\. ([\d.]+) auf der Warteliste\.$/, (_, n) => `Once you confirm, you're no. ${n.replace(/\./g, ",")} on the waitlist.`],

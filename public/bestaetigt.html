@@ -7,7 +7,8 @@
 <meta name="theme-color" content="#07070B">
 <title>Du bist dabei – Xyntal</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/home.css?v=6">
+<link rel="stylesheet" href="/fonts/fonts.css?v=31">
+<link rel="stylesheet" href="/home.css?v=11">
 <style>
 .confirm-page { min-height: 100dvh; display: flex; flex-direction: column; }
 .confirm-header { padding-top: 28px; padding-bottom: 28px; }
@@ -22,6 +23,8 @@
 .confirm-next b { display: block; font-size: 15px; margin-bottom: 5px; }
 .confirm-next p { color: var(--text-2); font-size: 14px; }
 .confirm-actions { display: grid; gap: 14px; }
+.confirm-timing { font-size: 14px; margin-bottom: 26px; }
+.confirm-actions .btn { min-height: 54px; white-space: normal; }
 .confirm-secondary { font-size: 14px; color: var(--text-2); text-underline-offset: 4px; }
 .confirm-foot { padding: 0 20px 26px; display: flex; justify-content: center; gap: 22px; color: var(--text-3); font-size: 12px; }
 @media(max-width:480px) { .confirm-header { padding-top: 22px; padding-bottom: 22px; } .confirm-main { padding: 18px 20px 40px; } .confirm-card { padding: 32px 22px; border-radius: 24px; } .confirm-copy { font-size: 16px; } .confirm-check { width: 64px; height: 64px; } }
@@ -40,9 +43,10 @@
 <div class="confirm-check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg></div>
 <p class="confirm-kicker">E-Mail bestätigt</p>
 <h1 id="confirm-title">Du bist <span class="grad-soft">dabei.</span></h1>
-<p class="confirm-copy">Dein Platz auf der Xyntal-Warteliste ist gesichert. Schön, dass du von Anfang an dabei bist.</p>
-<div class="confirm-next"><b>Wie geht’s weiter?</b><p>Wir melden uns per E-Mail, sobald der Early Access startet. Ein Starttermin steht noch nicht fest. Bis dahin kannst du schon deine Xyntal-Karte bauen.</p></div>
-<div class="confirm-actions"><a class="btn btn-primary" href="/#karte">Meine Xyntal-Karte bauen <span aria-hidden="true">→</span></a><a class="confirm-secondary" href="/#entdecken">Erst mal die Demo entdecken</a></div>
+<p class="confirm-copy">Deine E-Mail ist bestätigt. Du stehst jetzt auf der Xyntal-Warteliste – eine weitere Anmeldung ist nicht nötig.</p>
+<div class="confirm-next"><b>Dein nächster Schritt: Zeig, was du aufbauen willst.</b><p>Erstelle deine Xyntal-Karte mit deinen Skills und dem, was du suchst. Du kannst sie als Bild speichern und teilen.</p></div>
+<p class="confirm-copy confirm-timing">Wir melden uns per E-Mail, sobald die Beta startet. Der Starttermin steht noch nicht fest.</p>
+<div class="confirm-actions"><a class="btn btn-primary" href="/#karte">Jetzt meine Karte erstellen <span aria-hidden="true">→</span></a><a class="confirm-secondary" href="/#entdecken">Erst mal die Demo entdecken</a></div>
 </section>
 </main>
 <footer class="confirm-foot"><a href="/impressum">Impressum</a><a href="/impressum#datenschutz">Datenschutz</a></footer>

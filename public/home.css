@@ -899,3 +899,9 @@ html.mk-embed, html.mk-embed body { background: transparent !important; min-heig
   .hero-inner .hero-title, .hero-inner .hero-lead { text-align: left; }
   .hero-show { order: initial; padding-top: 0; }
 }
+
+/* Clear next step after a successful waitlist request. */
+.waitlist-status.is-ok { padding: 20px; text-align: left; border: 1px solid rgba(141,232,205,.3); border-radius: 18px; background: rgba(141,232,205,.055); color: var(--text); overflow-wrap: anywhere; }
+.waitlist-status.is-ok span { display: block; }
+.waitlist-status.is-ok span + span { margin-top: 10px; font-size: 14px; color: var(--text-2); line-height: 1.55; }
+.waitlist-status.is-ok span:first-child { font-size: 18px; font-weight: 650; color: var(--ok); }
