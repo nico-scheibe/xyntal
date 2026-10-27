@@ -31,3 +31,16 @@
 .content-comments .comment-form { grid-template-columns:minmax(0,1fr); align-items:start; }
 .content-comments .comment-form button { align-self:start; min-height:44px; border-radius:999px; }
 .content-comments .comment-delete { background:none; border:0; color:var(--text-2,#b4b4be); text-decoration:underline; text-underline-offset:3px; cursor:pointer; padding:6px 0; }
+
+/* Projektbilder */
+.project.has-image { overflow: hidden; }
+.project-image-link, .project.has-image > .project-image { display: block; margin: -22px -22px 4px; }
+.project-image { position: relative; aspect-ratio: 16 / 9; background: linear-gradient(135deg, rgba(185, 92, 255, .18), rgba(63, 216, 255, .12)); overflow: hidden; border-radius: var(--r-card, 16px) var(--r-card, 16px) 0 0; }
+.project-image img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .3s ease, transform .4s ease; }
+.project-image.is-loaded img { opacity: 1; }
+@media (hover: hover) { .project-image-link:hover .project-image img { transform: scale(1.02); } }
+.project-detail .project.has-image > .project-image { margin-bottom: 12px; }
+.project-image-field input[type="file"] { padding: 10px; border: 1px dashed var(--border-2, #2D2A42); border-radius: 12px; background: rgba(255, 255, 255, .03); width: 100%; color: var(--text-2); }
+.project-image-preview { display: grid; gap: 10px; justify-items: start; margin-top: 10px; }
+.project-image-preview[hidden] { display: none; }
+.project-image-preview img { width: 100%; max-width: 420px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 14px; border: 1px solid var(--border, #1F1C2E); }

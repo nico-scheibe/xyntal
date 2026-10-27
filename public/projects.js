@@ -24,6 +24,63 @@
   let filter = "";
   let ready = true;         // false, solange Migration 009 fehlt
 
+  /* ---------- Projektbilder (supabase/020_project_images.sql) ---------- */
+  const IMG_BUCKET = "project-images";
+  const IMG_RE = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.jpg$/;
+  let hasImages = true;                // false, solange Migration 020 fehlt
+  const imgUrls = new Map();
+  const isMissingImageColumn = (err) => /image_path/.test(String(err?.message || err)) || err?.code === "42703";
+
+  // Bild im Browser auf 1200×675 (16:9) zuschneiden und als JPG verkleinern
+  async function prepareImage(file) {
+    if (!file) return null;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) throw new Error("Bitte wähle ein JPG-, PNG- oder WebP-Bild.");
+    if (!file.size || file.size > 12 * 1024 * 1024) throw new Error("Das Bild darf höchstens 12 MB groß sein.");
+    let bmp;
+    try { bmp = await createImageBitmap(file); } catch { throw new Error("Das Bild konnte nicht gelesen werden. Bitte wähle eine andere Datei."); }
+    try {
+      const W = 1200, H = 675;
+      const canvas = document.createElement("canvas"); canvas.width = W; canvas.height = H;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#0B0A12"; ctx.fillRect(0, 0, W, H);
+      const scale = Math.max(W / bmp.width, H / bmp.height);
+      const sw = W / scale, sh = H / scale;
+      ctx.drawImage(bmp, (bmp.width - sw) / 2, (bmp.height - sh) / 2, sw, sh, 0, 0, W, H);
+      for (const q of [0.85, 0.75, 0.6]) {
+        const blob = await new Promise((res) => canvas.toBlob(res, "image/jpeg", q));
+        if (blob && blob.size <= 1500000) return blob;
+      }
+      throw new Error("Das Bild konnte nicht verkleinert werden. Bitte wähle ein anderes.");
+    } finally { bmp.close?.(); }
+  }
+  async function uploadImage(blob) {
+    const path = `${v.me.id}/${crypto.randomUUID()}.jpg`;
+    unwrap(await sb.storage.from(IMG_BUCKET).upload(path, blob, { contentType: "image/jpeg", cacheControl: "3600", upsert: false }));
+    return path;
+  }
+  async function removeImage(path) {
+    if (IMG_RE.test(path || "")) { try { await sb.storage.from(IMG_BUCKET).remove([path]); } catch { /* bleibt liegen, stört nicht */ } }
+  }
+  // Bilder sind privat: nur wer das Projekt sehen darf, bekommt sie
+  function hydrateImages(root) {
+    root.querySelectorAll("[data-project-image]").forEach(async (el) => {
+      const path = el.dataset.projectImage;
+      if (!IMG_RE.test(path) || el.querySelector("img")) return;
+      try {
+        let url = imgUrls.get(path);
+        if (!url) {
+          const { data, error } = await sb.storage.from(IMG_BUCKET).download(path);
+          if (error) throw error;
+          url = URL.createObjectURL(data); imgUrls.set(path, url);
+        }
+        if (!el.isConnected) return;
+        const img = new Image(); img.alt = el.dataset.alt || ""; img.decoding = "async";
+        img.onload = () => el.classList.add("is-loaded");
+        img.src = url; el.append(img);
+      } catch { el.remove(); }
+    });
+  }
+
   const isMissingTable = (err) => /(projects|project_roles|project_interest)\b.*(does not exist|schema cache)|schema cache.*project/i.test(String(err?.message || err));
   const myInterest = (roleId) => v.me && interest.some((i) => i.role_id === roleId && i.member_id === v.me.id);
   const roleInterest = (roleId) => interest.filter((i) => i.role_id === roleId && (!v.me || i.member_id !== v.me.id));
@@ -60,7 +117,10 @@
     const mine = v.me && p.owner_id === v.me.id;
     const roles = [...(p.roles || [])].sort((a, b) => a.id - b.id);
     const open = roles.filter((r) => !r.filled).length;
-    return `<article class="project${p.closed ? " closed" : ""}" data-id="${p.id}" aria-labelledby="p-${p.id}">
+    const img = IMG_RE.test(p.image_path || "") ? p.image_path : "";
+    const imgBox = img ? `<div class="project-image" data-project-image="${esc(img)}" data-alt="${esc(p.title)}"></div>` : "";
+    return `<article class="project${p.closed ? " closed" : ""}${img ? " has-image" : ""}" data-id="${p.id}" aria-labelledby="p-${p.id}">
+      ${img ? (isDetail ? imgBox : `<a class="project-image-link" href="/projekte?projekt=${p.id}" tabindex="-1" aria-hidden="true">${imgBox}</a>`) : ""}
       <div class="listing-top">
         <span class="tag tag-update">${PHASE_LABEL[p.phase] || "Idee"}</span>
         ${p.place ? `<span class="tag">${esc(p.place)}</span>` : ""}
@@ -79,6 +139,8 @@
         <div class="listing-author">${avatar(owner.name, "avatar-sm", owner.avatar_path)}<div><strong>${esc(owner.name)}</strong><span>${timeAgo(p.created_at)}${p.is_public ? " · öffentlich" : ""}</span></div></div>
         <div class="post-actions">
           ${v.canAct && !mine && !p.closed ? `<a class="btn btn-small btn-ghost" href="nachrichten?an=${esc(p.owner_id)}">Nachricht</a>` : ""}
+          ${mine && hasImages ? `<button type="button" data-act="image">${img ? "Bild ändern" : "Bild hinzufügen"}</button>` : ""}
+          ${mine && hasImages && img ? `<button type="button" data-act="image-remove">Bild entfernen</button>` : ""}
           ${mine ? `<button type="button" data-act="close">${p.closed ? "Wieder öffnen" : "Projekt schließen"}</button>` : ""}
           ${mine || v.isAdmin ? `<button type="button" data-act="delete">Löschen</button>` : ""}
         </div>
@@ -111,6 +173,7 @@
       if (list[0]) document.title = `${list[0].title} – Xyntal`;
     }
     window.XyntalComments?.mount(els.list);
+    hydrateImages(els.list);
     if (!initialAnchor && /^#p-\d+$/.test(location.hash)) {
       const target = document.getElementById(location.hash.slice(1));
       if (target) { initialAnchor = true; target.style.scrollMarginTop = "100px"; target.scrollIntoView({block: "start"}); }
@@ -121,9 +184,17 @@
 
   async function load() {
     try {
-      let query = sb.from("projects").select("id, title, pitch, body, phase, place, is_public, closed, created_at, owner_id, owner:profiles!projects_owner_id_fkey(id, name, headline, avatar_path), roles:project_roles(id, name, need, hours, filled)");
-      if (isDetail) query = query.eq("id", detailId);
-      projects = unwrap(await query.order("closed").order("created_at", { ascending: false }).limit(100));
+      const cols = (img) => `id, title, pitch, body, phase, place, is_public, closed, created_at, owner_id${img ? ", image_path" : ""}, owner:profiles!projects_owner_id_fkey(id, name, headline, avatar_path), roles:project_roles(id, name, need, hours, filled)`;
+      const run = (img) => {
+        let query = sb.from("projects").select(cols(img));
+        if (isDetail) query = query.eq("id", detailId);
+        return query.order("closed").order("created_at", { ascending: false }).limit(100);
+      };
+      let res = await run(hasImages);
+      if (res.error && hasImages && isMissingImageColumn(res.error)) { hasImages = false; res = await run(false); }
+      projects = unwrap(res);
+      const field = document.getElementById("project-image-field");
+      if (field) field.hidden = !hasImages;
       interest = v.me ? unwrap(await sb.from("project_interest")
         .select("role_id, member_id, note, created_at, member:profiles!project_interest_member_id_fkey(id, name, headline, avatar_path)")) : [];
       ready = true;
@@ -175,11 +246,30 @@
     els.form.elements.title.focus();
   }
   function closeForm() {
+    resetPreview();
     els.form.hidden = true;
     els.newBtn.hidden = !v.canAct;
     els.form.reset();
     setStatus(els.status, "");
   }
+
+  const imgInput = els.form.elements.image;
+  const imgPreview = document.getElementById("project-image-preview");
+  let previewUrl = "";
+  function resetPreview() {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    previewUrl = "";
+    if (imgPreview) { imgPreview.hidden = true; imgPreview.innerHTML = ""; }
+  }
+  imgInput?.addEventListener("change", () => {
+    resetPreview();
+    const f = imgInput.files?.[0];
+    if (!f || !imgPreview) return;
+    previewUrl = URL.createObjectURL(f);
+    imgPreview.innerHTML = `<img src="${previewUrl}" alt=""><button type="button" class="btn btn-ghost btn-small" data-clear-image>Anderes Bild</button>`;
+    imgPreview.hidden = false;
+    imgPreview.querySelector("[data-clear-image]").addEventListener("click", () => { imgInput.value = ""; resetPreview(); imgInput.click(); });
+  });
 
   els.newBtn.addEventListener("click", openForm);
   document.getElementById("cancel-project").addEventListener("click", () => { closeForm(); els.newBtn.focus(); });
@@ -206,9 +296,16 @@
       if (!roles.length) throw new Error("Beschreib mindestens eine offene Rolle.");
       if (roles.some((r) => !r.name)) throw new Error("Jede Rolle braucht einen Namen.");
       if (roles.some((r) => r.hours && (r.hours < 1 || r.hours > 60))) throw new Error("Stunden pro Woche bitte zwischen 1 und 60.");
-      const project = unwrap(await sb.from("projects").insert({
-        title: data.title, pitch: data.pitch, body: data.body, phase: data.phase, place: data.place, is_public: data.is_public,
-      }).select("id").single());
+      let imagePath = "";
+      const file = els.form.elements.image?.files?.[0];
+      if (file && hasImages) imagePath = await uploadImage(await prepareImage(file));
+      let project;
+      try {
+        project = unwrap(await sb.from("projects").insert({
+          title: data.title, pitch: data.pitch, body: data.body, phase: data.phase, place: data.place, is_public: data.is_public,
+          ...(imagePath ? { image_path: imagePath } : {}),
+        }).select("id").single());
+      } catch (err) { await removeImage(imagePath); throw err; }
       try {
         unwrap(await sb.from("project_roles").insert(roles.map((r) => ({ ...r, project_id: project.id }))));
       } catch (err) {
@@ -269,6 +366,24 @@
       } else if (btn.dataset.act === "fill") {
         unwrap(await sb.from("project_roles").update({ filled: !role.filled }).eq("id", role.id));
         role.filled = !role.filled;
+      } else if (btn.dataset.act === "image") {
+        const picker = document.createElement("input");
+        picker.type = "file"; picker.accept = "image/jpeg,image/png,image/webp";
+        const file = await new Promise((res) => {
+          picker.addEventListener("change", () => res(picker.files?.[0] || null), { once: true });
+          // Abbrechen im Dateidialog: Knopf wieder freigeben
+          picker.addEventListener("cancel", () => res(null), { once: true });
+          picker.click();
+        });
+        if (!file) { btn.disabled = false; return; }
+        btn.textContent = "Bild wird gespeichert …";
+        const path = await uploadImage(await prepareImage(file));
+        try { unwrap(await sb.from("projects").update({ image_path: path }).eq("id", id)); }
+        catch (err) { await removeImage(path); throw err; }
+        const old = p.image_path; p.image_path = path; await removeImage(old);
+      } else if (btn.dataset.act === "image-remove") {
+        unwrap(await sb.from("projects").update({ image_path: "" }).eq("id", id));
+        const old = p.image_path; p.image_path = ""; await removeImage(old);
       } else if (btn.dataset.act === "close") {
         unwrap(await sb.from("projects").update({ closed: !p.closed }).eq("id", id));
         p.closed = !p.closed;
