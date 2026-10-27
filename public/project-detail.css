@@ -44,3 +44,98 @@
 .project-image-preview { display: grid; gap: 10px; justify-items: start; margin-top: 10px; }
 .project-image-preview[hidden] { display: none; }
 .project-image-preview img { width: 100%; max-width: 420px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 14px; border: 1px solid var(--border, #1F1C2E); }
+
+/* =================================================================
+   Projekt-Karte im App-Look: Verlaufsrand, Bild mit Chips, Rollen-Karten
+   ================================================================= */
+.project {
+  position: relative; isolation: isolate;
+  border: 1px solid transparent !important;
+  background:
+    linear-gradient(180deg, rgba(24, 22, 36, .96), rgba(14, 13, 22, .96)) padding-box,
+    linear-gradient(135deg, rgba(185, 92, 255, .55), rgba(255, 95, 210, .28) 35%, rgba(63, 216, 255, .18) 65%, rgba(255, 255, 255, .06)) border-box !important;
+  border-radius: 22px !important;
+  box-shadow: 0 30px 60px -36px rgba(0, 0, 0, .9), 0 0 0 1px rgba(255, 255, 255, .02) inset;
+  transition: transform .25s cubic-bezier(.22, .8, .2, 1), box-shadow .25s ease;
+}
+@media (hover: hover) {
+  .project:not(.closed):hover { transform: translateY(-3px); box-shadow: 0 40px 70px -36px rgba(0, 0, 0, .95), 0 0 60px -20px rgba(185, 92, 255, .45); }
+}
+.project-detail .project:hover { transform: none; }
+
+/* Bild: läuft weich in die Karte, Chips sitzen darauf */
+.project-image, .project-image-link, .project.has-image > .project-image { border-radius: 21px 21px 0 0; }
+.project-image::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg, transparent 45%, rgba(14, 13, 22, .55) 78%, rgba(18, 17, 28, 1) 100%); }
+.project.has-image > .listing-top { position: relative; z-index: 2; margin-top: -48px; padding: 0 2px; }
+.project.has-image > .listing-top .tag {
+  background: rgba(10, 10, 16, .62) !important; border-color: rgba(255, 255, 255, .16) !important; color: #fff !important;
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+.tag-phase::before { content: ""; display: inline-block; width: 6px; height: 6px; margin-right: 6px; border-radius: 50%; background: currentColor; vertical-align: 1px; }
+.tag-phase.phase-idee { color: #FFD27A !important; }
+.tag-phase.phase-prototyp { color: #D9A8FF !important; }
+.tag-phase.phase-erste_kunden { color: #7FE3FF !important; }
+.tag-phase.phase-wachstum { color: #6EE7B7 !important; }
+.project.has-image > .listing-top .tag-phase::before { box-shadow: 0 0 10px currentColor; }
+
+/* Titel */
+.project-title { font-size: clamp(24px, 3vw, 30px) !important; letter-spacing: -0.035em; line-height: 1.1; }
+.project-title a { background: linear-gradient(100deg, #fff, #fff); -webkit-background-clip: text; background-clip: text; transition: color .2s; }
+@media (hover: hover) {
+  .project-title a:hover { color: transparent !important; background-image: linear-gradient(100deg, #B95CFF, #FF5FD2 40%, #5B8CFF 70%, #3FD8FF); }
+}
+.project-pitch { color: #D4D4DE !important; font-size: 16.5px !important; }
+
+/* „Projekt öffnen & bewerben“ als Button */
+.project-open {
+  justify-self: start; align-items: center; gap: 8px;
+  padding: 11px 18px; border-radius: 999px; text-decoration: none !important;
+  color: #fff !important; font-size: 14.5px;
+  background: linear-gradient(100deg, #A855F7, #EC4899 45%, #6366F1);
+  box-shadow: 0 10px 28px -12px rgba(236, 72, 153, .8), inset 0 1px 0 rgba(255, 255, 255, .25);
+  transition: filter .2s, transform .15s;
+}
+.project-open:hover { filter: brightness(1.1); }
+.project-open:active { transform: scale(.98); }
+
+/* Rollen als eigene Karten */
+.project-roles h3 { display: flex; align-items: center; gap: 8px; }
+.project-roles h3.has-open::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #34D399; box-shadow: 0 0 0 4px rgba(52, 211, 153, .18); }
+@media (prefers-reduced-motion: no-preference) {
+  .project-roles h3.has-open::before { animation: live-dot 2s ease-in-out infinite; }
+}
+@keyframes live-dot { 50% { box-shadow: 0 0 0 7px rgba(52, 211, 153, 0); } }
+.project-roles ul { gap: 8px !important; }
+.role-row {
+  position: relative; overflow: hidden;
+  padding: 14px 16px 14px 20px !important; border-radius: 14px !important;
+  background: rgba(255, 255, 255, .035) !important; border: 1px solid rgba(255, 255, 255, .07) !important;
+  transition: border-color .2s, background-color .2s;
+}
+.role-row::before { content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 3px; border-radius: 0 3px 3px 0;
+  background: linear-gradient(180deg, #B95CFF, #3FD8FF); }
+.role-row.is-filled::before { background: rgba(255, 255, 255, .18); }
+@media (hover: hover) { .role-row:not(.is-filled):hover { border-color: rgba(185, 92, 255, .35) !important; background: rgba(185, 92, 255, .06) !important; } }
+.role-info strong { display: flex !important; flex-wrap: wrap; align-items: center; gap: 8px; }
+.role-hours { font-style: normal; font: 600 11.5px/1 var(--f-text, inherit); padding: 5px 8px; border-radius: 999px; color: #9AF0FF; background: rgba(34, 229, 255, .1); border: 1px solid rgba(34, 229, 255, .25); }
+.role-info span { margin-top: 3px; color: #A6A4BD !important; }
+.role-join:not(.is-on) { background: linear-gradient(100deg, #A855F7, #EC4899 45%, #6366F1) !important; border-color: transparent !important; color: #fff !important; font-weight: 600; }
+.role-join:not(.is-on):hover { filter: brightness(1.1); }
+
+/* Fußzeile: Besitzer-Knöpfe dezent, Löschen wird rot */
+.project .listing-foot { border-top-color: rgba(255, 255, 255, .07) !important; }
+.project .post-actions button { font-size: 12.5px; }
+.project .post-actions button[data-act="delete"]:hover { color: #FF8A9B !important; border-color: rgba(255, 107, 129, .45) !important; background: rgba(255, 107, 129, .1) !important; }
+
+/* Rollen: Name bekommt Platz, Aktionen rechts untereinander */
+.role-row { grid-template-columns: minmax(0, 1fr) !important; }
+@media (min-width: 560px) { .role-row { grid-template-columns: minmax(0, 1fr) auto !important; align-items: center; } }
+.role-action { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+@media (min-width: 560px) { .role-action { align-items: flex-end; text-align: right; max-width: 220px; } }
+.role-quiet { font-size: 12px !important; }
+/* Phasen-Farbe auch auf dem Bild behalten */
+.project.has-image > .listing-top .tag-phase.phase-idee { color: #FFD27A !important; }
+.project.has-image > .listing-top .tag-phase.phase-prototyp { color: #E2B8FF !important; }
+.project.has-image > .listing-top .tag-phase.phase-erste_kunden { color: #7FE3FF !important; }
+.project.has-image > .listing-top .tag-phase.phase-wachstum { color: #6EE7B7 !important; }

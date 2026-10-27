@@ -88,7 +88,6 @@
   /* ---------- Darstellung ---------- */
 
   function roleHtml(p, r, mine) {
-    const meta = [r.need && esc(r.need), r.hours && `${r.hours} Std./Woche`].filter(Boolean).join(" · ");
     let action = "";
     if (mine) {
       const people = roleInterest(r.id);
@@ -107,7 +106,7 @@
       action = `<a class="text-link" href="/login?next=${encodeURIComponent(`projekte?projekt=${p.id}`)}">Einloggen, um dich zu bewerben</a>`;
     }
     return `<li class="role-row${r.filled ? " is-filled" : ""}" data-role="${r.id}">
-      <div class="role-info"><strong>${esc(r.name)}</strong>${meta ? `<span>${meta}</span>` : ""}</div>
+      <div class="role-info"><strong>${esc(r.name)}${r.hours ? `<em class="role-hours">${r.hours} Std./Woche</em>` : ""}</strong>${r.need ? `<span>${esc(r.need)}</span>` : ""}</div>
       <div class="role-action">${action}</div>
     </li>`;
   }
@@ -122,7 +121,7 @@
     return `<article class="project${p.closed ? " closed" : ""}${img ? " has-image" : ""}" data-id="${p.id}" aria-labelledby="p-${p.id}">
       ${img ? (isDetail ? imgBox : `<a class="project-image-link" href="/projekte?projekt=${p.id}" tabindex="-1" aria-hidden="true">${imgBox}</a>`) : ""}
       <div class="listing-top">
-        <span class="tag tag-update">${PHASE_LABEL[p.phase] || "Idee"}</span>
+        <span class="tag tag-update tag-phase phase-${esc(p.phase || "idee")}">${PHASE_LABEL[p.phase] || "Idee"}</span>
         ${p.place ? `<span class="tag">${esc(p.place)}</span>` : ""}
         ${p.closed ? `<span class="tag">Geschlossen</span>` : ""}
       </div>
@@ -132,7 +131,7 @@
       ${mine && isDetail ? `<div class="applications-heading"><strong>${roleInterestForProject(p).length} ${roleInterestForProject(p).length === 1 ? "Bewerbung" : "Bewerbungen"}</strong><p>Die Bewerbungen findest du unten bei der jeweiligen Rolle. Nur du und die jeweilige Person haben Zugriff darauf.</p></div>` : ""}
       ${!isDetail ? `<a class="text-link project-open" href="/projekte?projekt=${p.id}">Projekt öffnen &amp; bewerben →</a>` : ""}
       <div class="project-roles">
-        <h3>${open ? `${open} offene ${open === 1 ? "Rolle" : "Rollen"}` : "Alle Rollen besetzt"}</h3>
+        <h3${open ? ' class="has-open"' : ""}>${open ? `${open} offene ${open === 1 ? "Rolle" : "Rollen"}` : "Alle Rollen besetzt"}</h3>
         <ul>${roles.map((r) => roleHtml(p, r, mine)).join("")}</ul>
       </div>
       <div class="listing-foot">
