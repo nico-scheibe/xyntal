@@ -751,7 +751,7 @@
         p_handle: card.handle || "",
         p_public: !!(isPublic && card.handle), p_design: card.design || null,
       });
-      if (!res.ok) return null;
+      if (!res.ok) return /XYNTAL_MODERATION/.test(await res.text().catch(() => "")) ? "blocked" : null;
       const out = await res.json().catch(() => "");
       return typeof out === "string" ? out : "";
     } catch { return null; }
@@ -841,7 +841,9 @@
           const card = window.XyntalCard();
           const isPublic = !!form.PUBLIC_CARD?.checked;
           const res = await sendCard(email, card, isPublic);
-          if (res !== null) {
+          if (res === "blocked") {
+            parts.push("Deine Karte wurde nicht gespeichert: Sie enthält eine Beleidigung, Spam oder einen unsicheren Link.");
+          } else if (res !== null) {
             parts.push("Deine Karte ist gespeichert.");
             if (res === "ok") parts.push(isPublic ? `Deine Karte ist jetzt unter xyntal.de/${card.handle} zu sehen.` : `Dein Link xyntal.de/${card.handle} ist reserviert.`);
             else if (res === "taken") parts.push(`xyntal.de/${card.handle} ist leider schon vergeben. Du kannst dir nach dem Start einen anderen aussuchen.`);

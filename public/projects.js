@@ -130,8 +130,8 @@
       </div>
       ${n.motivation ? `<p class="app-motivation">${esc(n.motivation)}</p>` : ""}
       ${n.contact || n.portfolio ? `<dl class="app-facts">
-        ${n.contact ? `<div><dt>Kontakt</dt><dd>${contactHref ? `<a class="text-link" href="${esc(contactHref)}"${contactHref.startsWith("http") ? ' target="_blank" rel="noopener"' : ""}>${esc(n.contact)}</a>` : esc(n.contact)}</dd></div>` : ""}
-        ${n.portfolio ? `<div><dt>Portfolio</dt><dd>${portfolioHref ? `<a class="text-link" href="${esc(portfolioHref)}" target="_blank" rel="noopener">${esc(n.portfolio)}</a>` : esc(n.portfolio)}</dd></div>` : ""}
+        ${n.contact ? `<div><dt>Kontakt</dt><dd>${contactHref ? `<a class="text-link" href="${esc(contactHref)}"${contactHref.startsWith("http") ? ' target="_blank" rel="noopener nofollow"' : ""}>${esc(n.contact)}</a>` : esc(n.contact)}</dd></div>` : ""}
+        ${n.portfolio ? `<div><dt>Portfolio</dt><dd>${portfolioHref ? `<a class="text-link" href="${esc(portfolioHref)}" target="_blank" rel="noopener nofollow">${esc(n.portfolio)}</a>` : esc(n.portfolio)}</dd></div>` : ""}
       </dl>` : ""}
       <div class="app-foot">
         <span class="app-time">${timeAgo(i.created_at)}</span>
@@ -264,7 +264,7 @@
         ${goals.length ? `<ul class="project-goals">${goals.map((g) => `<li>${esc(g)}</li>`).join("")}</ul>` : ""}
         ${tags.length ? `<div class="tags">${tags.map((t) => `<span class="tag">${esc(t)}</span>`).join("")}</div>` : ""}
         ${timeframe ? `<p class="pd-timeframe">${esc(timeframe)}</p>` : ""}
-        ${links.length ? `<ul class="project-links">${links.map((l) => `<li><a class="text-link" href="${esc(normalizeUrl(l.url))}" target="_blank" rel="noopener">${esc(l.label || l.url)}</a></li>`).join("")}</ul>` : ""}
+        ${links.length ? `<ul class="project-links">${links.map((l) => `<li><a class="text-link" href="${esc(normalizeUrl(l.url))}" target="_blank" rel="noopener nofollow">${esc(l.label || l.url)}</a></li>`).join("")}</ul>` : ""}
       </section>
       <section class="project-section pd-team"><h2>Team</h2>
         <ul class="project-team">

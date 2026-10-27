@@ -22,6 +22,19 @@
     "Angemeldet als": "Signed in as", "Admin-Bereich": "Admin area",
   };
   const t = (de) => (document.documentElement.lang === "en" && EN[de]) || de;
+
+  // Links aus Mitglieder-Inhalten (rel="nofollow") vor dem Öffnen kurz bestätigen lassen
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest?.('a[rel~="nofollow"][href^="http"]');
+    if (!a || e.defaultPrevented) return;
+    let host = "";
+    try { host = new URL(a.href).hostname.replace(/^www\./, ""); } catch { return; }
+    if (/^xyntal\.(de|com)$/.test(host)) return;
+    const msg = document.documentElement.lang === "en"
+      ? `You are leaving Xyntal and opening:\n${host}\n\nThis link was posted by a member. Never enter passwords or payment details there.`
+      : `Du verlässt Xyntal und öffnest:\n${host}\n\nDiesen Link hat ein Mitglied geteilt. Gib dort nie Passwörter oder Zahlungsdaten ein.`;
+    if (!confirm(msg)) e.preventDefault();
+  }, true);
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
   function readSession() {

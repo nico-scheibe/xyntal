@@ -11,6 +11,13 @@ const PROFILE_FIELDS = ["name", "headline", "about", "phase", "category", "offer
 function friendlyError(err) {
   const msg = (err && (err.message || err.error_description)) || String(err || "");
   const map = [
+    // Schutzfilter der Datenbank (supabase/migrations/20261028140000_content_safety.sql)
+    [/XYNTAL_MODERATION:beleidigung/, "Bitte bleib respektvoll: Dein Text enthält eine Beleidigung und wurde nicht gespeichert."],
+    [/XYNTAL_MODERATION:scam/, "Dein Text sieht nach Betrug oder Spam aus (z. B. Geld- oder Gewinnversprechen) und wurde blockiert."],
+    [/XYNTAL_MODERATION:link/, "Dieser Link ist aus Sicherheitsgründen nicht erlaubt (Kurzlinks, verschleierte Adressen oder Downloads). Nutze bitte die vollständige, normale Adresse."],
+    [/XYNTAL_MODERATION:zu_viele_links/, "Bitte höchstens 5 Links pro Text."],
+    [/XYNTAL_MODERATION:zu_schnell/, "Du sendest gerade sehr viele Nachrichten. Bitte warte einen Moment."],
+    [/XYNTAL_MODERATION:wiederholung/, "Diese Nachricht hast du gerade schon mehrfach verschickt."],
     [/bucket not found/i, "Der Bildspeicher ist noch nicht eingerichtet. Bitte versuch es später erneut."],
     [/payload too large|maximum allowed size|exceeded.*size/i, "Das Bild ist zu groß. Bitte wähle eine kleinere Datei."],
     [/mime type.*not supported|invalid.*mime/i, "Dieses Bildformat wird nicht unterstützt. Bitte wähle JPG, PNG oder WebP."],
@@ -133,9 +140,9 @@ async function currentMember() {
 
 function memberCard(m, opts = {}) {
   const links = [
-    m.linkedin && `<a href="${esc(m.linkedin)}" target="_blank" rel="noopener">LinkedIn</a>`,
-    m.instagram && `<a href="${esc(m.instagram)}" target="_blank" rel="noopener">Instagram</a>`,
-    m.website && `<a href="${esc(m.website)}" target="_blank" rel="noopener">Website</a>`,
+    m.linkedin && `<a href="${esc(m.linkedin)}" target="_blank" rel="noopener nofollow">LinkedIn</a>`,
+    m.instagram && `<a href="${esc(m.instagram)}" target="_blank" rel="noopener nofollow">Instagram</a>`,
+    m.website && `<a href="${esc(m.website)}" target="_blank" rel="noopener nofollow">Website</a>`,
   ].filter(Boolean).join("");
   const tags = [PHASES[m.phase], m.category].filter(Boolean).map((t) => `<span class="tag">${esc(t)}</span>`).join("");
   return `
