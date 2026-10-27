@@ -22,8 +22,17 @@
 
   const page = (html) => { root.innerHTML = html; };
   // Angemeldete sind schon dabei: statt Warteliste zu den Projekten
-  let member = false;
-  try { member = !!localStorage.getItem("sb-rralgrlujoupprwlvoyo-auth-token"); } catch { /* privat */ }
+  let member = false, me = null;
+  try {
+    const raw = localStorage.getItem("sb-rralgrlujoupprwlvoyo-auth-token");
+    if (raw) {
+      member = true;
+      const ses = JSON.parse(raw);
+      // gültiges Token mitschicken, damit die Datenbank weiß, wer fragt (für „Nachricht schreiben“)
+      if (ses?.access_token && (!ses.expires_at || ses.expires_at * 1000 > Date.now() + 30000)) me = { id: ses.user?.id, token: ses.access_token };
+    }
+  } catch { /* privat */ }
+  const UUID = /^[0-9a-f-]{36}$/;
   const ctas = (primary) => `<div class="profile-actions">${primary}${member
     ? `<a class="btn btn-glass" href="/projekte">${esc(t("Projekte entdecken"))}</a>`
     : `<a class="btn btn-glass" href="/#warteliste">${esc(t("Auf die Warteliste"))}</a>`}</div>`;
@@ -75,9 +84,13 @@
       <section class="public-activity" aria-label="Projekte und Anzeigen" data-public-activity><p role="status">${esc(t("Projekte und Anzeigen werden geladen …"))}</p></section>
       <div class="profile-msg public-join">
         <p>${esc(t("Auf Xyntal finden Entwickler, Designer und Gründer die richtigen Leute für ihre Idee."))}</p>
-        ${ctas(member
-          ? `<a class="btn btn-primary" href="/meine-karte">${esc(t("Meine Karte bearbeiten"))}</a>`
-          : `<a class="btn btn-primary" href="/#karte">${esc(t("Bau deine eigene Karte"))}</a>`)}
+        ${ctas(!member
+          ? `<a class="btn btn-primary" href="/#karte">${esc(t("Bau deine eigene Karte"))}</a>`
+          : me && c.user_id && c.user_id === me.id
+            ? `<a class="btn btn-primary" href="/meine-karte">${esc(t("Meine Karte bearbeiten"))}</a>`
+            : UUID.test(c.user_id || "")
+              ? `<a class="btn btn-primary" href="/nachrichten?an=${encodeURIComponent(c.user_id)}">${esc(t("Nachricht schreiben"))}</a>`
+              : "")}
       </div>`);
   }
 
@@ -138,7 +151,7 @@
     try {
       const res = await fetch(`${SUPA}/rest/v1/rpc/get_public_card`, {
         method: "POST",
-        headers: { apikey: KEY, Authorization: `Bearer ${KEY}`, "Content-Type": "application/json" },
+        headers: { apikey: KEY, Authorization: `Bearer ${me ? me.token : KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({ p_handle: handle }),
       });
       if (!res.ok) throw new Error(String(res.status));

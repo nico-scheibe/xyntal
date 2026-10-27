@@ -912,3 +912,43 @@ html.mk-embed, html.mk-embed body { background: transparent !important; min-heig
 .mc-link-button:hover { background: rgba(128,128,128,.12); }
 .mc-link-button:focus-visible { outline: 2px solid var(--mc-text); outline-offset: 3px; }
 .mc-link-button[hidden] { display: none; }
+
+
+/* ---------- Swipe-Gefühl ---------- */
+/* nächste Karte rückt beim Ziehen nach */
+.swipe-card.is-under { --lift: 0; transform: translateY(calc((var(--depth) - var(--lift)) * 12px)) scale(calc(1 - (var(--depth) - var(--lift)) * 0.045)); }
+.swipe-card.is-under.is-dragging { transition: none; }
+/* Stempel wie in einer echten App: groß, schräg, wachsen mit dem Ziehen */
+.swipe-card .stamp { top: 26px; padding: 8px 16px; border-radius: 12px; font: 800 18px/1 var(--f); letter-spacing: 0.04em; box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6); }
+.swipe-card .stamp-yes { left: 22px; right: auto; transform: rotate(-12deg) scale(calc(0.8 + var(--yes) * 0.25)); background: linear-gradient(100deg, #34D399, #3FD8FF); color: #03140C; }
+.swipe-card .stamp-no { right: 22px; left: auto; transform: rotate(12deg) scale(calc(0.8 + var(--no) * 0.25)); background: rgba(255, 255, 255, 0.92); color: #111; }
+/* Rand leuchtet in Richtung der Entscheidung */
+.swipe-card.is-top { box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 0 0 calc(var(--yes) * 2px) rgba(52, 211, 153, 0.7), 0 0 calc(var(--yes) * 40px) rgba(52, 211, 153, 0.25); }
+.swipe-card.fly-right { transform: translate(140%, -6%) rotate(22deg) !important; }
+.swipe-card.fly-left { transform: translate(-140%, -6%) rotate(-22deg) !important; }
+/* Hinweis beim ersten Besuch: Karte wackelt einmal, eine Hand zeigt die Bewegung */
+.deck-wrap { position: relative; }
+@media (prefers-reduced-motion: no-preference) {
+  .swipe-card.is-top.is-hint { animation: swipe-hint 2.4s cubic-bezier(.45, .05, .25, 1) both; }
+  .swipe-hand { position: absolute; left: 50%; top: 58%; z-index: 6; width: 46px; height: 46px; margin-left: -23px; pointer-events: none; color: #fff; filter: drop-shadow(0 6px 14px rgba(0,0,0,.6)); animation: swipe-hand 2.4s cubic-bezier(.45, .05, .25, 1) both; }
+  .swipe-hand svg { width: 100%; height: 100%; fill: rgba(255,255,255,.16); stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+}
+@media (prefers-reduced-motion: reduce) { .swipe-hand { display: none; } }
+@keyframes swipe-hint {
+  0%, 8% { transform: none; --yes: 0; --no: 0; }
+  30% { transform: translateX(70px) rotate(4deg); --yes: .9; --no: 0; }
+  46% { transform: none; --yes: 0; }
+  68% { transform: translateX(-70px) rotate(-4deg); --no: .9; --yes: 0; }
+  86%, 100% { transform: none; --no: 0; }
+}
+@keyframes swipe-hand {
+  0% { opacity: 0; transform: translate(0, 10px); }
+  8% { opacity: 1; transform: none; }
+  30% { transform: translateX(70px) rotate(8deg); }
+  46% { transform: none; }
+  68% { transform: translateX(-70px) rotate(-8deg); }
+  86% { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: translate(0, 10px); }
+}
+@property --yes { syntax: "<number>"; inherits: true; initial-value: 0; }
+@property --no { syntax: "<number>"; inherits: true; initial-value: 0; }

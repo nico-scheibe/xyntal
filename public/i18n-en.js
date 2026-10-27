@@ -55,6 +55,7 @@ window.XYNTAL_EN = {
   "Du bist dabei": "You're in",
   "Finde Mitgründer, Entwickler und Designer, die mit dir etwas aufbauen wollen.": "Find co-founders, developers and designers who want to build with you.",
   "Projekte entdecken": "Explore projects",
+  "Nachricht schreiben": "Send a message",
   "Projekt mit diesem Team anlegen": "Create a project with this team",
   "Deine Karte bauen": "Build your card",
   "Deine Karte": "Your card",

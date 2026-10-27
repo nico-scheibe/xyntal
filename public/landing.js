@@ -205,8 +205,8 @@
     const picked = state.team[p.role] === p.id;
     const pct = Math.min(100, Math.round((p.hours / role.hours) * 100));
     return `<article class="swipe-card${depth ? " is-under" : " is-top"}${picked ? " is-picked" : ""}" style="--depth:${depth}" data-card="${p.id}" ${depth ? 'aria-hidden="true"' : `aria-labelledby="pn-${p.id}"`}>
-      <span class="stamp stamp-yes" aria-hidden="true">REIN</span>
-      <span class="stamp stamp-no" aria-hidden="true">WEITER</span>
+      <span class="stamp stamp-yes" aria-hidden="true">Ins Team</span>
+      <span class="stamp stamp-no" aria-hidden="true">Weiter</span>
       <div class="person-top">
         <span class="avatar${picked ? " is-ice" : ""}" aria-hidden="true">${initials(p.name)}</span>
         <div>
@@ -272,6 +272,12 @@
     if (!top) return;
     const p = personById[top.dataset.card];
     busy = true;
+    rememberSwipe();
+    buzz(yes ? [12, 40, 18] : 10);
+    // Auch per Knopf/Taste: Stempel kurz zeigen, dann wegfliegen
+    top.style.setProperty(yes ? "--yes" : "--no", 1);
+    top.style.setProperty(yes ? "--no" : "--yes", 0);
+    nextCard()?.style.setProperty("--lift", 1);
     top.classList.add(yes ? "fly-right" : "fly-left");
     top.style.transform = "";
     setTimeout(() => {
@@ -339,31 +345,75 @@
   }
   const matchOpen = () => !matchScreen.hidden;
 
+  // Vibration am Handy (wo der Browser es kann)
+  const buzz = (pattern) => { try { if (!still && navigator.vibrate) navigator.vibrate(pattern); } catch { /* egal */ } };
+  // Karten liegen im DOM von unten nach oben – die direkt darunter ist das vorige Element
+  const nextCard = () => { const top = $(".swipe-card.is-top", els.people); const prev = top?.previousElementSibling; return prev?.classList.contains("swipe-card") ? prev : null; };
+  const SWIPED = "xyntal-demo-swiped";
+  const rememberSwipe = () => { try { localStorage.setItem(SWIPED, "1"); } catch { /* egal */ } };
+  let hintHand = null;
+  // Beim ersten Besuch einmal zeigen, dass man wischen kann
+  function showHint() {
+    try { if (localStorage.getItem(SWIPED)) return; } catch { /* zeigen */ }
+    const top = $(".swipe-card.is-top", els.people);
+    if (!top || still || busy) return;
+    hintHand = document.createElement("span");
+    hintHand.className = "swipe-hand";
+    hintHand.setAttribute("aria-hidden", "true");
+    hintHand.innerHTML = '<svg viewBox="0 0 24 24"><path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V10m0-1.5a1.5 1.5 0 0 1 3 0V11m0-1a1.5 1.5 0 0 1 3 0v4.5a6 6 0 0 1-6 6h-.6a6 6 0 0 1-4.7-2.3L4.3 15a1.5 1.5 0 0 1 2.3-1.9L9 15.5"/></svg>';
+    els.people.parentElement.append(hintHand);
+    top.classList.add("is-hint");
+    setTimeout(() => { top.classList.remove("is-hint"); hintHand?.remove(); hintHand = null; }, 2600);
+  }
+  if ("IntersectionObserver" in window) {
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some((en) => en.isIntersecting)) { io.disconnect(); setTimeout(showHint, 500); }
+    }, { threshold: 0.6 });
+    io.observe(els.people);
+  }
+
   // Ziehen mit Maus oder Finger
   function bindDrag() {
     const top = $(".swipe-card.is-top", els.people);
     if (!top) return;
-    let x0 = 0, y0 = 0, dx = 0, dragging = false, id = null;
+    let x0 = 0, y0 = 0, dx = 0, dragging = false, id = null, past = false, vx = 0, lastX = 0, lastT = 0;
+    const under = nextCard();
     top.addEventListener("pointerdown", (e) => {
       if (busy || e.button > 0) return;
-      dragging = true; id = e.pointerId; x0 = e.clientX; y0 = e.clientY; dx = 0;
+      dragging = true; id = e.pointerId; x0 = e.clientX; y0 = e.clientY; dx = 0; past = false;
+      vx = 0; lastX = e.clientX; lastT = e.timeStamp;
       top.setPointerCapture(id);
       top.classList.add("is-dragging");
+      top.classList.remove("is-hint");
+      hintHand?.remove();
+      under?.classList.add("is-dragging");
     });
     top.addEventListener("pointermove", (e) => {
       if (!dragging || e.pointerId !== id) return;
       dx = e.clientX - x0;
+      const dt = e.timeStamp - lastT;
+      if (dt > 0) { vx = 0.5 * vx + 0.5 * ((e.clientX - lastX) / dt); lastX = e.clientX; lastT = e.timeStamp; }
       const dy = (e.clientY - y0) * 0.15;
       top.style.transform = `translate(${dx}px, ${dy}px) rotate(${dx / 18}deg)`;
       top.style.setProperty("--yes", Math.max(0, Math.min(1, dx / 110)));
       top.style.setProperty("--no", Math.max(0, Math.min(1, -dx / 110)));
+      under?.style.setProperty("--lift", Math.min(1, Math.abs(dx) / 160));
+      // kurzes Tippen am Handy, sobald die Entscheidung „einrastet“
+      const nowPast = Math.abs(dx) > 110;
+      if (nowPast !== past) { past = nowPast; if (past) buzz(8); }
     });
     const end = (e) => {
       if (!dragging || e.pointerId !== id) return;
       dragging = false;
       top.classList.remove("is-dragging");
-      if (Math.abs(dx) > 110) decide(dx > 0);
-      else { top.style.transform = ""; top.style.setProperty("--yes", 0); top.style.setProperty("--no", 0); }
+      under?.classList.remove("is-dragging");
+      // weit genug gezogen – oder schnell geschnippt
+      const flick = Math.abs(dx) > 45 && Math.abs(vx) > 0.45 && Math.sign(vx) === Math.sign(dx);
+      if (Math.abs(dx) > 110 || flick) decide(dx > 0);
+      else {
+        top.style.transform = ""; top.style.setProperty("--yes", 0); top.style.setProperty("--no", 0);
+        under?.style.setProperty("--lift", 0);
+      }
     };
     top.addEventListener("pointerup", end);
     top.addEventListener("pointercancel", end);
