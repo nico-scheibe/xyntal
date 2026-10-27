@@ -210,22 +210,24 @@
         <ul>${roles.map((r) => roleHtml(p, r, mine)).join("")}</ul>
       </div>`;
     if (isDetail) {
+      const appsNotice = mine
+        ? `<div class="applications-heading"><strong>${apps} ${apps === 1 ? "Bewerbung" : "Bewerbungen"}</strong><p>Bewerbungen siehst du bei der jeweiligen Rolle. Nur du und die Person haben Zugriff.</p></div>`
+        : "";
       return `<article class="project${p.closed ? " closed" : ""}${img || canEditImage ? " has-banner" : ""}${img ? " has-image" : ""}" data-id="${p.id}" aria-labelledby="p-${p.id}">
         ${bannerHtml(p, canEditImage, img)}
         ${cardMenu(p, mine, img, roles)}
         <div class="project-detail-layout">
-          <div class="project-detail-main">
-            ${detailMetaHtml(p, owner, mine, extra)}
-            ${mine ? `<div class="applications-heading"><strong>${apps} ${apps === 1 ? "Bewerbung" : "Bewerbungen"}</strong><p>Die Bewerbungen findest du rechts bei der jeweiligen Rolle. Nur du und die jeweilige Person haben Zugriff darauf.</p></div>` : ""}
+          <div class="project-detail-main">${detailMetaHtml(p, owner, mine, extra)}</div>
+          <aside class="project-detail-aside" aria-label="Offene Rollen">${appsNotice}${rolesBlock}</aside>
+          <div class="project-detail-foot">
             <details class="content-comments" open data-comment-kind="project" data-comment-id="${p.id}" data-comment-owner="${esc(p.owner_id)}" data-comment-closed="${p.closed}"><summary>Kommentare</summary></details>
           </div>
-          <aside class="project-detail-aside" aria-label="Offene Rollen">${rolesBlock}</aside>
         </div>
         <p class="post-error" data-error role="alert" hidden></p>
       </article>`;
     }
     const status = projectStatus(p);
-    return `<article class="project is-clickable${p.closed ? " closed" : ""}${img || canEditImage ? " has-banner" : ""}${img ? " has-image" : ""}" data-id="${p.id}" aria-labelledby="p-${p.id}">
+    return `<article class="project is-clickable${p.closed ? " closed" : ""}${img || canEditImage ? " has-banner" : ""}${img ? " has-image" : ""}" data-id="${p.id}" data-href="${detailHref(p.id)}" aria-labelledby="p-${p.id}">
       ${bannerHtml(p, canEditImage, img)}
       ${cardMenu(p, mine, img, roles)}
       <header class="project-heading">
@@ -586,16 +588,18 @@
   });
   els.list.addEventListener("keydown", (e) => {
     const zone = e.target?.closest?.("[data-image-drop]") === e.target ? e.target : null;
-    if (!zone || (e.key !== "Enter" && e.key !== " ")) return;
-    e.preventDefault();
-    pickImageFile().then((file) => { if (file) saveBannerImage(zone, file); });
+    if (zone && (e.key === "Enter" || e.key === " ")) {
+      e.preventDefault();
+      pickImageFile().then((file) => { if (file) saveBannerImage(zone, file); });
+      return;
+    }
   });
 
   els.list.addEventListener("click", async (e) => {
     if (!isDetail) {
       const card = e.target.closest(".project.is-clickable");
-      if (card && els.list.contains(card) && !e.target.closest("a, button, .card-menu, [data-image-drop]")) {
-        location.href = detailHref(card.dataset.id);
+      if (card && els.list.contains(card) && !e.target.closest("a[href], button, summary, input, textarea, select, label, .card-menu, [data-image-drop]")) {
+        location.assign(card.dataset.href || detailHref(card.dataset.id));
         return;
       }
     }
