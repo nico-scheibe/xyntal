@@ -1,6 +1,13 @@
 // Xyntal – englische Texte. Schlüssel = deutscher Originaltext (Leerzeichen zusammengefasst).
 // Neue deutsche Texte auf der Website hier ergänzen, sonst bleiben sie auf Englisch deutsch.
 window.XYNTAL_EN = {
+  "Deine Idee braucht": "Your idea needs",
+  "die richtigen Leute.": "the right people.",
+  "Finde Mitgründer, Entwickler und Designer, die mit dir etwas aufbauen wollen. Xyntal ist im Aufbau – trag dich ein und erfahre, wann die Beta startet.": "Find co-founders, developers and designers who want to build with you. Xyntal is in development — sign up to hear when the beta launches.",
+  "Zur Warteliste": "Join the waitlist",
+  "Kostenlos eintragen. Danach E-Mail bestätigen.": "Sign up for free. Then confirm your email.",
+  "Erst die Demo ausprobieren": "Try the demo first",
+
   /* ---------- Gemeinsam: Navigation, Footer, Allgemeines ---------- */
   "Zum Inhalt springen": "Skip to content",
   "Xyntal – Startseite": "Xyntal – Home",

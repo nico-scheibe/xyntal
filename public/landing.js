@@ -754,7 +754,8 @@
   const SENT = "Danke. Bitte prüfe dein Postfach und bestätige deine E-Mail-Adresse. Erst danach stehst du auf der Warteliste.";
   $$("[data-waitlist]").forEach((form) => {
     const status = $(".waitlist-status", form);
-    const button = $("button", form);
+    const button = $('button[type="submit"]', form);
+    const buttonLabel = button.textContent;
     // Mehrere Sätze als eigene Teile, damit jeder für sich übersetzt werden kann
     const setStatus = (text, kind = "") => {
       const parts = (Array.isArray(text) ? text : [text]).filter(Boolean);
@@ -810,7 +811,7 @@
         setStatus("Das hat gerade nicht geklappt. Bitte versuch es noch einmal.", "error");
       } finally {
         button.disabled = false;
-        button.textContent = "Eintragen";
+        button.textContent = buttonLabel;
       }
     });
   });
