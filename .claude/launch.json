@@ -1,0 +1,6 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "xyntal-static", "runtimeExecutable": "node", "runtimeArgs": ["C:/Users/Nico/AppData/Local/Temp/claude/C--Users-Nico-Desktop-xyntal-website/28c8e0c4-22ed-4e82-950d-26abcadc10de/scratchpad/serve.cjs", "C:/Users/Nico/Desktop/xyntal website/public"], "port": 5178 }
+  ]
+}

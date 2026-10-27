@@ -172,8 +172,21 @@
     if (String(m.body || "").trim()) return "";
     const atts = attachments.get(sid(m.id)) || [];
     if (!atts.length) return "Neue Nachricht";
-    if (atts.length === 1 && atts[0].kind === "audio") return "Sprachnachricht";
+    if (atts.every((a) => a.kind === "audio")) return "Sprachnachricht";
+    if (atts.every((a) => a.kind === "image")) return atts.length === 1 ? "Foto" : "Fotos";
+    if (atts.every((a) => a.kind === "video")) return atts.length === 1 ? "Video" : "Videos";
+    if (atts.length === 1) {
+      if (atts[0].kind === "image") return "Foto";
+      if (atts[0].kind === "video") return "Video";
+      if (atts[0].kind === "audio") return "Sprachnachricht";
+    }
     return "Datei";
+  }
+  function fmtSize(n) {
+    const b = Number(n) || 0;
+    if (b < 1024) return b + " B";
+    if (b < 1024 * 1024) return (b / 1024).toFixed(b < 10 * 1024 ? 1 : 0) + " KB";
+    return (b / (1024 * 1024)).toFixed(b < 10 * 1024 * 1024 ? 1 : 0) + " MB";
   }
   function listPreview(m, mine) {
     const sys = systemLabel(m);
@@ -265,7 +278,7 @@
     if (a.kind === "audio") {
       return `<div class="voice-player"><button type="button" class="voice-play" aria-label="Sprachnachricht" aria-pressed="false">▶</button><input class="voice-range" type="range" min="0" max="1000" value="0" aria-label="Sprachnachricht"><span class="voice-time">${fmt(a.duration)}</span><button type="button" class="voice-speed" data-i="0" aria-label="Wiedergabegeschwindigkeit">1×</button><audio preload="metadata" data-attach-path="${esc(a.path)}"></audio></div>`;
     }
-    return `<a class="file-card" data-attach-path="${esc(a.path)}" download="${name}" href="#" rel="noopener noreferrer"><span class="file-name">${name}</span><span>Herunterladen</span></a>`;
+    return `<a class="file-card" data-attach-path="${esc(a.path)}" download="${name}" href="#" rel="noopener noreferrer"><span class="file-meta"><span class="file-name">${name}</span><span class="file-size">${esc(fmtSize(a.size))}</span></span><span>Herunterladen</span></a>`;
   }
   function attachmentsHtml(m) {
     if (m.deleted_at || !features.attachments) return "";
@@ -345,7 +358,10 @@
   }
   function applyTypingLabel() {
     const el = document.getElementById("typing-indicator");
-    if (el) el.textContent = partnerTyping ? "schreibt …" : "";
+    if (!el) return;
+    if (!partnerTyping || !active) { el.textContent = ""; return; }
+    const name = people.get(active)?.name || "Mitglied";
+    el.innerHTML = `<span data-no-i18n>${esc(name)}</span> schreibt …`;
   }
   function showUploading(text) {
     status(text || "Wird hochgeladen …");
@@ -530,27 +546,67 @@
     });
     root.querySelectorAll("audio[data-attach-path]").forEach(bindVoice);
   }
+  let lightbox = { paths: [], index: 0 };
   function ensureLightbox() {
     if (document.getElementById("msg-lightbox")) return;
-    document.body.insertAdjacentHTML("beforeend", `<dialog class="msg-lightbox" id="msg-lightbox"><button type="button" class="msg-lightbox-close" aria-label="Schließen">×</button><div class="msg-lightbox-stage"></div></dialog>`);
+    document.body.insertAdjacentHTML("beforeend", `<dialog class="msg-lightbox" id="msg-lightbox" aria-label="Foto">
+      <button type="button" class="msg-lightbox-close" aria-label="Schließen">×</button>
+      <button type="button" class="msg-lightbox-nav prev" data-lb-dir="-1" aria-label="Vorheriges">‹</button>
+      <button type="button" class="msg-lightbox-nav next" data-lb-dir="1" aria-label="Nächstes">›</button>
+      <div class="msg-lightbox-stage"></div>
+      <a class="msg-lightbox-dl btn btn-small" href="#" download rel="noopener noreferrer" aria-label="Herunterladen">Herunterladen</a>
+    </dialog>`);
     const dlg = document.getElementById("msg-lightbox");
     dlg.querySelector(".msg-lightbox-close").addEventListener("click", () => dlg.close());
     dlg.addEventListener("click", (e) => { if (e.target === dlg) dlg.close(); });
+    dlg.querySelectorAll("[data-lb-dir]").forEach((btn) => btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      showLightboxAt(lightbox.index + Number(btn.dataset.lbDir));
+    }));
+    let touchX = null;
+    dlg.addEventListener("touchstart", (e) => { touchX = e.changedTouches?.[0]?.clientX ?? null; }, { passive: true });
+    dlg.addEventListener("touchend", (e) => {
+      if (touchX == null) return;
+      const dx = (e.changedTouches?.[0]?.clientX ?? touchX) - touchX;
+      touchX = null;
+      if (Math.abs(dx) > 48) showLightboxAt(lightbox.index + (dx < 0 ? 1 : -1));
+    }, { passive: true });
+    dlg.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowLeft") showLightboxAt(lightbox.index - 1);
+      if (e.key === "ArrowRight") showLightboxAt(lightbox.index + 1);
+    });
     dlg.addEventListener("close", () => {
       dlg.querySelectorAll("video").forEach((node) => { node.pause(); node.removeAttribute("src"); });
       dlg.querySelector(".msg-lightbox-stage").innerHTML = "";
+      lightbox = { paths: [], index: 0 };
     });
   }
-  async function openLightbox(path, name) {
-    if (!PATH_RE.test(path || "")) return;
-    const url = await signedUrl(path);
-    if (!url) { status("Das hat nicht geklappt. Versuch es erneut.", "error"); return; }
-    ensureLightbox();
+  async function showLightboxAt(i) {
     const dlg = document.getElementById("msg-lightbox");
-    dlg.setAttribute("aria-label", name || "Datei");
-    dlg.querySelector(".msg-lightbox-stage").innerHTML = `<img alt="${esc(name || "Datei")}" src="${esc(url)}">`;
+    if (!dlg || !lightbox.paths.length) return;
+    const n = lightbox.paths.length;
+    lightbox.index = ((i % n) + n) % n;
+    const item = lightbox.paths[lightbox.index];
+    const url = await signedUrl(item.path);
+    if (!url) { status("Das hat nicht geklappt. Versuch es erneut.", "error"); return; }
+    dlg.setAttribute("aria-label", item.name || "Foto");
+    dlg.querySelector(".msg-lightbox-stage").innerHTML = `<img alt="${esc(item.name || "Foto")}" src="${esc(url)}">`;
+    const dl = dlg.querySelector(".msg-lightbox-dl");
+    if (dl) { dl.href = url; dl.setAttribute("download", item.name || "foto.jpg"); }
+    dlg.querySelectorAll("[data-lb-dir]").forEach((btn) => { btn.hidden = n < 2; });
+  }
+  async function openLightbox(path, name, siblings) {
+    if (!PATH_RE.test(path || "")) return;
+    ensureLightbox();
+    const paths = (siblings && siblings.length ? siblings : [{ path, name: name || "Foto" }])
+      .filter((x) => PATH_RE.test(x.path || ""));
+    if (!paths.length) return;
+    lightbox = { paths, index: Math.max(0, paths.findIndex((x) => x.path === path)) };
+    if (lightbox.index < 0) lightbox.index = 0;
+    await showLightboxAt(lightbox.index);
+    const dlg = document.getElementById("msg-lightbox");
     try { if (!dlg.open) dlg.showModal(); }
-    catch { window.open(url, "_blank", "noopener,noreferrer"); }
+    catch { window.open(await signedUrl(path), "_blank", "noopener,noreferrer"); }
   }
 
   function classify(file) {
@@ -1083,7 +1139,14 @@
       const file = e.target.closest("a.file-card");
       if (file && (!file.getAttribute("href") || file.getAttribute("href") === "#")) { e.preventDefault(); return; }
       const light = e.target.closest("[data-lightbox]");
-      if (light) { await openLightbox(light.dataset.attachPath, light.getAttribute("aria-label") || "Datei"); return; }
+      if (light) {
+        const bubble = light.closest(".bubble");
+        const sibs = bubble
+          ? [...bubble.querySelectorAll("[data-lightbox]")].map((el) => ({ path: el.dataset.attachPath, name: el.getAttribute("aria-label") || "Foto" }))
+          : [];
+        await openLightbox(light.dataset.attachPath, light.getAttribute("aria-label") || "Foto", sibs);
+        return;
+      }
       if (e.target.closest("[data-reply-cancel]")) { replyTo = null; updateChrome(); return; }
       const jump = e.target.closest("[data-jump]");
       if (jump) { jumpTo(jump.dataset.jump); return; }
@@ -1243,6 +1306,19 @@
     document.querySelectorAll(".bubble.show-tools").forEach((el) => el.classList.remove("show-tools"));
   });
   document.addEventListener("visibilitychange", () => { if (document.hidden) stopTyping(); });
+
+  // Composer oberhalb der mobilen Tastatur halten
+  function syncKeyboardPad() {
+    const form = document.getElementById("thread-form");
+    if (!form || !window.visualViewport) return;
+    const vv = window.visualViewport;
+    const overlap = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+    form.style.paddingBottom = overlap ? Math.min(overlap, 240) + "px" : "";
+  }
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", syncKeyboardPad);
+    window.visualViewport.addEventListener("scroll", syncKeyboardPad);
+  }
 
   async function boot() {
     try { v = await viewer(); }
