@@ -905,3 +905,5 @@ html.mk-embed, html.mk-embed body { background: transparent !important; min-heig
 .waitlist-status.is-ok span { display: block; }
 .waitlist-status.is-ok span + span { margin-top: 10px; font-size: 14px; color: var(--text-2); line-height: 1.55; }
 .waitlist-status.is-ok span:first-child { font-size: 18px; font-weight: 650; color: var(--ok); }
+.waitlist-form > .signup-hint { order: 4; }
+.waitlist-form > .waitlist-status { order: 5; }
