@@ -1085,21 +1085,41 @@
     ch.on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages", filter: "sender_id=eq." + id }, upd);
     ch.subscribe();
     inboxChannel = ch;
-    if (!features.reactions) return;
-    reactChannel = sb.channel("msg-react-" + id)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "message_reactions" }, (payload) => {
-        const row = payload.new;
-        if (!row?.message_id || !findMessage(row.message_id)) return;
-        addReaction(row);
-        if (isInActive(row.message_id)) renderThread();
-      })
-      .on("postgres_changes", { event: "DELETE", schema: "public", table: "message_reactions" }, (payload) => {
-        const row = payload.old;
-        if (!row?.message_id) return;
-        removeReaction(row);
-        if (isInActive(row.message_id)) renderThread();
-      })
-      .subscribe();
+    if (features.reactions) {
+      reactChannel = sb.channel("msg-react-" + id)
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "message_reactions" }, (payload) => {
+          const row = payload.new;
+          if (!row?.message_id || !findMessage(row.message_id)) return;
+          addReaction(row);
+          if (isInActive(row.message_id)) renderThread();
+        })
+        .on("postgres_changes", { event: "DELETE", schema: "public", table: "message_reactions" }, (payload) => {
+          const row = payload.old;
+          if (!row?.message_id) return;
+          removeReaction(row);
+          if (isInActive(row.message_id)) renderThread();
+        })
+        .subscribe();
+    }
+    if (features.attachments) {
+      sb.channel("msg-att-" + id)
+        .on("postgres_changes", { event: "INSERT", schema: "public", table: "message_attachments" }, (payload) => {
+          const row = payload.new;
+          if (!row?.message_id || !findMessage(row.message_id)) return;
+          addAttachment(row);
+          if (isInActive(row.message_id)) renderThread();
+          renderList();
+        })
+        .on("postgres_changes", { event: "DELETE", schema: "public", table: "message_attachments" }, (payload) => {
+          const row = payload.old;
+          if (!row?.message_id) return;
+          const key = sid(row.message_id);
+          attachments.set(key, (attachments.get(key) || []).filter((a) => sid(a.id) !== sid(row.id) && a.path !== row.path));
+          if (isInActive(row.message_id)) renderThread();
+          renderList();
+        })
+        .subscribe();
+    }
   }
 
   function endGesture(e, commit) {

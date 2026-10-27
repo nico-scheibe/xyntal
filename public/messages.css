@@ -218,9 +218,14 @@
 .inbox .rec-level { flex: 1; height: 8px; border-radius: 99px; background: var(--panel-3); overflow: hidden; }
 .inbox .rec-level > i { display: block; height: 100%; width: 100%; transform-origin: left center; transform: scaleX(0.06); background: var(--grad); }
 .inbox #rec-time { font-variant-numeric: tabular-nums; font-size: 13px; min-width: 3.2em; }
-.inbox .attach-list { display: grid; gap: 6px; margin-bottom: 6px; }
-.inbox .attach-image { padding: 0; border: 0; background: none; cursor: pointer; border-radius: 10px; min-width: 44px; min-height: 44px; }
-.inbox .attach-image img,
+.inbox .attach-list { display: grid; gap: 6px; margin-bottom: 6px; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); max-width: min(320px, 100%); }
+.inbox .attach-list:has(.attach-video),
+.inbox .attach-list:has(.voice-player),
+.inbox .attach-list:has(.file-card) { grid-template-columns: 1fr; }
+.inbox .attach-image { padding: 0; border: 0; background: none; cursor: pointer; border-radius: 10px; min-width: 44px; min-height: 44px; overflow: hidden; }
+.inbox .attach-image img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 10px; }
+.inbox .attach-list:has(.attach-image):not(:has(.attach-image ~ .attach-image)) { grid-template-columns: 1fr; }
+.inbox .attach-list:has(.attach-image):not(:has(.attach-image ~ .attach-image)) .attach-image img { aspect-ratio: auto; max-width: min(280px, 100%); height: auto; object-fit: contain; }
 .inbox .attach-video video { display: block; max-width: min(280px, 100%); height: auto; border-radius: 10px; }
 .inbox .voice-player { display: flex; align-items: center; gap: 6px; min-width: min(240px, 68vw); position: relative; }
 .inbox .voice-player audio { position: absolute; width: 1px; height: 1px; opacity: 0; }

@@ -153,6 +153,9 @@ begin
     if uid is distinct from old.sender_id then
       raise exception 'Nur der Absender kann die Nachricht löschen.';
     end if;
+    -- Inhalt hier schon leeren, damit soft_delete_message und reply_to-Schutz nicht kollidieren
+    new.body := '';
+    new.reply_to := null;
     return new;
   end if;
 
@@ -274,6 +277,13 @@ create policy "Eigene Reaktion entfernen" on public.message_reactions
 do $$
 begin
   alter publication supabase_realtime add table public.message_reactions;
+exception
+  when duplicate_object then null;
+end $$;
+
+do $$
+begin
+  alter publication supabase_realtime add table public.message_attachments;
 exception
   when duplicate_object then null;
 end $$;
