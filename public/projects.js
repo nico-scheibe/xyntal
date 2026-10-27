@@ -93,7 +93,52 @@
   }
 
   const isMissingTable = (err) => /(projects|project_roles|project_interest)\b.*(does not exist|schema cache)|schema cache.*project/i.test(String(err?.message || err));
-  const myInterest = (roleId) => v.me && interest.some((i) => i.role_id === roleId && i.member_id === v.me.id);
+  const myInterest = (roleId) => v.me && interest.find((i) => i.role_id === roleId && i.member_id === v.me.id);
+  let hasStatus = true;     // false, solange die Migration application_status fehlt
+  const appStatus = (i) => i.status || "offen";
+  const STATUS_LABEL = { offen: "Offen", angenommen: "Angenommen", abgelehnt: "Abgelehnt" };
+
+  // Bewerbungstext: Motivation, danach „Name:“, „Kontakt:“, „Portfolio:“ (siehe Bewerbungsdialog)
+  function parseNote(note) {
+    const out = { motivation: [], name: "", contact: "", portfolio: "" };
+    for (const line of String(note || "").split("\n")) {
+      const m = /^(Name|Kontakt|Portfolio):\s*(.*)$/.exec(line);
+      if (m) out[{ Name: "name", Kontakt: "contact", Portfolio: "portfolio" }[m[1]]] = m[2].trim();
+      else out.motivation.push(line);
+    }
+    out.motivation = out.motivation.join("\n").trim();
+    return out;
+  }
+  const linkFor = (val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val) ? `mailto:${val}`
+    : /^(https?:\/\/)?[\w-]+(\.[\w-]+)+(\/\S*)?$/i.test(val) ? normalizeUrl(val) : "";
+
+  function applicationHtml(i) {
+    const n = parseNote(i.note);
+    const st = appStatus(i);
+    const name = i.member?.name || n.name || "Mitglied";
+    const contactHref = n.contact && linkFor(n.contact);
+    const portfolioHref = n.portfolio && linkFor(n.portfolio);
+    const actions = st === "offen"
+      ? `<button type="button" class="app-btn app-accept" data-act="accept" data-member="${esc(i.member_id)}">Annehmen</button>
+         <button type="button" class="app-btn app-reject" data-act="reject" data-member="${esc(i.member_id)}">Ablehnen</button>`
+      : `<button type="button" class="app-btn app-undo" data-act="reset" data-member="${esc(i.member_id)}">Rückgängig</button>`;
+    return `<li class="app-card is-${st}">
+      <div class="app-head">
+        ${avatar(name, "avatar-sm", i.member?.avatar_path)}
+        <div class="app-who"><strong>${esc(name)}</strong>${i.member?.headline ? `<span>${esc(i.member.headline)}</span>` : ""}</div>
+        <span class="app-status">${STATUS_LABEL[st]}</span>
+      </div>
+      ${n.motivation ? `<p class="app-motivation">${esc(n.motivation)}</p>` : ""}
+      ${n.contact || n.portfolio ? `<dl class="app-facts">
+        ${n.contact ? `<div><dt>Kontakt</dt><dd>${contactHref ? `<a class="text-link" href="${esc(contactHref)}"${contactHref.startsWith("http") ? ' target="_blank" rel="noopener"' : ""}>${esc(n.contact)}</a>` : esc(n.contact)}</dd></div>` : ""}
+        ${n.portfolio ? `<div><dt>Portfolio</dt><dd>${portfolioHref ? `<a class="text-link" href="${esc(portfolioHref)}" target="_blank" rel="noopener">${esc(n.portfolio)}</a>` : esc(n.portfolio)}</dd></div>` : ""}
+      </dl>` : ""}
+      <div class="app-foot">
+        <span class="app-time">${timeAgo(i.created_at)}</span>
+        <div class="app-actions">${actions}<a class="app-btn app-msg" href="nachrichten?an=${esc(i.member_id)}">Nachricht</a></div>
+      </div>
+    </li>`;
+  }
   const roleInterest = (roleId) => interest.filter((i) => i.role_id === roleId && (!v.me || i.member_id !== v.me.id));
 
   /* ---------- Darstellung ---------- */
@@ -125,10 +170,16 @@
     if (mine) {
       const people = roleInterest(r.id);
       if (people.length) {
-        action = `<details class="role-people"><summary>${people.length} ${people.length === 1 ? "Bewerbung" : "Bewerbungen"}</summary><ul>
-          ${people.map((i) => `<li>${avatar(i.member?.name || "Mitglied", "avatar-sm", i.member?.avatar_path)}<div><strong>${esc(i.member?.name || "Mitglied")}</strong>${i.member?.headline ? `<span>${esc(i.member.headline)}</span>` : ""}${i.note ? `<p>${esc(i.note)}</p>` : ""}</div><a class="btn btn-small btn-ghost" href="nachrichten?an=${esc(i.member_id)}">Nachricht</a></li>`).join("")}
-        </ul></details>`;
+        const open = people.filter((i) => appStatus(i) === "offen").length;
+        const order = { offen: 0, angenommen: 1, abgelehnt: 2 };
+        const sorted = [...people].sort((a, b) => order[appStatus(a)] - order[appStatus(b)] || String(b.created_at).localeCompare(String(a.created_at)));
+        action = `<details class="role-people"${open ? " open" : ""}><summary>${people.length} ${people.length === 1 ? "Bewerbung" : "Bewerbungen"}${open ? `<span class="app-new">${open} offen</span>` : ""}</summary>
+          <ul class="app-list">${sorted.map(applicationHtml).join("")}</ul></details>`;
       }
+    } else if (myInterest(r.id) && appStatus(myInterest(r.id)) === "angenommen") {
+      action = `<span class="role-applied is-accepted">Angenommen ✓</span>`;
+    } else if (myInterest(r.id) && appStatus(myInterest(r.id)) === "abgelehnt") {
+      action = `<span class="role-full">Abgelehnt</span>`;
     } else if (r.filled) {
       action = `<span class="role-full">Besetzt</span>`;
     } else if (myInterest(r.id)) {
@@ -186,8 +237,8 @@
   function appsSummaryHtml(p, mine) {
     if (!(mine || v.isAdmin)) return "";
     const parts = [...(p.roles || [])].sort((a, b) => a.id - b.id).map((r) => {
-      const n = roleInterest(r.id).length;
-      return n ? `<li><a class="pd-apps-link" href="#role-${r.id}">${esc(r.name)} · ${n} neu</a></li>` : null;
+      const n = roleInterest(r.id).filter((i) => appStatus(i) === "offen").length;
+      return n ?`<li><a class="pd-apps-link" href="#role-${r.id}">${esc(r.name)} · ${n} neu</a></li>` : null;
     }).filter(Boolean);
     return `<div class="pd-apps" aria-label="Bewerbungen">
       <h2>Bewerbungen</h2>
@@ -378,8 +429,12 @@
       projects = unwrap(res);
       const field = document.getElementById("project-image-field");
       if (field) field.hidden = !hasImages;
-      interest = v.me ? unwrap(await sb.from("project_interest")
-        .select("role_id, member_id, note, created_at, member:profiles!project_interest_member_id_fkey(id, name, headline, avatar_path)")) : [];
+      const interestCols = (st) => `role_id, member_id, note, created_at${st ? ", status" : ""}, member:profiles!project_interest_member_id_fkey(id, name, headline, avatar_path)`;
+      if (v.me) {
+        let ir = await sb.from("project_interest").select(interestCols(hasStatus));
+        if (ir.error && hasStatus && /status/i.test(ir.error.message || "")) { hasStatus = false; ir = await sb.from("project_interest").select(interestCols(false)); }
+        interest = unwrap(ir);
+      } else interest = [];
       ready = true;
     } catch (err) {
       if (isMissingTable(err)) { ready = false; els.newBtn.hidden = true; }
@@ -795,6 +850,23 @@
       } else if (btn.dataset.act === "leave") {
         unwrap(await sb.from("project_interest").delete().eq("role_id", role.id).eq("member_id", v.me.id));
         interest = interest.filter((i) => !(i.role_id === role.id && i.member_id === v.me.id));
+      } else if (["accept", "reject", "reset"].includes(btn.dataset.act)) {
+        const app = interest.find((i) => i.role_id === role.id && i.member_id === btn.dataset.member);
+        if (!app) { btn.disabled = false; return; }
+        const act = btn.dataset.act;
+        if (act === "reject" && !hasStatus) {
+          // ohne Status-Spalte heißt Ablehnen: Bewerbung entfernen
+          if (!btn.dataset.armed) { btn.dataset.armed = "1"; btn.textContent = "Wirklich ablehnen?"; btn.disabled = false; return; }
+          unwrap(await sb.from("project_interest").delete().eq("role_id", role.id).eq("member_id", app.member_id));
+          interest = interest.filter((i) => i !== app);
+        } else {
+          const next = act === "accept" ? "angenommen" : act === "reject" ? "abgelehnt" : "offen";
+          if (hasStatus) unwrap(await sb.from("project_interest").update({ status: next }).eq("role_id", role.id).eq("member_id", app.member_id));
+          // Annehmen besetzt die Rolle, Rückgängig gibt sie wieder frei
+          const filled = act === "accept" ? true : appStatus(app) === "angenommen" ? false : role.filled;
+          if (filled !== role.filled) { unwrap(await sb.from("project_roles").update({ filled }).eq("id", role.id)); role.filled = filled; }
+          app.status = next;
+        }
       } else if (btn.dataset.act === "fill") {
         unwrap(await sb.from("project_roles").update({ filled: !role.filled }).eq("id", role.id));
         role.filled = !role.filled;

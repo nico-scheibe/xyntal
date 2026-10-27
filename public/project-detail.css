@@ -415,3 +415,51 @@ body.pd-mobile-apply-on { padding-bottom: calc(76px + env(safe-area-inset-bottom
 @media (prefers-reduced-motion: reduce) {
   .project, .project-image img, .project .project-open, .comment-form textarea, .pd-share, .project-detail .role-join, .pd-team-slot .pd-slot-btn, .project-detail .role-card { transition: none; }
 }
+
+/* ---------- Bewerbungen (nur für den Projektbesitzer) ---------- */
+.project-detail .role-people { margin-top: 4px; border-top: 1px solid rgba(255,255,255,.08); padding-top: 12px; }
+.project-detail .role-people summary { display: flex; align-items: center; gap: 8px; list-style: none; }
+.project-detail .role-people summary::-webkit-details-marker { display: none; }
+.project-detail .role-people summary::before { content: "▸"; font-size: 11px; color: #9B98B0; transition: transform .15s ease; }
+.project-detail .role-people[open] summary::before { transform: rotate(90deg); }
+.project-detail .app-new { padding: 2px 8px; border-radius: 999px; background: rgba(236,72,153,.16); color: #F9A8D4; font-size: 11.5px; font-weight: 700; }
+.project-detail .role-people .app-list { display: grid; gap: 10px; margin-top: 12px; }
+.project-detail .role-people .app-card {
+  display: grid; grid-template-columns: minmax(0, 1fr); align-items: stretch; gap: 10px; padding: 14px; border-radius: 14px; font-size: 14px;
+  background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.09);
+}
+.project-detail .role-people .app-card.is-angenommen { border-color: rgba(110,231,183,.35); background: rgba(110,231,183,.06); }
+.project-detail .role-people .app-card.is-abgelehnt { opacity: .6; }
+.project-detail .role-people .app-card div { display: block; gap: 0; flex: none; }
+.project-detail .role-people .app-card .app-head { display: flex; align-items: center; gap: 10px; }
+.project-detail .role-people .app-card .app-who { flex: 1; min-width: 0; display: grid; gap: 1px; }
+.project-detail .role-people .app-who strong { font-size: 14.5px; color: #F4F3FB; }
+.project-detail .role-people .app-who span { font-size: 12px; color: #A6A4BD; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.project-detail .role-people .app-status { flex: none; padding: 3px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 700; background: rgba(255,255,255,.07); color: #C8C6D8; }
+.project-detail .is-offen .app-status { background: rgba(168,85,247,.16); color: #E2B8FF; }
+.project-detail .is-angenommen .app-status { background: rgba(110,231,183,.15); color: #6EE7B7; }
+.project-detail .is-abgelehnt .app-status { background: rgba(248,113,113,.12); color: #FCA5A5; }
+.project-detail .role-people .app-motivation {
+  margin: 0; padding: 10px 12px; border-left: 2px solid rgba(168,85,247,.55); border-radius: 0 10px 10px 0;
+  background: rgba(255,255,255,.03); font-size: 13.5px; line-height: 1.5; color: #E4E2F0;
+}
+.project-detail .role-people .app-card .app-facts { display: grid; gap: 6px; margin: 0; }
+.project-detail .role-people .app-card .app-facts > div { display: grid; grid-template-columns: 76px minmax(0,1fr); gap: 8px; font-size: 13px; }
+.project-detail .app-facts dt { color: #9B98B0; }
+.project-detail .app-facts dd { margin: 0; min-width: 0; overflow-wrap: anywhere; color: #E4E2F0; }
+.project-detail .role-people .app-card .app-foot { display: grid; gap: 8px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.07); }
+.project-detail .role-people .app-time { font-size: 12px; color: #9B98B0; }
+.project-detail .role-people .app-card .app-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.project-detail .app-btn {
+  display: inline-flex; align-items: center; justify-content: center; padding: 7px 13px; border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.04); color: #F4F3FB;
+  font: inherit; font-size: 13px; font-weight: 600; text-decoration: none; cursor: pointer;
+  transition: background .15s ease, border-color .15s ease, filter .15s ease;
+}
+.project-detail .app-btn:hover, .project-detail .app-btn:focus-visible { border-color: rgba(255,255,255,.3); background: rgba(255,255,255,.08); }
+.project-detail .app-accept { background: linear-gradient(100deg, #A855F7 0%, #EC4899 45%, #6366F1 100%); border-color: transparent; color: #fff; }
+.project-detail .app-accept:hover, .project-detail .app-accept:focus-visible { filter: brightness(1.1); border-color: transparent; background: linear-gradient(100deg, #A855F7 0%, #EC4899 45%, #6366F1 100%); }
+.project-detail .app-reject:hover, .project-detail .app-reject:focus-visible { border-color: rgba(248,113,113,.5); color: #FCA5A5; }
+.project-detail .app-btn:disabled { opacity: .6; cursor: progress; }
+.project-detail .role-applied.is-accepted { color: #6EE7B7; }
+@media (prefers-reduced-motion: reduce) { .project-detail .app-btn, .project-detail .role-people summary::before { transition: none; } }

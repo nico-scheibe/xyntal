@@ -79,7 +79,7 @@
         </article>
       </div>
       <div class="profile-story">${profileHtml(c.profile) || `<section class="pp glass"><p class="pp-headline">${esc(c.pitch || c.name)}</p><p>${esc(t("Lerne die Person hinter der Idee kennen."))}</p></section>`}
-      <nav class="public-shortcuts" aria-label="Profilbereiche"><a href="#profil-projekte">${esc(t("Projekte"))} <span aria-hidden="true">↓</span></a><a href="#profil-anzeigen">${esc(t("Anzeigen"))} <span aria-hidden="true">↓</span></a></nav></div>
+      </div>
       </div>
       <section class="public-activity" aria-label="Projekte und Anzeigen" data-public-activity><p role="status">${esc(t("Projekte und Anzeigen werden geladen …"))}</p></section>
       <div class="profile-msg public-join">
