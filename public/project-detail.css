@@ -139,3 +139,20 @@
 .project.has-image > .listing-top .tag-phase.phase-prototyp { color: #E2B8FF !important; }
 .project.has-image > .listing-top .tag-phase.phase-erste_kunden { color: #7FE3FF !important; }
 .project.has-image > .listing-top .tag-phase.phase-wachstum { color: #6EE7B7 !important; }
+
+/* Übersicht: die ganze Karte passt immer ins Fenster, Rollen scrollen bei Bedarf innen */
+.projects:not(.project-detail) .project {
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 18px; max-height: calc(100dvh - 110px); overflow: hidden;
+}
+.projects:not(.project-detail) .project > * { flex-shrink: 0; }
+.projects:not(.project-detail) .project-image-link { margin: -18px -18px 2px; }
+.projects:not(.project-detail) .project-image { aspect-ratio: auto; height: clamp(96px, 22vh, 220px); }
+.projects:not(.project-detail) .project-title { font-size: clamp(22px, 2.4vw, 26px) !important; margin: 0; }
+.projects:not(.project-detail) .project-pitch { font-size: 15px !important; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.projects:not(.project-detail) .project-open { align-self: flex-start; margin-top: 2px; padding: 9px 16px; }
+.projects:not(.project-detail) .project-roles { flex: 1 1 auto; min-height: 64px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.projects:not(.project-detail) .project-roles h3 { margin: 0 0 6px; }
+.projects:not(.project-detail) .role-row { padding: 10px 12px 10px 16px !important; }
+.projects:not(.project-detail) .role-info span { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+.projects:not(.project-detail) .listing-foot { padding-top: 10px; }
