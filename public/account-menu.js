@@ -7,6 +7,14 @@
   const KEY = "sb_publishable_YxSngs1ePBoxqI6f26GRww_2_kNaLfh";
   const TOKEN = `sb-${REF}-auth-token`;
 
+  // Rückkehr von Google & Co. auf einer Seite ohne Supabase (z. B. Startseite):
+  // weiter zum Login, der die Sitzung aus der Adresse übernimmt bzw. den Fehler zeigt.
+  const back = location.search + location.hash;
+  if (!window.supabase && location.pathname !== "/login" && /(^|[?#&])(access_token|code|error_description)=/.test(back)) {
+    location.replace("/login" + back);
+    return;
+  }
+
   const EN = {
     "Konto": "Account", "Einloggen": "Log in", "Konto anlegen": "Create account",
     "Noch kein Konto?": "No account yet?", "Mein Profil": "My profile", "Meine Karte": "My card",

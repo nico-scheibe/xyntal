@@ -170,8 +170,12 @@
   }
   (async () => {
     if (!sb) return;
+    const back = new URLSearchParams(location.search + "&" + location.hash.slice(1));
+    const fromProvider = back.has("access_token") || back.has("code");
     const { data: { session } } = await sb.auth.getSession();
+    if (back.has("error_description")) setStatus(status, `Anmeldung fehlgeschlagen: ${back.get("error_description")}`, "error");
     if (session && await mfaPending()) showMfa();
+    else if (session && fromProvider) location.replace(NEXT);
   })();
   mfaForm.addEventListener("submit", (e) => {
     e.preventDefault();
@@ -220,6 +224,6 @@
     else setStatus(status, "Falls es ein Konto mit dieser E-Mail gibt, ist ein Link zum Zurücksetzen unterwegs.", "ok");
   });
 </script>
-<script src="/account-menu.js?v=4" defer></script>
+<script src="/account-menu.js?v=5" defer></script>
 </body>
 </html>
