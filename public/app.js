@@ -315,7 +315,7 @@ function timeAgo(ts) {
 // Text sicher ausgeben, Zeilenumbrüche und Links erhalten
 function richText(s) {
   return esc(s)
-    .replace(/(https?:\/\/[^\s<]+[^\s<.,;:!?)\]])/g, '<a href="$1" target="_blank" rel="noopener nofollow">$1</a>')
+    .replace(/(https?:\/\/[^\s<]+[^\s<.,;:!?)\]])/g, '<a href="$1" target="_blank" rel="noopener noreferrer nofollow">$1</a>')
     .replace(/\n/g, "<br>");
 }
 
