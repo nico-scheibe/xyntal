@@ -43,6 +43,12 @@
 .public-item p, .public-empty { color: var(--text-2); }
 .public-item-meta { font-size: 12px; color: var(--text-2); }
 .public-item-link { font-size: 14px; color: var(--c); }
+
+.profile { padding-inline: max(var(--gutter), env(safe-area-inset-left)); grid-template-columns: minmax(0, 1fr); }
+.profile > *, .public-section, .public-item, .profile-msg { min-width: 0; max-width: 100%; }
+.profile-msg { width: min(100%, 30rem); }
+.profile-msg p { overflow-wrap: anywhere; }
+.public-item p { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
 </style>
 </head>
 <body class="home">
