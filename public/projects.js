@@ -149,6 +149,7 @@
   function cardMenu(p, mine, img, roles) {
     const items = [];
     if (mine) {
+      items.push(`<button type="button" role="menuitem" data-act="edit">Projekt bearbeiten</button>`, `<div class="card-menu-sep" role="separator"></div>`);
       for (const r of roles) {
         const label = r.filled ? `Besetzung aufheben: ${esc(r.name)}` : `Als besetzt markieren: ${esc(r.name)}`;
         items.push(`<button type="button" role="menuitem" data-act="fill" data-role="${r.id}" aria-pressed="${r.filled}">${label}</button>`);
@@ -261,6 +262,7 @@
             <p class="project-pitch">${esc(p.pitch)}</p>
           </div>
           <div class="pd-hero-toolbar">
+            ${mine ? `<button type="button" class="pd-share pd-edit" data-act="edit">Bearbeiten</button>` : ""}
             <button type="button" class="pd-share" data-act="share">Teilen</button>
             ${cardMenu(p, mine, img, roles)}
           </div>
@@ -392,6 +394,7 @@
     const i = els.rows.children.length + 1;
     const row = document.createElement("div");
     row.className = "role-edit";
+    if (r.id) row.dataset.id = r.id;
     row.innerHTML = `
       <label>Rolle ${i}<input type="text" name="role_name" maxlength="60" placeholder="z. B. Mobile-Entwicklung" value="${esc(r.name || "")}" required></label>
       <label>Wofür?<input type="text" name="role_need" maxlength="200" placeholder="z. B. App für iOS und Android" value="${esc(r.need || "")}"></label>
@@ -412,10 +415,38 @@
     els.addRole.hidden = rows.length >= MAX_ROLES;
   }
 
-  function openForm() {
+  let editing = null;       // Projekt, das gerade bearbeitet wird (sonst: neues Projekt)
+  const formHead = document.getElementById("project-form-head");
+  const formSubmit = els.form.querySelector('button[type="submit"]');
+  const imageField = document.getElementById("project-image-field");
+  function setFormMode(p) {
+    editing = p || null;
+    formHead.textContent = p ? "Projekt bearbeiten" : "Neues Projekt";
+    formSubmit.textContent = p ? "Änderungen speichern" : "Projekt veröffentlichen";
+    if (imageField) imageField.hidden = !!p; // Titelbild ändert man direkt am Banner
+  }
+
+  function openForm(p) {
+    setFormMode(p);
     els.form.hidden = false;
     els.newBtn.hidden = true;
     els.rows.innerHTML = "";
+    if (p) {
+      const f = els.form.elements;
+      f.title.value = p.title || "";
+      f.pitch.value = p.pitch || "";
+      f.phase.value = p.phase || "idee";
+      f.place.value = p.place || "";
+      f.body.value = p.body || "";
+      f.is_public.checked = !!p.is_public;
+      [...(p.roles || [])].sort((a, b) => a.id - b.id).forEach((r) => roleRow(r));
+      if (!els.rows.children.length) roleRow();
+      document.getElementById("from-demo").hidden = true;
+      els.list.hidden = true;
+      els.form.scrollIntoView({ block: "start" });
+      f.title.focus({ preventScroll: true });
+      return;
+    }
     let demo = [];
     try { demo = JSON.parse(localStorage.getItem(DEMO_KEY) || "[]"); } catch { /* egal */ }
     if (Array.isArray(demo) && demo.length) {
@@ -428,10 +459,14 @@
   }
   function closeForm() {
     resetPreview();
+    const wasEditing = editing;
     els.form.hidden = true;
-    els.newBtn.hidden = !v.canAct;
+    els.list.hidden = false;
+    els.newBtn.hidden = !v.canAct || isDetail;
     els.form.reset();
+    setFormMode(null);
     setStatus(els.status, "");
+    return wasEditing;
   }
 
   const imgInput = els.form.elements.image;
@@ -452,8 +487,11 @@
     imgPreview.querySelector("[data-clear-image]").addEventListener("click", () => { imgInput.value = ""; resetPreview(); imgInput.click(); });
   });
 
-  els.newBtn.addEventListener("click", openForm);
-  document.getElementById("cancel-project").addEventListener("click", () => { closeForm(); els.newBtn.focus(); });
+  els.newBtn.addEventListener("click", () => openForm());
+  document.getElementById("cancel-project").addEventListener("click", () => {
+    const p = closeForm();
+    (p ? document.querySelector(`[data-id="${p.id}"] [data-act="edit"], [data-id="${p.id}"] .card-menu-btn`) : els.newBtn)?.focus();
+  });
   els.addRole.addEventListener("click", () => roleRow().querySelector("input").focus());
   els.rows.addEventListener("click", (e) => {
     const btn = e.target.closest(".role-remove");
@@ -468,6 +506,7 @@
   els.form.addEventListener("submit", (e) => {
     e.preventDefault();
     const roles = [...els.rows.children].map((row) => ({
+      id: Number(row.dataset.id) || null,
       name: row.querySelector('[name="role_name"]').value.trim(),
       need: row.querySelector('[name="role_need"]').value.trim(),
       hours: Number(row.querySelector('[name="role_hours"]').value) || null,
@@ -477,6 +516,28 @@
       if (!roles.length) throw new Error("Beschreib mindestens eine offene Rolle.");
       if (roles.some((r) => !r.name)) throw new Error("Jede Rolle braucht einen Namen.");
       if (roles.some((r) => r.hours && (r.hours < 1 || r.hours > 60))) throw new Error("Stunden pro Woche bitte zwischen 1 und 60.");
+      if (editing) {
+        const p = editing;
+        const keep = new Set(roles.filter((r) => r.id).map((r) => r.id));
+        const removed = (p.roles || []).filter((r) => !keep.has(r.id));
+        if (removed.some((r) => roleInterest(r.id).length) && !confirm("Für eine entfernte Rolle gibt es schon Bewerbungen. Sie werden mit der Rolle gelöscht. Trotzdem speichern?")) {
+          setStatus(els.status, "");
+          return;
+        }
+        unwrap(await sb.from("projects").update({
+          title: data.title, pitch: data.pitch, body: data.body, phase: data.phase, place: data.place, is_public: data.is_public,
+        }).eq("id", p.id));
+        if (removed.length) unwrap(await sb.from("project_roles").delete().in("id", removed.map((r) => r.id)));
+        for (const r of roles.filter((r) => r.id)) {
+          unwrap(await sb.from("project_roles").update({ name: r.name, need: r.need, hours: r.hours }).eq("id", r.id));
+        }
+        const added = roles.filter((r) => !r.id).map(({ id, ...r }) => ({ ...r, project_id: p.id }));
+        if (added.length) unwrap(await sb.from("project_roles").insert(added));
+        closeForm();
+        await load();
+        document.querySelector(`[data-id="${p.id}"] [data-act="edit"], [data-id="${p.id}"] .card-menu-btn`)?.focus();
+        return;
+      }
       let imagePath = "";
       const file = els.form.elements.image?.files?.[0];
       if (file && hasImages) imagePath = await uploadImage(await prepareImage(file));
@@ -488,7 +549,7 @@
         }).select("id").single());
       } catch (err) { await removeImage(imagePath); throw err; }
       try {
-        unwrap(await sb.from("project_roles").insert(roles.map((r) => ({ ...r, project_id: project.id }))));
+        unwrap(await sb.from("project_roles").insert(roles.map(({ id, ...r }) => ({ ...r, project_id: project.id }))));
       } catch (err) {
         await sb.from("projects").delete().eq("id", project.id); // nichts Halbes stehen lassen
         throw err;
@@ -706,6 +767,11 @@
         target?.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
         target?.classList.add("is-flash");
         setTimeout(() => target?.classList.remove("is-flash"), 1200);
+        return;
+      }
+      if (btn.dataset.act === "edit") {
+        document.querySelector(".card-menu-pop:popover-open")?.hidePopover();
+        if (p) openForm(p);
         return;
       }
       if (btn.dataset.act === "share") {

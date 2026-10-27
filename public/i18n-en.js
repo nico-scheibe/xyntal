@@ -183,6 +183,8 @@ window.XYNTAL_EN = {
   "Finde die Menschen, mit denen du etwas aufbaust – egal, wo du bist.": "Find the people you'll build with – wherever you are.",
   "Für alle, die etwas aufbauen wollen.": "For everyone who wants to build something.",
   "Fußzeile": "Footer",
+  "Projekt bearbeiten": "Edit project",
+  "Für eine entfernte Rolle gibt es schon Bewerbungen. Sie werden mit der Rolle gelöscht. Trotzdem speichern?": "A removed role already has applications. They will be deleted with the role. Save anyway?",
   "Bereit, dein Team zu finden?": "Ready to find your team?",
   "Stell dein Projekt vor, bewirb dich auf offene Rollen oder lerne Leute kennen, die genauso viel vorhaben wie du.": "Present your project, apply for open roles or meet people who are just as driven as you.",
   "Mitmachen": "Get involved",
