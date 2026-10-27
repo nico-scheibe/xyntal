@@ -87,15 +87,26 @@
 
   /* ---------- Darstellung ---------- */
 
+  function roleBits(r) {
+    const hours = r.hours ? `<span class="role-hours">${r.hours} Std./Woche</span>` : "";
+    const status = `<span class="role-dot" aria-hidden="true"></span><span class="sr-only">${r.filled ? "Besetzt" : "Offen"}</span>`;
+    return { hours, status };
+  }
+
   function roleHtml(p, r, mine) {
+    const { hours, status } = roleBits(r);
+    const name = esc(r.name);
+    if (!isDetail) {
+      return `<li class="role-chip${r.filled ? " is-filled" : ""}" data-role="${r.id}"${r.need ? ' tabindex="0"' : ""}>
+        ${status}<span class="role-name">${name}</span>${hours}${r.need ? `<span class="role-need">${esc(r.need)}</span>` : ""}
+      </li>`;
+    }
     let action = "";
     if (mine) {
       const people = roleInterest(r.id);
-      action = `
-        <button type="button" class="role-toggle" data-act="fill" aria-pressed="${r.filled}">${r.filled ? "Besetzt" : "Als besetzt markieren"}</button>
-        ${people.length ? `<details class="role-people"><summary>${people.length} ${people.length === 1 ? "Bewerbung" : "Bewerbungen"}</summary><ul>
-          ${people.map((i) => `<li>${avatar(i.member?.name || "Mitglied", "avatar-sm", i.member?.avatar_path)}<div><strong>${esc(i.member?.name || "Mitglied")}</strong>${i.member?.headline ? `<span>${esc(i.member.headline)}</span>` : ""}${i.note ? `<p>${esc(i.note)}</p>` : ""}</div><a class="btn btn-small btn-ghost" href="nachrichten?an=${esc(i.member_id)}">Nachricht</a></li>`).join("")}
-        </ul></details>` : `<span class="role-quiet">Noch keine Bewerbung</span>`}`;
+      action = people.length ? `<details class="role-people"><summary>${people.length} ${people.length === 1 ? "Bewerbung" : "Bewerbungen"}</summary><ul>
+        ${people.map((i) => `<li>${avatar(i.member?.name || "Mitglied", "avatar-sm", i.member?.avatar_path)}<div><strong>${esc(i.member?.name || "Mitglied")}</strong>${i.member?.headline ? `<span>${esc(i.member.headline)}</span>` : ""}${i.note ? `<p>${esc(i.note)}</p>` : ""}</div><a class="btn btn-small btn-ghost" href="nachrichten?an=${esc(i.member_id)}">Nachricht</a></li>`).join("")}
+      </ul></details>` : `<span class="role-quiet">Noch keine Bewerbung</span>`;
     } else if (r.filled) {
       action = `<span class="tag">Besetzt</span>`;
     } else if (v.canAct && !p.closed) {
@@ -105,10 +116,40 @@
     } else if (!v.me) {
       action = `<a class="text-link" href="/login?next=${encodeURIComponent(`projekte?projekt=${p.id}`)}">Einloggen, um dich zu bewerben</a>`;
     }
-    return `<li class="role-row${r.filled ? " is-filled" : ""}" data-role="${r.id}">
-      <div class="role-info"><strong>${esc(r.name)}${r.hours ? `<em class="role-hours">${r.hours} Std./Woche</em>` : ""}</strong>${r.need ? `<span>${esc(r.need)}</span>` : ""}</div>
-      <div class="role-action">${action}</div>
+    return `<li class="role-line${r.filled ? " is-filled" : ""}" data-role="${r.id}">
+      <div class="role-line-main">${status}<strong class="role-name">${name}</strong>${hours}</div>
+      ${r.need ? `<p class="role-need">${esc(r.need)}</p>` : ""}
+      ${action ? `<div class="role-action">${action}</div>` : ""}
     </li>`;
+  }
+
+  function cardMenu(p, mine, img, roles) {
+    const items = [];
+    if (mine) {
+      for (const r of roles) {
+        const label = r.filled ? `Besetzung aufheben: ${esc(r.name)}` : `Als besetzt markieren: ${esc(r.name)}`;
+        items.push(`<button type="button" role="menuitem" data-act="fill" data-role="${r.id}" aria-pressed="${r.filled}">${label}</button>`);
+      }
+      if (items.length) items.push(`<div class="card-menu-sep" role="separator"></div>`);
+      if (hasImages && img) items.push(`<button type="button" role="menuitem" data-act="image-remove">Bild entfernen</button>`);
+      items.push(`<button type="button" role="menuitem" data-act="close">${p.closed ? "Wieder öffnen" : "Projekt schließen"}</button>`);
+    }
+    if (mine || v.isAdmin) {
+      if (items.length) items.push(`<div class="card-menu-sep" role="separator"></div>`);
+      items.push(`<button type="button" role="menuitem" class="is-danger" data-act="delete">Löschen</button>`);
+    }
+    if (!items.length) return "";
+    return `<div class="card-menu">
+      <button type="button" class="card-menu-btn" aria-haspopup="menu" aria-expanded="false" aria-label="Aktionen"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="6" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="18" cy="12" r="1.5" fill="currentColor"/></svg></button>
+      <div class="card-menu-pop" popover="auto" role="menu">${items.join("")}</div>
+    </div>`;
+  }
+
+  function bannerHtml(p, canEditImage, img) {
+    if (!img && !canEditImage) return "";
+    const box = `<div class="project-image${img ? "" : " is-empty"}"${img ? ` data-project-image="${esc(img)}" data-alt="${esc(p.title)}"` : ""}${canEditImage ? ' data-image-drop tabindex="0" aria-label="Titelbild"' : ""}></div>`;
+    if (canEditImage || isDetail) return box;
+    return `<a class="project-image-link" href="/projekte?projekt=${p.id}" tabindex="-1" aria-hidden="true">${box}</a>`;
   }
 
   function projectHtml(p) {
@@ -117,33 +158,25 @@
     const roles = [...(p.roles || [])].sort((a, b) => a.id - b.id);
     const open = roles.filter((r) => !r.filled).length;
     const img = IMG_RE.test(p.image_path || "") ? p.image_path : "";
-    const imgBox = img ? `<div class="project-image" data-project-image="${esc(img)}" data-alt="${esc(p.title)}"></div>` : "";
-    return `<article class="project${p.closed ? " closed" : ""}${img ? " has-image" : ""}" data-id="${p.id}" aria-labelledby="p-${p.id}">
-      ${img ? (isDetail ? imgBox : `<a class="project-image-link" href="/projekte?projekt=${p.id}" tabindex="-1" aria-hidden="true">${imgBox}</a>`) : ""}
-      <div class="listing-top">
-        <span class="tag tag-update tag-phase phase-${esc(p.phase || "idee")}">${PHASE_LABEL[p.phase] || "Idee"}</span>
-        ${p.place ? `<span class="tag">${esc(p.place)}</span>` : ""}
-        ${p.closed ? `<span class="tag">Geschlossen</span>` : ""}
-      </div>
-      <h2 class="project-title" id="p-${p.id}">${isDetail ? esc(p.title) : `<a href="/projekte?projekt=${p.id}">${esc(p.title)}</a>`}</h2>
+    const canEditImage = !!(mine && hasImages);
+    const apps = roleInterestForProject(p).length;
+    const cta = !isDetail ? `<a class="project-open" href="/projekte?projekt=${p.id}">${mine ? `Bewerbungen ansehen (${apps})` : "Projekt öffnen &amp; bewerben"}</a>` : "";
+    return `<article class="project${p.closed ? " closed" : ""}${img || canEditImage ? " has-banner" : ""}${img ? " has-image" : ""}" data-id="${p.id}" aria-labelledby="p-${p.id}">
+      ${bannerHtml(p, canEditImage, img)}
+      ${cardMenu(p, mine, img, roles)}
+      <header class="project-heading">
+        <p class="project-kicker"><span class="phase-label phase-${esc(p.phase || "idee")}">${PHASE_LABEL[p.phase] || "Idee"}</span>${p.place ? `<span class="project-place">${esc(p.place)}</span>` : ""}${p.closed ? `<span class="project-state">Geschlossen</span>` : ""}</p>
+        <h2 class="project-title" id="p-${p.id}">${isDetail ? esc(p.title) : `<a href="/projekte?projekt=${p.id}">${esc(p.title)}</a>`}</h2>
+      </header>
       <p class="project-pitch">${esc(p.pitch)}</p>
-      ${isDetail && p.body ? `<div class="project-body">${richText(p.body)}</div>` : p.body ? `<details class="project-more"><summary>Mehr dazu</summary><p>${richText(p.body)}</p></details>` : ""}
-      ${mine && isDetail ? `<div class="applications-heading"><strong>${roleInterestForProject(p).length} ${roleInterestForProject(p).length === 1 ? "Bewerbung" : "Bewerbungen"}</strong><p>Die Bewerbungen findest du unten bei der jeweiligen Rolle. Nur du und die jeweilige Person haben Zugriff darauf.</p></div>` : ""}
-      ${!isDetail ? `<a class="text-link project-open" href="/projekte?projekt=${p.id}">Projekt öffnen &amp; bewerben →</a>` : ""}
+      <div class="project-meta">${avatar(owner.name, "avatar-sm", owner.avatar_path)}<p>${esc(owner.name)} · ${timeAgo(p.created_at)}${p.is_public ? " · öffentlich" : ""}</p>${isDetail && v.canAct && !mine && !p.closed ? `<a class="text-link" href="nachrichten?an=${esc(p.owner_id)}">Nachricht</a>` : ""}</div>
+      ${isDetail && p.body ? `<div class="project-body">${richText(p.body)}</div>` : ""}
+      ${mine && isDetail ? `<div class="applications-heading"><strong>${apps} ${apps === 1 ? "Bewerbung" : "Bewerbungen"}</strong><p>Die Bewerbungen findest du unten bei der jeweiligen Rolle. Nur du und die jeweilige Person haben Zugriff darauf.</p></div>` : ""}
       <div class="project-roles">
-        <h3${open ? ' class="has-open"' : ""}>${open ? `${open} offene ${open === 1 ? "Rolle" : "Rollen"}` : "Alle Rollen besetzt"}</h3>
+        <h3>${open ? `${open} offene ${open === 1 ? "Rolle" : "Rollen"}` : "Alle Rollen besetzt"}</h3>
         <ul>${roles.map((r) => roleHtml(p, r, mine)).join("")}</ul>
       </div>
-      <div class="listing-foot">
-        <div class="listing-author">${avatar(owner.name, "avatar-sm", owner.avatar_path)}<div><strong>${esc(owner.name)}</strong><span>${timeAgo(p.created_at)}${p.is_public ? " · öffentlich" : ""}</span></div></div>
-        <div class="post-actions">
-          ${v.canAct && !mine && !p.closed ? `<a class="btn btn-small btn-ghost" href="nachrichten?an=${esc(p.owner_id)}">Nachricht</a>` : ""}
-          ${mine && hasImages ? `<button type="button" data-act="image">${img ? "Bild ändern" : "Bild hinzufügen"}</button>` : ""}
-          ${mine && hasImages && img ? `<button type="button" data-act="image-remove">Bild entfernen</button>` : ""}
-          ${mine ? `<button type="button" data-act="close">${p.closed ? "Wieder öffnen" : "Projekt schließen"}</button>` : ""}
-          ${mine || v.isAdmin ? `<button type="button" data-act="delete">Löschen</button>` : ""}
-        </div>
-      </div>
+      ${cta}
       <p class="post-error" data-error role="alert" hidden></p>
       ${isDetail ? `<details class="content-comments" data-comment-kind="project" data-comment-id="${p.id}" data-comment-owner="${esc(p.owner_id)}" data-comment-closed="${p.closed}"><summary>Kommentare &amp; Fragen</summary></details>` : ""}
     </article>`;
@@ -343,14 +376,133 @@
 
   /* ---------- Aktionen in der Liste ---------- */
 
+  function placeMenu(pop, btn) {
+    pop.style.visibility = "hidden";
+    const r = btn.getBoundingClientRect();
+    const w = pop.offsetWidth;
+    const h = pop.offsetHeight;
+    let top = r.bottom + 8;
+    if (top + h > window.innerHeight - 8) top = Math.max(8, r.top - h - 8);
+    let left = r.right - w;
+    left = Math.max(8, Math.min(left, window.innerWidth - w - 8));
+    pop.style.top = `${top}px`;
+    pop.style.left = `${left}px`;
+    pop.style.visibility = "visible";
+  }
+  els.list.addEventListener("toggle", (e) => {
+    const pop = e.target;
+    if (!(pop instanceof HTMLElement) || !pop.classList.contains("card-menu-pop")) return;
+    const menu = pop.parentElement;
+    const btn = menu?.querySelector(".card-menu-btn");
+    const open = e.newState === "open";
+    menu?.classList.toggle("is-open", open);
+    btn?.setAttribute("aria-expanded", String(open));
+    if (!open || !btn) return;
+    requestAnimationFrame(() => {
+      if (!pop.matches(":popover-open")) return;
+      placeMenu(pop, btn);
+      pop.querySelector("button")?.focus();
+    });
+  }, true);
+  els.list.addEventListener("keydown", (e) => {
+    const pop = e.target.closest?.(".card-menu-pop");
+    if (!pop) return;
+    const items = [...pop.querySelectorAll("button")];
+    const i = items.indexOf(document.activeElement);
+    if (e.key === "ArrowDown") { e.preventDefault(); items[(i + 1) % items.length]?.focus(); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); items[(i - 1 + items.length) % items.length]?.focus(); }
+    else if (e.key === "Home") { e.preventDefault(); items[0]?.focus(); }
+    else if (e.key === "End") { e.preventDefault(); items.at(-1)?.focus(); }
+  });
+  const closeOpenMenu = () => document.querySelector(".card-menu-pop:popover-open")?.hidePopover();
+  window.addEventListener("resize", closeOpenMenu);
+  window.addEventListener("scroll", closeOpenMenu, { passive: true });
+
+  function pickImageFile() {
+    const picker = document.createElement("input");
+    picker.type = "file";
+    picker.accept = "image/jpeg,image/png,image/webp";
+    return new Promise((res) => {
+      picker.addEventListener("change", () => res(picker.files?.[0] || null), { once: true });
+      picker.addEventListener("cancel", () => res(null), { once: true });
+      picker.click();
+    });
+  }
+  async function applyProjectImage(p, file) {
+    const path = await uploadImage(await prepareImage(file));
+    try { unwrap(await sb.from("projects").update({ image_path: path }).eq("id", p.id)); }
+    catch (err) { await removeImage(path); throw err; }
+    const old = p.image_path;
+    p.image_path = path;
+    await removeImage(old);
+  }
+  async function saveBannerImage(zone, file) {
+    const card = zone.closest(".project");
+    const p = projects.find((x) => x.id === Number(card.dataset.id));
+    const errorEl = card.querySelector("[data-error]");
+    if (!p || !file) return;
+    errorEl.hidden = true;
+    zone.setAttribute("aria-busy", "true");
+    try {
+      await applyProjectImage(p, file);
+      render();
+      document.querySelector(`[data-id="${p.id}"] [data-image-drop]`)?.focus();
+    } catch (err) {
+      zone.removeAttribute("aria-busy");
+      errorEl.textContent = friendlyError(err);
+      errorEl.hidden = false;
+    }
+  }
+  const imageZone = (target) => target?.closest?.("[data-image-drop]");
+  els.list.addEventListener("dragover", (e) => {
+    const zone = imageZone(e.target);
+    if (!zone || !els.list.contains(zone)) return;
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = "copy";
+    zone.classList.add("is-drag");
+  });
+  els.list.addEventListener("dragleave", (e) => {
+    const zone = imageZone(e.target);
+    if (!zone || zone.contains(e.relatedTarget)) return;
+    zone.classList.remove("is-drag");
+  });
+  els.list.addEventListener("drop", (e) => {
+    const zone = imageZone(e.target);
+    if (!zone || !els.list.contains(zone)) return;
+    e.preventDefault();
+    zone.classList.remove("is-drag");
+    const file = [...(e.dataTransfer?.files || [])][0];
+    if (file) saveBannerImage(zone, file);
+  });
+  els.list.addEventListener("dblclick", (e) => {
+    const zone = imageZone(e.target);
+    if (!zone || !els.list.contains(zone)) return;
+    e.preventDefault();
+    pickImageFile().then((file) => { if (file) saveBannerImage(zone, file); });
+  });
+  els.list.addEventListener("keydown", (e) => {
+    const zone = e.target?.closest?.("[data-image-drop]") === e.target ? e.target : null;
+    if (!zone || (e.key !== "Enter" && e.key !== " ")) return;
+    e.preventDefault();
+    pickImageFile().then((file) => { if (file) saveBannerImage(zone, file); });
+  });
+
   els.list.addEventListener("click", async (e) => {
+    const menuBtn = e.target.closest(".card-menu-btn");
+    if (menuBtn && els.list.contains(menuBtn)) {
+      const pop = menuBtn.closest(".card-menu").querySelector(".card-menu-pop");
+      if (pop.matches(":popover-open")) pop.hidePopover();
+      else pop.showPopover();
+      return;
+    }
     const btn = e.target.closest("button[data-act]");
     if (!btn) return;
     const card = btn.closest(".project");
     const id = Number(card.dataset.id);
     const p = projects.find((x) => x.id === id);
     const roleEl = btn.closest("[data-role]");
-    const role = roleEl && p.roles.find((r) => r.id === Number(roleEl.dataset.role));
+    const roleId = btn.dataset.role || roleEl?.dataset.role;
+    const role = roleId && p.roles.find((r) => r.id === Number(roleId));
     const errorEl = card.querySelector("[data-error]");
     errorEl.hidden = true;
     try {
@@ -366,20 +518,10 @@
         unwrap(await sb.from("project_roles").update({ filled: !role.filled }).eq("id", role.id));
         role.filled = !role.filled;
       } else if (btn.dataset.act === "image") {
-        const picker = document.createElement("input");
-        picker.type = "file"; picker.accept = "image/jpeg,image/png,image/webp";
-        const file = await new Promise((res) => {
-          picker.addEventListener("change", () => res(picker.files?.[0] || null), { once: true });
-          // Abbrechen im Dateidialog: Knopf wieder freigeben
-          picker.addEventListener("cancel", () => res(null), { once: true });
-          picker.click();
-        });
+        const file = await pickImageFile();
         if (!file) { btn.disabled = false; return; }
         btn.textContent = "Bild wird gespeichert …";
-        const path = await uploadImage(await prepareImage(file));
-        try { unwrap(await sb.from("projects").update({ image_path: path }).eq("id", id)); }
-        catch (err) { await removeImage(path); throw err; }
-        const old = p.image_path; p.image_path = path; await removeImage(old);
+        await applyProjectImage(p, file);
       } else if (btn.dataset.act === "image-remove") {
         unwrap(await sb.from("projects").update({ image_path: "" }).eq("id", id));
         const old = p.image_path; p.image_path = ""; await removeImage(old);
@@ -391,7 +533,9 @@
         unwrap(await sb.from("projects").delete().eq("id", id));
         projects = projects.filter((x) => x.id !== id);
       }
-      const focusKey = roleEl ? `[data-id="${id}"] [data-role="${roleEl.dataset.role}"] button` : `[data-id="${id}"] [data-act="${btn.dataset.act}"]`;
+      const focusKey = (btn.dataset.act === "join" || btn.dataset.act === "leave") && roleId
+        ? `[data-id="${id}"] [data-role="${roleId}"] button[data-act]`
+        : `[data-id="${id}"] .card-menu-btn`;
       render();
       document.querySelector(focusKey)?.focus();
     } catch (err) {
