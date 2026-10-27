@@ -6,11 +6,29 @@
   try { logged = !!localStorage.getItem("sb-rralgrlujoupprwlvoyo-auth-token"); } catch { /* privat */ }
   const bar = document.querySelector(".topbar-inner");
   const nav = document.getElementById("hauptnavigation");
-  if (!logged || !bar || !nav) return;
+
+  // Ohne Login: ⌘K/Strg+K lädt die Suche erst beim ersten Drücken (hält die Startseite schlank)
+  if (!logged) {
+    const onKey = (e) => {
+      if (!((e.metaKey || e.ctrlKey) && e.key && e.key.toLowerCase() === "k")) return;
+      e.preventDefault();
+      document.removeEventListener("keydown", onKey);
+      const css = document.createElement("link");
+      css.rel = "stylesheet"; css.href = "home-app.css?v=3";
+      document.head.append(css);
+      const s = document.createElement("script");
+      s.src = "effects.js?v=31";
+      s.onload = () => document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: e.metaKey, ctrlKey: e.ctrlKey, bubbles: true }));
+      document.body.append(s);
+    };
+    document.addEventListener("keydown", onKey);
+    return;
+  }
+  if (!bar || !nav) return;
 
   document.body.classList.add("is-member");
   const css = document.createElement("link");
-  css.rel = "stylesheet"; css.href = "home-app.css?v=2";
+  css.rel = "stylesheet"; css.href = "home-app.css?v=3";
   document.head.append(css);
 
   // Hauptnavigation wie auf den anderen Seiten: Nachrichten + Warteliste (Demo-Anker entfallen)
