@@ -3,6 +3,8 @@
 (() => {
   const PHASE_LABEL = { idee: "Idee", prototyp: "Prototyp", erste_kunden: "Erste Kunden", wachstum: "Wachstum" };
   const MAX_ROLES = 8;
+  const detailId = new URLSearchParams(location.search).get("projekt");
+  const isDetail = /^\d+$/.test(detailId || "");
   const DEMO_KEY = "xyntal-wunschrollen";
 
   const els = {
@@ -35,17 +37,17 @@
       const people = roleInterest(r.id);
       action = `
         <button type="button" class="role-toggle" data-act="fill" aria-pressed="${r.filled}">${r.filled ? "Besetzt" : "Als besetzt markieren"}</button>
-        ${people.length ? `<details class="role-people"><summary>${people.length} ${people.length === 1 ? "Meldung" : "Meldungen"}</summary><ul>
+        ${people.length ? `<details class="role-people"><summary>${people.length} ${people.length === 1 ? "Bewerbung" : "Bewerbungen"}</summary><ul>
           ${people.map((i) => `<li>${avatar(i.member?.name || "Mitglied", "avatar-sm", i.member?.avatar_path)}<div><strong>${esc(i.member?.name || "Mitglied")}</strong>${i.member?.headline ? `<span>${esc(i.member.headline)}</span>` : ""}${i.note ? `<p>${esc(i.note)}</p>` : ""}</div><a class="btn btn-small btn-ghost" href="nachrichten?an=${esc(i.member_id)}">Nachricht</a></li>`).join("")}
-        </ul></details>` : `<span class="role-quiet">Noch keine Meldung</span>`}`;
+        </ul></details>` : `<span class="role-quiet">Noch keine Bewerbung</span>`}`;
     } else if (r.filled) {
       action = `<span class="tag">Besetzt</span>`;
     } else if (v.canAct && !p.closed) {
       action = myInterest(r.id)
-        ? `<button type="button" class="role-join is-on" data-act="leave" aria-pressed="true">Gemeldet · zurückziehen</button>`
-        : `<button type="button" class="role-join" data-act="join" aria-pressed="false">Ich wäre dabei</button>`;
+        ? `<button type="button" class="role-join is-on" data-act="leave" aria-pressed="true">Bewerbung zurückziehen</button>`
+        : `<button type="button" class="role-join" data-act="join" aria-pressed="false">Jetzt bewerben</button>`;
     } else if (!v.me) {
-      action = `<a class="text-link" href="login">Einloggen, um dich zu melden</a>`;
+      action = `<a class="text-link" href="/login?next=${encodeURIComponent(`projekte?projekt=${p.id}`)}">Einloggen, um dich zu bewerben</a>`;
     }
     return `<li class="role-row${r.filled ? " is-filled" : ""}" data-role="${r.id}">
       <div class="role-info"><strong>${esc(r.name)}</strong>${meta ? `<span>${meta}</span>` : ""}</div>
@@ -64,9 +66,11 @@
         ${p.place ? `<span class="tag">${esc(p.place)}</span>` : ""}
         ${p.closed ? `<span class="tag">Geschlossen</span>` : ""}
       </div>
-      <h2 class="project-title" id="p-${p.id}">${esc(p.title)}</h2>
+      <h2 class="project-title" id="p-${p.id}">${isDetail ? esc(p.title) : `<a href="/projekte?projekt=${p.id}">${esc(p.title)}</a>`}</h2>
       <p class="project-pitch">${esc(p.pitch)}</p>
-      ${p.body ? `<details class="project-more"><summary>Mehr dazu</summary><p>${richText(p.body)}</p></details>` : ""}
+      ${isDetail && p.body ? `<div class="project-body">${richText(p.body)}</div>` : p.body ? `<details class="project-more"><summary>Mehr dazu</summary><p>${richText(p.body)}</p></details>` : ""}
+      ${mine && isDetail ? `<div class="applications-heading"><strong>${roleInterestForProject(p).length} ${roleInterestForProject(p).length === 1 ? "Bewerbung" : "Bewerbungen"}</strong><p>Die Bewerbungen findest du unten bei der jeweiligen Rolle. Nur du und die jeweilige Person haben Zugriff darauf.</p></div>` : ""}
+      ${!isDetail ? `<a class="text-link project-open" href="/projekte?projekt=${p.id}">Projekt öffnen &amp; bewerben →</a>` : ""}
       <div class="project-roles">
         <h3>${open ? `${open} offene ${open === 1 ? "Rolle" : "Rollen"}` : "Alle Rollen besetzt"}</h3>
         <ul>${roles.map((r) => roleHtml(p, r, mine)).join("")}</ul>
@@ -80,9 +84,11 @@
         </div>
       </div>
       <p class="post-error" data-error role="alert" hidden></p>
+      ${isDetail ? `<details class="content-comments" data-comment-kind="project" data-comment-id="${p.id}" data-comment-owner="${esc(p.owner_id)}" data-comment-closed="${p.closed}"><summary>Kommentare &amp; Fragen</summary></details>` : ""}
     </article>`;
   }
 
+  const roleInterestForProject = p => interest.filter(i => p.roles.some(r => r.id === i.role_id) && i.member_id !== p.owner_id);
   let initialAnchor = false;
   function render() {
     els.list.setAttribute("aria-busy", "false");
@@ -94,10 +100,17 @@
       filter === "offen" ? !p.closed && (p.roles || []).some((r) => !r.filled)
       : filter === "meine" ? v.me && p.owner_id === v.me.id
       : true);
-    els.list.innerHTML = list.length ? list.map(projectHtml).join("") : `<div class="empty-block">${
+    els.list.innerHTML = list.length ? list.map(projectHtml).join("") : isDetail ? "" : `<div class="empty-block">${
       filter === "meine" ? "<strong>Du hast noch kein Projekt angelegt.</strong><p>Beschreib dein Vorhaben in einem Satz und sag, wer dir fehlt.</p>"
       : filter === "offen" ? "<strong>Gerade sind keine Rollen offen.</strong><p>Schau später noch einmal vorbei.</p>"
       : `<strong>Noch keine Projekte.</strong><p>${v.canAct ? "Leg das erste an: Was baust du, und wer fehlt dir?" : "Sobald Mitglieder ihre Projekte teilen, findest du sie hier."}</p>`}</div>`;
+    if (isDetail) {
+      els.list.classList.add("project-detail");
+      els.list.insertAdjacentHTML("afterbegin", '<a class="text-link project-detail-back" href="/projekte">← Alle Projekte</a>');
+      if (!list.length) els.list.innerHTML += '<p class="empty">Dieses Projekt ist nicht verfügbar oder nicht für dich sichtbar.</p>';
+      if (list[0]) document.title = `${list[0].title} – Xyntal`;
+    }
+    window.XyntalComments?.mount(els.list);
     if (!initialAnchor && /^#p-\d+$/.test(location.hash)) {
       const target = document.getElementById(location.hash.slice(1));
       if (target) { initialAnchor = true; target.style.scrollMarginTop = "100px"; target.scrollIntoView({block: "start"}); }
@@ -108,9 +121,9 @@
 
   async function load() {
     try {
-      projects = unwrap(await sb.from("projects")
-        .select("id, title, pitch, body, phase, place, is_public, closed, created_at, owner_id, owner:profiles!projects_owner_id_fkey(id, name, headline, avatar_path), roles:project_roles(id, name, need, hours, filled)")
-        .order("closed").order("created_at", { ascending: false }).limit(100));
+      let query = sb.from("projects").select("id, title, pitch, body, phase, place, is_public, closed, created_at, owner_id, owner:profiles!projects_owner_id_fkey(id, name, headline, avatar_path), roles:project_roles(id, name, need, hours, filled)");
+      if (isDetail) query = query.eq("id", detailId);
+      projects = unwrap(await query.order("closed").order("created_at", { ascending: false }).limit(100));
       interest = v.me ? unwrap(await sb.from("project_interest")
         .select("role_id, member_id, note, created_at, member:profiles!project_interest_member_id_fkey(id, name, headline, avatar_path)")) : [];
       ready = true;
@@ -210,6 +223,28 @@
     });
   });
 
+  const application = document.createElement("dialog");
+  application.className = "apply-dialog";
+  application.setAttribute("aria-labelledby", "apply-title");
+  document.body.append(application);
+  function openApplication(project, role, trigger) {
+    application.innerHTML = `<form><p class="hint">${esc(project.title)}</p><h2 id="apply-title">Für ${esc(role.name)} bewerben</h2><p>Erzähl kurz, warum du mitmachen möchtest, was du mitbringst und wie viel Zeit du hast.</p><label>Deine Bewerbung<textarea name="note" required maxlength="500" rows="6" placeholder="Deine Motivation, passende Skills und Verfügbarkeit …"></textarea></label><p class="hint">Maximal 500 Zeichen. Sichtbar für dich und den Projektbesitzer.</p><div class="btn-row"><button class="btn" type="submit">Bewerbung senden</button><button class="btn btn-ghost" type="button" data-cancel-apply>Abbrechen</button></div><p role="status" class="form-status"></p></form>`;
+    application.querySelector('[data-cancel-apply]').addEventListener('click',()=>application.close());
+    application.addEventListener('close',()=>trigger?.isConnected && trigger.focus(),{once:true});
+    application.querySelector('form').addEventListener('submit',async e=>{
+      e.preventDefault(); const form=e.currentTarget,btn=form.querySelector('[type="submit"]'),out=form.querySelector('[role="status"]'),note=form.elements.note.value.trim();
+      if(!note){out.textContent="Bitte beschreibe kurz deine Bewerbung.";return;}
+      btn.disabled=true;out.textContent="Wird gesendet …";
+      try{
+        unwrap(await sb.from('project_interest').insert({role_id:role.id,note}));
+        application.close(); await load();
+        const feedback=els.list.querySelector(`[data-id="${project.id}"] [data-error]`);
+        if(feedback){feedback.hidden=false;feedback.className="form-status";feedback.setAttribute('role','status');feedback.textContent="Deine Bewerbung wurde gesendet. Der Projektbesitzer kann sie jetzt sehen.";feedback.scrollIntoView({block:'nearest'});}
+      }catch(err){out.textContent=err?.code === "23505" ? "Du hast dich bereits für diese Rolle beworben." : friendlyError(err);btn.disabled=false;}
+    });
+    application.showModal();
+  }
+
   /* ---------- Aktionen in der Liste ---------- */
 
   els.list.addEventListener("click", async (e) => {
@@ -225,8 +260,9 @@
     try {
       btn.disabled = true;
       if (btn.dataset.act === "join") {
-        unwrap(await sb.from("project_interest").insert({ role_id: role.id }));
-        interest.push({ role_id: role.id, member_id: v.me.id });
+        openApplication(p, role, btn);
+        btn.disabled = false;
+        return;
       } else if (btn.dataset.act === "leave") {
         unwrap(await sb.from("project_interest").delete().eq("role_id", role.id).eq("member_id", v.me.id));
         interest = interest.filter((i) => !(i.role_id === role.id && i.member_id === v.me.id));
@@ -259,13 +295,18 @@
 
   (async () => {
     v = await viewer();
+    if (isDetail) {
+      document.querySelector('.board-bar').hidden = true;
+      document.querySelector('.feed-filter').hidden = true;
+      document.body.classList.add('project-detail-page');
+    }
     els.notice.innerHTML = accessNotice(v, "Projekte anlegen und dich für Rollen melden", { open: true });
     els.mine.hidden = !v.me;
     await load();
     // Sprung von der Startseite zu einem bestimmten Projekt
     const target = location.hash && document.getElementById(location.hash.slice(1));
     if (target) { target.closest(".project")?.scrollIntoView({ block: "start" }); target.closest(".project")?.setAttribute("tabindex", "-1"); target.closest(".project")?.focus({ preventScroll: true }); }
-    if (v.canAct && ready) {
+    if (v.canAct && ready && !isDetail) {
       els.newBtn.hidden = false;
       if (new URLSearchParams(location.search).get("neu") === "1") openForm();
     }

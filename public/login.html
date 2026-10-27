@@ -110,7 +110,7 @@
   const status = document.getElementById("status");
   // Nach dem Login zurück zur gewünschten Seite – nur bekannte Ziele
   const nextParam = new URLSearchParams(location.search).get("next") || "";
-  const NEXT = /^[a-z-]{2,30}$/.test(nextParam) && nextParam !== "login" ? nextParam : "profil";
+  const NEXT = ((/^[a-z-]{2,30}$/.test(nextParam) && nextParam !== "login") || /^projekte\?projekt=\d+$/.test(nextParam) || /^boerse#anzeige-\d+$/.test(nextParam)) ? nextParam : "profil";
   const mfaForm = document.getElementById("mfa"), mfaStatus = document.getElementById("mfa-status");
 
   // Zweiter Schritt: Code aus der Authenticator-App

@@ -1,6 +1,28 @@
 // Xyntal – englische Texte. Schlüssel = deutscher Originaltext (Leerzeichen zusammengefasst).
 // Neue deutsche Texte auf der Website hier ergänzen, sonst bleiben sie auf Englisch deutsch.
 window.XYNTAL_EN = {
+  "Jetzt bewerben": "Apply now",
+  "Bewerbung zurückziehen": "Withdraw application",
+  "Einloggen, um dich zu bewerben": "Sign in to apply",
+  "Noch keine Bewerbung": "No applications yet",
+  "Projekt öffnen & bewerben →": "Open project & apply \u2192",
+  "← Alle Projekte": "\u2190 All projects",
+  "Kommentare & Fragen": "Comments & questions",
+  "Deine Bewerbung": "Your application",
+  "Bewerbung senden": "Send application",
+  "Deine Bewerbung wurde gesendet. Der Projektbesitzer kann sie jetzt sehen.": "Your application was sent. The project owner can now see it.",
+  "Kommentare werden geladen …": "Loading comments\u2026",
+  "Noch keine Kommentare. Starte das Gespräch.": "No comments yet. Start the conversation.",
+  "Dieser Eintrag ist geschlossen. Neue Kommentare sind nicht möglich.": "This entry is closed. New comments are disabled.",
+  "Dein Kommentar": "Your comment",
+  "Stell eine Frage oder teile dein Feedback.": "Ask a question or share feedback.",
+  "Kommentar veröffentlichen": "Post comment",
+  "Einloggen, um zu kommentieren": "Sign in to comment",
+  "Kommentar löschen": "Delete comment",
+  "Kommentare konnten nicht geladen werden.": "Comments could not be loaded.",
+  "Erneut versuchen": "Try again",
+  "Maximal 500 Zeichen. Sichtbar für dich und den Projektbesitzer.": "Up to 500 characters. Visible to you and the project owner.",
+
   "Menschen hinter den Ideen": "People behind the ideas",
   "Lerne die Person hinter der Idee kennen.": "Meet the person behind the idea.",
   "Projekte und Anzeigen werden geladen …": "Loading projects and listings…",
