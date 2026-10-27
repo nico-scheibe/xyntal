@@ -5,3 +5,7 @@ data/
 .env
 video/build/
 video/.venv/
+
+# Codex-Übergaben und lokale Supabase-Dateien
+*.bundle
+supabase/.temp/

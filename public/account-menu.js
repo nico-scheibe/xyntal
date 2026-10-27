@@ -221,7 +221,18 @@
       } catch { /* Initialen reichen */ }
     }
 
+    // Eingeloggt: In der Kopfzeile „Projekt anlegen“ statt „Auf die Warteliste“
+    function swapCta() {
+      if (!state.session) return;
+      const header = host.closest("header") || host;
+      header.querySelectorAll('a.btn[href$="#warteliste"]').forEach((a) => {
+        a.href = "/projekte?neu=1";
+        a.textContent = "Projekt anlegen";
+      });
+    }
+
     render();
+    swapCta();
     loadProfile();
     document.addEventListener("xyntal:lang", render);
     window.addEventListener("storage", (e) => { if (e.key === TOKEN) { state.session = readSession(); render(); loadProfile(); } });
