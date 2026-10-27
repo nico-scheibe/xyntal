@@ -17,7 +17,7 @@
   // Name aus /name, /u#name oder /u?name=…
   let handle = location.pathname.replace(/^\/+|\/+$/g, "");
   if (!HANDLE.test(handle.toLowerCase()) || handle === "u") handle = (location.hash.slice(1) || new URLSearchParams(location.search).get("name") || "");
-  handle = decodeURIComponent(handle).toLowerCase();
+  try { handle = decodeURIComponent(handle).toLowerCase(); } catch { handle = ""; }
   if (HANDLE.test(handle) && location.pathname !== `/${handle}`) history.replaceState(null, "", `/${handle}`);
 
   const page = (html) => { root.innerHTML = html; };
@@ -62,6 +62,7 @@
         </article>
       </div>
       ${profileHtml(c.profile)}
+      <section class="public-activity" aria-label="Projekte und Anzeigen" data-public-activity><p role="status">${esc(t("Projekte und Anzeigen werden geladen …"))}</p></section>
       <div class="profile-msg">
         <p>${esc(t("Auf Xyntal finden Entwickler, Designer und Gründer die richtigen Leute für ihre Idee."))}</p>
         ${ctas(`<a class="btn btn-primary" href="/#karte">${esc(t("Bau deine eigene Karte"))}</a>`)}
@@ -80,6 +81,31 @@
       links.length ? `<div class="pp-links">${links.map(([l, u]) => `<a class="btn btn-glass btn-sm" href="${esc(u)}" target="_blank" rel="noopener noreferrer nofollow">${esc(l)} ↗</a>`).join("")}</div>` : "",
     ].join("");
     return inner ? `<div class="pp glass">${inner}</div>` : "";
+  }
+  async function loadActivity() {
+    const target = root.querySelector("[data-public-activity]");
+    if (!target) return;
+    try {
+      const res = await fetch(`${SUPA}/rest/v1/rpc/get_public_profile_activity`, {
+        method: "POST", headers: { apikey: KEY, Authorization: `Bearer ${KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ p_handle: handle }),
+      });
+      if (!res.ok) throw new Error("activity");
+      const data = await res.json();
+      if (!target.isConnected) return;
+      const item = (x, kind) => {
+        const id = String(x.id);
+        if (!/^\d+$/.test(id)) return "";
+        const isProject = kind === "project";
+        const url = isProject ? `/projekte#p-${id}` : `/boerse#anzeige-${id}`;
+        return `<a class="public-item glass" href="${url}"><span class="public-item-meta">${esc(t(isProject ? "Projekt" : (x.type === "biete" ? "Angebot" : "Gesuch")))}${x.closed ? ` · ${esc(t("Geschlossen"))}` : ""}</span><h3 data-no-i18n>${esc(x.title)}</h3><p data-no-i18n>${esc(isProject ? x.pitch : x.excerpt)}</p><span class="public-item-link">${esc(t(isProject ? "Projekt ansehen" : "Anzeige ansehen"))} ↗</span></a>`;
+      };
+      const section = (title, items, kind, empty) => `<section class="public-section"><h2>${esc(t(title))}</h2>${items.length ? items.map(x => item(x, kind)).join("") : `<p class="public-empty">${esc(t(empty))}</p>`}</section>`;
+      target.innerHTML = section("Projekte", data?.projects || [], "project", "Noch keine öffentlichen Projekte.") + section("Anzeigen", data?.listings || [], "listing", "Noch keine öffentlichen Anzeigen.");
+    } catch {
+      if (target.isConnected) target.innerHTML = `<p role="status">${esc(t("Projekte und Anzeigen konnten nicht geladen werden."))}</p><button class="btn btn-glass" type="button" data-retry-activity>${esc(t("Neu laden"))}</button>`;
+      target.querySelector("[data-retry-activity]")?.addEventListener("click", loadActivity);
+    }
   }
   async function loadAvatar(path) {
     if (!/^[0-9a-f-]{36}\/[0-9a-f-]{36}\.jpg$/.test(path || "")) return;
@@ -105,10 +131,10 @@
       });
       if (!res.ok) throw new Error(String(res.status));
       const card = await res.json();
-      if (card && card.name) { renderCard(card); if (card.profile) loadAvatar(card.profile.avatar_path); return; }
+      if (card && card.name) { renderCard(card); loadActivity(); if (card.profile) loadAvatar(card.profile.avatar_path); return; }
       if (card && card.reserved) {
         document.title = `xyntal.de/${handle} – ${t("reserviert")}`;
-        return page(`<div class="profile-msg"><h1><b>xyntal.de/${esc(handle)}</b><br>${esc(t("ist reserviert."))}</h1><p>${esc(t("Diese Person ist schon auf der Warteliste. Ihre Karte erscheint hier, sobald Xyntal startet."))}</p>${ctas(`<a class="btn btn-primary" href="/#karte">${esc(t("Eigenen Link sichern"))}</a>`)}</div>`);
+        return page(`<div class="profile-msg"><h1><b>xyntal.de/${esc(handle)}</b><br>${esc(t("ist reserviert."))}</h1><p>${esc(t("Dieses Profil ist noch nicht öffentlich freigegeben. Es kann schon jetzt im eigenen Konto veröffentlicht werden."))}</p>${ctas(`<a class="btn btn-primary" href="/#karte">${esc(t("Eigenen Link sichern"))}</a>`)}</div>`);
       }
       document.title = `xyntal.de/${handle} – ${t("noch frei")}`;
       page(`<div class="profile-msg"><h1><b>xyntal.de/${esc(handle)}</b><br>${esc(t("ist noch frei."))}</h1><p>${esc(t("Bau deine Xyntal-Karte und sichere dir diesen Link, bevor ihn jemand anders bekommt."))}</p>${ctas(`<a class="btn btn-primary" href="${freeLink(handle)}">${esc(t("Diesen Link sichern"))}</a>`)}</div>`);

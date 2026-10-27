@@ -366,11 +366,11 @@
       const card = unwrap(await sb.rpc("get_my_card"));
       if (!card) { text.textContent = "Du hast noch keine Karte. Gestalte sie unten – dann kannst du dir auch deinen Link xyntal.de/deinname sichern."; return; }
       if (card.handle && card.is_public) {
-        text.innerHTML = `Dein öffentliches Profil: <b data-no-i18n>xyntal.de/${esc(card.handle)}</b> – mit deiner Karte und den Angaben aus „Profil“ (Über mich, Angebot, Suche, Links, Profilbild).`;
+        text.innerHTML = `Dein öffentliches Profil: <b data-no-i18n>xyntal.de/${esc(card.handle)}</b> – mit deiner Karte, deinen Profilangaben sowie deinen öffentlichen Projekten und Anzeigen.`;
         cardLink = `https://xyntal.de/${card.handle}`;
         view.href = `/${card.handle}`; view.hidden = copy.hidden = false;
       } else if (card.handle) {
-        text.innerHTML = `Dein Link <b data-no-i18n>xyntal.de/${esc(card.handle)}</b> ist reserviert, aber nicht öffentlich. Unten unter „Sichtbarkeit &amp; Link“ kannst du ihn freischalten.`;
+        text.innerHTML = `Dein Link <b data-no-i18n>xyntal.de/${esc(card.handle)}</b> führt zu deinem Profil, sobald du es freigibst. Aktiviere unten unter „Sichtbarkeit &amp; Link“ dein öffentliches Profil und speichere deine Karte.`;
       } else {
         text.textContent = "Deine Karte ist gespeichert. Sichere dir unten noch deinen Link xyntal.de/deinname.";
       }

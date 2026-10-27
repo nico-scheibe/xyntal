@@ -134,7 +134,7 @@
         ? `<button type="button" data-act="like" class="${liked.has(l.id) ? "active" : ""}" aria-pressed="${liked.has(l.id)}">♥ <span>${count}</span></button>`
         : `<span class="count">♥ ${count}</span>`;
     return `
-      <article class="listing listing-${l.type} ${l.closed ? "closed" : ""}" data-id="${l.id}">
+      <article id="anzeige-${l.id}" class="listing listing-${l.type} ${l.closed ? "closed" : ""}" data-id="${l.id}">
         <div class="listing-top">
           <span class="tag tag-${l.type}">${l.type === "suche" ? "Suche" : "Biete"}</span>
           ${l.category ? `<span class="tag">${esc(l.category)}</span>` : ""}
@@ -162,6 +162,12 @@
       : `<p class="empty">${filter ? "Hier ist noch nichts." : "Noch keine Einträge – was suchst oder bietest du?"}</p>`;
   }
 
+  let initialAnchor = false;
+  function revealLinkedListing() {
+    if (initialAnchor || !/^#anzeige-\d+$/.test(location.hash)) return;
+    const target = document.getElementById(location.hash.slice(1));
+    if (target) { initialAnchor = true; target.style.scrollMarginTop = "100px"; target.scrollIntoView({block: "start"}); }
+  }
   async function load() {
     try {
       listings = unwrap(await sb.from("listings")
@@ -175,6 +181,7 @@
         liked = new Set();
       }
       render();
+      revealLinkedListing();
     } catch (err) {
       // Migration 008 noch nicht ausgeführt: Börse ohne Reaktionen weiter nutzbar.
       if (String(err?.message || err).includes("like_count") || String(err?.message || err).includes("listing_likes")) {
@@ -185,6 +192,7 @@
             .order("closed").order("created_at", { ascending: false }).limit(200));
           liked = new Set();
           render();
+      revealLinkedListing();
           return;
         } catch (fallbackErr) {
           document.getElementById("board").innerHTML = `<p class="empty">${esc(friendlyError(fallbackErr))}</p>`;
@@ -254,11 +262,13 @@
         unwrap(await sb.from("listings").update({ closed: !l.closed }).eq("id", id));
         l.closed = !l.closed;
         render();
+      revealLinkedListing();
       } else if (btn.dataset.act === "delete") {
         if (!btn.dataset.armed) { btn.dataset.armed = "1"; btn.textContent = "Wirklich löschen?"; return; }
         unwrap(await sb.from("listings").delete().eq("id", id));
         listings = listings.filter((x) => x.id !== id);
         render();
+      revealLinkedListing();
       }
     } catch (err) {
       btn.disabled = false;

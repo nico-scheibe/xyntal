@@ -83,6 +83,7 @@
     </article>`;
   }
 
+  let initialAnchor = false;
   function render() {
     els.list.setAttribute("aria-busy", "false");
     if (!ready) {
@@ -97,6 +98,10 @@
       filter === "meine" ? "<strong>Du hast noch kein Projekt angelegt.</strong><p>Beschreib dein Vorhaben in einem Satz und sag, wer dir fehlt.</p>"
       : filter === "offen" ? "<strong>Gerade sind keine Rollen offen.</strong><p>Schau später noch einmal vorbei.</p>"
       : `<strong>Noch keine Projekte.</strong><p>${v.canAct ? "Leg das erste an: Was baust du, und wer fehlt dir?" : "Sobald Mitglieder ihre Projekte teilen, findest du sie hier."}</p>`}</div>`;
+    if (!initialAnchor && /^#p-\d+$/.test(location.hash)) {
+      const target = document.getElementById(location.hash.slice(1));
+      if (target) { initialAnchor = true; target.style.scrollMarginTop = "100px"; target.scrollIntoView({block: "start"}); }
+    }
   }
 
   /* ---------- Laden ---------- */

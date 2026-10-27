@@ -1,6 +1,15 @@
 // Xyntal – englische Texte. Schlüssel = deutscher Originaltext (Leerzeichen zusammengefasst).
 // Neue deutsche Texte auf der Website hier ergänzen, sonst bleiben sie auf Englisch deutsch.
 window.XYNTAL_EN = {
+  "Projekte und Anzeigen werden geladen …": "Loading projects and listings…",
+  "Anzeigen": "Listings",
+  "Noch keine öffentlichen Projekte.": "No public projects yet.",
+  "Noch keine öffentlichen Anzeigen.": "No public listings yet.",
+  "Projekte und Anzeigen konnten nicht geladen werden.": "Projects and listings could not be loaded.",
+  "Projekt ansehen": "View project",
+  "Anzeige ansehen": "View listing",
+  "Dieses Profil ist noch nicht öffentlich freigegeben. Es kann schon jetzt im eigenen Konto veröffentlicht werden.": "This profile has not been made public yet. It can already be published from the owner’s account.",
+
   "Fast geschafft – bestätige jetzt deine E-Mail.": "Almost there \u2014 confirm your email now.",
   "Keine Mail gefunden? Warte ein paar Minuten und prüfe auch deinen Spam-Ordner.": "No email yet? Wait a few minutes and check your spam folder too.",
 

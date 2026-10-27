@@ -14,7 +14,7 @@
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="stylesheet" href="/fonts/fonts.css?v=31">
   <link rel="stylesheet" href="/home.css?v=9">
-  <script src="/i18n-en.js?v=47" defer></script>
+  <script src="/i18n-en.js?v=50" defer></script>
   <script src="/i18n.js?v=31" defer></script>
   <style>
     .profile { min-height: calc(100vh - 200px); display: grid; align-content: center; justify-items: center; gap: 22px; padding: 48px 0 72px; text-align: center; }
@@ -32,7 +32,18 @@
     .pp-block h2 { margin-bottom: 6px; font: 600 12.5px/1 var(--f-text); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-3); }
     .pp-block p { color: var(--text-2); white-space: pre-line; overflow-wrap: anywhere; }
     .pp-links { display: flex; flex-wrap: wrap; gap: 8px; }
-  </style>
+
+.public-activity { width: 100%; max-width: 760px; display: grid; gap: 28px; text-align: left; }
+.public-section { display: grid; gap: 12px; }
+.public-section h2 { font-size: 24px; letter-spacing: -.03em; }
+.public-item { display: grid; gap: 9px; padding: 22px; border-radius: 20px; text-decoration: none; overflow-wrap: anywhere; }
+.public-item:hover { border-color: var(--c); }
+.public-item:focus-visible { outline: 2px solid var(--c); outline-offset: 4px; }
+.public-item h3 { font-size: 20px; }
+.public-item p, .public-empty { color: var(--text-2); }
+.public-item-meta { font-size: 12px; color: var(--text-2); }
+.public-item-link { font-size: 14px; color: var(--c); }
+</style>
 </head>
 <body class="home">
 <div class="aurora" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -58,6 +69,6 @@
     </nav>
   </div>
 </footer>
-<script src="/u.js?v=2" defer></script>
+<script src="/u.js?v=3" defer></script>
 </body>
 </html>
