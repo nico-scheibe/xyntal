@@ -17,10 +17,11 @@
   <link rel="stylesheet" href="fonts/fonts.css?v=31">
   <link rel="stylesheet" href="style.css?v=31">
   <link rel="stylesheet" href="cosmos.css?v=40">
-  <script src="i18n-en.js?v=53" defer></script>
+  <script src="i18n-en.js?v=55" defer></script>
   <script src="i18n.js?v=31" defer></script>
   <script src="cosmos.js?v=40" defer></script>
   <link rel="stylesheet" href="/backdrop.css?v=4">
+  <link rel="stylesheet" href="/site-footer.css?v=1">
 </head>
 <body>
 <div class="xy-bg" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i><span class="xy-grid"></span><span class="xy-stars"></span><span class="xy-stars"></span></div>
@@ -54,7 +55,7 @@
       <h3>Anschrift</h3>
       <p class="todo">[Anschrift einsetzen]</p>
       <h3>Kontakt</h3>
-      <p>E-Mail: <a href="mailto:nico.scheibe18@gmail.com">nico.scheibe18@gmail.com</a></p>
+      <p>E-Mail: <a href="mailto:admin@xyntal.com">admin@xyntal.com</a></p>
     </section>
 
     <section aria-labelledby="datenschutz">
@@ -92,7 +93,7 @@
       <p>Öffentliche Karte: Hast du einen Wunsch-Link reserviert und beim Eintragen „Karte öffentlich zeigen“ angehakt, ist deine Karte unter xyntal.de/deinname für alle sichtbar – mit Vorname, Bereich, Erfahrung, Skills, Zeit, Stadt, Arbeitsweise, was du suchst, deinem Satz, deinem Link und der von dir gewählten Gestaltung. Nicht sichtbar sind deine E-Mail-Adresse, Notizen und dein Foto (das ohnehin nie hochgeladen wird). Ohne diesen Haken zeigt der Link nur, dass er reserviert ist. Grundlage ist deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO); du kannst sie jederzeit über die Kontaktadresse im Impressum widerrufen, dann wird die Karte sofort ausgeblendet.</p>
       <p>Konto und Karte: Legst du ein Konto mit derselben, bestätigten E-Mail-Adresse an, mit der du deine Karte auf die Warteliste geschickt hast, wird die Karte mit deinem Konto verknüpft. Du kannst sie dann unter „Meine Karte“ selbst bearbeiten, deinen Wunsch-Link ändern und entscheiden, ob dein Profil öffentlich ist. Ist es öffentlich, zeigt xyntal.de/deinname neben der Karte auch „Über mich“, was du bietest und suchst, deine Links und dein Profilbild aus deinem Profil – nie deine E-Mail-Adresse. Grundlage ist der Vertrag über dein Konto (Art. 6 Abs. 1 lit. b DSGVO) und für die öffentliche Anzeige deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO), die du jederzeit durch Abwählen widerrufen kannst.</p>
       <p>Einladungen: Nach dem Eintragen erzeugen wir für deine E-Mail-Adresse einen Einladungscode und speichern beides in Supabase (siehe Abschnitt 3), damit du deinen persönlichen Link teilen kannst. Öffnet jemand diesen Link, wird der Code im lokalen Speicher seines Browsers gemerkt. Trägt sich die Person danach in die Warteliste ein, speichern wir ihre E-Mail-Adresse zusammen mit deinem Code, um dir die versprochene Gratis-Woche gutschreiben zu können. Nur der Admin kann diese Angaben sehen. Grundlage ist die Durchführung des Einladungsprogramms, an dem du teilnimmst (Art. 6 Abs. 1 lit. b DSGVO), bzw. unser berechtigtes Interesse an einer fairen Zuordnung von Einladungen (Art. 6 Abs. 1 lit. f DSGVO). Die Angaben werden gelöscht, wenn die Warteliste endet oder du dich abmeldest; eine frühere Löschung kannst du jederzeit über die Kontaktadresse im Impressum verlangen.</p>
-      <p>Die Kontaktadresse wird über Gmail (Google) bereitgestellt. Bei einer Kontaktanfrage verarbeiten wir und der E-Mail-Dienst deine Absenderdaten, den Inhalt und gegebenenfalls Anhänge zur Bearbeitung. Grundlage ist bei mitgliedschaftsbezogenen Anfragen Art. 6 Abs. 1 lit. b DSGVO, ansonsten unser berechtigtes Interesse an der Beantwortung von Anfragen (Art. 6 Abs. 1 lit. f DSGVO).</p>
+      <p>Die Kontaktadresse wird über IONOS (1&1 IONOS SE, Deutschland) bereitgestellt. Bei einer Kontaktanfrage verarbeiten wir und der E-Mail-Dienst deine Absenderdaten, den Inhalt und gegebenenfalls Anhänge zur Bearbeitung. Grundlage ist bei mitgliedschaftsbezogenen Anfragen Art. 6 Abs. 1 lit. b DSGVO, ansonsten unser berechtigtes Interesse an der Beantwortung von Anfragen (Art. 6 Abs. 1 lit. f DSGVO).</p>
 
       <h3>8. Browser-Speicher, Schriften und externe Dateien</h3>
       <p>Der Login speichert Sitzungsdaten im lokalen Speicher deines Browsers, damit du angemeldet bleibst und sich deine Sitzung erneuern lässt. Beim Abmelden wird die lokale Sitzung entfernt. Diese Speicherung ist für die ausdrücklich gewünschte Anmeldung erforderlich (§ 25 Abs. 2 Nr. 2 TDDDG); die zugehörige Verarbeitung beruht auf Art. 6 Abs. 1 lit. b DSGVO.</p>
@@ -114,6 +115,69 @@
     <p><a class="text-link" href="./">Zurück zur Startseite</a></p>
   </div>
 </main>
+<footer class="site-footer" aria-label="Fußzeile">
+  <div class="sf-inner">
+    <div class="sf-cta">
+      <div>
+        <h2>Bereit, dein Team zu finden?</h2>
+        <p>Stell dein Projekt vor, bewirb dich auf offene Rollen oder lerne Leute kennen, die genauso viel vorhaben wie du.</p>
+      </div>
+      <div class="sf-cta-actions">
+        <a class="sf-btn sf-btn-primary" href="/#warteliste">Auf die Warteliste</a>
+        <a class="sf-btn" href="/projekte">Projekte entdecken</a>
+      </div>
+    </div>
+    <div class="sf-main">
+      <div class="sf-brand">
+        <a class="sf-logo" href="/" aria-label="Xyntal – Startseite"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14" class="bm-a"/><path d="M19 5l-5.3 5.3M10.3 13.7L5 19" class="bm-b"/></svg>xyntal</a>
+        <p>Finde die Menschen, mit denen du etwas aufbaust – egal, wo du bist.</p>
+        <div class="sf-contact">
+          <a href="mailto:admin@xyntal.com"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg><span data-no-i18n>admin@xyntal.com</span></a>
+          <a href="https://www.linkedin.com/in/nico-scheibe-781a20445" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 10v7M8 7v.01M12 17v-4a2 2 0 0 1 4 0v4M12 10v7"/></svg>LinkedIn<span class="sr-only"> (öffnet in neuem Tab)</span></a>
+        </div>
+      </div>
+      <nav class="sf-cols" aria-label="Fußzeile">
+        <div class="sf-col">
+          <h3>Entdecken</h3>
+          <ul>
+            <li><a href="/projekte">Projekte</a></li>
+            <li><a href="/boerse">Börse</a></li>
+            <li><a href="/community">Community</a></li>
+            <li><a href="/events">Treffen</a></li>
+            <li><a href="/mitglieder">Mitglieder</a></li>
+          </ul>
+        </div>
+        <div class="sf-col">
+          <h3>Mitmachen</h3>
+          <ul>
+            <li><a href="/mitglied-werden">Mitglied werden</a></li>
+            <li><a href="/beta">Beta-Programm</a></li>
+            <li><a href="/meine-karte">Meine Karte</a></li>
+            <li><a href="/#warteliste">Warteliste</a></li>
+            <li><a href="/login">Login</a></li>
+          </ul>
+        </div>
+        <div class="sf-col">
+          <h3>Rechtliches</h3>
+          <ul>
+            <li><a href="/impressum">Impressum</a></li>
+            <li><a href="/impressum#datenschutz">Datenschutz</a></li>
+            <li><a href="/impressum#deine-rechte">Deine Rechte</a></li>
+            <li><a href="mailto:admin@xyntal.com">Kontakt</a></li>
+          </ul>
+        </div>
+      </nav>
+    </div>
+    <div class="sf-bottom">
+      <span data-no-i18n>© 2026 Xyntal</span>
+      <ul class="sf-badges">
+        <li>Keine Tracker</li>
+        <li>Schriften lokal gehostet</li>
+      </ul>
+      <a class="sf-top" href="#">Nach oben ↑</a>
+    </div>
+  </div>
+</footer>
 
 <script src="vendor/supabase.js?v=31"></script>
 <script src="config.js?v=31"></script>

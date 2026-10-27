@@ -17,10 +17,11 @@
   <link rel="stylesheet" href="fonts/fonts.css?v=31">
   <link rel="stylesheet" href="style.css?v=31">
   <link rel="stylesheet" href="cosmos.css?v=41">
-  <script src="i18n-en.js?v=53" defer></script>
+  <script src="i18n-en.js?v=55" defer></script>
   <script src="i18n.js?v=31" defer></script>
   <script src="cosmos.js?v=40" defer></script>
   <link rel="stylesheet" href="/backdrop.css?v=4">
+  <link rel="stylesheet" href="/site-footer.css?v=1">
 </head>
 <body>
 <div class="xy-bg" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i><span class="xy-grid"></span><span class="xy-stars"></span><span class="xy-stars"></span></div>
@@ -247,21 +248,67 @@
   </section>
 </main>
 
-<footer>
-  <div class="wrap">
-    <div>
-      <a class="logo" href="./"><svg class="logo-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14" class="bm-a"/><path d="M19 5l-5.3 5.3M10.3 13.7L5 19" class="bm-b"/></svg>xyntal</a>
-      <p style="margin: 10px 0 0">Für alle, die etwas aufbauen wollen.</p>
+<footer class="site-footer" aria-label="Fußzeile">
+  <div class="sf-inner">
+    <div class="sf-cta">
+      <div>
+        <h2>Bereit, dein Team zu finden?</h2>
+        <p>Stell dein Projekt vor, bewirb dich auf offene Rollen oder lerne Leute kennen, die genauso viel vorhaben wie du.</p>
+      </div>
+      <div class="sf-cta-actions">
+        <a class="sf-btn sf-btn-primary" href="/#warteliste">Auf die Warteliste</a>
+        <a class="sf-btn" href="/projekte">Projekte entdecken</a>
+      </div>
     </div>
-    <nav class="foot-links" aria-label="Fußzeile">
-      <a href="projekte">Projekte</a>
-      <a href="community">Community</a>
-      <a href="boerse">Börse</a>
-      <a href="mitglieder">Mitglieder</a>
-      <a href="beta">Beta-Programm</a>
-      <a href="impressum">Impressum</a>
-      <a href="impressum#datenschutz">Datenschutz</a>
-    </nav>
+    <div class="sf-main">
+      <div class="sf-brand">
+        <a class="sf-logo" href="/" aria-label="Xyntal – Startseite"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14" class="bm-a"/><path d="M19 5l-5.3 5.3M10.3 13.7L5 19" class="bm-b"/></svg>xyntal</a>
+        <p>Finde die Menschen, mit denen du etwas aufbaust – egal, wo du bist.</p>
+        <div class="sf-contact">
+          <a href="mailto:admin@xyntal.com"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg><span data-no-i18n>admin@xyntal.com</span></a>
+          <a href="https://www.linkedin.com/in/nico-scheibe-781a20445" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 10v7M8 7v.01M12 17v-4a2 2 0 0 1 4 0v4M12 10v7"/></svg>LinkedIn<span class="sr-only"> (öffnet in neuem Tab)</span></a>
+        </div>
+      </div>
+      <nav class="sf-cols" aria-label="Fußzeile">
+        <div class="sf-col">
+          <h3>Entdecken</h3>
+          <ul>
+            <li><a href="/projekte">Projekte</a></li>
+            <li><a href="/boerse">Börse</a></li>
+            <li><a href="/community">Community</a></li>
+            <li><a href="/events">Treffen</a></li>
+            <li><a href="/mitglieder">Mitglieder</a></li>
+          </ul>
+        </div>
+        <div class="sf-col">
+          <h3>Mitmachen</h3>
+          <ul>
+            <li><a href="/mitglied-werden">Mitglied werden</a></li>
+            <li><a href="/beta">Beta-Programm</a></li>
+            <li><a href="/meine-karte">Meine Karte</a></li>
+            <li><a href="/#warteliste">Warteliste</a></li>
+            <li><a href="/login">Login</a></li>
+          </ul>
+        </div>
+        <div class="sf-col">
+          <h3>Rechtliches</h3>
+          <ul>
+            <li><a href="/impressum">Impressum</a></li>
+            <li><a href="/impressum#datenschutz">Datenschutz</a></li>
+            <li><a href="/impressum#deine-rechte">Deine Rechte</a></li>
+            <li><a href="mailto:admin@xyntal.com">Kontakt</a></li>
+          </ul>
+        </div>
+      </nav>
+    </div>
+    <div class="sf-bottom">
+      <span data-no-i18n>© 2026 Xyntal</span>
+      <ul class="sf-badges">
+        <li>Keine Tracker</li>
+        <li>Schriften lokal gehostet</li>
+      </ul>
+      <a class="sf-top" href="#">Nach oben ↑</a>
+    </div>
   </div>
 </footer>
 

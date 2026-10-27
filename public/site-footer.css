@@ -1,0 +1,93 @@
+/* ---------- Gemeinsame Fußzeile (alle Seiten) ---------- */
+.site-footer {
+  --sf-text: #ECEBF7;
+  --sf-text-2: #A6A4BD;
+  --sf-text-3: #827F9C;
+  --sf-line: rgba(255, 255, 255, 0.09);
+  --sf-accent: #22E5FF;
+  position: relative;
+  margin-top: 64px;
+  padding: 0 0 calc(28px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--sf-line);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.015), rgba(255, 255, 255, 0.035));
+  color: var(--sf-text-2);
+  font-size: 14px;
+  line-height: 1.55;
+}
+.site-footer::before {
+  content: "";
+  position: absolute;
+  inset: -1px 0 auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(34, 229, 255, 0.55), rgba(185, 92, 255, 0.45), transparent);
+  pointer-events: none;
+}
+.site-footer a { color: inherit; text-decoration: none; transition: color 160ms ease; }
+.site-footer a:hover, .site-footer a:focus-visible { color: var(--sf-text); }
+.sf-inner { width: min(1160px, 100% - 32px); margin-inline: auto; }
+
+/* Aufruf oben */
+.sf-cta {
+  display: grid;
+  gap: 18px;
+  padding: 40px 0 36px;
+  border-bottom: 1px solid var(--sf-line);
+}
+.sf-cta h2 { margin: 0; font-size: clamp(1.3rem, 2.4vw, 1.7rem); line-height: 1.2; color: var(--sf-text); font-weight: 700; letter-spacing: -0.01em; }
+.sf-cta p { margin: 6px 0 0; max-width: 46ch; }
+.sf-cta-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.sf-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 10px 18px; border-radius: 999px;
+  border: 1px solid var(--sf-line); color: var(--sf-text) !important;
+  font-weight: 600; font-size: 14px;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+.sf-btn:hover { border-color: rgba(255, 255, 255, 0.28); background: rgba(255, 255, 255, 0.05); }
+.sf-btn-primary { background: linear-gradient(100deg, #A855F7 0%, #EC4899 45%, #6366F1 100%); border-color: transparent; color: #fff !important; }
+.sf-btn-primary:hover { background: linear-gradient(100deg, #A855F7 0%, #EC4899 45%, #6366F1 100%); border-color: transparent; filter: brightness(1.1); }
+
+/* Hauptbereich */
+.sf-main { display: grid; gap: 36px; padding: 40px 0 36px; }
+.sf-brand .sf-logo { display: inline-flex; align-items: center; gap: 10px; color: var(--sf-text); font-weight: 700; font-size: 20px; letter-spacing: -0.02em; }
+.sf-brand .sf-logo svg { width: 26px; height: 26px; fill: none; stroke-width: 3; stroke-linecap: round; }
+.sf-brand .sf-logo .bm-a { stroke: var(--sf-text); }
+.sf-brand .sf-logo .bm-b { stroke: var(--sf-accent); }
+.sf-brand p { margin: 12px 0 0; max-width: 34ch; }
+.sf-contact { display: grid; gap: 8px; margin-top: 18px; }
+.sf-contact a { display: inline-flex; align-items: center; gap: 10px; width: fit-content; }
+.sf-contact svg { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; color: var(--sf-text-3); }
+.sf-contact a:hover svg { color: var(--sf-accent); }
+
+.sf-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px 24px; }
+.sf-col h3 {
+  margin: 0 0 12px;
+  font-family: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  font-size: 11.5px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--sf-text-3);
+}
+.sf-col ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.sf-col a { display: inline-block; padding: 2px 0; }
+
+/* Leiste unten */
+.sf-bottom {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px;
+  padding-top: 22px; border-top: 1px solid var(--sf-line);
+  font-size: 13px; color: var(--sf-text-3);
+}
+.sf-badges { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.sf-badges li { padding: 4px 10px; border: 1px solid var(--sf-line); border-radius: 999px; }
+.sf-top { display: inline-flex; align-items: center; gap: 6px; }
+
+@media (min-width: 760px) {
+  .sf-cta { grid-template-columns: 1fr auto; align-items: center; }
+  .sf-cols { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (min-width: 1000px) {
+  .sf-main { grid-template-columns: minmax(0, 1.1fr) minmax(0, 2fr); gap: 48px; }
+}
+@media (forced-colors: active) {
+  .site-footer::before { display: none; }
+  .sf-btn { border: 1px solid CanvasText; }
+}
+.mk-embed .site-footer { display: none !important; }
