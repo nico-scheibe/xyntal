@@ -322,6 +322,7 @@
   const form = document.getElementById("profile");
   const status = document.getElementById("status");
   let me = null;
+  let hasProject = false;
 
   function render(m) {
     document.getElementById("hello").innerHTML = `Hallo, <em>${esc((m.name || "du").split(" ")[0])}.</em>`;
@@ -344,7 +345,7 @@
       [!!(m.about && (m.offer || m.seek)), "Profil ergänzen: was du kannst und suchst", "#profile"],
       [!!m.avatar_path, "Profilbild hinzufügen", "#avatar-form"],
       [m.status === "approved", m.status === "approved" ? "Freigeschaltet" : "Freischaltung (für das öffentliche Profil)", null],
-      [false, "Erstes Projekt anlegen oder bei einem einsteigen", m.status === "rejected" ? null : "projekte?neu=1"],
+      ...(hasProject ? [] : [[false, "Erstes Projekt anlegen oder bei einem einsteigen", m.status === "rejected" ? null : "projekte?neu=1"]]),
     ];
     document.getElementById("next-steps").innerHTML = steps.map(([done, label, href]) => `<li class="${done ? "done" : ""}">
       <span class="step-mark" aria-hidden="true"></span>
@@ -403,6 +404,13 @@
     render(me);
     setupAvatarEditor(me, updated => { me = updated; render(me); });
     renderXcard();
+    // Schritt „Erstes Projekt“ entfällt, sobald es ein eigenes Projekt oder eine Rollen-Meldung gibt
+    const [own, joined] = await Promise.all([
+      sb.from("projects").select("id", { count: "exact", head: true }).eq("owner_id", me.id),
+      sb.from("project_interest").select("role_id", { count: "exact", head: true }).eq("member_id", me.id),
+    ]);
+    hasProject = (own.count || 0) + (joined.count || 0) > 0;
+    if (hasProject) render(me);
     fromHash();
   }, 300);
 

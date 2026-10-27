@@ -14,7 +14,8 @@
     return { key: "active", label: "In Arbeit" };
   }
   function projectExtras(p) {
-    return window.XyntalProjectExtras?.for(p) || { goals: [], tags: [], links: [], team: [], timeframe: "" };
+    const base = window.XyntalProjectExtras?.for(p) || { goals: [], tags: [], links: [], team: [], timeframe: "" };
+    return { ...base, roleTags: base.roleTags && typeof base.roleTags === "object" ? base.roleTags : {} };
   }
 
   const els = {
@@ -103,34 +104,44 @@
     return { hours, status };
   }
 
-  function roleHtml(p, r, mine) {
-    const { hours, status } = roleBits(r);
+  function roleHtml(p, r, mine, extra) {
+    const bits = roleBits(r);
     const name = esc(r.name);
     const slots = r.filled ? 0 : 1;
     const slotsLabel = r.filled ? "Besetzt" : `${slots} ${slots === 1 ? "Platz" : "Plätze"} offen`;
     if (!isDetail) {
       return `<li class="role-chip${r.filled ? " is-filled" : ""}" data-role="${r.id}"${r.need ? ' tabindex="0"' : ""}>
-        ${status}<span class="role-name">${name}</span>${hours}${r.need ? `<span class="role-need">${esc(r.need)}</span>` : ""}
+        ${bits.status}<span class="role-name">${name}</span>${bits.hours}${r.need ? `<span class="role-need">${esc(r.need)}</span>` : ""}
       </li>`;
     }
+    const hours = bits.hours;
+    const skillTags = [
+      ...(Array.isArray(extra?.roleTags?.[r.name]) ? extra.roleTags[r.name] : []),
+      ...(Array.isArray(extra?.tags) ? extra.tags : []),
+    ].filter(Boolean).filter((t, i, a) => a.indexOf(t) === i).slice(0, 8);
+    const tagsHtml = skillTags.length
+      ? `<div class="role-tags">${skillTags.map((t) => `<span class="tag">${esc(t)}</span>`).join("")}</div>` : "";
     let action = "";
     if (mine) {
       const people = roleInterest(r.id);
-      action = people.length ? `<details class="role-people"><summary>${people.length} ${people.length === 1 ? "Bewerbung" : "Bewerbungen"}</summary><ul>
-        ${people.map((i) => `<li>${avatar(i.member?.name || "Mitglied", "avatar-sm", i.member?.avatar_path)}<div><strong>${esc(i.member?.name || "Mitglied")}</strong>${i.member?.headline ? `<span>${esc(i.member.headline)}</span>` : ""}${i.note ? `<p>${esc(i.note)}</p>` : ""}</div><a class="btn btn-small btn-ghost" href="nachrichten?an=${esc(i.member_id)}">Nachricht</a></li>`).join("")}
-      </ul></details>` : `<span class="role-quiet">Noch keine Bewerbung</span>`;
+      if (people.length) {
+        action = `<details class="role-people"><summary>${people.length} ${people.length === 1 ? "Bewerbung" : "Bewerbungen"}</summary><ul>
+          ${people.map((i) => `<li>${avatar(i.member?.name || "Mitglied", "avatar-sm", i.member?.avatar_path)}<div><strong>${esc(i.member?.name || "Mitglied")}</strong>${i.member?.headline ? `<span>${esc(i.member.headline)}</span>` : ""}${i.note ? `<p>${esc(i.note)}</p>` : ""}</div><a class="btn btn-small btn-ghost" href="nachrichten?an=${esc(i.member_id)}">Nachricht</a></li>`).join("")}
+        </ul></details>`;
+      }
     } else if (r.filled) {
-      action = `<span class="tag role-full">Besetzt</span>`;
+      action = `<span class="role-full">Besetzt</span>`;
     } else if (myInterest(r.id)) {
-      action = `<button type="button" class="role-join is-on" disabled aria-disabled="true">Beworben</button>`;
+      action = `<div class="role-applied-wrap"><span class="role-applied">Beworben ✓</span><button type="button" class="role-withdraw" data-act="leave">Zurückziehen</button></div>`;
     } else if (v.canAct && !p.closed) {
       action = `<button type="button" class="role-join" data-act="join">Bewerben</button>`;
     } else if (!v.me) {
       action = `<a class="text-link" href="/login?next=${encodeURIComponent(`projekte?projekt=${p.id}`)}">Einloggen, um dich zu bewerben</a>`;
     }
-    return `<li class="role-line${r.filled ? " is-filled" : ""}" data-role="${r.id}">
-      <div class="role-line-main">${status}<strong class="role-name">${name}</strong>${hours}<span class="role-slots">${esc(slotsLabel)}</span></div>
+    return `<li class="role-card${r.filled ? " is-filled" : ""}" id="role-${r.id}" data-role="${r.id}">
+      <div class="role-card-head"><strong class="role-name">${name}</strong>${hours}<span class="role-slots">${esc(slotsLabel)}</span></div>
       ${r.need ? `<p class="role-need">${esc(r.need)}</p>` : ""}
+      ${tagsHtml}
       ${action ? `<div class="role-action">${action}</div>` : ""}
     </li>`;
   }
@@ -164,41 +175,59 @@
     return `<a class="project-image-link" href="${detailHref(p.id)}" tabindex="-1" aria-hidden="true">${box}</a>`;
   }
 
-  function detailMetaHtml(p, owner, mine, extra) {
-    const status = projectStatus(p);
+  function hoursSpan(roles) {
+    const vals = (roles || []).map((r) => Number(r.hours)).filter((h) => h > 0);
+    if (!vals.length) return "—";
+    const min = Math.min(...vals), max = Math.max(...vals);
+    return min === max ? `${min} Std.` : `${min}–${max} Std.`;
+  }
+
+  function appsSummaryHtml(p, mine) {
+    if (!(mine || v.isAdmin)) return "";
+    const parts = [...(p.roles || [])].sort((a, b) => a.id - b.id).map((r) => {
+      const n = roleInterest(r.id).length;
+      return n ? `<li><a class="pd-apps-link" href="#role-${r.id}">${esc(r.name)} · ${n} neu</a></li>` : null;
+    }).filter(Boolean);
+    return `<div class="pd-apps" aria-label="Bewerbungen">
+      <h2>Bewerbungen</h2>
+      ${parts.length ? `<ul>${parts.join("")}</ul>` : `<p class="pd-apps-empty">0 Bewerbungen</p>`}
+    </div>`;
+  }
+
+  function detailMainHtml(p, owner, mine, extra, roles) {
     const timeframe = extra.timeframe || "";
     const goals = extra.goals.filter(Boolean);
     const tags = extra.tags.filter(Boolean);
     const links = extra.links.filter((l) => l?.url);
-    const team = [
+    const members = [
       { name: owner.name || "Mitglied", role: "Ersteller", avatar_path: owner.avatar_path },
       ...extra.team.filter((m) => m?.name),
     ];
-    const created = p.created_at
-      ? new Date(p.created_at).toLocaleDateString(document.documentElement.lang === "en" ? "en-GB" : "de-DE", { dateStyle: "medium" })
-      : "";
+    const openRoles = roles.filter((r) => !r.filled);
+    const aboutBody = p.body
+      ? `<div class="project-body">${richText(p.body)}</div>`
+      : `<p class="project-body project-body-empty">${esc(p.pitch)}</p>`;
     return `
-      <header class="project-heading">
-        <p class="project-kicker">
-          <span class="project-status status-${status.key}">${esc(status.label)}</span>
-          <span class="phase-label phase-${esc(p.phase || "idee")}">${PHASE_LABEL[p.phase] || "Idee"}</span>
-          ${p.place ? `<span class="project-place">${esc(p.place)}</span>` : ""}
-        </p>
-        <h1 class="project-title" id="p-${p.id}">${esc(p.title)}</h1>
-        <p class="project-pitch">${esc(p.pitch)}</p>
-        <div class="project-meta">${avatar(owner.name, "avatar-sm", owner.avatar_path)}<p><strong>${esc(owner.name)}</strong>${created ? ` · ${esc(created)}` : ""}${p.is_public ? " · öffentlich" : ""}</p>${v.canAct && !mine && !p.closed ? `<a class="text-link" href="nachrichten?an=${esc(p.owner_id)}">Nachricht</a>` : ""}</div>
-      </header>
-      ${p.body ? `<section class="project-section"><h2>Beschreibung</h2><div class="project-body">${richText(p.body)}</div></section>` : ""}
-      ${goals.length ? `<section class="project-section"><h2>Ziele</h2><ul class="project-goals">${goals.map((g) => `<li>${esc(g)}</li>`).join("")}</ul></section>` : ""}
-      ${tags.length ? `<section class="project-section"><h2>Tech-Stack &amp; Tags</h2><div class="tags">${tags.map((t) => `<span class="tag">${esc(t)}</span>`).join("")}</div></section>` : ""}
-      ${timeframe ? `<section class="project-section"><h2>Zeitrahmen</h2><p>${esc(timeframe)}</p></section>` : ""}
-      ${links.length ? `<section class="project-section"><h2>Links</h2><ul class="project-links">${links.map((l) => `<li><a class="text-link" href="${esc(normalizeUrl(l.url))}" target="_blank" rel="noopener">${esc(l.label || l.url)}</a></li>`).join("")}</ul></section>` : ""}
-      <section class="project-section"><h2>Team</h2><ul class="project-team">${team.map((m) => `<li>${avatar(m.name, "avatar-sm", m.avatar_path)}<div><strong>${esc(m.name)}</strong><span>${esc(m.role || "Mitglied")}</span></div></li>`).join("")}</ul></section>`;
+      <section class="project-section pd-about"><h2>Über das Projekt</h2>${aboutBody}
+        ${goals.length ? `<ul class="project-goals">${goals.map((g) => `<li>${esc(g)}</li>`).join("")}</ul>` : ""}
+        ${tags.length ? `<div class="tags">${tags.map((t) => `<span class="tag">${esc(t)}</span>`).join("")}</div>` : ""}
+        ${timeframe ? `<p class="pd-timeframe">${esc(timeframe)}</p>` : ""}
+        ${links.length ? `<ul class="project-links">${links.map((l) => `<li><a class="text-link" href="${esc(normalizeUrl(l.url))}" target="_blank" rel="noopener">${esc(l.label || l.url)}</a></li>`).join("")}</ul>` : ""}
+      </section>
+      <section class="project-section pd-team"><h2>Team</h2>
+        <ul class="project-team">
+          ${members.map((m) => `<li>${avatar(m.name, "avatar-sm", m.avatar_path)}<div><strong>${esc(m.name)}</strong><span>${esc(m.role || "Mitglied")}</span></div></li>`).join("")}
+          ${openRoles.map((r) => `<li class="pd-team-slot"><button type="button" class="pd-slot-btn" data-act="jump-role" data-role="${r.id}"><span class="pd-slot-avatar" aria-hidden="true">?</span><div><strong>Deine Rolle?</strong><span>${esc(r.name)}</span></div></button></li>`).join("")}
+        </ul>
+      </section>
+      <section class="project-section pd-comments">
+        <details class="content-comments" open data-comment-kind="project" data-comment-id="${p.id}" data-comment-owner="${esc(p.owner_id)}" data-comment-closed="${p.closed}"><summary>Kommentare</summary></details>
+      </section>`;
   }
 
   function projectHtml(p) {
     const owner = p.owner || { name: "Mitglied" };
-    const mine = v.me && p.owner_id === v.me.id;
+    const mine = !!(v.me && p.owner_id === v.me.id);
     const roles = [...(p.roles || [])].sort((a, b) => a.id - b.id);
     const open = roles.filter((r) => !r.filled).length;
     const img = IMG_RE.test(p.image_path || "") ? p.image_path : "";
@@ -207,22 +236,58 @@
     const extra = projectExtras(p);
     const rolesBlock = `<div class="project-roles">
         <h3>${open ? `${open} offene ${open === 1 ? "Rolle" : "Rollen"}` : "Alle Rollen besetzt"}</h3>
-        <ul>${roles.map((r) => roleHtml(p, r, mine)).join("")}</ul>
+        <ul>${roles.map((r) => roleHtml(p, r, mine, extra)).join("")}</ul>
       </div>`;
     if (isDetail) {
-      const appsNotice = mine
-        ? `<div class="applications-heading"><strong>${apps} ${apps === 1 ? "Bewerbung" : "Bewerbungen"}</strong><p>Bewerbungen siehst du bei der jeweiligen Rolle. Nur du und die Person haben Zugriff.</p></div>`
+      const status = projectStatus(p);
+      const phase = PHASE_LABEL[p.phase] || "Idee";
+      const teamSize = 1 + extra.team.filter((m) => m?.name).length;
+      const created = p.created_at
+        ? new Date(p.created_at).toLocaleDateString(document.documentElement.lang === "en" ? "en-GB" : "de-DE", { dateStyle: "medium" })
         : "";
+      const metaBits = [
+        `<strong>${esc(owner.name || "Mitglied")}</strong>`,
+        p.place ? esc(p.place) : "",
+        created ? esc(created) : "",
+        p.is_public ? "öffentlich" : "",
+      ].filter(Boolean);
+      const showApplyBar = open > 0 && !mine && !p.closed;
       return `<article class="project${p.closed ? " closed" : ""}${img || canEditImage ? " has-banner" : ""}${img ? " has-image" : ""}" data-id="${p.id}" aria-labelledby="p-${p.id}">
-        ${bannerHtml(p, canEditImage, img)}
-        ${cardMenu(p, mine, img, roles)}
-        <div class="project-detail-layout">
-          <div class="project-detail-main">${detailMetaHtml(p, owner, mine, extra)}</div>
-          <aside class="project-detail-aside" aria-label="Offene Rollen">${appsNotice}${rolesBlock}</aside>
-          <div class="project-detail-foot">
-            <details class="content-comments" open data-comment-kind="project" data-comment-id="${p.id}" data-comment-owner="${esc(p.owner_id)}" data-comment-closed="${p.closed}"><summary>Kommentare</summary></details>
+        <div class="pd-hero${img || canEditImage ? " has-media" : ""}">
+          ${bannerHtml(p, canEditImage, img) || `<div class="project-image is-empty" aria-hidden="true"></div>`}
+          <div class="pd-hero-copy">
+            <p class="pd-badges"><span class="project-status status-${status.key}">${esc(status.label)}</span><span class="phase-label phase-${esc(p.phase || "idee")}">${esc(phase)}</span></p>
+            <h1 class="project-title" id="p-${p.id}">${esc(p.title)}</h1>
+            <p class="project-pitch">${esc(p.pitch)}</p>
+          </div>
+          <div class="pd-hero-toolbar">
+            <button type="button" class="pd-share" data-act="share">Teilen</button>
+            ${cardMenu(p, mine, img, roles)}
           </div>
         </div>
+        <div class="pd-meta-row">${avatar(owner.name, "avatar-sm", owner.avatar_path)}<p>${metaBits.join(" · ")}</p></div>
+        <dl class="pd-stats" aria-label="Projektkennzahlen">
+          <div><dt>Phase</dt><dd>${esc(phase)}</dd></div>
+          <div><dt>Offene Rollen</dt><dd>${open}</dd></div>
+          <div><dt>Team</dt><dd>${teamSize}</dd></div>
+          <div><dt>Std./Woche</dt><dd>${esc(hoursSpan(roles))}</dd></div>
+        </dl>
+        <div class="project-detail-layout">
+          <div class="project-detail-main">${detailMainHtml(p, owner, mine, extra, roles)}</div>
+          <aside class="project-detail-aside" id="pd-roles" aria-label="Offene Rollen">
+            ${appsSummaryHtml(p, mine)}
+            <div class="project-roles">
+              <h2>Offene Rollen</h2>
+              <ul>${roles.map((r) => roleHtml(p, r, mine, extra)).join("")}</ul>
+            </div>
+            <div class="pd-creator">
+              ${avatar(owner.name, "avatar-md", owner.avatar_path)}
+              <div><strong>${esc(owner.name || "Mitglied")}</strong><span>Ersteller</span></div>
+              ${v.canAct && !mine && !p.closed ? `<a class="btn btn-small btn-ghost pd-msg" href="nachrichten?an=${esc(p.owner_id)}">Nachricht schreiben</a>` : !v.me ? `<a class="text-link" href="/login?next=${encodeURIComponent(`projekte?projekt=${p.id}`)}">Einloggen, um zu schreiben</a>` : ""}
+            </div>
+          </aside>
+        </div>
+        ${showApplyBar ? `<div class="pd-mobile-bar" data-mobile-apply><a class="btn pd-mobile-apply" href="#pd-roles">Auf eine Rolle bewerben</a></div>` : ""}
         <p class="post-error" data-error role="alert" hidden></p>
       </article>`;
     }
@@ -276,10 +341,24 @@
     }
     window.XyntalComments?.mount(els.list);
     hydrateImages(els.list);
+    setupMobileApplyBar(els.list);
     if (!initialAnchor && /^#p-\d+$/.test(location.hash)) {
       const target = document.getElementById(location.hash.slice(1));
       if (target) { initialAnchor = true; target.style.scrollMarginTop = "100px"; target.scrollIntoView({block: "start"}); }
     }
+  }
+
+  let mobileApplyIo = null;
+  function setupMobileApplyBar(root) {
+    mobileApplyIo?.disconnect();
+    mobileApplyIo = null;
+    const bar = root.querySelector("[data-mobile-apply]");
+    const roles = root.querySelector("#pd-roles");
+    if (!bar || !roles) return;
+    const sync = (visible) => { bar.hidden = visible; document.body.classList.toggle("pd-mobile-apply-on", !visible); };
+    mobileApplyIo = new IntersectionObserver(([e]) => sync(e.isIntersecting), { root: null, threshold: 0.12, rootMargin: "0px 0px -48px 0px" });
+    mobileApplyIo.observe(roles);
+    sync(false);
   }
 
   /* ---------- Laden ---------- */
@@ -617,15 +696,39 @@
     const p = projects.find((x) => x.id === id);
     const roleEl = btn.closest("[data-role]");
     const roleId = btn.dataset.role || roleEl?.dataset.role;
-    const role = roleId && p.roles.find((r) => r.id === Number(roleId));
-    const errorEl = card.querySelector("[data-error]");
-    errorEl.hidden = true;
+    const role = roleId && p?.roles?.find((r) => r.id === Number(roleId));
+    const errorEl = card?.querySelector("[data-error]");
+    if (errorEl) errorEl.hidden = true;
     try {
+      if (btn.dataset.act === "jump-role") {
+        const target = document.getElementById(`role-${roleId}`);
+        target?.style.setProperty("scroll-margin-top", "96px");
+        target?.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+        target?.classList.add("is-flash");
+        setTimeout(() => target?.classList.remove("is-flash"), 1200);
+        return;
+      }
+      if (btn.dataset.act === "share") {
+        const url = location.href.split("#")[0];
+        try {
+          await navigator.clipboard.writeText(url);
+          const prev = btn.textContent;
+          btn.textContent = "Link kopiert";
+          btn.classList.add("is-done");
+          setTimeout(() => { if (btn.isConnected) { btn.textContent = prev; btn.classList.remove("is-done"); } }, 1800);
+        } catch {
+          window.prompt("Link zum Teilen:", url);
+        }
+        return;
+      }
       btn.disabled = true;
       if (btn.dataset.act === "join") {
         openApplication(p, role, btn);
         btn.disabled = false;
         return;
+      } else if (btn.dataset.act === "leave") {
+        unwrap(await sb.from("project_interest").delete().eq("role_id", role.id).eq("member_id", v.me.id));
+        interest = interest.filter((i) => !(i.role_id === role.id && i.member_id === v.me.id));
       } else if (btn.dataset.act === "fill") {
         unwrap(await sb.from("project_roles").update({ filled: !role.filled }).eq("id", role.id));
         role.filled = !role.filled;
@@ -645,15 +748,19 @@
         unwrap(await sb.from("projects").delete().eq("id", id));
         projects = projects.filter((x) => x.id !== id);
       }
-      const focusKey = btn.dataset.act === "join" && roleId
+      const focusKey = btn.dataset.act === "leave" && roleId
+        ? `[data-id="${id}"] [data-role="${roleId}"] button[data-act="join"], [data-id="${id}"] [data-role="${roleId}"] .role-join`
+        : btn.dataset.act === "join" && roleId
         ? `[data-id="${id}"] [data-role="${roleId}"] button[data-act]`
         : `[data-id="${id}"] .card-menu-btn`;
       render();
       document.querySelector(focusKey)?.focus();
     } catch (err) {
       btn.disabled = false;
-      errorEl.textContent = friendlyError(err);
-      errorEl.hidden = false;
+      if (errorEl) {
+        errorEl.textContent = friendlyError(err);
+        errorEl.hidden = false;
+      }
     }
   });
 

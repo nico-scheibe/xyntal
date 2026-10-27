@@ -10,6 +10,7 @@ window.XyntalProjectExtras = {
       links: Array.isArray(extra.links) ? extra.links : [],
       team: Array.isArray(extra.team) ? extra.team : [],
       timeframe: typeof extra.timeframe === "string" ? extra.timeframe : "",
+      roleTags: extra.roleTags && typeof extra.roleTags === "object" ? extra.roleTags : {},
     };
   },
 };
