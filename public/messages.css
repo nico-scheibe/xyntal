@@ -1,4 +1,83 @@
 /* Nachrichten: erweitert .inbox / .bubble. Dunkles Lila-Pink nur im Posteingang. */
+
+/* Volle Breite + Viewport-Höhe: Liste links, Thread rechts */
+body.messages-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  height: 100dvh;
+  overflow: hidden;
+}
+body.messages-page .site-footer { display: none; }
+body.messages-page .messages-main {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+body.messages-page .messages-head {
+  flex: 0 0 auto;
+  padding: 10px 0 8px;
+  text-align: left;
+}
+body.messages-page .messages-head .wrap { margin: 0; max-width: none; }
+body.messages-page .messages-head h1 {
+  margin: 0;
+  font-size: clamp(1.35rem, 2.6vw, 1.85rem);
+  line-height: 1.15;
+}
+body.messages-page .messages-head .eyebrow { margin-bottom: 4px; }
+body.messages-page .messages-body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0 0 12px;
+}
+body.messages-page .messages-wrap {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0 12px;
+}
+@media (min-width: 720px) {
+  body.messages-page .messages-wrap { padding: 0 20px; }
+}
+body.messages-page #notice:empty { display: none; }
+body.messages-page .inbox {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+}
+body.messages-page .inbox-list,
+body.messages-page .thread {
+  min-height: 0;
+  height: 100%;
+}
+body.messages-page #conversations {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+body.messages-page .thread-messages {
+  max-height: none !important;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+@media (min-width: 860px) {
+  body.messages-page .inbox {
+    grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+  }
+}
+
 .inbox {
   --grad: linear-gradient(135deg, #5B21B6 0%, #A21CAF 48%, #BE185D 100%);
   --on-accent: #fff;
@@ -326,7 +405,12 @@
   transform: translateX(-50%);
   text-decoration: none;
 }
+@media (max-width: 859px) {
+  body.messages-page .messages-wrap { padding: 0 8px; }
+  body.messages-page .inbox { border-radius: 12px; }
+}
 @media (max-width: 400px) {
+  body.messages-page .messages-wrap { padding: 0 6px; }
   .inbox { border-radius: 12px; }
   .inbox .bubble { max-width: 92%; }
   .inbox .thread-messages { padding: 12px; }
