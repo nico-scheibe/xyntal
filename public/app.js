@@ -11,7 +11,7 @@ const PROFILE_FIELDS = ["name", "headline", "about", "phase", "category", "offer
 function friendlyError(err) {
   const msg = (err && (err.message || err.error_description)) || String(err || "");
   const map = [
-    // Schutzfilter der Datenbank (supabase/migrations/20261028140000_content_safety.sql)
+    // Schutzfilter der Datenbank (supabase/migrations/20261028150000_content_safety.sql)
     [/XYNTAL_MODERATION:beleidigung/, "Bitte bleib respektvoll: Dein Text enthält eine Beleidigung und wurde nicht gespeichert."],
     [/XYNTAL_MODERATION:scam/, "Dein Text sieht nach Betrug oder Spam aus (z. B. Geld- oder Gewinnversprechen) und wurde blockiert."],
     [/XYNTAL_MODERATION:link/, "Dieser Link ist aus Sicherheitsgründen nicht erlaubt (Kurzlinks, verschleierte Adressen oder Downloads). Nutze bitte die vollständige, normale Adresse."],
