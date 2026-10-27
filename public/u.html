@@ -14,7 +14,7 @@
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="stylesheet" href="/fonts/fonts.css?v=31">
   <link rel="stylesheet" href="/home.css?v=12">
-  <script src="/i18n-en.js?v=50" defer></script>
+  <script src="/i18n-en.js?v=51" defer></script>
   <script src="/i18n.js?v=31" defer></script>
   <style>
     .profile { min-height: calc(100vh - 200px); display: grid; align-content: center; justify-items: center; gap: 22px; padding: 48px 0 72px; text-align: center; }
@@ -49,6 +49,42 @@
 .profile-msg { width: min(100%, 30rem); }
 .profile-msg p { overflow-wrap: anywhere; }
 .public-item p { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* Public profile: identity, story and work in one coherent page. */
+.profile { align-content: start; gap: 36px; padding-top: 38px; }
+.public-intro { display:flex; align-items:center; justify-content:space-between; gap:16px; width:100%; padding-bottom:22px; border-bottom:1px solid var(--line); text-align:left; }
+.public-eyebrow { color:var(--text-2); font-size:12px; letter-spacing:.09em; text-transform:uppercase; }
+.public-address { color:var(--text-3); font-size:13px; }
+.profile-overview { width:100%; display:grid; gap:28px; align-items:start; }
+.profile-overview .bp-stage { width:100%; justify-self:center; }
+.profile-story { min-width:0; display:grid; gap:18px; text-align:left; }
+.profile-story .pp { width:100%; padding:28px; gap:26px; background:linear-gradient(145deg,rgba(185,92,255,.055),rgba(255,255,255,.018)); border:1px solid var(--line); }
+.pp-headline { font-size:clamp(22px,3vw,30px); line-height:1.25; padding-bottom:24px; border-bottom:1px solid var(--line); }
+.pp-block h2 { display:flex; align-items:center; gap:9px; margin-bottom:12px; color:var(--text-2); }
+.pp-block h2::before { content:''; width:5px; height:5px; border-radius:50%; background:#C9A6FF; }
+.pp-block p { font-size:15px; line-height:1.75; }
+.public-shortcuts { display:flex; gap:10px; }
+.public-shortcuts a { display:flex; justify-content:space-between; gap:24px; padding:14px 18px; border:1px solid var(--line); border-radius:14px; font-size:14px; flex:1; text-decoration:none; }
+.public-shortcuts a:hover { background:rgba(185,92,255,.08); }
+.public-shortcuts span { color:#C9A6FF; }
+.public-activity { max-width:none; gap:36px; }
+.public-section { scroll-margin-top:92px; }
+.public-section-heading { display:flex; align-items:center; gap:12px; margin-bottom:4px; }
+.public-section h2 { font-size:28px; font-weight:650; }
+.public-count { display:grid; place-items:center; width:27px; height:27px; border-radius:50%; background:rgba(185,92,255,.12); color:#D6B7FF; font-size:12px; }
+.public-items { display:grid; gap:16px; }
+.public-item { position:relative; gap:13px; padding:26px; background:linear-gradient(140deg,rgba(185,92,255,.045),rgba(255,255,255,.02)); border:1px solid var(--line); transition:border-color .2s,transform .2s; }
+.public-item:hover { border-color:rgba(185,92,255,.5); transform:translateY(-2px); }
+.public-item-meta { justify-self:start; padding:5px 9px; border-radius:7px; background:rgba(185,92,255,.10); color:#D6B7FF; }
+.public-item h3 { font-size:22px; line-height:1.25; letter-spacing:-.025em; }
+.public-item p { font-size:14px; line-height:1.65; }
+.public-item-link { margin-top:5px; color:#D6B7FF; font-weight:600; }
+.public-empty { padding:22px; border:1px dashed var(--line); border-radius:16px; font-size:14px; }
+.public-join { width:100%; max-width:none; padding:30px 20px; border-top:1px solid var(--line); gap:20px; }
+.public-join p { max-width:430px; font-size:15px; line-height:1.6; }
+@media(min-width:860px) { .profile-overview { grid-template-columns:minmax(300px,.85fr) minmax(0,1.15fr); gap:38px; } .profile-overview .bp-stage { position:sticky; top:96px; } .public-items { grid-template-columns:repeat(2,minmax(0,1fr)); } .public-empty { grid-column:1/-1; } }
+@media(max-width:480px) { .profile { gap:26px; padding-top:24px; } .public-intro { align-items:flex-start; flex-direction:column; gap:8px; } .profile-story .pp { padding:24px 20px; } .public-section h2 { font-size:24px; } .public-item { padding:22px; } }
+@media(prefers-reduced-motion:reduce) { .public-item { transition:none; } .public-item:hover { transform:none; } }
 </style>
 </head>
 <body class="home">
@@ -75,6 +111,6 @@
     </nav>
   </div>
 </footer>
-<script src="/u.js?v=4" defer></script>
+<script src="/u.js?v=5" defer></script>
 </body>
 </html>

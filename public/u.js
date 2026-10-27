@@ -47,6 +47,8 @@
     };
     document.title = `${name} · xyntal.de/${c.handle}`;
     page(`
+      <div class="public-intro"><span class="public-eyebrow">${esc(t("Menschen hinter den Ideen"))}</span><span class="public-address" data-no-i18n>xyntal.de/${esc(c.handle)}</span></div>
+      <div class="profile-overview">
       <div class="bp-stage">
         <article class="my-card" data-theme="${theme}" data-surface="${surface}" data-shape="${shape}" data-layout="${layout}" style="--tg:${grad};--t1:${cols[0]}">
           <div class="mc-cover" aria-hidden="true">
@@ -62,9 +64,11 @@
           <div class="mc-foot">${link ? `<a class="mc-link mc-link-button" href="${esc(link)}" target="_blank" rel="noopener noreferrer nofollow" data-no-i18n>${esc(linkText)} ↗</a>` : ""}<span class="mc-site" data-no-i18n>xyntal.de/${esc(c.handle)}</span></div>
         </article>
       </div>
-      ${profileHtml(c.profile)}
+      <div class="profile-story">${profileHtml(c.profile) || `<section class="pp glass"><p class="pp-headline">${esc(c.pitch || c.name)}</p><p>${esc(t("Lerne die Person hinter der Idee kennen."))}</p></section>`}
+      <nav class="public-shortcuts" aria-label="Profilbereiche"><a href="#profil-projekte">${esc(t("Projekte"))} <span aria-hidden="true">↓</span></a><a href="#profil-anzeigen">${esc(t("Anzeigen"))} <span aria-hidden="true">↓</span></a></nav></div>
+      </div>
       <section class="public-activity" aria-label="Projekte und Anzeigen" data-public-activity><p role="status">${esc(t("Projekte und Anzeigen werden geladen …"))}</p></section>
-      <div class="profile-msg">
+      <div class="profile-msg public-join">
         <p>${esc(t("Auf Xyntal finden Entwickler, Designer und Gründer die richtigen Leute für ihre Idee."))}</p>
         ${ctas(`<a class="btn btn-primary" href="/#karte">${esc(t("Bau deine eigene Karte"))}</a>`)}
       </div>`);
@@ -101,7 +105,7 @@
         const url = isProject ? `/projekte#p-${id}` : `/boerse#anzeige-${id}`;
         return `<a class="public-item glass" href="${url}"><span class="public-item-meta">${esc(t(isProject ? "Projekt" : (x.type === "biete" ? "Angebot" : "Gesuch")))}${x.closed ? ` · ${esc(t("Geschlossen"))}` : ""}</span><h3 data-no-i18n>${esc(x.title)}</h3><p data-no-i18n>${esc(isProject ? x.pitch : x.excerpt)}</p><span class="public-item-link">${esc(t(isProject ? "Projekt ansehen" : "Anzeige ansehen"))} ↗</span></a>`;
       };
-      const section = (title, items, kind, empty) => `<section class="public-section"><h2>${esc(t(title))}</h2>${items.length ? items.map(x => item(x, kind)).join("") : `<p class="public-empty">${esc(t(empty))}</p>`}</section>`;
+      const section = (title, items, kind, empty) => `<section class="public-section" id="${kind === "project" ? "profil-projekte" : "profil-anzeigen"}"><div class="public-section-heading"><h2>${esc(t(title))}</h2><span class="public-count">${items.length}</span></div><div class="public-items">${items.length ? items.map(x => item(x, kind)).join("") : `<p class="public-empty">${esc(t(empty))}</p>`}</div></section>`;
       target.innerHTML = section("Projekte", data?.projects || [], "project", "Noch keine öffentlichen Projekte.") + section("Anzeigen", data?.listings || [], "listing", "Noch keine öffentlichen Anzeigen.");
     } catch {
       if (target.isConnected) target.innerHTML = `<p role="status">${esc(t("Projekte und Anzeigen konnten nicht geladen werden."))}</p><button class="btn btn-glass" type="button" data-retry-activity>${esc(t("Neu laden"))}</button>`;

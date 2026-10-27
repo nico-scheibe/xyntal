@@ -1,6 +1,8 @@
 // Xyntal – englische Texte. Schlüssel = deutscher Originaltext (Leerzeichen zusammengefasst).
 // Neue deutsche Texte auf der Website hier ergänzen, sonst bleiben sie auf Englisch deutsch.
 window.XYNTAL_EN = {
+  "Menschen hinter den Ideen": "People behind the ideas",
+  "Lerne die Person hinter der Idee kennen.": "Meet the person behind the idea.",
   "Projekte und Anzeigen werden geladen …": "Loading projects and listings…",
   "Anzeigen": "Listings",
   "Noch keine öffentlichen Projekte.": "No public projects yet.",
