@@ -26,6 +26,22 @@
     } catch { return null; }
   }
   const client = () => (typeof sb !== "undefined" && sb ? sb : null); // eslint-disable-line no-undef
+  let ownClient = null;
+  async function getClient() {
+    const c = client();
+    if (c) return c;
+    if (ownClient) return ownClient;
+    if (!window.supabase) await new Promise((res, rej) => {
+      const sc = document.createElement("script"); sc.src = "/vendor/supabase.js?v=31"; sc.onload = res; sc.onerror = rej; document.head.append(sc);
+    });
+    ownClient = window.supabase.createClient(URL_, KEY);
+    return ownClient;
+  }
+  // Name und Foto merken, damit sie beim nächsten Seitenaufruf sofort da sind
+  const CACHE = "xyntal-acct";
+  const readCache = (id) => { try { const c = JSON.parse(localStorage.getItem(CACHE) || "null"); return c && c.id === id ? c : null; } catch { return null; } };
+  const writeCache = (v) => { try { localStorage.setItem(CACHE, JSON.stringify(v)); } catch { /* egal */ } };
+  let photoUrl = "", photoPath = "";
 
   const ICON_USER = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.2" r="3.8"/><path d="M4.6 20.2c.9-3.9 3.9-6 7.4-6s6.5 2.1 7.4 6"/></svg>';
   const ICONS = {
@@ -101,6 +117,8 @@
     const btn = root.querySelector(".acct-btn");
     const menu = root.querySelector(".acct-menu");
     const state = { session: readSession(), name: "", avatar: "", admin: false };
+    const cached = state.session && readCache(state.session.user.id);
+    if (cached) { state.name = cached.name || ""; state.avatar = cached.avatar || ""; state.admin = !!cached.admin; }
 
     function render() {
       const s = state.session;
@@ -111,6 +129,7 @@
         const hadImg = btn.querySelector(".acct-face img");
         btn.innerHTML = `<span class="acct-face avatar" ${safeAvatar ? `data-avatar-path="${esc(safeAvatar)}"` : ""}>${esc(initials(label))}</span><span class="acct-dot" aria-hidden="true"></span>`;
         if (hadImg && safeAvatar) btn.querySelector(".acct-face").append(hadImg);
+        else if (safeAvatar) showPhoto(safeAvatar);
         menu.innerHTML = `
           <div class="acct-head"><small>${t("Angemeldet als")}</small><b>${esc(label)}</b>${state.name && s.user.email ? `<span>${esc(s.user.email)}</span>` : ""}</div>
           <a href="/profil" role="menuitem">${ICONS.profil}${t("Mein Profil")}</a>
@@ -130,6 +149,22 @@
           <a class="acct-primary" href="/mitglied-werden" role="menuitem">${ICONS.neu}${t("Konto anlegen")}</a>`;
       }
       menu.setAttribute("role", "menu");
+    }
+
+    async function showPhoto(path) {
+      if (typeof hydrateAvatar === "function") return; // avatars.js übernimmt das
+      try {
+        if (photoPath !== path) {
+          const c = await getClient();
+          const { data, error } = await c.storage.from("avatars").download(path);
+          if (error || !data) return;
+          if (photoUrl) URL.revokeObjectURL(photoUrl);
+          photoUrl = URL.createObjectURL(data); photoPath = path;
+        }
+        const face = btn.querySelector(".acct-face");
+        if (!face || face.querySelector("img")) return;
+        const img = new Image(); img.alt = ""; img.src = photoUrl; face.append(img);
+      } catch { /* Initialen bleiben */ }
     }
 
     const items = () => [...menu.querySelectorAll('[role="menuitem"]')];
@@ -163,28 +198,25 @@
       if (!out) return;
       out.disabled = true;
       try {
-        let c = client();
-        if (!c) {
-          if (!window.supabase) await new Promise((res, rej) => {
-            const sc = document.createElement("script"); sc.src = "/vendor/supabase.js?v=31"; sc.onload = res; sc.onerror = rej; document.head.append(sc);
-          });
-          c = window.supabase.createClient(URL_, KEY);
-        }
+        const c = await getClient();
         await c.auth.signOut();
       } catch { /* notfalls lokal abmelden */ }
-      try { localStorage.removeItem(TOKEN); } catch { /* egal */ }
+      try { localStorage.removeItem(TOKEN); localStorage.removeItem(CACHE); } catch { /* egal */ }
       location.href = "/";
     });
 
     async function loadProfile() {
-      const c = client();
-      if (!c || !state.session) return;
+      if (!state.session) return;
       try {
+        const c = await getClient();
         const { data: { session } } = await c.auth.getSession();
         if (!session) { state.session = null; render(); return; }
         state.session = { user: session.user };
         const { data } = await c.from("profiles").select("name, avatar_path, is_admin").eq("id", session.user.id).maybeSingle();
-        if (data) { state.name = data.name || ""; state.avatar = data.avatar_path || ""; state.admin = data.is_admin === true; }
+        if (data) {
+          state.name = data.name || ""; state.avatar = data.avatar_path || ""; state.admin = data.is_admin === true;
+          writeCache({ id: session.user.id, name: state.name, avatar: state.avatar, admin: state.admin });
+        }
         render();
       } catch { /* Initialen reichen */ }
     }
