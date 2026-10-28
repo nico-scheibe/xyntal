@@ -108,3 +108,6 @@
 .member-xcard-link:hover { transform: translateY(-3px); }
 .member-xcard-link:focus-visible { outline: 2px solid #D08BFF; outline-offset: 4px; }
 @media (prefers-reduced-motion: reduce) { .member-xcard-link { transition: none; } .member-xcard-link:hover { transform: none; } }
+.member-xcard-link { position: relative; }
+.member-xcard-cover { position: absolute; inset: 0; z-index: 1; border-radius: 26px; }
+.member-xcard-link .mc-link-button { position: relative; z-index: 2; }
