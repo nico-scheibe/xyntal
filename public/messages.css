@@ -471,3 +471,71 @@ body.messages-page .thread-messages {
   .inbox .bubble.flash { animation: none; }
   .inbox .rec-level > i { transition: none; }
 }
+
+/* ---------- Glas-Look für Kopfzeile und Eingabeleiste ---------- */
+body.messages-page .inbox .thread { background: rgba(6, 5, 12, 0.55); }
+body.messages-page .inbox .thread-head {
+  position: relative;
+  z-index: 2;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  backdrop-filter: blur(24px) saturate(170%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+body.messages-page .inbox .thread-form {
+  background: linear-gradient(180deg, rgba(6, 5, 12, 0), rgba(6, 5, 12, 0.6));
+  border-top: 0;
+  padding: 10px 14px 14px;
+}
+body.messages-page .inbox .composer-row {
+  align-items: flex-end;
+  gap: 6px;
+  padding: 6px;
+  border-radius: 26px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.04));
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 -1px 0 rgba(255, 255, 255, 0.04), 0 12px 32px rgba(0, 0, 0, 0.38);
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+body.messages-page .inbox .composer-row:focus-within {
+  border-color: rgba(240, 171, 252, 0.45);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 0 0 3px rgba(168, 85, 247, 0.18), 0 12px 32px rgba(0, 0, 0, 0.38);
+}
+body.messages-page .inbox .composer-row textarea {
+  min-height: 40px;
+  padding: 10px 8px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  outline: none;
+  color: var(--text);
+  scrollbar-width: none;
+}
+body.messages-page .inbox .composer-row textarea::-webkit-scrollbar { display: none; }
+body.messages-page .inbox .composer-row .msg-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transition: background .15s ease, transform .15s ease;
+}
+body.messages-page .inbox .composer-row .msg-icon:hover,
+body.messages-page .inbox .composer-row .msg-icon:focus-visible { background: rgba(255, 255, 255, 0.16); }
+body.messages-page .inbox .composer-row .msg-icon:active { transform: scale(.94); }
+body.messages-page .inbox .composer-row .btn {
+  min-height: 40px;
+  border-radius: 999px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 6px 18px rgba(190, 24, 93, 0.35);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  body.messages-page .inbox .thread-head, body.messages-page .inbox .composer-row { background: rgba(28, 26, 40, 0.96); }
+}
+@media (prefers-reduced-motion: reduce) {
+  body.messages-page .inbox .composer-row, body.messages-page .inbox .composer-row .msg-icon { transition: none; }
+}
