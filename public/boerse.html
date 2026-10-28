@@ -199,6 +199,7 @@
     const long = !!l.body && (l.body.length > 320 || l.body.split("\n").length > 6);
     const ownMenu = mine || v.isAdmin ? `<details class="listing-menu"><summary aria-label="Aktionen"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18" cy="12" r="1.6"/></svg></summary>
           <div class="listing-menu-pop">
+            ${mine ? `<button type="button" data-act="edit">Bearbeiten</button>` : ""}
             ${mine ? `<button type="button" data-act="toggle">${l.closed ? "Wieder öffnen" : "Als erledigt markieren"}</button>` : ""}
             <button type="button" data-act="delete" class="is-danger">Löschen</button>
           </div></details>` : "";
@@ -275,21 +276,44 @@
 
   const form = document.getElementById("listing-form");
   const newBtn = document.getElementById("new-listing");
-  newBtn.addEventListener("click", () => { form.hidden = false; newBtn.hidden = true; form.elements.title.focus(); });
-  document.getElementById("cancel-listing").addEventListener("click", () => { form.hidden = true; newBtn.hidden = false; form.reset(); });
+  const submitBtn = form.querySelector('button[type="submit"]');
+  let editingListing = null;   // Eintrag, der gerade bearbeitet wird (sonst: neuer Eintrag)
+  function openListingForm(l) {
+    editingListing = l || null;
+    form.reset();
+    if (l) {
+      const f = form.elements;
+      f.type.value = l.type; f.category.value = l.category || ""; f.title.value = l.title || "";
+      f.body.value = l.body || ""; f.is_public.checked = !!l.is_public;
+    }
+    submitBtn.textContent = l ? "Änderungen speichern" : "Veröffentlichen";
+    form.hidden = false;
+    newBtn.hidden = true;
+    if (l) form.scrollIntoView({ block: "start" });
+    form.elements.title.focus({ preventScroll: !!l });
+  }
+  function closeListingForm() {
+    form.hidden = true;
+    newBtn.hidden = false;
+    form.reset();
+    editingListing = null;
+    submitBtn.textContent = "Veröffentlichen";
+    setStatus(document.getElementById("listing-status"), "");
+  }
+  newBtn.addEventListener("click", () => openListingForm());
+  document.getElementById("cancel-listing").addEventListener("click", closeListingForm);
 
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     submitWith(form, document.getElementById("listing-status"), async (data) => {
       if (!data.title) throw new Error("Bitte gib einen Titel an.");
-      unwrap(await sb.from("listings").insert({
-        type: data.type, category: data.category, title: data.title, body: data.body, is_public: data.is_public,
-      }));
-      form.reset();
-      form.hidden = true;
-      newBtn.hidden = false;
-      setStatus(document.getElementById("listing-status"), "");
+      const fields = { type: data.type, category: data.category, title: data.title, body: data.body, is_public: data.is_public };
+      const edited = editingListing;
+      if (edited) unwrap(await sb.from("listings").update(fields).eq("id", edited.id));
+      else unwrap(await sb.from("listings").insert(fields));
+      closeListingForm();
       await load();
+      if (edited) document.getElementById(`anzeige-${edited.id}`)?.scrollIntoView({ block: "center" });
     });
   });
 
@@ -328,6 +352,9 @@
         btn.setAttribute("aria-pressed", liked.has(id));
         btn.querySelector("span").textContent = Number(l.like_count) || 0;
         btn.disabled = false;
+      } else if (btn.dataset.act === "edit") {
+        btn.closest("details")?.removeAttribute("open");
+        if (l) openListingForm(l);
       } else if (btn.dataset.act === "toggle") {
         unwrap(await sb.from("listings").update({ closed: !l.closed }).eq("id", id));
         l.closed = !l.closed;
