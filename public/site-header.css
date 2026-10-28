@@ -1,0 +1,109 @@
+/* ---------- Gemeinsame Kopfzeile (alle Seiten) ----------
+   Eigenständig, damit sie auf Seiten mit style.css und mit home.css gleich aussieht.
+   Wird als letztes Stylesheet geladen. Verhalten: account-menu.js (Menü, aktive Seite),
+   effects.js (Suche), i18n.js (DE/EN), account-menu.js (Konto). */
+.nav {
+  position: sticky; top: 0; z-index: 50;
+  padding-top: env(safe-area-inset-top);
+  background: rgba(7, 7, 11, 0.86) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09) !important;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", "Inter", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .nav { background: rgba(7, 7, 11, 0.62) !important; -webkit-backdrop-filter: blur(20px) saturate(180%) !important; backdrop-filter: blur(20px) saturate(180%) !important; }
+}
+.nav .wrap {
+  display: flex; align-items: center; gap: 4px; height: 64px; position: relative;
+  width: min(1240px, 100% - 32px); max-width: none; margin-inline: auto; padding: 0;
+}
+.nav .logo {
+  display: inline-flex; align-items: center; gap: 10px; flex: none; margin-right: 14px;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI Variable Display", "Segoe UI", "Inter", Roboto, sans-serif !important;
+  font-weight: 700 !important; font-size: 21px; letter-spacing: -0.04em !important;
+  color: #F5F5F7; text-decoration: none;
+}
+.nav .logo-mark { width: 22px; height: 22px; fill: none; stroke-width: 2.6; stroke-linecap: round; }
+
+/* Links */
+.nav .nav-links { display: flex; gap: 2px; align-items: center; flex: 1 1 auto; min-width: 0; }
+.nav .nav-links a {
+  text-decoration: none; color: #A1A1AA; white-space: nowrap;
+  font-family: inherit; font-size: 14.5px; font-weight: 500;
+  padding: 8px 11px; border-radius: 999px; transition: color .15s, background .15s;
+}
+.nav .nav-links a:hover { color: #F5F5F7; background: rgba(255, 255, 255, 0.06); }
+.nav .nav-links a[aria-current="page"] { color: #F5F5F7; background: rgba(185, 92, 255, 0.16); }
+.nav .nav-links .nav-cta {
+  line-height: 1.2; white-space: nowrap;
+  margin-left: auto; padding: 9px 16px; border-radius: 999px; font-weight: 600; font-size: 14px;
+  color: #fff !important; background: linear-gradient(100deg, #A855F7 0%, #EC4899 45%, #6366F1 100%) !important;
+  box-shadow: 0 6px 18px rgba(236, 72, 153, 0.25);
+}
+.nav .nav-links .nav-cta:hover { filter: brightness(1.08); }
+.nav .nav-links [hidden] { display: none !important; }
+.nav .nav-links .hide-sm { display: none; }
+.nav .nav-links .nav-main { display: none; }
+@media (min-width: 1180px) { .nav .nav-links .nav-main { display: inline-block; } }
+/* Login steckt im Konto-Symbol; als Text nur im ausgeklappten Menü */
+.nav .nav-links:not(.open) [data-account] { display: none; }
+
+/* Menü-Knopf (unter 1180 px) */
+.nav .nav-toggle {
+  display: none; flex: none; order: 9;
+  font: 500 13px/1 inherit; color: #F5F5F7; cursor: pointer;
+  background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px; padding: 9px 14px; margin: 0 0 0 8px;
+}
+@media (max-width: 1179px) {
+  .nav .nav-toggle { display: inline-block; }
+  .nav .nav-links:not(.open) .nav-cta { display: inline-block; }
+  .nav .nav-links.open {
+    position: absolute; top: 64px; left: -16px; right: -16px;
+    flex-direction: column; align-items: stretch; gap: 2px;
+    max-height: calc(100dvh - 80px); overflow-y: auto;
+    padding: 10px 16px 18px;
+    background: rgba(10, 9, 16, 0.985); border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+    -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+  }
+  .nav .nav-links.open a { padding: 12px 14px; border-radius: 12px; }
+  .nav .nav-links.open .nav-main, .nav .nav-links.open .hide-sm { display: block; }
+  .nav .nav-links.open .nav-cta { margin: 10px 0 0; text-align: center; }
+}
+@media (max-width: 640px) { .nav .nav-links:not(.open) .nav-cta { display: none; } }
+
+/* Suche (effects.js), Sprache (i18n.js), Konto (account-menu.js) */
+.nav .cmdk-trigger {
+  display: none; align-items: center; gap: 8px; flex: none; order: 6;
+  font: inherit; font-size: 13px; color: #6E6E78; cursor: pointer;
+  background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 999px; padding: 6px 8px 6px 12px; margin: 0 4px 0 8px !important;
+}
+.nav .cmdk-trigger:hover { color: #A1A1AA; border-color: rgba(255, 255, 255, 0.14); }
+.nav .cmdk-trigger kbd { font: 600 11px/1 ui-monospace, "SF Mono", Consolas, monospace; padding: 3px 5px; border-radius: 6px; background: rgba(255, 255, 255, 0.08); color: #A1A1AA; }
+@media (min-width: 1400px) { .nav .cmdk-trigger { display: inline-flex; } }
+.nav .lang-switch {
+  display: inline-flex; align-items: center; flex: none; order: 7; height: 32px; padding: 2px;
+  border-radius: 999px; background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.09); margin: 0 0 0 6px;
+}
+.nav .lang-switch button { height: 26px; min-width: 34px; padding: 0 9px; border: 0; border-radius: 999px; background: transparent; color: #A1A1AA; font: 600 12px/1 inherit; cursor: pointer; }
+.nav .lang-switch button[aria-pressed="true"] { background: #fff; color: #000; }
+.nav .wrap > .acct { order: 8; margin-left: 8px; }
+.nav .badge { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 4px; border-radius: 999px; background: #EC4899; color: #fff; font-size: 11px; font-weight: 700; }
+
+/* Befehlspalette (effects.js) – auch auf Seiten ohne style.css */
+.cmdk { position: fixed; inset: 0; z-index: 100; display: grid; justify-items: center; align-items: start; padding: 12vh 16px 16px; background: rgba(6, 7, 10, 0.6); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.cmdk-box { width: min(620px, 100%); background: #111117; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 20px; box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.9); overflow: hidden; color: #F5F5F7; }
+.cmdk-input { display: flex; align-items: center; gap: 10px; padding: 0 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.09); }
+.cmdk-input svg { width: 16px; height: 16px; color: #6E6E78; flex: none; }
+.cmdk-input input { flex: 1; border: 0; background: transparent; color: #F5F5F7; padding: 16px 0; font: inherit; font-size: 15px; outline: none; box-shadow: none !important; }
+.cmdk-list { max-height: min(56vh, 420px); overflow-y: auto; padding: 6px; }
+.cmdk-group { font: 11px ui-monospace, "SF Mono", Consolas, monospace; color: #6E6E78; padding: 10px 10px 4px; }
+.cmdk-item { display: grid; grid-template-columns: 22px 1fr auto; gap: 10px; align-items: center; width: 100%; text-align: left; font: inherit; font-size: 14px; color: #A1A1AA; background: transparent; border: 0; border-radius: 12px; padding: 9px 10px; cursor: pointer; }
+.cmdk-item .k, .cmdk-item .g { font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: 11px; color: #6E6E78; }
+.cmdk-item .g { text-align: center; }
+.cmdk-item[aria-selected="true"] { background: rgba(185, 92, 255, 0.14); color: #F5F5F7; }
+.cmdk-item[aria-selected="true"] .g, .cmdk-item mark { background: none; color: #D08BFF; }
+.cmdk-foot { display: flex; gap: 16px; padding: 10px 16px; border-top: 1px solid rgba(255, 255, 255, 0.09); font-size: 12px; color: #6E6E78; }
+.cmdk-empty { padding: 28px; text-align: center; color: #6E6E78; font-size: 14px; }
+
+@media (prefers-reduced-motion: reduce) { .nav .nav-links a { transition: none; } }

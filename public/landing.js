@@ -112,23 +112,7 @@
   /* ---------------------------------------------------------------
      Navigation
      --------------------------------------------------------------- */
-  const topbar = $(".topbar");
-  const setScrolled = () => topbar.classList.toggle("is-scrolled", scrollY > 8);
-  addEventListener("scroll", setScrolled, { passive: true });
-  setScrolled();
-
-  const toggle = $(".menu-toggle");
-  const nav = $("#hauptnavigation");
-  const setMenu = (open) => {
-    nav.classList.toggle("is-open", open);
-    toggle.setAttribute("aria-expanded", String(open));
-    $(".menu-toggle-label", toggle).textContent = open ? "Schließen" : "Menü";
-  };
-  toggle.addEventListener("click", () => setMenu(!nav.classList.contains("is-open")));
-  nav.addEventListener("click", (e) => { if (e.target.closest("a")) setMenu(false); });
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && nav.classList.contains("is-open")) { setMenu(false); toggle.focus(); }
-  });
+  // Kopfzeile und Handy-Menü: gemeinsame Kopfzeile (site-header.css, account-menu.js)
 
   // Angemeldet? Die Supabase-Sitzung liegt im localStorage – dafür muss die große Bibliothek nicht laden.
   // Angemeldete landen bei „Projekt starten“ direkt im Projektformular statt in der Anmeldung.

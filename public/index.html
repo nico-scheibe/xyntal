@@ -27,26 +27,26 @@
   <script src="i18n.js?v=31" defer></script>
   <link rel="stylesheet" href="/backdrop.css?v=4">
   <link rel="stylesheet" href="/site-footer.css?v=1">
+  <link rel="stylesheet" href="/site-header.css?v=1">
 </head>
 <body class="home">
 <div class="xy-bg" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i><span class="xy-grid"></span><span class="xy-stars"></span><span class="xy-stars"></span></div>
 <a class="skip" href="#inhalt">Zum Inhalt springen</a>
 
 
-<header class="topbar">
-  <div class="shell topbar-inner">
-    <a class="brand" href="./" aria-label="Xyntal – Startseite">
-      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="bm-g" x1="4" y1="4" x2="20" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#B95CFF"/><stop offset=".45" stop-color="#FF5FD2"/><stop offset="1" stop-color="#3FD8FF"/></linearGradient></defs><path d="M5 5l14 14M19 5l-5.3 5.3M10.3 13.7L5 19" stroke="url(#bm-g)"/></svg>
-      <span>xyntal</span>
-    </a>
-    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="hauptnavigation">
-      <span class="menu-toggle-bars" aria-hidden="true"></span><span class="menu-toggle-label">Menü</span>
-    </button>
-    <nav id="hauptnavigation" class="mainnav" aria-label="Hauptnavigation">
-      <a href="#entdecken">Demo</a>
-      <a href="#karte">Deine Karte</a>
-      <a href="#warum">Warum Xyntal</a>
-      <a class="btn btn-primary btn-sm" href="#warteliste">Auf die Warteliste</a>
+<header class="nav">
+  <div class="wrap">
+    <a class="logo" href="/" aria-label="Xyntal – Startseite"><svg class="logo-mark" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="nav-mark-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B95CFF"/><stop offset=".5" stop-color="#FF5FD2"/><stop offset="1" stop-color="#3FD8FF"/></linearGradient></defs><path d="M5 5l14 14" stroke="#F5F5F7"/><path d="M19 5l-5.3 5.3M10.3 13.7L5 19" stroke="url(#nav-mark-grad)"/></svg>xyntal</a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="main-nav">Menü</button>
+    <nav class="nav-links" id="main-nav" aria-label="Hauptnavigation">
+      <a class="nav-main" href="/projekte">Projekte</a>
+      <a class="nav-main" href="/boerse">Gesuche &amp; Angebote</a>
+      <a class="nav-main" href="/community">Community</a>
+      <a class="nav-main" href="/events">Treffen</a>
+      <a class="nav-main" href="/mitglieder">Mitglieder</a>
+      <a class="hide-sm" href="/nachrichten" data-messages hidden>Nachrichten</a>
+      <a class="hide-sm" href="/login" data-account>Login</a>
+      <a class="btn btn-small nav-cta" href="/#warteliste">Auf die Warteliste</a>
     </nav>
   </div>
 </header>
@@ -524,8 +524,9 @@
 </footer>
 
 <script src="card-builder.js?v=3" defer></script>
-<script src="landing.js?v=swipe-49" defer></script>
-<script src="home-nav.js?v=4" defer></script>
-<script src="/account-menu.js?v=6" defer></script>
+<script src="landing.js?v=swipe-50" defer></script>
+<script src="home-nav.js?v=5" defer></script>
+<script src="/effects.js?v=33" defer></script>
+<script src="/account-menu.js?v=7" defer></script>
 </body>
 </html>

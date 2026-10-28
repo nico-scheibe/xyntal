@@ -19,9 +19,33 @@
     "Konto": "Account", "Einloggen": "Log in", "Konto anlegen": "Create account",
     "Noch kein Konto?": "No account yet?", "Mein Profil": "My profile", "Meine Karte": "My card",
     "Nachrichten": "Messages", "Projekte": "Projects", "Abmelden": "Log out", "Kontomenü": "Account menu",
-    "Angemeldet als": "Signed in as", "Admin-Bereich": "Admin area",
+    "Angemeldet als": "Signed in as", "Admin-Bereich": "Admin area", "Menü": "Menu", "Schließen": "Close",
   };
   const t = (de) => (document.documentElement.lang === "en" && EN[de]) || de;
+
+  // Gemeinsame Kopfzeile (site-header.css): Handy-Menü und aktuelle Seite markieren
+  function initHeader() {
+    const toggle = document.querySelector(".nav .nav-toggle");
+    const nav = document.getElementById("main-nav");
+    if (toggle && nav && !toggle.dataset.bound) {
+      toggle.dataset.bound = "1";
+      const setOpen = (open) => {
+        nav.classList.toggle("open", open);
+        toggle.setAttribute("aria-expanded", String(open));
+        toggle.textContent = t(open ? "Schließen" : "Menü");
+      };
+      toggle.addEventListener("click", () => setOpen(!nav.classList.contains("open")));
+      nav.addEventListener("click", (e) => { if (e.target.closest("a")) setOpen(false); });
+      document.addEventListener("keydown", (e) => { if (e.key === "Escape" && nav.classList.contains("open")) { setOpen(false); toggle.focus(); } });
+    }
+    const page = location.pathname.replace(/\.html$/, "").split("/").filter(Boolean).pop() || "";
+    document.querySelectorAll("#main-nav a").forEach((a) => {
+      const href = (a.getAttribute("href") || "").split(/[?#]/)[0].replace(/^\//, "");
+      if (href && href === page) a.setAttribute("aria-current", "page");
+    });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initHeader);
+  else initHeader();
 
   // Links aus Mitglieder-Inhalten (rel="nofollow") vor dem Öffnen kurz bestätigen lassen
   document.addEventListener("click", (e) => {

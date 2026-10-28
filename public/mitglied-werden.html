@@ -23,18 +23,24 @@
   <script src="cosmos.js?v=40" defer></script>
   <link rel="stylesheet" href="/backdrop.css?v=4">
   <link rel="stylesheet" href="/site-footer.css?v=1">
+  <link rel="stylesheet" href="/site-header.css?v=1">
 </head>
 <body>
 <div class="xy-bg" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i><span class="xy-grid"></span><span class="xy-stars"></span><span class="xy-stars"></span></div>
 
 <header class="nav">
   <div class="wrap">
-    <a class="logo" href="./" aria-label="Xyntal Startseite"><svg class="logo-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5l14 14" class="bm-a"/><path d="M19 5l-5.3 5.3M10.3 13.7L5 19" class="bm-b"/></svg>xyntal</a>
+    <a class="logo" href="/" aria-label="Xyntal – Startseite"><svg class="logo-mark" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="nav-mark-grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B95CFF"/><stop offset=".5" stop-color="#FF5FD2"/><stop offset="1" stop-color="#3FD8FF"/></linearGradient></defs><path d="M5 5l14 14" stroke="#F5F5F7"/><path d="M19 5l-5.3 5.3M10.3 13.7L5 19" stroke="url(#nav-mark-grad)"/></svg>xyntal</a>
     <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="main-nav">Menü</button>
     <nav class="nav-links" id="main-nav" aria-label="Hauptnavigation">
-      <a class="hide-sm" href="nachrichten" data-messages hidden>Nachrichten</a>
-      <a class="hide-sm" href="login" data-account>Login</a>
-      <a class="btn btn-small" href="./#warteliste">Auf die Warteliste</a>
+      <a class="nav-main" href="/projekte">Projekte</a>
+      <a class="nav-main" href="/boerse">Gesuche &amp; Angebote</a>
+      <a class="nav-main" href="/community">Community</a>
+      <a class="nav-main" href="/events">Treffen</a>
+      <a class="nav-main" href="/mitglieder">Mitglieder</a>
+      <a class="hide-sm" href="/nachrichten" data-messages hidden>Nachrichten</a>
+      <a class="hide-sm" href="/login" data-account>Login</a>
+      <a class="btn btn-small nav-cta" href="/#warteliste">Auf die Warteliste</a>
     </nav>
   </div>
 </header>
@@ -209,10 +215,10 @@
 
 <script src="vendor/supabase.js?v=31"></script>
 <script src="config.js?v=31"></script>
-<script src="app.js?v=35"></script>
+<script src="app.js?v=36"></script>
 <script src="avatars.js?v=31"></script>
 <script src="notifications.js?v=32"></script>
-<script src="effects.js?v=31"></script>
+<script src="effects.js?v=33"></script>
 <script>
   const form = document.getElementById("register");
   const status = document.getElementById("status");
@@ -266,6 +272,6 @@
     });
   });
 </script>
-<script src="/account-menu.js?v=6" defer></script>
+<script src="/account-menu.js?v=7" defer></script>
 </body>
 </html>

@@ -226,14 +226,15 @@
     }
     requestAnimationFrame(frame);
   }
-  if (!still && !document.body.classList.contains("home")) document.querySelectorAll("[data-scramble]").forEach((el) => {
+  const calm = document.body.matches(".home, .page-404, .confirm-page");
+  if (!still && !calm) document.querySelectorAll("[data-scramble]").forEach((el) => {
     if (document.fonts?.ready) document.fonts.ready.then(() => scramble(el)); else scramble(el);
   });
 
   /* ---------------------------------------------------------------
      Scroll-Reveal mit Staffelung innerhalb eines Rasters
      --------------------------------------------------------------- */
-  const revealables = document.body.classList.contains("home") ? [] : document.querySelectorAll(
+  const revealables = calm ? [] : document.querySelectorAll(
     ".section-head, .feature, .card, .plan, .perk, .list li, .rail li, .matrix-cell, .event-info, .event form, .mac, .quote, .code, .preview-stage"
   );
   revealables.forEach((el) => {

@@ -364,23 +364,4 @@ function accessNotice(v, what, { open = false } = {}) {
   if (count) link.innerHTML = `Nachrichten <span class="badge">${count}</span>`;
 })();
 
-// Handy-Menü in der Kopfzeile
-(() => {
-  const toggle = document.querySelector(".nav-toggle");
-  const nav = document.getElementById("main-nav");
-  if (!toggle || !nav) return;
-  toggle.addEventListener("click", () => {
-    const open = nav.classList.toggle("open");
-    toggle.setAttribute("aria-expanded", open);
-    toggle.textContent = open ? "Schließen" : "Menü";
-  });
-})();
-
-// Navigation: aktuelle Seite markieren (wie der aktive Eintrag in der App-Seitenleiste)
-(() => {
-  const page = location.pathname.replace(/\.html$/, "").split("/").filter(Boolean).pop() || "";
-  document.querySelectorAll("#main-nav a").forEach((a) => {
-    const href = (a.getAttribute("href") || "").split(/[?#]/)[0];
-    if (href && href !== "./" && href === page) a.setAttribute("aria-current", "page");
-  });
-})();
+// Handy-Menü und aktive Seite in der Kopfzeile: account-menu.js (läuft auf allen Seiten)
