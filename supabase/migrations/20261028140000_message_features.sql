@@ -81,17 +81,8 @@ create policy "Nachrichten senden" on public.messages
     and recipient_id <> (select auth.uid())
     and (select public.is_active_member())
     and exists (select 1 from public.profiles p where p.id = recipient_id and p.status <> 'rejected')
-    and (
-      reply_to is null
-      or exists (
-        select 1 from public.messages r
-         where r.id = reply_to
-           and (
-             (r.sender_id = sender_id and r.recipient_id = recipient_id)
-             or (r.sender_id = recipient_id and r.recipient_id = sender_id)
-           )
-      )
-    )
+    -- reply_to prüft der Trigger messages_validate_reply; eine Abfrage auf messages hier
+    -- führte zu „infinite recursion detected in policy“ (siehe 20261028160000_fix_messages_insert_policy)
   );
 
 drop policy if exists "Als gelesen markieren" on public.messages;
