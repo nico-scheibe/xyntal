@@ -35,3 +35,13 @@
 @media(max-width:480px) { .beta-benefit-grid { grid-template-columns: 1fr; }.beta-hero h1 { font-size: 2.4rem; }.beta-actions { align-items: stretch; flex-direction: column; }.beta-benefit { padding: 22px; }.beta-form .form-grid.two { grid-template-columns: 1fr; } }
 
 .beta-benefits, .beta-application { padding-block: 0; }
+
+/* Align paired controls even when one label includes a hint or wraps. */
+.beta-form .form-grid > label { display: flex; flex-direction: column; align-self: stretch; }
+.beta-form .form-grid > label > input, .beta-form .form-grid > label > select { margin-top: auto; flex-shrink: 0; }
+
+.beta-feedback-dialog { width: min(600px,calc(100% - 32px)); max-height: calc(100dvh - 32px); overflow-y: auto; padding: 28px; border: 1px solid var(--border-2); border-radius: 22px; background: var(--panel); color: var(--text); box-shadow: 0 24px 100px #0009; }
+.beta-feedback-dialog::backdrop { background: #000b; backdrop-filter: blur(6px); }
+.beta-feedback-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }.beta-feedback-header h2 { margin: 10px 0; font-size: 24px; }.beta-feedback-dialog > p { color: var(--text-2); line-height: 1.65; font-size: 14px; }
+.beta-feedback-close { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); border-radius: 50%; width: 36px; height: 36px; flex: none; cursor: pointer; font-size: 24px; }.beta-feedback-form { display: grid; gap: 16px; }.beta-feedback-form textarea { resize: vertical; min-height: 140px; }.beta-feedback-form .hint { font-size: 12px; line-height: 1.6; color: var(--text-2); margin: 0; }.beta-feedback-form > button { justify-self: start; }.beta-feedback-dialog [hidden] { display: none !important; }.beta-feedback-success p { color: var(--text-2); line-height: 1.6; }.beta-feedback-dialog .form-status { margin: 0; }
+@media(max-width:480px) { .beta-feedback-dialog { padding: 20px; }.beta-feedback-header h2 { font-size: 21px; } }

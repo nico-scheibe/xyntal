@@ -1,0 +1,24 @@
+const fs=require('fs'),vm=require('vm'),http=require('http'),assert=require('assert/strict'),{randomUUID}=require('crypto');
+const source=fs.readFileSync(require('path').join(__dirname,'../hosting/daki/server.cjs'),'utf8');
+let key='test-key',providerOk=true;const sent=[];
+const ctx={Buffer,Date,AbortSignal,readSecret:(file)=>file==='.brevo-key'?key:'',fetch:async(url,opts)=>{sent.push({url,opts,data:JSON.parse(opts.body)});return {ok:providerOk}}};
+vm.runInNewContext(source.slice(source.indexOf('// Beta feedback:'),source.indexOf('const types ='))+'\nglobalThis.handle=handleBetaFeedback;',ctx);
+(async()=>{const server=http.createServer(ctx.handle);server.listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));try{
+ const url='http://127.0.0.1:'+server.address().port;
+ const data=()=>({name:'Test Person',email:randomUUID()+'@example.com',message:'Mein Feedback: Grüße aus Regensburg!',requestId:randomUUID()});
+ const post=(body,headers={})=>fetch(url,{method:'POST',headers:{'Content-Type':'application/json',Origin:'https://xyntal.de',...headers},body:typeof body==='string'?body:JSON.stringify(body)});
+ assert.equal((await fetch(url)).status,405);
+ assert.equal((await post(data(),{Origin:'https://evil.example'})).status,403);
+ assert.equal((await post(data(),{'Content-Type':'text/plain'})).status,415);
+ assert.equal((await post('{')).status,400);
+ assert.equal((await post({...data(),email:'bad'})).status,400);
+ assert.equal((await post({...data(),message:'x'})).status,400);
+ assert.equal((await post({...data(),message:'x'.repeat(18000)})).status,413);
+ assert.equal((await post({...data(),website:'spam'})).status,200);assert.equal(sent.length,0);
+ key='';assert.equal((await post(data())).status,503);key='test-key';
+ const valid=data();const res=await post({...valid,to:'attacker@example.com'});assert.equal(res.status,200);assert.equal((await res.json()).ok,true);
+ assert.equal(sent[0].data.to[0].email,'admin@xyntal.com');assert.equal(sent[0].data.replyTo.email,valid.email);assert.match(sent[0].data.textContent,/Grüße/);assert.equal(sent[0].opts.headers['api-key'],'test-key');assert.equal(sent[0].data.headers.IdempotencyKey,'beta-feedback-'+valid.requestId);
+ providerOk=false;assert.equal((await post(data())).status,502);providerOk=true;
+ const repeat=data();for(let i=0;i<3;i++)assert.equal((await post({...repeat,requestId:randomUUID()})).status,200);assert.equal((await post({...repeat,requestId:randomUUID()})).status,429);
+ console.log('PASS: mail recipient, reply-to, UTF-8, server-only key, validation, origin, size limit, honeypot, rate limit and provider failure');
+ }finally{await new Promise(r=>server.close(r))}})().catch(e=>{console.error(e);process.exitCode=1});

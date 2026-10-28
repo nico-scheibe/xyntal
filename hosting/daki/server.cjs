@@ -78,6 +78,70 @@ async function waitlistCount() {
   return waitlist.pending;
 }
 
+// Beta feedback: fixed recipient, server-side mail credentials only.
+const feedbackLimits = new Map();
+function feedbackJson(res, code, data) {
+  res.writeHead(code, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+  res.end(JSON.stringify(data));
+}
+async function handleBetaFeedback(req, res) {
+  if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return feedbackJson(res, 405, { error: 'Bitte sende das Feedback über das Formular.' }); }
+  if (req.headers.origin && !['https://xyntal.de', 'https://www.xyntal.de'].includes(req.headers.origin)) {
+    return feedbackJson(res, 403, { error: 'Diese Anfrage ist nicht erlaubt.' });
+  }
+  if (!/^application\/json(?:\s*;|$)/i.test(req.headers['content-type'] || '')) return feedbackJson(res, 415, { error: 'Ungültiges Datenformat.' });
+  if (Number(req.headers['content-length']) > 16384) { req.resume(); return feedbackJson(res, 413, { error: 'Deine Nachricht ist zu lang.' }); }
+  try {
+    const raw = await new Promise((resolve, reject) => {
+      const chunks = []; let size = 0, tooLarge = false;
+      req.setTimeout(15000, () => { reject(new Error('timeout')); req.destroy(); });
+      req.on('data', chunk => { size += chunk.length; if (size > 16384) tooLarge = true; else chunks.push(chunk); });
+      req.on('end', () => { req.setTimeout(0); resolve(tooLarge ? null : Buffer.concat(chunks).toString('utf8')); });
+      req.on('error', reject);
+    });
+    if (raw === null) return feedbackJson(res, 413, { error: 'Deine Nachricht ist zu lang.' });
+    let data;
+    try { data = JSON.parse(raw); } catch { return feedbackJson(res, 400, { error: 'Die Nachricht konnte nicht gelesen werden.' }); }
+    if (!data || typeof data !== 'object' || Array.isArray(data)) return feedbackJson(res, 400, { error: 'Die Nachricht konnte nicht gelesen werden.' });
+    if (data.website) return feedbackJson(res, 200, { ok: true });
+    const name = typeof data.name === 'string' ? data.name.trim() : '';
+    const email = typeof data.email === 'string' ? data.email.trim() : '';
+    const message = typeof data.message === 'string' ? data.message.trim() : '';
+    if (!name || name.length > 80 || /[\r\n]/.test(name) || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || message.length < 10 || message.length > 5000) {
+      return feedbackJson(res, 400, { error: 'Bitte gib deinen Namen, eine gültige E-Mail-Adresse und eine Nachricht mit 10 bis 5000 Zeichen an.' });
+    }
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(data.requestId || '')) return feedbackJson(res, 400, { error: 'Bitte lade das Formular neu und versuche es erneut.' });
+    const key = readSecret('.brevo-key', 'BREVO_API_KEY');
+    const sender = readSecret('.brevo-sender', 'BREVO_SENDER_EMAIL') || 'admin@xyntal.com';
+    if (!key) return feedbackJson(res, 503, { error: 'Der Feedbackversand ist gerade nicht verfügbar. Bitte versuche es später erneut.' });
+    const now = Date.now();
+    for (const [id, item] of feedbackLimits) if (item.until <= now) feedbackLimits.delete(id);
+    const remote = req.socket.remoteAddress || 'unknown';
+    const local = ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(remote);
+    const ip = local && req.headers['cf-connecting-ip'] ? req.headers['cf-connecting-ip'] : remote;
+    const limits = [['all', 40], ['ip:' + ip, 10], ['email:' + email.toLowerCase(), 3]];
+    if (limits.some(([id, max]) => (feedbackLimits.get(id)?.count || 0) >= max)) return feedbackJson(res, 429, { error: 'Du hast gerade mehrere Nachrichten gesendet. Bitte versuche es später erneut.' });
+    for (const [id] of limits) {
+      const item = feedbackLimits.get(id) || { count: 0, until: now + 3600000 };
+      item.count++; feedbackLimits.set(id, item);
+    }
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST', headers: { 'api-key': key, 'Content-Type': 'application/json', accept: 'application/json' },
+      body: JSON.stringify({
+        sender: { email: sender, name: 'Xyntal Feedback' },
+        to: [{ email: 'admin@xyntal.com', name: 'Nico' }],
+        replyTo: { email, name }, subject: 'Xyntal Beta-Feedback',
+        textContent: ['Beta-Feedback von ' + name, 'Antwort an: ' + email, '', message].join('\n'),
+        headers: { IdempotencyKey: 'beta-feedback-' + data.requestId },
+      }), signal: AbortSignal.timeout(15000),
+    });
+    if (!response.ok) return feedbackJson(res, 502, { error: 'Das Feedback konnte nicht gesendet werden. Bitte versuche es erneut.' });
+    return feedbackJson(res, 200, { ok: true });
+  } catch {
+    if (!res.destroyed && !res.headersSent) feedbackJson(res, 502, { error: 'Das Feedback konnte nicht gesendet werden. Bitte versuche es erneut.' });
+  }
+}
+
 const types = { '.html':'text/html; charset=utf-8', '.css':'text/css; charset=utf-8', '.js':'text/javascript; charset=utf-8', '.json':'application/json', '.png':'image/png', '.jpg':'image/jpeg', '.svg':'image/svg+xml', '.webp':'image/webp', '.woff2':'font/woff2', '.woff':'font/woff', '.ico':'image/x-icon', '.txt':'text/plain; charset=utf-8', '.xml':'application/xml; charset=utf-8' };
 http.createServer((req,res) => {
   if (!['GET','HEAD'].includes(req.method)) { res.writeHead(405); return res.end(); }
@@ -88,6 +152,8 @@ http.createServer((req,res) => {
     res.writeHead(308, { Location: pathname.slice(0, -1) + new URL(req.url, 'http://localhost').search });
     return res.end();
   }
+  if (pathname === '/api/beta-feedback') { handleBetaFeedback(req, res); return; }
+  if (!['GET','HEAD'].includes(req.method)) { res.writeHead(405); return res.end(); }
   if (pathname === '/__deployment') {
     res.writeHead(root ? 200 : 503, {'Content-Type':'application/json','Cache-Control':'no-store'});
     return res.end(JSON.stringify({commit, branch:'main', updating}));

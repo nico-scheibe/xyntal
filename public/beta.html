@@ -20,13 +20,13 @@
   <link rel="stylesheet" href="style.css?v=32">
   <link rel="stylesheet" href="cosmos.css?v=40">
   <script src="i18n-en.js?v=64" defer></script>
-  <script src="/beta-i18n.js?v=1" defer></script>
+  <script src="/beta-i18n.js?v=2" defer></script>
   <script src="i18n.js?v=31" defer></script>
   <script src="cosmos.js?v=40" defer></script>
   <link rel="stylesheet" href="/backdrop.css?v=4">
   <link rel="stylesheet" href="/site-footer.css?v=1">
   <link rel="stylesheet" href="/site-header.css?v=3">
-  <link rel="stylesheet" href="/beta.css?v=1">
+  <link rel="stylesheet" href="/beta.css?v=3">
 </head>
 <body>
 <div class="xy-bg" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i><span class="xy-grid"></span><span class="xy-stars"></span><span class="xy-stars"></span></div>
@@ -92,7 +92,7 @@
           <span class="beta-kicker">Dein Platz in der Beta</span><h2 id="application-title">Was möchtest du<br><em>voranbringen?</em></h2>
           <p>Eine eigene Idee, ein Projekt oder Lust, bei anderen mitzubauen: Erzähl mir, was du suchst und wie Xyntal dir dabei helfen kann.</p>
           <ul class="beta-promises"><li>Die Teilnahme ist kostenlos.</li><li>Für die Bewerbung brauchst du kein Konto.</li><li>Deine Angaben sind nicht öffentlich.</li></ul>
-          <div class="beta-feedback"><strong>Du bist schon dabei?</strong><p>Was funktioniert gut, wo kommst du nicht weiter?</p><a class="text-link" href="mailto:admin@xyntal.com?subject=Xyntal%20Beta-Feedback">Feedback an Nico schicken <span aria-hidden="true">↗</span></a></div>
+          <div class="beta-feedback"><strong>Du bist schon dabei?</strong><p>Was funktioniert gut, wo kommst du nicht weiter?</p><a class="text-link" href="#feedback" data-feedback-open>Feedback an Nico schicken <span aria-hidden="true">↗</span></a></div>
         </aside>
       <div class="beta-apply" id="bewerben">
         <form class="card-form beta-form" id="beta-form" novalidate aria-labelledby="beta-form-head">
@@ -155,6 +155,19 @@
       </section>
     </div>
   </section>
+  <dialog class="beta-feedback-dialog" id="feedback" aria-labelledby="feedback-title">
+    <div class="beta-feedback-header"><div><span class="beta-kicker">Direkt an Nico</span><h2 id="feedback-title">Dein Feedback zu Xyntal</h2></div><button type="button" class="beta-feedback-close" data-feedback-close aria-label="Schließen">×</button></div>
+    <p>Was hilft dir, was fehlt und wo kommst du nicht weiter? Deine Nachricht geht direkt an admin@xyntal.com.</p>
+    <form id="feedback-form" class="beta-feedback-form">
+      <label>Name<input name="name" autocomplete="name" maxlength="80" required></label>
+      <label>E-Mail <span class="hint">Damit ich dir antworten kann.</span><input name="email" type="email" autocomplete="email" maxlength="254" required></label>
+      <label>Deine Nachricht<textarea name="message" minlength="10" maxlength="5000" rows="6" required placeholder="Was wolltest du tun? Was hat funktioniert oder gefehlt?"></textarea></label>
+      <div class="beta-hp" aria-hidden="true"><label>Website<input name="website" tabindex="-1" autocomplete="off"></label></div>
+      <p class="hint">Deine Angaben werden zur Bearbeitung deines Feedbacks per E-Mail über Brevo versendet. Bitte keine Passwörter oder Daten anderer Personen angeben. <a class="text-link" href="/impressum#datenschutz" target="_blank" rel="noopener">Datenschutz</a></p>
+      <button class="btn" type="submit">Feedback senden</button><p class="form-status" role="status" aria-live="polite" data-feedback-status></p>
+    </form>
+    <div class="beta-feedback-success" data-feedback-success hidden><h3>Danke für dein Feedback!</h3><p>Deine Nachricht wurde an den E-Mail-Dienst zum Versand an Nico übergeben.</p><button type="button" class="btn btn-ghost" data-feedback-close>Schließen</button></div>
+  </dialog>
 </main>
 
 <footer class="site-footer" aria-label="Fußzeile">
@@ -279,6 +292,7 @@
     done.focus();
   }
 </script>
+<script src="/beta-feedback.js?v=1" defer></script>
 <script src="/account-menu.js?v=8" defer></script>
 </body>
 </html>

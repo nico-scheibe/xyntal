@@ -53,3 +53,25 @@ Object.assign(window.XYNTAL_EN, {
 });
 
 window.XYNTAL_EN_PATTERNS.push([/^Erzähl mir etwas mehr über dein Vorhaben – mindestens (\d+) Zeichen\.$/, (_, n) => 'Tell me a little more about your plans — at least ' + n + ' characters.']);
+
+Object.assign(window.XYNTAL_EN, {
+  "Direkt an Nico": "Directly to Nico",
+  "Dein Feedback zu Xyntal": "Your feedback on Xyntal",
+  "Was hilft dir, was fehlt und wo kommst du nicht weiter? Deine Nachricht geht direkt an admin@xyntal.com.": "What helps you, what is missing and where are you stuck? Your message goes directly to admin@xyntal.com.",
+  "Damit ich dir antworten kann.": "So I can reply to you.",
+  "Deine Nachricht": "Your message",
+  "Was wolltest du tun? Was hat funktioniert oder gefehlt?": "What were you trying to do? What worked or was missing?",
+  "Deine Angaben werden zur Bearbeitung deines Feedbacks per E-Mail über Brevo versendet. Bitte keine Passwörter oder Daten anderer Personen angeben.": "Your details are sent by email through Brevo to respond to your feedback. Please do not include passwords or other people’s personal data.",
+  "Feedback senden": "Send feedback",
+  "Feedback wird gesendet …": "Sending feedback …",
+  "Danke für dein Feedback!": "Thank you for your feedback!",
+  "Deine Nachricht wurde an den E-Mail-Dienst zum Versand an Nico übergeben.": "Your message has been accepted by the email service for delivery to Nico.",
+  "Der Versand dauert zu lange. Bitte versuche es erneut.": "Sending is taking too long. Please try again.",
+  "Das Feedback konnte nicht gesendet werden. Bitte versuche es erneut.": "Your feedback could not be sent. Please try again.",
+  "Der Feedbackversand ist gerade nicht verfügbar. Bitte versuche es später erneut.": "Feedback is currently unavailable. Please try again later.",
+  "Du hast gerade mehrere Nachrichten gesendet. Bitte versuche es später erneut.": "You have sent several messages recently. Please try again later.",
+  "Bitte gib deinen Namen, eine gültige E-Mail-Adresse und eine Nachricht mit 10 bis 5000 Zeichen an.": "Please enter your name, a valid email address and a message between 10 and 5000 characters.",
+  "Bitte lade das Formular neu und versuche es erneut.": "Please reload the form and try again.",
+  "Deine Nachricht ist zu lang.": "Your message is too long.",
+  "Die Nachricht konnte nicht gelesen werden.": "Your message could not be read."
+});

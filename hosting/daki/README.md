@@ -62,3 +62,17 @@ mit `/projekte?projekt=ID` funktionieren weiter und zeigen die Kurzadresse an.
 Die Zugriffsrechte der Projekte bleiben durch die bestehenden Datenbankregeln wirksam.
 
 Prüfung: `node tests/project-links.cjs`.
+
+## Beta-Feedback per E-Mail
+
+Der Feedbacklink auf der Beta-Seite öffnet ein Formular. Es sendet JSON an
+`POST /api/beta-feedback`; der Server versendet über Brevo ausschließlich an
+`admin@xyntal.com`. Die Besucheradresse wird als Reply-To gesetzt.
+Verwendet denselben geheimen `BREVO_API_KEY` bzw. `.brevo-key` wie der Wartelistenzähler.
+Der Schlüssel muss Transaktionsmails versenden dürfen. Der Absender ist standardmäßig
+`admin@xyntal.com` und muss in Brevo bestätigt sein. Ein anderer bestätigter Absender
+kann über `BREVO_SENDER_EMAIL` oder `.brevo-sender` gesetzt werden. Diese Dateien
+bleiben außerhalb von `public/`; niemals Schlüssel ins Frontend oder Repository schreiben.
+Nach dem Veröffentlichen Daki für den neuen API-Endpunkt neu starten. Der Python-
+Vorschauserver bietet keinen Mailversand. Ohne verfügbaren Versand meldet das Formular
+einen Fehler und behält die Eingabe. Prüfung ohne echte E-Mails: `node tests/beta-feedback.cjs`.
