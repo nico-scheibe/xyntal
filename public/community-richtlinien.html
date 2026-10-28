@@ -18,13 +18,14 @@
   <link rel="stylesheet" href="fonts/fonts.css?v=31">
   <link rel="stylesheet" href="style.css?v=32">
   <link rel="stylesheet" href="cosmos.css?v=40">
-  <script src="i18n-en.js?v=64" defer></script>
+  <script src="i18n-en.js?v=65" defer></script>
   <script src="i18n.js?v=31" defer></script>
   <script src="cosmos.js?v=40" defer></script>
   <link rel="stylesheet" href="/backdrop.css?v=4">
   <link rel="stylesheet" href="/site-footer.css?v=1">
   <link rel="stylesheet" href="/site-header.css?v=3">
-  <link rel="stylesheet" href="/richtlinien.css?v=1">
+  <link rel="stylesheet" href="/beta.css?v=1">
+  <link rel="stylesheet" href="/richtlinien.css?v=2">
 </head>
 <body>
 <div class="xy-bg" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i><span class="xy-grid"></span><span class="xy-stars"></span><span class="xy-stars"></span></div>
@@ -239,8 +240,24 @@
     <section class="report-box" aria-labelledby="melden">
       <h2 id="melden">Etwas gesehen, das nicht passt?</h2>
       <p>Melde es – wir schauen uns jede Meldung an.</p>
-      <a class="btn" href="mailto:admin@xyntal.com?subject=Versto%C3%9F%20melden">Verstoß melden</a>
+      <button class="btn" type="button" data-feedback-open>Verstoß melden</button>
     </section>
+
+    <dialog class="beta-feedback-dialog" id="feedback" aria-labelledby="feedback-title">
+      <div class="beta-feedback-header"><div><span class="beta-kicker">Vertraulich an Xyntal</span><h2 id="feedback-title">Verstoß melden</h2></div><button type="button" class="beta-feedback-close" data-feedback-close aria-label="Schließen">×</button></div>
+      <p>Beschreib kurz, was passiert ist. Deine Meldung geht direkt an admin@xyntal.com. Die gemeldete Person erfährt nicht, wer gemeldet hat.</p>
+      <form id="feedback-form" class="beta-feedback-form" data-sending="Meldung wird gesendet …">
+        <input type="hidden" name="kind" value="report">
+        <label>Name<input name="name" autocomplete="name" maxlength="80" required></label>
+        <label>E-Mail <span class="hint">Damit wir dir antworten können.</span><input name="email" type="email" autocomplete="email" maxlength="254" required></label>
+        <label>Wo ist es passiert? <span class="hint">Link, Profilname oder Bereich (optional)</span><input name="where" maxlength="500" placeholder="z. B. xyntal.de/name oder Community-Beitrag vom 28.10."></label>
+        <label>Was ist passiert?<textarea name="message" minlength="10" maxlength="5000" rows="6" required placeholder="Was ist passiert und warum hältst du es für einen Verstoß?"></textarea></label>
+        <div class="beta-hp" aria-hidden="true"><label>Website<input name="website" tabindex="-1" autocomplete="off"></label></div>
+        <p class="hint">Deine Angaben werden zur Bearbeitung deiner Meldung per E-Mail über Brevo versendet. Bitte keine Passwörter angeben. <a class="text-link" href="/impressum#datenschutz" target="_blank" rel="noopener">Datenschutz</a></p>
+        <button class="btn" type="submit">Meldung senden</button><p class="form-status" role="status" aria-live="polite" data-feedback-status></p>
+      </form>
+      <div class="beta-feedback-success" data-feedback-success hidden><h3>Danke für deine Meldung!</h3><p>Wir schauen sie uns an und melden uns per E-Mail, sobald wir entschieden haben.</p><button type="button" class="btn btn-ghost" data-feedback-close>Schließen</button></div>
+    </dialog>
 
     <p>Diese Richtlinien wachsen mit Xyntal. Wenn wir sie ändern, sagen wir es dir vorher. Betreiber: Nico Scheibe – Kontakt siehe <a href="/impressum">Impressum</a>.</p>
     <p><a class="text-link" href="./">Zurück zur Startseite</a></p>
@@ -313,5 +330,6 @@
 <script src="notifications.js?v=33"></script>
 <script src="effects.js?v=33"></script>
 <script src="/account-menu.js?v=8" defer></script>
+<script src="/beta-feedback.js?v=2" defer></script>
 </body>
 </html>

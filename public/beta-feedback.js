@@ -20,7 +20,7 @@
   form.addEventListener('submit', async e => {
     e.preventDefault();
     if (busy || !form.reportValidity()) return;
-    busy = true; submit.disabled = true; status.textContent = t('Feedback wird gesendet …'); status.className = 'form-status';
+    busy = true; submit.disabled = true; status.textContent = t(form.dataset.sending || 'Feedback wird gesendet …'); status.className = 'form-status';
     try {
       const response = await fetch('/api/beta-feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...Object.fromEntries(new FormData(form)), requestId }), signal: AbortSignal.timeout(25000) });

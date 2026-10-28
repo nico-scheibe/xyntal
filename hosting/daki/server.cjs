@@ -107,6 +107,10 @@ async function handleBetaFeedback(req, res) {
     const name = typeof data.name === 'string' ? data.name.trim() : '';
     const email = typeof data.email === 'string' ? data.email.trim() : '';
     const message = typeof data.message === 'string' ? data.message.trim() : '';
+    // Meldungen aus den Community-Richtlinien nutzen denselben Versand.
+    const report = data.kind === 'report';
+    const where = report && typeof data.where === 'string' ? data.where.trim() : '';
+    if (where.length > 500 || /[\r\n]/.test(where)) return feedbackJson(res, 400, { error: 'Bitte gib den Ort des Verstoßes in einer Zeile mit höchstens 500 Zeichen an.' });
     if (!name || name.length > 80 || /[\r\n]/.test(name) || email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || message.length < 10 || message.length > 5000) {
       return feedbackJson(res, 400, { error: 'Bitte gib deinen Namen, eine gültige E-Mail-Adresse und eine Nachricht mit 10 bis 5000 Zeichen an.' });
     }
@@ -128,11 +132,13 @@ async function handleBetaFeedback(req, res) {
     const response = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST', headers: { 'api-key': key, 'Content-Type': 'application/json', accept: 'application/json' },
       body: JSON.stringify({
-        sender: { email: sender, name: 'Xyntal Feedback' },
+        sender: { email: sender, name: report ? 'Xyntal Meldung' : 'Xyntal Feedback' },
         to: [{ email: 'admin@xyntal.com', name: 'Nico' }],
-        replyTo: { email, name }, subject: 'Xyntal Beta-Feedback',
-        textContent: ['Beta-Feedback von ' + name, 'Antwort an: ' + email, '', message].join('\n'),
-        headers: { IdempotencyKey: 'beta-feedback-' + data.requestId },
+        replyTo: { email, name }, subject: report ? 'Xyntal Meldung: Verstoß gegen die Community-Richtlinien' : 'Xyntal Beta-Feedback',
+        textContent: report
+          ? ['Meldung von ' + name, 'Antwort an: ' + email, 'Wo: ' + (where || '–'), '', message].join('\n')
+          : ['Beta-Feedback von ' + name, 'Antwort an: ' + email, '', message].join('\n'),
+        headers: { IdempotencyKey: (report ? 'report-' : 'beta-feedback-') + data.requestId },
       }), signal: AbortSignal.timeout(15000),
     });
     if (!response.ok) return feedbackJson(res, 502, { error: 'Das Feedback konnte nicht gesendet werden. Bitte versuche es erneut.' });
@@ -144,7 +150,6 @@ async function handleBetaFeedback(req, res) {
 
 const types = { '.html':'text/html; charset=utf-8', '.css':'text/css; charset=utf-8', '.js':'text/javascript; charset=utf-8', '.json':'application/json', '.png':'image/png', '.jpg':'image/jpeg', '.svg':'image/svg+xml', '.webp':'image/webp', '.woff2':'font/woff2', '.woff':'font/woff', '.ico':'image/x-icon', '.txt':'text/plain; charset=utf-8', '.xml':'application/xml; charset=utf-8' };
 http.createServer((req,res) => {
-  if (!['GET','HEAD'].includes(req.method)) { res.writeHead(405); return res.end(); }
   let pathname;
   try { pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname); }
   catch { res.writeHead(400); return res.end(); }
