@@ -24,7 +24,7 @@
   <link rel="stylesheet" href="/backdrop.css?v=4">
   <link rel="stylesheet" href="/site-footer.css?v=1">
   <link rel="stylesheet" href="/site-header.css?v=3">
-  <link rel="stylesheet" href="/community-feed.css?v=3">
+  <link rel="stylesheet" href="/community-feed.css?v=4">
 </head>
 <body>
 <div class="xy-bg" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i><span class="xy-grid"></span><span class="xy-stars"></span><span class="xy-stars"></span></div>
@@ -262,20 +262,26 @@
     const mine = v.me && c.author_id === v.me.id;
     const canDel = mine || v.isAdmin;
     const canEdit = commentFeatures.edit && canEditComment(c);
-    const replyBtn = commentFeatures.reply && depth === 0
-      ? `<button type="button" data-act="reply-comment">Antworten</button>` : "";
-    const editBtn = canEdit ? `<button type="button" data-act="edit-comment">Bearbeiten</button>` : "";
-    const delBtn = canDel ? `<button type="button" data-act="delete-comment">Löschen</button>` : "";
+    const actions = [
+      commentFeatures.reply && depth === 0 ? `<button type="button" class="c-act" data-act="reply-comment">Antworten</button>` : "",
+      canEdit ? `<button type="button" class="c-act" data-act="edit-comment">Bearbeiten</button>` : "",
+      canDel ? `<button type="button" class="c-act c-act-danger" data-act="delete-comment">Löschen</button>` : "",
+    ].filter(Boolean).join("");
     return `
-      <div class="comment${depth ? " is-reply" : ""}" data-comment="${c.id}" data-depth="${depth}">
+      <article class="comment${depth ? " is-reply" : ""}" data-comment="${c.id}" data-depth="${depth}">
         ${avatar(c.author?.name, "avatar-sm", c.author?.avatar_path)}
         <div class="comment-main">
-          <div class="comment-meta"><strong>${esc(c.author?.name || "Mitglied")}</strong> · ${timeAgo(c.created_at)}${c.edited_at ? " · bearbeitet" : ""}
-            ${replyBtn}${editBtn}${delBtn}</div>
+          <header class="comment-head">
+            <strong class="comment-author">${esc(c.author?.name || "Mitglied")}</strong>
+            <time class="comment-time">${timeAgo(c.created_at)}${c.edited_at ? " · bearbeitet" : ""}</time>
+          </header>
           <div class="comment-body" data-comment-body>${richText(c.body)}</div>
-          ${reactionChips(c.id, reactions)}
+          <div class="comment-toolbar">
+            ${actions ? `<div class="comment-acts">${actions}</div>` : ""}
+            ${reactionChips(c.id, reactions)}
+          </div>
         </div>
-      </div>`;
+      </article>`;
   }
 
   async function loadComments(article) {
@@ -320,9 +326,12 @@
         }).join("") : `<p class="empty-small">Noch keine Kommentare. Schreib den ersten.</p>`}
       </div>
       <form class="comment-form" novalidate>
-        ${replyTarget ? `<div class="comment-reply-bar">Antwort auf <strong>${esc(replyTarget.author?.name || "Mitglied")}</strong><button type="button" class="text-link" data-act="cancel-reply">Abbrechen</button></div>` : ""}
-        <input type="text" name="body" maxlength="1500" placeholder="${replyTarget ? "Antwort schreiben …" : "Kommentar schreiben …"}" aria-label="${replyTarget ? "Antwort" : "Kommentar"}">
-        <button class="btn btn-small" type="submit">Senden</button>
+        ${replyTarget ? `<div class="comment-reply-bar"><span>Antwort auf <strong>${esc(replyTarget.author?.name || "Mitglied")}</strong></span><button type="button" class="c-act" data-act="cancel-reply">Abbrechen</button></div>` : ""}
+        <div class="comment-compose">
+          <label class="sr-only" for="c-input-${id}">${replyTarget ? "Antwort" : "Kommentar"}</label>
+          <input id="c-input-${id}" type="text" name="body" maxlength="1500" placeholder="${replyTarget ? "Antwort schreiben …" : "Kommentar schreiben …"}" autocomplete="off">
+          <button class="btn btn-small" type="submit">Senden</button>
+        </div>
       </form>`;
   }
 
