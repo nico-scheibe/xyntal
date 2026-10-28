@@ -58,6 +58,9 @@ body.messages-page .thread {
   height: 100%;
   max-height: 100%;
 }
+/* .thread ist ein <section>: das globale section-Padding (104px) erzeugte die Leisten über und unter dem Chat */
+body.messages-page .thread { padding: 0; }
+body.messages-page #thread-status:empty { display: none; }
 body.messages-page #conversations {
   flex: 1 1 auto;
   min-height: 0;
