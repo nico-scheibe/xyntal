@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="280" height="280" viewBox="0 0 280 280">
+  <!-- Chat-Hintergrund „Natur“: Blätter, Blumen, Berge – nahtlos kachelbar -->
+  <g fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <g stroke="#FFFFFF" stroke-opacity=".07">
+      <!-- Blatt -->
+      <g transform="translate(22 20) rotate(-30 12 12)"><path d="M3 21C3 9 11 3 21 3c0 10-6 18-18 18z"/><path d="M3 21L14 10"/></g>
+      <!-- Blume -->
+      <g transform="translate(120 26) rotate(10 12 12)"><circle cx="12" cy="9" r="2.5"/><path d="M12 6.5a3 3 0 1 1 2.6 4.3M9.4 10.8a3 3 0 1 1 2.6-4.3M14.6 10.8a3 3 0 1 1-5.2 0M12 12v11M12 18c-2-2-5-2-6-1M12 20c2-2 5-2 6-1"/></g>
+      <!-- Berge -->
+      <g transform="translate(206 26)"><path d="M2 20l8-12 5 7 3-4 8 9z"/><path d="M8 11l2-3 2 3"/></g>
+      <!-- Sonne -->
+      <g transform="translate(62 96)"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></g>
+      <!-- Tanne -->
+      <g transform="translate(168 96) rotate(-6 11 12)"><path d="M11 2l7 9h-4l5 7H3l5-7H4z"/><path d="M11 18v5"/></g>
+      <!-- Pilz -->
+      <g transform="translate(234 108) rotate(12 11 11)"><path d="M2 11a9 7 0 0 1 18 0z"/><path d="M8 11v6a3 3 0 0 0 6 0v-6"/><circle cx="8" cy="7" r="1"/><circle cx="14" cy="6" r="1"/></g>
+      <!-- Wolke -->
+      <g transform="translate(16 172) rotate(-5 14 9)"><path d="M7 16h14a5 5 0 0 0 0-10 7 7 0 0 0-13-1A5 5 0 0 0 7 16z"/></g>
+      <!-- Ast mit Blättern -->
+      <g transform="translate(108 176) rotate(20 14 12)"><path d="M2 22C10 16 18 10 26 2"/><path d="M9 17c-3-1-4-4-3-7 3 1 4 4 3 7zM15 12c0-3 2-5 5-5 0 3-2 5-5 5zM19 8c-3 0-5-2-5-5 3 0 5 2 5 5z"/></g>
+      <!-- Tropfen -->
+      <g transform="translate(210 182)"><path d="M10 2c4 6 7 9 7 13a7 7 0 0 1-14 0c0-4 3-7 7-13z"/></g>
+      <!-- Schmetterling -->
+      <g transform="translate(56 236) rotate(-10 12 10)"><path d="M12 6v12"/><path d="M12 9C9 3 2 3 3 9c1 4 6 4 9 2M12 9c3-6 10-6 9 0-1 4-6 4-9 2M12 13c-3 0-6 2-5 5 2 2 5-1 5-3M12 13c3 0 6 2 5 5-2 2-5-1-5-3"/><path d="M12 6l-2-3M12 6l2-3"/></g>
+      <!-- Welle -->
+      <g transform="translate(156 244)"><path d="M2 8c3-4 6-4 9 0s6 4 9 0 6-4 9 0"/><path d="M2 15c3-4 6-4 9 0s6 4 9 0 6-4 9 0"/></g>
+    </g>
+    <g stroke="#6EE7B7" stroke-opacity=".1">
+      <path d="M92 52l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/>
+      <path d="M150 150c-3-3.5-8-1-6 3.5l6 5.5 6-5.5c2-4.5-3-7-6-3.5z"/>
+      <path d="M252 66l1.5 3.5 3.5 1.5-3.5 1.5-1.5 3.5-1.5-3.5-3.5-1.5 3.5-1.5z"/>
+      <path d="M36 128l1.5 3.5 3.5 1.5-3.5 1.5-1.5 3.5-1.5-3.5-3.5-1.5 3.5-1.5z"/>
+      <circle cx="196" cy="62" r="2"/><circle cx="78" cy="196" r="2"/><circle cx="240" cy="150" r="1.6"/><circle cx="262" cy="244" r="1.6"/><circle cx="120" cy="262" r="1.4"/>
+    </g>
+  </g>
+</svg>

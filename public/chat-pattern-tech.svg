@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="280" height="280" viewBox="0 0 280 280">
+  <!-- Chat-Hintergrund „Tech“: Chips, Geräte, Signale – nahtlos kachelbar -->
+  <g fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <g stroke="#FFFFFF" stroke-opacity=".07">
+      <!-- Chip -->
+      <g transform="translate(22 20) rotate(-8 12 12)"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></g>
+      <!-- Laptop -->
+      <g transform="translate(116 28) rotate(6 14 10)"><rect x="5" y="3" width="18" height="12" rx="1.5"/><path d="M2 18h24l-2 2H4z"/></g>
+      <!-- WLAN -->
+      <g transform="translate(210 22) rotate(-10 12 10)"><path d="M2 8a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0"/><circle cx="12" cy="19" r="1"/></g>
+      <!-- Handy -->
+      <g transform="translate(62 94) rotate(12 9 13)"><rect x="3" y="1" width="12" height="22" rx="2.5"/><path d="M7 4h4M9 19h0"/></g>
+      <!-- Terminal -->
+      <g transform="translate(164 98) rotate(-6 13 10)"><rect x="1" y="2" width="24" height="17" rx="2"/><path d="M5 8l3 3-3 3M11 14h6"/></g>
+      <!-- Zahnrad -->
+      <g transform="translate(234 104)"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/><circle cx="12" cy="12" r="7"/></g>
+      <!-- Mauszeiger -->
+      <g transform="translate(20 172) rotate(-12 10 11)"><path d="M3 2l14 9-6 1.5 3.5 6.5-2.5 1.2-3.5-6.5L4 18z"/></g>
+      <!-- Batterie -->
+      <g transform="translate(108 182) rotate(15 13 8)"><rect x="1" y="3" width="21" height="11" rx="2"/><path d="M24 7v3M5 6v5M9 6v5"/></g>
+      <!-- Wolke mit Upload -->
+      <g transform="translate(204 184) rotate(-4 14 10)"><path d="M7 18h14a5 5 0 0 0 0-10 7 7 0 0 0-13-1A5 5 0 0 0 7 18z"/><path d="M14 16v-6M11 12l3-3 3 3"/></g>
+      <!-- Controller -->
+      <g transform="translate(52 240) rotate(-8 14 9)"><path d="M7 3h14a6 6 0 0 1 5.5 8.5l-2 4.5a3 3 0 0 1-5 .5L17 14h-6l-2.5 2.5a3 3 0 0 1-5-.5l-2-4.5A6 6 0 0 1 7 3z"/><path d="M8 7v4M6 9h4"/><circle cx="19" cy="8" r=".8"/><circle cx="21" cy="11" r=".8"/></g>
+      <!-- Binär -->
+      <g transform="translate(158 242)"><path d="M3 2v10M9 2a3 5 0 1 0 0 10 3 5 0 1 0 0-10zM17 2v10M23 2a3 5 0 1 0 0 10 3 5 0 1 0 0-10z"/></g>
+    </g>
+    <g stroke="#22E5FF" stroke-opacity=".1">
+      <path d="M92 52l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/>
+      <path d="M252 66l1.5 3.5 3.5 1.5-3.5 1.5-1.5 3.5-1.5-3.5-3.5-1.5 3.5-1.5z"/>
+      <path d="M144 146l6 6M150 146l-6 6"/>
+      <path d="M36 128l1.5 3.5 3.5 1.5-3.5 1.5-1.5 3.5-1.5-3.5-3.5-1.5 3.5-1.5z"/>
+      <path d="M258 236h8M262 232v8"/>
+      <circle cx="196" cy="62" r="2"/><circle cx="78" cy="196" r="2"/><circle cx="240" cy="150" r="1.6"/><circle cx="14" cy="76" r="1.6"/><circle cx="120" cy="262" r="1.4"/>
+    </g>
+  </g>
+</svg>

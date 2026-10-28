@@ -42,6 +42,10 @@
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
     "application/vnd.openxmlformats-officedocument.presentationml.presentation": "pptx",
   };
+  const BG_KEY = "xyntal-chat-bg";
+  const CHAT_BGS = [["xyntal", "Xyntal"], ["space", "Weltall"], ["natur", "Natur"], ["tech", "Tech"], ["fun", "Fun"], ["none", "Ohne Muster"]];
+  let chatBg = "xyntal";
+  try { const saved = localStorage.getItem(BG_KEY); if (CHAT_BGS.some(([k]) => k === saved)) chatBg = saved; } catch { /* Standard */ }
   const ICON = {
     clip: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.4 11.1l-8.5 8.5a5 5 0 0 1-7.1-7.1l8.5-8.5a3.5 3.5 0 0 1 5 5L11 17.2a2 2 0 0 1-2.8-2.8l7.8-7.8"/></svg>',
     mic: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M8 21h8"/></svg>',
@@ -396,6 +400,7 @@
           <span class="thread-headline">${esc(p.headline || "")}</span>
           <span class="typing" id="typing-indicator" role="status"></span>
         </div>
+        ${bgPickerHtml()}
       </header>
       <div class="thread-messages" id="thread-messages" role="log" aria-label="Nachrichten">
         <span class="swipe-hint" id="swipe-hint" hidden>Antworten</span>
@@ -1438,6 +1443,43 @@
     if (target && target !== v.me.id) await open(target);
     else renderList();
   }
+  // ---------- Chat-Hintergrund: Muster wählen (nur in diesem Browser gemerkt) ----------
+  function bgPickerHtml() {
+    return `<div class="bg-picker">
+      <button type="button" class="msg-icon bg-btn" id="bg-btn" aria-label="Chat-Hintergrund ändern" aria-haspopup="true" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.4 0 2-1 2-2 0-1.5-1.2-1.8-1.2-3.2 0-1.2 1-1.8 2.2-1.8H17a4 4 0 0 0 4-4c0-4-4-7-9-7z"/><circle cx="7.5" cy="11" r="1.2"/><circle cx="10" cy="7" r="1.2"/><circle cx="15" cy="7" r="1.2"/></svg></button>
+      <div class="bg-menu" id="bg-menu" role="menu" aria-label="Chat-Hintergrund" hidden>
+        ${CHAT_BGS.map(([key, label]) => `<button type="button" role="menuitemradio" class="bg-option" data-bg-option="${key}" aria-checked="${key === chatBg}"><span class="bg-swatch bg-swatch-${key}" aria-hidden="true"></span><span>${label}</span></button>`).join("")}
+      </div>
+    </div>`;
+  }
+  function applyChatBg() { const ib = document.getElementById("inbox"); if (ib) ib.dataset.chatBg = chatBg; }
+  applyChatBg();
+  document.addEventListener("click", (e) => {
+    const menu = document.getElementById("bg-menu");
+    const btn = e.target.closest?.("#bg-btn");
+    const opt = e.target.closest?.("[data-bg-option]");
+    if (btn && menu) {
+      menu.hidden = !menu.hidden;
+      btn.setAttribute("aria-expanded", String(!menu.hidden));
+      if (!menu.hidden) menu.querySelector('[aria-checked="true"]')?.focus();
+      return;
+    }
+    if (opt) {
+      chatBg = opt.dataset.bgOption;
+      try { localStorage.setItem(BG_KEY, chatBg); } catch { /* nur für diese Sitzung */ }
+      applyChatBg();
+      menu?.querySelectorAll("[data-bg-option]").forEach((b) => b.setAttribute("aria-checked", String(b === opt)));
+    }
+    if (menu && !menu.hidden && (opt || !e.target.closest?.("#bg-menu"))) {
+      menu.hidden = true;
+      document.getElementById("bg-btn")?.setAttribute("aria-expanded", "false");
+    }
+  });
+  document.addEventListener("keydown", (e) => {
+    const menu = document.getElementById("bg-menu");
+    if (e.key === "Escape" && menu && !menu.hidden) { menu.hidden = true; document.getElementById("bg-btn")?.focus(); }
+  });
+
   boot().catch((err) => {
     const n = document.getElementById("notice");
     if (n && !n.innerHTML) n.innerHTML = `<div class="notice">${esc(friendlyError(err))}</div>`;
