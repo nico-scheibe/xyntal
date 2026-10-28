@@ -5,6 +5,8 @@ outside the public web root. No dependencies or GitHub credentials are required.
 It checks the public `main` branch every 30 seconds and publishes `public/`
 from a complete Git archive. The previous site stays live if a fetch fails.
 Only the public directory is exposed; database migrations and server state are not.
+The Supabase-backed browser app is served at `/app/` from `public/app/` and uses
+the website's root Supabase configuration and shared XCard assets.
 
 Every push to `main` is detected within 30 seconds. Other branches do not publish.
 Check `/__deployment` or the `X-Xyntal-Commit` response header for the deployed revision.
