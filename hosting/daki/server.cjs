@@ -56,6 +56,9 @@ const readSecret = (file, env) => {
   if (process.env[env]) return process.env[env].trim();
   try { return fs.readFileSync(path.join(__dirname, file), 'utf8').trim(); } catch { return ''; }
 };
+const feedbackKeyAtStartup = readSecret('.brevo-key', 'BREVO_API_KEY');
+const feedbackSenderAtStartup = readSecret('.brevo-sender', 'BREVO_SENDER_EMAIL');
+console.log('[beta-feedback] Brevo config key=' + (feedbackKeyAtStartup ? 'yes' : 'no') + ' keyLength=' + feedbackKeyAtStartup.length + ' sender=' + (feedbackSenderAtStartup ? 'yes' : 'no'));
 let waitlist = { count: null, at: 0, pending: null };
 async function waitlistCount() {
   if (Date.now() - waitlist.at < 20 * 1000) return waitlist.count;
@@ -141,9 +144,27 @@ async function handleBetaFeedback(req, res) {
         headers: { IdempotencyKey: (report ? 'report-' : 'beta-feedback-') + data.requestId },
       }), signal: AbortSignal.timeout(15000),
     });
-    if (!response.ok) return feedbackJson(res, 502, { error: 'Das Feedback konnte nicht gesendet werden. Bitte versuche es erneut.' });
+    if (!response.ok) {
+      let responseText = '';
+      try { responseText = await response.text(); } catch {}
+      let code = '', detail = responseText.slice(0, 300);
+      try {
+        const data = JSON.parse(responseText);
+        if (data && typeof data === 'object') {
+          if (data.code != null) code = String(data.code);
+          if (data.message != null) detail = String(data.message);
+        }
+      } catch {}
+      for (const value of [key, name, email, where, message]) if (value) {
+        code = code.split(value).join('[redacted]');
+        detail = detail.split(value).join('[redacted]');
+      }
+      console.error('[beta-feedback] Brevo ' + response.status + ' ' + code + ': ' + detail);
+      return feedbackJson(res, 502, { error: 'Das Feedback konnte nicht gesendet werden. Bitte versuche es erneut.' });
+    }
     return feedbackJson(res, 200, { ok: true });
-  } catch {
+  } catch (err) {
+    console.error('[beta-feedback] ' + err.name + ': ' + err.message);
     if (!res.destroyed && !res.headersSent) feedbackJson(res, 502, { error: 'Das Feedback konnte nicht gesendet werden. Bitte versuche es erneut.' });
   }
 }
