@@ -168,8 +168,9 @@ Absenderdomain ist noch nicht eingerichtet.
 
 ## Profilbilder
 
-Unter **Mein Profil → Dein Profilbild** ein JPG, PNG oder WebP bis 8 MB wählen,
-den mittigen quadratischen Ausschnitt prüfen und mit **Bild speichern** hochladen.
+Unter **Mein Profil** ein JPG, PNG oder WebP bis 8 MB direkt auf den Avatar ziehen
+oder den Avatar doppelklicken und eine Datei auswählen. Das Bild wird mittig
+quadratisch zugeschnitten und automatisch gespeichert (auch per Enter/Leertaste auswählbar).
 Die Website kodiert das Bild neu als JPEG (512 × 512 Pixel, ohne ursprüngliche
 Dateimetadaten). Der private Storage-Bucket `avatars` akzeptiert nur JPEG bis 1 MB.
 Die Website nutzt Downloads mit RLS und lokale Blob-URLs, keine öffentlichen

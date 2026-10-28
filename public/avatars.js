@@ -107,23 +107,48 @@ function setupAvatarEditor(member, onChange) {
     save.disabled = !selected || busy;
     input.disabled = busy;
     remove.disabled = !current.avatar_path || busy;
-    cancel.hidden = !selected;
+    cancel.hidden = true;
     cancel.disabled = busy;
   }
-  input.addEventListener('change', async () => {
-    const generation = ++preparing;
-    const file = input.files[0];
-    selected = null; renderPreview();
-    if (!file) return;
+  async function selectFile(file) {
+    if (busy || !file) return;
+    busy = true; selected = null; renderPreview();
     setStatus(status, 'Bild wird vorbereitet …');
     try {
-      const blob = await prepareAvatar(file);
-      if (generation !== preparing) return;
-      selected = blob;
-      setStatus(status, 'Passt der Ausschnitt? Mit „Bild speichern“ lädst du ihn hoch.');
-    } catch (err) { if (generation === preparing) setStatus(status, friendlyError(err), 'error'); }
-    if (generation === preparing) renderPreview();
+      selected = await prepareAvatar(file);
+      busy = false;
+      await savePicture();
+    } catch (err) { selected = null; setStatus(status, friendlyError(err), 'error'); }
+    finally { busy = false; input.value = ''; renderPreview(); }
+  }
+  input.addEventListener('change', () => selectFile(input.files[0]));
+  const profilePreview = document.getElementById('preview');
+  function editableAvatar(target) { return target.closest('#preview .avatar'); }
+  function decorateAvatar() {
+    const target = profilePreview?.querySelector('.avatar');
+    if (!target) return;
+    target.tabIndex = 0;
+    target.setAttribute('role', 'button');
+    target.setAttribute('aria-label', 'Profilbild ändern');
+    target.setAttribute('aria-describedby', 'avatar-hint');
+    target.title = 'Bild hier ablegen oder doppelklicken';
+  }
+  profilePreview?.addEventListener('dblclick', e => { if (editableAvatar(e.target) && !busy) input.click(); });
+  profilePreview?.addEventListener('keydown', e => {
+    if (editableAvatar(e.target) && ['Enter', ' '].includes(e.key)) { e.preventDefault(); if (!busy) input.click(); }
   });
+  profilePreview?.addEventListener('dragover', e => {
+    const target = editableAvatar(e.target);
+    if (target) { e.preventDefault(); e.dataTransfer.dropEffect = busy ? 'none' : 'copy'; target.classList.add('avatar-drop'); }
+  });
+  profilePreview?.addEventListener('dragleave', e => { editableAvatar(e.target)?.classList.remove('avatar-drop'); });
+  profilePreview?.addEventListener('drop', e => {
+    const target = editableAvatar(e.target);
+    if (!target) return;
+    e.preventDefault(); target.classList.remove('avatar-drop'); selectFile(e.dataTransfer.files[0]);
+  });
+  if (profilePreview) new MutationObserver(decorateAvatar).observe(profilePreview, { childList: true, subtree: true });
+  decorateAvatar();
   cancel.addEventListener('click', () => { ++preparing; selected = null; input.value = ''; setStatus(status, ''); renderPreview(); });
   async function changePicture(path, successText) {
     const old = current.avatar_path;
@@ -140,8 +165,8 @@ function setupAvatarEditor(member, onChange) {
     }
     setStatus(status, successText, 'ok');
   }
-  form.addEventListener('submit', async e => {
-    e.preventDefault();
+  form.addEventListener('submit', e => { e.preventDefault(); savePicture(); });
+  async function savePicture() {
     if (!selected || busy) return;
     busy = true; renderPreview(); setStatus(status, 'Bild wird gespeichert …');
     const path = `${current.id}/${crypto.randomUUID()}.jpg`;
@@ -166,7 +191,7 @@ function setupAvatarEditor(member, onChange) {
       }
       setStatus(status, friendlyError(err), 'error');
     } finally { busy = false; renderPreview(); }
-  });
+  }
   remove.addEventListener('click', async () => {
     if (busy || !current.avatar_path) return;
     if (!remove.dataset.armed) {

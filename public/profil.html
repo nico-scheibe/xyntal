@@ -23,6 +23,7 @@
   <link rel="stylesheet" href="/backdrop.css?v=4">
   <link rel="stylesheet" href="/site-footer.css?v=1">
   <link rel="stylesheet" href="/site-header.css?v=3">
+<link rel="stylesheet" href="/profile-layout.css?v=1">
 </head>
 <body>
 <div class="xy-bg" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i><span class="xy-grid"></span><span class="xy-stars"></span><span class="xy-stars"></span></div>
@@ -44,17 +45,17 @@
 </header>
 
 <main>
-  <section class="page-head" id="top">
-    <div class="wrap">
+  <section class="page-body join-body">
+    <div class="wrap join-layout profile-layout">
+      <aside class="join-aside profile-side" aria-label="Profilbereich">  <div class="profile-greeting" id="top">
+    <div>
       <div class="eyebrow"><b>xyntal</b> / mein profil</div>
       <h1 id="hello">Dein <em>Profil.</em></h1>
       <p>So sehen dich andere – erst nach der Freigabe und nur so, wie du die Sichtbarkeit einstellst.</p>
     </div>
-  </section>
+  </div>
 
-  <section class="page-body join-body">
-    <div class="wrap join-layout profile-layout">
-      <aside class="join-aside profile-side" aria-label="Profilbereich">
+
         <div id="notice"></div>
         <div class="ptabs ptabs-side" role="tablist" aria-label="Profilbereich" aria-orientation="vertical">
           <button type="button" role="tab" id="tab-profil" aria-controls="panel-profil" aria-selected="true" data-tab="profil"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Profil</button>
@@ -70,21 +71,15 @@
 
         <section class="ptab-panel" role="tabpanel" id="panel-profil" aria-labelledby="tab-profil" data-panel="profil">
           <div id="preview"></div>
-        <form id="avatar-form" class="avatar-editor card-form" novalidate>
-          <h2>Dein Profilbild</h2>
-          <div class="avatar-editor-row"><div data-avatar-preview></div><div>
-            <label for="avatar-file">Bild auswählen</label>
-            <input id="avatar-file" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="avatar-hint">
-            <p class="hint" id="avatar-hint">JPG, PNG oder WebP · bis 8 MB. Dein Bild wird mittig quadratisch zugeschnitten. Sichtbar für dieselben Personen wie dein Profil.</p>
-          </div></div>
-          <div class="btn-row">
-            <button class="btn btn-small" type="submit" data-avatar-save disabled>Bild speichern</button>
-            <button class="btn btn-small btn-ghost" type="button" data-avatar-cancel hidden>Auswahl verwerfen</button>
-            <button class="btn btn-small btn-ghost" type="button" data-avatar-remove disabled>Bild entfernen</button>
-            <button class="btn btn-small btn-ghost" type="button" data-avatar-cleanup hidden>Alte Dateien aufräumen</button>
-          </div>
-          <p class="form-status" role="status" aria-live="polite"></p>
-        </form>
+<form id="avatar-form" class="profile-avatar-controls" novalidate>
+<input id="avatar-file" type="file" accept="image/jpeg,image/png,image/webp" hidden aria-label="Profilbild auswählen">
+<div data-avatar-preview hidden></div>
+<p class="hint" id="avatar-hint">Profilbild ändern: Bild auf den Avatar ziehen oder doppelklicken. JPG, PNG oder WebP · bis 8 MB.</p>
+<button type="submit" data-avatar-save hidden disabled>Bild speichern</button>
+<button type="button" data-avatar-cancel hidden>Auswahl verwerfen</button>
+<button class="btn btn-small btn-ghost" type="button" data-avatar-remove disabled>Bild entfernen</button>
+<button class="btn btn-small btn-ghost" type="button" data-avatar-cleanup hidden>Alte Dateien aufräumen</button>
+<p class="form-status" role="status" aria-live="polite"></p></form>
         <form id="profile" class="card-form" novalidate>
           <fieldset>
             <legend>Profil bearbeiten</legend>
@@ -317,7 +312,7 @@
 <script src="vendor/supabase.js?v=31"></script>
 <script src="config.js?v=31"></script>
 <script src="app.js?v=36"></script>
-<script src="avatars.js?v=31"></script>
+<script src="avatars.js?v=32"></script>
 <script src="notifications.js?v=33"></script>
 <script src="effects.js?v=33"></script>
 <script>
