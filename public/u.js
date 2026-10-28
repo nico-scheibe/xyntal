@@ -6,13 +6,6 @@
   const HANDLE = /^[a-z0-9][a-z0-9_-]{2,19}$/;
   const SUPA = "https://rralgrlujoupprwlvoyo.supabase.co";
   const KEY = "sb_publishable_YxSngs1ePBoxqI6f26GRww_2_kNaLfh";
-  const THEMES = {
-    aurora: ["#B95CFF", "#FF5FD2", "#5B8CFF", "#3FD8FF"], sunset: ["#FFB547", "#FF6A5C", "#FF3D8B", "#B95CFF"],
-    ocean: ["#34D399", "#3FD8FF", "#5B8CFF", "#6D5BFF"], mono: ["#FFFFFF", "#C9C9D1", "#7A7A86", "#E4E4E7"],
-  };
-  const BLOCKS = ["place", "pitch", "skills", "stats", "looking"];
-  const LEVELS = ["Einsteiger", "Fortgeschritten", "Profi"];
-  const isHex = (s) => typeof s === "string" && /^#[0-9a-f]{6}$/i.test(s);
 
   // Name aus /name, /u#name oder /u?name=…
   let handle = location.pathname.replace(/^\/+|\/+$/g, "");
@@ -39,44 +32,13 @@
   const freeLink = (h) => `/?handle=${encodeURIComponent(h)}#karte`;
 
   function renderCard(c) {
-    const d = c.design && typeof c.design === "object" ? c.design : {};
-    const theme = d.theme === "custom" && isHex(d.c1) && isHex(d.c2) ? "custom" : THEMES[d.theme] ? d.theme : "aurora";
-    const cols = theme === "custom" ? [d.c1, d.c2] : THEMES[theme];
-    const grad = `linear-gradient(120deg, ${cols.map((col, k, a) => `${col} ${Math.round((k / (a.length - 1)) * 100)}%`).join(", ")})`;
-    const surface = d.surface === "light" ? "light" : "dark", shape = d.shape === "rounded" ? "rounded" : "circle", layout = d.layout === "center" ? "center" : "left";
-    const order = (Array.isArray(d.order) ? d.order.filter((b) => BLOCKS.includes(b)) : []).concat(BLOCKS).filter((b, i, a) => a.indexOf(b) === i);
-    const off = Array.isArray(d.off) ? d.off.filter((b) => BLOCKS.includes(b)) : [];
     const name = c.name || "?";
-    const level = LEVELS.includes(c.level) ? c.level : "";
-    const place = [c.city, c.mode ? t(c.mode) : ""].filter(Boolean).join(" · ");
-    const link = /^https?:\/\//.test(c.link || "") ? c.link : "";
-    const linkText = link && /(^|\.)linkedin\.com$/i.test(new URL(link).hostname) ? "LinkedIn" : "Website";
-    const lv = LEVELS.indexOf(level);
-    const blocks = {
-      place: place ? `<p class="mc-place"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg><span data-no-i18n>${esc(place)}</span></p>` : "",
-      pitch: c.pitch ? `<p class="mc-pitch" data-no-i18n>${esc(c.pitch)}</p>` : "",
-      looking: c.looking ? `<p class="mc-looking"><span>${esc(t("Sucht"))}</span> <b>${esc(t(c.looking))}</b></p>` : "",
-      skills: (c.skills || []).length ? `<ul class="mc-skills" data-no-i18n>${c.skills.map((s) => `<li>${esc(s)}</li>`).join("")}</ul>` : "",
-      stats: `<div class="mc-stats"><div><span>${esc(t("Zeit"))}</span><b>${esc(t(`${Number(c.hours) || 0} Std./Woche`))}</b><i class="mc-bar"><i style="width:${Math.min(100, ((Number(c.hours) || 0) / 20) * 100)}%"></i></i></div>${level ? `<div><span>${esc(t("Erfahrung"))}</span><b>${esc(t(level))}</b><i class="mc-dots">${[0, 1, 2].map((k) => `<i class="${k <= lv ? "on" : ""}"></i>`).join("")}</i></div>` : ""}</div>`,
-    };
     document.title = `${name} · xyntal.de/${c.handle}`;
     page(`
       <div class="public-intro"><span class="public-eyebrow">${esc(t("Menschen hinter den Ideen"))}</span><span class="public-address" data-no-i18n>xyntal.de/${esc(c.handle)}</span></div>
       <div class="profile-overview">
       <div class="bp-stage">
-        <article class="my-card" data-theme="${theme}" data-surface="${surface}" data-shape="${shape}" data-layout="${layout}" style="--tg:${grad};--t1:${cols[0]}">
-          <div class="mc-cover" aria-hidden="true">
-            <span class="mc-mark"><svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5l-5.3 5.3M10.3 13.7L5 19"/></svg>xyntal</span>
-            <span class="mc-badge">${esc(t("Early Access"))}</span>
-          </div>
-          <div class="mc-head"><span class="mc-avatar" data-pub-avatar><span>${esc(name[0].toUpperCase())}</span></span></div>
-          <div class="mc-id">
-            <h1 class="mc-name" data-no-i18n>${esc(name)}</h1>
-            <p class="mc-role">${esc(t(c.role || ""))}${level ? ` · ${esc(t(level))}` : ""}</p>
-          </div>
-          <div class="mc-blocks">${order.filter((b) => !off.includes(b)).map((b) => blocks[b]).join("")}</div>
-          <div class="mc-foot">${link ? `<a class="mc-link mc-link-button" href="${esc(link)}" target="_blank" rel="noopener noreferrer nofollow" data-no-i18n>${esc(linkText)} ↗</a>` : ""}<span class="mc-site" data-no-i18n>xyntal.de/${esc(c.handle)}</span></div>
-        </article>
+        ${window.XyntalCardHtml(c, { t, heading: "h1", avatarAttrs: "data-pub-avatar" })}
       </div>
       <div class="profile-story">${profileHtml(c.profile) || `<section class="pp glass"><p class="pp-headline">${esc(c.pitch || c.name)}</p><p>${esc(t("Lerne die Person hinter der Idee kennen."))}</p></section>`}
       </div>
