@@ -18,13 +18,13 @@
   <link rel="stylesheet" href="fonts/fonts.css?v=31">
   <link rel="stylesheet" href="style.css?v=32">
   <link rel="stylesheet" href="cosmos.css?v=40">
-  <script src="i18n-en.js?v=65" defer></script>
+  <script src="i18n-en.js?v=66" defer></script>
   <script src="i18n.js?v=31" defer></script>
   <script src="cosmos.js?v=40" defer></script>
   <link rel="stylesheet" href="/backdrop.css?v=4">
   <link rel="stylesheet" href="/site-footer.css?v=1">
   <link rel="stylesheet" href="/site-header.css?v=3">
-  <link rel="stylesheet" href="/community-feed.css?v=2">
+  <link rel="stylesheet" href="/community-feed.css?v=3">
 </head>
 <body>
 <div class="xy-bg" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i><span class="xy-grid"></span><span class="xy-stars"></span><span class="xy-stars"></span></div>
@@ -154,14 +154,18 @@
 <script src="effects.js?v=33"></script>
 <script>
   const KIND = { update: "Update", frage: "Frage", erfolg: "Erfolg" };
+  const COMMENT_EMOJIS = ["❤️", "👍", "😂", "😮", "😢", "🔥"];
   let v = { me: null, isMember: false, isAdmin: false };
   let posts = [];
   let liked = new Set();
   let filter = "";
+  const commentFeatures = { reply: true, edit: true, reactions: true };
+  const replyDraft = new Map(); // postId -> parent comment id
 
   const EDIT_WINDOW = 30 * 60 * 1000;
   let hasEditedAt = true;
   function canEditPost(p) { return !!v.me && p.author_id === v.me.id && Date.now() < Date.parse(p.created_at) + EDIT_WINDOW; }
+  function canEditComment(c) { return !!v.me && c.author_id === v.me.id && Date.now() < Date.parse(c.created_at) + EDIT_WINDOW; }
   async function queryPosts(id) {
     const run = () => {
       let query = sb.from('posts').select('id, kind, body, is_public, like_count, comment_count, created_at, author_id' + (hasEditedAt ? ', edited_at' : '') + ', author:profiles!posts_author_id_fkey(id, name, headline, avatar_path)');
@@ -237,25 +241,87 @@
     }
   }
 
+  function reactionChips(commentId, rows) {
+    if (!commentFeatures.reactions) return "";
+    const byEmoji = new Map();
+    for (const r of rows || []) {
+      if (r.comment_id !== commentId) continue;
+      const list = byEmoji.get(r.emoji) || { emoji: r.emoji, count: 0, mine: false };
+      list.count++;
+      if (v.me && r.member_id === v.me.id) list.mine = true;
+      byEmoji.set(r.emoji, list);
+    }
+    const chips = [...byEmoji.values()].map((x) =>
+      `<button type="button" class="c-react-chip${x.mine ? " is-mine" : ""}" data-act="toggle-react" data-emoji="${esc(x.emoji)}" aria-pressed="${x.mine}">${x.emoji} ${x.count}</button>`
+    ).join("");
+    const pick = COMMENT_EMOJIS.map((e) => `<button type="button" class="c-react-pick" data-act="toggle-react" data-emoji="${e}" aria-label="Reagieren mit ${e}">${e}</button>`).join("");
+    return `<div class="c-react-row">${chips}<details class="c-react-more"><summary aria-label="Reagieren">＋</summary><div class="c-react-pop">${pick}</div></details></div>`;
+  }
+
+  function commentHtml(c, reactions, depth = 0) {
+    const mine = v.me && c.author_id === v.me.id;
+    const canDel = mine || v.isAdmin;
+    const canEdit = commentFeatures.edit && canEditComment(c);
+    const replyBtn = commentFeatures.reply && depth === 0
+      ? `<button type="button" data-act="reply-comment">Antworten</button>` : "";
+    const editBtn = canEdit ? `<button type="button" data-act="edit-comment">Bearbeiten</button>` : "";
+    const delBtn = canDel ? `<button type="button" data-act="delete-comment">Löschen</button>` : "";
+    return `
+      <div class="comment${depth ? " is-reply" : ""}" data-comment="${c.id}" data-depth="${depth}">
+        ${avatar(c.author?.name, "avatar-sm", c.author?.avatar_path)}
+        <div class="comment-main">
+          <div class="comment-meta"><strong>${esc(c.author?.name || "Mitglied")}</strong> · ${timeAgo(c.created_at)}${c.edited_at ? " · bearbeitet" : ""}
+            ${replyBtn}${editBtn}${delBtn}</div>
+          <div class="comment-body" data-comment-body>${richText(c.body)}</div>
+          ${reactionChips(c.id, reactions)}
+        </div>
+      </div>`;
+  }
+
   async function loadComments(article) {
     const id = Number(article.dataset.id);
     const box = article.querySelector(".comments");
     box.innerHTML = `<p class="empty-small">Lade Kommentare …</p>`;
-    const comments = unwrap(await sb.from("post_comments")
-      .select("id, body, created_at, author_id, author:profiles!post_comments_author_id_fkey(id, name, avatar_path)")
-      .eq("post_id", id).order("created_at"));
+    const cols = commentFeatures.reply || commentFeatures.edit
+      ? "id, body, created_at, author_id, parent_id, edited_at, author:profiles!post_comments_author_id_fkey(id, name, avatar_path)"
+      : "id, body, created_at, author_id, author:profiles!post_comments_author_id_fkey(id, name, avatar_path)";
+    let comments;
+    try {
+      comments = unwrap(await sb.from("post_comments").select(cols).eq("post_id", id).order("created_at")) || [];
+    } catch (err) {
+      if (/parent_id|edited_at|column/.test(String(err?.message || err))) {
+        commentFeatures.reply = false;
+        commentFeatures.edit = false;
+        comments = unwrap(await sb.from("post_comments")
+          .select("id, body, created_at, author_id, author:profiles!post_comments_author_id_fkey(id, name, avatar_path)")
+          .eq("post_id", id).order("created_at")) || [];
+      } else throw err;
+    }
+    let reactions = [];
+    if (commentFeatures.reactions && comments.length) {
+      try {
+        reactions = unwrap(await sb.from("post_comment_reactions")
+          .select("comment_id, member_id, emoji")
+          .in("comment_id", comments.map((c) => c.id))) || [];
+      } catch {
+        commentFeatures.reactions = false;
+        reactions = [];
+      }
+    }
+    const roots = comments.filter((c) => !c.parent_id);
+    const kids = comments.filter((c) => c.parent_id);
+    const replyTo = replyDraft.get(id);
+    const replyTarget = replyTo && comments.find((c) => c.id === Number(replyTo));
     box.innerHTML = `
-      ${comments.map((c) => `
-        <div class="comment" data-comment="${c.id}">
-          ${avatar(c.author?.name, "avatar-sm", c.author?.avatar_path)}
-          <div>
-            <div class="comment-meta"><strong>${esc(c.author?.name || "Mitglied")}</strong> · ${timeAgo(c.created_at)}
-              ${c.author_id === v.me.id || v.isAdmin ? `<button type="button" data-act="delete-comment">Löschen</button>` : ""}</div>
-            <div>${richText(c.body)}</div>
-          </div>
-        </div>`).join("")}
+      <div class="comment-list">
+        ${roots.length ? roots.map((c) => {
+          const nested = kids.filter((k) => k.parent_id === c.id).map((k) => commentHtml(k, reactions, 1)).join("");
+          return commentHtml(c, reactions, 0) + nested;
+        }).join("") : `<p class="empty-small">Noch keine Kommentare. Schreib den ersten.</p>`}
+      </div>
       <form class="comment-form" novalidate>
-        <input type="text" name="body" maxlength="1500" placeholder="Kommentar schreiben …" aria-label="Kommentar">
+        ${replyTarget ? `<div class="comment-reply-bar">Antwort auf <strong>${esc(replyTarget.author?.name || "Mitglied")}</strong><button type="button" class="text-link" data-act="cancel-reply">Abbrechen</button></div>` : ""}
+        <input type="text" name="body" maxlength="1500" placeholder="${replyTarget ? "Antwort schreiben …" : "Kommentar schreiben …"}" aria-label="${replyTarget ? "Antwort" : "Kommentar"}">
         <button class="btn btn-small" type="submit">Senden</button>
       </form>`;
   }
@@ -331,9 +397,61 @@
       } else if (btn.dataset.act === "delete-comment") {
         const cid = Number(btn.closest("[data-comment]").dataset.comment);
         unwrap(await sb.from("post_comments").delete().eq("id", cid));
-        post.comment_count--;
+        post.comment_count = Math.max(0, (post.comment_count || 1) - 1);
         article.querySelector('[data-act="comments"]').textContent = `Kommentare (${post.comment_count})`;
         await loadComments(article);
+      } else if (btn.dataset.act === "reply-comment") {
+        if (!commentFeatures.reply) return;
+        const cid = Number(btn.closest("[data-comment]").dataset.comment);
+        replyDraft.set(id, cid);
+        await loadComments(article);
+        article.querySelector(".comment-form input")?.focus();
+      } else if (btn.dataset.act === "cancel-reply") {
+        replyDraft.delete(id);
+        await loadComments(article);
+        article.querySelector(".comment-form input")?.focus();
+      } else if (btn.dataset.act === "edit-comment") {
+        if (!commentFeatures.edit) return;
+        const row = btn.closest("[data-comment]");
+        const bodyEl = row.querySelector("[data-comment-body]");
+        if (!bodyEl || row.querySelector(".comment-edit-form")) return;
+        const plain = bodyEl.innerText.trim();
+        const form = document.createElement("form");
+        form.className = "comment-edit-form";
+        form.innerHTML = `<textarea name="body" maxlength="1500" rows="3" required></textarea><div class="comment-edit-actions"><button class="btn btn-small" type="submit">Speichern</button><button class="btn btn-small btn-ghost" type="button" data-act="cancel-edit-comment">Abbrechen</button></div>`;
+        form.elements.body.value = plain;
+        bodyEl.hidden = true;
+        bodyEl.after(form);
+        form.elements.body.focus();
+      } else if (btn.dataset.act === "cancel-edit-comment") {
+        const row = btn.closest("[data-comment]");
+        row.querySelector(".comment-edit-form")?.remove();
+        const bodyEl = row.querySelector("[data-comment-body]");
+        if (bodyEl) bodyEl.hidden = false;
+      } else if (btn.dataset.act === "toggle-react") {
+        if (!commentFeatures.reactions) return;
+        const row = btn.closest("[data-comment]");
+        const cid = Number(row.dataset.comment);
+        const emoji = btn.dataset.emoji;
+        if (!emoji) return;
+        btn.disabled = true;
+        const mine = btn.classList.contains("is-mine") || btn.getAttribute("aria-pressed") === "true";
+        try {
+          if (mine) {
+            unwrap(await sb.from("post_comment_reactions").delete().eq("comment_id", cid).eq("member_id", v.me.id).eq("emoji", emoji));
+          } else {
+            const res = await sb.from("post_comment_reactions").insert({ comment_id: cid, emoji });
+            if (res.error?.code === "23505") {
+              unwrap(await sb.from("post_comment_reactions").delete().eq("comment_id", cid).eq("member_id", v.me.id).eq("emoji", emoji));
+            } else unwrap(res);
+          }
+          await loadComments(article);
+        } catch (err) {
+          if (/post_comment_reactions|does not exist|schema cache/.test(String(err?.message || err))) {
+            commentFeatures.reactions = false;
+            await loadComments(article);
+          } else throw err;
+        }
       }
     } catch (err) {
       btn.disabled = false;
@@ -370,8 +488,34 @@
     });
   }, 10000);
 
-  // Kommentar senden
+  // Kommentar / Antwort senden
   feed.addEventListener("submit", async (e) => {
+    const editForm = e.target.closest(".comment-edit-form");
+    if (editForm) {
+      e.preventDefault();
+      const article = editForm.closest(".post");
+      const row = editForm.closest("[data-comment]");
+      const cid = Number(row.dataset.comment);
+      const body = editForm.elements.body.value.trim();
+      if (!body) return;
+      try {
+        editForm.querySelector("[type=submit]").disabled = true;
+        unwrap(await sb.from("post_comments").update({ body, edited_at: new Date().toISOString() }).eq("id", cid));
+        await loadComments(article);
+      } catch (err) {
+        editForm.querySelector("[type=submit]").disabled = false;
+        if (/edited_at|column/.test(String(err?.message || err))) {
+          try {
+            unwrap(await sb.from("post_comments").update({ body }).eq("id", cid));
+            commentFeatures.edit = false;
+            await loadComments(article);
+            return;
+          } catch (err2) { alertIn(article, friendlyError(err2)); return; }
+        }
+        alertIn(article, friendlyError(err));
+      }
+      return;
+    }
     const form = e.target.closest(".comment-form");
     if (!form) return;
     e.preventDefault();
@@ -379,14 +523,25 @@
     const id = Number(article.dataset.id);
     const body = form.elements.body.value.trim();
     if (!body) return;
+    const parentId = commentFeatures.reply ? replyDraft.get(id) : null;
     try {
       form.querySelector("button").disabled = true;
-      unwrap(await sb.from("post_comments").insert({ post_id: id, body }));
+      const payload = { post_id: id, body };
+      if (parentId) payload.parent_id = Number(parentId);
+      try {
+        unwrap(await sb.from("post_comments").insert(payload));
+      } catch (err) {
+        if (parentId && /parent_id|column|schema/.test(String(err?.message || err))) {
+          commentFeatures.reply = false;
+          unwrap(await sb.from("post_comments").insert({ post_id: id, body }));
+        } else throw err;
+      }
+      replyDraft.delete(id);
       const post = posts.find((p) => p.id === id);
       post.comment_count++;
       article.querySelector('[data-act="comments"]').textContent = `Kommentare (${post.comment_count})`;
       await loadComments(article);
-      article.querySelector(".comment-form input").focus();
+      article.querySelector(".comment-form input")?.focus();
     } catch (err) {
       form.querySelector("button").disabled = false;
       alertIn(article, friendlyError(err));

@@ -8,3 +8,36 @@
 .post-edit-form { display: grid; gap: 12px; }.post-edit-form textarea { resize: vertical; min-height: 130px; line-height: 1.6; }.post-edit-form .hint { margin: 0; font-size: 12px; color: var(--text-2); }.post-edit-actions { display: flex; flex-wrap: wrap; gap: 8px; }.post-edit-form .form-status { margin: 0; }
 .feed-filter button { border-radius: 12px; }.feed-filter button[aria-selected=true] { background: var(--accent-soft); border-color: var(--accent); }
 @media(max-width:560px) { #feed .post { padding: 18px; }#feed .post-head { grid-template-columns: 40px minmax(0,1fr) auto; gap: 10px; }#feed .post-head .avatar { width: 40px; height: 40px; }#feed .post-meta span { white-space: normal; font-size: 12px; }#feed .post-foot { align-items: flex-start; flex-direction: column; }#feed .post-actions { width: 100%; } }
+
+/* Kommentar: Antworten, Bearbeiten, Reaktionen */
+#feed .comments { display: grid; gap: 12px; margin-top: 4px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.07); }
+#feed .comment-list { display: grid; gap: 12px; }
+#feed .comment { display: grid; grid-template-columns: 32px minmax(0,1fr); gap: 10px; align-items: start; }
+#feed .comment.is-reply { margin-left: 28px; padding-left: 12px; border-left: 2px solid rgba(185,92,255,.28); }
+#feed .comment-main { min-width: 0; display: grid; gap: 6px; }
+#feed .comment-meta { font-size: 12px; color: var(--text-2); display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
+#feed .comment-meta strong { color: var(--text); font-size: 13px; }
+#feed .comment-meta button { background: none; border: 0; color: var(--text-2); font: inherit; font-size: 12px; cursor: pointer; padding: 2px 0; min-height: 28px; }
+#feed .comment-meta button:hover { color: var(--accent-2); }
+#feed .comment-body { font-size: 14px; line-height: 1.55; overflow-wrap: anywhere; }
+#feed .c-react-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+#feed .c-react-chip, #feed .c-react-pick, #feed .c-react-more > summary {
+  min-height: 32px; min-width: 32px; padding: 4px 8px; border-radius: 999px; border: 1px solid rgba(255,255,255,.1);
+  background: rgba(255,255,255,.04); color: var(--text); font: inherit; font-size: 13px; cursor: pointer;
+}
+#feed .c-react-chip.is-mine, #feed .c-react-chip[aria-pressed="true"] { background: rgba(185,92,255,.16); border-color: rgba(185,92,255,.35); }
+#feed .c-react-more { position: relative; }
+#feed .c-react-more > summary { list-style: none; display: inline-flex; align-items: center; justify-content: center; }
+#feed .c-react-more > summary::-webkit-details-marker { display: none; }
+#feed .c-react-pop {
+  position: absolute; left: 0; bottom: calc(100% + 6px); z-index: 3; display: flex; gap: 4px; flex-wrap: wrap;
+  padding: 6px; border-radius: 12px; background: var(--panel); border: 1px solid var(--border);
+  box-shadow: 0 12px 28px rgba(0,0,0,.4); min-width: 180px;
+}
+#feed .comment-reply-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 12px; color: var(--text-2); grid-column: 1 / -1; }
+#feed .comment-edit-form { display: grid; gap: 8px; }
+#feed .comment-edit-form textarea { width: 100%; min-height: 72px; resize: vertical; font: inherit; }
+#feed .comment-edit-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+@media (max-width: 560px) {
+  #feed .comment.is-reply { margin-left: 12px; }
+}
