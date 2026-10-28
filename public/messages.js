@@ -50,6 +50,7 @@
   const features = { reply: true, edit: true, delete: true, reactions: true, attachments: true, voice: true, presence: true };
   let v = { me: null, isMember: false, canAct: false };
   let messages = [];
+  let directory = []; // alle anschreibbaren Mitglieder für die Suche
   const people = new Map();
   const reactions = new Map();
   const attachments = new Map();
@@ -1136,10 +1137,33 @@
     if (commit && swiping && dx > 64) setReply(id);
   }
 
+  function norm(s) {
+    return String(s || "").toLowerCase().normalize("NFD").replace(/\p{M}/gu, "");
+  }
+  function renderMemberResults(q) {
+    const box = document.getElementById("member-results");
+    if (!box) return;
+    const query = norm(q).trim();
+    if (!query) { box.hidden = true; box.innerHTML = ""; return; }
+    const hits = directory.filter((m) => {
+      if (!v.me || m.id === v.me.id) return false;
+      return norm(m.name).includes(query) || norm(m.headline).includes(query);
+    }).slice(0, 12);
+    box.hidden = false;
+    box.innerHTML = hits.length
+      ? hits.map((m) => `<button type="button" class="member-hit" role="option" data-partner="${esc(m.id)}">${avatar(m.name, "avatar-sm", m.avatar_path)}<span class="conv-text"><strong>${esc(m.name || "Mitglied")}</strong>${m.headline ? `<span>${esc(m.headline)}</span>` : ""}</span></button>`).join("")
+      : `<p class="empty-small">Kein Mitglied gefunden.</p>`;
+  }
+  function clearMemberSearch() {
+    const input = document.getElementById("member-search");
+    if (input) input.value = "";
+    renderMemberResults("");
+  }
+
   const thread = document.getElementById("thread");
   const convHost = document.getElementById("conversations");
-  const newChat = document.getElementById("new-chat");
-  if (!thread || !convHost || !newChat) return;
+  const memberSearch = document.getElementById("member-search");
+  if (!thread || !convHost || !memberSearch) return;
   thread.addEventListener("click", async (e) => {
     try {
       if (e.target.closest(".thread-back")) { inbox.classList.remove("show-thread"); return; }
@@ -1312,9 +1336,20 @@
     const b = e.target.closest("[data-partner]");
     if (b) open(b.dataset.partner).catch((err) => status(friendlyError(err), "error"));
   });
-  newChat.addEventListener("change", (e) => {
-    if (e.target.value) open(e.target.value).catch((err) => status(friendlyError(err), "error"));
-    e.target.value = "";
+  memberSearch.addEventListener("input", () => renderMemberResults(memberSearch.value));
+  memberSearch.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") { clearMemberSearch(); memberSearch.blur(); }
+  });
+  document.getElementById("member-results")?.addEventListener("click", (e) => {
+    const hit = e.target.closest("[data-partner]");
+    if (!hit) return;
+    clearMemberSearch();
+    open(hit.dataset.partner).catch((err) => status(friendlyError(err), "error"));
+  });
+  document.addEventListener("click", (e) => {
+    if (e.target.closest(".member-search")) return;
+    const box = document.getElementById("member-results");
+    if (box && !box.hidden) renderMemberResults("");
   });
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
@@ -1358,8 +1393,8 @@
     inbox.hidden = false;
     try {
       const members = unwrap(await sb.from("profiles").select("id, name, headline, avatar_path").neq("status", "rejected").order("name")) || [];
+      directory = members;
       members.forEach((m) => people.set(m.id, m));
-      document.getElementById("new-chat").insertAdjacentHTML("beforeend", members.filter((m) => m.id !== v.me.id).map((m) => `<option value="${esc(m.id)}">${esc(m.name || "Mitglied")}</option>`).join(""));
       messages = unwrap(await sb.from("messages").select("*").or(`sender_id.eq.${v.me.id},recipient_id.eq.${v.me.id}`).order("created_at", { ascending: false }).limit(1000)) || [];
       await ensurePeople(messages.map(partnerOf));
       await loadExtras(messages.map((m) => m.id));
