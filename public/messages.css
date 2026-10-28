@@ -588,3 +588,23 @@ body.messages-page .inbox .thread-head { overflow: visible; }
 .inbox .bg-swatch-fun { background-image: url("/chat-pattern-fun.svg"); }
 .inbox .bg-swatch-none { background-image: radial-gradient(120% 90% at 50% 0%, rgba(168, 85, 247, 0.18), transparent 70%); }
 @media (max-width: 420px) { .inbox .bg-menu { grid-template-columns: repeat(2, 92px); } }
+
+/* ---------- Eingabeleiste: durchsichtiges Glas, schwebt über den Nachrichten ---------- */
+body.messages-page .inbox .thread { position: relative; }
+body.messages-page .inbox .thread-form {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 3;
+  background: none; border: 0; pointer-events: none;
+}
+body.messages-page .inbox .thread-form > * { pointer-events: auto; }
+body.messages-page .inbox .thread-messages { padding-bottom: calc(var(--composer-h, 76px) + 14px); scroll-padding-bottom: calc(var(--composer-h, 76px) + 14px); }
+body.messages-page .inbox .composer-row {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.03));
+  -webkit-backdrop-filter: blur(18px) saturate(190%) brightness(1.05);
+  backdrop-filter: blur(18px) saturate(190%) brightness(1.05);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), inset 0 -1px 0 rgba(255, 255, 255, 0.05), 0 10px 30px rgba(0, 0, 0, 0.32);
+}
+body.messages-page .inbox .composer-row .msg-icon { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.14); }
+body.messages-page #thread-status:not(:empty) {
+  position: absolute; left: 16px; right: 16px; bottom: calc(var(--composer-h, 76px) + 6px); z-index: 3; margin: 0;
+}

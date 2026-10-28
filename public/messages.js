@@ -69,6 +69,7 @@
   let voiceBlob = null;
   let rec = null;
   let uploading = false;
+  let composerObs = null;
   let uploadAbort = false;
   let uploadLabel = "";
   let partnerTyping = false;
@@ -420,6 +421,16 @@
         <p class="sr-only" id="composer-hint">Tippe Enter zum Senden, Shift+Enter für neue Zeile</p>
       </form>
       <p class="form-status" id="thread-status" role="status" aria-live="polite"></p>`;
+    // Eingabeleiste schwebt als Glas über den Nachrichten: Platz unten freihalten
+    const form = document.getElementById("thread-form");
+    if (form) {
+      box.style.setProperty("--composer-h", form.offsetHeight + "px");
+      composerObs?.disconnect();
+      if ("ResizeObserver" in window) {
+        composerObs = new ResizeObserver(() => box.style.setProperty("--composer-h", form.offsetHeight + "px"));
+        composerObs.observe(form);
+      }
+    }
     document.getElementById("inbox").classList.add("show-thread");
     const list = document.getElementById("thread-messages");
     if (stick) list.scrollTop = list.scrollHeight;
