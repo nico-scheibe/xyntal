@@ -22,7 +22,7 @@
   <script src="cosmos.js?v=40" defer></script>
   <link rel="stylesheet" href="/backdrop.css?v=4">
   <link rel="stylesheet" href="/site-footer.css?v=1">
-  <link rel="stylesheet" href="/site-header.css?v=2">
+  <link rel="stylesheet" href="/site-header.css?v=3">
 </head>
 <body>
 <div class="xy-bg" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i><span class="xy-grid"></span><span class="xy-stars"></span><span class="xy-stars"></span></div>
@@ -54,21 +54,19 @@
 
   <section class="page-body join-body">
     <div class="wrap join-layout profile-layout">
-      <aside class="join-aside" aria-labelledby="steps-head">
+      <aside class="join-aside profile-side" aria-label="Profilbereich">
         <div id="notice"></div>
-        <h2 class="join-section-head" id="steps-head">Nächste Schritte</h2>
-        <ol class="next-steps" id="next-steps"></ol>
+        <div class="ptabs ptabs-side" role="tablist" aria-label="Profilbereich" aria-orientation="vertical">
+          <button type="button" role="tab" id="tab-profil" aria-controls="panel-profil" aria-selected="true" data-tab="profil"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Profil</button>
+          <button type="button" role="tab" id="tab-karte" aria-controls="panel-karte" aria-selected="false" tabindex="-1" data-tab="karte"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="11" r="2"/><path d="M14 10h4M14 14h4M6 16h6"/></svg>Xyntal-Karte</button>
+          <button type="button" role="tab" id="tab-sicherheit" aria-controls="panel-sicherheit" aria-selected="false" tabindex="-1" data-tab="sicherheit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg>Sicherheit</button>
+        </div>
         <div class="side-actions">
           <button class="btn btn-ghost btn-small" id="logout" type="button">Ausloggen</button>
           <a class="btn btn-ghost btn-small" href="#sicherheit">Sicherheit &amp; Konto</a>
         </div>
       </aside>
       <div class="join-main profile-main">
-        <div class="ptabs" role="tablist" aria-label="Profilbereich">
-          <button type="button" role="tab" id="tab-profil" aria-controls="panel-profil" aria-selected="true" data-tab="profil"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Profil</button>
-          <button type="button" role="tab" id="tab-karte" aria-controls="panel-karte" aria-selected="false" tabindex="-1" data-tab="karte"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="11" r="2"/><path d="M14 10h4M14 14h4M6 16h6"/></svg>Xyntal-Karte</button>
-          <button type="button" role="tab" id="tab-sicherheit" aria-controls="panel-sicherheit" aria-selected="false" tabindex="-1" data-tab="sicherheit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg>Sicherheit</button>
-        </div>
 
         <section class="ptab-panel" role="tabpanel" id="panel-profil" aria-labelledby="tab-profil" data-panel="profil">
           <div id="preview"></div>
@@ -320,13 +318,12 @@
 <script src="config.js?v=31"></script>
 <script src="app.js?v=36"></script>
 <script src="avatars.js?v=31"></script>
-<script src="notifications.js?v=32"></script>
+<script src="notifications.js?v=33"></script>
 <script src="effects.js?v=33"></script>
 <script>
   const form = document.getElementById("profile");
   const status = document.getElementById("status");
   let me = null;
-  let hasProject = false;
 
   function render(m) {
     document.getElementById("hello").innerHTML = `Hallo, <em>${esc((m.name || "du").split(" ")[0])}.</em>`;
@@ -334,8 +331,6 @@
     let notice = "";
     if (m.status === "pending") {
       notice = `<div class="notice">${fresh ? "<strong>Willkommen bei Xyntal!</strong> " : ""}Du kannst schon <a class="text-link" href="projekte?neu=1">Projekte anlegen</a> und <a class="text-link" href="mitglieder">andere Mitglieder anschreiben</a>. Dein Profil schaue ich mir zusätzlich persönlich an und schalte es frei – dann erscheint es auch öffentlich.</div>`;
-    } else if (m.status === "approved") {
-      notice = `<div class="notice">Du bist freigeschaltet. <a class="text-link" href="mitglieder">Zu den Mitgliedern →</a>${m.is_admin ? ` · <a class="text-link" href="admin">Zum Admin-Bereich →</a>` : ""}</div>`;
     } else if (m.status === "rejected") {
       notice = `<div class="notice">Dein Profil wurde nicht freigeschaltet. Bei Fragen melde dich gern per E-Mail.</div>`;
     }
@@ -343,18 +338,6 @@
       notice = `<div class="notice"><strong>Fast fertig:</strong> Schreib unten in einem Satz, woran du arbeitest – dann kann ich dein Profil freischalten.</div>` + notice;
     }
     document.getElementById("notice").innerHTML = notice;
-    // Nächste Schritte: was schon erledigt ist, was noch fehlt
-    const steps = [
-      [!!m.headline, "Ein Satz zu dir", "#profile"],
-      [!!(m.about && (m.offer || m.seek)), "Profil ergänzen: was du kannst und suchst", "#profile"],
-      [!!m.avatar_path, "Profilbild hinzufügen", "#avatar-form"],
-      [m.status === "approved", m.status === "approved" ? "Freigeschaltet" : "Freischaltung (für das öffentliche Profil)", null],
-      ...(hasProject ? [] : [[false, "Erstes Projekt anlegen oder bei einem einsteigen", m.status === "rejected" ? null : "projekte?neu=1"]]),
-    ];
-    document.getElementById("next-steps").innerHTML = steps.map(([done, label, href]) => `<li class="${done ? "done" : ""}">
-      <span class="step-mark" aria-hidden="true"></span>
-      ${href && !done ? `<a class="text-link" href="${href}">${label}</a>` : `<span>${label}</span>`}${done ? '<span class="sr-only"> – erledigt</span>' : ""}
-    </li>`).join("");
     document.getElementById("preview").innerHTML = `<div class="members-grid" style="grid-template-columns: 1fr; margin-top: 0">${memberCard(m)}</div>`;
   }
 
@@ -383,7 +366,7 @@
   tabs.forEach((b) => b.addEventListener("click", () => { selectTab(b.dataset.tab); toTabsTop(); }));
   document.querySelector(".ptabs").addEventListener("keydown", (e) => {
     const i = tabs.findIndex((b) => b.getAttribute("aria-selected") === "true");
-    const j = e.key === "ArrowRight" ? i + 1 : e.key === "ArrowLeft" ? i - 1 : e.key === "Home" ? 0 : e.key === "End" ? tabs.length - 1 : null;
+    const j = e.key === "ArrowRight" || e.key === "ArrowDown" ? i + 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? i - 1 : e.key === "Home" ? 0 : e.key === "End" ? tabs.length - 1 : null;
     if (j === null) return;
     e.preventDefault();
     selectTab(TABS[(j + tabs.length) % tabs.length], { focus: true });
@@ -408,13 +391,6 @@
     render(me);
     setupAvatarEditor(me, updated => { me = updated; render(me); });
     renderXcard();
-    // Schritt „Erstes Projekt“ entfällt, sobald es ein eigenes Projekt oder eine Rollen-Meldung gibt
-    const [own, joined] = await Promise.all([
-      sb.from("projects").select("id", { count: "exact", head: true }).eq("owner_id", me.id),
-      sb.from("project_interest").select("role_id", { count: "exact", head: true }).eq("member_id", me.id),
-    ]);
-    hasProject = (own.count || 0) + (joined.count || 0) > 0;
-    if (hasProject) render(me);
     fromHash();
   }, 300);
 

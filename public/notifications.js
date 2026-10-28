@@ -36,8 +36,12 @@
       all.disabled = !count;
       list.innerHTML = rows.length ? rows.map(n => {
         const href = n.kind === 'message' && n.sender_id ? `nachrichten?an=${encodeURIComponent(n.sender_id)}`
-          : n.kind === 'comment' ? `community?beitrag=${encodeURIComponent(n.post_id)}` : 'nachrichten';
-        return `<a class="notification-item${n.read_at ? '' : ' unread'}" href="${esc(href)}" data-notification="${esc(n.id)}"><span>${n.kind === 'message' ? 'Du hast eine neue Nachricht.' : 'Jemand hat deinen Beitrag kommentiert.'}</span><small>${esc(timeAgo(n.created_at))}${n.read_at ? '' : ' · ungelesen'}</small></a>`;
+          : n.kind === 'comment' ? `community?beitrag=${encodeURIComponent(n.post_id)}`
+          : n.kind === 'approved' ? 'mitglieder' : 'nachrichten';
+        const text = n.kind === 'message' ? 'Du hast eine neue Nachricht.'
+          : n.kind === 'approved' ? 'Du bist freigeschaltet – dein Profil ist jetzt für Mitglieder sichtbar.'
+          : 'Jemand hat deinen Beitrag kommentiert.';
+        return `<a class="notification-item${n.read_at ? '' : ' unread'}" href="${esc(href)}" data-notification="${esc(n.id)}"><span>${text}</span><small>${esc(timeAgo(n.created_at))}${n.read_at ? '' : ' · ungelesen'}</small></a>`;
       }).join('') : '<p class="empty-small">Noch keine Benachrichtigungen. Neue Nachrichten und Kommentare zu deinen Beiträgen findest du hier.</p>';
       setStatus(status, '');
     } catch {

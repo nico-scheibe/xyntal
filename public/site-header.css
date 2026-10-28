@@ -112,3 +112,8 @@
 .avatar, .acct-face { overflow: hidden; }
 .avatar > img, .acct-face > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
 .avatar:has(> img) { position: relative; }
+
+/* Profil: Bereichs-Navigation links untereinander */
+.ptabs.ptabs-side { display: grid; gap: 6px; padding: 6px; margin: 0 0 20px; overflow: visible; border-radius: 18px; }
+.ptabs.ptabs-side button { justify-content: flex-start; width: 100%; padding: 12px 14px; border-radius: 12px; }
+@media (max-width: 959px) { .ptabs.ptabs-side { display: flex; overflow-x: auto; } .ptabs.ptabs-side button { width: auto; } }
