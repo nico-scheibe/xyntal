@@ -14,6 +14,7 @@
   if (HANDLE.test(handle) && location.pathname !== `/${handle}`) history.replaceState(null, "", `/${handle}`);
 
   const page = (html) => { root.innerHTML = html; };
+  root.addEventListener("click", (e) => { if (e.target.closest("[data-reload]")) location.reload(); });
   // Angemeldete sind schon dabei: statt Warteliste zu den Projekten
   let member = false, me = null;
   try {
@@ -127,7 +128,7 @@
       document.title = `xyntal.de/${handle} – ${t("noch frei")}`;
       page(`<div class="profile-msg"><h1><b>xyntal.de/${esc(handle)}</b><br>${esc(t("ist noch frei."))}</h1><p>${esc(t("Bau deine Xyntal-Karte und sichere dir diesen Link, bevor ihn jemand anders bekommt."))}</p>${ctas(`<a class="btn btn-primary" href="${freeLink(handle)}">${esc(t("Diesen Link sichern"))}</a>`)}</div>`);
     } catch {
-      page(`<div class="profile-msg"><h1>${esc(t("Die Karte konnte gerade nicht geladen werden."))}</h1><p>${esc(t("Bitte versuch es gleich noch einmal."))}</p>${ctas(`<button class="btn btn-primary" type="button" onclick="location.reload()">${esc(t("Neu laden"))}</button>`)}</div>`);
+      page(`<div class="profile-msg"><h1>${esc(t("Die Karte konnte gerade nicht geladen werden."))}</h1><p>${esc(t("Bitte versuch es gleich noch einmal."))}</p>${ctas(`<button class="btn btn-primary" type="button" data-reload>${esc(t("Neu laden"))}</button>`)}</div>`);
     }
   }
   load();

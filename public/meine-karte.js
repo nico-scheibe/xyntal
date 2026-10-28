@@ -9,6 +9,7 @@
   let dirty = false, savedHandle = "";
 
   const showGate = (html) => { gate.innerHTML = html; gate.hidden = false; app.hidden = true; };
+  gate.addEventListener("click", (e) => { if (e.target.closest("[data-reload]")) location.reload(); });
   const say = (text, kind = "") => { out.textContent = text; out.className = "mk-status" + (kind ? ` is-${kind}` : ""); };
 
   function updateLink() {
@@ -56,7 +57,7 @@
     try {
       [card, me] = await Promise.all([sb.rpc("get_my_card").then(unwrap), currentMember()]);
     } catch (err) {
-      return showGate(`<h2>${t("Deine Karte konnte nicht geladen werden.")}</h2><p>${esc(friendlyError(err))}</p><div class="mk-actions"><button class="btn btn-primary" type="button" onclick="location.reload()">${t("Neu laden")}</button></div>`);
+      return showGate(`<h2>${t("Deine Karte konnte nicht geladen werden.")}</h2><p>${esc(friendlyError(err))}</p><div class="mk-actions"><button class="btn btn-primary" type="button" data-reload>${t("Neu laden")}</button></div>`);
     }
     gate.hidden = true; app.hidden = false;
     if (card) {
