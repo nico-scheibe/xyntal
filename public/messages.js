@@ -1450,10 +1450,31 @@
     for (const m of messages) {
       if (!m.deleted_at && !String(m.body || "").trim() && Date.now() - new Date(m.created_at).getTime() < 120000) watchAttachments(m.id);
     }
-    const target = new URLSearchParams(location.search).get("an");
-    if (target && target !== v.me.id) await open(target);
-    else renderList();
+    const params = new URLSearchParams(location.search);
+    const target = params.get("an");
+    if (target && target !== v.me.id) {
+      await open(target);
+      await prefillListingReply(params.get("anzeige"));
+    } else renderList();
   }
+  // Von „Gesuche & Angebote“ kommend (?anzeige=ID): Antwort mit Bezug zur Anzeige vorbereiten
+  async function prefillListingReply(rawId) {
+    if (!/^\d+$/.test(rawId || "")) return;
+    try {
+      const { data: l } = await sb.from("listings").select("id, title, type").eq("id", Number(rawId)).maybeSingle();
+      const ta = document.querySelector("#thread-form textarea");
+      if (!l || !ta || ta.value.trim()) return;
+      const kind = l.type === "suche" ? "Gesuch" : "Angebot";
+      ta.value = `Hallo! Ich melde mich auf dein ${kind} „${l.title}“: https://xyntal.de/boerse#anzeige-${l.id}\n\n`;
+      draft = ta.value;
+      grow(ta);
+      syncSendButton();
+      ta.focus();
+      ta.setSelectionRange(ta.value.length, ta.value.length);
+    } catch { /* ohne Bezug weiterschreiben */ }
+    history.replaceState(null, "", `nachrichten?an=${encodeURIComponent(active)}`);
+  }
+
   // ---------- Chat-Hintergrund: Muster wählen (nur in diesem Browser gemerkt) ----------
   function bgPickerHtml() {
     return `<div class="bg-picker">

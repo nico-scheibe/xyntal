@@ -183,6 +183,8 @@ window.XYNTAL_EN = {
   "Finde die Menschen, mit denen du etwas aufbaust – egal, wo du bist.": "Find the people you'll build with – wherever you are.",
   "Für alle, die etwas aufbauen wollen.": "For everyone who wants to build something.",
   "Fußzeile": "Footer",
+  "Einloggen, um zu antworten": "Log in to reply",
+  "Gefällt mir": "Like",
   "Profil ansehen": "View profile",
   "Chat-Hintergrund ändern": "Change chat background",
   "Chat-Hintergrund": "Chat background",
