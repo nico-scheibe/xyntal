@@ -1,6 +1,6 @@
 const fs=require('fs'),vm=require('vm'),assert=require('assert');
-const html=fs.readFileSync('public/admin.html','utf8');
-const start=html.indexOf('  const betaDraftNotes ='),end=html.indexOf('  const betaPanel=',start);
+const html=fs.readFileSync('public/pages/admin.js','utf8');
+const start=html.indexOf('const betaDraftNotes ='),end=html.indexOf('const betaPanel=',start);
 const nodes=new Map(),node=s=>{if(!nodes.has(s))nodes.set(s,{innerHTML:'',textContent:'',addEventListener(){}});return nodes.get(s)};
 const ctx=vm.createContext({document:{querySelector:node,getElementById:node},esc:s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),fmt:()=> '25.10.26',BETA_STATUS:{neu:'Neu',in_pruefung:'In Prüfung',angenommen:'Angenommen'},BETA_FOCUS:{design:'Design',entwicklung:'Entwicklung'},BETA_HOURS:{'1-2':'1–2 Std.'},lastData:{beta:[{id:1,name:'<img src=x onerror=alert(1)>',email:'safe@example.invalid',why:'Motivation',project:'Portfolio',focus:'design',hours:'1-2',status:'neu',admin_note:'Gespräch',link:'javascript:alert(1)',created_at:'2026-10-25'},...Array.from({length:20},(_,i)=>({id:i+2,name:`Tester ${i}`,email:`test${i}@example.invalid`,focus:'entwicklung',hours:'1-2',why:'Baut eine App',project:'App',status:'in_pruefung',created_at:'2026-10-24'}))]}});
 vm.runInContext(html.slice(start,end),ctx);

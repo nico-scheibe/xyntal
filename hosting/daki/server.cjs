@@ -170,15 +170,14 @@ async function handleBetaFeedback(req, res) {
 }
 
 const types = { '.html':'text/html; charset=utf-8', '.css':'text/css; charset=utf-8', '.js':'text/javascript; charset=utf-8', '.json':'application/json', '.png':'image/png', '.jpg':'image/jpeg', '.svg':'image/svg+xml', '.webp':'image/webp', '.woff2':'font/woff2', '.woff':'font/woff', '.ico':'image/x-icon', '.txt':'text/plain; charset=utf-8', '.xml':'application/xml; charset=utf-8' };
-// Sicherheits-Header für alle Antworten. Die vollständige CSP läuft erst im Report-Only-Modus,
-// weil einige Seiten Inline-Skripte nutzen – Verstöße erscheinen in der Browser-Konsole.
+// Sicherheits-Header für alle Antworten. Skripte nur aus eigenen Dateien (keine Inline-Skripte);
+// Inline-Styles bleiben erlaubt, weil Seiten style-Attribute setzen.
 const SECURITY_HEADERS = {
   'Strict-Transport-Security': 'max-age=31536000',
   'X-Frame-Options': 'SAMEORIGIN',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=()',
-  'Content-Security-Policy': "base-uri 'self'; object-src 'none'; frame-ancestors 'self'",
-  'Content-Security-Policy-Report-Only': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://rralgrlujoupprwlvoyo.supabase.co; font-src 'self'; connect-src 'self' https://rralgrlujoupprwlvoyo.supabase.co wss://rralgrlujoupprwlvoyo.supabase.co https://*.sibforms.com; form-action 'self' https://*.sibforms.com; frame-ancestors 'self'; base-uri 'self'; object-src 'none'",
+  'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://rralgrlujoupprwlvoyo.supabase.co; font-src 'self'; connect-src 'self' https://rralgrlujoupprwlvoyo.supabase.co wss://rralgrlujoupprwlvoyo.supabase.co https://*.sibforms.com; form-action 'self' https://*.sibforms.com; frame-ancestors 'self'; base-uri 'self'; object-src 'none'",
 };
 http.createServer((req,res) => {
   for (const [name, value] of Object.entries(SECURITY_HEADERS)) res.setHeader(name, value);
