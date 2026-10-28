@@ -18,6 +18,7 @@ function friendlyError(err) {
     [/XYNTAL_MODERATION:zu_viele_links/, "Bitte höchstens 5 Links pro Text."],
     [/XYNTAL_MODERATION:zu_schnell/, "Du sendest gerade sehr viele Nachrichten. Bitte warte einen Moment."],
     [/XYNTAL_MODERATION:wiederholung/, "Diese Nachricht hast du gerade schon mehrfach verschickt."],
+    [/XYNTAL_TIMEOUT/, "Das hat zu lange gedauert. Prüfe deine Verbindung und versuch es noch einmal."],
     [/bucket not found/i, "Der Bildspeicher ist noch nicht eingerichtet. Bitte versuch es später erneut."],
     [/payload too large|maximum allowed size|exceeded.*size/i, "Das Bild ist zu groß. Bitte wähle eine kleinere Datei."],
     [/mime type.*not supported|invalid.*mime/i, "Dieses Bildformat wird nicht unterstützt. Bitte wähle JPG, PNG oder WebP."],

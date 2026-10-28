@@ -696,11 +696,18 @@
       duration: Number.isFinite(duration) && duration > 0 ? duration : null,
     };
   }
+  // Hängende Anfragen nicht endlos warten lassen („Wird hochgeladen …“ blieb sonst stehen)
+  const TIMEOUT = "XYNTAL_TIMEOUT", SEND_TIMEOUT = 20000, UPLOAD_TIMEOUT = 180000;
+  function withTimeout(promise, ms) {
+    let timer;
+    return Promise.race([promise, new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(TIMEOUT)), ms); })])
+      .finally(() => clearTimeout(timer));
+  }
   async function uploadOne(messageId, prep) {
     if (!prep.blob?.size) throw new Error("Das hat nicht geklappt. Versuch es erneut.");
     const path = (String(v.me.id).toLowerCase() + "/" + crypto.randomUUID() + "." + prep.ext).toLowerCase();
     if (!PATH_RE.test(path)) throw new Error("Das hat nicht geklappt. Versuch es erneut.");
-    unwrap(await sb.storage.from(BUCKET).upload(path, prep.blob, { contentType: prep.mime, cacheControl: "3600", upsert: false }));
+    unwrap(await withTimeout(sb.storage.from(BUCKET).upload(path, prep.blob, { contentType: prep.mime, cacheControl: "3600", upsert: false }), UPLOAD_TIMEOUT));
     try {
       const rows = unwrap(await sb.from("message_attachments").insert({
         message_id: asId(messageId), path, kind: prep.kind, mime: prep.mime, size: prep.blob.size,
@@ -859,7 +866,18 @@
       showUploading(uploadLabel);
       const payload = { recipient_id: recipient, body: text };
       if (reply) payload.reply_to = asId(reply);
-      const rows = unwrap(await sb.from("messages").insert(payload).select());
+      let rows;
+      try {
+        rows = unwrap(await withTimeout(sb.from("messages").insert(payload).select(), SEND_TIMEOUT));
+      } catch (err) {
+        if (err?.message !== TIMEOUT) throw err;
+        // Antwort kam nicht – vielleicht ist die Nachricht trotzdem angekommen
+        const since = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+        const check = await withTimeout(sb.from("messages").select("*").eq("sender_id", v.me.id).eq("recipient_id", recipient)
+          .eq("body", text).gte("created_at", since).order("created_at", { ascending: false }).limit(1), 8000).catch(() => null);
+        rows = check?.data?.length ? check.data : null;
+        if (!rows) throw new Error("Der Server antwortet gerade nicht. Prüfe deine Verbindung und versuch es noch einmal.");
+      }
       sent = rows?.[0];
       if (!sent?.id) throw new Error("Das hat nicht geklappt. Versuch es erneut.");
       upsertMessage(sent);
