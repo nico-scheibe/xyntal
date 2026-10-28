@@ -10,7 +10,7 @@
   const isHex = (s) => typeof s === "string" && /^#[0-9a-f]{6}$/i.test(s);
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-  // opts: t (Übersetzung), heading ("h1"/"h3"), avatarAttrs (zusätzliche Attribute am Avatar)
+  // opts: t (Übersetzung), heading ("h1"/"h3"), avatarAttrs (zusätzliche Attribute am Avatar), messageUrl (interner Nachrichtenlink)
   function html(c, opts = {}) {
     const t = opts.t || ((de) => (window.XyntalI18n ? window.XyntalI18n.t(de) : de));
     const heading = opts.heading === "h1" ? "h1" : "h3";
@@ -35,6 +35,7 @@
       skills: (c.skills || []).length ? `<ul class="mc-skills" data-no-i18n>${c.skills.map((s) => `<li>${esc(s)}</li>`).join("")}</ul>` : "",
       stats: `<div class="mc-stats"><div><span>${esc(t("Zeit"))}</span><b>${esc(t(`${Number(c.hours) || 0} Std./Woche`))}</b><i class="mc-bar"><i style="width:${Math.min(100, ((Number(c.hours) || 0) / 20) * 100)}%"></i></i></div>${level ? `<div><span>${esc(t("Erfahrung"))}</span><b>${esc(t(level))}</b><i class="mc-dots">${[0, 1, 2].map((k) => `<i class="${k <= lv ? "on" : ""}"></i>`).join("")}</i></div>` : ""}</div>`,
     };
+    const message = typeof opts.messageUrl === "string" && opts.messageUrl ? `<a class="mc-message mc-link-button" href="${esc(opts.messageUrl)}">Nachricht schreiben</a>` : "";
     return `<article class="my-card" data-theme="${theme}" data-surface="${surface}" data-shape="${shape}" data-layout="${layout}" style="--tg:${grad};--t1:${cols[0]}">
           <div class="mc-cover" aria-hidden="true">
             <span class="mc-mark"><svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5l-5.3 5.3M10.3 13.7L5 19"/></svg>xyntal</span>
@@ -46,7 +47,7 @@
             <p class="mc-role">${esc(t(c.role || ""))}${level ? ` · ${esc(t(level))}` : ""}</p>
           </div>
           <div class="mc-blocks">${order.filter((b) => !off.includes(b)).map((b) => blocks[b]).join("")}</div>
-          <div class="mc-foot">${link ? `<a class="mc-link mc-link-button" href="${esc(link)}" target="_blank" rel="noopener noreferrer nofollow" data-no-i18n>${esc(linkText)} ↗</a>` : ""}<span class="mc-site" data-no-i18n>xyntal.de/${esc(c.handle)}</span></div>
+          <div class="mc-foot">${link ? `<a class="mc-link mc-link-button" href="${esc(link)}" target="_blank" rel="noopener noreferrer nofollow" data-no-i18n>${esc(linkText)} ↗</a>` : ""}<span class="mc-site" data-no-i18n>xyntal.de/${esc(c.handle)}</span>${message}</div>
         </article>`;
   }
 

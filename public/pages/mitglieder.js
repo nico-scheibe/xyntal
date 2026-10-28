@@ -21,12 +21,22 @@
       const c = cards.get(m.id);
       if (!c || !window.XyntalCardHtml) return memberCard(m, { message: viewerIsMember && m.id !== me.id });
       const photo = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.jpg$/.test(m.avatar_path || "") ? `data-avatar-path="${esc(m.avatar_path)}"` : "";
-      return `<div class="member-xcard xcard-host"><div class="member-xcard-link">${window.XyntalCardHtml(c, { avatarAttrs: photo })}<a class="member-xcard-cover" href="/${esc(c.handle)}" aria-label="${esc(c.name || m.name)} – Profil ansehen"></a></div>
-        ${viewerIsMember && m.id !== me.id ? `<div class="member-xcard-actions"><a class="btn btn-small btn-ghost" href="nachrichten?an=${esc(m.id)}">Nachricht schreiben</a></div>` : ""}</div>`;
+      const canMessage = viewerIsMember && m.id !== me.id;
+      return `<div class="member-xcard xcard-host"><div class="member-xcard-link" data-profile-url="/${esc(c.handle)}" role="group" tabindex="0" aria-label="${esc(c.name || m.name)} – Profil öffnen">${window.XyntalCardHtml(c, { avatarAttrs: photo, messageUrl: canMessage ? `/nachrichten?an=${encodeURIComponent(m.id)}` : "" })}</div></div>`;
     };
     grid.innerHTML = members.length
       ? members.map(tile).join("")
       : `<p class="empty" style="grid-column: 1 / -1">Die ersten Profile entstehen gerade. <a class="text-link" href="mitglied-werden">Sei eines der ersten Mitglieder.</a></p>`;
+    grid.addEventListener("click", (e) => {
+      if (e.target.closest("a,button")) return;
+      const card = e.target.closest("[data-profile-url]");
+      if (card) location.href = card.dataset.profileUrl;
+    });
+    grid.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" || e.target.closest("a,button")) return;
+      const card = e.target.closest("[data-profile-url]");
+      if (card) location.href = card.dataset.profileUrl;
+    });
   } catch (err) {
     grid.innerHTML = `<p class="empty">${esc(friendlyError(err))}</p>`;
   }
