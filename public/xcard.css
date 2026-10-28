@@ -111,3 +111,12 @@
 .member-xcard-link { position: relative; }
 .member-xcard-cover { position: absolute; inset: 0; z-index: 1; border-radius: 26px; }
 .member-xcard-link .mc-link-button { position: relative; z-index: 2; }
+
+/* Mitglieder: alle Karten gleich groß – gleiche Breite und Höhe, Fußzeile immer unten */
+.member-xcard { align-self: stretch; grid-template-rows: 1fr auto; justify-items: stretch; }
+.member-xcard-link { justify-self: center; height: 100%; }
+.member-xcard .my-card {
+  width: 100%; max-width: 380px; height: 100%; min-height: 620px;
+  grid-template-rows: auto auto auto 1fr auto; align-content: stretch;
+}
+.member-xcard .mc-blocks { align-content: start; }
