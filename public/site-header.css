@@ -107,3 +107,8 @@
 .cmdk-empty { padding: 28px; text-align: center; color: #6E6E78; font-size: 14px; }
 
 @media (prefers-reduced-motion: reduce) { .nav .nav-links a { transition: none; } }
+
+/* Profilbilder bleiben immer exakt in ihrer Form (Kreis), egal wie groß das Bild ist */
+.avatar, .acct-face { overflow: hidden; }
+.avatar > img, .acct-face > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
+.avatar:has(> img) { position: relative; }

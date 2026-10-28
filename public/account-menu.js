@@ -109,7 +109,8 @@
   .acct-btn:focus-visible{outline:2px solid #3FD8FF;outline-offset:3px}
   .acct-btn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
   .acct-face{position:absolute;inset:2px;border-radius:999px;display:grid;place-items:center;overflow:hidden;font:700 13px/1 inherit;letter-spacing:.02em;color:#fff;background:linear-gradient(135deg,#B95CFF,#FF5FD2 50%,#3FD8FF)}
-  .acct-face img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .acct-btn .acct-face{position:absolute;inset:2px;width:auto;height:auto;min-width:0;padding:0;border:0;box-shadow:none}
+  .acct-face img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit}
   .acct-btn[aria-expanded="true"]{border-color:#3FD8FF}
   .acct-dot{position:absolute;top:-1px;right:-1px;width:11px;height:11px;border-radius:999px;background:#34D399;border:2px solid var(--bg,#07070B)}
   .acct-menu{position:absolute;top:calc(100% + 10px);right:0;z-index:200;width:min(260px,calc(100vw - 24px));padding:6px;border-radius:16px;background:rgba(18,18,25,.96);border:1px solid rgba(255,255,255,.12);box-shadow:0 18px 50px rgba(0,0,0,.55);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);color:#F5F5F7;transform-origin:top right;animation:acct-in .16s cubic-bezier(.22,.8,.2,1)}
