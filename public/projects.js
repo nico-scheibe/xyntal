@@ -395,7 +395,7 @@
         document.title = "Projekt nicht gefunden – Xyntal";
         els.list.innerHTML = `<div class="empty-block project-not-found"><strong>Projekt nicht gefunden</strong><p>Dieses Projekt existiert nicht oder ist für dich nicht sichtbar.</p><p><a class="text-link" href="/projekte">← Zurück zur Übersicht</a></p></div>`;
       } else {
-        document.title = `${list[0].title} – Xyntal`;
+        document.title = `${location.host}${detailHref(list[0].id)} – ${list[0].title}`;
         const head = document.querySelector(".page-head .wrap");
         if (head) {
           head.querySelector(".eyebrow").innerHTML = `<b>xyntal</b> / <a href="/projekte">projekte</a> / detail`;
