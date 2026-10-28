@@ -463,3 +463,10 @@ body.pd-mobile-apply-on { padding-bottom: calc(76px + env(safe-area-inset-bottom
 .project-detail .app-btn:disabled { opacity: .6; cursor: progress; }
 .project-detail .role-applied.is-accepted { color: #6EE7B7; }
 @media (prefers-reduced-motion: reduce) { .project-detail .app-btn, .project-detail .role-people summary::before { transition: none; } }
+
+/* Personal project address beside the project details. */
+.pd-personal-link { display: grid; gap: 12px; padding: 20px; border: 1px solid var(--border); border-radius: 16px; background: var(--panel); min-width: 0; }
+.pd-personal-link h2 { margin: 0; font-size: 14px; font-weight: 600; color: var(--text); }
+.pd-personal-link-url { color: var(--accent); font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+.pd-personal-link .btn { justify-self: start; }
+.pd-personal-link .hint { margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-2); }

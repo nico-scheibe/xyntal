@@ -23,7 +23,7 @@ class Handler(SimpleHTTPRequestHandler):
 
     def redirect_project_slash(self):
         parsed = urlparse(self.path)
-        if re.fullmatch(r"/[a-z0-9][a-z0-9_-]{0,60}\.xy/", parsed.path):
+        if re.fullmatch(r"/[a-z0-9][a-z0-9_-]{0,19}-[a-z0-9][a-z0-9_-]{0,118}/", parsed.path):
             self.send_response(308)
             self.send_header("Location", parsed.path[:-1] + ("?" + parsed.query if parsed.query else ""))
             self.end_headers()
@@ -40,13 +40,12 @@ class Handler(SimpleHTTPRequestHandler):
 
     def translate_path(self, path):
         parsed = urlparse(path).path
-        if re.fullmatch(r"/[a-z0-9][a-z0-9_-]{0,60}\.xy/?", parsed):
-            return os.path.join(PUBLIC, "projekte.html")
         if parsed != "/" and "." not in os.path.basename(parsed):
             candidate = super().translate_path(parsed.rstrip("/") + ".html")
             if os.path.isfile(candidate):
                 return candidate
-            # xyntal.de/name → öffentliche Karte (wie hosting/daki/server.cjs)
+            if re.fullmatch(r"/[a-z0-9][a-z0-9_-]{0,19}-[a-z0-9][a-z0-9_-]{0,118}/?", parsed):
+                return os.path.join(PUBLIC, "projekte.html")
             if re.fullmatch(r"/[a-zA-Z0-9][a-zA-Z0-9_-]{2,19}/?", parsed) and not os.environ.get("XYNTAL_NO_HANDLE_ROUTE"):
                 return os.path.join(PUBLIC, "u.html")
         return super().translate_path(path)

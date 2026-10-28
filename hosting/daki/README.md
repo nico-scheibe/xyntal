@@ -48,11 +48,14 @@ Danach Daki einmal neu starten, damit der neue Server-Code geladen wird.
 
 ## Projekt-Kurzlinks
 
-Projekte verwenden feste Adressen wie `/nico-projekt.xy`; weitere Projekte derselben
-Person erhalten einen Zusatz mit ihrer Projekt-ID. Ohne persönlichen Handle lautet
-der Link `/projekt-ID.xy`. Titeländerungen verändern die Adresse nicht.
+Projekte verwenden feste Adressen wie `/nico-xyntal` aus persönlichem Handle und Projektnamen.
+Umlaute werden ausgeschrieben, Leerzeichen werden Bindestriche. Bei gleichen Namen
+kommt die Projekt-ID hinzu. Ohne Handle wird `projekt` als Präfix verwendet.
+Titeländerungen verändern bestehende Adressen nicht. Persönliche Profiladressen
+haben Vorrang; belegte Adressen werden bei der Projektlinkvergabe übersprungen.
 
 Vor Freischaltung `supabase/migrations/20261028200000_project_share_links.sql`
+und danach `supabase/migrations/20261028210000_project_handle_title_links.sql`
 im Supabase SQL Editor ausführen. Anschließend Website-Dateien veröffentlichen
 und Daki neu starten, damit die neue Serverroute geladen wird. Bestehende Links
 mit `/projekte?projekt=ID` funktionieren weiter und zeigen die Kurzadresse an.

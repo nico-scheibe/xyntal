@@ -4,14 +4,14 @@
   const PHASE_LABEL = { idee: "Idee", prototyp: "Prototyp", erste_kunden: "Erste Kunden", wachstum: "Wachstum" };
   const MAX_ROLES = 8;
   const detailId = new URLSearchParams(location.search).get("projekt");
-  const detailSlug = /^\/[a-z0-9][a-z0-9_-]{0,60}\.xy\/?$/.test(location.pathname)
+  const detailSlug = /^\/[a-z0-9][a-z0-9_-]{0,19}-[a-z0-9][a-z0-9_-]{0,118}\/?$/.test(location.pathname)
     ? location.pathname.replace(/^\/|\/$/g, "") : "";
   const isDetail = !!detailSlug || /^\d+$/.test(detailId || "");
   let hasShareSlugs = true;
   const DEMO_KEY = "xyntal-wunschrollen";
   const detailHref = (id) => {
     const slug = projects.find(p => String(p.id) === String(id))?.share_slug;
-    return /^[a-z0-9][a-z0-9_-]{0,60}\.xy$/.test(slug || "") ? '/' + slug : '/projekte?projekt=' + id;
+    return /^[a-z0-9][a-z0-9_-]{0,19}-[a-z0-9][a-z0-9_-]{0,118}$/.test(slug || "") ? '/' + slug : '/projekte?projekt=' + id;
   };
 
   function projectStatus(p) {
@@ -334,6 +334,12 @@
         <div class="project-detail-layout">
           <div class="project-detail-main">${detailMainHtml(p, owner, mine, extra, roles)}</div>
           <aside class="project-detail-aside" id="pd-roles" aria-label="Offene Rollen">
+            <section class="pd-personal-link" aria-labelledby="project-link-${p.id}">
+              <h2 id="project-link-${p.id}">Persönlicher Projektlink</h2>
+              <a class="pd-personal-link-url" href="${esc(detailHref(p.id))}" data-no-i18n>${esc(location.host + detailHref(p.id))}</a>
+              <button class="btn btn-small btn-ghost" type="button" data-act="share">Link kopieren</button>
+              ${mine && !p.share_slug ? '<p class="hint">Die Kurzadresse ist noch nicht eingerichtet. Diesen Link kannst du bereits teilen.</p>' : ''}
+            </section>
             ${appsSummaryHtml(p, mine)}
             <div class="project-roles">
               <h2>Offene Rollen</h2>
@@ -930,6 +936,11 @@
   }));
 
   (async () => {
+    // Hyphenated profile handles retain their existing personal address.
+    if (detailSlug && detailSlug.length <= 20) {
+      const card = await sb.rpc('get_public_card', { p_handle: detailSlug });
+      if (!card.error && card.data) { location.replace('/u?name=' + encodeURIComponent(detailSlug)); return; }
+    }
     v = await viewer();
     if (isDetail) {
       document.querySelector('.board-bar').hidden = true;

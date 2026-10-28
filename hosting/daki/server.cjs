@@ -84,7 +84,7 @@ http.createServer((req,res) => {
   let pathname;
   try { pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname); }
   catch { res.writeHead(400); return res.end(); }
-  if (/^\/[a-z0-9][a-z0-9_-]{0,60}\.xy\/$/.test(pathname)) {
+  if (/^\/[a-z0-9][a-z0-9_-]{0,19}-[a-z0-9][a-z0-9_-]{0,118}\/$/.test(pathname)) {
     res.writeHead(308, { Location: pathname.slice(0, -1) + new URL(req.url, 'http://localhost').search });
     return res.end();
   }
@@ -106,7 +106,7 @@ http.createServer((req,res) => {
   if (file === currentRoot || pathname.endsWith('/')) file = path.join(file, 'index.html');
   if (!path.extname(file) && fs.existsSync(file + '.html')) file += '.html';
   // Project short links use the project page and its existing access checks.
-  if (/^\/[a-z0-9][a-z0-9_-]{0,60}\.xy\/?$/.test(pathname)) file = path.join(currentRoot, 'projekte.html');
+  if ((!fs.existsSync(file) || !fs.statSync(file).isFile()) && /^\/[a-z0-9][a-z0-9_-]{0,19}-[a-z0-9][a-z0-9_-]{0,118}\/?$/.test(pathname)) file = path.join(currentRoot, 'projekte.html');
   // xyntal.de/name: Wunsch-Link zeigt die öffentliche Karte (die Seite fragt Supabase selbst)
   if ((!fs.existsSync(file) || !fs.statSync(file).isFile()) && /^\/[a-z0-9][a-z0-9_-]{2,19}\/?$/i.test(pathname) && fs.existsSync(path.join(currentRoot, 'u.html'))) file = path.join(currentRoot, 'u.html');
   if (!fs.existsSync(file) || !fs.statSync(file).isFile()) {
