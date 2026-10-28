@@ -539,3 +539,14 @@ body.messages-page .inbox .composer-row .btn {
 @media (prefers-reduced-motion: reduce) {
   body.messages-page .inbox .composer-row, body.messages-page .inbox .composer-row .msg-icon { transition: none; }
 }
+
+/* ---------- Chat-Hintergrund: kleine Doodle-Icons (wie in Messenger-Apps) ---------- */
+body.messages-page .inbox .thread-messages {
+  background-image: radial-gradient(120% 80% at 50% 0%, rgba(168, 85, 247, 0.08), transparent 60%), url("/chat-pattern.svg");
+  background-size: auto, 280px 280px;
+  background-repeat: no-repeat, repeat;
+  background-attachment: local, local;
+}
+@media (max-width: 600px) {
+  body.messages-page .inbox .thread-messages { background-size: auto, 220px 220px; }
+}
