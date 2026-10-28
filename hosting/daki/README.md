@@ -45,3 +45,17 @@ Einrichtung in Daki (Ordner `/home/container/xyntal`, beide Dateien nie committe
 - `.brevo-list`: die ID der Warteliste (Brevo → Kontakte → Listen, Spalte „ID“)
 
 Danach Daki einmal neu starten, damit der neue Server-Code geladen wird.
+
+## Projekt-Kurzlinks
+
+Projekte verwenden feste Adressen wie `/nico-projekt.xy`; weitere Projekte derselben
+Person erhalten einen Zusatz mit ihrer Projekt-ID. Ohne persönlichen Handle lautet
+der Link `/projekt-ID.xy`. Titeländerungen verändern die Adresse nicht.
+
+Vor Freischaltung `supabase/migrations/20261028200000_project_share_links.sql`
+im Supabase SQL Editor ausführen. Anschließend Website-Dateien veröffentlichen
+und Daki neu starten, damit die neue Serverroute geladen wird. Bestehende Links
+mit `/projekte?projekt=ID` funktionieren weiter und zeigen die Kurzadresse an.
+Die Zugriffsrechte der Projekte bleiben durch die bestehenden Datenbankregeln wirksam.
+
+Prüfung: `node tests/project-links.cjs`.

@@ -4,9 +4,15 @@
   const PHASE_LABEL = { idee: "Idee", prototyp: "Prototyp", erste_kunden: "Erste Kunden", wachstum: "Wachstum" };
   const MAX_ROLES = 8;
   const detailId = new URLSearchParams(location.search).get("projekt");
-  const isDetail = /^\d+$/.test(detailId || "");
+  const detailSlug = /^\/[a-z0-9][a-z0-9_-]{0,60}\.xy\/?$/.test(location.pathname)
+    ? location.pathname.replace(/^\/|\/$/g, "") : "";
+  const isDetail = !!detailSlug || /^\d+$/.test(detailId || "");
+  let hasShareSlugs = true;
   const DEMO_KEY = "xyntal-wunschrollen";
-  const detailHref = (id) => `/projekte?projekt=${id}`;
+  const detailHref = (id) => {
+    const slug = projects.find(p => String(p.id) === String(id))?.share_slug;
+    return /^[a-z0-9][a-z0-9_-]{0,60}\.xy$/.test(slug || "") ? '/' + slug : '/projekte?projekt=' + id;
+  };
 
   function projectStatus(p) {
     if (p.closed) return { key: "done", label: "Abgeschlossen" };
@@ -418,15 +424,30 @@
 
   async function load() {
     try {
-      const cols = (img) => `id, title, pitch, body, phase, place, is_public, closed, created_at, owner_id${img ? ", image_path" : ""}, owner:profiles!projects_owner_id_fkey(id, name, headline, avatar_path), roles:project_roles(id, name, need, hours, filled)`;
+      const cols = (img) => `id, title, pitch, body, phase, place, is_public, closed, created_at, owner_id${hasShareSlugs ? ", share_slug" : ""}${img ? ", image_path" : ""}, owner:profiles!projects_owner_id_fkey(id, name, headline, avatar_path), roles:project_roles(id, name, need, hours, filled)`;
       const run = (img) => {
         let query = sb.from("projects").select(cols(img));
-        if (isDetail) query = query.eq("id", detailId);
+        if (detailSlug) query = query.eq("share_slug", detailSlug);
+        else if (isDetail) query = query.eq("id", detailId);
         return query.order("closed").order("created_at", { ascending: false }).limit(100);
       };
-      let res = await run(hasImages);
-      if (res.error && hasImages && isMissingImageColumn(res.error)) { hasImages = false; res = await run(false); }
+      let res;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        res = await run(hasImages);
+        if (!res.error) break;
+        if (hasShareSlugs && /share_slug/.test(res.error.message || "")) {
+          if (detailSlug) throw new Error('Dieser Projektlink ist noch nicht eingerichtet.');
+          hasShareSlugs = false;
+        } else if (hasImages && isMissingImageColumn(res.error)) hasImages = false;
+        else break;
+      }
       projects = unwrap(res);
+      if (isDetail && projects[0]?.share_slug) {
+        const canonical = detailHref(projects[0].id);
+        const params = new URLSearchParams(location.search); params.delete('projekt');
+        const search = params.toString();
+        history.replaceState(null, '', canonical + (search ? '?' + search : '') + location.hash);
+      }
       const field = document.getElementById("project-image-field");
       if (field) field.hidden = !hasImages;
       const interestCols = (st) => `role_id, member_id, note, created_at${st ? ", status" : ""}, member:profiles!project_interest_member_id_fkey(id, name, headline, avatar_path)`;
@@ -830,7 +851,7 @@
         return;
       }
       if (btn.dataset.act === "share") {
-        const url = location.href.split("#")[0];
+        const url = new URL(detailHref(p.id), location.origin).href;
         try {
           await navigator.clipboard.writeText(url);
           const prev = btn.textContent;

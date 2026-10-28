@@ -21,8 +21,27 @@ class Handler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=PUBLIC, **kwargs)
 
+    def redirect_project_slash(self):
+        parsed = urlparse(self.path)
+        if re.fullmatch(r"/[a-z0-9][a-z0-9_-]{0,60}\.xy/", parsed.path):
+            self.send_response(308)
+            self.send_header("Location", parsed.path[:-1] + ("?" + parsed.query if parsed.query else ""))
+            self.end_headers()
+            return True
+        return False
+
+    def do_GET(self):
+        if not self.redirect_project_slash():
+            super().do_GET()
+
+    def do_HEAD(self):
+        if not self.redirect_project_slash():
+            super().do_HEAD()
+
     def translate_path(self, path):
         parsed = urlparse(path).path
+        if re.fullmatch(r"/[a-z0-9][a-z0-9_-]{0,60}\.xy/?", parsed):
+            return os.path.join(PUBLIC, "projekte.html")
         if parsed != "/" and "." not in os.path.basename(parsed):
             candidate = super().translate_path(parsed.rstrip("/") + ".html")
             if os.path.isfile(candidate):

@@ -84,7 +84,8 @@
         const id = String(x.id);
         if (!/^\d+$/.test(id)) return "";
         const isProject = kind === "project";
-        const url = isProject ? `/projekte?projekt=${id}` : `/boerse#anzeige-${id}`;
+        const projectUrl = /^[a-z0-9][a-z0-9_-]{0,60}\.xy$/.test(x.share_slug || '') ? '/' + x.share_slug : '/projekte?projekt=' + id;
+        const url = isProject ? projectUrl : '/boerse#anzeige-' + id;
         return `<a class="public-item glass" href="${url}"><span class="public-item-meta">${esc(t(isProject ? "Projekt" : (x.type === "biete" ? "Angebot" : "Gesuch")))}${x.closed ? ` · ${esc(t("Geschlossen"))}` : ""}</span><h3 data-no-i18n>${esc(x.title)}</h3><p data-no-i18n>${esc(isProject ? x.pitch : x.excerpt)}</p><span class="public-item-link">${esc(t(isProject ? "Projekt ansehen" : "Anzeige ansehen"))} ↗</span></a>`;
       };
       const section = (title, items, kind, empty) => `<section class="public-section" id="${kind === "project" ? "profil-projekte" : "profil-anzeigen"}"><div class="public-section-heading"><h2>${esc(t(title))}</h2><span class="public-count">${items.length}</span></div><div class="public-items">${items.length ? items.map(x => item(x, kind)).join("") : `<p class="public-empty">${esc(t(empty))}</p>`}</div></section>`;
