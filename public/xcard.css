@@ -101,3 +101,10 @@
 .xcard-host .mc-skills { list-style: none; padding-left: 0; margin-left: 0; }
 .xcard-host .mc-skills li { list-style: none; }
 .xcard-host .mc-skills li::before, .xcard-host .mc-skills li::after { content: none !important; display: none !important; }
+
+/* Mitglieder: Karte gerade, ganze Karte klickbar */
+.member-xcard .my-card { transform: none; animation: none; }
+.member-xcard-link { display: block; width: 100%; max-width: 380px; color: inherit; text-decoration: none; border-radius: 26px; transition: transform .2s ease; }
+.member-xcard-link:hover { transform: translateY(-3px); }
+.member-xcard-link:focus-visible { outline: 2px solid #D08BFF; outline-offset: 4px; }
+@media (prefers-reduced-motion: reduce) { .member-xcard-link { transition: none; } .member-xcard-link:hover { transform: none; } }
