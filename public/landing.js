@@ -437,6 +437,7 @@
     if (power) { power.style.setProperty("--p", cover); $("b", power).textContent = `${cover}%`; }
     [...els.teamMeter.children].forEach((seg, i) => seg.classList.toggle("on", i < n));
     els.open.disabled = n < 2;
+    $("[data-ws-preview]", demo).hidden = n >= 2;
     els.wsHint.textContent = n < 2
       ? (n === 0 ? "Hol mindestens zwei Menschen ins Team." : "Noch eine Person, dann kann es losgehen.")
       : n < ROLES.length ? "Offene Rollen kannst du auch später besetzen." : "Alle Rollen sind besetzt.";
@@ -527,6 +528,7 @@
     (rest[Math.min(idx, rest.length - 1)] || els.open).focus();
   });
   els.open.addEventListener("click", () => showView("workspace"));
+  $("[data-ws-preview]", demo).addEventListener("click", () => showView("workspace"));
   $("[data-back]", els.workspace).addEventListener("click", () => showView("select"));
   els.workspace.addEventListener("change", (e) => {
     const box = e.target.closest("[data-task]");
@@ -678,7 +680,7 @@
   })();
 
   /* ---------------------------------------------------------------
-     Zähler der Warteliste: echte Zahl vom Server (Brevo), auch bei einem einzelnen Eintrag sichtbar
+     Zähler der Warteliste: echte Zahl vom Server (Brevo), sichtbar ab 10 Einträgen
      --------------------------------------------------------------- */
   (() => {
     const box = $("[data-waitlist-count]");
@@ -698,7 +700,7 @@
         const num = $("[data-waitlist-number]", box);
         const value = count.toLocaleString("de-DE");
         if (num.textContent !== value) num.textContent = value;
-        box.hidden = false;
+        box.hidden = count < 10; // erst ab einer sichtbaren Gruppe zeigen, sonst wirkt die Seite leer
       } catch { /* Bei Ausfällen bleibt die letzte bestätigte Zahl stehen. */ }
       finally { pending = false; }
     }
