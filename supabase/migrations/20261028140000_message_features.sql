@@ -463,29 +463,12 @@ create policy "Xyntal Nachrichtenanhänge entfernen" on storage.objects
   );
 
 -- =====================================================================
--- 8) Storage-Aufräumen bei Anhang-Löschung (inkl. Soft-Delete-Cascade)
+-- 8) Storage-Aufräumen: kein Trigger mehr – direktes Löschen in storage.objects verbietet Supabase.
+--    Dateien entfernt der Browser über die Storage-API (siehe 20261028170000_fix_attachment_storage_cleanup).
 -- =====================================================================
 
-create or replace function public.cleanup_message_attachment_storage()
-returns trigger
-language plpgsql
-security definer
-set search_path = ''
-as $$
-begin
-  delete from storage.objects
-   where bucket_id = 'message-attachments'
-     and name = old.path;
-  return old;
-end;
-$$;
-revoke execute on function public.cleanup_message_attachment_storage()
-  from public, anon, authenticated;
-
 drop trigger if exists message_attachments_cleanup_storage on public.message_attachments;
-create trigger message_attachments_cleanup_storage
-  after delete on public.message_attachments
-  for each row execute function public.cleanup_message_attachment_storage();
+drop function if exists public.cleanup_message_attachment_storage();
 
 -- =====================================================================
 -- 9) 2FA-Schutz (restriktiv) für neue und bestehende RLS-Tabellen

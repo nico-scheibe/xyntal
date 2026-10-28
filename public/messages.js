@@ -882,6 +882,9 @@
       if (!sent?.id) throw new Error("Das hat nicht geklappt. Versuch es erneut.");
       upsertMessage(sent);
       draft = "";
+      // renderThread übernimmt sonst den alten Text aus dem Eingabefeld wieder als Entwurf
+      const sentTa = document.querySelector("#thread-form textarea");
+      if (sentTa) sentTa.value = "";
       replyTo = null;
       clearPendingUrls();
       pending = [];
@@ -948,7 +951,10 @@
   }
   async function deleteMessage(id) {
     const now = new Date().toISOString();
+    const paths = (attachments.get(sid(id)) || []).map((a) => a.path).filter(Boolean);
     const rows = unwrap(await sb.from("messages").update({ deleted_at: now }).eq("id", asId(id)).select());
+    // Dateien über die Storage-API entfernen (direktes Löschen in storage.objects erlaubt Supabase nicht)
+    if (paths.length) { try { await sb.storage.from(BUCKET).remove(paths); } catch { /* Datei bleibt sonst liegen */ } }
     if (rows?.[0]) upsertMessage(rows[0]);
     else {
       const m = findMessage(id);
