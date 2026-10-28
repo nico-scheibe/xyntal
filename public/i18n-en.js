@@ -1,6 +1,14 @@
 // Xyntal – englische Texte. Schlüssel = deutscher Originaltext (Leerzeichen zusammengefasst).
 // Neue deutsche Texte auf der Website hier ergänzen, sonst bleiben sie auf Englisch deutsch.
 window.XYNTAL_EN = {
+  "Beitrag bearbeiten": "Edit post",
+  "Bis 30 Minuten nach dem Absenden": "Up to 30 minutes after posting",
+  "Bis 30 Minuten nach dem Absenden bearbeitbar.": "Editable for 30 minutes after posting.",
+  "Die 30 Minuten zum Bearbeiten dieses Beitrags sind abgelaufen.": "The 30-minute editing window for this post has expired.",
+  "Die Bearbeitungsfunktion ist noch nicht eingerichtet. Bitte versuche es später erneut.": "Post editing is not available yet. Please try again later.",
+  "Dieser Beitrag kann nicht bearbeitet werden.": "This post cannot be edited.",
+  "Der Beitrag wurde inzwischen geändert. Lade die Seite neu, bevor du ihn erneut bearbeitest.": "This post has changed. Reload the page before editing it again.",
+  "Dein Beitrag muss 1 bis 3000 Zeichen enthalten.": "Your post must contain between 1 and 3000 characters.",
   "Jetzt bewerben": "Apply now",
   "Bewerben": "Apply",
   "Beworben": "Applied",
