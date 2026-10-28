@@ -91,6 +91,7 @@ async function handleBetaFeedback(req, res) {
   }
   if (!/^application\/json(?:\s*;|$)/i.test(req.headers['content-type'] || '')) return feedbackJson(res, 415, { error: 'Ungültiges Datenformat.' });
   if (Number(req.headers['content-length']) > 16384) { req.resume(); return feedbackJson(res, 413, { error: 'Deine Nachricht ist zu lang.' }); }
+  let saved = false;
   try {
     const raw = await new Promise((resolve, reject) => {
       const chunks = []; let size = 0, tooLarge = false;
@@ -116,10 +117,10 @@ async function handleBetaFeedback(req, res) {
     }
     if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(data.requestId || '')) return feedbackJson(res, 400, { error: 'Bitte lade das Formular neu und versuche es erneut.' });
     // Meldungen zusätzlich für die Admin-Übersicht speichern; die Mail geht auch raus, wenn das scheitert.
-    if (report) await supabaseRpc('submit_report', { p_name: name, p_email: email, p_location: where, p_message: message }).catch(() => {});
+    if (report) saved = await supabaseRpc('submit_report', { p_name: name, p_email: email, p_location: where, p_message: message }).then(() => true, (error) => { console.error('[report] Speichern fehlgeschlagen:', error.message); return false; });
     const key = readSecret('.brevo-key', 'BREVO_API_KEY');
     const sender = readSecret('.brevo-sender', 'BREVO_SENDER_EMAIL') || 'admin@xyntal.com';
-    if (!key) return feedbackJson(res, 503, { error: 'Der Feedbackversand ist gerade nicht verfügbar. Bitte versuche es später erneut.' });
+    if (!key) return saved ? feedbackJson(res, 200, { ok: true }) : feedbackJson(res, 503, { error: 'Der Feedbackversand ist gerade nicht verfügbar. Bitte versuche es später erneut.' });
     const now = Date.now();
     for (const [id, item] of feedbackLimits) if (item.until <= now) feedbackLimits.delete(id);
     const remote = req.socket.remoteAddress || 'unknown';
@@ -143,10 +144,12 @@ async function handleBetaFeedback(req, res) {
         headers: { IdempotencyKey: (report ? 'report-' : 'beta-feedback-') + data.requestId },
       }), signal: AbortSignal.timeout(15000),
     });
-    if (!response.ok) return feedbackJson(res, 502, { error: 'Das Feedback konnte nicht gesendet werden. Bitte versuche es erneut.' });
+    if (!response.ok) console.error('[beta-feedback] Brevo', response.status, (await response.text().catch(() => '')).slice(0, 300));
+    if (!response.ok && !saved) return feedbackJson(res, 502, { error: 'Das Feedback konnte nicht gesendet werden. Bitte versuche es erneut.' });
     return feedbackJson(res, 200, { ok: true });
-  } catch {
-    if (!res.destroyed && !res.headersSent) feedbackJson(res, 502, { error: 'Das Feedback konnte nicht gesendet werden. Bitte versuche es erneut.' });
+  } catch (error) {
+    console.error('[beta-feedback]', error.name, error.message);
+    if (!res.destroyed && !res.headersSent) feedbackJson(res, saved ? 200 : 502, saved ? { ok: true } : { error: 'Das Feedback konnte nicht gesendet werden. Bitte versuche es erneut.' });
   }
 }
 

@@ -1,7 +1,8 @@
 const fs=require('fs'),vm=require('vm'),http=require('http'),assert=require('assert/strict'),{randomUUID}=require('crypto');
 const source=fs.readFileSync(require('path').join(__dirname,'../hosting/daki/server.cjs'),'utf8');
 let key='test-key',providerOk=true;const sent=[];
-const ctx={Buffer,Date,AbortSignal,readSecret:(file)=>file==='.brevo-key'?key:'',fetch:async(url,opts)=>{sent.push({url,opts,data:JSON.parse(opts.body)});return {ok:providerOk}}};
+const rpcs=[];let rpcOk=true;
+const ctx={Buffer,Date,AbortSignal,console,readSecret:(file)=>({'.brevo-key':key,'.supabase-url':'https://db.example','.supabase-anon-key':'anon'})[file]||'',fetch:async(url,opts)=>{if(url.includes('/rest/v1/rpc/')){rpcs.push({url,data:JSON.parse(opts.body)});return {ok:rpcOk,json:async()=>1}}sent.push({url,opts,data:JSON.parse(opts.body)});return {ok:providerOk,text:async()=>'{"code":"unauthorized"}'}}};
 vm.runInNewContext(source.slice(source.indexOf('// Beta feedback:'),source.indexOf('const types ='))+'\nglobalThis.handle=handleBetaFeedback;',ctx);
 (async()=>{const server=http.createServer(ctx.handle);server.listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));try{
  const url='http://127.0.0.1:'+server.address().port;
@@ -18,7 +19,9 @@ vm.runInNewContext(source.slice(source.indexOf('// Beta feedback:'),source.index
  key='';assert.equal((await post(data())).status,503);key='test-key';
  const valid=data();const res=await post({...valid,to:'attacker@example.com'});assert.equal(res.status,200);assert.equal((await res.json()).ok,true);
  assert.equal(sent[0].data.to[0].email,'admin@xyntal.com');assert.equal(sent[0].data.replyTo.email,valid.email);assert.match(sent[0].data.textContent,/Grüße/);assert.equal(sent[0].opts.headers['api-key'],'test-key');assert.equal(sent[0].data.headers.IdempotencyKey,'beta-feedback-'+valid.requestId);
- providerOk=false;assert.equal((await post(data())).status,502);providerOk=true;
+ providerOk=false;assert.equal((await post(data())).status,502);
+ const rep={...data(),kind:'report',where:'xyntal.de/test'};assert.equal((await post(rep)).status,200);assert.equal(rpcs.at(-1).data.p_location,'xyntal.de/test');assert.match(rpcs.at(-1).url,/submit_report$/);
+ rpcOk=false;assert.equal((await post({...data(),kind:'report'})).status,502);rpcOk=true;providerOk=true;
  const repeat=data();for(let i=0;i<3;i++)assert.equal((await post({...repeat,requestId:randomUUID()})).status,200);assert.equal((await post({...repeat,requestId:randomUUID()})).status,429);
- console.log('PASS: mail recipient, reply-to, UTF-8, server-only key, validation, origin, size limit, honeypot, rate limit and provider failure');
+ console.log('PASS: mail recipient, reply-to, UTF-8, server-only key, validation, origin, size limit, honeypot, rate limit and provider failure, stored report survives mail failure');
  }finally{await new Promise(r=>server.close(r))}})().catch(e=>{console.error(e);process.exitCode=1});

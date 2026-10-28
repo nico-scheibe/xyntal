@@ -70,6 +70,7 @@
         <label>Grad<select name="grade" required><option value="A">A – leicht (1 Punkt)</option><option value="B">B – mittel (3 Punkte)</option><option value="C">C – schwer (Sperre)</option></select></label>
         <label>Regel<select name="rule">${RULES.map((r, i) => `<option value="${i + 1}">${i + 1}. ${r}</option>`).join("")}</select></label>
         <label class="mod-wide">Begründung (geht an das Mitglied)<input name="reason" required minlength="3" maxlength="1000" placeholder="Was ist passiert und gegen welche Regel verstößt es?"></label>
+        <label class="mod-check"><input type="checkbox" name="hint"> Nur Hinweis (Stufe 0, Grad A): Vermerk ohne Punkte</label>
         <label class="mod-check"><input type="checkbox" name="mild"> Grad C ohne Vorsatz: 30 Tage statt dauerhaft</label>
         <div class="row-actions mod-wide"><button type="submit">Verwarnung speichern</button><span class="hint" data-strike-status role="status"></span></div>
       </form>
@@ -81,7 +82,7 @@
           <td>${esc(memberName(id))}</td>
           <td><b>${points(id)}</b></td>
           <td>${s ? `<span class="status-pill status-rejected">${LEVEL[s.level]}</span><br><small>bis ${when(s.ends_at)}</small><br><button data-act="lift" data-id="${s.id}">Sperre aufheben</button>` : `<span class="status-pill status-approved">${LEVEL.none}</span>`}</td>
-          <td>${state.strikes.filter((k) => k.member_id === id).map((k) => `<div class="mod-strike"><small>${when(k.created_at)} · Grad ${k.grade} · ${k.points} P. · Regel ${k.rule || "–"}${new Date(k.expires_at) <= new Date() ? " · verfallen" : ""}</small><br>${esc(k.reason)} <button data-act="unstrike" data-id="${k.id}">Löschen (Einspruch)</button></div>`).join("")}</td>
+          <td>${state.strikes.filter((k) => k.member_id === id).map((k) => `<div class="mod-strike"><small>${when(k.created_at)} · Grad ${k.grade} · ${k.grade === "A" && !k.points ? "Hinweis" : `${k.points} P.`} · Regel ${k.rule || "–"}${new Date(k.expires_at) <= new Date() ? " · verfallen" : ""}</small><br>${esc(k.reason)} <button data-act="unstrike" data-id="${k.id}">Löschen (Einspruch)</button></div>`).join("")}</td>
         </tr>`; }).join("")}</tbody></table></div>` : '<p class="empty">Noch keine Verwarnungen.</p>'}`;
   }
 
@@ -142,12 +143,13 @@
     e.preventDefault();
     const f = e.target, status = f.querySelector("[data-strike-status]");
     const name = f.member.selectedOptions[0]?.textContent || "";
+    if (f.hint.checked && f.grade.value !== "A") { status.textContent = "Ein Hinweis ohne Punkte ist nur bei Grad A möglich."; return; }
     if (f.grade.value === "C" && !f.mild.checked && !confirm(`${name} wird dauerhaft gesperrt. Fortfahren?`)) return;
     f.querySelector("[type=submit]").disabled = true;
     try {
       const res = await sb.rpc("admin_add_strike", {
         p_member: f.member.value, p_grade: f.grade.value, p_rule: Number(f.rule.value), p_reason: f.reason.value.trim(),
-        p_report: f.report.value ? Number(f.report.value) : null, p_mild: f.mild.checked,
+        p_report: f.report.value ? Number(f.report.value) : null, p_mild: f.mild.checked, p_hint: f.hint.checked,
       }).then(unwrap);
       await loadModeration();
       panel.querySelector("[data-strike-status]").textContent = `Gespeichert: ${res.points} Punkte, ${LEVEL[res.level]}${res.ends_at ? ` bis ${when(res.ends_at)}` : ""}. Denk daran, das Mitglied mit Begründung und Einspruchsweg zu informieren.`;

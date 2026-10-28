@@ -109,6 +109,16 @@ returns boolean language sql stable security definer set search_path = '' as $$
      and public.moderation_level(auth.uid()) not in ('suspended', 'banned');
 $$;
 
+-- Auch Projekte, Nachrichten und Profile lesen (018) sind für Gesperrte zu
+create or replace function public.is_active_member()
+returns boolean language sql stable security definer set search_path = '' as $$
+  select exists (
+    select 1 from public.profiles p join auth.users u on u.id = p.id
+     where p.id = auth.uid() and p.status <> 'rejected'
+       and (u.email_confirmed_at is not null or u.phone_confirmed_at is not null)
+  ) and public.moderation_level(auth.uid()) not in ('suspended', 'banned');
+$$;
+
 -- Eigener Stand für die Website (Hinweis bei Einschränkung oder Sperre)
 create or replace function public.my_moderation_status()
 returns jsonb language sql stable security definer set search_path = '' as $$
@@ -124,12 +134,14 @@ revoke execute on function public.my_moderation_status() from public, anon;
 grant execute on function public.my_moderation_status() to authenticated;
 
 -- Verwarnung vergeben (nur Admins). Punkte und Folgen nach dem Strafkatalog.
--- p_mild: Grad C ohne Vorsatz -> 30 Tage Sperre statt dauerhaft.
+-- p_mild: Grad C ohne Vorsatz -> 30 Tage Sperre statt dauerhaft. p_hint: Grad A als Hinweis (Stufe 0, keine Punkte).
+drop function if exists public.admin_add_strike(uuid, text, int, text, bigint, boolean);
 create or replace function public.admin_add_strike(p_member uuid, p_grade text, p_rule int, p_reason text,
-                                                   p_report bigint default null, p_mild boolean default false)
+                                                   p_report bigint default null, p_mild boolean default false,
+                                                   p_hint boolean default false)
 returns jsonb language plpgsql security definer set search_path = '' as $$
 declare
-  pts       smallint := case p_grade when 'A' then 1 when 'B' then 3 else 0 end;
+  pts       smallint := case when p_hint and p_grade = 'A' then 0 when p_grade = 'A' then 1 when p_grade = 'B' then 3 else 0 end;
   total     int;
   prev      int;
   lvl       text;
@@ -162,14 +174,19 @@ begin
     ends := case lvl when 'restricted' then now() + interval '7 days' when 'suspended' then now() + interval '30 days' end;
     insert into public.member_sanctions (member_id, level, ends_at, strike_id) values (p_member, lvl, ends, strike);
   end if;
+  -- Stufe 4: Profil und Karte nicht mehr öffentlich, Wunsch-Link wird frei
+  if lvl = 'banned' then
+    update public.profiles set is_public = false where id = p_member;
+    update public.waitlist_cards set is_public = false, handle = null where user_id = p_member;
+  end if;
   if p_report is not null then
     update public.moderation_reports set status = 'erledigt' where id = p_report;
   end if;
   return jsonb_build_object('strike', strike, 'points', total, 'level', coalesce(lvl, 'none'), 'ends_at', ends);
 end;
 $$;
-revoke execute on function public.admin_add_strike(uuid, text, int, text, bigint, boolean) from public, anon;
-grant execute on function public.admin_add_strike(uuid, text, int, text, bigint, boolean) to authenticated;
+revoke execute on function public.admin_add_strike(uuid, text, int, text, bigint, boolean, boolean) from public, anon;
+grant execute on function public.admin_add_strike(uuid, text, int, text, bigint, boolean, boolean) to authenticated;
 
 -- ---------- Zusatzregeln für den Schutzfilter ----------
 -- p_table bestimmt, welche Regeln gelten: Kontaktdaten nur in Profil, Projekten und Börse,
