@@ -1,6 +1,6 @@
 /* Nachrichten: erweitert .inbox / .bubble. Dunkles Lila-Pink nur im Posteingang. */
 
-/* Volle Breite + Viewport-Höhe: Liste links, Thread rechts */
+/* Volle Breite + Viewport-Höhe: Liste links, Thread rechts – kantenlos unter der Nav */
 body.messages-page {
   display: flex;
   flex-direction: column;
@@ -16,46 +16,42 @@ body.messages-page .messages-main {
   min-height: 0;
   min-width: 0;
 }
-body.messages-page .messages-head {
-  flex: 0 0 auto;
-  padding: 10px 0 8px;
-  text-align: left;
-}
-body.messages-page .messages-head .wrap { margin: 0; max-width: none; }
-body.messages-page .messages-head h1 {
-  margin: 0;
-  font-size: clamp(1.35rem, 2.6vw, 1.85rem);
-  line-height: 1.15;
-}
-body.messages-page .messages-head .eyebrow { margin-bottom: 4px; }
+/* Titelzeile weg – Platz für den Chat */
+body.messages-page .messages-head { display: none; }
 body.messages-page .messages-body {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding: 0 0 12px;
+  padding: 0;
+  margin: 0;
 }
 body.messages-page .messages-wrap {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 0;
   min-height: 0;
   width: 100%;
   max-width: none;
   margin: 0;
-  padding: 0 12px;
+  padding: 0;
 }
-@media (min-width: 720px) {
-  body.messages-page .messages-wrap { padding: 0 20px; }
+body.messages-page #notice {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 8px 12px 0;
 }
-body.messages-page #notice:empty { display: none; }
+body.messages-page #notice:empty { display: none; padding: 0; }
 body.messages-page .inbox {
   flex: 1 1 auto;
   min-height: 0;
   width: 100%;
   height: 100%;
-  border-radius: 16px;
+  border-radius: 0;
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 0;
 }
 body.messages-page .inbox-list,
 body.messages-page .thread {
@@ -405,13 +401,7 @@ body.messages-page .thread-messages {
   transform: translateX(-50%);
   text-decoration: none;
 }
-@media (max-width: 859px) {
-  body.messages-page .messages-wrap { padding: 0 8px; }
-  body.messages-page .inbox { border-radius: 12px; }
-}
 @media (max-width: 400px) {
-  body.messages-page .messages-wrap { padding: 0 6px; }
-  .inbox { border-radius: 12px; }
   .inbox .bubble { max-width: 92%; }
   .inbox .thread-messages { padding: 12px; }
   .inbox .thread-head, .inbox .thread-form { padding-left: 10px; padding-right: 10px; }
