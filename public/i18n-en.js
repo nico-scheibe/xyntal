@@ -1349,6 +1349,7 @@ window.XYNTAL_EN = {
   "Informationen zum Betreiber und zum Umgang mit deinen Daten. Stand: 28. Oktober 2026.": "Information about the operator and how your data is handled. As of 28 October 2026. This is a translation for convenience; the German version is legally binding.",
   "Inhalt dieser Seite": "On this page",
   "Deine Rechte": "Your rights",
+  "Community-Richtlinien": "Community guidelines",
   "Impressum noch unvollständig.": "Legal notice still incomplete.",
   "Name und Anschrift sind Platzhalter. Trag sie selbst ein, bevor die Seite als vollständiges Impressum gilt.": "Name and address are placeholders. Fill them in before this page counts as a complete legal notice.",
   "Angaben gemäß § 5 DDG": "Information pursuant to § 5 DDG (German Digital Services Act)",
