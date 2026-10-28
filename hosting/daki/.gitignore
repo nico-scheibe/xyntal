@@ -2,3 +2,6 @@
 .cloudflared-token
 .tunnel-command
 cloudflared*
+.openai-*
+.supabase-*
+.brevo-*

@@ -18,6 +18,12 @@ function friendlyError(err) {
     [/XYNTAL_MODERATION:zu_viele_links/, "Bitte höchstens 5 Links pro Text."],
     [/XYNTAL_MODERATION:zu_schnell/, "Du sendest gerade sehr viele Nachrichten. Bitte warte einen Moment."],
     [/XYNTAL_MODERATION:wiederholung/, "Diese Nachricht hast du gerade schon mehrfach verschickt."],
+    // Zusatzregeln und Sperren (supabase/migrations/20261029100000_moderation_strikes.sql)
+    [/XYNTAL_MODERATION:abzocke/, "Dein Text sieht nach Abzocke aus (z. B. MLM, Krypto-Pump oder Werde-reich-Versprechen) und wurde blockiert."],
+    [/XYNTAL_MODERATION:daten/, "Bitte keine Bankdaten wie eine IBAN öffentlich posten. Teile sie nur direkt per Nachricht."],
+    [/XYNTAL_MODERATION:kontaktdaten/, "Bitte keine Telefonnummern, E-Mail-Adressen oder Messenger-Kontakte in Profil, Projekten oder Börse. Kontakt läuft über Xyntal – deine Website kannst du im Profil verlinken."],
+    [/XYNTAL_MODERATION:eingeschraenkt/, "Dein Konto ist wegen eines Regelverstoßes vorübergehend eingeschränkt. Du kannst gerade nichts Neues veröffentlichen."],
+    [/XYNTAL_MODERATION:gesperrt/, "Dein Konto ist wegen eines Regelverstoßes gesperrt."],
     [/XYNTAL_TIMEOUT/, "Das hat zu lange gedauert. Prüfe deine Verbindung und versuch es noch einmal."],
     [/bucket not found/i, "Der Bildspeicher ist noch nicht eingerichtet. Bitte versuch es später erneut."],
     [/payload too large|maximum allowed size|exceeded.*size/i, "Das Bild ist zu groß. Bitte wähle eine kleinere Datei."],
@@ -362,6 +368,26 @@ function accessNotice(v, what, { open = false } = {}) {
   const { count } = await sb.from("messages").select("id", { count: "exact", head: true })
     .eq("recipient_id", session.user.id).is("read_at", null);
   if (count) link.innerHTML = `Nachrichten <span class="badge">${count}</span>`;
+})();
+
+// Hinweis bei Einschränkung oder Sperre (Strafkatalog in /community-richtlinien)
+(async () => {
+  if (!sb) return;
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return;
+  const { data, error } = await sb.rpc("my_moderation_status");
+  if (error || !data || data.level === "none") return;
+  const until = data.ends_at ? new Date(data.ends_at).toLocaleDateString(document.documentElement.lang === "en" ? "en-GB" : "de-DE") : "";
+  const text = {
+    restricted: "Dein Konto ist wegen eines Regelverstoßes eingeschränkt: Du kannst keine neuen Beiträge, Projekte oder Börseneinträge veröffentlichen.",
+    suspended: "Dein Konto ist wegen eines Regelverstoßes vorübergehend gesperrt.",
+    banned: "Dein Konto ist wegen eines Regelverstoßes dauerhaft gesperrt.",
+  }[data.level];
+  const box = document.createElement("div");
+  box.className = "notice moderation-notice";
+  box.setAttribute("role", "status");
+  box.innerHTML = `${esc(text)}${until ? ` <span>Bis</span> <span data-no-i18n>${esc(until)}</span>.` : ""} <a class="text-link" href="/community-richtlinien#verfahren">Einspruch und Ablauf</a>`;
+  (document.querySelector("main .wrap") || document.querySelector("main") || document.body).prepend(box);
 })();
 
 // Handy-Menü und aktive Seite in der Kopfzeile: account-menu.js (läuft auf allen Seiten)

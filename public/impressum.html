@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="fonts/fonts.css?v=31">
   <link rel="stylesheet" href="style.css?v=32">
   <link rel="stylesheet" href="cosmos.css?v=40">
-  <script src="i18n-en.js?v=64" defer></script>
+  <script src="i18n-en.js?v=66" defer></script>
   <script src="i18n.js?v=31" defer></script>
   <script src="cosmos.js?v=40" defer></script>
   <link rel="stylesheet" href="/backdrop.css?v=4">
@@ -87,6 +87,9 @@
       <p>Innerhalb von 15 Minuten nach dem Versand kannst du eine eigene Nachricht bearbeiten. Eine Löschung entfernt den Inhalt und zeigt einen Platzhalter („Diese Nachricht wurde gelöscht“). Tippanzeigen („schreibt …“) laufen über Realtime Presence und sind ephemer; sie werden nicht dauerhaft gespeichert. Grundlage ist die gewünschte Community-Nutzung (Art. 6 Abs. 1 lit. b DSGVO); Moderation und Missbrauchsschutz beruhen auf Art. 6 Abs. 1 lit. f DSGVO.</p>
       <p>Nachrichten und Anhänge werden für die Dauer deiner Mitgliedschaft bzw. bis zu deiner Löschung gespeichert. Bei Kontolöschung werden deine Nachrichten, Reaktionen und die zugehörigen Anhänge entfernt. Die Nachrichten sind nicht Ende-zu-Ende-verschlüsselt; technische Zugriffsrechte des Betreibers und der Infrastruktur-Dienstleister bestehen zur Administration.</p>
       <p>Benachrichtigungen zu Nachrichten und Kommentaren speichern Empfänger, Auslöser, Verweise auf die zugehörigen Inhalte sowie Erstellungs- und Gelesen-Zeitpunkt. Sie werden nur dem jeweiligen Empfänger angezeigt. Diese Funktionen dienen der gewünschten Community-Nutzung (Art. 6 Abs. 1 lit. b DSGVO); Moderation und Missbrauchsschutz beruhen auf Art. 6 Abs. 1 lit. f DSGVO.</p>
+
+      <p id="moderation"><strong>Schutzfilter, Meldungen und Verwarnungen:</strong> Texte, die du auf Xyntal veröffentlichst oder als Nachricht sendest, prüft die Datenbank vor dem Speichern automatisch auf Beleidigungen, Betrugsmaschen und gefährliche Links, in Profil, Projekten und Börse auch auf Kontaktdaten. Blockierte Texte werden nicht gespeichert. Meldungen über das Formular in den <a href="/community-richtlinien">Community-Richtlinien</a> speichern wir mit Name, E-Mail-Adresse, Ort und Beschreibung; nur der Admin sieht sie, zusätzlich geht eine E-Mail über Brevo an die Kontaktadresse. Vergibt der Admin eine Verwarnung, speichern wir Grad, Punkte, Regel, Begründung sowie daraus folgende Einschränkungen oder Sperren. Du siehst deine eigenen Verwarnungen; Punkte zählen 12 Monate. Verwarnungen bleiben bis zur Löschung deines Kontos gespeichert, Meldungen bis der Admin sie löscht; eine automatische Löschung gibt es noch nicht. Grundlage ist unser berechtigtes Interesse an einer sicheren Community und der Durchsetzung der Community-Richtlinien (Art. 6 Abs. 1 lit. f DSGVO).</p>
+      <p><strong>KI-Einschätzung von Meldungen:</strong> Auf Wunsch des Admins wird eine Meldung zur Einschätzung an die API von OpenAI übermittelt (OpenAI Ireland Ltd., Irland; Verarbeitung auch durch OpenAI, L.L.C., USA). Übertragen werden nur Beschreibung, Ort und gegebenenfalls der vom Admin eingefügte gemeldete Inhalt, nicht Name und E-Mail-Adresse der meldenden Person. Die KI schlägt nur eine Einschätzung vor; über Verwarnungen und Sperren entscheidet immer ein Mensch. Nach Angaben von OpenAI werden über die API übermittelte Daten nicht zum Training verwendet und bis zu 30 Tage zur Missbrauchserkennung gespeichert. Mit OpenAI besteht ein Auftragsverarbeitungsvertrag mit Standardvertragsklauseln für Übermittlungen in die USA. Grundlage ist Art. 6 Abs. 1 lit. f DSGVO. Weitere Informationen: <a href="https://openai.com/policies/eu-privacy-policy/">OpenAI-Datenschutzerklärung</a>.</p>
 
       <h3>5. Treffen und Zusagen</h3>
       <p>Bei einer Zusage speichern wir die Zuordnung deines Profils zum Termin und den Zeitpunkt deiner Zusage. Der Admin sieht die Teilnehmerliste zur Organisation, andere Besucher bzw. Mitglieder sehen je nach Sichtbarkeit des Termins nur die Anzahl der Zusagen. Du kannst deine Zusage zurücknehmen. Grundlage ist die Organisation deiner gewünschten Teilnahme (Art. 6 Abs. 1 lit. b DSGVO). Eine Terminabsage löscht bestehende Zusagen nicht automatisch.</p>
@@ -185,7 +188,7 @@
 
 <script src="vendor/supabase.js?v=31"></script>
 <script src="config.js?v=31"></script>
-<script src="app.js?v=36"></script>
+<script src="app.js?v=37"></script>
 <script src="avatars.js?v=31"></script>
 <script src="notifications.js?v=33"></script>
 <script src="effects.js?v=33"></script>

@@ -76,3 +76,23 @@ bleiben außerhalb von `public/`; niemals Schlüssel ins Frontend oder Repositor
 Nach dem Veröffentlichen Daki für den neuen API-Endpunkt neu starten. Der Python-
 Vorschauserver bietet keinen Mailversand. Ohne verfügbaren Versand meldet das Formular
 einen Fehler und behält die Eingabe. Prüfung ohne echte E-Mails: `node tests/beta-feedback.cjs`.
+
+## Moderation und KI-Prüfung
+
+Meldungen aus `/community-richtlinien` laufen über `/api/beta-feedback` (`kind: "report"`):
+Der Server speichert sie per `submit_report` in Supabase und schickt eine Mail an admin@xyntal.com.
+Im Admin-Bereich (Tab „Meldungen & Verstöße“) ruft „KI prüfen“ `/api/moderation-check` auf.
+Der Endpunkt prüft per Supabase-Token, ob du Admin bist, und fragt dann die OpenAI-API
+(Moderation + Einschätzung nach den Community-Richtlinien). Die KI entscheidet nichts.
+
+Einrichtung:
+
+1. `supabase/migrations/20261029100000_moderation_strikes.sql` im Supabase SQL Editor ausführen.
+2. In Daki (Ordner `/home/container/xyntal`, nie committen):
+   - `.openai-key`: OpenAI-API-Schlüssel (platform.openai.com → API keys)
+   - optional `.openai-model`: Modell für die Einschätzung, Standard `gpt-4.1-mini`
+3. Bei OpenAI den Auftragsverarbeitungsvertrag (DPA) abschließen; die Datenschutzerklärung setzt ihn voraus.
+4. Daki neu starten, damit der neue Server-Code geladen wird.
+
+Supabase-URL und Publishable Key liest der Server aus `public/config.js`
+(alternativ `SUPABASE_URL` / `SUPABASE_ANON_KEY`).
