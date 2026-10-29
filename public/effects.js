@@ -136,10 +136,14 @@
   function render() {
     const q = input.value.trim();
     const groups = commandGroups();
+    const exactMatches = q
+      ? groups.flatMap(([, entries]) => entries.filter((e) => (`${e.label} ${e.keys}`).toLowerCase().split(/[\s&]+/).includes(q.toLowerCase())))
+      : [];
     items = [];
     let html = "";
     for (const [name, entries] of groups) {
-      const found = entries
+      const candidates = exactMatches.length ? entries.filter((e) => exactMatches.includes(e)) : entries;
+      const found = candidates
         .map((e) => {
           // Treffer im Namen zählen voll, Treffer nur in der Überschrift/den Stichworten halb
           const inLabel = fuzzy(q, e.label);
