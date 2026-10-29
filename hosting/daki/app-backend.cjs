@@ -15,7 +15,9 @@ const exec = promisify(require('node:child_process').execFile);
 
 const repository = 'https://github.com/nico-scheibe/xyntal-app-windows.git';
 const branch = 'refs/heads/master';
-const port = '8787';
+// Not the backend's usual 8787: the Daki host shares localhost with other
+// services, and 8787 was already taken there. APP_BACKEND_PORT overrides it.
+const defaultPort = '47821';
 const state = path.join(__dirname, '.app-deploy');
 const cache = path.join(state, 'repo.git');
 // Database and uploads live outside every release so updates never lose data.
@@ -42,7 +44,9 @@ function readEnvFile() {
 function run(serverDir) {
   if (child) { child.removeAllListeners('close'); child.kill('SIGTERM'); }
   // HOST/PORT are fixed here: the backend must stay on localhost behind the tunnel.
-  const env = { ...process.env, ...readEnvFile(), HOST: '127.0.0.1', PORT: port, TRUST_PROXY: '1', DB_PATH: path.join(data, 'xyntalnet.db') };
+  const fileEnv = readEnvFile();
+  const port = /^\d{2,5}$/.test(fileEnv.APP_BACKEND_PORT || '') ? fileEnv.APP_BACKEND_PORT : defaultPort;
+  const env = { ...process.env, ...fileEnv, HOST: '127.0.0.1', PORT: port, TRUST_PROXY: '1', DB_PATH: path.join(data, 'xyntalnet.db') };
   child = spawn(process.execPath, ['src/index.ts'], { cwd: serverDir, env, stdio: 'inherit' });
   child.on('error', (error) => console.error('App backend start failed:', error.message));
   child.on('close', (code) => {

@@ -29,7 +29,7 @@ from `.cloudflared-token` (permissions 0600). Never commit this file.
 
 `start.cjs` lädt zusätzlich `app-backend.cjs`. Es holt `server/` aus dem privaten
 Repo `nico-scheibe/xyntal-app-windows` (Branch `master`), führt `npm ci --omit=dev`
-aus und startet das Backend auf `127.0.0.1:8787`. Jede Minute prüft es auf neue
+aus und startet das Backend auf `127.0.0.1:47821` (änderbar mit `APP_BACKEND_PORT`). Jede Minute prüft es auf neue
 Commits; erst eine fertig installierte Version ersetzt die laufende. Datenbank und
 Uploads liegen in `.app-data/` und überleben Updates. Benötigt Node 24.
 
@@ -40,7 +40,7 @@ Einrichtung in Daki (Ordner `/home/container/xyntal`, nie committen):
   `HOST`, `PORT` und `DB_PATH` setzt das Skript selbst
 
 Ohne Token startet nur die Website. Im Cloudflare-Tunnel `xyntal-daki` einen
-Public Hostname `api.xyntal.de` → `http://localhost:8787` anlegen, danach Daki neu
+Public Hostname `api.xyntal.de` → `http://localhost:47821` anlegen, danach Daki neu
 starten. In der Desktop-App unter Einstellungen die API-Adresse
 `https://api.xyntal.de` eintragen.
 
