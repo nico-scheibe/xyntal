@@ -14,7 +14,7 @@ Check `/__deployment` or the `X-Xyntal-Commit` response header for the deployed 
 Daki startup (downloads the server from this repository before starting):
 
 ```sh
-cd /home/container/xyntal && curl -fsSL https://raw.githubusercontent.com/nico-scheibe/xyntal/main/hosting/daki/start.cjs -o start.cjs && node start.cjs
+cd /home/container/xyntal && curl -fsSL "https://raw.githubusercontent.com/nico-scheibe/xyntal/main/hosting/daki/start.cjs?t=$(date +%s)" -o start.cjs && node start.cjs
 ```
 
 Runtime changes to `hosting/daki/server.cjs` take effect after restarting Daki.

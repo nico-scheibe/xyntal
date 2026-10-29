@@ -26,14 +26,14 @@ async function start() {
     fs.renameSync(binary + '.next',binary);
   }
   fs.chmodSync(binary,0o700);
-  const serverResponse = await fetch('https://raw.githubusercontent.com/nico-scheibe/xyntal/main/hosting/daki/server.cjs', {signal:AbortSignal.timeout(30000)});
+  const serverResponse = await fetch('https://raw.githubusercontent.com/nico-scheibe/xyntal/main/hosting/daki/server.cjs?t=' + Date.now(), {signal:AbortSignal.timeout(30000)});
   if (!serverResponse.ok) throw new Error('Website server download failed');
   fs.writeFileSync(path.join(__dirname,'auto-server.cjs.next'), await serverResponse.text());
   fs.renameSync(path.join(__dirname,'auto-server.cjs.next'), path.join(__dirname,'auto-server.cjs'));
   require('./auto-server.cjs');
   // The app backend is optional: a failed download never blocks the website.
   try {
-    const backendResponse = await fetch('https://raw.githubusercontent.com/nico-scheibe/xyntal/main/hosting/daki/app-backend.cjs', {signal:AbortSignal.timeout(30000)});
+    const backendResponse = await fetch('https://raw.githubusercontent.com/nico-scheibe/xyntal/main/hosting/daki/app-backend.cjs?t=' + Date.now(), {signal:AbortSignal.timeout(30000)});
     if (!backendResponse.ok) throw new Error('HTTP ' + backendResponse.status);
     fs.writeFileSync(path.join(__dirname,'auto-app-backend.cjs.next'), await backendResponse.text());
     fs.renameSync(path.join(__dirname,'auto-app-backend.cjs.next'), path.join(__dirname,'auto-app-backend.cjs'));
