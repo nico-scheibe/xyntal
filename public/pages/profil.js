@@ -3,6 +3,7 @@ const status = document.getElementById("status");
 let me = null;
 
 function render(m) {
+  document.querySelector("[data-beta-download]").hidden = m.is_beta_tester !== true;
   document.getElementById("hello").innerHTML = `Hallo, <em>${esc((m.name || "du").split(" ")[0])}.</em>`;
   const fresh = new URLSearchParams(location.search).has("neu");
   let notice = "";
