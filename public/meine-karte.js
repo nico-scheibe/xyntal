@@ -6,7 +6,7 @@
   const pub = $("[data-mk-public]"), pubHint = $("[data-mk-public-hint]"), urlLabel = $("[data-mk-url]");
   const saveBtn = $("[data-mk-save]"), view = $("[data-mk-view]"), out = $("[data-mk-status]");
   const B = window.XyntalBuilder;
-  let dirty = false, savedHandle = "";
+  let dirty = false, savedHandle = "", importedWaitlistCard = false;
 
   const showGate = (html) => { gate.innerHTML = html; gate.hidden = false; app.hidden = true; };
   gate.addEventListener("click", (e) => { if (e.target.closest("[data-reload]")) location.reload(); });
@@ -64,10 +64,30 @@
       B.set(fromServer(card));
       pub.checked = !!card.is_public;
       savedHandle = card.is_public ? card.handle || "" : card.handle || "";
+      try {
+        const saved = JSON.parse(localStorage.getItem("xyntal-waitlist-card") || "null");
+        if (saved?.email === session.user.email.trim().toLowerCase()) localStorage.removeItem("xyntal-waitlist-card");
+      } catch { /* Server-Karte bleibt maßgeblich. */ }
       say(t("Deine Karte ist geladen."), "ok");
     } else {
-      B.set({ name: ((me && me.name) || "").split(" ")[0] || "" });
-      say(t("Du hast noch keine Karte. Gestalte sie und klick auf „Karte speichern“."));
+      let waitlistDraft = null;
+      let waitlistPublic = false;
+      try {
+        const saved = JSON.parse(localStorage.getItem("xyntal-waitlist-card") || "null");
+        if (saved?.email === session.user.email.trim().toLowerCase() && saved.card?.touched) {
+          waitlistDraft = saved.card;
+          waitlistPublic = !!saved.is_public;
+        }
+      } catch { /* kein lokaler Entwurf */ }
+      if (waitlistDraft) {
+        B.set(fromServer(waitlistDraft));
+        pub.checked = waitlistPublic;
+        importedWaitlistCard = true;
+        say(t("Deine Wartelisten-Karte wird in dein Konto übernommen …"));
+      } else {
+        B.set({ name: ((me && me.name) || "").split(" ")[0] || "" });
+        say(t("Du hast noch keine Karte. Gestalte sie und klick auf „Karte speichern“."));
+      }
     }
     if (me && me.avatar_path) loadAvatar(me.avatar_path);
     dirty = false;
@@ -93,6 +113,11 @@
       }));
       const fresh = unwrap(await sb.rpc("get_my_card"));
       if (fresh) { B.set({ handle: fresh.handle || "" }); pub.checked = !!fresh.is_public; savedHandle = fresh.handle || ""; }
+      if (importedWaitlistCard && fresh) {
+        try { localStorage.removeItem("xyntal-waitlist-card"); } catch { /* Karte ist bereits sicher auf dem Server. */ }
+        importedWaitlistCard = false;
+      }
+      if (importedWaitlistCard && !fresh) throw new Error(t("Die Übernahme konnte nicht bestätigt werden. Deine Karte bleibt auf diesem Gerät gespeichert."));
       dirty = false; saveBtn.textContent = t("Karte speichern"); updateLink();
       if (res === "taken") say(t("Gespeichert – aber dieser Wunsch-Link ist schon vergeben. Dein bisheriger Link bleibt."), "error");
       else if (res === "invalid") say(t("Gespeichert – dieser Wunsch-Link ist nicht verfügbar. Dein bisheriger Link bleibt."), "error");
@@ -105,5 +130,8 @@
     } finally { saveBtn.disabled = false; }
   });
 
-  start();
+  // Ist bereits eine bestätigte Wartelisten-Karte für diese E-Mail vorhanden,
+  // wird sie sofort geladen. Andernfalls die ausdrücklich freigegebene lokale
+  // Karte automatisch im angemeldeten Konto sichern.
+  start().then(() => { if (importedWaitlistCard) saveBtn.click(); });
 })();

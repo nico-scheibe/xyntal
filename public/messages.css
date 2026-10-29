@@ -15,6 +15,7 @@ body.messages-page {
 body.messages-page .xy-bg { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
 body.messages-page > .nav,
 body.messages-page > .messages-main { position: relative; z-index: 1; }
+body.messages-page > .nav { z-index: 50; }
 body.messages-page .site-footer { display: none !important; }
 body.messages-page .messages-main {
   flex: 1 1 auto;

@@ -282,7 +282,7 @@
     }
     if (a.kind === "video") return `<div class="attach-video"><video controls playsinline preload="metadata" data-attach-path="${esc(a.path)}" aria-label="${name}"></video></div>`;
     if (a.kind === "audio") {
-      return `<div class="voice-player"><button type="button" class="voice-play" aria-label="Sprachnachricht" aria-pressed="false">▶</button><input class="voice-range" type="range" min="0" max="1000" value="0" aria-label="Sprachnachricht"><span class="voice-time">${fmt(a.duration)}</span><button type="button" class="voice-speed" data-i="0" aria-label="Wiedergabegeschwindigkeit">1×</button><audio preload="metadata" data-attach-path="${esc(a.path)}"></audio></div>`;
+      return `<div class="voice-player"><button type="button" class="voice-play" aria-label="Sprachnachricht wird geladen" aria-pressed="false" disabled>…</button><input class="voice-range" type="range" min="0" max="1000" value="0" aria-label="Sprachnachricht" disabled><span class="voice-time">${fmt(a.duration)}</span><button type="button" class="voice-speed" data-i="0" aria-label="Wiedergabegeschwindigkeit" disabled>1×</button><audio preload="metadata" data-attach-path="${esc(a.path)}"></audio></div>`;
     }
     return `<a class="file-card" data-attach-path="${esc(a.path)}" download="${name}" href="#" rel="noopener noreferrer"><span class="file-meta"><span class="file-name">${name}</span><span class="file-size">${esc(fmtSize(a.size))}</span></span><span>Herunterladen</span></a>`;
   }
@@ -546,6 +546,18 @@
     };
     audio.addEventListener("timeupdate", paint);
     audio.addEventListener("pause", () => { if (play) { play.textContent = "▶"; play.setAttribute("aria-pressed", "false"); } });
+    const enablePlayback = () => {
+      if (play) { play.disabled = false; play.textContent = "▶"; play.setAttribute("aria-label", "Sprachnachricht abspielen"); }
+      if (range) range.disabled = false;
+      const speed = box.querySelector(".voice-speed");
+      if (speed) speed.disabled = false;
+    };
+    audio.addEventListener("loadedmetadata", () => { paint(); enablePlayback(); }, { once: true });
+    audio.addEventListener("canplay", enablePlayback, { once: true });
+    audio.addEventListener("error", () => {
+      if (play) { play.disabled = true; play.textContent = "!"; play.setAttribute("aria-label", "Sprachnachricht nicht verfügbar"); }
+      status("Diese Sprachnachricht konnte nicht geladen werden. Bitte lade die Seite neu.", "error");
+    }, { once: true });
     range?.addEventListener("input", () => { if (audio.duration) audio.currentTime = audio.duration * (Number(range.value) / 1000); });
   }
   function hydrateMedia(root) {
@@ -556,9 +568,16 @@
       el.dataset.hydrated = "1";
       signedUrl(path).then((url) => {
         if (!el.isConnected) return;
-        if (!url) { delete el.dataset.hydrated; return; }
+        if (!url) {
+          delete el.dataset.hydrated;
+          if (el.tagName === "AUDIO") status("Die Sprachnachricht konnte nicht geladen werden. Bitte lade die Seite neu.", "error");
+          return;
+        }
         if (el.tagName === "A") el.href = url;
-        else el.src = url;
+        else {
+          el.src = url;
+          if (el.tagName === "AUDIO" || el.tagName === "VIDEO") el.load();
+        }
       }).catch(() => { delete el.dataset.hydrated; });
     });
     root.querySelectorAll("audio[data-attach-path]").forEach(bindVoice);

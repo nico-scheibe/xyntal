@@ -742,6 +742,14 @@
       return typeof out === "string" ? out : "";
     } catch { return null; }
   }
+  // Die freigegebene Karte bleibt als Wiederherstellung auf diesem Gerät, falls
+  // der Nutzer sein Konto erst nach dem Double-Opt-in bestätigt.
+  function keepWaitlistCard(email, card, isPublic) {
+    try {
+      localStorage.setItem("xyntal-waitlist-card", JSON.stringify({ email: email.trim().toLowerCase(), card, is_public: !!isPublic }));
+      return true;
+    } catch { return false; }
+  }
 
   // Einladungen: ?ref=code aus dem Link merken, nach dem Eintragen gutschreiben
   const REF_KEY = "xyntal-ref", INVITE_KEY = "xyntal-einladung";
@@ -826,6 +834,7 @@
         if (form.SHARE_CARD?.checked && window.XyntalCard) {
           const card = window.XyntalCard();
           const isPublic = !!form.PUBLIC_CARD?.checked;
+          const keptLocally = keepWaitlistCard(email, card, isPublic);
           const res = await sendCard(email, card, isPublic);
           if (res === "blocked") {
             parts.push("Deine Karte wurde nicht gespeichert: Sie enthält eine Beleidigung, Spam oder einen unsicheren Link.");
@@ -834,7 +843,8 @@
             if (res === "ok") parts.push(isPublic ? `Deine Karte ist jetzt unter xyntal.de/${card.handle} zu sehen.` : `Dein Link xyntal.de/${card.handle} ist reserviert.`);
             else if (res === "taken") parts.push(`xyntal.de/${card.handle} ist leider schon vergeben. Du kannst dir nach dem Start einen anderen aussuchen.`);
             else if (res === "invalid") parts.push("Dieser Wunsch-Link ist nicht verfügbar. Du kannst dir nach dem Start einen anderen aussuchen.");
-          }
+          } else if (keptLocally) parts.push("Der Server hat die Karte noch nicht bestätigt. Sie bleibt auf diesem Gerät für die Übernahme nach deiner Registrierung vorgemerkt.");
+          else parts.push("Die Karte konnte gerade nicht gespeichert werden. Bitte bleib auf diesem Gerät und versuch es nach der Registrierung erneut.");
         }
         setStatus(parts, "ok");
         afterSignup(email);
