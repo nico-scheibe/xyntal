@@ -874,7 +874,7 @@ html.mk-embed, html.mk-embed body { background: transparent !important; min-heig
 .mk-embed .topbar, .mk-embed .footer, .mk-embed .aurora, .mk-embed .builder .section-head { display: none !important; }
 .mk-embed .builder { padding: 0 0 8px; }
 .mk-embed .builder > .shell { padding-left: 0; padding-right: 0; max-width: none; }
-@media (min-width: 960px) { .mk-embed .builder-grid { grid-template-columns: minmax(0, 1.1fr) minmax(280px, .9fr); gap: clamp(16px, 2vw, 28px); } }
+@media (min-width: 960px) { .mk-embed .builder-grid { grid-template-columns: minmax(0, .9fr) minmax(320px, 1.1fr); gap: clamp(16px, 2vw, 28px); } }
 
 /* Mobile-first landing signup */
 .hero .ht-intro { color: var(--text); }
