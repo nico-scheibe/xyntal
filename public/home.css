@@ -868,6 +868,7 @@ a.bf-photo-pick { text-decoration: none; }
 
 /* /meine-karte eingebettet im Profilbereich (Registerkarte „Xyntal-Karte“) */
 html.mk-embed, html.mk-embed body { background: transparent !important; min-height: 0 !important; overflow: visible; }
+.mk-embed .nav, .mk-embed .site-footer, .mk-embed .xy-bg,
 .mk-embed .topbar, .mk-embed .footer, .mk-embed .aurora, .mk-embed .builder .section-head { display: none !important; }
 .mk-embed .builder { padding: 0 0 8px; }
 .mk-embed .builder > .shell { padding-left: 0; padding-right: 0; max-width: none; }
