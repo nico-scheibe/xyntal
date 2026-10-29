@@ -415,4 +415,8 @@ function alertIn(article, text) {
     document.getElementById("composer-avatar").innerHTML = avatar(v.me.name, "", v.me.avatar_path);
   }
   await load();
+  if (v.isMember && new URLSearchParams(location.search).get("neu") === "1") {
+    composer.scrollIntoView({ block: "center", behavior: "smooth" });
+    composer.elements.body.focus({ preventScroll: true });
+  }
 })();

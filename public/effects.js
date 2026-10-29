@@ -10,19 +10,49 @@
   /* ---------------------------------------------------------------
      ⌘K – Befehlspalette (wie in der App)
      --------------------------------------------------------------- */
-  const PAGES = [
-    { label: "Startseite", href: "./", glyph: "~", keys: "home start" },
+  const ACTIONS = [
+    { label: "Projekt anlegen", href: "projekte?neu=1", glyph: "+", keys: "projekt erstellen neu gründen" },
+    { label: "Gesuch oder Angebot erstellen", href: "boerse?neu=1", glyph: "⇄", keys: "börse suche biete inserat listing" },
+    { label: "Nachricht schreiben", href: "nachrichten?neu=1", glyph: "✉", keys: "chat dm neue nachricht senden" },
+    { label: "Community-Beitrag erstellen", href: "community?neu=1", glyph: "#", keys: "post update frage erfolg teilen" },
+    { label: "Mitglieder suchen", href: "mitglieder", glyph: "@", keys: "menschen profil team finden" },
+    { label: "Xyntal-Karte bearbeiten", href: "profil#karte", glyph: "▣", keys: "karte profil gestalten vorschau" },
+    { label: "Profil bearbeiten", href: "profil", glyph: "◐", keys: "konto name bio avatar profil" },
+  ];
+  const NAVIGATION = [
+    { label: "Projekte", href: "projekte", glyph: "▦", keys: "teams rollen entdecken" },
+    { label: "Gesuche & Angebote", href: "boerse", glyph: "⇄", keys: "börse suche biete" },
     { label: "Community", href: "community", glyph: "#", keys: "feed beiträge fragen erfolge" },
-    { label: "Gesuche & Angebote", href: "boerse", glyph: "⇄", keys: "börse suche biete mitgründer" },
     { label: "Mitglieder", href: "mitglieder", glyph: "@", keys: "profile menschen leute" },
     { label: "Nachrichten", href: "nachrichten", glyph: "✉", keys: "chat dm inbox" },
-    { label: "Mein Profil", href: "profil", glyph: "◐", keys: "konto account bearbeiten" },
-    { label: "Login", href: "login", glyph: "→", keys: "anmelden einloggen" },
-    { label: "Projekt starten", href: "mitglied-werden", glyph: "+", keys: "registrieren mitglied werden konto profil anlegen projekt" },
-    { label: "Warteliste", href: "./#warteliste", glyph: "✉", keys: "waitlist newsletter anmelden email" },
+    { label: "Mein Profil", href: "profil", glyph: "◐", keys: "konto account" },
     { label: "Beta-Programm", href: "beta", glyph: "β", keys: "beta tester testen bewerben bewerbung früher zugang" },
-    { label: "Impressum & Datenschutz", href: "impressum", glyph: "§", keys: "rechtliches datenschutz" },
+    { label: "Warteliste", href: "./#warteliste", glyph: "✉", keys: "waitlist newsletter email" },
   ];
+  const accountCommands = () => {
+    const signedIn = !!document.querySelector("[data-acct-logout]");
+    return signedIn
+      ? [
+          { label: "Einstellungen", href: "profil#sicherheit", glyph: "⚙", keys: "konto sicherheit passwort email" },
+          { label: "Ausloggen", action: "logout", glyph: "↪", keys: "abmelden sign out" },
+          { label: "Impressum & Datenschutz", href: "impressum", glyph: "§", keys: "rechtliches datenschutz" },
+        ]
+      : [
+          { label: "Login", href: "login", glyph: "→", keys: "anmelden einloggen" },
+          { label: "Konto anlegen", href: "mitglied-werden", glyph: "+", keys: "registrieren mitglied werden" },
+          { label: "Impressum & Datenschutz", href: "impressum", glyph: "§", keys: "rechtliches datenschutz" },
+        ];
+  };
+
+  function commandGroups() {
+    const signedIn = !!document.querySelector("[data-acct-logout]");
+    return [
+      ["Aktionen", signedIn ? ACTIONS : ACTIONS.filter((item) => item.label === "Mitglieder suchen")],
+      ["Navigation", NAVIGATION],
+      ["Konto & Rechtliches", accountCommands()],
+      ["Auf dieser Seite", sectionsOnPage()],
+    ];
+  }
 
   // Abschnitte der aktuellen Seite: Name aus dem Label („06 — pläne“ → „Pläne“), Überschrift als Suchtext
   function sectionsOnPage() {
@@ -94,9 +124,17 @@
 
   function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
 
+  function destination(item) {
+    if (item.href) {
+      if (item.href.startsWith("./")) return "/" + item.href.slice(2);
+      return item.href.startsWith("/") ? item.href : "/" + item.href;
+    }
+    return item.target ? "#" + item.target.id : "↵";
+  }
+
   function render() {
     const q = input.value.trim();
-    const groups = [["Auf dieser Seite", sectionsOnPage()], ["Seiten", PAGES]];
+    const groups = commandGroups();
     items = [];
     let html = "";
     for (const [name, entries] of groups) {
@@ -115,7 +153,7 @@
       for (const e of found) {
         const i = items.push(e) - 1;
         html += `<button type="button" class="cmdk-item" role="option" data-i="${i}" aria-selected="false">
-          <span class="g">${esc(e.glyph)}</span><span>${highlight(e.label, e.m.hits)}</span><span class="k">${e.href ? esc(e.href === "./" ? "/" : "/" + e.href) : "#" + esc(e.target.id)}</span></button>`;
+          <span class="g">${esc(e.glyph)}</span><span>${highlight(e.label, e.m.hits)}</span><span class="k">${esc(destination(e))}</span></button>`;
       }
     }
     list.innerHTML = html || `<div class="cmdk-empty">Nichts gefunden für „${esc(q)}“</div>`;
@@ -144,6 +182,9 @@
     if (item.target) {
       item.target.scrollIntoView({ behavior: still ? "auto" : "smooth", block: "start" });
       history.replaceState(null, "", "#" + item.target.id);
+    } else if (item.action === "logout") {
+      close(false);
+      document.querySelector("[data-acct-logout]")?.click();
     } else {
       location.href = item.href;
     }

@@ -194,4 +194,8 @@ document.getElementById("board").addEventListener("click", async (e) => {
   document.getElementById("notice").innerHTML = accessNotice(v, "Einträge erstellen, reagieren und Mitglieder kontaktieren");
   if (v.isMember) newBtn.hidden = false;
   await load();
+  if (v.isMember && new URLSearchParams(location.search).get("neu") === "1") {
+    openListingForm();
+    form.scrollIntoView({ block: "center", behavior: "smooth" });
+  }
 })();

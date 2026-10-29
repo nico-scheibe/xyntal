@@ -1474,7 +1474,12 @@
     if (target && target !== v.me.id) {
       await open(target);
       await prefillListingReply(params.get("anzeige"));
-    } else renderList();
+    } else {
+      renderList();
+      if (v.isMember && params.get("neu") === "1") {
+        memberSearch.focus({ preventScroll: true });
+      }
+    }
   }
   // Von „Gesuche & Angebote“ kommend (?anzeige=ID): Antwort mit Bezug zur Anzeige vorbereiten
   async function prefillListingReply(rawId) {
