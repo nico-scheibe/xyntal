@@ -45,12 +45,12 @@
     return `<article class="my-card${firstUser ? " is-first-user" : ""}" data-first-user="${firstUser ? "true" : "false"}" data-theme="${theme}" data-surface="${surface}" data-shape="${shape}" data-layout="${layout}" style="--tg:${grad};--t1:${cols[0]}">
           <div class="mc-cover" aria-hidden="true">
             <span class="mc-mark"><svg viewBox="0 0 24 24"><defs><linearGradient id="xm-ac" x1="3" y1="21" x2="21" y2="3" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#B36BFF"/><stop offset="1" stop-color="#3A8AFF"/></linearGradient><linearGradient id="xm-bc" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#3A8AFF"/><stop offset="1" stop-color="#3FE0F0"/></linearGradient><mask id="xm-gc" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><path d="M3 21Q8.59 8.59 21 3" fill="none" stroke="#000" stroke-width="7.4" stroke-linecap="round"/></mask></defs><path d="M3 3Q15.41 8.59 21 21" fill="none" stroke="url(#xm-bc)" stroke-width="4.6" stroke-linecap="round" mask="url(#xm-gc)"/><path d="M3 21Q8.59 8.59 21 3" fill="none" stroke="url(#xm-ac)" stroke-width="4.6" stroke-linecap="round"/></svg>xyntal</span>
-            <span class="mc-badge${firstUser ? " mc-badge-first-user" : ""}">${esc(t(firstUser ? "First User" : "Early Access"))}</span>
+            <span class="mc-badge${firstUser ? " mc-badge-first-user" : c.is_admin === true ? " mc-badge-admin" : ""}">${esc(t(c.is_admin === true ? "Admin" : firstUser ? "First User" : "Early Access"))}</span>
           </div>
           <div class="mc-head"><span class="mc-avatar"${opts.avatarAttrs ? " " + opts.avatarAttrs : ""}><span>${esc(name[0].toUpperCase())}</span></span></div>
           <div class="mc-id">
             <${heading} class="mc-name${firstUser ? " mc-name-first-user" : ""}" data-no-i18n>${esc(name)}${c.is_verified === true ? ' <span class="verified-mark" role="img" aria-label="Verifiziertes Mitglied" title="Verifiziertes Mitglied"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5.2 10.3 3.1 3.1 6.7-7"/></svg></span>' : ""}</${heading}>
-            <p class="mc-role">${esc(t(c.role || ""))}${level ? ` · ${esc(t(level))}` : ""}${c.is_admin === true ? ' <span class="mc-admin-badge" aria-label="Admin">Admin</span>' : ""}</p>
+            <p class="mc-role">${esc(t(c.role || ""))}${level ? ` · ${esc(t(level))}` : ""}</p>
           </div>
           <div class="mc-blocks">${order.filter((b) => !off.includes(b)).map((b) => blocks[b]).join("")}</div>
           <div class="mc-foot">${link ? `<a class="mc-link mc-link-button" href="${esc(link)}" target="_blank" rel="noopener noreferrer nofollow" data-no-i18n>${esc(linkText)} ↗</a>` : ""}<span class="mc-site" data-no-i18n>xyntal.de/${esc(c.handle)}</span>${message}</div>
