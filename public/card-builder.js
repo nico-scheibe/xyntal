@@ -155,7 +155,7 @@
     function animateCardOrder() {
       const previous = captureLayout(el.blocks, "[data-block]");
       render(false);
-      animateLayout(el.blocks, previous, { duration: 520 });
+      animateLayout(el.blocks, previous, { duration: 680 });
     }
 
     function settleDraggedItem(item) {
@@ -271,7 +271,7 @@
       if (!handle || (e.pointerType === "mouse" && e.button !== 0)) return;
       const item = handle.closest("[data-order-item]");
       pointerDrag = { pointerId: e.pointerId, block: handle.dataset.dragHandle, handle, item,
-        startY: e.clientY, moved: false, previousOrder: data.order.slice() };
+        startY: e.clientY, lastY: e.clientY, direction: 0, moved: false, previousOrder: data.order.slice() };
       try { handle.setPointerCapture(e.pointerId); } catch { /* Pointer capture is optional. */ }
     });
     el.order.addEventListener("pointermove", (e) => {
@@ -282,14 +282,27 @@
       e.preventDefault();
       el.order.classList.add("is-dragging");
       drag.item.classList.add("is-dragging");
-      const target = document.elementFromPoint(e.clientX, e.clientY)?.closest("li[data-order-item]");
-      if (!target || target === drag.item || !el.order.contains(target)) return;
+      const previousY = drag.lastY;
+      drag.lastY = e.clientY;
+      if (e.clientY > previousY + 4) drag.direction = 1;
+      else if (e.clientY < previousY - 4) drag.direction = -1;
+      const localY = e.clientY - el.order.getBoundingClientRect().top;
+      const remaining = $$('[data-order-item]', el.order)
+        .filter((item) => item !== drag.item)
+        .sort((a, b) => a.offsetTop - b.offsetTop);
+      const target = remaining.find((item) => {
+        const midpoint = item.offsetTop + item.offsetHeight / 2;
+        const threshold = midpoint + drag.direction * 10;
+        return localY < threshold;
+      }) || null;
+      const currentSlot = $$('[data-order-item]', el.order).indexOf(drag.item);
+      const targetSlot = target ? remaining.indexOf(target) : remaining.length;
+      if (targetSlot === currentSlot) return;
       $$("li.is-drop-target", el.order).forEach((item) => item.classList.remove("is-drop-target"));
-      target.classList.add("is-drop-target");
-      const before = e.clientY < target.getBoundingClientRect().top + target.offsetHeight / 2;
+      target?.classList.add("is-drop-target");
       const previousList = captureLayout(el.order, "[data-order-item]");
-      el.order.insertBefore(drag.item, before ? target : target.nextElementSibling);
-      animateLayout(el.order, previousList, { skip: drag.item, duration: 260 });
+      el.order.insertBefore(drag.item, target);
+      animateLayout(el.order, previousList, { skip: drag.item, duration: 560 });
     });
     const endPointerDrag = (e, cancelled) => {
       const drag = pointerDrag;

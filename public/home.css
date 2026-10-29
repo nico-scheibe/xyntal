@@ -782,11 +782,11 @@ html { scrollbar-color: #2A2A33 transparent; }
 
 /* Anordnung */
 .bf-label { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; font: 600 14.5px/1.3 var(--f-text); color: var(--text); }
-.bf-order { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
-.bf-order li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 6px 6px 12px; border-radius: 14px; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--line); transition: opacity 180ms ease, transform 360ms cubic-bezier(.22, 1, .36, 1), border-color 220ms ease, background-color 220ms ease, box-shadow 220ms ease; }
+.bf-order { position: relative; list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.bf-order li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 6px 6px 12px; border-radius: 14px; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--line); transition: opacity 220ms ease, transform 560ms cubic-bezier(.22, 1, .36, 1), border-color 260ms ease, background-color 260ms ease, box-shadow 260ms ease; }
 .bf-order li.is-off { opacity: 0.55; }
 .bf-order.is-dragging { user-select: none; }
-.bf-order li.is-dragging { position: relative; z-index: 1; opacity: .97; transform: scale(1.018); border-color: rgba(185, 92, 255, .62); background: linear-gradient(120deg, rgba(185, 92, 255, .09), rgba(63, 216, 255, .06)); box-shadow: 0 12px 30px rgba(0, 0, 0, .32), 0 0 20px rgba(185, 92, 255, .08); }
+.bf-order li.is-dragging { position: relative; z-index: 1; opacity: .97; transform: scale(1.018); border-color: rgba(185, 92, 255, .62); background: linear-gradient(120deg, rgba(185, 92, 255, .09), rgba(63, 216, 255, .06)); box-shadow: 0 12px 30px rgba(0, 0, 0, .32), 0 0 20px rgba(185, 92, 255, .08); transition-duration: 220ms; }
 .bf-order li.is-drop-target { border-color: rgba(63, 216, 255, .65); background: rgba(63, 216, 255, .08); box-shadow: inset 0 0 0 1px rgba(63, 216, 255, .08); }
 .bf-order li.is-grabbed { border-color: rgba(185, 92, 255, .65); background: rgba(185, 92, 255, .08); }
 .bf-order label { position: relative; display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1; font-size: 14.5px; cursor: pointer; }
