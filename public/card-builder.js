@@ -127,20 +127,33 @@
       if (el.photoRemove) el.photoRemove.hidden = !has;
     }
 
+    let pointerDrag = null;
+    let keyboardGrabbed = "";
+    let keyboardPreviousOrder = null;
+
     function renderOrder(focusSel) {
-      const n = data.order.length;
-      el.order.innerHTML = data.order.map((b, i) => `<li class="${shown(b) ? "" : "is-off"}">
+      el.order.innerHTML = data.order.map((b) => `<li data-order-item="${b}" class="${shown(b) ? "" : "is-off"}${keyboardGrabbed === b ? " is-grabbed" : ""}">
           <label><input type="checkbox" data-show="${b}"${shown(b) ? " checked" : ""}><span class="check-box" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7"/></svg></span><span>${esc(t(BLOCKS[b]))}</span></label>
-          <span class="bf-move">
-            <button type="button" data-move="${b}" data-dir="-1"${i === 0 ? " disabled" : ""} aria-label="${esc(t(BLOCKS[b]))}: ${esc(t("nach oben"))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button>
-            <button type="button" data-move="${b}" data-dir="1"${i === n - 1 ? " disabled" : ""} aria-label="${esc(t(BLOCKS[b]))}: ${esc(t("nach unten"))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
-          </span>
+          <button type="button" class="bf-drag-handle" data-drag-handle="${b}" aria-pressed="${keyboardGrabbed === b}" aria-keyshortcuts="Space ArrowUp ArrowDown Escape" aria-label="${esc(t(BLOCKS[b]))}: ${esc(t("Mit Leertaste greifen und mit den Pfeiltasten verschieben"))}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="6" r="1.2"/><circle cx="15" cy="6" r="1.2"/><circle cx="9" cy="12" r="1.2"/><circle cx="15" cy="12" r="1.2"/><circle cx="9" cy="18" r="1.2"/><circle cx="15" cy="18" r="1.2"/></svg></button>
         </li>`).join("");
       if (focusSel) {
-        const f = $(focusSel, el.order);
-        const b = f?.dataset.move;
-        (f && !f.disabled ? f : b ? $(`[data-move="${b}"]:not([disabled])`, el.order) : null)?.focus();
+        $(focusSel, el.order)?.focus();
       }
+    }
+
+    function finishReorder(focusSelector) {
+      data.order = $$('[data-order-item]', el.order).map((item) => item.dataset.orderItem);
+      data.touched = true;
+      persist(); renderOrder(focusSelector); render();
+      el.status.textContent = t("Reihenfolge aktualisiert.");
+    }
+
+    function moveOrderItem(block, direction) {
+      const from = data.order.indexOf(block), to = from + direction;
+      if (from < 0 || to < 0 || to >= data.order.length) return false;
+      data.order.splice(to, 0, data.order.splice(from, 1)[0]);
+      renderOrder(`[data-drag-handle="${block}"]`); render();
+      return true;
     }
 
     function render() {
@@ -210,12 +223,72 @@
       data.off = e.target.checked ? data.off.filter((x) => x !== b) : data.off.concat(b);
       data.touched = true; persist(); renderOrder(`[data-show="${b}"]`); render();
     });
-    el.order.addEventListener("click", (e) => {
-      const btn = e.target.closest("[data-move]"); if (!btn) return;
-      const b = btn.dataset.move, dir = Number(btn.dataset.dir), i = data.order.indexOf(b), j = i + dir;
-      if (j < 0 || j >= data.order.length) return;
-      [data.order[i], data.order[j]] = [data.order[j], data.order[i]];
-      data.touched = true; persist(); renderOrder(`[data-move="${b}"][data-dir="${dir}"]`); render();
+    el.order.addEventListener("pointerdown", (e) => {
+      const handle = e.target.closest("[data-drag-handle]");
+      if (!handle || (e.pointerType === "mouse" && e.button !== 0)) return;
+      const item = handle.closest("[data-order-item]");
+      pointerDrag = { pointerId: e.pointerId, block: handle.dataset.dragHandle, handle, item,
+        startY: e.clientY, moved: false, previousOrder: data.order.slice() };
+      try { handle.setPointerCapture(e.pointerId); } catch { /* Pointer capture is optional. */ }
+    });
+    el.order.addEventListener("pointermove", (e) => {
+      const drag = pointerDrag;
+      if (!drag || drag.pointerId !== e.pointerId) return;
+      if (!drag.moved && Math.abs(e.clientY - drag.startY) < 5) return;
+      drag.moved = true;
+      e.preventDefault();
+      el.order.classList.add("is-dragging");
+      drag.item.classList.add("is-dragging");
+      const target = document.elementFromPoint(e.clientX, e.clientY)?.closest("li[data-order-item]");
+      if (!target || target === drag.item || !el.order.contains(target)) return;
+      $$("li.is-drop-target", el.order).forEach((item) => item.classList.remove("is-drop-target"));
+      target.classList.add("is-drop-target");
+      const before = e.clientY < target.getBoundingClientRect().top + target.offsetHeight / 2;
+      el.order.insertBefore(drag.item, before ? target : target.nextElementSibling);
+    });
+    const endPointerDrag = (e, cancelled) => {
+      const drag = pointerDrag;
+      if (!drag || drag.pointerId !== e.pointerId) return;
+      pointerDrag = null;
+      el.order.classList.remove("is-dragging");
+      $$("li.is-dragging, li.is-drop-target", el.order).forEach((item) => item.classList.remove("is-dragging", "is-drop-target"));
+      if (cancelled) {
+        data.order = drag.previousOrder;
+        renderOrder();
+      } else if (drag.moved) {
+        finishReorder(`[data-drag-handle="${drag.block}"]`);
+      }
+    };
+    el.order.addEventListener("pointerup", (e) => endPointerDrag(e, false));
+    el.order.addEventListener("pointercancel", (e) => endPointerDrag(e, true));
+    el.order.addEventListener("keydown", (e) => {
+      const handle = e.target.closest("[data-drag-handle]");
+      if (!handle) return;
+      const block = handle.dataset.dragHandle;
+      if (e.key === " " || e.key === "Enter") {
+        e.preventDefault();
+        if (keyboardGrabbed === block) {
+          keyboardGrabbed = ""; keyboardPreviousOrder = null;
+          data.touched = true; persist(); renderOrder(`[data-drag-handle="${block}"]`); render();
+          el.status.textContent = t("Reihenfolge aktualisiert.");
+          return;
+        }
+        keyboardGrabbed = block; keyboardPreviousOrder = data.order.slice();
+        renderOrder(`[data-drag-handle="${block}"]`);
+        el.status.textContent = t("Element aufgenommen. Mit den Pfeiltasten verschieben, mit Leertaste ablegen.");
+        return;
+      }
+      if (e.key === "Escape" && keyboardGrabbed === block) {
+        e.preventDefault(); data.order = keyboardPreviousOrder || data.order;
+        keyboardGrabbed = ""; keyboardPreviousOrder = null;
+        renderOrder(`[data-drag-handle="${block}"]`); render();
+        el.status.textContent = t("Verschieben abgebrochen.");
+        return;
+      }
+      if (keyboardGrabbed !== block) return;
+      if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+        e.preventDefault(); moveOrderItem(block, e.key === "ArrowUp" ? -1 : 1);
+      }
     });
 
     // Foto: quadratisch zuschneiden und verkleinern – bleibt im Browser
