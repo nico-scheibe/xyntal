@@ -711,6 +711,8 @@ footer .wrap { display: grid; gap: 24px; }
 .empty-small { color: var(--text-3); font-size: 13px; margin: 0; }
 
 /* Mitgliederkarten */
+.verified-mark { display:inline-grid; place-items:center; width:18px; height:18px; margin-left:5px; vertical-align:middle; border-radius:50%; color:#fff; background:linear-gradient(135deg,#4CB7FF,#6E6CFF); box-shadow:0 0 14px rgba(76,183,255,.42); }
+.verified-mark svg { width:13px; height:13px; fill:none; stroke:currentColor; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; }
 .members-grid { display: grid; gap: 16px; margin-top: 8px; }
 @media (min-width: 720px) { .members-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (min-width: 1000px) { .members-grid { grid-template-columns: repeat(3, 1fr); } }

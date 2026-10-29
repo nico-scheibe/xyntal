@@ -49,7 +49,7 @@
           </div>
           <div class="mc-head"><span class="mc-avatar"${opts.avatarAttrs ? " " + opts.avatarAttrs : ""}><span>${esc(name[0].toUpperCase())}</span></span></div>
           <div class="mc-id">
-            <${heading} class="mc-name${firstUser ? " mc-name-first-user" : ""}" data-no-i18n>${esc(name)}</${heading}>
+            <${heading} class="mc-name${firstUser ? " mc-name-first-user" : ""}" data-no-i18n>${esc(name)}${c.is_verified === true ? ' <span class="verified-mark" role="img" aria-label="Verifiziertes Mitglied" title="Verifiziertes Mitglied"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5.2 10.3 3.1 3.1 6.7-7"/></svg></span>' : ""}</${heading}>
             <p class="mc-role">${esc(t(c.role || ""))}${level ? ` · ${esc(t(level))}` : ""}</p>
           </div>
           <div class="mc-blocks">${order.filter((b) => !off.includes(b)).map((b) => blocks[b]).join("")}</div>

@@ -739,6 +739,8 @@ html { scrollbar-color: #2A2A33 transparent; }
 .mc-id { display: grid; gap: 4px; }
 .mc-name { font: 700 26px/1.1 var(--f); letter-spacing: -0.03em; overflow-wrap: anywhere; }
 .mc-name-first-user { color: var(--mc-text); text-shadow: 0 0 11px rgba(185,92,255,.62), 0 0 25px rgba(63,216,255,.32); }
+.verified-mark { display:inline-grid; place-items:center; width:18px; height:18px; margin-left:5px; vertical-align:middle; border-radius:50%; color:#fff; background:linear-gradient(135deg,#4CB7FF,#6E6CFF); box-shadow:0 0 14px rgba(76,183,255,.42); }
+.verified-mark svg { width:13px; height:13px; fill:none; stroke:currentColor; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; }
 .mc-role { font-size: 14.5px; color: var(--mc-text2); }
 .mc-place { display: flex; align-items: center; gap: 5px; font-size: 13.5px; color: var(--mc-text3); }
 .mc-place svg { width: 15px; height: 15px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; }

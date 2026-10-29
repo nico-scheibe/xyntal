@@ -20,8 +20,9 @@ async function load() {
   }
   let data;
   try {
-    const [members, signups, newsletter] = await Promise.all([
+    const [members, verifiedProfiles, signups, newsletter] = await Promise.all([
       sb.rpc("admin_members").then(unwrap),
+      sb.from("profiles").select("id,is_verified").then(unwrap),
       sb.from("event_signups").select("*").order("created_at", { ascending: false }).then(unwrap),
       sb.from("newsletter").select("*").order("created_at", { ascending: false }).then(unwrap),
     ]);
@@ -33,6 +34,8 @@ async function load() {
       sb.from("waitlist_referrers").select("*").then(unwrap),
       sb.from("waitlist_referrals").select("*").order("created_at", { ascending: false }).then(unwrap),
     ]).then(([referrers, referrals]) => ({ referrers, referrals })).catch((err) => ({ error: err.message }));
+    const verifiedById = new Map(verifiedProfiles.map((profile) => [profile.id, profile.is_verified === true]));
+    members.forEach((member) => { member.is_verified = verifiedById.get(member.id) === true; });
     data = { members, signups, newsletter, beta, cards, invites };
     lastData = data;
   } catch (err) {
@@ -56,12 +59,13 @@ async function load() {
   document.querySelector('[data-panel="members"]').innerHTML = data.members.length ? `
     ${waiting.length ? `<div class="bulk-bar"><span>${waiting.length} ${waiting.length === 1 ? "Mitglied wartet" : "Mitglieder warten"} auf Freischaltung</span><button data-act="approve-all">Alle ${waiting.length} freischalten</button></div>` : ""}
     <div class="table-wrap"><table>
-      <thead><tr><th>Name</th><th>Vorhaben</th><th>Status</th><th>Aktionen</th></tr></thead>
+      <thead><tr><th>Name</th><th>Vorhaben</th><th>Status</th><th>Verified</th><th>Aktionen</th></tr></thead>
       <tbody>${data.members.map((m) => `
         <tr>
           <td>${esc(m.name || "(noch kein Name)")}<br><small>${esc(m.email || m.phone || "")}${m.provider && m.provider !== "email" ? ` · via ${esc(PROVIDER_LABELS[m.provider] || m.provider)}` : ""}</small><br><small>${fmt(m.created_at)}${m.is_public ? " · öffentlich" : ""}</small></td>
           <td>${esc(m.headline)}<br><small>${esc([PHASES[m.phase], m.category].filter(Boolean).join(" · "))}</small></td>
           <td><span class="status-pill status-${m.status}">${statusLabel[m.status]}</span></td>
+          <td><button class="verified-admin-toggle${m.is_verified ? " is-on" : ""}" data-act="verified" data-id="${m.id}" aria-pressed="${m.is_verified}" aria-label="Verified-Badge für ${esc(m.name || "Mitglied")} ${m.is_verified ? "entfernen" : "vergeben"}">${m.is_verified ? "✓ Verified" : "+ Vergeben"}</button></td>
           <td><div class="row-actions">
             ${m.status !== "approved" ? `<button data-act="approve" data-id="${m.id}">Freischalten</button>` : ""}
             ${m.status !== "rejected" && !m.is_admin ? `<button data-act="reject" data-id="${m.id}">Ablehnen</button>` : ""}
@@ -542,6 +546,11 @@ document.querySelector('[data-panel="members"]').addEventListener("click", async
       if (!btn.dataset.armed) { btn.dataset.armed = "1"; btn.textContent = "Wirklich alle freischalten?"; return; }
       btn.disabled = true;
       for (const m of lastData.members.filter((x) => x.status === "pending")) unwrap(await sb.rpc("admin_set_status", { p_id: m.id, p_status: "approved" }));
+    } else if (act === "verified") {
+      btn.disabled = true;
+      const member = lastData.members.find((row) => row.id === id);
+      if (!member) throw Error("Mitglied nicht mehr vorhanden.");
+      unwrap(await sb.rpc("admin_set_verified", { p_id: id, p_is_verified: !member.is_verified }));
     } else if (act === "delete") {
       // Zweistufig statt Browser-Dialog
       if (!btn.dataset.armed) {
