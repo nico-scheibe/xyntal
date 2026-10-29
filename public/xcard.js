@@ -46,6 +46,7 @@
           <div class="mc-cover" aria-hidden="true">
             <span class="mc-mark"><svg viewBox="0 0 24 24"><defs><linearGradient id="xm-ac" x1="3" y1="21" x2="21" y2="3" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#B36BFF"/><stop offset="1" stop-color="#3A8AFF"/></linearGradient><linearGradient id="xm-bc" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#3A8AFF"/><stop offset="1" stop-color="#3FE0F0"/></linearGradient><mask id="xm-gc" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><path d="M3 21Q8.59 8.59 21 3" fill="none" stroke="#000" stroke-width="7.4" stroke-linecap="round"/></mask></defs><path d="M3 3Q15.41 8.59 21 21" fill="none" stroke="url(#xm-bc)" stroke-width="4.6" stroke-linecap="round" mask="url(#xm-gc)"/><path d="M3 21Q8.59 8.59 21 3" fill="none" stroke="url(#xm-ac)" stroke-width="4.6" stroke-linecap="round"/></svg>xyntal</span>
             <span class="mc-badge${firstUser ? " mc-badge-first-user" : c.is_admin === true ? " mc-badge-admin" : ""}">${esc(t(c.is_admin === true ? "Admin" : firstUser ? "First User" : "Early Access"))}</span>
+            ${c.is_beta_tester === true ? `<span class="mc-badge mc-badge-beta-tester">${esc(t("Beta-Tester"))}</span>` : ""}
           </div>
           <div class="mc-head"><span class="mc-avatar"${opts.avatarAttrs ? " " + opts.avatarAttrs : ""}><span>${esc(name[0].toUpperCase())}</span></span></div>
           <div class="mc-id">

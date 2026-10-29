@@ -726,6 +726,7 @@ html { scrollbar-color: #2A2A33 transparent; }
 .mc-badge { padding: 6px 11px; border-radius: 999px; background: rgba(0, 0, 0, 0.32); font: 600 11.5px/1 var(--f-text); color: #fff; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
 .mc-badge-first-user { display: inline-flex; align-items: center; gap: 5px; border: 1px solid rgba(255,255,255,.52); background: linear-gradient(115deg, rgba(145,72,255,.92), rgba(49,170,255,.88)); box-shadow: 0 0 18px rgba(143,83,255,.48), inset 0 1px rgba(255,255,255,.24); letter-spacing: .015em; }
 .mc-badge-admin { display: inline-flex; align-items: center; border: 1px solid rgba(112,190,255,.62); background: linear-gradient(115deg, rgba(45,131,255,.94), rgba(116,81,255,.92)); box-shadow: 0 0 18px rgba(69,145,255,.38), inset 0 1px rgba(255,255,255,.24); letter-spacing: .035em; }
+.mc-badge-beta-tester { margin-left: 6px; border: 1px solid rgba(119, 210, 255, .42); background: linear-gradient(120deg, rgba(30, 154, 255, .36), rgba(120, 76, 255, .34)); color: #F2FAFF; box-shadow: 0 0 18px rgba(63, 180, 255, .18); }
 .mc-badge-first-user::before { content: "01"; font: 700 9px/1 var(--f-text); letter-spacing: -.04em; }
 .mc-head { display: flex; margin-top: -54px; }
 .mc-blocks { display: grid; gap: 14px; }

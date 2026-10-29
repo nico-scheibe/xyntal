@@ -22,7 +22,7 @@ async function load() {
   try {
     const [members, verifiedProfiles, signups, newsletter] = await Promise.all([
       sb.rpc("admin_members").then(unwrap),
-      sb.from("profiles").select("id,is_verified").then(unwrap),
+      sb.from("profiles").select("id,is_verified,is_beta_tester").then(unwrap),
       sb.from("event_signups").select("*").order("created_at", { ascending: false }).then(unwrap),
       sb.from("newsletter").select("*").order("created_at", { ascending: false }).then(unwrap),
     ]);
@@ -35,7 +35,11 @@ async function load() {
       sb.from("waitlist_referrals").select("*").order("created_at", { ascending: false }).then(unwrap),
     ]).then(([referrers, referrals]) => ({ referrers, referrals })).catch((err) => ({ error: err.message }));
     const verifiedById = new Map(verifiedProfiles.map((profile) => [profile.id, profile.is_verified === true]));
-    members.forEach((member) => { member.is_verified = verifiedById.get(member.id) === true; });
+    const betaTesterById = new Map(verifiedProfiles.map((profile) => [profile.id, profile.is_beta_tester === true]));
+    members.forEach((member) => {
+      member.is_verified = verifiedById.get(member.id) === true;
+      member.is_beta_tester = betaTesterById.get(member.id) === true;
+    });
     data = { members, signups, newsletter, beta, cards, invites };
     lastData = data;
   } catch (err) {
@@ -59,13 +63,13 @@ async function load() {
   document.querySelector('[data-panel="members"]').innerHTML = data.members.length ? `
     ${waiting.length ? `<div class="bulk-bar"><span>${waiting.length} ${waiting.length === 1 ? "Mitglied wartet" : "Mitglieder warten"} auf Freischaltung</span><button data-act="approve-all">Alle ${waiting.length} freischalten</button></div>` : ""}
     <div class="table-wrap"><table>
-      <thead><tr><th>Name</th><th>Vorhaben</th><th>Status</th><th>Verified</th><th>Aktionen</th></tr></thead>
+      <thead><tr><th>Name</th><th>Vorhaben</th><th>Status</th><th>Badges</th><th>Aktionen</th></tr></thead>
       <tbody>${data.members.map((m) => `
         <tr>
           <td>${esc(m.name || "(noch kein Name)")}<br><small>${esc(m.email || m.phone || "")}${m.provider && m.provider !== "email" ? ` · via ${esc(PROVIDER_LABELS[m.provider] || m.provider)}` : ""}</small><br><small>${fmt(m.created_at)}${m.is_public ? " · öffentlich" : ""}</small></td>
           <td>${esc(m.headline)}<br><small>${esc([PHASES[m.phase], m.category].filter(Boolean).join(" · "))}</small></td>
           <td><span class="status-pill status-${m.status}">${statusLabel[m.status]}</span></td>
-          <td><button class="verified-admin-toggle${m.is_verified ? " is-on" : ""}" data-act="verified" data-id="${m.id}" aria-pressed="${m.is_verified}" aria-label="Verified-Badge für ${esc(m.name || "Mitglied")} ${m.is_verified ? "entfernen" : "vergeben"}">${m.is_verified ? "✓ Verified" : "+ Vergeben"}</button></td>
+          <td><button class="verified-admin-toggle${m.is_verified ? " is-on" : ""}" data-act="verified" data-id="${m.id}" aria-pressed="${m.is_verified}" aria-label="Verified-Badge für ${esc(m.name || "Mitglied")} ${m.is_verified ? "entfernen" : "vergeben"}">${m.is_verified ? "✓ Verified" : "+ Verified"}</button><br><button class="beta-admin-toggle${m.is_beta_tester ? " is-on" : ""}" data-act="beta-tester" data-id="${m.id}" aria-pressed="${m.is_beta_tester}" aria-label="Beta-Tester-Badge für ${esc(m.name || "Mitglied")} ${m.is_beta_tester ? "entfernen" : "vergeben"}">${m.is_beta_tester ? "✦ Beta-Tester" : "+ Beta-Tester"}</button></td>
           <td><div class="row-actions">
             ${m.status !== "approved" ? `<button data-act="approve" data-id="${m.id}">Freischalten</button>` : ""}
             ${m.status !== "rejected" && !m.is_admin ? `<button data-act="reject" data-id="${m.id}">Ablehnen</button>` : ""}
@@ -551,6 +555,11 @@ document.querySelector('[data-panel="members"]').addEventListener("click", async
       const member = lastData.members.find((row) => row.id === id);
       if (!member) throw Error("Mitglied nicht mehr vorhanden.");
       unwrap(await sb.rpc("admin_set_verified", { p_id: id, p_is_verified: !member.is_verified }));
+    } else if (act === "beta-tester") {
+      btn.disabled = true;
+      const member = lastData.members.find((row) => row.id === id);
+      if (!member) throw Error("Mitglied nicht mehr vorhanden.");
+      unwrap(await sb.rpc("admin_set_beta_tester", { p_id: id, p_is_beta_tester: !member.is_beta_tester }));
     } else if (act === "delete") {
       // Zweistufig statt Browser-Dialog
       if (!btn.dataset.armed) {
