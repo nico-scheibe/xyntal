@@ -32,12 +32,18 @@ let child, commit, updating = false, stopping = false;
 
 function readEnvFile() {
   const env = {};
-  try {
-    for (const line of fs.readFileSync(path.join(__dirname, '.app-backend.env'), 'utf8').split(/\r?\n/)) {
-      const match = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/);
-      if (match) env[match[1]] = match[2];
-    }
-  } catch {}
+  let bytes;
+  try { bytes = fs.readFileSync(path.join(__dirname, '.app-backend.env')); } catch { console.log('App backend: no .app-backend.env'); return env; }
+  // Windows editors may save with a BOM or as UTF-16 ("Unicode"); both would
+  // otherwise silently hide every setting.
+  const text = (bytes[0] === 0xFF && bytes[1] === 0xFE ? bytes.toString('utf16le') : bytes.toString('utf8')).replace(/^﻿/, '');
+  for (const line of text.split(/\r?\n/)) {
+    const match = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/);
+    if (match) env[match[1]] = match[2];
+  }
+  // Names only, never values: enough to see whether the file arrived intact.
+  const set = Object.keys(env).filter(k => env[k].length > 0);
+  console.log('App backend: .app-backend.env sets ' + (set.length ? set.join(', ') : 'nothing'));
   return env;
 }
 
