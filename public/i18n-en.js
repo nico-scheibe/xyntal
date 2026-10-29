@@ -1256,6 +1256,16 @@ window.XYNTAL_EN = {
   "Vorheriges": "Previous",
   "Nächstes": "Next",
   "Schreib die erste Nachricht – stell dich kurz vor.": "Write the first message – introduce yourself briefly.",
+  "Suche oben nach einem Mitglied und schreib die erste Nachricht.": "Search for a member above and write the first message.",
+  "Deine Nachrichten": "Your messages",
+  "Wähle links ein Gespräch oder suche oben ein Mitglied.": "Pick a conversation on the left or search for a member above.",
+  "Vorschläge": "Suggestions",
+  "Hey! Freut mich, dich kennenzulernen.": "Hey! Nice to meet you.",
+  "Woran arbeitest du gerade?": "What are you working on right now?",
+  "Cooles Profil – lass uns vernetzen.": "Cool profile – let's connect.",
+  "Nachrichtenaktionen": "Message actions",
+  "Senden": "Send",
+  "Gespräche": "Conversations",
 
   /* ---------- Profil ---------- */
   "Mein Profil – Xyntal": "My profile – Xyntal",

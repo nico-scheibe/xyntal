@@ -49,7 +49,14 @@
   const ICON = {
     clip: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.4 11.1l-8.5 8.5a5 5 0 0 1-7.1-7.1l8.5-8.5a3.5 3.5 0 0 1 5 5L11 17.2a2 2 0 0 1-2.8-2.8l7.8-7.8"/></svg>',
     mic: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M8 21h8"/></svg>',
+    send: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>',
+    chat: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8.5 8.5 0 0 1-8.5 8.5c-1.4 0-2.7-.3-3.9-.9L3 21l1.5-4.4A8.5 8.5 0 1 1 21 12z"/></svg>',
   };
+  const STARTERS = [
+    "Hey! Freut mich, dich kennenzulernen.",
+    "Woran arbeitest du gerade?",
+    "Cooles Profil – lass uns vernetzen.",
+  ];
 
   const features = { reply: true, edit: true, delete: true, reactions: true, attachments: true, voice: true, presence: true };
   let v = { me: null, isMember: false, canAct: false };
@@ -106,6 +113,26 @@
     if (diff === 1) return "Gestern";
     const lang = document.documentElement.lang === "en" ? "en-GB" : "de-DE";
     return d.toLocaleDateString(lang, { day: "numeric", month: "short", year: "numeric" });
+  }
+  function clockTime(ts) {
+    const d = new Date(ts);
+    if (Number.isNaN(d.getTime())) return "";
+    const lang = document.documentElement.lang === "en" ? "en-GB" : "de-DE";
+    return d.toLocaleTimeString(lang, { hour: "2-digit", minute: "2-digit" });
+  }
+  function listTime(ts) {
+    if (!ts) return "";
+    const d = new Date(ts);
+    if (Number.isNaN(d.getTime())) return "";
+    const start = (dt) => new Date(dt.getFullYear(), dt.getMonth(), dt.getDate()).getTime();
+    const diff = Math.round((start(new Date()) - start(d)) / 86400000);
+    if (diff === 0) return clockTime(ts);
+    if (diff === 1) return "Gestern";
+    if (diff < 7) {
+      const lang = document.documentElement.lang === "en" ? "en-GB" : "de-DE";
+      return d.toLocaleDateString(lang, { weekday: "short" });
+    }
+    return dayLabel(ts);
   }
   function safeName(name) {
     const base = String(name || "Datei").split(/[/\\]/).pop().replace(/[\u0000-\u001f]/g, "").trim();
@@ -165,6 +192,13 @@
     if (!missing.length) return;
     const rows = unwrap(await sb.from("profiles").select("id, name, headline, avatar_path").in("id", missing)) || [];
     rows.forEach((r) => people.set(r.id, r));
+    try {
+      const cards = unwrap(await sb.from("waitlist_cards").select("user_id, handle").in("user_id", missing).not("handle", "is", null)) || [];
+      for (const c of cards) {
+        const p = people.get(c.user_id);
+        if (p && c.handle) p.handle = c.handle;
+      }
+    } catch { /* Profil-Link optional */ }
   }
   function syncNav() {
     if (!v.me) return;
@@ -220,12 +254,13 @@
       const p = people.get(c.partner) || { name: "Mitglied" };
       const mine = c.last && c.last.sender_id === v.me.id;
       const preview = c.last ? listPreview(c.last, mine) : "Neues Gespräch";
-      return `<button type="button" class="conv${c.partner === active ? " active" : ""}" data-partner="${esc(c.partner)}" aria-current="${c.partner === active ? "true" : "false"}">
+      const when = c.last ? listTime(c.last.created_at) : "";
+      return `<button type="button" class="conv${c.partner === active ? " active" : ""}${c.unread ? " unread" : ""}" data-partner="${esc(c.partner)}" aria-current="${c.partner === active ? "true" : "false"}">
         ${avatar(p.name, "avatar-sm", p.avatar_path)}
-        <span class="conv-text"><strong>${esc(p.name || "Mitglied")}</strong><span>${preview}</span></span>
-        ${c.unread ? `<span class="badge">${c.unread}</span>` : ""}
+        <span class="conv-text"><strong>${esc(p.name || "Mitglied")}</strong><span class="conv-preview">${preview}</span></span>
+        <span class="conv-meta">${when ? `<time datetime="${esc(c.last.created_at)}">${esc(when)}</time>` : ""}${c.unread ? `<span class="badge">${c.unread}</span>` : ""}</span>
       </button>`;
-    }).join("") : `<p class="empty-small">Noch keine Gespräche.</p>`;
+    }).join("") : `<div class="inbox-empty"><p class="empty-small">Noch keine Gespräche.</p><p class="inbox-empty-hint">Suche oben nach einem Mitglied und schreib die erste Nachricht.</p></div>`;
     syncNav();
   }
 
@@ -247,13 +282,16 @@
     return `<button type="button" class="emoji-btn" data-pick="1" data-emoji="${e}">${e}</button>`;
   }
   function toolsHtml(m) {
-    if (sid(editingId) === sid(m.id)) return "";
+    if (m.deleted_at || sid(editingId) === sid(m.id)) return "";
     const mine = m.sender_id === v.me.id;
     const confirming = sid(confirmDelete) === sid(m.id);
+    const hasAny = features.reply || features.reactions || (mine && (canEdit(m) || features.delete));
+    if (!hasAny) return "";
     const emojis = features.reactions
       ? `<div class="react-pop">${QUICK.map(emojiBtn).join("")}<button type="button" class="emoji-btn" data-emoji-more aria-expanded="false" aria-label="Mehr Emojis">+</button><div class="react-more" hidden>${MORE.map(emojiBtn).join("")}</div></div>`
       : "";
-    return `<div class="bubble-tools">
+    return `<button type="button" class="msg-more" data-msg-more aria-label="Nachrichtenaktionen" aria-expanded="false" aria-haspopup="true">⋯</button>
+    <div class="bubble-tools" role="toolbar" aria-label="Nachrichtenaktionen">
       ${features.reply ? `<button type="button" class="tool-btn" data-reply>Antworten</button>` : ""}
       ${emojis}
       ${mine && canEdit(m) ? `<button type="button" class="tool-btn" data-edit aria-label="Nachricht bearbeiten">Bearbeiten</button>` : ""}
@@ -296,7 +334,8 @@
     const mine = m.sender_id === v.me.id;
     const id = esc(m.id);
     const cls = ["bubble", mine ? "mine" : "", grouped ? "grouped" : "", tail ? "tail" : "", m.deleted_at ? "deleted" : ""].filter(Boolean).join(" ");
-    const time = `<time datetime="${esc(m.created_at)}">${esc(timeAgo(m.created_at))}${!m.deleted_at && m.edited_at ? " · bearbeitet" : ""}</time>`;
+    const stamp = clockTime(m.created_at) || timeAgo(m.created_at);
+    const time = `<time datetime="${esc(m.created_at)}" title="${esc(timeAgo(m.created_at))}">${esc(stamp)}${!m.deleted_at && m.edited_at ? " · bearbeitet" : ""}</time>`;
     if (m.deleted_at) {
       return `<div class="${cls}" id="msg-${id}" data-id="${id}"><p class="deleted-text">Diese Nachricht wurde gelöscht</p>${time}</div>`;
     }
@@ -308,9 +347,29 @@
     const meta = tail || m.edited_at ? time : "";
     return `<div class="${cls}" id="msg-${id}" data-id="${id}">${toolsHtml(m)}${quoteBlock(m)}${attachmentsHtml(m)}${body}${chipsHtml(m.id)}${meta}</div>`;
   }
-  function threadBody() {
+  function emptyThreadHtml(p) {
+    const name = p.name || "Mitglied";
+    const chips = STARTERS.map((t) => `<button type="button" class="starter-chip" data-starter="${esc(t)}">${esc(t)}</button>`).join("");
+    return `<div class="thread-empty">
+      <div class="thread-empty-card">
+        ${avatar(name, "avatar-lg", p.avatar_path)}
+        <strong class="thread-empty-name">${esc(name)}</strong>
+        ${p.headline ? `<p class="thread-empty-headline">${esc(p.headline)}</p>` : ""}
+        <p class="thread-empty-hint">Schreib die erste Nachricht – stell dich kurz vor.</p>
+        <div class="starter-chips" role="group" aria-label="Vorschläge">${chips}</div>
+      </div>
+    </div>`;
+  }
+  function idleThreadHtml() {
+    return `<div class="thread-idle">
+      <div class="thread-idle-mark" aria-hidden="true">${ICON.chat}</div>
+      <strong>Deine Nachrichten</strong>
+      <p>Wähle links ein Gespräch oder suche oben ein Mitglied.</p>
+    </div>`;
+  }
+  function threadBody(p) {
     const thread = messages.filter((m) => partnerOf(m) === active).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-    if (!thread.length) return `<p class="empty-small">Schreib die erste Nachricht – stell dich kurz vor.</p>`;
+    if (!thread.length) return emptyThreadHtml(p || {});
     let html = "";
     for (let i = 0; i < thread.length; i++) {
       const m = thread[i];
@@ -377,11 +436,21 @@
     el.insertAdjacentHTML("afterend", `<p class="upload-row"><button type="button" class="btn btn-ghost btn-small" id="cancel-upload">Upload abbrechen</button></p>`);
   }
 
+  function applyStarter(text) {
+    const ta = document.querySelector("#thread-form textarea");
+    if (!ta || uploading) return;
+    draft = String(text || "");
+    ta.value = draft;
+    grow(ta);
+    syncSendButton();
+    ta.focus();
+    try { ta.setSelectionRange(ta.value.length, ta.value.length); } catch { /* leer */ }
+  }
   function renderThread() {
     const box = document.getElementById("thread");
     if (!box) return;
     if (!active) {
-      box.innerHTML = `<p class="empty">Wähle links ein Gespräch oder schreib einem Mitglied.</p>`;
+      box.innerHTML = idleThreadHtml();
       return;
     }
     const prevList = document.getElementById("thread-messages");
@@ -392,20 +461,28 @@
     const prevScroll = prevList ? prevList.scrollTop : 0;
     const p = people.get(active) || { name: "Mitglied", headline: "" };
     const showMic = showMicNow();
+    const handle = String(p.handle || "").toLowerCase();
+    const profileHref = /^[a-z0-9][a-z0-9_-]{2,19}$/.test(handle) ? `/${encodeURIComponent(handle)}` : "";
+    const profileOpen = profileHref
+      ? `<a class="thread-profile" href="${esc(profileHref)}" aria-label="Profil von ${esc(p.name || "Mitglied")}">`
+      : `<div class="thread-profile">`;
+    const profileClose = profileHref ? "</a>" : "</div>";
     box.innerHTML = `
       <header class="thread-head">
         <button type="button" class="thread-back" aria-label="Zurück zur Liste">←</button>
-        ${avatar(p.name, "avatar-sm", p.avatar_path)}
-        <div class="thread-id">
-          <strong>${esc(p.name || "Mitglied")}</strong>
-          <span class="thread-headline">${esc(p.headline || "")}</span>
-          <span class="typing" id="typing-indicator" role="status"></span>
-        </div>
+        ${profileOpen}
+          ${avatar(p.name, "avatar-sm thread-avatar", p.avatar_path)}
+          <span class="thread-id">
+            <strong>${esc(p.name || "Mitglied")}</strong>
+            <span class="thread-headline">${esc(p.headline || "")}</span>
+            <span class="typing" id="typing-indicator" role="status"></span>
+          </span>
+        ${profileClose}
         ${bgPickerHtml()}
       </header>
       <div class="thread-messages" id="thread-messages" role="log" aria-label="Nachrichten">
         <span class="swipe-hint" id="swipe-hint" hidden>Antworten</span>
-        ${threadBody()}
+        ${threadBody(p)}
       </div>
       <form class="thread-form" id="thread-form" novalidate>
         <div id="reply-slot">${replySlotHtml()}</div>
@@ -416,7 +493,7 @@
           ${features.attachments ? `<button type="button" class="msg-icon" id="attach-btn" aria-label="Anhang hinzufügen">${ICON.clip}</button><input id="attach-input" type="file" multiple hidden tabindex="-1" aria-hidden="true" accept="${ACCEPT}">` : ""}
           <textarea name="body" rows="1" maxlength="2000" placeholder="Nachricht schreiben …" aria-label="Nachricht" aria-describedby="composer-hint" enterkeyhint="send">${esc(draft)}</textarea>
           ${features.voice ? `<button type="button" class="msg-icon" id="mic-btn" aria-label="Aufnahme starten"${showMic ? "" : " hidden"}>${ICON.mic}</button>` : ""}
-          <button class="btn btn-small" id="send-btn" type="submit"${showMic || rec ? " hidden" : ""}>Senden</button>
+          <button class="msg-icon send-btn" id="send-btn" type="submit" aria-label="Senden"${showMic || rec ? " hidden" : ""}>${ICON.send}</button>
         </div>
         <p class="sr-only" id="composer-hint">Tippe Enter zum Senden, Shift+Enter für neue Zeile</p>
       </form>
@@ -1208,6 +1285,23 @@
     try {
       if (e.target.closest(".thread-back")) { inbox.classList.remove("show-thread"); return; }
       if (e.target.closest("#cancel-upload")) { uploadAbort = true; e.target.closest("button").disabled = true; return; }
+      const starter = e.target.closest("[data-starter]");
+      if (starter) { applyStarter(starter.dataset.starter); return; }
+      const msgMore = e.target.closest("[data-msg-more]");
+      if (msgMore) {
+        const bubble = msgMore.closest(".bubble");
+        if (!bubble) return;
+        const open = !bubble.classList.contains("show-tools");
+        document.querySelectorAll(".bubble.show-tools").forEach((el) => {
+          el.classList.remove("show-tools");
+          el.querySelector("[data-msg-more]")?.setAttribute("aria-expanded", "false");
+        });
+        if (open) {
+          bubble.classList.add("show-tools");
+          msgMore.setAttribute("aria-expanded", "true");
+        }
+        return;
+      }
       if (e.target.closest("#attach-btn")) { document.getElementById("attach-input")?.click(); return; }
       if (e.target.closest("#mic-btn")) { await startRecording(); return; }
       if (e.target.closest("#rec-cancel")) { await stopRecording(true); return; }
@@ -1331,8 +1425,12 @@
     gesture = { id: bubble.dataset.id, x: e.clientX, y: e.clientY, bubble, swiping: false, timer: null };
     gesture.timer = setTimeout(() => {
       if (!gesture || gesture.swiping) return;
-      document.querySelectorAll(".bubble.show-tools").forEach((el) => el.classList.remove("show-tools"));
+      document.querySelectorAll(".bubble.show-tools").forEach((el) => {
+        el.classList.remove("show-tools");
+        el.querySelector("[data-msg-more]")?.setAttribute("aria-expanded", "false");
+      });
       bubble.classList.add("show-tools");
+      bubble.querySelector("[data-msg-more]")?.setAttribute("aria-expanded", "true");
     }, 550);
   });
   thread.addEventListener("pointermove", (e) => {
@@ -1435,6 +1533,13 @@
       const members = unwrap(await sb.from("profiles").select("id, name, headline, avatar_path").neq("status", "rejected").order("name")) || [];
       directory = members;
       members.forEach((m) => people.set(m.id, m));
+      try {
+        const cards = unwrap(await sb.from("waitlist_cards").select("user_id, handle").not("handle", "is", null)) || [];
+        for (const c of cards) {
+          const p = people.get(c.user_id);
+          if (p && c.handle) p.handle = c.handle;
+        }
+      } catch { /* Profil-Link optional */ }
       messages = unwrap(await sb.from("messages").select("*").or(`sender_id.eq.${v.me.id},recipient_id.eq.${v.me.id}`).order("created_at", { ascending: false }).limit(1000)) || [];
       await ensurePeople(messages.map(partnerOf));
       await loadExtras(messages.map((m) => m.id));
