@@ -31,6 +31,14 @@ async function start() {
   fs.writeFileSync(path.join(__dirname,'auto-server.cjs.next'), await serverResponse.text());
   fs.renameSync(path.join(__dirname,'auto-server.cjs.next'), path.join(__dirname,'auto-server.cjs'));
   require('./auto-server.cjs');
+  // The app backend is optional: a failed download never blocks the website.
+  try {
+    const backendResponse = await fetch('https://raw.githubusercontent.com/nico-scheibe/xyntal/main/hosting/daki/app-backend.cjs', {signal:AbortSignal.timeout(30000)});
+    if (!backendResponse.ok) throw new Error('HTTP ' + backendResponse.status);
+    fs.writeFileSync(path.join(__dirname,'auto-app-backend.cjs.next'), await backendResponse.text());
+    fs.renameSync(path.join(__dirname,'auto-app-backend.cjs.next'), path.join(__dirname,'auto-app-backend.cjs'));
+  } catch (error) { console.error('App backend download failed:', error.message); }
+  if (fs.existsSync(path.join(__dirname,'auto-app-backend.cjs'))) require('./auto-app-backend.cjs');
   let tunnel;
   let shuttingDown = false;
   function connect() {

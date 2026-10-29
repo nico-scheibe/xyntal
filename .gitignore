@@ -9,3 +9,10 @@ video/.venv/
 # Codex-Übergaben und lokale Supabase-Dateien
 *.bundle
 supabase/.temp/
+
+# Daki: Geheimnisse und Laufzeitdaten des App-Backends
+.app-github-token
+.app-backend.env
+.app-deploy/
+.app-data/
+auto-app-backend.cjs

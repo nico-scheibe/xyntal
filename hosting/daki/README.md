@@ -25,6 +25,25 @@ Cloudflare tunnel `xyntal-daki` connects to `http://localhost:4129` inside Daki.
 The launcher verifies a pinned Cloudflared binary and reads the tunnel token
 from `.cloudflared-token` (permissions 0600). Never commit this file.
 
+## App-Backend (api.xyntal.de)
+
+`start.cjs` lädt zusätzlich `app-backend.cjs`. Es holt `server/` aus dem privaten
+Repo `nico-scheibe/xyntal-app-windows` (Branch `master`), führt `npm ci --omit=dev`
+aus und startet das Backend auf `127.0.0.1:8787`. Jede Minute prüft es auf neue
+Commits; erst eine fertig installierte Version ersetzt die laufende. Datenbank und
+Uploads liegen in `.app-data/` und überleben Updates. Benötigt Node 24.
+
+Einrichtung in Daki (Ordner `/home/container/xyntal`, nie committen):
+
+- `.app-github-token`: Fine-grained Token, nur dieses Repo, nur „Contents: Read“
+- `.app-backend.env` (optional): `KEY=VALUE`-Zeilen wie `ANTHROPIC_API_KEY=…`;
+  `HOST`, `PORT` und `DB_PATH` setzt das Skript selbst
+
+Ohne Token startet nur die Website. Im Cloudflare-Tunnel `xyntal-daki` einen
+Public Hostname `api.xyntal.de` → `http://localhost:8787` anlegen, danach Daki neu
+starten. In der Desktop-App unter Einstellungen die API-Adresse
+`https://api.xyntal.de` eintragen.
+
 Domain configuration (22 October 2026): IONOS delegates `xyntal.de` to
 `haley.ns.cloudflare.com` and `steven.ns.cloudflare.com`. Proxied CNAME records
 for `@` and `www` target tunnel `7740193b-a9bb-4a15-a4b9-ee4b62d0859d.cfargotunnel.com`.
