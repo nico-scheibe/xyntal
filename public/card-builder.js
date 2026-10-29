@@ -154,15 +154,15 @@
 
     function animateCardOrder() {
       const previous = captureLayout(el.blocks, "[data-block]");
-      render();
+      render(false);
       animateLayout(el.blocks, previous, { duration: 520 });
     }
 
     function settleDraggedItem(item) {
       if (still || !item?.isConnected) return;
       item.animate(
-        [{ transform: "scale(1.035)" }, { transform: "scale(.99)" }, { transform: "scale(1)" }],
-        { duration: 420, easing: "cubic-bezier(.2, .8, .2, 1)" }
+        [{ transform: "scale(1.018)" }, { transform: "scale(1)" }],
+        { duration: 380, easing: "cubic-bezier(.22, 1, .36, 1)" }
       );
     }
 
@@ -199,7 +199,7 @@
       return true;
     }
 
-    function render() {
+    function render(animatePulse = true) {
       const name = data.name.trim() || "Alex";
       const c = el.card;
       c.dataset.theme = data.theme; c.dataset.surface = data.surface; c.dataset.shape = data.shape; c.dataset.layout = data.layout;
@@ -232,7 +232,7 @@
       const badHandle = !!data.handle && !validHandle(data.handle);
       el.handle.toggleAttribute("aria-invalid", badHandle);
       el.handleHint.classList.toggle("is-error", badHandle);
-      c.classList.remove("pulse"); void c.offsetWidth; c.classList.add("pulse");
+      if (animatePulse) { c.classList.remove("pulse"); void c.offsetWidth; c.classList.add("pulse"); }
       // kleine Vorschau in der Warteliste
       if (el.launch && data.touched) {
         el.launch.hidden = false;
