@@ -130,6 +130,41 @@
     let pointerDrag = null;
     let keyboardGrabbed = "";
     let keyboardPreviousOrder = null;
+    const flipAnimations = new WeakMap();
+
+    function captureLayout(root, selector) {
+      return new Map($$(selector, root).map((node) => [node, node.getBoundingClientRect()]));
+    }
+
+    function animateLayout(root, previous, { skip = null, duration = 360 } = {}) {
+      if (still) return;
+      for (const [node, first] of previous) {
+        if (node === skip || !node.isConnected) continue;
+        const last = node.getBoundingClientRect();
+        const y = first.top - last.top;
+        if (Math.abs(y) < 1) continue;
+        flipAnimations.get(node)?.cancel();
+        const animation = node.animate(
+          [{ transform: `translateY(${y}px)` }, { transform: "translateY(0)" }],
+          { duration, easing: "cubic-bezier(.22, 1, .36, 1)" }
+        );
+        flipAnimations.set(node, animation);
+      }
+    }
+
+    function animateCardOrder() {
+      const previous = captureLayout(el.blocks, "[data-block]");
+      render();
+      animateLayout(el.blocks, previous, { duration: 520 });
+    }
+
+    function settleDraggedItem(item) {
+      if (still || !item?.isConnected) return;
+      item.animate(
+        [{ transform: "scale(1.035)" }, { transform: "scale(.99)" }, { transform: "scale(1)" }],
+        { duration: 420, easing: "cubic-bezier(.2, .8, .2, 1)" }
+      );
+    }
 
     function renderOrder(focusSel) {
       el.order.innerHTML = data.order.map((b) => `<li data-order-item="${b}" class="${shown(b) ? "" : "is-off"}${keyboardGrabbed === b ? " is-grabbed" : ""}">
@@ -144,7 +179,9 @@
     function finishReorder(focusSelector) {
       data.order = $$('[data-order-item]', el.order).map((item) => item.dataset.orderItem);
       data.touched = true;
-      persist(); renderOrder(focusSelector); render();
+      persist();
+      if (focusSelector) $(focusSelector, el.order)?.focus();
+      animateCardOrder();
       el.status.textContent = t("Reihenfolge aktualisiert.");
     }
 
@@ -152,7 +189,13 @@
       const from = data.order.indexOf(block), to = from + direction;
       if (from < 0 || to < 0 || to >= data.order.length) return false;
       data.order.splice(to, 0, data.order.splice(from, 1)[0]);
-      renderOrder(`[data-drag-handle="${block}"]`); render();
+      const previousList = captureLayout(el.order, "[data-order-item]");
+      const item = $(`[data-order-item="${block}"]`, el.order);
+      const neighbor = $$('[data-order-item]', el.order)[to + (direction < 0 ? 1 : 0)];
+      el.order.insertBefore(item, direction < 0 ? neighbor : neighbor?.nextElementSibling || null);
+      animateLayout(el.order, previousList, { duration: 280 });
+      $(`[data-drag-handle="${block}"]`, el.order)?.focus();
+      animateCardOrder();
       return true;
     }
 
@@ -244,7 +287,9 @@
       $$("li.is-drop-target", el.order).forEach((item) => item.classList.remove("is-drop-target"));
       target.classList.add("is-drop-target");
       const before = e.clientY < target.getBoundingClientRect().top + target.offsetHeight / 2;
+      const previousList = captureLayout(el.order, "[data-order-item]");
       el.order.insertBefore(drag.item, before ? target : target.nextElementSibling);
+      animateLayout(el.order, previousList, { skip: drag.item, duration: 260 });
     });
     const endPointerDrag = (e, cancelled) => {
       const drag = pointerDrag;
@@ -257,6 +302,7 @@
         renderOrder();
       } else if (drag.moved) {
         finishReorder(`[data-drag-handle="${drag.block}"]`);
+        settleDraggedItem(drag.item);
       }
     };
     el.order.addEventListener("pointerup", (e) => endPointerDrag(e, false));
