@@ -20,6 +20,7 @@
     { label: "Profil bearbeiten", href: "profil", glyph: "◐", keys: "konto name bio avatar profil" },
   ];
   const NAVIGATION = [
+    { label: "Startseite", href: "./", glyph: "⌂", keys: "home start homepage" },
     { label: "Projekte", href: "projekte", glyph: "▦", keys: "teams rollen entdecken" },
     { label: "Gesuche & Angebote", href: "boerse", glyph: "⇄", keys: "börse suche biete" },
     { label: "Community", href: "community", glyph: "#", keys: "feed beiträge fragen erfolge" },
