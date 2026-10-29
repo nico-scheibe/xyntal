@@ -50,7 +50,7 @@
           <div class="mc-head"><span class="mc-avatar"${opts.avatarAttrs ? " " + opts.avatarAttrs : ""}><span>${esc(name[0].toUpperCase())}</span></span></div>
           <div class="mc-id">
             <${heading} class="mc-name${firstUser ? " mc-name-first-user" : ""}" data-no-i18n>${esc(name)}${c.is_verified === true ? ' <span class="verified-mark" role="img" aria-label="Verifiziertes Mitglied" title="Verifiziertes Mitglied"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5.2 10.3 3.1 3.1 6.7-7"/></svg></span>' : ""}</${heading}>
-            <p class="mc-role">${esc(t(c.role || ""))}${level ? ` · ${esc(t(level))}` : ""}</p>
+            <p class="mc-role">${esc(t(c.role || ""))}${level ? ` · ${esc(t(level))}` : ""}${c.is_admin === true ? ' <span class="mc-admin-badge" aria-label="Admin">Admin</span>' : ""}</p>
           </div>
           <div class="mc-blocks">${order.filter((b) => !off.includes(b)).map((b) => blocks[b]).join("")}</div>
           <div class="mc-foot">${link ? `<a class="mc-link mc-link-button" href="${esc(link)}" target="_blank" rel="noopener noreferrer nofollow" data-no-i18n>${esc(linkText)} ↗</a>` : ""}<span class="mc-site" data-no-i18n>xyntal.de/${esc(c.handle)}</span>${message}</div>

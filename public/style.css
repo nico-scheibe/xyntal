@@ -719,6 +719,7 @@ footer .wrap { display: grid; gap: 24px; }
 .member { padding: 22px; display: grid; gap: 14px; align-content: start; }
 .member-head { display: grid; grid-template-columns: 44px 1fr; gap: 14px; align-items: center; }
 .member h3 { margin: 0; font-size: 16px; }
+.member-admin-badge { display: inline-flex; align-items: center; margin-left: 7px; padding: 3px 8px; border: 1px solid rgba(92,176,255,.34); border-radius: 999px; background: linear-gradient(120deg,rgba(64,144,255,.18),rgba(123,91,255,.16)); color: #9BCBFF; font-size: 10px; line-height: 1.3; font-weight: 700; letter-spacing: .035em; vertical-align: middle; }
 .member-headline { margin: 2px 0 0; color: var(--text-2); font-size: 13px; line-height: 1.45; }
 .member-about { margin: 0; font-size: 14px; color: var(--text-2); }
 .member-kv {

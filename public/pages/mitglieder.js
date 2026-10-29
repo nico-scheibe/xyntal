@@ -22,7 +22,7 @@
       if (!c || !window.XyntalCardHtml) return memberCard(m, { message: viewerIsMember && m.id !== me.id });
       const photo = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.jpg$/.test(m.avatar_path || "") ? `data-avatar-path="${esc(m.avatar_path)}"` : "";
       const canMessage = viewerIsMember && m.id !== me.id;
-      return `<div class="member-xcard xcard-host"><div class="member-xcard-link" data-profile-url="/${esc(c.handle)}" role="group" tabindex="0" aria-label="${esc(c.name || m.name)} – Profil öffnen">${window.XyntalCardHtml({ ...c, is_verified: m.is_verified === true }, { avatarAttrs: photo, messageUrl: canMessage ? `/nachrichten?an=${encodeURIComponent(m.id)}` : "" })}</div></div>`;
+      return `<div class="member-xcard xcard-host"><div class="member-xcard-link" data-profile-url="/${esc(c.handle)}" role="group" tabindex="0" aria-label="${esc(c.name || m.name)} – Profil öffnen">${window.XyntalCardHtml({ ...c, is_verified: m.is_verified === true, is_admin: m.is_admin === true }, { avatarAttrs: photo, messageUrl: canMessage ? `/nachrichten?an=${encodeURIComponent(m.id)}` : "" })}</div></div>`;
     };
     grid.innerHTML = members.length
       ? members.map(tile).join("")

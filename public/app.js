@@ -151,7 +151,7 @@ function memberCard(m, opts = {}) {
       <div class="member-head">
         ${avatar(m.name, "", m.avatar_path)}
         <div>
-          <h3>${esc(m.name)}${m.is_verified === true ? ' <span class="verified-mark" role="img" aria-label="Verifiziertes Mitglied" title="Verifiziertes Mitglied"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5.2 10.3 3.1 3.1 6.7-7"/></svg></span>' : ""}</h3>
+          <h3>${esc(m.name)}${m.is_verified === true ? ' <span class="verified-mark" role="img" aria-label="Verifiziertes Mitglied" title="Verifiziertes Mitglied"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5.2 10.3 3.1 3.1 6.7-7"/></svg></span>' : ""}${m.is_admin === true ? ' <span class="member-admin-badge" aria-label="Admin">Admin</span>' : ""}</h3>
           <p class="member-headline">${esc(m.headline)}</p>
         </div>
       </div>
