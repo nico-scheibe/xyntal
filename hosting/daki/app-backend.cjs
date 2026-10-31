@@ -28,7 +28,7 @@ const token = (() => { try { return fs.readFileSync(path.join(__dirname, '.app-g
 // The token travels as a header, never in a URL, so it cannot show up in git output.
 const auth = ['-c', 'http.extraHeader=Authorization: Basic ' + Buffer.from('x-access-token:' + token).toString('base64')];
 
-let child, commit, updating = false, stopping = false;
+let child, backup, commit, updating = false, stopping = false;
 
 function readEnvFile() {
   const env = {};
@@ -59,6 +59,24 @@ function run(serverDir) {
     if (stopping) return;
     console.error('App backend exited (' + code + '); restarting in 5 s');
     setTimeout(() => run(serverDir), 5000);
+  });
+  runBackups(serverDir, env);
+}
+
+// A daily recovery bundle of the database and uploads (the server's own
+// scripts/backup-loop.ts: VACUUM INTO + blobs + manifest), kept in .app-data/backups
+// so it survives updates. 14 bundles stay; a failed run keeps the existing ones.
+function runBackups(serverDir, env) {
+  if (backup) { backup.removeAllListeners('close'); backup.kill('SIGTERM'); }
+  const destination = path.join(data, 'backups');
+  fs.mkdirSync(destination, { recursive: true });
+  const backupEnv = { ...env, BACKUP_INTERVAL_HOURS: env.BACKUP_INTERVAL_HOURS || '24', BACKUP_KEEP: env.BACKUP_KEEP || '14' };
+  backup = spawn(process.execPath, ['scripts/backup-loop.ts', destination], { cwd: serverDir, env: backupEnv, stdio: 'inherit' });
+  backup.on('error', (error) => console.error('App backend backups failed to start:', error.message));
+  backup.on('close', (code) => {
+    if (stopping) return;
+    console.error('App backend backup loop exited (' + code + '); restarting in 60 s');
+    setTimeout(() => runBackups(serverDir, env), 60000);
   });
 }
 
@@ -114,5 +132,5 @@ if (!token) {
   }
   update();
   setInterval(update, 60000).unref();
-  for (const signal of ['SIGTERM', 'SIGINT']) process.on(signal, () => { stopping = true; if (child) child.kill(signal); });
+  for (const signal of ['SIGTERM', 'SIGINT']) process.on(signal, () => { stopping = true; if (child) child.kill(signal); if (backup) backup.kill(signal); });
 }

@@ -32,6 +32,11 @@ Repo `nico-scheibe/xyntal-app-windows` (Branch `master`), führt `npm ci --omit=
 aus und startet das Backend auf `127.0.0.1:47821` (änderbar mit `APP_BACKEND_PORT`). Jede Minute prüft es auf neue
 Commits; erst eine fertig installierte Version ersetzt die laufende. Datenbank und
 Uploads liegen in `.app-data/` und überleben Updates. Benötigt Node 24.
+Einmal täglich legt `scripts/backup-loop.ts` des Servers ein Wiederherstellungs-Bündel
+(Datenbank per `VACUUM INTO`, Uploads, Manifest) in `.app-data/backups/` ab; die letzten
+14 bleiben. Intervall und Anzahl lassen sich in `.app-backend.env` mit
+`BACKUP_INTERVAL_HOURS` und `BACKUP_KEEP` ändern. Wiederherstellen:
+`npm run backup:verify -- <Bündel>` prüfen, dann die Dateien zurückkopieren.
 
 Einrichtung in Daki (Ordner `/home/container/xyntal`, nie committen):
 
