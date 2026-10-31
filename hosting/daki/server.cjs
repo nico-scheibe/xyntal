@@ -177,7 +177,7 @@ const SECURITY_HEADERS = {
   'X-Frame-Options': 'SAMEORIGIN',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=()',
-  'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://rralgrlujoupprwlvoyo.supabase.co; font-src 'self'; connect-src 'self' https://rralgrlujoupprwlvoyo.supabase.co wss://rralgrlujoupprwlvoyo.supabase.co https://*.sibforms.com; form-action 'self' https://*.sibforms.com; frame-ancestors 'self'; base-uri 'self'; object-src 'none'",
+  'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://rralgrlujoupprwlvoyo.supabase.co; font-src 'self'; connect-src 'self' https://api.xyntal.de https://rralgrlujoupprwlvoyo.supabase.co wss://rralgrlujoupprwlvoyo.supabase.co https://*.sibforms.com; form-action 'self' https://*.sibforms.com; frame-ancestors 'self'; base-uri 'self'; object-src 'none'",
 };
 http.createServer((req,res) => {
   for (const [name, value] of Object.entries(SECURITY_HEADERS)) res.setHeader(name, value);
