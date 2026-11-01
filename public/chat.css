@@ -165,7 +165,8 @@ body.messages-page .site-footer { display: none; }
 .xc-compose-row { display: flex; align-items: flex-end; gap: 4px; }
 .xc-gif-btn { font-size: 12px; font-weight: 800; letter-spacing: .02em; }
 .xc-input-wrap { position: relative; flex: 1; min-width: 0; }
-.xc-input-wrap textarea { width: 100%; min-height: 40px; max-height: 180px; padding: 9px 10px; border: 0; background: none; box-shadow: none !important; resize: none; font-size: 15px; line-height: 1.4; color: var(--text, #fff); }
+.xc-input-wrap textarea { display: block; width: 100%; min-height: 40px; max-height: 180px; padding: 9px 10px; border: 0; background: none; box-shadow: none !important; resize: none; font-size: 15px; line-height: 1.4; color: var(--text, #fff); }
+.xc-input-wrap textarea::placeholder { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .xc-send { display: grid; place-items: center; width: 40px; height: 40px; flex: none; border: 0; border-radius: 50%; background: var(--xc-mine); color: #fff !important; cursor: pointer; }
 .xc-send:disabled { opacity: .5; }
 .xc-icon.is-rec { width: auto; padding: 0 12px; background: rgba(255, 107, 129, .2); color: #FF6B81 !important; font-size: 13px; font-variant-numeric: tabular-nums; }

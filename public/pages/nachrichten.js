@@ -534,7 +534,11 @@
   // ---------- Eingabe ----------
   const input = () => threadEl.querySelector("[data-input]");
   const composerText = () => (input() ? input().value : "");
-  function grow(ta) { ta.style.height = "auto"; ta.style.height = `${Math.min(ta.scrollHeight, 180)}px`; }
+  function grow(ta) {
+    ta.style.height = "auto";
+    // Leer: eine Zeile, auch wenn der Platzhalter länger ist (sonst sitzen +, Emoji und GIF tiefer als der Text)
+    if (ta.value) ta.style.height = `${Math.min(ta.scrollHeight, 180)}px`;
+  }
   function syncSend() {
     const has = composerText().trim().length > 0 || S.pending.length > 0;
     threadEl.querySelector("[data-send]").hidden = !has;
