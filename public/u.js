@@ -4,6 +4,11 @@
   const t = (de) => (window.XyntalI18n ? window.XyntalI18n.t(de) : de);
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const HANDLE = /^[a-z0-9][a-z0-9_-]{2,19}$/;
+  // Gesperrte Namen wie in supabase/016_account_cards.sql – nie als „noch frei“ anbieten
+  const BLOCKED = new Set(["admin", "api", "app", "about", "beta", "bestaetigt", "blog", "datenschutz", "demo", "help", "hilfe", "impressum",
+    "karte", "login", "logout", "mail", "meine-karte", "mitglieder", "mitglied-werden", "nachrichten", "news", "passwort-neu",
+    "preise", "pricing", "profil", "projekte", "register", "settings", "signup", "support", "team", "warteliste", "www",
+    "xyntal", "boerse", "community", "events"]);
   const SUPA = "https://rralgrlujoupprwlvoyo.supabase.co";
   const KEY = "sb_publishable_YxSngs1ePBoxqI6f26GRww_2_kNaLfh";
 
@@ -29,47 +34,56 @@
   const UUID = /^[0-9a-f-]{36}$/;
   const ctas = (primary) => `<div class="profile-actions">${primary}${member
     ? `<a class="btn btn-glass" href="/projekte">${esc(t("Projekte entdecken"))}</a>`
-    : `<a class="btn btn-glass" href="/#warteliste">${esc(t("Auf die Warteliste"))}</a>`}</div>`;
+    : `<a class="btn btn-glass" href="/beta">${esc(t("Für die Beta bewerben"))}</a>`}</div>`;
   const freeLink = (h) => `/?handle=${encodeURIComponent(h)}#karte`;
 
   function renderCard(c) {
     const name = c.name || "?";
+    const own = !!(me && c.user_id && c.user_id === me.id);
     document.title = `${name} · xyntal.de/${c.handle}`;
+    const primary = !member
+      ? `<a class="btn btn-primary" href="/#karte">${esc(t("Bau deine eigene Karte"))}</a>`
+      : own
+        ? `<a class="btn btn-primary" href="/meine-karte">${esc(t("Meine Karte bearbeiten"))}</a>`
+        : UUID.test(c.user_id || "")
+          ? `<a class="btn btn-primary" href="/nachrichten?an=${encodeURIComponent(c.user_id)}">${esc(t("Nachricht schreiben"))}</a>`
+          : "";
     page(`
-      <div class="public-intro"><span class="public-eyebrow">${esc(t("Menschen hinter den Ideen"))}</span><span class="public-address" data-no-i18n>xyntal.de/${esc(c.handle)}</span></div>
-      <div class="profile-overview">
-      <div class="bp-stage">
-        ${window.XyntalCardHtml(c, { t, heading: "h1", avatarAttrs: "data-pub-avatar" })}
-      </div>
-      <div class="profile-story">${profileHtml(c.profile) || `<section class="pp glass"><p class="pp-headline">${esc(c.pitch || c.name)}</p><p>${esc(t("Lerne die Person hinter der Idee kennen."))}</p></section>`}
-      </div>
-      </div>
-      ${me && UUID.test(c.user_id || "") && c.user_id !== me.id && window.XyntalApp ? `<section class="xm xm-public" aria-label="${esc(t("Eure Passung"))}" data-match hidden></section>` : ""}
-      <section class="public-activity" aria-label="Projekte und Anzeigen" data-public-activity><p role="status">${esc(t("Projekte und Anzeigen werden geladen …"))}</p></section>
-      <div class="profile-msg public-join">
-        <p>${esc(t("Auf Xyntal finden Entwickler, Designer und Gründer die richtigen Leute für ihre Idee."))}</p>
-        ${ctas(!member
-          ? `<a class="btn btn-primary" href="/#karte">${esc(t("Bau deine eigene Karte"))}</a>`
-          : me && c.user_id && c.user_id === me.id
-            ? `<a class="btn btn-primary" href="/meine-karte">${esc(t("Meine Karte bearbeiten"))}</a>`
-            : UUID.test(c.user_id || "")
-              ? `<a class="btn btn-primary" href="/nachrichten?an=${encodeURIComponent(c.user_id)}">${esc(t("Nachricht schreiben"))}</a>`
-              : "")}
+      <div class="pf">
+        <aside class="pf-side">
+          <div class="bp-stage">${window.XyntalCardHtml(c, { t, heading: "h1", avatarAttrs: "data-pub-avatar" })}</div>
+          <div class="pf-actions">
+            ${primary}
+            <button class="btn btn-glass" type="button" data-copy-link>${esc(t("Link kopieren"))}</button>
+            <p class="pf-copied" role="status" data-copy-status></p>
+          </div>
+        </aside>
+        <div class="pf-main">
+          ${profileHtml(c)}
+          ${me && UUID.test(c.user_id || "") && !own && window.XyntalApp ? `<section class="xm xm-public" aria-label="${esc(t("Eure Passung"))}" data-match hidden></section>` : ""}
+          <section class="public-activity" aria-label="${esc(t("Projekte und Anzeigen"))}" data-public-activity><p class="pf-muted" role="status">${esc(t("Projekte und Anzeigen werden geladen …"))}</p></section>
+          ${member ? "" : `<div class="pf-join"><p>${esc(t("Auf Xyntal finden Entwickler, Designer und Gründer die richtigen Leute für ihre Idee."))}</p><a class="btn btn-glass btn-sm" href="/beta">${esc(t("Für die Beta bewerben"))}</a></div>`}
+        </div>
       </div>`);
   }
+  root.addEventListener("click", async (e) => {
+    if (!e.target.closest("[data-copy-link]")) return;
+    const status = root.querySelector("[data-copy-status]");
+    try { await navigator.clipboard.writeText(location.origin + location.pathname); status.textContent = t("Link kopiert."); }
+    catch { status.textContent = location.host + location.pathname; }
+  });
 
   // Profilinfos aus dem Konto (nur wenn die Person ihr Profil öffentlich gemacht hat)
   const safeUrl = (u) => (/^https?:\/\/[^\s]+$/i.test(u || "") ? u : "");
-  function profileHtml(p) {
-    if (!p) return "";
-    const block = (title, text) => (text && text.trim() ? `<section class="pp-block"><h2>${esc(t(title))}</h2><p data-no-i18n>${esc(text)}</p></section>` : "");
+  function profileHtml(c) {
+    const p = c.profile || {};
+    const row = (title, text) => (text && text.trim() ? `<div class="pf-row"><h2>${esc(t(title))}</h2><p data-no-i18n>${esc(text)}</p></div>` : "");
     const links = [["LinkedIn", p.linkedin], ["Instagram", p.instagram], ["Website", p.website]].map(([l, u]) => [l, safeUrl(u)]).filter(([, u]) => u);
-    const inner = [
-      p.headline ? `<p class="pp-headline" data-no-i18n>${esc(p.headline)}</p>` : "",
-      block("Über mich", p.about), block("Ich biete", p.offer), block("Ich suche", p.seek),
-      links.length ? `<div class="pp-links">${links.map(([l, u]) => `<a class="btn btn-glass btn-sm" href="${esc(u)}" target="_blank" rel="noopener noreferrer nofollow">${esc(l)} ↗</a>`).join("")}</div>` : "",
-    ].join("");
-    return inner ? `<div class="pp glass">${inner}</div>` : "";
+    const rows = row("Über mich", p.about) + row("Ich biete", p.offer) + row("Ich suche", p.seek)
+      + (links.length ? `<div class="pf-row"><h2>${esc(t("Links"))}</h2><p class="pf-links">${links.map(([l, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener noreferrer nofollow">${esc(l)} ↗</a>`).join("")}</p></div>` : "");
+    const headline = p.headline || c.pitch || "";
+    return `<header class="pf-head"><p class="pf-address" data-no-i18n>xyntal.de/${esc(c.handle)}</p>${headline ? `<p class="pf-headline" data-no-i18n>${esc(headline)}</p>` : ""}</header>
+      ${rows ? `<section class="pf-about">${rows}</section>` : `<p class="pf-muted">${esc(t("Lerne die Person hinter der Idee kennen."))}</p>`}`;
   }
   async function loadActivity() {
     const target = root.querySelector("[data-public-activity]");
@@ -88,10 +102,11 @@
         const isProject = kind === "project";
         const projectUrl = /^[a-z0-9][a-z0-9_-]{0,19}-[a-z0-9][a-z0-9_-]{0,118}$/.test(x.share_slug || '') ? '/' + x.share_slug : '/projekte?projekt=' + id;
         const url = isProject ? projectUrl : '/boerse#anzeige-' + id;
-        return `<a class="public-item glass" href="${url}"><span class="public-item-meta">${esc(t(isProject ? "Projekt" : (x.type === "biete" ? "Angebot" : "Gesuch")))}${x.closed ? ` · ${esc(t("Geschlossen"))}` : ""}</span><h3 data-no-i18n>${esc(x.title)}</h3><p data-no-i18n>${esc(isProject ? x.pitch : x.excerpt)}</p><span class="public-item-link">${esc(t(isProject ? "Projekt ansehen" : "Anzeige ansehen"))} ↗</span></a>`;
+        return `<a class="public-item" href="${url}"><span class="public-item-body"><span class="public-item-meta">${esc(t(isProject ? "Projekt" : (x.type === "biete" ? "Angebot" : "Gesuch")))}${x.closed ? ` · ${esc(t("Geschlossen"))}` : ""}</span><h3 data-no-i18n>${esc(x.title)}</h3><p data-no-i18n>${esc(isProject ? x.pitch : x.excerpt)}</p></span><span class="public-item-arrow" aria-hidden="true">↗</span></a>`;
       };
-      const section = (title, items, kind, empty) => `<section class="public-section" id="${kind === "project" ? "profil-projekte" : "profil-anzeigen"}"><div class="public-section-heading"><h2>${esc(t(title))}</h2><span class="public-count">${items.length}</span></div><div class="public-items">${items.length ? items.map(x => item(x, kind)).join("") : `<p class="public-empty">${esc(t(empty))}</p>`}</div></section>`;
-      target.innerHTML = section("Projekte", data?.projects || [], "project", "Noch keine öffentlichen Projekte.") + section("Anzeigen", data?.listings || [], "listing", "Noch keine öffentlichen Anzeigen.");
+      // Leere Bereiche weglassen, statt „Noch keine …“ anzuzeigen
+      const section = (title, items, kind) => items.length ? `<section class="public-section" id="${kind === "project" ? "profil-projekte" : "profil-anzeigen"}"><h2>${esc(t(title))} <span class="public-count">${items.length}</span></h2><div class="public-items">${items.map(x => item(x, kind)).join("")}</div></section>` : "";
+      target.innerHTML = section("Projekte", data?.projects || [], "project") + section("Anzeigen", data?.listings || [], "listing");
     } catch {
       if (target.isConnected) target.innerHTML = `<p role="status">${esc(t("Projekte und Anzeigen konnten nicht geladen werden."))}</p><button class="btn btn-glass" type="button" data-retry-activity>${esc(t("Neu laden"))}</button>`;
       target.querySelector("[data-retry-activity]")?.addEventListener("click", loadActivity);
@@ -172,6 +187,10 @@
       if (card && card.reserved) {
         document.title = `xyntal.de/${handle} – ${t("reserviert")}`;
         return page(`<div class="profile-msg"><h1><b>xyntal.de/${esc(handle)}</b><br>${esc(t("ist reserviert."))}</h1><p>${esc(t("Dieses Profil ist noch nicht öffentlich freigegeben. Es kann schon jetzt im eigenen Konto veröffentlicht werden."))}</p>${ctas(`<a class="btn btn-primary" href="/#karte">${esc(t("Eigenen Link sichern"))}</a>`)}</div>`);
+      }
+      if (BLOCKED.has(handle)) {
+        document.title = `xyntal.de/${handle} – ${t("nicht verfügbar")}`;
+        return page(`<div class="profile-msg"><h1>${esc(t("Diese Seite gibt es nicht."))}</h1><p>${esc(t("Prüf den Link oder schau dich auf der Startseite um."))}</p>${ctas(`<a class="btn btn-primary" href="/">${esc(t("Zur Startseite"))}</a>`)}</div>`);
       }
       document.title = `xyntal.de/${handle} – ${t("noch frei")}`;
       page(`<div class="profile-msg"><h1><b>xyntal.de/${esc(handle)}</b><br>${esc(t("ist noch frei."))}</h1><p>${esc(t("Bau deine Xyntal-Karte und sichere dir diesen Link, bevor ihn jemand anders bekommt."))}</p>${ctas(`<a class="btn btn-primary" href="${freeLink(handle)}">${esc(t("Diesen Link sichern"))}</a>`)}</div>`);

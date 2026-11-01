@@ -1,6 +1,13 @@
 // Xyntal – englische Texte. Schlüssel = deutscher Originaltext (Leerzeichen zusammengefasst).
 // Neue deutsche Texte auf der Website hier ergänzen, sonst bleiben sie auf Englisch deutsch.
 window.XYNTAL_EN = {
+  "Projekte und Anzeigen": "Projects and listings",
+  "Link kopieren": "Copy link",
+  "Link kopiert.": "Link copied.",
+  "Links": "Links",
+  "nicht verfügbar": "not available",
+  "Diese Seite gibt es nicht.": "This page doesn't exist.",
+  "Prüf den Link oder schau dich auf der Startseite um.": "Check the link or have a look around the home page.",
   "Die Beta läuft": "The beta is live",
   "Für Solo-Founder und Maker mit einem digitalen Projekt: Finde Mitgründer, Entwickler und Designer – mit klaren Erwartungen an Fähigkeiten, Zeit und Zusammenarbeit. Xyntal ist in der Beta – bewirb dich und bau mit deinem Projekt von Anfang an mit.": "For solo founders and makers with a digital project: find co-founders, developers and designers – with clear expectations on skills, time and collaboration. Xyntal is in beta – apply and build with your project from day one.",
   "Für die Beta bewerben": "Apply for the beta",
