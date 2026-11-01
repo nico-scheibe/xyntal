@@ -276,11 +276,11 @@
       } catch { /* Initialen reichen */ }
     }
 
-    // Eingeloggt: In der Kopfzeile „Projekt anlegen“ statt „Auf die Warteliste“
+    // Eingeloggt: In der Kopfzeile „Projekt anlegen“ statt „Für die Beta bewerben“
     function swapCta() {
       if (!state.session) return;
       const header = host.closest("header") || host;
-      header.querySelectorAll('a.btn[href$="#warteliste"]').forEach((a) => {
+      header.querySelectorAll('a.btn[href$="#warteliste"], a.nav-cta[href="/beta"]').forEach((a) => {
         a.href = "/projekte?neu=1";
         a.textContent = "Projekt anlegen";
       });

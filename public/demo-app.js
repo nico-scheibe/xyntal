@@ -710,7 +710,7 @@
   const VIEWS = { home: viewHome, focus: viewFocus, workspaces: viewWorkspaces, projects: viewProjects, messages: viewMessages, discover: viewDiscover, communities: viewCommunities, files: viewFiles, ai: viewAi, automations: viewAutomations, calendar: viewCalendar };
   const ctaLinks = (primary, secondary) => signedIn
     ? `<a class="${primary}" href="/profil">${icon("download")}${T("App herunterladen", "Download the app")}</a><a class="${secondary}" href="/beta">${T("Zum Beta-Programm", "Beta programme")}</a>`
-    : `<a class="${primary}" href="/#warteliste">${T("Auf die Warteliste", "Join the waitlist")}</a><a class="${secondary}" href="/profil">${icon("download")}${T("Beta-Tester: App laden", "Beta testers: get the app")}</a>`;
+    : `<a class="${primary}" href="/beta">${T("Für die Beta bewerben", "Apply for the beta")}</a><a class="${secondary}" href="/profil">${icon("download")}${T("Beta-Tester: App laden", "Beta testers: get the app")}</a>`;
 
   /* ---------- Rahmen: Titelleiste und Seitenleiste ---------- */
   function crumbs(s) {

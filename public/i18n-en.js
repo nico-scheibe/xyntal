@@ -1,6 +1,17 @@
 // Xyntal – englische Texte. Schlüssel = deutscher Originaltext (Leerzeichen zusammengefasst).
 // Neue deutsche Texte auf der Website hier ergänzen, sonst bleiben sie auf Englisch deutsch.
 window.XYNTAL_EN = {
+  "Die Beta läuft": "The beta is live",
+  "Für Solo-Founder und Maker mit einem digitalen Projekt: Finde Mitgründer, Entwickler und Designer – mit klaren Erwartungen an Fähigkeiten, Zeit und Zusammenarbeit. Xyntal ist in der Beta – bewirb dich und bau mit deinem Projekt von Anfang an mit.": "For solo founders and makers with a digital project: find co-founders, developers and designers – with clear expectations on skills, time and collaboration. Xyntal is in beta – apply and build with your project from day one.",
+  "Für die Beta bewerben": "Apply for the beta",
+  "Kostenlos, ohne Konto, in etwa drei Minuten.": "Free, no account needed, takes about three minutes.",
+  "Noch nicht bereit für die Beta?": "Not ready for the beta yet?",
+  "Bleib auf dem Laufenden.": "Stay in the loop.",
+  "Trag dich ein und erfahre, wenn Xyntal für alle startet.": "Sign up and hear when Xyntal launches for everyone.",
+  "Neues zuerst": "News first",
+  "Du erfährst als Erste:r von neuen Funktionen und vom Start.": "You're the first to hear about new features and the launch.",
+  "Die Desktop-App für Mac und Windows ist in der Beta. Bewirb dich für das Beta-Programm oder hol dir Updates per E-Mail.": "The desktop app for Mac and Windows is in beta. Apply for the beta programme or get updates by email.",
+  "Updates per E-Mail": "Updates by email",
   "Für Solo-Founder und Maker mit einem digitalen Projekt: Finde Mitgründer, Entwickler und Designer – mit klaren Erwartungen an Fähigkeiten, Zeit und Zusammenarbeit. Xyntal ist im Aufbau – trag dich ein und erfahre, wann die Beta startet.": "For solo founders and makers with a digital project: find co-founders, developers and designers – with clear expectations on skills, time and collaboration. Xyntal is in development — sign up to hear when the beta launches.",
   "Wenige Vorschläge.": "A few suggestions.",
   "Das passende Team.": "The right team.",

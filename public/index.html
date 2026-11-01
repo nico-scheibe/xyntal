@@ -22,8 +22,8 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="stylesheet" href="fonts/fonts.css?v=31">
-  <link rel="stylesheet" href="home.css?v=24">
-  <script src="i18n-en.js?v=68" defer></script>
+  <link rel="stylesheet" href="home.css?v=25">
+  <script src="i18n-en.js?v=69" defer></script>
   <script src="demo-i18n.js?v=1" defer></script>
   <script src="i18n.js?v=31" defer></script>
   <link rel="stylesheet" href="/backdrop.css?v=4">
@@ -47,7 +47,7 @@
       <a class="nav-main" href="/mitglieder">Mitglieder</a>
       <a class="hide-sm" href="/nachrichten" data-messages hidden>Nachrichten</a>
       <a class="hide-sm" href="/login" data-account>Login</a>
-      <a class="btn btn-small nav-cta" href="/#warteliste">Auf die Warteliste</a>
+      <a class="btn btn-small nav-cta" href="/beta">Für die Beta bewerben</a>
     </nav>
   </div>
 </header>
@@ -58,29 +58,19 @@
   <section class="hero" aria-labelledby="hero-title">
     <div class="shell hero-grid">
       <div class="hero-inner">
-        <p class="pill"><span class="pill-dot" aria-hidden="true"></span>Early Access startet bald</p>
+        <p class="pill"><span class="pill-dot" aria-hidden="true"></span>Die Beta läuft</p>
         <h1 id="hero-title" class="hero-title">
           <span class="ht-intro">Deine Idee braucht</span>
           <span class="ht-grad">die richtigen Leute.</span>
         </h1>
-        <p class="hero-lead">Für Solo-Founder und Maker mit einem digitalen Projekt: Finde Mitgründer, Entwickler und Designer – mit klaren Erwartungen an Fähigkeiten, Zeit und Zusammenarbeit. Xyntal ist im Aufbau – trag dich ein und erfahre, wann die Beta startet.</p>
-<form class="waitlist-form hero-signup" aria-label="Auf die Warteliste" data-waitlist novalidate>
-        <div class="waitlist-row glass">
-          <label class="sr-only" for="hero-email">E-Mail-Adresse</label>
-          <input id="hero-email" aria-describedby="hero-signup-hint" type="email" name="EMAIL" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" maxlength="254" required placeholder="du@beispiel.de">
+        <p class="hero-lead">Für Solo-Founder und Maker mit einem digitalen Projekt: Finde Mitgründer, Entwickler und Designer – mit klaren Erwartungen an Fähigkeiten, Zeit und Zusammenarbeit. Xyntal ist in der Beta – bewirb dich und bau mit deinem Projekt von Anfang an mit.</p>
+        <div class="hero-signup hero-cta">
+          <div class="hero-cta-actions">
+            <a class="btn btn-primary" href="/beta">Für die Beta bewerben</a>
+            <a class="btn btn-glass" href="#entdecken">Demo ausprobieren</a>
+          </div>
+          <p class="signup-hint">Kostenlos, ohne Konto, in etwa drei Minuten.</p>
         </div>
-        <label class="waitlist-check">
-          <input type="checkbox" name="OPT_IN" value="1" required>
-          <span class="check-box" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7"/></svg></span>
-          <span>Ich möchte E-Mails zum Xyntal-Start, zur Beta und zur Entwicklung von Xyntal erhalten. Abmeldung jederzeit. <a href="impressum#datenschutz">Datenschutz</a></span>
-        </label>
-          <button class="btn btn-primary" type="submit">Zur Warteliste</button>
-
-        <div class="waitlist-hp" aria-hidden="true"><input type="text" name="email_address_check" tabindex="-1" autocomplete="off"></div>
-        <p class="signup-hint" id="hero-signup-hint">Kostenlos eintragen. Danach E-Mail bestätigen.</p>
-        <p class="waitlist-status" role="status" aria-live="polite"></p>
-      </form>
-        <a class="hero-demo-link" href="#entdecken">Erst die Demo ausprobieren <span aria-hidden="true">↗</span></a>
       </div>
 
       <div class="hero-show" aria-hidden="true" data-hero-show>
@@ -339,9 +329,9 @@
   <!-- Warteliste -->
   <section class="launch" id="warteliste" aria-labelledby="launch-title">
     <div class="shell launch-inner">
-      <p class="eyebrow">Early Access</p>
-      <h2 id="launch-title" class="h2 launch-title">Sei dabei, <span class="grad-soft">wenn es losgeht.</span></h2>
-      <p class="section-lead">Werde Teil der ersten Testgruppe.</p>
+      <p class="eyebrow">Newsletter</p>
+      <h2 id="launch-title" class="h2 launch-title">Noch nicht bereit für die Beta? <span class="grad-soft">Bleib auf dem Laufenden.</span></h2>
+      <p class="section-lead">Trag dich ein und erfahre, wenn Xyntal für alle startet.</p>
       <div class="launch-card" data-launch-card hidden></div>
       <div class="launch-count" data-waitlist-count role="status" aria-live="polite" hidden>
         <span class="launch-count-orbit" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M16 5a3 3 0 0 1 0 6M18 14a5 5 0 0 1 3 4v2"/></svg></span>
@@ -375,7 +365,7 @@
         <p class="waitlist-status" role="status" aria-live="polite"></p>
       </form>
       <ul class="launch-perks">
-        <li class="glass"><span class="lp-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M13 3L5 14h6l-1 7 8-11h-6l1-7z"/></svg></span><b>Früher Zugang zur Beta</b><span>Du testest Xyntal vor allen anderen.</span></li>
+        <li class="glass"><span class="lp-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M13 3L5 14h6l-1 7 8-11h-6l1-7z"/></svg></span><b>Neues zuerst</b><span>Du erfährst als Erste:r von neuen Funktionen und vom Start.</span></li>
         <li class="glass"><span class="lp-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg></span><b>Dein eigenes Profil</b><span>Mit Wunsch-Link xyntal.de/deinname, bevor ihn jemand anders bekommt.</span></li>
         <li class="glass"><span class="lp-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M8 9h8M8 13h5"/></svg></span><b>Erstes Projekt-Board</b><span>Stell deine Idee mit offenen Rollen als Erste:r ein.</span></li>
       </ul>
@@ -394,7 +384,7 @@
         <p>Stell dein Projekt vor, bewirb dich auf offene Rollen oder lerne Leute kennen, die genauso viel vorhaben wie du.</p>
       </div>
       <div class="sf-cta-actions">
-        <a class="sf-btn sf-btn-primary" href="/#warteliste">Auf die Warteliste</a>
+        <a class="sf-btn sf-btn-primary" href="/beta">Für die Beta bewerben</a>
         <a class="sf-btn" href="/projekte">Projekte entdecken</a>
       </div>
     </div>
@@ -424,7 +414,7 @@
             <li><a href="/mitglied-werden">Mitglied werden</a></li>
             <li><a href="/beta">Beta-Programm</a></li>
             <li><a href="/meine-karte">Meine Karte</a></li>
-            <li><a href="/#warteliste">Warteliste</a></li>
+            <li><a href="/#warteliste">Newsletter</a></li>
             <li><a href="/login">Login</a></li>
           </ul>
         </div>
@@ -451,7 +441,7 @@
 <script src="landing.js?v=swipe-53" defer></script>
 <script src="home-nav.js?v=5" defer></script>
 <script src="/effects.js?v=36" defer></script>
-<script src="/account-menu.js?v=8" defer></script>
-<script src="/demo-app.js?v=3" defer></script>
+<script src="/account-menu.js?v=9" defer></script>
+<script src="/demo-app.js?v=4" defer></script>
 </body>
 </html>

@@ -118,7 +118,6 @@ Alle Links in `public/` sind relativ (`community` statt `/community`), damit die
 
 ## Noch offen
 
-- Foto als `public/nico.jpg` ablegen und in `public/index.html` einbinden (Kommentar im Abschnitt „Wer steckt dahinter?“)
 - Instagram- und LinkedIn-Links im Footer von `public/index.html`
 - Impressum und vollständige Datenschutzerklärung in `public/impressum.html` (Supabase als Dienstleister nennen)
 - Newsletter versenden: Adressen im Admin als CSV exportieren und z. B. in Brevo oder MailerLite importieren
