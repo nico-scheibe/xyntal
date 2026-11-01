@@ -1,7 +1,7 @@
 // /nachrichten – dieselben Gespräche wie in der Xyntal-App, im selben Aufbau:
 // links die Gesprächsliste (Alle · Ungelesen · Anfragen · Gruppen · Archiviert),
 // in der Mitte der Verlauf mit Einblick zur Zusammenarbeit und Eingabe (Anhang,
-// Emoji, GIF, Sprachnachricht, /projekt, @-Erwähnung), rechts Person bzw. Gruppe.
+// Emoji, GIF, Sprachnachricht, /projekt · /arbeitsbereich · /gruppe, @-Erwähnung), rechts Person bzw. Gruppe.
 // Alles läuft über den App-Server (app-api.js) – ein Datenbestand für App und Website.
 (() => {
   const X = window.XyntalApp;
@@ -26,7 +26,7 @@
   const S = {
     me: "", meName: "", conversations: [], filter: "all", query: "", searchHits: [],
     active: "", messages: [], hasMore: false, readers: [], members: new Map(), users: new Map(), presence: new Map(),
-    insight: new Map(), projectFilter: "", chatProjects: [], replyTo: null, editId: "", pending: [], projectTag: null,
+    insight: new Map(), tagFilter: "", tagFilterName: "", filterTagDropped: false, chatTags: [], replyTo: null, editId: "", pending: [], tag: null,
     mentionIds: new Map(), typing: new Map(), view: "list", infoOpen: true, draft: new Map(), loadingOlder: false,
   };
   let chatBg = "xyntal";
@@ -81,6 +81,48 @@
     if (text) setTimeout(() => { if (el.textContent === text) el.textContent = ""; }, 6000);
   }
   const conv = (id) => S.conversations.find((c) => c.id === id);
+
+  // Markierungen wie in der App: Projekt, Arbeitsbereich oder Gruppe (auf dem Server „community“).
+  // Eine Nachricht trägt höchstens ein Projekt (m.project) und/oder einen Arbeitsbereich bzw. eine Gruppe (m.tag).
+  const TAG_KINDS = ["project", "workspace", "community"];
+  const TAG_ICON = { project: "folder", workspace: "building", community: "users" };
+  const TAG_LABEL = { project: "Projekt", workspace: "Arbeitsbereich", community: "Gruppe" };
+  const TAG_ABOUT = { project: "Zum Projekt", workspace: "Zum Arbeitsbereich", community: "Zur Gruppe" };
+  const tagKey = (g) => `${g.kind}:${g.id}`;
+  const tagsOf = (m) => [m.project ? { kind: "project", ...m.project } : null, m.tag && TAG_KINDS.includes(m.tag.kind) ? m.tag : null].filter(Boolean);
+  // Die Befehle der Eingabe (wie tagCommand() in der App, qml/screens/messages/MessageFormat.js)
+  const TAG_COMMANDS = [["projekt", "project"], ["project", "project"], ["arbeitsbereich", "workspace"], ["workspace", "workspace"],
+    ["gruppe", "community"], ["group", "community"], ["community", "community"]];
+  // Der Befehl direkt vor dem Cursor: ein einzelnes „/“ bietet alles an, „/arb“ die passenden Arten,
+  // nach einem Leerzeichen grenzt der Rest die Liste ein („/projekt apo“). Nur am Anfang oder nach
+  // Leerraum – „und/oder“ ist keiner. `start` ist die Stelle des Schrägstrichs.
+  function tagCommand(text, cursor) {
+    const head = String(text || "").slice(0, Math.max(0, Math.min(Number(cursor) || 0, String(text || "").length)));
+    const none = { active: false, prefix: "", start: -1, kinds: [] };
+    const m = /(^|\s)\/([A-Za-z]*)(?: ([^\n/]{0,40}))?$/.exec(head);
+    if (!m) return none;
+    const command = m[2].toLowerCase();
+    const kinds = [];
+    for (const [word, kind] of TAG_COMMANDS) {
+      const hit = m[3] === undefined ? word.startsWith(command) : word === command;
+      if (hit && !kinds.includes(kind)) kinds.push(kind);
+    }
+    if (!kinds.length) return none;
+    return { active: true, prefix: m[3] === undefined ? "" : m[3], start: m.index + m[1].length, kinds };
+  }
+  // Was die nächste Nachricht markiert: die eigene Auswahl, sonst im gefilterten Verlauf der Filter
+  // (nur, wenn du ihn selbst markieren darfst; das × nimmt ihn für diese Nachricht weg).
+  function effectiveTag() {
+    if (S.tag) return S.tag;
+    if (!S.tagFilter || S.filterTagDropped) return null;
+    const seen = S.messages.map(tagsOf).flat().find((g) => tagKey(g) === S.tagFilter);
+    return seen && seen.accessible ? { kind: seen.kind, id: seen.id, name: seen.name } : null;
+  }
+  function tagPayload() {
+    const g = effectiveTag();
+    if (!g) return {};
+    return g.kind === "project" ? { projectId: g.id } : { tag: { kind: g.kind, id: g.id } };
+  }
   const isGroup = (c) => c && !(c.kind === "dm" && c.partnerId);
 
   async function user(id) {
@@ -186,14 +228,14 @@
   async function open(id, { push = true } = {}) {
     if (S.active && S.active !== id) S.draft.set(S.active, composerText());
     S.active = id;
-    S.messages = []; S.hasMore = false; S.readers = []; S.replyTo = null; S.editId = ""; S.pending = []; S.projectTag = null;
-    S.mentionIds = new Map(); S.projectFilter = ""; S.chatProjects = [];
+    S.messages = []; S.hasMore = false; S.readers = []; S.replyTo = null; S.editId = ""; S.pending = []; S.tag = null;
+    S.mentionIds = new Map(); S.tagFilter = ""; S.tagFilterName = ""; S.filterTagDropped = false; S.chatTags = [];
     setView("thread");
     if (push) history.replaceState(null, "", `nachrichten?c=${encodeURIComponent(id)}`);
     renderList();
     renderThreadShell();
     try {
-      await Promise.all([loadMessages(), loadMembers(id), loadChatProjects()]);
+      await Promise.all([loadMessages(), loadMembers(id), loadChatTags()]);
       const c = conv(id);
       if (c && !isGroup(c)) loadInsight(c.partnerId);
       markRead();
@@ -209,9 +251,10 @@
     } catch { S.members.set(id, { members: [], can: {} }); }
     renderHeader(); renderInfo();
   }
-  async function loadChatProjects() {
-    try { S.chatProjects = (await X.api("GET", `/conversations/${encodeURIComponent(S.active)}/projects`)).projects || []; }
-    catch { S.chatProjects = []; }
+  // Alles, was in diesem Gespräch markiert wurde (Projekte, Arbeitsbereiche, Gruppen) – die Filter rechts
+  async function loadChatTags() {
+    try { S.chatTags = (await X.api("GET", `/conversations/${encodeURIComponent(S.active)}/tags`)).tags || []; }
+    catch { S.chatTags = []; }
     renderInfo();
   }
   async function loadInsight(partnerId) {
@@ -233,7 +276,7 @@
     const id = S.active;
     let path = `/conversations/${encodeURIComponent(id)}/messages?limit=50`;
     if (older && S.messages.length) path += `&before=${encodeURIComponent(S.messages[0].ts)}&beforeId=${encodeURIComponent(S.messages[0].id)}`;
-    if (S.projectFilter) path += `&projectId=${encodeURIComponent(S.projectFilter)}`;
+    if (S.tagFilter) path += `&tag=${encodeURIComponent(S.tagFilter)}`;
     const r = await X.api("GET", path);
     if (S.active !== id) return;
     if (older) {
@@ -255,7 +298,7 @@
     const first = S.messages[0];
     let path = `/conversations/${encodeURIComponent(id)}/messages?limit=200`;
     if (first) path += `&since=${encodeURIComponent(first.ts)}&sinceId=${encodeURIComponent(first.id)}`;
-    if (S.projectFilter) path += `&projectId=${encodeURIComponent(S.projectFilter)}`;
+    if (S.tagFilter) path += `&tag=${encodeURIComponent(S.tagFilter)}`;
     try {
       const r = await X.api("GET", path);
       if (S.active !== id) return;
@@ -291,11 +334,11 @@
         <div data-composer-top></div>
         <div class="xc-compose-row">
           <div class="xc-pop-anchor">
-            <button type="button" class="xc-icon" data-plus aria-label="${esc(t("Anhängen, GIF oder Projekt"))}" aria-haspopup="menu" aria-expanded="false">${ICON.plus}</button>
+            <button type="button" class="xc-icon" data-plus aria-label="${esc(t("Anhängen, GIF oder Markierung"))}" aria-haspopup="menu" aria-expanded="false">${ICON.plus}</button>
             <div class="xc-menu" data-plus-menu role="menu" hidden>
               <button type="button" role="menuitem" data-attach>${ICON.clip}<span>${esc(t("Datei anhängen …"))}</span></button>
               <button type="button" role="menuitem" data-gif-open>${ICON.gif}<span>${esc(t("GIF senden …"))}</span></button>
-              <button type="button" role="menuitem" data-project-open>${ICON.folder}<span>${esc(t("Projekt markieren …"))}</span></button>
+              <button type="button" role="menuitem" data-tag-open>${ICON.folder}<span>${esc(t("Projekt, Arbeitsbereich oder Gruppe markieren …"))}</span></button>
             </div>
           </div>
           <div class="xc-pop-anchor">
@@ -304,7 +347,7 @@
           </div>
           <button type="button" class="xc-icon xc-gif-btn" data-gif-open aria-label="${esc(t("GIF senden"))}">GIF</button>
           <div class="xc-input-wrap">
-            <textarea data-input rows="1" maxlength="8000" placeholder="${esc(t(matchMedia("(max-width: 600px)").matches ? "Nachricht …" : "Nachricht … (@ erwähnt jemanden, /projekt markiert ein Projekt)"))}" aria-label="${esc(t("Nachricht"))}"></textarea>
+            <textarea data-input rows="1" maxlength="8000" placeholder="${esc(t(matchMedia("(max-width: 600px)").matches ? "Nachricht …" : "Nachricht … (@ erwähnt, / markiert Projekt, Arbeitsbereich oder Gruppe)"))}" aria-label="${esc(t("Nachricht"))}"></textarea>
             <div class="xc-pop xc-picker" data-picker hidden></div>
           </div>
           <button type="button" class="xc-icon" data-mic aria-label="${esc(t("Sprachnachricht aufnehmen"))}">${ICON.mic}</button>
@@ -373,7 +416,10 @@
     const gif = m.kind === "gif" && m.gif && /^https:\/\/(media\d?|i)\.giphy\.com\//.test(m.gif.url || "")
       ? `<img class="xc-gif" src="${esc(m.gif.url)}" alt="${esc(m.gif.title || "GIF")}" loading="lazy" width="${Number(m.gif.width) || 200}" height="${Number(m.gif.height) || 150}">` : "";
     const reply = m.replyToId ? `<button type="button" class="xc-quote" data-jump="${esc(m.replyToId)}"><b data-no-i18n>${esc(m.replyToAuthor)}</b><span data-no-i18n>${esc(m.replySnippet || t(m.replyKind === "voice" ? "Sprachnachricht" : m.replyKind === "gif" ? "GIF" : m.replyKind === "file" ? "Datei" : "Nachricht"))}</span></button>` : "";
-    const project = m.project ? `<span class="xc-project" title="${esc(m.project.accessible ? t("Projekt") : t("Du bist nicht in diesem Arbeitsbereich"))}">${ICON.folder}<span data-no-i18n>${esc(m.project.name)}</span></span>` : "";
+    const project = tagsOf(m).map((g) => {
+      const title = g.accessible ? `${t(TAG_LABEL[g.kind])} · ${t("Klick zeigt nur Nachrichten dazu")}` : t(g.kind === "community" ? "Du bist nicht in dieser Gruppe" : "Du bist nicht in diesem Arbeitsbereich");
+      return `<button type="button" class="xc-project" data-tag-filter="${esc(tagKey(g))}" data-name="${esc(g.name)}" title="${esc(title)}" aria-pressed="${S.tagFilter === tagKey(g)}">${ICON[TAG_ICON[g.kind]]}<span data-no-i18n>${esc(g.name)}</span></button>`;
+    }).join("");
     const reactions = (m.reactions || []).length ? `<div class="xc-reactions">${m.reactions.map((r) => `<button type="button" class="xc-reaction${r.mine ? " is-mine" : ""}" data-react="${esc(r.emoji)}" title="${esc(r.names.join(", "))}" aria-pressed="${r.mine}">${esc(r.emoji)} <b>${r.count}</b></button>`).join("")}</div>` : "";
     const body = m.body && !(m.kind === "gif" && m.body === (m.gif && m.gif.url)) ? `<div class="xc-body" data-no-i18n>${m.isCode ? `<pre><code>${esc(m.body)}</code></pre>` : bodyHtml(m)}</div>` : "";
     const editing = S.editId === m.id;
@@ -382,7 +428,7 @@
       <div class="xc-bubble-wrap">
         ${showAuthor ? `<span class="xc-author" data-no-i18n>${esc(m.author)}</span>` : ""}
         <div class="xc-bubble">
-          ${reply}${project}
+          ${reply}${project ? `<div class="xc-tagrow">${project}</div>` : ""}
           ${editing ? `<form class="xc-edit" data-edit-form><textarea data-edit-input rows="2" maxlength="8000">${esc(m.body)}</textarea><div><button class="btn btn-small" type="submit">${esc(t("Speichern"))}</button><button class="btn btn-small btn-ghost" type="button" data-edit-cancel>${esc(t("Abbrechen"))}</button></div></form>` : body}
           ${gif}${(m.attachments || []).map((a) => attachmentHtml(a, m)).join("")}
           <span class="xc-meta"><time datetime="${esc(m.ts)}">${esc(timeOf(m.ts))}</time>${m.edited ? ` · ${esc(t("bearbeitet"))}` : ""}${m.threadReplyCount ? ` · ${m.threadReplyCount === 1 ? esc(t("1 Antwort im Thread")) : `${m.threadReplyCount} ${esc(t("Antworten im Thread"))}`}` : ""}</span>
@@ -418,13 +464,17 @@
         html = html.replace(`data-msg="${esc(lastMine.id)}">`, `data-msg="${esc(lastMine.id)}" data-seen="${esc(label)}">`);
       }
     }
-    scroller.innerHTML = html || `<p class="xc-empty">${esc(t(S.projectFilter ? "Zu diesem Projekt gibt es hier noch keine Nachrichten." : "Noch keine Nachrichten – sag hallo."))}</p>`;
+    scroller.innerHTML = html || `<p class="xc-empty">${esc(t(S.tagFilter ? "Dazu gibt es noch keine Nachrichten." : "Noch keine Nachrichten – sag hallo."))}</p>`;
     hydrate(scroller);
     if (stick) scroller.scrollTop = scroller.scrollHeight;
     const bar = threadEl.querySelector("[data-filterbar]");
-    const p = S.chatProjects.find((x) => x.id === S.projectFilter);
-    bar.hidden = !S.projectFilter;
-    if (S.projectFilter) bar.innerHTML = `${ICON.folder}<span>${esc(t("Nur Nachrichten zu"))} <b data-no-i18n>${esc(p ? p.name : "")}</b></span><button type="button" class="xc-link" data-filter-clear>${esc(t("Alle Nachrichten"))}</button>`;
+    bar.hidden = !S.tagFilter;
+    if (S.tagFilter) {
+      const kind = S.tagFilter.split(":")[0];
+      const hint = effectiveTag() && !S.tag ? `<small>${esc(t("Neue Nachrichten hier werden damit markiert."))}</small>` : "";
+      bar.innerHTML = `${ICON[TAG_ICON[kind]] || ICON.folder}<span>${esc(t("Nur Nachrichten zu"))} <b data-no-i18n>${esc(S.tagFilterName)}</b> ${hint}</span><button type="button" class="xc-link" data-filter-clear>${esc(t("Alle Nachrichten"))}</button>`;
+    }
+    renderComposerTop();
   }
   function hydrate(scope) {
     scope.querySelectorAll("[data-file-id]").forEach(async (el) => {
@@ -448,7 +498,7 @@
     const c = conv(S.active);
     root.classList.toggle("info-closed", !S.infoOpen);
     if (!c) { setInfo(`<p class="xc-empty">${esc(t("Wähle ein Gespräch, um Details zu sehen."))}</p>`); return; }
-    const projects = S.chatProjects.length ? `<section><h3>${esc(t("Projekte in diesem Chat"))}</h3><ul class="xc-projects">${S.chatProjects.map((p) => `<li><button type="button" data-project-filter="${esc(p.id)}" aria-pressed="${S.projectFilter === p.id}">${ICON.folder}<span data-no-i18n>${esc(p.name)}</span><small>${p.count}</small></button></li>`).join("")}</ul><p class="xc-hint">${esc(t("Klick auf ein Projekt, um nur seine Nachrichten zu sehen. Mit /projekt in einer Nachricht markierst du eins."))}</p></section>` : "";
+    const projects = S.chatTags.length ? `<section><h3>${esc(t("In diesem Chat markiert"))}</h3><ul class="xc-projects">${S.chatTags.filter((g) => TAG_KINDS.includes(g.kind)).map((g) => `<li><button type="button" data-tag-filter="${esc(tagKey(g))}" data-name="${esc(g.name)}" aria-pressed="${S.tagFilter === tagKey(g)}" title="${esc(t(TAG_LABEL[g.kind]))}">${ICON[TAG_ICON[g.kind]]}<span data-no-i18n>${esc(g.name)}</span><small>${g.count}</small></button></li>`).join("")}</ul><p class="xc-hint">${esc(t("Klick auf einen Eintrag, um nur seine Nachrichten zu sehen. In einer Nachricht markierst du mit /projekt, /arbeitsbereich oder /gruppe."))}</p></section>` : "";
     if (isGroup(c)) {
       const r = S.members.get(c.id) || { members: [] };
       setInfo(`
@@ -468,8 +518,8 @@
       <section class="xc-links">${handle ? `<a class="btn btn-small btn-ghost" href="/${esc(handle)}">${esc(t("Profil ansehen"))}</a>` : ""}<a class="btn btn-small btn-ghost" href="/fuer-dich?person=${encodeURIComponent(c.partnerId)}">${esc(t("Eure Passung"))}</a></section>`);
   }
   infoEl.addEventListener("click", async (e) => {
-    const f = e.target.closest("[data-project-filter]");
-    if (f) { S.projectFilter = S.projectFilter === f.dataset.projectFilter ? "" : f.dataset.projectFilter; renderInfo(); loadMessages(); return; }
+    const f = e.target.closest("[data-tag-filter]");
+    if (f) { setTagFilter(f.dataset.tagFilter, f.dataset.name); return; }
     if (e.target.closest("[data-leave]")) {
       const b = e.target.closest("[data-leave]");
       if (!b.dataset.armed) { b.dataset.armed = "1"; b.textContent = t("Wirklich verlassen?"); setTimeout(() => { delete b.dataset.armed; b.textContent = t("Gruppe verlassen"); }, 5000); return; }
@@ -495,7 +545,8 @@
     if (!top) return;
     const parts = [];
     if (S.replyTo) parts.push(`<div class="xc-chipbar">${ICON.reply}<span>${esc(t("Antwort an"))} <b data-no-i18n>${esc(S.replyTo.author)}</b>: <span data-no-i18n>${esc((S.replyTo.body || "").slice(0, 80))}</span></span><button type="button" class="xc-x" data-reply-cancel aria-label="${esc(t("Antwort abbrechen"))}">×</button></div>`);
-    if (S.projectTag) parts.push(`<div class="xc-chipbar">${ICON.folder}<span>${esc(t("Zu Projekt"))} <b data-no-i18n>${esc(S.projectTag.name)}</b></span><button type="button" class="xc-x" data-project-cancel aria-label="${esc(t("Projekt-Markierung entfernen"))}">×</button></div>`);
+    const g = effectiveTag();
+    if (g) parts.push(`<div class="xc-chipbar" data-tag-chip="${esc(tagKey(g))}">${ICON[TAG_ICON[g.kind]]}<span>${esc(t(TAG_ABOUT[g.kind]))} <b data-no-i18n>${esc(g.name)}</b></span><button type="button" class="xc-x" data-tag-cancel aria-label="${esc(t("Markierung entfernen"))}">×</button></div>`);
     if (S.pending.length) parts.push(`<div class="xc-pending">${S.pending.map((p, i) => `<span class="xc-pend">${p.preview ? `<img src="${p.preview}" alt="">` : ICON.clip}<span data-no-i18n>${esc(p.file.name)}</span><button type="button" class="xc-x" data-pending-remove="${i}" aria-label="${esc(t("Entfernen"))}">×</button></span>`).join("")}</div>`);
     top.innerHTML = parts.join("");
   }
@@ -539,47 +590,68 @@
     if (e.target.matches("[data-edit-form]")) saveEdit(e.target.querySelector("textarea").value);
   });
 
-  // @-Erwähnung und /projekt: Auswahl über der Eingabe
-  let projectsCache = null;
-  async function projectsList() {
-    if (projectsCache) return projectsCache;
-    projectsCache = (async () => {
-      const { workspaces } = await X.api("GET", "/workspaces");
-      const lists = await Promise.all((workspaces || []).map((w) => X.api("GET", `/workspaces/${encodeURIComponent(w.id)}/projects`).then((r) => (r.projects || []).map((p) => ({ id: p.id, name: p.name, workspace: w.name }))).catch(() => [])));
-      return lists.flat();
+  // @-Erwähnung und /projekt, /arbeitsbereich, /gruppe: Auswahl über der Eingabe
+  let tagCache = null;
+  function tagChoices() {
+    if (tagCache) return tagCache;
+    tagCache = (async () => {
+      const [{ workspaces }, { communities }] = await Promise.all([
+        X.api("GET", "/workspaces"),
+        X.api("GET", "/communities").catch(() => ({ communities: [] })),
+      ]);
+      const projects = await Promise.all((workspaces || []).map((w) => X.api("GET", `/workspaces/${encodeURIComponent(w.id)}/projects`)
+        .then((r) => (r.projects || []).filter((p) => p.archived !== true).map((p) => ({ kind: "project", id: p.id, name: p.name, detail: w.name })))
+        .catch(() => [])));
+      return [
+        ...projects.flat(),
+        ...(workspaces || []).map((w) => ({ kind: "workspace", id: w.id, name: w.name })),
+        ...(communities || []).map((c) => ({ kind: "community", id: c.id, name: c.name })),
+      ];
     })();
-    projectsCache.catch(() => { projectsCache = null; });
-    return projectsCache;
+    tagCache.catch(() => { tagCache = null; });
+    return tagCache;
   }
-  function tokenAtCursor() {
+  function mentionAtCursor() {
     const ta = input();
     const before = ta.value.slice(0, ta.selectionStart);
-    const m = /(^|\s)([@/])([^\s@/]*)$/.exec(before);
-    return m ? { kind: m[2], query: m[3].toLowerCase(), start: before.length - m[3].length - 1 } : null;
+    const m = /(^|\s)@([^\s@]*)$/.exec(before);
+    return m ? { query: m[2].toLowerCase(), start: before.length - m[2].length - 1 } : null;
   }
-  async function syncPicker(forceProject = false) {
+  let pickerSeq = 0;
+  async function syncPicker(forceTag = false) {
     const picker = threadEl.querySelector("[data-picker]");
-    const tok = forceProject ? { kind: "/", query: "projekt", start: -1 } : tokenAtCursor();
-    if (!tok) { picker.hidden = true; return; }
+    const ta = input();
+    const seq = ++pickerSeq;
+    const cmd = forceTag ? { active: true, prefix: "", start: -1, kinds: TAG_KINDS } : tagCommand(ta.value, ta.selectionStart);
+    const men = cmd.active ? null : mentionAtCursor();
     let items = [];
-    if (tok.kind === "@") {
+    let start = -1;
+    if (men) {
+      start = men.start;
       const r = S.members.get(S.active) || { members: [] };
-      items = r.members.filter((m) => !m.mine && m.displayName.toLowerCase().includes(tok.query)).slice(0, 6)
+      items = r.members.filter((m) => !m.mine && m.displayName.toLowerCase().includes(men.query)).slice(0, 6)
         .map((m) => `<button type="button" data-pick="mention" data-id="${esc(m.id)}" data-name="${esc(m.displayName)}">${avatar(userNow(m.id) || { displayName: m.displayName }, "xc-av-sm")}<span data-no-i18n>${esc(m.displayName)}</span></button>`);
-      if (isGroup(conv(S.active)) && "everyone".startsWith(tok.query)) items.push(`<button type="button" data-pick="everyone"><span class="xc-av xc-av-sm">@</span><span>@everyone</span></button>`);
-    } else {
-      if (!forceProject && !"projekt".startsWith(tok.query.split(" ")[0]) && !/^projekt/.test(tok.query)) { picker.hidden = true; return; }
-      const q = forceProject ? "" : tok.query.replace(/^projekt/, "").trim();
+      if (isGroup(conv(S.active)) && "everyone".startsWith(men.query)) items.push(`<button type="button" data-pick="everyone"><span class="xc-av xc-av-sm">@</span><span>@everyone</span></button>`);
+    } else if (cmd.active) {
+      start = cmd.start;
       let list = [];
-      try { list = await projectsList(); } catch { list = []; }
-      items = list.filter((p) => p.name.toLowerCase().includes(q)).slice(0, 8)
-        .map((p) => `<button type="button" data-pick="project" data-id="${esc(p.id)}" data-name="${esc(p.name)}">${ICON.folder}<span data-no-i18n>${esc(p.name)}</span><small data-no-i18n>${esc(p.workspace)}</small></button>`);
-      if (!items.length) items = [`<p class="xc-hint">${esc(t(list.length ? "Kein Projekt gefunden." : "Du bist noch in keinem Projekt."))}</p>`];
+      try { list = await tagChoices(); } catch { list = []; }
+      if (seq !== pickerSeq) return;
+      const needle = cmd.prefix.trim().toLowerCase();
+      const ofKind = list.filter((c) => cmd.kinds.includes(c.kind));
+      const hits = ofKind.filter((c) => !needle || c.name.toLowerCase().includes(needle)).slice(0, 10);
+      items = hits.map((c) => `<button type="button" data-pick="tag" data-kind="${esc(c.kind)}" data-id="${esc(c.id)}" data-name="${esc(c.name)}">${ICON[TAG_ICON[c.kind]]}<span data-no-i18n>${esc(c.name)}</span><small data-no-i18n>${esc(c.kind === "project" ? c.detail : t(TAG_LABEL[c.kind]))}</small></button>`);
+      const empty = ofKind.length ? "Nichts gefunden."
+        : cmd.kinds.length > 1 ? "Du bist noch in keinem Projekt, Arbeitsbereich oder keiner Gruppe."
+        : { project: "Du bist noch in keinem Projekt.", workspace: "Du bist noch in keinem Arbeitsbereich.", community: "Du bist noch in keiner Gruppe." }[cmd.kinds[0]];
+      items.unshift(`<p class="xc-picker-head">${esc(t("Nachricht markieren"))}</p>`);
+      if (!hits.length) items.push(`<p class="xc-hint">${esc(t(empty))}</p>`);
     }
+    if (seq !== pickerSeq) return;
     if (!items.length) { picker.hidden = true; return; }
     picker.innerHTML = items.join("");
     picker.querySelector("[data-pick]")?.classList.add("is-active");
-    picker.dataset.start = String(tok.start);
+    picker.dataset.start = String(start);
     picker.hidden = false;
   }
   threadEl.addEventListener("click", (e) => {
@@ -590,15 +662,26 @@
     const start = Number(picker.dataset.start);
     const cut = (insert) => {
       if (start < 0) return;
-      ta.value = ta.value.slice(0, start) + insert + ta.value.slice(ta.selectionStart);
+      let after = ta.value.slice(ta.selectionStart);
+      const before = ta.value.slice(0, start);
+      // Kein doppeltes Leerzeichen, wo der Befehl stand
+      if (!insert && /\s$/.test(before) && /^\s/.test(after)) after = after.slice(1);
+      ta.value = before + insert + after;
       ta.selectionStart = ta.selectionEnd = start + insert.length;
     };
     if (pick.dataset.pick === "mention") { cut(`@${pick.dataset.name} `); S.mentionIds.set(pick.dataset.id, pick.dataset.name); }
     else if (pick.dataset.pick === "everyone") { cut("@everyone "); S.mentionIds.set("*", "everyone"); }
-    else { cut(""); S.projectTag = { id: pick.dataset.id, name: pick.dataset.name }; renderComposerTop(); }
+    else { cut(""); S.tag = { kind: pick.dataset.kind, id: pick.dataset.id, name: pick.dataset.name }; S.filterTagDropped = false; renderComposerTop(); }
     picker.hidden = true;
     ta.focus(); grow(ta); syncSend();
   });
+  function setTagFilter(key, name) {
+    S.tagFilter = S.tagFilter === key ? "" : key;
+    S.tagFilterName = S.tagFilter ? name || "" : "";
+    S.filterTagDropped = false;
+    renderInfo(); renderComposerTop();
+    loadMessages().catch((err) => say(fail(err), "error"));
+  }
 
   // Tippen anzeigen (höchstens alle 3 Sekunden ein Hinweis an die anderen)
   let lastTyping = 0;
@@ -629,11 +712,12 @@
       const mentions = [...S.mentionIds.entries()].filter(([id, name]) => id !== "*" && text.includes(`@${name}`)).map(([id]) => id);
       await X.api("POST", `/conversations/${encodeURIComponent(c.id)}/messages`, {
         body: text, attachments, mentions, mentionEveryone: S.mentionIds.has("*") && text.includes("@everyone"),
-        replyToId: S.replyTo ? S.replyTo.id : undefined, projectId: S.projectTag ? S.projectTag.id : undefined,
+        replyToId: S.replyTo ? S.replyTo.id : undefined, ...tagPayload(),
       });
+      const tagged = effectiveTag();
       ta.value = ""; S.draft.delete(c.id); S.pending = []; S.replyTo = null; S.mentionIds = new Map();
-      if (S.projectTag) loadChatProjects();
-      S.projectTag = null;
+      if (tagged) loadChatTags();
+      S.tag = null;
       grow(ta); renderComposerTop(); syncSend();
       await refreshActive();
       threadEl.querySelector("[data-messages]").scrollTop = 1e9;
@@ -754,8 +838,10 @@
   async function sendGif(g) {
     threadEl.querySelector("[data-gif-pop]").hidden = true;
     try {
-      await X.api("POST", `/conversations/${encodeURIComponent(S.active)}/messages`, { body: "", gif: g, replyToId: S.replyTo ? S.replyTo.id : undefined });
-      S.replyTo = null; renderComposerTop();
+      const tagged = effectiveTag();
+      await X.api("POST", `/conversations/${encodeURIComponent(S.active)}/messages`, { body: "", gif: g, replyToId: S.replyTo ? S.replyTo.id : undefined, ...tagPayload() });
+      S.replyTo = null; S.tag = null; renderComposerTop();
+      if (tagged) loadChatTags();
       await refreshActive();
       threadEl.querySelector("[data-messages]").scrollTop = 1e9;
       loadConversations();
@@ -782,7 +868,7 @@
     }
     if (target.closest("[data-attach]")) { close("[data-plus-menu]"); threadEl.querySelector("[data-file]").click(); return; }
     if (target.closest("[data-gif-open]")) { close("[data-plus-menu]"); openGifs(); return; }
-    if (target.closest("[data-project-open]")) { close("[data-plus-menu]"); input().focus(); syncPicker(true); return; }
+    if (target.closest("[data-tag-open]")) { close("[data-plus-menu]"); input().focus(); syncPicker(true); return; }
     if (target.closest("[data-emoji-open]")) { const pop = threadEl.querySelector("[data-emoji-pop]"); pop.hidden = !pop.hidden; return; }
     const emo = target.closest("[data-emoji]");
     if (emo) {
@@ -797,11 +883,13 @@
     if (gifBtn) { const grid = gifBtn.closest("[data-gif-grid]"); sendGif(grid._gifs[Number(gifBtn.dataset.gif)]); return; }
     if (target.closest("[data-mic]")) { toggleRecording(); return; }
     if (target.closest("[data-reply-cancel]")) { S.replyTo = null; renderComposerTop(); return; }
-    if (target.closest("[data-project-cancel]")) { S.projectTag = null; renderComposerTop(); return; }
+    if (target.closest("[data-tag-cancel]")) { S.tag = null; S.filterTagDropped = !!S.tagFilter; renderComposerTop(); renderMessages(); return; }
+    const chip = target.closest("[data-tag-filter]");
+    if (chip) { setTagFilter(chip.dataset.tagFilter, chip.dataset.name); return; }
     const rm = target.closest("[data-pending-remove]");
     if (rm) { const [p] = S.pending.splice(Number(rm.dataset.pendingRemove), 1); if (p && p.preview) URL.revokeObjectURL(p.preview); renderComposerTop(); syncSend(); return; }
     if (target.closest("[data-older]")) { if (!S.loadingOlder) { S.loadingOlder = true; loadMessages({ older: true }).finally(() => { S.loadingOlder = false; }); } return; }
-    if (target.closest("[data-filter-clear]")) { S.projectFilter = ""; renderInfo(); loadMessages(); return; }
+    if (target.closest("[data-filter-clear]")) { setTagFilter(S.tagFilter, ""); return; }
     if (target.closest("[data-edit-cancel]")) { S.editId = ""; renderMessages(); return; }
     const jump = target.closest("[data-jump]");
     if (jump) { const el = threadEl.querySelector(`[data-msg="${CSS.escape(jump.dataset.jump)}"]`); if (el) { el.scrollIntoView({ block: "center" }); el.classList.add("is-flash"); setTimeout(() => el.classList.remove("is-flash"), 1200); } return; }
@@ -986,6 +1074,8 @@
     plus: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
     clip: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.4 11.1l-8.5 8.5a5 5 0 0 1-7.1-7.1l8.5-8.5a3.5 3.5 0 0 1 5 5L11 17.2a2 2 0 0 1-2.8-2.8l7.8-7.8"/></svg>',
     gif: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M9.5 10.5H8a1.5 1.5 0 0 0 0 3h1.5V12M12.5 10v4M15.5 14v-4h2.5M15.5 12h2"/></svg>',
+    building: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v14M16 10h2a2 2 0 0 1 2 2v8M3 20h18M8 8h4M8 12h4M8 16h4"/></svg>',
+    users: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14a6.5 6.5 0 0 1 3.5 6"/></svg>',
     folder: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v7.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></svg>',
     mic: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M8 21h8"/></svg>',
     send: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6"/></svg>',

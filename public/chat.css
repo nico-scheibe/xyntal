@@ -93,6 +93,7 @@ body.messages-page .site-footer { display: none; }
 .xc-link { border: 0; background: none; color: #6FB3FF !important; font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap; cursor: pointer; }
 .xc-filterbar { display: flex; align-items: center; gap: 10px; padding: 8px 18px; border-bottom: 1px solid var(--xc-line); color: var(--xc-text-2); font-size: 13px; }
 .xc-filterbar span { flex: 1; }
+.xc-filterbar small { color: var(--xc-text-3); font-size: 12px; }
 
 .xc-messages { flex: 1; overflow-y: auto; padding: 16px 18px 8px; display: flex; flex-direction: column; gap: 4px; background-repeat: repeat; background-size: 340px; }
 .xc-messages:focus-visible { outline: none; }
@@ -127,8 +128,12 @@ body.messages-page .site-footer { display: none; }
 .xc-msg[data-seen] { margin-bottom: 16px; }
 .xc-quote { display: grid; gap: 1px; padding: 6px 10px; border: 0; border-left: 3px solid rgba(255, 255, 255, .55); border-radius: 8px; background: rgba(0, 0, 0, .2); text-align: left; font-size: 12.5px; cursor: pointer; }
 .xc-quote span { opacity: .8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.xc-project { display: inline-flex; align-items: center; gap: 5px; justify-self: start; padding: 2px 9px; border-radius: 99px; background: rgba(0, 0, 0, .22); font-size: 12px; font-weight: 600; }
-.xc-project svg { width: 14px; height: 14px; }
+.xc-tagrow { display: flex; flex-wrap: wrap; gap: 4px; justify-self: start; }
+.xc-project { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; padding: 2px 9px; border: 1px solid transparent; border-radius: 99px; background: rgba(0, 0, 0, .22); color: inherit; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.xc-project span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.xc-project:hover { background: rgba(0, 0, 0, .32); }
+.xc-project[aria-pressed="true"] { border-color: rgba(255, 255, 255, .55); }
+.xc-project svg { flex: none; width: 14px; height: 14px; }
 .xc-gif { display: block; max-width: 260px; width: 100%; height: auto; border-radius: 12px; }
 .xc-image { display: block; padding: 0; border: 0; border-radius: 12px; overflow: hidden; background: rgba(0, 0, 0, .2); cursor: zoom-in; }
 .xc-image img { display: block; max-width: 280px; max-height: 320px; width: auto; height: auto; }
@@ -193,6 +198,9 @@ body.messages-page .site-footer { display: none; }
 .xc-picker button { display: flex; align-items: center; gap: 10px; padding: 7px 8px; border: 0; border-radius: 10px; background: none; text-align: left; cursor: pointer; font-size: 14px; }
 .xc-picker button small { margin-left: auto; color: var(--xc-text-3); font-size: 12px; }
 .xc-picker button.is-active, .xc-picker button:hover { background: var(--xc-panel-3); }
+.xc-picker-head { margin: 2px 8px 4px; color: var(--xc-text-3); font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.xc-picker .xc-hint { margin: 4px 8px 6px; }
+.xc-picker svg { flex: none; width: 18px; height: 18px; }
 .xc-gifs { left: 14px; bottom: 76px; display: grid; gap: 8px; width: min(440px, calc(100% - 28px)); max-height: min(460px, 60vh); padding: 10px; }
 .xc-gifs input { padding: 9px 14px; border-radius: 999px; }
 .xc-gif-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; overflow-y: auto; min-height: 120px; }
