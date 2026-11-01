@@ -151,7 +151,7 @@
     goals: {
       label: "Ziele – was du suchst", add: "Ziel hinzufügen", max: 8,
       options: { "Find a cofounder": "Mitgründer:in finden", "Join a startup": "Bei einem Startup einsteigen", "Hire builders": "Leute fürs Team finden",
-        "Find a mentor": "Mentor:in finden", "Mentor others": "Andere mentorieren", "Find collaborators": "Mitstreiter:innen finden",
+        "Find a mentor": "Mentor:in finden", "Mentor others": "Mentoring geben", "Find collaborators": "Mitstreiter:innen finden",
         "Raise funding": "Finanzierung finden", "Learn & grow": "Lernen & wachsen", "Ship a side project": "Nebenprojekt fertigstellen",
         "Freelance work": "Freelance-Aufträge" },
     },
