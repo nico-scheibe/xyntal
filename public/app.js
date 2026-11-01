@@ -359,9 +359,18 @@ function accessNotice(v, what, { open = false } = {}) {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) return;
   link.hidden = false;
-  const { count } = await sb.from("messages").select("id", { count: "exact", head: true })
-    .eq("recipient_id", session.user.id).is("read_at", null);
-  if (count) link.innerHTML = `Nachrichten <span class="badge">${count}</span>`;
+  // Ungelesen zählt der App-Server (dieselben Gespräche wie in der App, app-api.js);
+  // ohne App-Sitzung im Browser bleibt der Link ohne Zahl.
+  try {
+    const app = JSON.parse(localStorage.getItem("xyntal-app-session") || "null");
+    if (!app || app.sb !== session.user.id || !(Date.parse(app.expiresAt) > Date.now())) return;
+    const api = (window.XYNTAL_CONFIG && window.XYNTAL_CONFIG.appApiUrl) || "https://api.xyntal.de";
+    const res = await fetch(`${api}/conversations`, { headers: { authorization: `Bearer ${app.token}` } });
+    if (!res.ok) return;
+    const list = ((await res.json()).data || {}).conversations || [];
+    const count = list.filter((c) => !c.archived).reduce((n, c) => n + (c.unread || 0), 0);
+    if (count) link.innerHTML = `Nachrichten <span class="badge">${count}</span>`;
+  } catch { /* ohne Zahl */ }
 })();
 
 // Handy-Menü und aktive Seite in der Kopfzeile: account-menu.js (läuft auf allen Seiten)

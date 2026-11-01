@@ -1,6 +1,6 @@
 /* Matching auf der Website: Profil „Für besseres Matching“, Arbeitsstil-Test, „Für dich“
    und die Passung auf Mitgliederseiten. Läuft mit style.css und mit home.css (xyntal.de/name). */
-.xm, .xm-dialog {
+.xm, .xm-dialog, .xc {
   --xm-accent: var(--accent, var(--c, #22E5FF));
   --xm-soft: var(--accent-soft, rgba(63, 216, 255, 0.12));
   --xm-line: var(--border, var(--line, #1F1C2E));
