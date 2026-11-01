@@ -28,6 +28,7 @@ type HookPayload = {
 type OutgoingEmail = {
   to: string;
   tokenHash: string;
+  code?: string;
   subject: string;
   heading: string;
   message: string;
@@ -105,7 +106,12 @@ function brandedHtml(message: OutgoingEmail, link: string) {
   const safeMessage = escapeHtml(message.message);
   const safeButton = escapeHtml(message.button);
   const safeLink = escapeHtml(link);
-  return `<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><title>${safeHeading}</title></head><body style="margin:0;background:#07070b;color:#f5f5f7;font-family:Arial,sans-serif"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#07070b"><tr><td align="center" style="padding:40px 14px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px"><tr><td align="center" style="padding:0 0 26px"><a href="https://xyntal.de/"><img src="https://xyntal.de/email/logo.png" width="113" height="31" alt="Xyntal" style="display:block;border:0"></a></td></tr><tr><td style="padding:1px;border-radius:24px;background:#26262f"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="padding:40px;background:#121219;border-radius:23px"><div style="height:4px;background:linear-gradient(90deg,#a855f7,#ec4899,#6366f1);border-radius:4px"></div><p style="margin:28px 0 8px;color:#34d399;font-size:12px;letter-spacing:.08em;text-transform:uppercase">Xyntal</p><h1 style="margin:0 0 16px;font-size:30px;line-height:1.15">${safeHeading}</h1><p style="margin:0 0 28px;color:#b4b4be;font-size:16px;line-height:1.6">${safeMessage}</p><a href="${safeLink}" style="display:inline-block;padding:16px 26px;border-radius:999px;background:#a855f7;background-image:linear-gradient(100deg,#a855f7,#ec4899 50%,#6366f1);color:#fff;font-weight:bold;text-decoration:none">${safeButton} &rarr;</a><hr style="margin:28px 0 16px;border:0;border-top:1px solid #26262f"><p style="margin:0;color:#8a8a95;font-size:13px;line-height:1.5">Wenn du diese Aktion nicht angefordert hast, kannst du diese E-Mail ignorieren.</p></td></tr></table></td></tr><tr><td align="center" style="padding:24px 10px 0;color:#8a8a95;font-size:12px">Stop swiping. <span style="color:#e879f9">Start building.</span><br><a href="https://xyntal.de/impressum" style="color:#8a8a95">Impressum</a> · <a href="https://xyntal.de/impressum#datenschutz" style="color:#8a8a95">Datenschutz</a></td></tr></table></td></tr></table></body></html>`;
+  // Sign-in mails also carry the one-time code, for the Xyntal app and for
+  // reading the mail on another device than the one signing in.
+  const codeBlock = message.code
+    ? `<p style="margin:26px 0 8px;color:#b4b4be;font-size:14px;line-height:1.5">Oder gib diesen Code in der Xyntal-App ein:</p><p style="margin:0;font-size:32px;line-height:1.2;letter-spacing:.28em;font-weight:bold;font-family:Menlo,Consolas,monospace;color:#f5f5f7">${escapeHtml(message.code)}</p>`
+    : "";
+  return `<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><title>${safeHeading}</title></head><body style="margin:0;background:#07070b;color:#f5f5f7;font-family:Arial,sans-serif"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#07070b"><tr><td align="center" style="padding:40px 14px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px"><tr><td align="center" style="padding:0 0 26px"><a href="https://xyntal.de/"><img src="https://xyntal.de/email/logo.png" width="113" height="31" alt="Xyntal" style="display:block;border:0"></a></td></tr><tr><td style="padding:1px;border-radius:24px;background:#26262f"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="padding:40px;background:#121219;border-radius:23px"><div style="height:4px;background:linear-gradient(90deg,#a855f7,#ec4899,#6366f1);border-radius:4px"></div><p style="margin:28px 0 8px;color:#34d399;font-size:12px;letter-spacing:.08em;text-transform:uppercase">Xyntal</p><h1 style="margin:0 0 16px;font-size:30px;line-height:1.15">${safeHeading}</h1><p style="margin:0 0 28px;color:#b4b4be;font-size:16px;line-height:1.6">${safeMessage}</p><a href="${safeLink}" style="display:inline-block;padding:16px 26px;border-radius:999px;background:#a855f7;background-image:linear-gradient(100deg,#a855f7,#ec4899 50%,#6366f1);color:#fff;font-weight:bold;text-decoration:none">${safeButton} &rarr;</a>${codeBlock}<hr style="margin:28px 0 16px;border:0;border-top:1px solid #26262f"><p style="margin:0;color:#8a8a95;font-size:13px;line-height:1.5">Wenn du diese Aktion nicht angefordert hast, kannst du diese E-Mail ignorieren.</p></td></tr></table></td></tr><tr><td align="center" style="padding:24px 10px 0;color:#8a8a95;font-size:12px">Stop swiping. <span style="color:#e879f9">Start building.</span><br><a href="https://xyntal.de/impressum" style="color:#8a8a95">Impressum</a> · <a href="https://xyntal.de/impressum#datenschutz" style="color:#8a8a95">Datenschutz</a></td></tr></table></td></tr></table></body></html>`;
 }
 
 async function sendWithBrevo(apiKey: string, payload: Record<string, unknown>) {
@@ -161,7 +167,12 @@ Deno.serve(async (request) => {
     messages.push({ to: payload.user.new_email, tokenHash: payload.email_data.token_hash, ...sharedMessage });
   }
   if (messages.length === 0 && payload.email_data.token_hash) {
-    messages.push({ to: action === "email_change" ? payload.user.new_email ?? email : email, tokenHash: payload.email_data.token_hash, ...sharedMessage });
+    messages.push({
+      to: action === "email_change" ? payload.user.new_email ?? email : email,
+      tokenHash: payload.email_data.token_hash,
+      code: action === "magiclink" && /^\d{6,10}$/.test(payload.email_data.token ?? "") ? payload.email_data.token : undefined,
+      ...sharedMessage,
+    });
   }
   if (messages.length === 0) return new Response("Auth email token is missing", { status: 400 });
 
@@ -183,7 +194,7 @@ Deno.serve(async (request) => {
           to: [{ email: message.to }],
           subject: message.subject,
           htmlContent: brandedHtml(message, link),
-          textContent: `${message.heading}\n\n${message.message}\n\n${message.button}: ${link}\n\nWenn du diese Aktion nicht angefordert hast, ignoriere diese E-Mail.`,
+          textContent: `${message.heading}\n\n${message.message}\n\n${message.button}: ${link}\n\n${message.code ? `Oder gib diesen Code in der Xyntal-App ein: ${message.code}\n\n` : ""}Wenn du diese Aktion nicht angefordert hast, ignoriere diese E-Mail.`,
           tags: [`xyntal-auth-${action}`],
         });
       }
