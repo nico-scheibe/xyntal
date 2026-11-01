@@ -27,6 +27,16 @@
       // Sicheres Vorab-Deployment: ohne Migration bleibt die Glocke unsichtbar.
       if (result.error && ['PGRST205', '42P01'].includes(result.error.code)) { root.hidden = true; return; }
       const rows = unwrap(result);
+      // Who wrote: names of the senders (profiles are readable to members);
+      // without them the hint stays generic.
+      const senderIds = [...new Set(rows.filter(n => n.kind === 'message' && n.sender_id).map(n => n.sender_id))];
+      const names = {};
+      if (senderIds.length) {
+        try {
+          const people = unwrap(await sb.from('profiles').select('id, name').in('id', senderIds)) || [];
+          for (const p of people) names[p.id] = (p.name || '').trim();
+        } catch { /* generic text below */ }
+      }
       const { count, error } = await sb.from('notifications').select('id', { count: 'exact', head: true }).is('read_at', null);
       if (error) throw error;
       root.hidden = false;
@@ -38,7 +48,7 @@
         const href = n.kind === 'message' && n.sender_id ? `nachrichten?an=${encodeURIComponent(n.sender_id)}`
           : n.kind === 'comment' ? `community?beitrag=${encodeURIComponent(n.post_id)}`
           : n.kind === 'approved' ? 'mitglieder' : 'nachrichten';
-        const text = n.kind === 'message' ? 'Du hast eine neue Nachricht.'
+        const text = n.kind === 'message' ? (names[n.sender_id] ? `Neue Nachricht von <b>${esc(names[n.sender_id])}</b>.` : 'Du hast eine neue Nachricht.')
           : n.kind === 'approved' ? 'Du bist freigeschaltet – dein Profil ist jetzt für Mitglieder sichtbar.'
           : 'Jemand hat deinen Beitrag kommentiert.';
         return `<a class="notification-item${n.read_at ? '' : ' unread'}" href="${esc(href)}" data-notification="${esc(n.id)}"><span>${text}</span><small>${esc(timeAgo(n.created_at))}${n.read_at ? '' : ' · ungelesen'}</small></a>`;
