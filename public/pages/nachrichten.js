@@ -73,12 +73,12 @@
     return html.replace(/\n/g, "<br>");
   }
   const fail = (err) => (err && err.message) || t("Das hat nicht geklappt. Versuch es gleich noch einmal.");
-  function say(text, kind = "") {
+  function say(text, kind = "", ms = 6000) {
     const el = root.querySelector("[data-status]");
     if (!el) return;
     el.textContent = text;
     el.className = `xc-status${kind ? " " + kind : ""}`;
-    if (text) setTimeout(() => { if (el.textContent === text) el.textContent = ""; }, 6000);
+    if (text) setTimeout(() => { if (el.textContent === text) el.textContent = ""; }, ms);
   }
   const conv = (id) => S.conversations.find((c) => c.id === id);
 
@@ -781,9 +781,37 @@
       recorder.onstop = () => finishRecording();
       recorder.start();
       showRec();
-    } catch {
-      say(t("Kein Zugriff aufs Mikrofon. Erlaube es in deinem Browser, um Sprachnachrichten aufzunehmen."), "error");
+    } catch (err) {
+      say(await micProblem(err), "error", 15000);
     }
+  }
+  // Warum der Browser das Mikrofon nicht freigibt. Oft fragt er gar nicht erst: wenn Windows bzw. macOS
+  // dem Browser das Mikrofon sperrt, wenn xyntal.de früher einmal blockiert wurde oder wenn keins da ist.
+  async function micProblem(err) {
+    const name = (err && err.name) || "";
+    const detail = (err && err.message) || "";
+    console.warn("Mikrofon:", name, detail);
+    const win = /Windows/.test(navigator.userAgent);
+    if (name === "NotFoundError" || name === "OverconstrainedError") {
+      return t(win ? "Kein Mikrofon gefunden. Schließ eins an und prüf unter Windows-Einstellungen → System → Sound, ob ein Eingabegerät aktiv ist."
+        : "Kein Mikrofon gefunden. Schließ eins an und versuch es noch einmal.");
+    }
+    if (name === "NotReadableError" || name === "AbortError") {
+      return t("Das Mikrofon lässt sich gerade nicht öffnen – vermutlich nutzt es ein anderes Programm (z. B. Teams, Discord oder Zoom).");
+    }
+    if (name === "NotAllowedError" || name === "SecurityError") {
+      let state = "";
+      try { state = (await navigator.permissions.query({ name: "microphone" })).state; } catch { /* nicht überall abfragbar */ }
+      // Chrome/Edge melden eine Sperre durch das Betriebssystem mit „Permission denied by system“
+      if (/system/i.test(detail) || (state === "granted")) {
+        return t(win ? "Windows sperrt das Mikrofon für deinen Browser. Öffne Einstellungen → Datenschutz und Sicherheit → Mikrofon, schalte „Mikrofonzugriff“ und „Desktop-Apps den Zugriff erlauben“ ein und lade die Seite neu."
+          : "Dein Betriebssystem sperrt das Mikrofon für deinen Browser. Erlaube es in den Systemeinstellungen unter Datenschutz → Mikrofon und lade die Seite neu.");
+      }
+      if (state === "denied") {
+        return t("Das Mikrofon ist für xyntal.de blockiert. Klick links neben der Adresse auf das Symbol für die Website-Einstellungen, stell „Mikrofon“ auf „Zulassen“ und lade die Seite neu.");
+      }
+    }
+    return t("Kein Zugriff aufs Mikrofon. Erlaube es in deinem Browser, um Sprachnachrichten aufzunehmen.");
   }
   function showRec() {
     const btn = threadEl.querySelector("[data-mic]");
