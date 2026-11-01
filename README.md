@@ -59,6 +59,7 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 | `/profil` | Registerkarten Profil (Bio, Bild, Links) · Matching · Xyntal-Karte · Sicherheit (E-Mail, Passwort, 2FA, Anmeldemethoden, überall abmelden, Konto löschen) |
 | `/profil#matching` | „Für besseres Matching“: Skills, Tech-Stack, Ziele, Interessen, Sprachen, Zeitzone, Verfügbarkeit, Stunden, Sichtbarkeit – gespeichert auf dem App-Server (`api.xyntal.de`), dieselben Daten wie in der Desktop-App (`public/app-api.js`, `public/pages/profil-matching.js`) |
 | `/arbeitsstil` | Arbeitsstil-Test der App (28 Blöcke, „am meisten“/„am wenigsten“), ausgewertet auf dem App-Server |
+| `/matching` | Öffentliche Erklärung, wie die Passung berechnet wird (zehn Bereiche, Gewichte je Art der Zusammenarbeit, Plus/Minus, Risiko und Aussagekraft, Auswahl der Vorschläge) – bei Änderungen an `server/src/matching/scoring.ts` mitziehen |
 | `/fuer-dich` | Vorschläge aus dem Matching des App-Servers mit Erklärung, Speichern, „Passt nicht“ und „Nachricht schreiben“; `xyntal.de/name` zeigt angemeldeten Mitgliedern zusätzlich „Eure Passung“ |
 | `/admin` | Mitglieder freischalten, frühere Anmeldungen & Newsletter (CSV), Link zur Treffen-Verwaltung |
 

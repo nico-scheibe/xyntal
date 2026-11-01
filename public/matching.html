@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>So funktioniert das Matching – Xyntal</title>
+  <meta name="description" content="Wie Xyntal die Passung zwischen zwei Menschen berechnet: zehn Bereiche, Gewichte je nach Art der Zusammenarbeit, Plus- und Minuspunkte, Risiko und Sicherheit.">
+  <meta property="og:title" content="So funktioniert das Matching – Xyntal">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Xyntal">
+  <meta property="og:image" content="https://xyntal.de/og-image.jpg?v=2">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Xyntal: Große Ideen beginnen mit den richtigen Menschen.">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="fonts/fonts.css?v=31">
+  <link rel="stylesheet" href="style.css?v=34">
+  <link rel="stylesheet" href="cosmos.css?v=41">
+  <script src="i18n-en.js?v=65" defer></script>
+  <script src="i18n.js?v=31" defer></script>
+  <script src="cosmos.js?v=40" defer></script>
+  <link rel="stylesheet" href="/backdrop.css?v=4">
+  <link rel="stylesheet" href="/site-footer.css?v=1">
+  <link rel="stylesheet" href="/site-header.css?v=3">
+<link rel="stylesheet" href="/matching.css?v=2">
+</head>
+<body>
+<div class="xy-bg" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i><span class="xy-grid"></span><span class="xy-stars"></span><span class="xy-stars"></span></div>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="logo" href="/" aria-label="Xyntal – Startseite"><svg class="logo-mark" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="xm-a1" x1="3" y1="21" x2="21" y2="3" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#B36BFF"/><stop offset="1" stop-color="#3A8AFF"/></linearGradient><linearGradient id="xm-b1" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#3A8AFF"/><stop offset="1" stop-color="#3FE0F0"/></linearGradient><mask id="xm-g1" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><path d="M3 21Q8.59 8.59 21 3" fill="none" stroke="#000" stroke-width="7.4" stroke-linecap="round"/></mask></defs><path d="M3 3Q15.41 8.59 21 21" fill="none" stroke="url(#xm-b1)" stroke-width="4.6" stroke-linecap="round" mask="url(#xm-g1)"/><path d="M3 21Q8.59 8.59 21 3" fill="none" stroke="url(#xm-a1)" stroke-width="4.6" stroke-linecap="round"/></svg>xyntal</a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="main-nav">Menü</button>
+    <nav class="nav-links" id="main-nav" aria-label="Hauptnavigation">
+      <a class="nav-main" href="/projekte">Projekte</a>
+      <a class="nav-main" href="/boerse">Gesuche &amp; Angebote</a>
+      <a class="nav-main" href="/community">Community</a>
+      <a class="nav-main" href="/mitglieder">Mitglieder</a>
+      <a class="hide-sm" href="/nachrichten" data-messages hidden>Nachrichten</a>
+      <a class="hide-sm" href="/login" data-account>Login</a>
+      <a class="btn btn-small nav-cta" href="/#warteliste">Auf die Warteliste</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="page-head" id="top">
+    <div class="wrap">
+      <div class="eyebrow"><b>xyntal</b> / matching</div>
+      <h1>So berechnen wir eure <em>Passung.</em></h1>
+      <p>Jede Prozentzahl auf Xyntal kommt aus demselben Matching auf unserem Server – in der App und auf der Website. Hier steht, was in den Wert einfließt, wie stark, und was nie.</p>
+    </div>
+  </section>
+
+  <section class="page-body">
+    <div class="wrap narrow xm xm-doc">
+      <nav class="xm-toc" aria-label="Inhalt">
+        <a href="#bereiche">Zehn Bereiche</a>
+        <a href="#gewichte">Gewichte</a>
+        <a href="#plus-minus">Plus und Minus</a>
+        <a href="#sicherheit">Risiko und Aussagekraft</a>
+        <a href="#vorschlaege">Wer vorgeschlagen wird</a>
+        <a href="#nie">Was nie zählt</a>
+        <a href="#besser">Bessere Vorschläge</a>
+      </nav>
+
+      <section class="card-form" aria-labelledby="formel">
+        <h2 id="formel">Die Rechnung in einem Satz</h2>
+        <p class="xm-formula">Passung = gewichtete Bereiche + Pluspunkte − Minuspunkte − Risikoabschlag − Unsicherheitsabschlag</p>
+        <p>Das Ergebnis liegt immer zwischen 0 und 100. Es ist bewusst kein Durchschnitt: Ein Bereich, in dem ihr super zusammenpasst, wiegt nicht einfach einen auf, in dem es klemmt. Und dieselben Angaben ergeben immer dieselbe Zahl – es gibt keinen Zufall und keine bezahlte Platzierung.</p>
+      </section>
+
+      <section class="card-form" aria-labelledby="bereiche">
+        <h2 id="bereiche">1. Zehn Bereiche statt einer Zahl</h2>
+        <p>Für jede Person rechnet Xyntal zehn Bereiche von 0 bis 100 aus. Unter jedem Vorschlag siehst du sie einzeln, mit dem Grund dafür.</p>
+        <dl class="xm-defs">
+          <div><dt>Vision</dt><dd>Wollt ihr dasselbe aufbauen? Gemeinsame Ziele zählen etwas mehr als gemeinsame Interessen. Sucht ihr beide etwas Langfristiges oder eine Mitgründung, gibt es einen Zuschlag.</dd></div>
+          <div><dt>Ergänzende Fähigkeiten</dt><dd>Decken eure Skills und euer Tech-Stack verschiedene Rollen ab – etwa Entwicklung und Design? Zwei sehr ähnliche Profile ergänzen sich wenig und bekommen hier höchstens 45.</dd></div>
+          <div><dt>Umsetzung</dt><dd>Wie aktiv baut die Person: letzte Aktivität, Nachrichten der letzten 30 Tage, erledigte Aufgaben in ihren Arbeitsbereichen und Bewertungen von Mitstreitern.</dd></div>
+          <div><dt>Absicht</dt><dd>Sucht ihr dieselbe Art von Zusammenarbeit? Mitgründung und Mitgründung passen voll, Mentor:in und Mentee ebenso, Mitgründung und kurzfristige Hilfe kaum.</dd></div>
+          <div><dt>Vertrauen</dt><dd>Verifizierung, ein vollständiges Profil, Bewertungen und gemeinsame Bereiche – abzüglich offener Meldungen und Blockierungen.</dd></div>
+          <div><dt>Kommunikation</dt><dd>Gemeinsame Sprachen, wie gut eure Arbeitsstile im Austausch zusammenpassen und ob die Person in letzter Zeit erreichbar war.</dd></div>
+          <div><dt>Verfügbarkeit</dt><dd>Passt eure Zeit zusammen: „Offen“, „Begrenzt“ oder „Fokussiert“ und die Stunden pro Woche. Liegt ihr nah beieinander, steigt der Wert.</dd></div>
+          <div><dt>Projektbedarf</dt><dd>Bringt die Person mit, was einem Projekt oder Team gerade fehlt? Zählt nur, wenn es um ein Projekt oder einen Arbeitsbereich geht.</dd></div>
+          <div><dt>Persönlichkeit</dt><dd>Wie sich eure Ergebnisse aus dem <a class="text-link" href="arbeitsstil">Arbeitsstil-Test</a> ergänzen – zwei, die beide nur antreiben, sind nicht automatisch das beste Team.</dd></div>
+          <div><dt>Langfristiges Potenzial</dt><dd>Deuten gemeinsame Ziele, eure Absicht und stetige Aktivität auf eine längere Zusammenarbeit hin?</dd></div>
+        </dl>
+        <p class="hint">Fehlt für einen Bereich auf einer Seite die Angabe, zählt er nicht mit, und die übrigen Bereiche werden hochgerechnet. Fehlende Angaben kosten aber Aussagekraft (siehe unten) – ein fast leeres Profil kann so kein sicheres 90 vortäuschen.</p>
+      </section>
+
+      <section class="card-form" aria-labelledby="gewichte">
+        <h2 id="gewichte">2. Wie stark ein Bereich zählt</h2>
+        <p>Das hängt davon ab, was ihr beide unter „Was suchst du gerade?“ angegeben habt. Sucht ihr beide eine Mitgründung, zählen Vision und langfristiges Potenzial mehr; bei Mentor:in und Mentee die Fähigkeiten und die Kommunikation; wollen beide mitarbeiten oder kurzfristig helfen, vor allem die Umsetzung. Sonst gilt die allgemeine Verteilung.</p>
+        <div class="xm-table-wrap" tabindex="0" role="region" aria-label="Gewichte je Art der Zusammenarbeit">
+          <table class="xm-table">
+            <thead><tr><th scope="col">Bereich</th><th scope="col">Allgemein</th><th scope="col">Mitgründung</th><th scope="col">Mentoring</th><th scope="col">Umsetzung</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Vision</th><td>15 %</td><td>20 %</td><td>10 %</td><td>8 %</td></tr>
+              <tr><th scope="row">Ergänzende Fähigkeiten</th><td>15 %</td><td>15 %</td><td>20 %</td><td>15 %</td></tr>
+              <tr><th scope="row">Umsetzung</th><td>15 %</td><td>14 %</td><td>8 %</td><td>25 %</td></tr>
+              <tr><th scope="row">Absicht</th><td>10 %</td><td>12 %</td><td>12 %</td><td>10 %</td></tr>
+              <tr><th scope="row">Vertrauen</th><td>10 %</td><td>10 %</td><td>15 %</td><td>10 %</td></tr>
+              <tr><th scope="row">Kommunikation</th><td>10 %</td><td>6 %</td><td>15 %</td><td>10 %</td></tr>
+              <tr><th scope="row">Verfügbarkeit</th><td>8 %</td><td>5 %</td><td>10 %</td><td>12 %</td></tr>
+              <tr><th scope="row">Projektbedarf</th><td>7 %</td><td>–</td><td>–</td><td>–</td></tr>
+              <tr><th scope="row">Persönlichkeit</th><td>5 %</td><td>8 %</td><td>5 %</td><td>5 %</td></tr>
+              <tr><th scope="row">Langfristiges Potenzial</th><td>5 %</td><td>10 %</td><td>5 %</td><td>5 %</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="hint">Jede Spalte ergibt 100 %. In der Erklärung zu einem Vorschlag steht bei jedem Grund, wie viel er gerade zählt.</p>
+      </section>
+
+      <section class="card-form" aria-labelledby="plus-minus">
+        <h2 id="plus-minus">3. Plus- und Minuspunkte</h2>
+        <p>Danach kommen feste, kleine Zu- und Abschläge für Dinge, die die Bereiche allein nicht zeigen:</p>
+        <div class="xm-two">
+          <ul class="xm-points xm-plus">
+            <li><b>+4</b> Ähnliche langfristige Ziele <span>(mindestens zwei gemeinsame Ziele)</span></li>
+            <li><b>+4</b> Stark ergänzende Rollen</li>
+            <li><b>+3</b> Kürzlich aktiv <span>(in den letzten 7 Tagen)</span></li>
+            <li><b>+3</b> Gute gemeinsame Erfahrung <span>(gute Bewertung oder schon in Kontakt)</span></li>
+            <li><b>+2</b> Beide Profile sehr vollständig</li>
+            <li><b>+2</b> Du hast den Vorschlag gespeichert</li>
+          </ul>
+          <ul class="xm-points xm-minus">
+            <li><b>−15</b> Offene Meldungen oder von mehreren blockiert</li>
+            <li><b>−10</b> Sehr dünnes Profil <span>(weniger als 30 % ausgefüllt)</span></li>
+            <li><b>−10</b> Seit über 90 Tagen weg und schreibt nicht</li>
+            <li><b>−8</b> Seit über 60 Tagen inaktiv oder kaum erreichbar</li>
+            <li><b>−6</b> Eure verfügbare Zeit passt nicht</li>
+            <li><b>−5</b> Unterschiedliche Absicht</li>
+            <li><b>−5</b> Fähigkeiten überschneiden sich nur, statt sich zu ergänzen</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="card-form" aria-labelledby="sicherheit">
+        <h2 id="sicherheit">4. Risiko und Aussagekraft</h2>
+        <p><b>Risiko</b> schätzt, wie wahrscheinlich ein Match enttäuscht: lange Inaktivität, keine Nachrichten, ein dünnes Profil, unterschiedliche Absicht oder Zeit. Ein gewöhnliches Risiko kostet höchstens 12 Punkte. Nur bei offenen Meldungen oder mehreren Blockierungen kann es bis zu 35 Punkte kosten.</p>
+        <p><b>Aussagekraft</b> sagt, wie viele Angaben hinter der Zahl stehen: wie vollständig eure beiden Profile sind, in wie vielen Bereichen Daten da sind und ob es Aktivität und Gemeinsamkeiten gibt. Ist sie niedrig, zieht Xyntal bis zu 8 Punkte ab und zeigt den Hinweis „Wenige Angaben“.</p>
+      </section>
+
+      <section class="card-form" aria-labelledby="vorschlaege">
+        <h2 id="vorschlaege">5. Wer dir vorgeschlagen wird</h2>
+        <p>Die angezeigte Passung ist überall dieselbe – in der Liste, unter „Gespeichert“ und in der Erklärung. Für die <b>Auswahl und Reihenfolge</b> der Vorschläge nimmt Xyntal zusätzlich zwei Dinge dazu:</p>
+        <ul class="xm-bullets">
+          <li>einen kleinen Bonus für neue oder gerade aktive Mitglieder (höchstens 12 Punkte), damit du Leute triffst, die auch antworten,</li>
+          <li>was du mit „Passt nicht“ angibst: Profile, die einem ausgeblendeten ähneln, rücken etwas nach hinten (höchstens 15 Punkte).</li>
+        </ul>
+        <p>Vorgeschlagen wird ab 65 Punkten (mit diesem Bonus und Abzug) – oder wenn eure Arbeitsstile sehr ähnlich sind. Mitglieder mit einer öffentlichen Xyntal-Karte erscheinen immer.</p>
+        <p>Nie vorgeschlagen werden Personen, die du ausgeblendet hast, Personen, zwischen denen und dir eine Blockierung besteht (egal von wem), und Profile, die auf „Privat“ oder „Nur Team“ stehen, wenn ihr keinen Arbeitsbereich teilt.</p>
+      </section>
+
+      <section class="card-form" aria-labelledby="nie">
+        <h2 id="nie">6. Was nie in die Zahl einfließt</h2>
+        <ul class="xm-bullets">
+          <li>Dein Tarif. Bezahlte Konten bekommen höchstens eine von Xyntal AI formulierte Erklärung – die Zahlen dahinter sind dieselben.</li>
+          <li>Der Inhalt deiner Nachrichten. Das Matching zählt nur, ob jemand in letzter Zeit geschrieben hat.</li>
+          <li>Wie jemand aussieht, Name, Alter, Geschlecht oder Herkunft. Ob es ein Profilbild gibt, zählt nur für die Vollständigkeit des Profils.</li>
+          <li>Wie viele Follower jemand hat.</li>
+        </ul>
+      </section>
+
+      <section class="card-form" aria-labelledby="besser">
+        <h2 id="besser">7. So werden deine Vorschläge besser</h2>
+        <ul class="xm-bullets">
+          <li>Fülle im Profil unter <a class="text-link" href="profil#matching">„Matching“</a> Ziele, Interessen, Skills, Sprachen, Verfügbarkeit und „Was suchst du gerade?“ aus.</li>
+          <li>Mach den <a class="text-link" href="arbeitsstil">Arbeitsstil-Test</a> – erst dann zählen Persönlichkeit und ein Teil der Kommunikation.</li>
+          <li>Sag bei Vorschlägen, die nicht passen, warum. Daraus lernt die Reihenfolge.</li>
+        </ul>
+        <div class="xm-row"><a class="btn" href="fuer-dich">Meine Vorschläge ansehen</a><a class="btn btn-ghost" href="profil#matching">Matching-Angaben ergänzen</a></div>
+      </section>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer" aria-label="Fußzeile">
+  <div class="sf-inner">
+    <div class="sf-cta">
+      <div>
+        <h2>Bereit, dein Team zu finden?</h2>
+        <p>Stell dein Projekt vor, bewirb dich auf offene Rollen oder lerne Leute kennen, die genauso viel vorhaben wie du.</p>
+      </div>
+      <div class="sf-cta-actions">
+        <a class="sf-btn sf-btn-primary" href="/#warteliste">Auf die Warteliste</a>
+        <a class="sf-btn" href="/projekte">Projekte entdecken</a>
+      </div>
+    </div>
+    <div class="sf-main">
+      <div class="sf-brand">
+        <a class="sf-logo" href="/" aria-label="Xyntal – Startseite"><svg viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="xm-a2" x1="3" y1="21" x2="21" y2="3" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#B36BFF"/><stop offset="1" stop-color="#3A8AFF"/></linearGradient><linearGradient id="xm-b2" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#3A8AFF"/><stop offset="1" stop-color="#3FE0F0"/></linearGradient><mask id="xm-g2" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><path d="M3 21Q8.59 8.59 21 3" fill="none" stroke="#000" stroke-width="7.4" stroke-linecap="round"/></mask></defs><path d="M3 3Q15.41 8.59 21 21" fill="none" stroke="url(#xm-b2)" stroke-width="4.6" stroke-linecap="round" mask="url(#xm-g2)"/><path d="M3 21Q8.59 8.59 21 3" fill="none" stroke="url(#xm-a2)" stroke-width="4.6" stroke-linecap="round"/></svg>xyntal</a>
+        <p>Finde die Menschen, mit denen du etwas aufbaust – egal, wo du bist.</p>
+        <div class="sf-contact">
+          <a href="mailto:admin@xyntal.com"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg><span data-no-i18n>admin@xyntal.com</span></a>
+          <a href="https://www.linkedin.com/in/nico-scheibe-781a20445" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 10v7M8 7v.01M12 17v-4a2 2 0 0 1 4 0v4M12 10v7"/></svg>LinkedIn<span class="sr-only"> (öffnet in neuem Tab)</span></a>
+        </div>
+      </div>
+      <nav class="sf-cols" aria-label="Fußzeile">
+        <div class="sf-col">
+          <h3>Entdecken</h3>
+          <ul>
+            <li><a href="/projekte">Projekte</a></li>
+            <li><a href="/demo">Demo</a></li>
+            <li><a href="/boerse">Gesuche &amp; Angebote</a></li>
+            <li><a href="/community">Community</a></li>
+            <li><a href="/mitglieder">Mitglieder</a></li>
+          </ul>
+        </div>
+        <div class="sf-col">
+          <h3>Mitmachen</h3>
+          <ul>
+            <li><a href="/mitglied-werden">Mitglied werden</a></li>
+            <li><a href="/beta">Beta-Programm</a></li>
+            <li><a href="/meine-karte">Meine Karte</a></li>
+            <li><a href="/#warteliste">Warteliste</a></li>
+            <li><a href="/login">Login</a></li>
+          </ul>
+        </div>
+        <div class="sf-col">
+          <h3>Rechtliches</h3>
+          <ul>
+            <li><a href="/impressum">Impressum</a></li>
+            <li><a href="/impressum#datenschutz">Datenschutz</a></li>
+            <li><a href="/impressum#deine-rechte">Deine Rechte</a></li>
+            <li><a href="/community-richtlinien">Community-Richtlinien</a></li>
+            <li><a href="mailto:admin@xyntal.com">Kontakt</a></li>
+          </ul>
+        </div>
+      </nav>
+    </div>
+    <div class="sf-bottom">
+      <span data-no-i18n>© 2026 Xyntal</span>
+      <a class="sf-top" href="#">Nach oben ↑</a>
+    </div>
+  </div>
+</footer>
+
+<script src="vendor/supabase.js?v=31"></script>
+<script src="config.js?v=31"></script>
+<script src="app.js?v=36"></script>
+<script src="avatars.js?v=32"></script>
+<script src="notifications.js?v=34"></script>
+<script src="effects.js?v=36"></script>
+<script src="/account-menu.js?v=8" defer></script>
+</body>
+</html>

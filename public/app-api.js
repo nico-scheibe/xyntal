@@ -226,7 +226,8 @@
           ${d.about ? `<p class="xm-about" data-no-i18n>${esc(d.about)}</p>` : ""}
         </div>`).join("")}</div>
       ${(m.boosts || []).length || (m.penalties || []).length ? `<ul class="xm-signals">${signals(m.boosts, "boost")}${signals(m.penalties, "penalty")}</ul>` : ""}
-      ${(m.riskFactors || []).length ? `<p class="xm-hint">${esc(t("Achte auf:"))} <span data-no-i18n>${esc(m.riskFactors.join(" · "))}</span></p>` : ""}`;
+      ${(m.riskFactors || []).length ? `<p class="xm-hint">${esc(t("Achte auf:"))} <span data-no-i18n>${esc(m.riskFactors.join(" · "))}</span></p>` : ""}
+      <p class="xm-hint"><a class="text-link" href="/matching">${esc(t("So berechnen wir die Passung"))}</a></p>`;
   }
   // „Passt nicht“ mit Grund – wie der Dialog in der App
   function askDismissReason() {

@@ -4,14 +4,14 @@
 -- sperrt dieser Trigger – für jeden Schreibweg (Karte speichern, Warteliste, Admin).
 -- Im Supabase SQL Editor ausführen. Vorher prüfen, ob schon jemand einen dieser Namen hat:
 --   select handle, name from public.waitlist_cards
---   where handle = any (array['404','index','u','koppeln','app-anmeldung','arbeitsstil','fuer-dich']);
+--   where handle = any (array['404','index','u','koppeln','app-anmeldung','arbeitsstil','fuer-dich','matching']);
 -- (Bestehende Karten bleiben unverändert; nur neue oder geänderte Links werden abgelehnt.)
 
 create or replace function public.reject_page_handles() returns trigger
 language plpgsql set search_path = '' as $$
 begin
   if NEW.handle is not null and NEW.handle = any (array[
-      '404', 'index', 'u', 'koppeln', 'app-anmeldung', 'arbeitsstil', 'fuer-dich']) then
+      '404', 'index', 'u', 'koppeln', 'app-anmeldung', 'arbeitsstil', 'fuer-dich', 'matching']) then
     raise exception 'Dieser Link gehört zu einer Seite von Xyntal. Bitte wähle einen anderen.' using errcode = '23514';
   end if;
   return NEW;
