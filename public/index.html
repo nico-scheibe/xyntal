@@ -29,7 +29,7 @@
   <link rel="stylesheet" href="/backdrop.css?v=4">
   <link rel="stylesheet" href="/site-footer.css?v=1">
   <link rel="stylesheet" href="/site-header.css?v=3">
-  <link rel="stylesheet" href="/demo-app.css?v=1">
+  <link rel="stylesheet" href="/demo-app.css?v=2">
 </head>
 <body class="home">
 <div class="xy-bg" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i><span class="xy-grid"></span><span class="xy-stars"></span><span class="xy-stars"></span></div>
@@ -100,104 +100,11 @@
     <div class="shell">
       <header class="section-head">
         <p class="eyebrow">Interaktive Demo</p>
-        <h2 id="demo-title" class="h2">Wenige Vorschläge.<br><span class="grad-soft">Das passende Team.</span></h2>
-        <p class="section-lead">Probier es aus: Pro Rolle zeigt dir Xyntal nur Menschen, die zu deinem Projekt passen. Nach rechts holst du jemanden ins Team, nach links kommt die nächste Person. <span class="tag">Beispieldaten</span></p>
+        <h2 id="demo-title" class="h2">Die ganze App.<br><span class="grad-soft">Zum Durchklicken.</span></h2>
+        <p class="section-lead">Arbeitsbereiche, Aufgaben, Team-Chat, Matches, Kalender und KI-Center: So arbeitest du in der Xyntal-App. Probier jeden Bereich aus – ohne Konto. <span class="tag">Beispieldaten</span></p>
       </header>
-
-      <div class="demo glass" data-demo>
-        <!-- Auswahl -->
-        <div class="demo-body swipe" data-view="select">
-          <div class="swipe-stage">
-            <div class="stage-top">
-              <div class="project-chip"><span class="project-glyph" aria-hidden="true">L</span><span><b>Loopr</b><small>KI-App: Du summst, sie macht den Song</small></span></div>
-              <div class="swipe-roles" role="group" aria-label="Offene Rollen" data-roles></div>
-            </div>
-            <div class="people-head">
-              <h4 class="mini-head" id="people-head" data-people-title>Passende Menschen</h4>
-              <span class="people-count" data-people-count></span>
-            </div>
-            <div class="deck-wrap">
-              <div class="deck" data-people tabindex="0" aria-describedby="swipe-hint" aria-labelledby="people-head"></div>
-              <div class="match-screen" data-match-screen hidden></div>
-            </div>
-            <div class="swipe-actions" data-swipe-actions>
-              <button type="button" class="swipe-btn swipe-no" data-swipe="no" aria-label="Weiter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-              <button type="button" class="swipe-btn swipe-yes" data-swipe="yes" aria-label="Ins Team"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-7.5-10.4A4.3 4.3 0 0 1 12 7.4a4.3 4.3 0 0 1 7.5 2.7c0 5.8-7.5 10.4-7.5 10.4z"/></svg></button>
-            </div>
-            <p class="hint swipe-hint" id="swipe-hint">Ziehen, tippen oder Pfeiltasten ← →. Ein Match gibt es nur, wenn beide Ja sagen.</p>
-          </div>
-
-          <aside class="demo-team" aria-labelledby="team-head">
-            <div class="team-head">
-              <h4 class="mini-head" id="team-head">Dein Demo-Team</h4>
-              <span class="team-count" data-team-count>0 von 4</span>
-            </div>
-            <div class="team-power" aria-hidden="true" data-team-power><span>Team-Abdeckung</span><b>0%</b><i></i></div>
-            <div class="team-meter" aria-hidden="true" data-team-meter><i></i><i></i><i></i><i></i></div>
-            <ul class="team-slots" data-team></ul>
-            <div class="team-foot">
-              <button class="btn btn-primary btn-block" type="button" data-open-workspace disabled aria-describedby="ws-hint">Workspace öffnen</button>
-              <p class="hint" id="ws-hint" data-ws-hint>Hol mindestens zwei Menschen ins Team.</p>
-              <button class="btn btn-glass btn-sm btn-block" type="button" data-ws-preview>Workspace-Vorschau ansehen</button>
-            </div>
-          </aside>
-        </div>
-
-        <!-- Workspace -->
-        <div class="demo-body workspace" data-view="workspace" hidden tabindex="-1" aria-labelledby="ws-title">
-          <div class="ws-head">
-            <div>
-              <p class="eyebrow">Gemeinsamer Workspace <span class="tag">Demo</span></p>
-              <h3 class="ws-title" id="ws-title">Loopr · Erste sechs Wochen</h3>
-            </div>
-            <button class="btn btn-glass btn-sm" type="button" data-back><span aria-hidden="true">←</span> Team bearbeiten</button>
-          </div>
-          <div class="ws-grid">
-            <section class="ws-panel ws-tasks" aria-labelledby="ws-tasks-head">
-              <div class="ws-panel-head">
-                <h4 class="mini-head" id="ws-tasks-head">Aufgaben</h4>
-                <span class="ws-progress-label" data-progress-label>0 von 0 erledigt</span>
-              </div>
-              <div class="progress" aria-hidden="true"><i data-progress-bar></i></div>
-              <ul class="tasks" data-tasks></ul>
-            </section>
-            <section class="ws-panel ws-team" aria-labelledby="ws-team-head">
-              <h4 class="mini-head" id="ws-team-head">Team</h4>
-              <ul class="ws-members" data-ws-members></ul>
-              <button class="btn btn-glass btn-block" type="button" data-kickoff>Kickoff-Termin vorschlagen</button>
-              <p class="hint" data-kickoff-status role="status" aria-live="polite" tabindex="-1"></p>
-            </section>
-            <section class="ws-panel ws-feed" aria-labelledby="ws-feed-head">
-              <h4 class="mini-head" id="ws-feed-head">Verlauf</h4>
-              <ol class="feed" data-feed></ol>
-            </section>
-          </div>
-          <div class="ws-bridge">
-            <p><strong>Du hast selbst ein Vorhaben?</strong> Trag dich auf die Warteliste ein. Sobald Xyntal startet, bist du unter den Ersten, die ihr Team so finden.</p>
-            <a class="btn btn-primary" href="#warteliste" data-bridge>Ich will das für meine Idee</a>
-          </div>
-        </div>
-
-        <p class="sr-only" aria-live="polite" data-announce></p>
-      </div>
-
-      <ul class="features">
-        <li class="feature glass">
-          <span class="f-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h10M4 17h6"/></svg></span>
-          <h3>Wenige, passende Vorschläge</h3>
-          <p>Pro Rolle nur die Leute, die wirklich passen – mit Begründung statt Endlos-Feed.</p>
-        </li>
-        <li class="feature glass">
-          <span class="f-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 20.5s-7.5-4.6-7.5-10.4A4.3 4.3 0 0 1 12 7.4a4.3 4.3 0 0 1 7.5 2.7c0 5.8-7.5 10.4-7.5 10.4z"/></svg></span>
-          <h3>Match nur, wenn beide Ja sagen</h3>
-          <p>Kein Spam: Kontakt entsteht erst, wenn die andere Person auch will.</p>
-        </li>
-        <li class="feature glass">
-          <span class="f-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8 12l3 3 5-6"/></svg></span>
-          <h3>Danach: gemeinsamer Workspace</h3>
-          <p>Aufgaben, Entscheidungen, Fortschritt – damit aus dem Match ein Team wird.</p>
-        </li>
-      </ul>
+      <div data-app-demo></div>
+      <p class="app-demo-full"><a href="/demo">Demo im großen Fenster öffnen <span aria-hidden="true">↗</span></a></p>
       <header class="section-head terms-head">
         <h3>Klar von Anfang an: <span class="grad-soft">Wie ihr zusammenarbeitet.</span></h3>
         <p class="section-lead">Jedes Projekt auf Xyntal wird angeben, worauf die Zusammenarbeit hinausläuft – bevor jemand Zeit investiert.</p>
@@ -220,19 +127,6 @@
         </li>
       </ul>
       <p class="demo-honest">So wird Xyntal funktionieren. Die Demo zeigt Beispieldaten – Vorschläge und gemeinsame Workspaces sind gerade im Bau.</p>
-    </div>
-  </section>
-
-  <!-- App-Vorschau: die Desktop-App zum Durchklicken (demo-app.js) -->
-  <section class="app-demo-section" id="app-vorschau" aria-labelledby="app-demo-title">
-    <div class="shell">
-      <header class="section-head">
-        <p class="eyebrow">Interaktive Demo · Desktop-App</p>
-        <h2 id="app-demo-title" class="h2">Die ganze App.<br><span class="grad-soft">Zum Durchklicken.</span></h2>
-        <p class="section-lead">Arbeitsbereiche, Aufgaben, Team-Chat, Matches, Kalender und KI-Center: So arbeitest du in der Xyntal-App. Probier jeden Bereich aus – ohne Konto. <span class="tag">Beispieldaten</span></p>
-      </header>
-      <div data-app-demo></div>
-      <p class="app-demo-full"><a href="/demo">Demo im großen Fenster öffnen <span aria-hidden="true">↗</span></a></p>
     </div>
   </section>
 
@@ -554,10 +448,10 @@
 </footer>
 
 <script src="card-builder.js?v=7" defer></script>
-<script src="landing.js?v=swipe-52" defer></script>
+<script src="landing.js?v=swipe-53" defer></script>
 <script src="home-nav.js?v=5" defer></script>
 <script src="/effects.js?v=36" defer></script>
 <script src="/account-menu.js?v=8" defer></script>
-<script src="/demo-app.js?v=2" defer></script>
+<script src="/demo-app.js?v=3" defer></script>
 </body>
 </html>

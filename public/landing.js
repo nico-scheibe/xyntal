@@ -128,7 +128,9 @@
   /* ---------------------------------------------------------------
      Demo
      --------------------------------------------------------------- */
+  // Die Swipe-Demo gibt es nur noch, wenn eine Seite [data-demo] enthält; die Startseite zeigt stattdessen die App-Demo (demo-app.js).
   const demo = $("[data-demo]");
+  if (demo) (() => {
   const els = {
     roles: $("[data-roles]", demo),
     people: $("[data-people]", demo),
@@ -560,6 +562,7 @@
   renderTeam();
   renderSteps();
   renderDeck();
+  })();
 
   /* ---------------------------------------------------------------
      Team-Moment: Profile verbinden sich zur Projektansicht

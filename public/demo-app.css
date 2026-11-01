@@ -658,9 +658,8 @@
 @media (max-width: 900px) { .dp-tips { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 560px) { .dp-tips { grid-template-columns: 1fr; } .dp-cta { padding: 22px; } .dp-cta-act, .dp-cta-act .btn { width: 100%; } }
 
-.app-demo-section { padding: clamp(56px, 8vw, 110px) 0 clamp(40px, 6vw, 80px); }
-.app-demo-section .xa-host { --xa-h: 700px; }
-.app-demo-full { display: flex; justify-content: center; margin-top: 18px; }
+.demo-section .xa-host { --xa-h: 700px; }
+.app-demo-full { display: flex; justify-content: center; margin: 18px 0 clamp(48px, 7vw, 88px); }
 .app-demo-full a { display: inline-flex; align-items: center; gap: 8px; color: #F5F5F7; font-weight: 600; font-size: 14.5px; text-decoration: none; border-bottom: 1px solid rgba(255, 255, 255, 0.25); padding-bottom: 2px; }
 .app-demo-full a:hover { border-bottom-color: #3FD8FF; }
 
