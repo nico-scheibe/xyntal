@@ -6,7 +6,7 @@ Object.assign(window.XYNTAL_EN, {
   "Die richtigen Menschen.": "The right people.",
   "Du willst etwas aufbauen oder bei einer Idee mitmachen? Bring dein Vorhaben mit, lerne Menschen mit passenden Fähigkeiten kennen und gestalte Xyntal mit.": "Want to build something or join an idea? Bring your ambition, meet people with the skills you need and help shape Xyntal.",
   "Für die Beta bewerben": "Apply for the beta",
-  "Kostenlos teilnehmen. Bewerbung ohne Konto.": "Free to join. No account needed to apply.",
+  "Kostenlos teilnehmen. Bewerbung mit bestätigtem Xyntal-Konto.": "Free to join. Apply with a confirmed Xyntal account.",
   "Dein nächster Schritt": "Your next step",
   "Aus deiner Idee": "Turn your idea",
   "wird ein Gespräch.": "into a conversation.",
@@ -40,7 +40,7 @@ Object.assign(window.XYNTAL_EN, {
   "voranbringen?": "to move forward?",
   "Eine eigene Idee, ein Projekt oder Lust, bei anderen mitzubauen: Erzähl mir, was du suchst und wie Xyntal dir dabei helfen kann.": "Your own idea, a project or a desire to help others build: tell me what you are looking for and how Xyntal could help.",
   "Die Teilnahme ist kostenlos.": "Participation is free.",
-  "Für die Bewerbung brauchst du kein Konto.": "You do not need an account to apply.",
+  "Für die Bewerbung brauchst du ein Xyntal-Konto mit bestätigter E-Mail-Adresse.": "You need a Xyntal account with a confirmed email address to apply.",
   "Deine Angaben sind nicht öffentlich.": "Your application details are not public.",
   "Du bist schon dabei?": "Already taking part?",
   "Was funktioniert gut, wo kommst du nicht weiter?": "What works well, and where are you getting stuck?",
@@ -73,5 +73,12 @@ Object.assign(window.XYNTAL_EN, {
   "Bitte gib deinen Namen, eine gültige E-Mail-Adresse und eine Nachricht mit 10 bis 5000 Zeichen an.": "Please enter your name, a valid email address and a message between 10 and 5000 characters.",
   "Bitte lade das Formular neu und versuche es erneut.": "Please reload the form and try again.",
   "Deine Nachricht ist zu lang.": "Your message is too long.",
-  "Die Nachricht konnte nicht gelesen werden.": "Your message could not be read."
+  "Die Nachricht konnte nicht gelesen werden.": "Your message could not be read.",
+  "Für die Bewerbung brauchst du ein Xyntal-Konto mit bestätigter E-Mail-Adresse. Melde dich an oder erstelle kostenlos ein Konto, danach kannst du dich hier bewerben.": "You need a Xyntal account with a confirmed email address to apply. Log in or create a free account, then you can apply here.",
+  "Bitte bestätige zuerst deine E-Mail-Adresse. Den Link dazu haben wir dir nach der Registrierung geschickt. Lade danach diese Seite neu.": "Please confirm your email address first. We sent you the link after you signed up. Then reload this page.",
+  "Wir sehen uns jede Bewerbung persönlich an. Wenn du ausgewählt wirst, melden wir uns per E-Mail und du bekommst das Beta-Tester-Abzeichen auf deinem Profil. Pro Konto zählt eine Bewerbung.": "We read every application personally. If you are selected, we will email you and you will get the beta tester badge on your profile. One application per account.",
+  "Ich lese deine Bewerbung persönlich. Wenn du dabei bist, bekommst du die nächsten Schritte per E-Mail und das Beta-Tester-Abzeichen auf deinem Profil.": "I personally read your application. If you are selected, you will receive the next steps by email and the beta tester badge on your profile.",
+  "aus deinem Konto, nie sichtbar": "from your account, never shown",
+  "Deine Bewerbung ist angekommen. Wenn du dabei bist, melde ich mich per E-Mail bei dir. Falls du dich mit diesem Konto schon einmal beworben hast, zählt deine erste Bewerbung.": "Your application has arrived. If you're in, I'll email you. If you've applied with this account before, your first application counts.",
+  "Konto erstellen": "Create account"
 });

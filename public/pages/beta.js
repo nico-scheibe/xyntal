@@ -12,19 +12,31 @@ function updateCount() {
 }
 why.addEventListener("input", updateCount);
 
-// Eingeloggte Mitglieder müssen Name und E-Mail nicht noch einmal tippen
-currentMember().then((me) => {
-  if (!me) return;
-  if (!form.elements.name.value) form.elements.name.value = me.name || "";
-  if (!form.elements.email.value) form.elements.email.value = me.email || "";
-}).catch(() => {});
+const gate = document.getElementById("beta-gate");
+
+// Bewerben geht nur mit Konto und bestätigter E-Mail; die Adresse kommt aus dem Konto
+async function initAccess() {
+  const { data: { session } } = await sb.auth.getSession();
+  const user = session && session.user;
+  if (!user) { gate.hidden = false; return; }
+  if (!user.email_confirmed_at) {
+    gate.querySelector("[data-gate-text]").textContent = "Bitte bestätige zuerst deine E-Mail-Adresse. Den Link dazu haben wir dir nach der Registrierung geschickt. Lade danach diese Seite neu.";
+    gate.querySelector("[data-gate-actions]").hidden = true;
+    gate.hidden = false;
+    return;
+  }
+  form.elements.email.value = user.email || "";
+  form.hidden = false;
+  const me = await currentMember().catch(() => null);
+  if (me && !form.elements.name.value) form.elements.name.value = me.name || "";
+}
+initAccess().catch(() => { gate.hidden = false; });
 
 form.addEventListener("submit", (e) => {
   e.preventDefault();
   submitWith(form, status, async (d) => {
     if (d.company) { showDone(); return; } // Bots füllen das versteckte Feld aus
-    requireFields(d, ["name", "email", "focus", "hours", "why"], "Bitte fülle alle Pflichtfelder aus.");
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)) throw new Error("Bitte gib eine gültige E-Mail-Adresse an.");
+    requireFields(d, ["name", "focus", "hours", "why"], "Bitte fülle alle Pflichtfelder aus.");
     if (d.why.length < MIN_WHY) {
       why.focus();
       throw new Error(`Erzähl mir etwas mehr über dein Vorhaben – mindestens ${MIN_WHY} Zeichen.`);
