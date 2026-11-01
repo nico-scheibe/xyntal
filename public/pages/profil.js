@@ -3,7 +3,15 @@ const status = document.getElementById("status");
 let me = null;
 
 function render(m) {
-  document.querySelector("[data-beta-download]").hidden = m.is_beta_tester !== true;
+  const betaCard = document.querySelector("[data-beta-download]");
+  betaCard.hidden = m.is_beta_tester !== true;
+  // The download for this computer comes first and stands out.
+  const onWindows = /Windows/i.test(navigator.userAgent);
+  const first = betaCard.querySelector(`[data-download="${onWindows ? "windows" : "mac"}"]`);
+  const second = betaCard.querySelector(`[data-download="${onWindows ? "mac" : "windows"}"]`);
+  first.classList.remove("btn-ghost");
+  second.classList.add("btn-ghost");
+  first.parentNode.insertBefore(first, second);
   document.getElementById("hello").innerHTML = `Hallo, <em>${esc((m.name || "du").split(" ")[0])}.</em>`;
   const fresh = new URLSearchParams(location.search).has("neu");
   let notice = "";

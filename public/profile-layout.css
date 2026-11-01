@@ -19,7 +19,10 @@
 .beta-download-card .hint { max-width: 720px; margin: 0; }
 .beta-download-kicker { color: var(--accent); font-size: 10px; font-weight: 750; letter-spacing: .12em; }
 .beta-download-card .btn { flex: 0 0 auto; }
-@media (max-width: 600px) { .beta-download-card { align-items: stretch; flex-direction: column; } .beta-download-card .btn { align-self: flex-start; } }
+.beta-download-actions { display: flex; flex-direction: column; gap: 8px; flex: 0 0 auto; }
+.beta-download-version { margin: 2px 0 0; color: var(--text-2); font-size: 12px; text-align: center; }
+.beta-download-version strong { color: var(--text); }
+@media (max-width: 600px) { .beta-download-card { align-items: stretch; flex-direction: column; } .beta-download-card .btn, .beta-download-actions { align-self: flex-start; } }
 @media (min-width: 1400px) {
  #panel-profil { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
  #panel-profil #preview { grid-column: 1; grid-row: 1; }
