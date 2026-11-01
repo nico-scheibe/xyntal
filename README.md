@@ -56,7 +56,10 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 | `/mitglieder` | Freigeschaltete Profile (Gäste sehen nur öffentliche) |
 | `/name` | Öffentliche Karte unter dem Wunsch-Link (`u.html`); vor einem Daki-Neustart leitet `404.html` dorthin weiter |
 | `/meine-karte` | Eigene Xyntal-Karte ansehen und gestalten, Wunsch-Link und Sichtbarkeit ändern (Login nötig; eingebettet im Profil mit `?embed=1`) |
-| `/profil` | Registerkarten Profil (Bio, Bild, Links) · Xyntal-Karte · Sicherheit (E-Mail, Passwort, 2FA, Anmeldemethoden, überall abmelden, Konto löschen) |
+| `/profil` | Registerkarten Profil (Bio, Bild, Links) · Matching · Xyntal-Karte · Sicherheit (E-Mail, Passwort, 2FA, Anmeldemethoden, überall abmelden, Konto löschen) |
+| `/profil#matching` | „Für besseres Matching“: Skills, Tech-Stack, Ziele, Interessen, Sprachen, Zeitzone, Verfügbarkeit, Stunden, Sichtbarkeit – gespeichert auf dem App-Server (`api.xyntal.de`), dieselben Daten wie in der Desktop-App (`public/app-api.js`, `public/pages/profil-matching.js`) |
+| `/arbeitsstil` | Arbeitsstil-Test der App (28 Blöcke, „am meisten“/„am wenigsten“), ausgewertet auf dem App-Server |
+| `/fuer-dich` | Vorschläge aus dem Matching des App-Servers mit Erklärung, Speichern, „Passt nicht“ und „Nachricht schreiben“; `xyntal.de/name` zeigt angemeldeten Mitgliedern zusätzlich „Eure Passung“ |
 | `/admin` | Mitglieder freischalten, frühere Anmeldungen & Newsletter (CSV), Link zur Treffen-Verwaltung |
 
 ## Design und Sprachen

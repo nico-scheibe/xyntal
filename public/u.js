@@ -44,6 +44,7 @@
       <div class="profile-story">${profileHtml(c.profile) || `<section class="pp glass"><p class="pp-headline">${esc(c.pitch || c.name)}</p><p>${esc(t("Lerne die Person hinter der Idee kennen."))}</p></section>`}
       </div>
       </div>
+      ${me && UUID.test(c.user_id || "") && c.user_id !== me.id && window.XyntalApp ? `<section class="xm xm-public" aria-label="${esc(t("Eure Passung"))}" data-match hidden></section>` : ""}
       <section class="public-activity" aria-label="Projekte und Anzeigen" data-public-activity><p role="status">${esc(t("Projekte und Anzeigen werden geladen …"))}</p></section>
       <div class="profile-msg public-join">
         <p>${esc(t("Auf Xyntal finden Entwickler, Designer und Gründer die richtigen Leute für ihre Idee."))}</p>
@@ -96,6 +97,53 @@
       target.querySelector("[data-retry-activity]")?.addEventListener("click", loadActivity);
     }
   }
+  // Eure Passung – vom Matching des App-Servers (wie „Für dich“), nur für Angemeldete.
+  // Ist die Person dort nicht sichtbar (privat, blockiert), bleibt der Bereich einfach weg.
+  async function loadMatch(websiteId) {
+    const box = root.querySelector("[data-match]");
+    if (!box) return;
+    const X = window.XyntalApp;
+    try {
+      const { profile } = await X.api("GET", `/users/by-website/${encodeURIComponent(websiteId)}`);
+      const { match } = await X.api("GET", `/matches/people/${encodeURIComponent(profile.id)}`);
+      if (!box.isConnected) return;
+      const btn = (attrs, label) => `<button class="btn btn-glass btn-sm" type="button" ${attrs}>${esc(t(label))}</button>`;
+      box.innerHTML = `
+        <div class="xm-detail">
+          <div class="xm-detail-head">
+            ${X.scoreRing(match.overall, "xm-lg")}
+            <div><p class="xm-kicker">${esc(t("Eure Passung"))}</p><h2><span>${esc(t("Du und"))}</span> <span data-no-i18n>${esc(profile.displayName)}</span></h2></div>
+          </div>
+          ${match.explanation && match.explanation.summary ? `<p class="xm-summary" data-no-i18n>${esc(match.explanation.summary)}</p>` : ""}
+          <details><summary>${esc(t("Wie sich die Passung zusammensetzt"))}</summary><div class="xm-explain">${X.explanationHtml({ ...match, explanation: null })}</div></details>
+          <div class="profile-actions" style="justify-content:flex-start">
+            ${btn(`data-match-save aria-pressed="${match.saved}"`, match.saved ? "Gespeichert ✓" : "Speichern")}
+            ${match.dismissed ? "" : btn("data-match-dismiss", "Passt nicht")}
+            <a class="btn btn-glass btn-sm" href="/fuer-dich?person=${encodeURIComponent(profile.id)}">${esc(t("Alle Vorschläge"))}</a>
+          </div>
+          <p class="xm-status" role="status" data-match-status></p>
+        </div>`;
+      box.hidden = false;
+      const status = box.querySelector("[data-match-status]");
+      box.querySelector("[data-match-save]").addEventListener("click", async (e) => {
+        const b = e.currentTarget, on = b.getAttribute("aria-pressed") !== "true";
+        try {
+          await X.record(profile.id, on ? "saved" : "unsaved");
+          b.setAttribute("aria-pressed", String(on));
+          b.textContent = t(on ? "Gespeichert ✓" : "Speichern");
+        } catch (err) { status.textContent = err.message; }
+      });
+      box.querySelector("[data-match-dismiss]")?.addEventListener("click", async (e) => {
+        const choice = await X.askDismissReason();
+        if (!choice) return;
+        try {
+          await X.record(profile.id, "dismissed", { reason: choice.reason, note: choice.note || null });
+          e.target.remove();
+          status.textContent = t("Ausgeblendet – diese Person erscheint nicht mehr in deinen Vorschlägen.");
+        } catch (err) { status.textContent = err.message; }
+      });
+    } catch { /* ohne App-Sitzung oder nicht sichtbar: keine Passung */ }
+  }
   async function loadAvatar(path) {
     if (!/^[0-9a-f-]{36}\/[0-9a-f-]{36}\.jpg$/.test(path || "")) return;
     try {
@@ -120,7 +168,7 @@
       });
       if (!res.ok) throw new Error(String(res.status));
       const card = await res.json();
-      if (card && card.name) { renderCard(card); loadActivity(); if (card.profile) loadAvatar(card.profile.avatar_path); return; }
+      if (card && card.name) { renderCard(card); loadActivity(); loadMatch(card.user_id); if (card.profile) loadAvatar(card.profile.avatar_path); return; }
       if (card && card.reserved) {
         document.title = `xyntal.de/${handle} – ${t("reserviert")}`;
         return page(`<div class="profile-msg"><h1><b>xyntal.de/${esc(handle)}</b><br>${esc(t("ist reserviert."))}</h1><p>${esc(t("Dieses Profil ist noch nicht öffentlich freigegeben. Es kann schon jetzt im eigenen Konto veröffentlicht werden."))}</p>${ctas(`<a class="btn btn-primary" href="/#karte">${esc(t("Eigenen Link sichern"))}</a>`)}</div>`);

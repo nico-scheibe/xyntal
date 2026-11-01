@@ -27,7 +27,7 @@ function render(m) {
   document.getElementById("preview").innerHTML = `<div class="members-grid" style="grid-template-columns: 1fr; margin-top: 0">${memberCard(m)}</div>`;
 }
 
-// ---------- Registerkarten: Profil · Xyntal-Karte · Sicherheit ----------
+// ---------- Registerkarten: Profil · Matching · Xyntal-Karte · Sicherheit ----------
 const tabs = [...document.querySelectorAll("[data-tab]")];
 const TABS = tabs.map((b) => b.dataset.tab);
 function selectTab(name, { focus = false, push = true } = {}) {
@@ -41,6 +41,7 @@ function selectTab(name, { focus = false, push = true } = {}) {
   for (const p of document.querySelectorAll("[data-panel]")) p.hidden = p.dataset.panel !== name;
   if (push && location.hash !== `#${name}`) history.replaceState(null, "", `#${name}`);
   if (name === "karte") openCardEditor();
+  if (name === "matching" && window.openMatchingTab) window.openMatchingTab();
   if (name === "sicherheit") renderSecurity();
 }
 // weiter unten gewechselt: zum Anfang der neuen Registerkarte springen

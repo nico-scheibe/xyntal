@@ -17,7 +17,7 @@
 
   const EN = {
     "Konto": "Account", "Einloggen": "Log in", "Konto anlegen": "Create account",
-    "Noch kein Konto?": "No account yet?", "Mein Profil": "My profile", "Meine Karte": "My card",
+    "Noch kein Konto?": "No account yet?", "Mein Profil": "My profile", "Meine Karte": "My card", "Für dich": "For you",
     "Nachrichten": "Messages", "Projekte": "Projects", "Abmelden": "Log out", "Kontomenü": "Account menu",
     "Angemeldet als": "Signed in as", "Admin-Bereich": "Admin area", "Menü": "Menu", "Schließen": "Close",
   };
@@ -91,6 +91,7 @@
 
   const ICON_USER = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.2" r="3.8"/><path d="M4.6 20.2c.9-3.9 3.9-6 7.4-6s6.5 2.1 7.4 6"/></svg>';
   const ICONS = {
+    match: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="12" r="5.2"/><circle cx="15" cy="12" r="5.2"/></svg>',
     profil: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.2" r="3.6"/><path d="M5 20c.9-3.6 3.7-5.6 7-5.6s6.1 2 7 5.6"/></svg>',
     karte: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="2.5"/><circle cx="9" cy="11" r="2"/><path d="M6.5 15.5c.5-1.3 1.4-2 2.5-2s2 .7 2.5 2M14 10h4M14 13.5h3"/></svg>',
     nachrichten: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 6.5h15v9.5h-9l-4 3.5V16h-2z"/></svg>',
@@ -180,6 +181,7 @@
         menu.innerHTML = `
           <div class="acct-head"><small>${t("Angemeldet als")}</small><b>${esc(label)}</b>${state.name && s.user.email ? `<span>${esc(s.user.email)}</span>` : ""}</div>
           <a href="/profil" role="menuitem">${ICONS.profil}${t("Mein Profil")}</a>
+          <a href="/fuer-dich" role="menuitem">${ICONS.match}${t("Für dich")}</a>
           <a href="/meine-karte" role="menuitem">${ICONS.karte}${t("Meine Karte")}</a>
           <a href="/nachrichten" role="menuitem">${ICONS.nachrichten}${t("Nachrichten")}</a>
           <a href="/projekte" role="menuitem">${ICONS.projekte}${t("Projekte")}</a>
@@ -248,6 +250,12 @@
         const c = await getClient();
         await c.auth.signOut();
       } catch { /* notfalls lokal abmelden */ }
+      // Auch die App-Sitzung fürs Matching (app-api.js) beenden
+      try {
+        const app = JSON.parse(localStorage.getItem("xyntal-app-session") || "null");
+        if (app && app.token) fetch(`${(window.XYNTAL_CONFIG && window.XYNTAL_CONFIG.appApiUrl) || "https://api.xyntal.de"}/auth/logout`, { method: "POST", keepalive: true, headers: { authorization: `Bearer ${app.token}` } }).catch(() => {});
+        localStorage.removeItem("xyntal-app-session");
+      } catch { /* egal */ }
       try { localStorage.removeItem(TOKEN); localStorage.removeItem(CACHE); } catch { /* egal */ }
       location.href = "/";
     });
