@@ -12,6 +12,7 @@ function render(m) {
   first.classList.remove("btn-ghost");
   second.classList.add("btn-ghost");
   first.parentNode.insertBefore(first, second);
+  showDownloadVersions(betaCard);
   document.getElementById("hello").innerHTML = `Hallo, <em>${esc((m.name || "du").split(" ")[0])}.</em>`;
   const fresh = new URLSearchParams(location.search).has("neu");
   let notice = "";
@@ -25,6 +26,26 @@ function render(m) {
   }
   document.getElementById("notice").innerHTML = notice;
   document.getElementById("preview").innerHTML = `<div class="members-grid" style="grid-template-columns: 1fr; margin-top: 0">${memberCard(m)}</div>`;
+}
+
+// The version line follows what the API announces (server/release.json in the
+// app repo), so a new desktop release never leaves a stale number here. The
+// static text in profil.html stays as the fallback while the API is unreachable.
+let downloadVersionsShown = false;
+async function showDownloadVersions(betaCard) {
+  if (downloadVersionsShown || betaCard.hidden) return;
+  downloadVersionsShown = true;
+  const line = betaCard.querySelector("[data-download-version]");
+  const platforms = [["macos", "Mac"], ["windows", "Windows"]];
+  const parts = [];
+  for (const [platform, label] of platforms) {
+    try {
+      const r = await fetch(`https://api.xyntal.de/app/update?platform=${platform}&current=0.0.0`);
+      const v = (await r.json())?.data?.latestVersion;
+      if (v) parts.push(`${label} <strong>${esc(v)}</strong>`);
+    } catch {}
+  }
+  if (parts.length) line.innerHTML = `Aktuelle Version: ${parts.join(" · ")}`;
 }
 
 // ---------- Registerkarten: Profil · Matching · Xyntal-Karte · Sicherheit ----------
