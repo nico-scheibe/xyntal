@@ -342,12 +342,12 @@
             </div>
           </div>
           <div class="xc-pop-anchor">
-            <button type="button" class="xc-icon" data-emoji-open aria-label="${esc(t("Emoji einfügen"))}" aria-haspopup="true" aria-expanded="false">😊</button>
+            <button type="button" class="xc-icon" data-emoji-open aria-label="${esc(t("Emoji einfügen"))}" aria-haspopup="true" aria-expanded="false">${ICON.smile}</button>
             <div class="xc-pop xc-emoji" data-emoji-pop hidden>${EMOJI.map((e) => `<button type="button" data-emoji="${e}" aria-label="${e}">${e}</button>`).join("")}</div>
           </div>
           <button type="button" class="xc-icon xc-gif-btn" data-gif-open aria-label="${esc(t("GIF senden"))}">GIF</button>
           <div class="xc-input-wrap">
-            <textarea data-input rows="1" maxlength="8000" placeholder="${esc(t(matchMedia("(max-width: 600px)").matches ? "Nachricht …" : "Nachricht … (@ erwähnt, / markiert Projekt, Arbeitsbereich oder Gruppe)"))}" aria-label="${esc(t("Nachricht"))}"></textarea>
+            <textarea data-input rows="1" maxlength="8000" placeholder="${esc(t("Nachricht …"))}" aria-label="${esc(t("Nachricht"))}"></textarea>
             <div class="xc-pop xc-picker" data-picker hidden></div>
           </div>
           <button type="button" class="xc-icon" data-mic aria-label="${esc(t("Sprachnachricht aufnehmen"))}">${ICON.mic}</button>
