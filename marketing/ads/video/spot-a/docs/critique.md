@@ -57,3 +57,17 @@ Worst three (most damaging first):
 
 Checks failed: none. 17/20 hits within 20 ms, median 2.8 ms.
 Verdict: READY
+
+## Round 5 (v2 "spannender")
+| hook | read | motion | variety | brand | sync | min |
+|  9   |  8   |   9    |    9    |   9   |  9   |  8  |
+
+Changes: two-turn ratcheting wheel with star streaks, music drop moved onto the lock (beat 16),
+camera push + punches + shakes, live 0→99 ring count with shockwave, stakkato reasons, header
+slams in word by word, flashes on lock and end card (the two structural moments).
+Worst three:
+1. [beat 16] Flash at 0.55 whites the lock frame out -> reduced to 0.4 so the Passung card stays visible under it.
+2. [beats 16.2-16.6] Empty panel for ~0.2 s while it opens; acceptable, typing starts right after.
+3. [beat 0] Frame 0 shows only "POV: Du" of the header; the wheel is already spinning so the frame is not blank.
+Checks failed: none. 29/33 hits within 20 ms, median 3.4 ms.
+Verdict: READY
