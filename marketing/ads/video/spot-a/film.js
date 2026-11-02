@@ -331,11 +331,12 @@ function endCard(ctx, u) {
   const L = layout(ctx, 'xyntal', f, track);
   const x0 = W / 2 - L.width / 2, base = cy + 110;
   ctx.save(); ctx.beginPath(); ctx.rect(0, base - L.asc - 60, W, L.asc + L.desc + 70); ctx.clip();
-  ctx.fillStyle = grad(ctx, x0, 0, x0 + L.width, 0);
   L.glyphs.forEach((g, j) => {
     const p = E.outBack(prog(u, 26.6 + j * 0.06, 27.1 + j * 0.06), 1.3);
     if (p <= 0) return;
     ctx.save(); ctx.translate(x0 + g.cx, base + (1 - p) * (L.asc + 60));
+    // gradient in glyph space, so the wordmark reads violet -> cyan across its full width
+    ctx.fillStyle = grad(ctx, -g.cx, 0, L.width - g.cx, 0);
     ctx.font = f; ctx.textAlign = 'center'; ctx.letterSpacing = `${track}px`; ctx.fillText(g.ch, 0, 0); ctx.restore();
   });
   ctx.restore();
