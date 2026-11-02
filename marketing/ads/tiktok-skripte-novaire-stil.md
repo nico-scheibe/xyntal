@@ -261,3 +261,103 @@ Opener für einen 60er.
 3. Spot B und F (Passung als Hero): Differenzierung.
 4. Spot D (Dialog): teuerste Produktion, erst wenn A/E/B Signal zeigen.
 5. Spot C nur mit echtem Bewerbungsschluss.
+
+---
+
+## 5. Zweite Referenzrunde: Strichmännchen-Metaphern und Text-Promos
+
+Dreizehn weitere Links, neun davon analysiert (vier scheiterten an fehlenden
+Analyse-Credits: @drleonkessel, @xzelogos, @angel_cx2 und ein Duplikat). Sie bilden zwei
+neue Familien, die sich klar vom Novaire-UI-Stil unterscheiden:
+
+| Familie | Referenzen | Was sie ausmacht |
+|---|---|---|
+| **Leuchtende Strichmännchen** | @neuronvisuals „Who lets go last?“, @stargeek1212 „Who makes it up?“, @stepzerovisuals „So fühlt sich eine Woche an“, @scott.331 „Procrastinator vs. Planner“ | Schwarzer Hintergrund, weiße, weich leuchtende Strichfiguren mit Labels über dem Kopf, eine Frage als fixer Header, Timer oder Zähler, ein einziger roter Akzent für den Twist, keine Stimme, kein Produkt, 8–22 s. Die Story ist eine Metapher, die Pointe kommt in den letzten zwei Sekunden. |
+| **Harte Text-Promo** | @veyyonn „Liner“, @rootlesszen „Riff“ | Konkurrenz-Icons mit `ADS.` `PAYWALL.` darunter, dann der eigene Name mit einem Wort (`mogged.` / `Just a player.`), dann 1–2 s pro Feature mit echter UI, dann `free. no ads.`, dann Endcard mit URL und Plattformen. Monospace-Labels mit Zählern (`02/07`). Trap-Beat, Cuts auf jede Snare. |
+| **Erklär-Format mit Lead-Magnet** | @psychologisch04 | Studienzahl als Zähler, Balkendiagramm, Stempel `MYTHOS`, Follower-Zähler, Kommentar-Keyword als CTA. Für Xyntal nur als Idee: „Kommentiere TEAM und ich schick dir die Checkliste“. |
+| **Laptop im Raum** | @tonytuyisenge | Echtes MacBook auf dem Tisch, lila LED-Licht, auf dem Bildschirm läuft eine UI-Animation, Untertitel „Pah pah pah!“. Für Xyntal als Desktop-App-Teaser interessant, braucht aber echtes Footage. |
+
+Die Vokabel-Anzeige von @novaireapp (7702022) bestätigt den UI-Stil aus Abschnitt 1:
+Scan-Linie, Pills mit Rim-Light, Fortschrittspfad `1 Tag · 2 Tage · 4 Tage`, „Läuft.“
+
+### Was das für Xyntal ändert
+
+Die Strichmännchen-Familie ist für Xyntal die stärkere Entdeckung als die UI-Spots: Das
+Produkt ist noch im Bau, und diese Spots brauchen **kein Produkt**, nur eine Wahrheit über
+das Gründen. Sie werden geteilt, weil sie eine Erfahrung benennen. Xyntal taucht erst im
+letzten Bild auf. Die Text-Promo-Familie ist der richtige Rahmen, sobald die App
+auslieferbar ist: Konkurrenz benennen, in 20 Sekunden alle Features, URL.
+
+Gemeinsame Regeln der Strichmännchen-Spots:
+
+- Hintergrund reines Schwarz, keine Sterne. Figuren weiß mit 12 px Outer-Glow, Boden mit
+  schwacher Spiegelung.
+- Header in Versalien, geometrisch, breite Laufweite (Space Grotesk 600, liegt in
+  `public/fonts`), fix am oberen Rand.
+- Labels in derselben Schrift, klein, über dem Kopf, bewegen sich mit der Figur.
+- Ein einziger Akzent: Xyntal-Cyan `#3FD8FF` statt des Rot der Referenzen. Rot bleibt für
+  „Scheitern“.
+- Keine Stimme. Ein Ticken oder ein Zähler, dumpfe Thuds, ein Bass-Drop vor der Pointe.
+- Die Endcard ist zwei Zeilen: Pointe in Weiß, Xyntal-Zeile in Cyan. Darunter die
+  Wortmarke klein.
+
+### Spot G · „Wer findet zuerst ein Team?“ (14 s)
+
+Vorlage: @neuronvisuals (vier Figuren an der Stange, Timer, eine fällt nach der anderen).
+
+| Zeit | On-Screen-Text | Visual | Sound |
+|---|---|---|---|
+| 0:00 | **WER FINDET ZUERST EIN TEAM?** · `0:00` | Vier Figuren hängen an einer Stange unter vier Lichtkegeln. Labels: `LINKEDIN-POST` `DISCORD` `ZUFALL` `XYNTAL` | Ticken startet |
+| 0:02 | `1:00` | `LINKEDIN-POST` lässt los, setzt sich, Spot geht aus. Kleines Label: `0 Kommentare` | Thud |
+| 0:04 | `2:30` | `DISCORD` lässt los, Denkerpose. Label: `„Klingt cool, meld dich mal“` | Thud |
+| 0:06 | `4:10` | `ZUFALL` hält noch, zittert | Ticken schneller |
+| 0:07 | `4:40` | Neben `XYNTAL` erscheint eine zweite Figur, die mithält: Label `SWIFT · 10 STD./WOCHE`, Hände leuchten cyan | Bass-Drop, Match-Chime |
+| 0:09 | `5:18` | `ZUFALL` fällt. Die zwei bei `XYNTAL` hängen nicht mehr, sie stehen auf der Stange | Thud, dann Stille |
+| 0:11–0:14 | **ALLEIN HÄLT KEINER EWIG.** · *Finde Leute, die mit dir dranbleiben.* · `xyntal` · *Beta · Link in Bio* | Figuren frieren ein, Text blendet auf | Ein Ton |
+
+### Spot H · „Wer kommt oben an?“ (20 s)
+
+Vorlage: @stargeek1212 (Rolltreppe abwärts, Figuren mit Labels, Stockwerk-Zähler, Hindernisse).
+
+| Zeit | On-Screen-Text | Visual | Sound |
+|---|---|---|---|
+| 0:00–0:02 | **WER KOMMT OBEN AN?** · `STUFE 00` | Rolltreppe läuft nach unten. Figuren laufen hoch: `IDEE` `MOTIVATION` `TALENT` `KONTAKTE` | Dumpfer Beat |
+| 0:03–0:06 | `STUFE 01` | `MOTIVATION` wird langsamer, rutscht ab. `TALENT` steht still und hält eine Kiste `PERFEKTIONISMUS` | – |
+| 0:07–0:10 | `STUFE 02` · Kisten `KEIN MITGRÜNDER` `KEIN DESIGNER` | `IDEE` stolpert über zwei rote Kisten, bleibt liegen | Thud, Thud |
+| 0:11–0:14 | `STUFE 04` → `STUFE 07` | Eine zweite Figur kommt von der Seite, Label `PASSUNG 91`, packt eine Kiste, beide laufen im Takt. Zähler rast | Beat zieht an |
+| 0:15–0:17 | `STUFE 10` | Oben stehen zwei Figuren, darunter die Rolltreppe mit den liegenden | Stille |
+| 0:18–0:20 | **MANCHE NEHMEN DIE ROLLTREPPE.** · *Ideen nehmen die Treppe. Zu zweit.* · `xyntal` · *Beta · Link in Bio* | Endcard | Ein Ton |
+
+### Spot I · „So fühlt sich Gründen allein an“ (9 s)
+
+Vorlage: @stepzerovisuals (Radfahrer bergauf, Schilder MO–SO, Zoom-out auf die Wand).
+
+| Zeit | On-Screen-Text | Visual | Sound |
+|---|---|---|---|
+| 0:00–0:04 | **SO FÜHLT SICH GRÜNDEN ALLEIN AN.** | Figur tritt bergauf, Schilder: `IDEE` `PROTOTYP` `LANDINGPAGE` `ERSTE NUTZER` | Musik, langsam |
+| 0:04–0:05 | Schild `LAUNCH` | Kurze Abfahrt, Arme ausgebreitet | Musik hebt |
+| 0:06–0:07 | Schild `ALLEIN WEITER`, rot | Kamera fährt raus: eine senkrechte Wand | Musik bricht |
+| 0:07–0:09 | Schild `ZU ZWEIT`, cyan | Neben der Figur erscheint eine zweite mit Rad, die Wand wird zu einer Rampe | Match-Chime |
+| 0:09 | `xyntal` · *Beta · Link in Bio* | Endcard | – |
+
+### Spot J · „Jede Plattform:“ (25 s, Text-Promo, erst wenn die App auslieferbar ist)
+
+Vorlage: @veyyonn „Liner“ und @rootlesszen „Riff“.
+
+| Zeit | On-Screen-Text | Visual |
+|---|---|---|
+| 0:00–0:02 | **JEDE PLATTFORM:** · `LINKEDIN` *Posts.* · `DISCORD` *Threads.* · `SLACK` *Stille.* · `ZUFALL` *Glück.* | Vier Icons poppen nacheinander, rote Labels darunter |
+| 0:02–0:04 | **xyntal** · *zeigt dir, wer passt. Und warum.* | Wortmarke, Icons dahinter durchgestrichen |
+| 0:05–0:07 | *Passung. Zehn Bereiche.* | Echte „Für dich“-Karte, Ring füllt sich |
+| 0:08–0:10 | *Offene Rollen. Klare Erwartungen.* | Echte Projektkarte mit Rollen-Pills |
+| 0:11–0:12 | *Dein Link.* · `✓ xyntal.de/alex reserviert` | Xyntal-Karte |
+| 0:13–0:15 | *Workspaces. Aufgaben. Team-Chat.* | Echte App-Screens (Desktop) |
+| 0:15–0:18 | **kostenlos.** · **ohne Sitzpreise.** · **mit Begründung.** | Drei Zeilen Typo |
+| 0:18–0:23 | `01/05 KARTE` · `02/05 PROJEKT` · `03/05 PASSUNG` · `04/05 NACHRICHTEN` · `05/05 WORKSPACE` | 3D-Kartenkarussell, Monospace-Zähler |
+| 0:24–0:25 | **xyntal** · `xyntal.de` · `WINDOWS · MACOS · WEB` | Endcard |
+
+### Empfehlung
+
+Erst Spot G rendern: er ist 14 Sekunden, braucht kein Produkt-UI, und die Vorlage hat das
+Format bewiesen. Danach I (9 s, derselbe Figuren-Rig). H ist die lange Version für Reichweite.
+J wartet auf die auslieferbare App.
