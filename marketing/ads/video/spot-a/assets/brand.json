@@ -1,0 +1,190 @@
+{
+ "url": "http://127.0.0.1:4173",
+ "title": "Xyntal – Große Ideen beginnen mit den richtigen Menschen",
+ "description": "Xyntal verbindet Entwickler, Designer, Gründer und alle, die etwas aufbauen wollen. Beschreibe dein Vorhaben – Xyntal zeigt dir, wer passt und warum.",
+ "themeColor": [
+  "#07070B"
+ ],
+ "text_colors": [
+  [
+   "#f5f5f7",
+   77
+  ],
+  [
+   "#a1a1aa",
+   69
+  ],
+  [
+   "#a3a7ba",
+   42
+  ],
+  [
+   "#e9e9ed",
+   35
+  ],
+  [
+   "#ffffff",
+   28
+  ],
+  [
+   "#a6a4bd",
+   20
+  ],
+  [
+   "#6e6e78",
+   13
+  ],
+  [
+   "#000000",
+   12
+  ],
+  [
+   "#8a8a95",
+   6
+  ],
+  [
+   "#8a8ea4",
+   5
+  ]
+ ],
+ "background_colors": [
+  [
+   "#161b22",
+   79
+  ],
+  [
+   "#1c2330",
+   21
+  ],
+  [
+   "#06060a",
+   20
+  ],
+  [
+   "#0b0e14",
+   20
+  ],
+  [
+   "#0d1117",
+   18
+  ],
+  [
+   "#ffffff",
+   5
+  ],
+  [
+   "#007aff",
+   2
+  ],
+  [
+   "#1b1e2c",
+   1
+  ],
+  [
+   "#11151c",
+   1
+  ],
+  [
+   "#3b3b3b",
+   1
+  ]
+ ],
+ "font_families": [
+  [
+   "-apple-system",
+   329
+  ],
+  [
+   "JetBrains Mono",
+   8
+  ],
+  [
+   "ui-monospace",
+   2
+  ],
+  [
+   "Space Grotesk",
+   2
+  ]
+ ],
+ "font_weights": [
+  [
+   "-apple-system 400",
+   122
+  ],
+  [
+   "-apple-system 600",
+   91
+  ],
+  [
+   "-apple-system 700",
+   68
+  ],
+  [
+   "-apple-system 500",
+   45
+  ],
+  [
+   "JetBrains Mono 400",
+   4
+  ],
+  [
+   "-apple-system 650",
+   3
+  ],
+  [
+   "JetBrains Mono 500",
+   3
+  ],
+  [
+   "ui-monospace 600",
+   2
+  ],
+  [
+   "Space Grotesk 900",
+   1
+  ],
+  [
+   "JetBrains Mono 600",
+   1
+  ],
+  [
+   "Space Grotesk 600",
+   1
+  ]
+ ],
+ "css_vars": {
+  "--bg": "#07070B",
+  "--surface": "rgba(255, 255, 255, 0.045)",
+  "--surface-2": "rgba(255, 255, 255, 0.07)",
+  "--surface-solid": "#111117",
+  "--card": "#121219",
+  "--line": "rgba(255, 255, 255, 0.09)",
+  "--line-2": "rgba(255, 255, 255, 0.14)",
+  "--text": "#F5F5F7",
+  "--text-2": "#A1A1AA",
+  "--text-3": "#6E6E78",
+  "--ok": "#34D399",
+  "--v": "#B95CFF",
+  "--p": "#FF5FD2",
+  "--b": "#5B8CFF",
+  "--c": "#3FD8FF",
+  "--grad": "linear-gradient(100deg, #B95CFF 0%, #FF5FD2 34%, #5B8CFF 68%, #3FD8FF 100%)",
+  "--grad-btn": "linear-gradient(100deg, #A855F7 0%, #EC4899 45%, #6366F1 100%)",
+  "--f": "-apple-system, BlinkMacSystemFont, \"SF Pro Display\", \"Segoe UI Variable Display\", \"Segoe UI\", \"Inter\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+  "--f-text": "-apple-system, BlinkMacSystemFont, \"SF Pro Text\", \"Segoe UI Variable Text\", \"Segoe UI\", \"Inter\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+  "--f-mono": "ui-monospace, \"SF Mono\", \"Cascadia Code\", \"JetBrains Mono\", Consolas, Menlo, monospace",
+  "--ease": "cubic-bezier(0.22, 0.8, 0.2, 1)",
+  "--gutter": "20px",
+  "--max": "1180px",
+  "--r": "20px",
+  "--r-lg": "28px"
+ },
+ "wordmark": {
+  "text": "xyntal",
+  "font": "-apple-system, BlinkMacSystemFont, \"SF Pro Display\", \"Segoe UI Variable Display\", \"Segoe UI\", Inter, Roboto, sans-serif",
+  "weight": "700",
+  "tracking": "-0.84px",
+  "html": "<svg class=\"logo-mark\" viewBox=\"0 0 24 24\" aria-hidden=\"true\"><defs><linearGradient id=\"xm-a1\" x1=\"3\" y1=\"21\" x2=\"21\" y2=\"3\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0\" stop-color=\"#B36BFF\"></stop><stop offset=\"1\" stop-color=\"#3A8AFF\"></stop></linearGradient><linearGradient id=\"xm-b1\" x1=\"3\" y1=\"3\" x2=\"21\" y2=\"21\" gradientUnits=\"userSpaceOnUse\"><stop offset=\"0\" stop-color=\"#3A8AFF\"></stop><sto"
+ }
+}
