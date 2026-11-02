@@ -1614,6 +1614,8 @@ window.XYNTAL_EN = {
   "Anschrift": "Address",
   "[Anschrift einsetzen]": "[insert address]",
   "Kontakt": "Contact",
+  "Umsatzsteuer": "VAT",
+  "Kleinunternehmer gemäß § 19 UStG. Es wird keine Umsatzsteuer berechnet und ausgewiesen.": "Small business under § 19 UStG (German VAT Act). No VAT is charged or shown.",
   "1. Verantwortlicher und Geltungsbereich": "1. Controller and scope",
   "Verantwortlich für die Verarbeitung auf dieser Website und in der Xyntal-App ist der im Impressum genannte Betreiber. Die dort angegebene E-Mail-Adresse ist auch der Kontakt für Datenschutzanfragen. Diese Erklärung gilt für die Xyntal-Website mit ihren Community-Funktionen und für die Xyntal-App für macOS und Windows (Abschnitt 9).": "The controller for processing on this website and in the Xyntal app is the operator named in the legal notice. The email address given there is also the contact for privacy requests. This policy applies to the Xyntal website with its community features and to the Xyntal app for macOS and Windows (section 9).",
   "2. Besuch der Website und Hosting": "2. Visiting the website and hosting",
