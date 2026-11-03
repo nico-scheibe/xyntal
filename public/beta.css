@@ -8,7 +8,7 @@
 .beta-badge > span { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
 .beta-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
 .beta-hero .beta-micro { margin-top: 16px; font-size: 12px; color: var(--text-2); }
-.beta-start { padding: 32px; border: 1px solid var(--border-2); border-radius: 24px; background: linear-gradient(145deg,rgba(185,92,255,.08),transparent 65%),var(--panel); }
+.beta-start { padding: 32px; border: 1px solid var(--border-2); border-radius: 2px; background: var(--panel); }
 .beta-kicker { display: block; color: var(--accent-2); font-size: 11px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; }
 .beta-start h2 { font-size: clamp(1.65rem,2.5vw,2.25rem); line-height: 1.2; margin: 20px 0 12px; }
 .beta-start > p { font-size: 14px; color: var(--text-2); line-height: 1.7; }

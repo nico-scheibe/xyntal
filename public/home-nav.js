@@ -11,6 +11,14 @@
   css.rel = "stylesheet"; css.href = "home-app.css?v=3";
   document.head.append(css);
   // Inhalte der Startseite für Mitglieder: statt Warteliste direkt loslegen
+  // Startseite (start.css): Mitglieder sehen statt der Beta-Bewerbung den Weg in die Projekte
+  const actions = document.querySelector(".hero-actions");
+  if (actions) {
+    actions.innerHTML = '<a class="button" href="/projekte?neu=1">Projekt anlegen</a><a class="textlink" href="/projekte">Projekte ansehen <span aria-hidden="true">→</span></a>';
+  }
+  const betaCta = document.querySelector(".beta-cta .button");
+  if (betaCta) { betaCta.href = "/projekte"; betaCta.textContent = "Zu den Projekten"; }
+  // Ältere Startseite (home.css)
   const hero = document.querySelector(".hero-inner");
   if (hero) {
     const pill = hero.querySelector(".pill");
