@@ -2236,6 +2236,21 @@ window.XYNTAL_EN = {
   "Dein Tarif, sein Ablauf und das Guthaben, mit dem Xyntal AI läuft – derselbe Stand wie in der App unter Einstellungen → Tarif.": "Your plan, when it ends, and the credit Xyntal AI runs on – the same as in the app under Settings → Plan.",
   "Tarif & KI-Guthaben – Xyntal": "Plan & AI credit – Xyntal",
   "Tarif & KI-Guthaben": "Plan & AI credit",
+  "In deinem Tarif sind etwa {n} KI-Anfragen pro Monat enthalten. Brauchst du mehr, zahlt dein Guthaben.": "Your plan includes about {n} AI requests a month. If you need more, your credit pays.",
+  "Xyntal AI zahlst du nach Verbrauch: jede KI-Anfrage geht von deinem Guthaben ab.": "Xyntal AI is pay as you go: every AI request is paid from your credit.",
+  "{n} Anfragen für {amount}": "{n} requests for {amount}",
+  "KI-Anfragen": "AI requests",
+  "Diesen Monat inklusive": "Included this month",
+  "noch etwa {left} von {total}": "about {left} of {total} left",
+  "Inklusive Anfragen verbraucht": "Included requests used",
+  "Aus deinem Guthaben": "From your credit",
+  "etwa {n} Anfragen": "about {n} requests",
+  "Guthaben: {amount}": "Credit: {amount}",
+  "Die inklusiven Anfragen dieses Monats sind fast aufgebraucht – danach zahlt dein Guthaben.": "This month's included requests are almost used up – after that your credit pays.",
+  "Die inklusiven Anfragen dieses Monats sind fast aufgebraucht – lade Guthaben auf, damit Xyntal AI danach weiterläuft.": "This month's included requests are almost used up – add credit so Xyntal AI keeps going after that.",
+  "Eine Anfrage ist ein durchschnittlicher KI-Aufruf der letzten 30 Tage – eine Frage an den Assistenten, ein Agenten-Lauf oder eine Zusammenfassung. Aufgaben mit vielen Schritten zählen mehr, kurze Fragen weniger. Guthaben verfällt nie und wird nie automatisch abgebucht.": "A request is an average AI call of the last 30 days – a question to the assistant, an agent run or a summary. Tasks with many steps count more, short questions less. Credit never expires and is never charged automatically.",
+  "Eine Anfrage ist ein geschätzter durchschnittlicher KI-Aufruf – eine Frage an den Assistenten, ein Agenten-Lauf oder eine Zusammenfassung. Aufgaben mit vielen Schritten zählen mehr, kurze Fragen weniger. Guthaben verfällt nie und wird nie automatisch abgebucht.": "A request is an estimated average AI call – a question to the assistant, an agent run or a summary. Tasks with many steps count more, short questions less. Credit never expires and is never charged automatically.",
+  "etwa {n} KI-Anfragen pro Monat inklusive": "about {n} AI requests a month included",
 };
 
 // Texte mit eingesetzten Werten (Zahlen, Namen). Gruppen werden selbst wieder übersetzt.

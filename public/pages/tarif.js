@@ -22,6 +22,16 @@
     const d = new Date(iso || "");
     return Number.isNaN(d.getTime()) ? "" : d.toLocaleDateString(locale(), { day: "numeric", month: "long", year: "numeric" });
   };
+  // Budgets read as KI-Anfragen, not euros: the server says what one average request
+  // costs (measured from real usage, or estimated). Rounded down so a promise never
+  // overstates what the money buys.
+  const requests = (cents, callCents) => {
+    const n = callCents > 0 ? Math.floor(Number(cents || 0) / callCents) : 0;
+    if (n < 20) return Math.max(0, n);
+    const step = n < 100 ? 5 : n < 1000 ? 10 : 50;
+    return Math.floor(n / step) * step;
+  };
+  const count = (n) => Number(n).toLocaleString(locale());
   const say = (text, kind = "") => { notice.innerHTML = text ? `<p class="xm-status ${kind}" role="status">${esc(text)}</p>` : ""; };
   const fail = (err) => (err && err.message) || t("Das hat nicht geklappt. Versuch es gleich noch einmal.");
 
@@ -51,37 +61,54 @@
 
   function aiPanel(d) {
     const ai = d.ai || {};
+    const call = Number(ai.callCents || 0);
     const included = Number(ai.includedCents || 0);
-    const used = Math.min(Number(ai.includedUsedCents || 0), included);
+    const usedCents = Math.min(Number(ai.includedUsedCents || 0), included);
     const credit = Number(ai.creditCents || 0);
     const nearly = included > 0 && ai.reminderShare > 0 && Number(ai.includedUsedCents || 0) >= included * ai.reminderShare;
-    const share = included > 0 ? Math.min(100, Math.round((used / included) * 100)) : 0;
+    const share = included > 0 ? Math.min(100, Math.round((usedCents / included) * 100)) : 0;
+    const includedN = requests(included, call);
+    const leftN = requests(included - usedCents, call);
+    const creditN = requests(Math.max(0, credit), call);
     const intro = included > 0
-      ? t("Xyntal AI zahlst du nach Verbrauch: {amount} pro Monat sind in deinem Tarif enthalten, darüber hinaus zahlt dein Guthaben.").replace("{amount}", euro(included))
-      : t("Xyntal AI zahlst du nach Verbrauch: jeder Aufruf geht von deinem Guthaben ab.");
+      ? t("In deinem Tarif sind etwa {n} KI-Anfragen pro Monat enthalten. Brauchst du mehr, zahlt dein Guthaben.").replace("{n}", count(includedN))
+      : t("Xyntal AI zahlst du nach Verbrauch: jede KI-Anfrage geht von deinem Guthaben ab.");
     const packs = (ai.packs || []).map((c) =>
-      `<button class="btn btn-small" type="button" data-pack="${esc(c)}" ${d.configured ? "" : "disabled"}>${esc(t("{amount} aufladen").replace("{amount}", price(c)))}</button>`).join("");
+      `<button class="btn btn-small" type="button" data-pack="${esc(c)}" ${d.configured ? "" : "disabled"}>${esc(t("{n} Anfragen für {amount}").replace("{n}", count(requests(c, call))).replace("{amount}", price(c)))}</button>`).join("");
     return `
       <section class="xm-detail xm-billing">
-        <div class="xm-billing-head"><h2>${esc(t("KI-Guthaben"))}</h2></div>
+        <div class="xm-billing-head"><h2>${esc(t("KI-Anfragen"))}</h2></div>
         <p class="xm-billing-text">${esc(intro)}</p>
         <dl class="xm-billing-figures">
-          <div><dt>${esc(t("Guthaben"))}</dt><dd class="${credit > 0 ? "" : "xm-warn-text"}">${esc(euro(Math.max(0, credit)))}</dd></div>
           ${included > 0 ? `
-          <div><dt>${esc(t("Inklusive diesen Monat"))}</dt>
-            <dd class="${nearly ? "xm-warn-text" : ""}">${esc(t("{used} von {total} verbraucht").replace("{used}", euro(used)).replace("{total}", euro(included)))}</dd>
-            <div class="xm-billing-bar${nearly ? " xm-nearly" : ""}" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${share}" aria-label="${esc(t("Inklusivbudget verbraucht"))}"><i style="width:${share}%"></i></div>
+          <div><dt>${esc(t("Diesen Monat inklusive"))}</dt>
+            <dd class="${nearly ? "xm-warn-text" : ""}">${esc(t("noch etwa {left} von {total}").replace("{left}", count(leftN)).replace("{total}", count(includedN)))}</dd>
+            <div class="xm-billing-bar${nearly ? " xm-nearly" : ""}" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${share}" aria-label="${esc(t("Inklusive Anfragen verbraucht"))}"><i style="width:${share}%"></i></div>
             <small>${esc(t("Setzt sich am {date} zurück.").replace("{date}", day(ai.resetsAt)))}</small>
           </div>` : ""}
+          <div><dt>${esc(t("Aus deinem Guthaben"))}</dt>
+            <dd class="${credit > 0 ? "" : "xm-warn-text"}">${esc(t("etwa {n} Anfragen").replace("{n}", count(creditN)))}</dd>
+            <small>${esc(t("Guthaben: {amount}").replace("{amount}", euro(Math.max(0, credit))))}</small>
+          </div>
         </dl>
         ${nearly && ai.available ? `<p class="xm-billing-text xm-warn-text">${esc(credit > 0
-          ? t("Das Inklusivbudget dieses Monats ist fast aufgebraucht – danach übernimmt dein Guthaben.")
-          : t("Das Inklusivbudget dieses Monats ist fast aufgebraucht – lade Guthaben auf, damit Xyntal AI danach weiterläuft."))}</p>` : ""}
+          ? t("Die inklusiven Anfragen dieses Monats sind fast aufgebraucht – danach zahlt dein Guthaben.")
+          : t("Die inklusiven Anfragen dieses Monats sind fast aufgebraucht – lade Guthaben auf, damit Xyntal AI danach weiterläuft."))}</p>` : ""}
         ${!ai.available && ai.reason ? `<p class="xm-billing-text xm-warn-text" data-no-i18n>${esc(ai.reason)}</p>` : ""}
         <div class="xm-actions">${packs}</div>
         ${d.configured ? "" : `<p class="xm-billing-hint">${esc(t("Zahlungen sind auf diesem Server noch nicht eingerichtet."))}</p>`}
-        <p class="xm-billing-hint">${esc(t("Jeder Aufruf kostet den Token-Preis des Modells mit einer kleinen Marge – eine kurze Antwort ist ein Bruchteil eines Cents. Guthaben verfällt nie und wird nie automatisch abgebucht."))}</p>
+        <p class="xm-billing-hint">${esc(t(ai.callEstimateMeasured
+          ? "Eine Anfrage ist ein durchschnittlicher KI-Aufruf der letzten 30 Tage – eine Frage an den Assistenten, ein Agenten-Lauf oder eine Zusammenfassung. Aufgaben mit vielen Schritten zählen mehr, kurze Fragen weniger. Guthaben verfällt nie und wird nie automatisch abgebucht."
+          : "Eine Anfrage ist ein geschätzter durchschnittlicher KI-Aufruf – eine Frage an den Assistenten, ein Agenten-Lauf oder eine Zusammenfassung. Aufgaben mit vielen Schritten zählen mehr, kurze Fragen weniger. Guthaben verfällt nie und wird nie automatisch abgebucht."))}</p>
       </section>`;
+  }
+
+  // Die Feature-Zeilen eines Tarifs, die KI-Budget-Zeile als Anfragen statt in Euro.
+  function planFeatures(p, d) {
+    const call = Number((d.ai || {}).callCents || 0);
+    if (!p.aiBudgetLine || !(p.aiIncludedCents > 0) || !(call > 0)) return p.features || [];
+    const line = t("etwa {n} KI-Anfragen pro Monat inklusive").replace("{n}", count(requests(p.aiIncludedCents, call)));
+    return (p.features || []).map((f) => (f === p.aiBudgetLine ? line : f));
   }
 
   // Upgrade-Karten nur für Start: bezahlte Tarife wechseln im Abo-Portal (der Server lehnt
@@ -102,7 +129,7 @@
             ? `<s>${esc(price(full))}</s> <b>${esc(price(cut))}</b>${esc(unit)}`
             : `<b>${esc(price(full))}</b>${esc(unit)}`}</p>
           <p class="xm-billing-text" data-no-i18n>${esc(p.blurb)}</p>
-          <ul class="xm-plan-features" data-no-i18n>${(p.features || []).map((f) => `<li>${esc(f)}</li>`).join("")}</ul>
+          <ul class="xm-plan-features" data-no-i18n>${planFeatures(p, d).map((f) => `<li>${esc(f)}</li>`).join("")}</ul>
           <div class="xm-actions"><button class="btn btn-small" type="button" data-upgrade="${esc(p.id)}" ${d.configured ? "" : "disabled"}>${esc(t("{plan} wählen").replace("{plan}", p.name))}</button></div>
         </article>`;
     }).join("");
