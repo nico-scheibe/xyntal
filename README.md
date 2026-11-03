@@ -36,7 +36,8 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 | `supabase/017_security.sql` | Sicherheit im Profil: 2FA (Authenticator-App) wird in allen Tabellen, Admin-Rechten und beim Löschen durchgesetzt; `verify_my_password` prüft das aktuelle Passwort (max. 5 Versuche / 15 Min.) |
 | `supabase/018_open_projects_messages.sql` | Projekte anlegen, für Rollen melden und Nachrichten schreiben schon mit bestätigtem Konto (ohne Freischaltung); Abgelehnte ausgeschlossen; Spam-Grenzen: 5 Projekte/Tag, 30 Nachrichten und 3 neue Gespräche pro Stunde |
 | `supabase/010_beta_applications.sql` | Beta-Programm: Bewerbungstabelle (ursprünglich ohne Konto), lesen und bewerten nur Admins |
-| `supabase/migrations/20261103120000_beta_requires_account.sql` | Beta-Programm: Bewerbung nur mit Konto (`apply_for_beta` nur für `authenticated`, `user_id` je Bewerbung, `get_my_beta_application` für den eigenen Stand); **noch auszuführen** |
+| `supabase/migrations/20261103120000_beta_requires_account.sql` | Beta-Programm: Bewerbung nur mit Konto (`apply_for_beta` nur für `authenticated`, `user_id` je Bewerbung, `get_my_beta_application` für den eigenen Stand) |
+| `supabase/migrations/20261103130000_beta_accepted_sets_badge.sql` | Beta-Programm: Status „angenommen“ setzt den Beta-Tester-Badge per Trigger; **noch auszuführen** |
 | `ANMELDUNG-EINRICHTEN.md` | Anleitung: Brevo-SMTP einrichten; Google, Apple, LinkedIn und SMS einschalten |
 
 ## Seiten
@@ -300,8 +301,11 @@ Name und E-Mail aus dem Konto und speichert die `user_id` an der Bewerbung (eine
 Konto). `get_my_beta_application` zeigt Mitgliedern nur Stand und Datum der eigenen
 Bewerbung, nie die Admin-Notiz. Alte Bewerbungen ohne Konto bleiben erhalten und
 werden beim nächsten Login über die E-Mail dem Konto zugeordnet; im Admin-Bereich
-stehen sie als „ohne Konto (alt)“. Der Beta-Tester-Badge wird weiterhin von Hand
-am Mitglied vergeben.
+stehen sie als „ohne Konto (alt)“. Seit
+`supabase/migrations/20261103130000_beta_accepted_sets_badge.sql` setzt der Status
+„angenommen“ per Trigger den Beta-Tester-Badge am verknüpften Konto (und damit die
+Desktop-Downloads im Profil); wechselt der Status wieder weg, wird der Badge entfernt.
+Der Badge lässt sich zusätzlich weiterhin von Hand am Mitglied setzen.
 
 UI-Logik prüfen: `node tests/admin-ui.cjs` (Beispieldaten, keine Live-Datenbank).
 Öffentlicher Testablauf und Feedback: `/beta#testen`.
