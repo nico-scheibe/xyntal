@@ -2,9 +2,9 @@
 #feed { display: grid; gap: 18px; align-items: start; }
 #feed .post {
   padding: 20px 22px; gap: 16px; min-height: 0; align-content: start;
-  background: #101013 !important;
-  border-color: rgba(255,255,255,.1) !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.025);
+  background: #FFFFFF !important;
+  border-color: rgba(28, 27, 24, .1) !important;
+  box-shadow: inset 0 1px 0 rgba(28, 27, 24, .025);
 }
 #feed .post-head { gap: 14px; }
 #feed .post-meta { gap: 4px; }
@@ -15,7 +15,7 @@
 #feed .post-body p:last-child { margin-bottom: 0; }
 #feed .post-foot {
   display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
-  padding: 12px 0 0; margin: 0; gap: 10px 12px; border-top: 1px solid rgba(255,255,255,.07);
+  padding: 12px 0 0; margin: 0; gap: 10px 12px; border-top: 1px solid rgba(28, 27, 24, .07);
 }
 #feed .post-time { font-size: 12px; color: var(--text-2); }
 #feed .post-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
@@ -26,20 +26,20 @@
   transition: background .15s ease, color .15s ease, border-color .15s ease;
 }
 #feed .post-actions button:hover,
-#feed .post-actions a:hover { background: rgba(255,255,255,.05); color: var(--text); }
+#feed .post-actions a:hover { background: rgba(28, 27, 24, .05); color: var(--text); }
 #feed .post-actions button:focus-visible,
 #feed .post-actions a:focus-visible {
-  outline: 2px solid #3FE0F0; outline-offset: 2px;
+  outline: 2px solid #1F3A93; outline-offset: 2px;
 }
 #feed .post-actions [data-act=like] {
-  padding-inline: 11px; background: rgba(63, 224, 240, .07); border-color: rgba(63, 224, 240, .12); color: var(--accent-2);
+  padding-inline: 11px; background: rgba(31, 58, 147, .07); border-color: rgba(31, 58, 147, .12); color: var(--accent-2);
 }
 #feed .post-actions [data-act=like].active {
-  color: #3FE0F0; background: rgba(63, 224, 240, .13); border-color: rgba(63, 224, 240, .25);
+  color: #1F3A93; background: rgba(31, 58, 147, .13); border-color: rgba(31, 58, 147, .25);
 }
 #feed .post-actions [data-act=edit]::before { content: "✎"; margin-right: 5px; font-size: 14px; color: var(--accent-2); }
 #feed .post-actions .post-delete { color: var(--text-2); }
-#feed .post-actions .post-delete:hover { color: #fda4af; background: rgba(251,113,133,.1); }
+#feed .post-actions .post-delete:hover { color: #B3261E; background: rgba(251,113,133,.1); }
 #feed [hidden] { display: none !important; }
 #feed .post-editor-slot:empty { display: none; }
 .post-edit-form { display: grid; gap: 12px; }
@@ -53,17 +53,17 @@
 /* ---------- Kommentare: klare Hierarchie, ruhige Abstände ---------- */
 #feed .comments {
   display: grid; gap: 16px; margin-top: 4px; padding-top: 16px;
-  border-top: 1px solid rgba(255,255,255,.07);
+  border-top: 1px solid rgba(28, 27, 24, .07);
 }
 #feed .comment-list { display: grid; gap: 14px; }
 #feed .comment {
   display: grid; grid-template-columns: 36px minmax(0,1fr); gap: 12px; align-items: start;
-  padding: 12px 12px 10px; border-radius: 2px; background: rgba(255,255,255,.025);
-  border: 1px solid rgba(255,255,255,.06);
+  padding: 12px 12px 10px; border-radius: 2px; background: rgba(28, 27, 24, .025);
+  border: 1px solid rgba(28, 27, 24, .06);
 }
 #feed .comment.is-reply {
   margin-left: 24px; background: transparent;
-  border-color: transparent; border-left: 2px solid rgba(63, 224, 240, .35);
+  border-color: transparent; border-left: 2px solid rgba(31, 58, 147, .35);
   border-radius: 0; padding: 8px 0 8px 14px;
 }
 #feed .comment-main { min-width: 0; display: grid; gap: 8px; }
@@ -85,28 +85,28 @@
   background: transparent; color: var(--text-2); font: inherit; font-size: 12px; font-weight: 600;
   transition: background .15s ease, color .15s ease;
 }
-#feed .c-act:hover { background: rgba(255,255,255,.06); color: var(--text); }
-#feed .c-act:focus-visible { outline: 2px solid #3FE0F0; outline-offset: 2px; }
-#feed .c-act-danger:hover { color: #fda4af; background: rgba(251,113,133,.1); }
+#feed .c-act:hover { background: rgba(28, 27, 24, .06); color: var(--text); }
+#feed .c-act:focus-visible { outline: 2px solid #1F3A93; outline-offset: 2px; }
+#feed .c-act-danger:hover { color: #B3261E; background: rgba(251,113,133,.1); }
 
 #feed .c-react-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-left: auto; }
 #feed .c-react-chip,
 #feed .c-react-pick,
 #feed .c-react-more > summary {
   min-height: 36px; min-width: 36px; padding: 4px 10px; border-radius: 2px;
-  border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.04);
+  border: 1px solid rgba(28, 27, 24, .1); background: rgba(28, 27, 24, .04);
   color: var(--text); font: inherit; font-size: 13px; cursor: pointer;
   transition: background .15s ease, border-color .15s ease;
 }
 #feed .c-react-chip:hover,
 #feed .c-react-pick:hover,
-#feed .c-react-more > summary:hover { background: rgba(63, 224, 240, .12); border-color: rgba(63, 224, 240, .28); }
+#feed .c-react-more > summary:hover { background: rgba(31, 58, 147, .12); border-color: rgba(31, 58, 147, .28); }
 #feed .c-react-chip:focus-visible,
 #feed .c-react-pick:focus-visible,
-#feed .c-react-more > summary:focus-visible { outline: 2px solid #3FE0F0; outline-offset: 2px; }
+#feed .c-react-more > summary:focus-visible { outline: 2px solid #1F3A93; outline-offset: 2px; }
 #feed .c-react-chip.is-mine,
 #feed .c-react-chip[aria-pressed="true"] {
-  background: rgba(63, 224, 240, .18); border-color: rgba(63, 224, 240, .4);
+  background: rgba(31, 58, 147, .18); border-color: rgba(31, 58, 147, .4);
 }
 #feed .c-react-more { position: relative; }
 #feed .c-react-more > summary {
@@ -117,19 +117,19 @@
 #feed .c-react-pop {
   position: absolute; right: 0; bottom: calc(100% + 8px); z-index: 20;
   display: flex; gap: 4px; flex-wrap: wrap; padding: 8px; border-radius: 2px;
-  background: #16141F; border: 1px solid rgba(255,255,255,.12);
-  box-shadow: 0 16px 40px rgba(0,0,0,.5); min-width: 200px;
+  background: #16141F; border: 1px solid rgba(28, 27, 24, .12);
+  box-shadow: 0 16px 40px rgba(255, 255, 255, .5); min-width: 200px;
 }
 
 /* Composer */
 #feed .comment-form {
   display: grid; gap: 10px; margin: 0; padding: 12px; border-radius: 2px;
-  background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08);
+  background: rgba(28, 27, 24, .03); border: 1px solid rgba(28, 27, 24, .08);
 }
 #feed .comment-reply-bar {
   display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
   gap: 8px; padding: 8px 10px; border-radius: 2px;
-  background: rgba(63, 224, 240, .08); border: 1px solid rgba(63, 224, 240, .2);
+  background: rgba(31, 58, 147, .08); border: 1px solid rgba(31, 58, 147, .2);
   font-size: 13px; color: var(--text-2); line-height: 1.4;
 }
 #feed .comment-reply-bar strong { color: var(--text); }
@@ -138,12 +138,12 @@
 }
 #feed .comment-compose input {
   width: 100%; min-height: 44px; margin: 0; padding: 10px 14px; border-radius: 2px;
-  border: 1px solid rgba(255,255,255,.12); background: rgba(0,0,0,.25); color: var(--text);
+  border: 1px solid rgba(28, 27, 24, .12); background: rgba(255, 255, 255, .25); color: var(--text);
   font: inherit; font-size: 15px;
 }
 #feed .comment-compose input::placeholder { color: var(--text-3, #8B8898); }
 #feed .comment-compose input:focus {
-  outline: 2px solid #3FE0F0; outline-offset: 1px; border-color: transparent;
+  outline: 2px solid #1F3A93; outline-offset: 1px; border-color: transparent;
 }
 #feed .comment-compose .btn {
   min-height: 44px; padding-inline: 18px; border-radius: 2px; cursor: pointer;
@@ -151,10 +151,10 @@
 #feed .comment-edit-form { display: grid; gap: 10px; }
 #feed .comment-edit-form textarea {
   width: 100%; min-height: 80px; resize: vertical; font: inherit; font-size: 15px; line-height: 1.5;
-  padding: 12px; border-radius: 2px; border: 1px solid rgba(255,255,255,.12);
-  background: rgba(0,0,0,.25); color: var(--text);
+  padding: 12px; border-radius: 2px; border: 1px solid rgba(28, 27, 24, .12);
+  background: rgba(255, 255, 255, .25); color: var(--text);
 }
-#feed .comment-edit-form textarea:focus { outline: 2px solid #3FE0F0; outline-offset: 1px; }
+#feed .comment-edit-form textarea:focus { outline: 2px solid #1F3A93; outline-offset: 1px; }
 #feed .comment-edit-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 #feed .empty-small { margin: 0; padding: 4px 0; color: var(--text-2); font-size: 13px; }
 

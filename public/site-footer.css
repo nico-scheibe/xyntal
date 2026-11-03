@@ -1,10 +1,10 @@
 /* ---------- Gemeinsame Fußzeile (alle Seiten) ---------- */
 .site-footer {
-  --sf-text: #E8E6E1;
-  --sf-text-2: #A3A09A;
-  --sf-text-3: #6E6C66;
-  --sf-line: #26262B;
-  --sf-accent: #3FE0F0;
+  --sf-text: #1C1B18;
+  --sf-text-2: #5C5953;
+  --sf-text-3: #8D8980;
+  --sf-line: #D9D4C8;
+  --sf-accent: #1C1B18;
   position: relative;
   margin-top: 64px;
   padding: 0 0 calc(28px + env(safe-area-inset-bottom));
@@ -26,23 +26,23 @@
   padding: 40px 0 36px;
   border-bottom: 1px solid var(--sf-line);
 }
-.sf-cta h2 { margin: 0; font-family: "Space Grotesk", inherit; font-size: clamp(1.3rem, 2.4vw, 1.7rem); line-height: 1.2; color: var(--sf-text); font-weight: 600; letter-spacing: -0.015em; }
+.sf-cta h2 { margin: 0; font-family: inherit; font-size: clamp(1.3rem, 2.4vw, 1.7rem); line-height: 1.2; color: var(--sf-text); font-weight: 600; letter-spacing: -0.015em; }
 .sf-cta p { margin: 6px 0 0; max-width: 46ch; }
 .sf-cta-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .sf-btn {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 10px 18px; border-radius: 2px;
-  border: 1px solid #3B3B42; color: var(--sf-text) !important;
-  font-family: "Space Grotesk", inherit; font-weight: 600; font-size: 14px;
+  border: 1px solid #BDB7A8; color: var(--sf-text) !important;
+  font-family: inherit; font-weight: 600; font-size: 14px;
   transition: border-color 160ms ease, background 160ms ease;
 }
 .sf-btn:hover { border-color: var(--sf-text-2); }
-.sf-btn-primary { background: var(--sf-accent); border-color: var(--sf-accent); color: #06181B !important; }
+.sf-btn-primary { background: var(--sf-accent); border-color: var(--sf-accent); color: #F6F3EC !important; }
 .sf-btn-primary:hover { background: transparent; color: var(--sf-accent) !important; }
 
 /* Hauptbereich */
 .sf-main { display: grid; gap: 36px; padding: 40px 0 36px; }
-.sf-brand .sf-logo { display: inline-flex; align-items: center; gap: 10px; color: var(--sf-text); font-family: "Space Grotesk", inherit; font-weight: 700; font-size: 20px; letter-spacing: -0.03em; }
+.sf-brand .sf-logo { display: inline-flex; align-items: center; gap: 10px; color: var(--sf-text); font-family: inherit; font-weight: 700; font-size: 20px; letter-spacing: -0.03em; }
 .sf-brand .sf-logo svg { width: 26px; height: 26px; fill: none; stroke-width: 3; stroke-linecap: round; }
 .sf-brand .sf-logo .bm-a { stroke: var(--sf-text); }
 .sf-brand .sf-logo .bm-b { stroke: var(--sf-accent); }

@@ -5,31 +5,31 @@
    keine Verläufe, kein Glas, keine Effekte im Hintergrund.
    ===================================================================== */
 :root {
-  --bg: #0B0B0D;
-  --panel: #101013;
-  --panel-2: #15151A;
-  --panel-3: #1B1B21;
-  --border: #26262B;
-  --border-2: #3B3B42;
-  --text: #E8E6E1;
-  --text-2: #A3A09A;
-  --text-3: #6E6C66;
-  --accent: #3FE0F0;
-  --accent-2: #3FE0F0;
-  --accent-soft: rgba(63, 224, 240, 0.12);
-  --cyan: #3FE0F0;
-  --grad: #3FE0F0;
-  --grad-btn: #3FE0F0;
-  --on-accent: #06181B;
-  --x-violet: #3FE0F0; --x-pink: #3FE0F0; --x-blue: #3FE0F0; --x-cyan: #3FE0F0;
+  --bg: #F6F3EC;
+  --panel: #FFFFFF;
+  --panel-2: #EFEBE1;
+  --panel-3: #E6E1D5;
+  --border: #D9D4C8;
+  --border-2: #BDB7A8;
+  --text: #1C1B18;
+  --text-2: #5C5953;
+  --text-3: #8D8980;
+  --accent: #1F3A93;
+  --accent-2: #1F3A93;
+  --accent-soft: rgba(31, 58, 147, 0.1);
+  --cyan: #1F3A93;
+  --grad: #1C1B18;
+  --grad-btn: #1C1B18;
+  --on-accent: #F6F3EC;
+  --x-violet: #1F3A93; --x-pink: #1F3A93; --x-blue: #1F3A93; --x-cyan: #1F3A93;
   --x-grad: var(--grad);
   --r-card: 2px; --r-ctl: 2px; --r-modal: 2px;
-  --f: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --f: "Source Serif 4", Georgia, "Times New Roman", serif; --f-unused: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --f-text: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, "SF Mono", "Cascadia Code", Consolas, Menlo, monospace;
   --f-hack: var(--f);
 }
-html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scrollbar-color: #2A2A33 transparent; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scrollbar-color: #BDB7A8 transparent; }
 body {
   background: var(--bg);
   font-family: var(--f-text);
@@ -37,13 +37,13 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 body::before { display: none; }
-::selection { background: var(--cyan); color: var(--on-accent); }
+::selection { background: var(--text); color: var(--bg); }
 :focus-visible { outline-color: var(--cyan); }
 
 h1, h2, h3, legend, .event-info dd, .plan .price, .app-main .greet, .section-title, .page-head h1 {
   font-family: var(--f) !important;
-  font-weight: 600 !important;
-  letter-spacing: -0.02em !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.01em !important;
   font-variation-settings: normal !important;
 }
 h1 em, h2 em, .grad-text, .page-head h1 em {
@@ -73,10 +73,10 @@ h1 em, h2 em, .grad-text, .page-head h1 em {
 .btn, .btn-small {
   border-radius: 2px !important;
   font-family: var(--f) !important; font-weight: 600 !important; letter-spacing: 0;
-  background: var(--accent) !important; color: var(--on-accent) !important; border: 1px solid var(--accent) !important;
+  background: var(--text) !important; color: var(--bg) !important; border: 1px solid var(--text) !important;
   box-shadow: none;
 }
-.btn:hover { background: transparent !important; color: var(--accent) !important; filter: none; }
+.btn:hover { background: transparent !important; color: var(--text) !important; filter: none; }
 .btn-ghost, .btn.btn-ghost, .btn-quiet {
   background: transparent !important; color: var(--text) !important; border-color: var(--border-2) !important; box-shadow: none;
 }
@@ -122,7 +122,7 @@ input, select, textarea { font-family: var(--f-text); font-size: 16px; border-ra
 }
 .ptabs button svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
 .ptabs button:hover { color: var(--text); }
-.ptabs button[aria-selected="true"] { color: var(--on-accent); background: var(--accent); box-shadow: none; }
+.ptabs button[aria-selected="true"] { color: var(--bg); background: var(--text); box-shadow: none; }
 @media (max-width: 420px) { .ptabs button { padding: 10px 12px; gap: 6px; font-size: 13px; } .ptabs button svg { width: 15px; height: 15px; } }
 .ptab-panel { display: grid; gap: 24px; min-width: 0; }
 .ptab-panel[hidden] { display: none; }
@@ -140,7 +140,7 @@ input, select, textarea { font-family: var(--f-text); font-size: 16px; border-ra
 .sec-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--grad); flex: none; }
 .mfa-setup { display: grid; gap: 16px; padding-top: 6px; border-top: 1px solid var(--border); }
 .sec-steps { margin: 0; padding-left: 20px; color: var(--text-2); display: grid; gap: 4px; }
-.mfa-qr { justify-self: start; padding: 12px; background: #fff; border-radius: 2px; line-height: 0; }
+.mfa-qr { justify-self: start; padding: 12px; background: #fff; border: 1px solid var(--border); border-radius: 2px; line-height: 0; }
 .mfa-qr img { width: 176px; height: 176px; display: block; }
 .mfa-secret { font-family: var(--mono); font-size: 13px; color: var(--text); background: var(--panel-2); padding: 2px 6px; border-radius: 2px; word-break: break-all; }
 .sec-danger { border-color: rgba(248, 113, 113, 0.28) !important; }

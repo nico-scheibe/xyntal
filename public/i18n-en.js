@@ -2117,6 +2117,28 @@ window.XYNTAL_EN = {
   "Projekt anlegen": "Create a project",
   "Projekte ansehen": "See projects",
   "Zu den Projekten": "Go to projects",
+  // Startseite als Brief (brief.css)
+  "Xyntal – Ein Brief von Nico": "Xyntal – A letter from Nico",
+  "November 2026": "November 2026",
+  "Hallo,": "Hello,",
+  "ich bin Nico, und ich baue Xyntal. Das ist keine Firma mit Team und Büro, das bin ich, seit 2025, an meinem Schreibtisch. Ich schreibe dir das als Brief, weil eine Landingpage mit großen Versprechen nicht das ist, was ich dir sagen will.": "I'm Nico, and I'm building Xyntal. It's not a company with a team and an office. It's me, since 2025, at my desk. I'm writing this as a letter because a landing page full of big promises isn't what I want to tell you.",
+  "Angefangen hat es mit einem Problem, das ich selbst hatte: Ich wollte etwas Eigenes aufbauen und hatte niemanden, mit dem ich es hätte tun können. Nicht, weil es die Leute nicht gibt. Sondern weil man sie nicht findet. LinkedIn ist zum Zeigen da, Discord zum Reden, Meetups zum Zufall. Nirgends steht, wer gerade wirklich Zeit hat, was die Person kann und was sie erwartet.": "It started with a problem I had myself: I wanted to build something of my own and had nobody to do it with. Not because those people don't exist. Because you can't find them. LinkedIn is for showing off, Discord for talking, meetups for chance. Nowhere does it say who actually has time right now, what they can do and what they expect.",
+  "Xyntal soll genau das lösen. Du beschreibst, was du vorhast, und Xyntal zeigt dir Leute, die dazu passen, und sagt dir, warum. Es geht um drei Arten von Menschen:": "Xyntal is meant to solve exactly that. You describe what you're planning, and Xyntal shows you people who fit and tells you why. It's about three kinds of people:",
+  "Mitgründer:innen": "Co-founders",
+  ", die mit dir eine Firma aufbauen und das Risiko teilen.": " who build a company with you and share the risk.",
+  ", die ein bestimmtes Stück mit dir bauen: die App, das Design, den ersten Vertrieb. Zeitlich begrenzt, bezahlt oder gegen Anteile.": " who build one specific piece with you: the app, the design, the first sales. Time-boxed, paid or for equity.",
+  ", und dir in einem Gespräch ersparen, was sie vor einem Jahr selbst erst lernen mussten.": " who, in one conversation, save you what they had to learn the hard way a year ago.",
+  "Eine Sache ist mir dabei wichtig: Die Bedingungen stehen am Anfang, nicht am Ende. Jedes Projekt auf Xyntal sagt, ob es um Mitgründung mit Anteilen geht, um bezahlte Mitarbeit oder um ein Nebenprojekt ohne Geld, mit abgesprochenen Stunden pro Woche. Bevor jemand Zeit investiert.": "One thing matters to me here: the terms come first, not last. Every project on Xyntal says whether it's about co-founding with equity, paid work, or a side project without money and with agreed hours per week. Before anyone invests time.",
+  "Xyntal ist eine App für den Rechner, für Mac und Windows. Darin sind dein Profil, die Vorschläge, die Gespräche und ein gemeinsamer Arbeitsbereich für jedes Projekt. Diese Website ist nur der Eingang. Wenn du sehen willst, wie die App aussieht, gibt es": "Xyntal is a desktop app for Mac and Windows. Inside are your profile, the suggestions, the conversations and a shared workspace for every project. This website is just the entrance. If you want to see what the app looks like, there's",
+  "eine Demo mit Beispieldaten": "a demo with sample data",
+  "Wo wir stehen, ehrlich: Die Beta läuft. Profile, Projekte mit offenen Rollen, Gesuche und Nachrichten funktionieren. Die Vorschläge und die gemeinsamen Arbeitsbereiche sind noch im Bau. Es gibt Ecken, die nicht fertig sind, und wenn du eine findest, will ich davon hören.": "Where we are, honestly: the beta is running. Profiles, projects with open roles, listings and messages work. The suggestions and the shared workspaces are still under construction. There are corners that aren't finished, and if you find one, I want to hear about it.",
+  "Rein kommt man per Bewerbung. Nicht, um es exklusiv zu machen, sondern damit am Anfang Leute drin sind, die wirklich etwas vorhaben, und damit ich mit jedem Einzelnen sprechen kann. Die Bewerbung sind drei Fragen: Was baust du, wen suchst du, wie viel Zeit hast du. Ich lese jede selbst und antworte per E-Mail. In der Beta kostet Xyntal nichts.": "You get in by applying. Not to make it exclusive, but so that the first people inside actually have something in mind, and so I can talk to every single one. The application is three questions: what are you building, who are you looking for, how much time do you have. I read every one myself and reply by email. During the beta, Xyntal costs nothing.",
+  "Wenn das nach dir klingt:": "If that sounds like you:",
+  "Und wenn du Fragen hast, schreib mir einfach:": "And if you have questions, just write to me:",
+  "Nico": "Nico",
+  "Nico Scheibe, Gründer von Xyntal ·": "Nico Scheibe, founder of Xyntal ·",
+  "PS.": "PS.",
+  "Noch nichts Konkretes vor? Dann sag ich dir Bescheid, wenn Xyntal für alle offen ist. Keine Werbung, nur Mails, wenn es wirklich etwas Neues gibt.": "Nothing concrete planned yet? Then I'll let you know when Xyntal opens to everyone. No advertising, just an email when there's really something new.",
 };
 
 // Texte mit eingesetzten Werten (Zahlen, Namen). Gruppen werden selbst wieder übersetzt.

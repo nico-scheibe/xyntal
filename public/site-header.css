@@ -5,8 +5,8 @@
 .nav {
   position: sticky; top: 0; z-index: 50;
   padding-top: env(safe-area-inset-top);
-  background: #0B0B0D !important;
-  border-bottom: 1px solid #26262B !important;
+  background: #F6F3EC !important;
+  border-bottom: 1px solid #D9D4C8 !important;
   font-family: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 .nav .wrap {
@@ -15,30 +15,30 @@
 }
 .nav .logo {
   display: inline-flex; align-items: center; gap: 10px; flex: none; margin-right: 14px;
-  font-family: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-  font-weight: 700 !important; font-size: 21px; letter-spacing: -0.03em !important;
-  color: #E8E6E1; text-decoration: none;
+  font-family: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-weight: 600 !important; font-size: 20px; letter-spacing: -0.02em !important;
+  color: #1C1B18; text-decoration: none;
 }
 .nav .logo-mark { width: 22px; height: 22px; fill: none; stroke-width: 2.6; stroke-linecap: round; }
 
 /* Links */
 .nav .nav-links { display: flex; gap: 2px; align-items: center; flex: 1 1 auto; min-width: 0; }
 .nav .nav-links a {
-  text-decoration: none; color: #A3A09A; white-space: nowrap;
+  text-decoration: none; color: #5C5953; white-space: nowrap;
   font-family: inherit; font-size: 14.5px; font-weight: 500;
   padding: 8px 11px; border-radius: 2px; transition: color .15s;
   box-shadow: inset 0 -1px 0 transparent;
 }
-.nav .nav-links a:hover { color: #E8E6E1; }
-.nav .nav-links a[aria-current="page"] { color: #E8E6E1; box-shadow: inset 0 -1px 0 #3FE0F0; }
+.nav .nav-links a:hover { color: #1C1B18; }
+.nav .nav-links a[aria-current="page"] { color: #1C1B18; box-shadow: inset 0 -1px 0 #1C1B18; }
 .nav .nav-links .nav-cta {
   line-height: 1.2; white-space: nowrap;
   margin-left: auto; padding: 9px 16px; border-radius: 2px; font-weight: 600; font-size: 14px;
   font-family: "Space Grotesk", inherit;
-  color: #06181B !important; background: #3FE0F0 !important; border: 1px solid #3FE0F0;
+  color: #F6F3EC !important; background: #1C1B18 !important; border: 1px solid #1C1B18;
   box-shadow: none;
 }
-.nav .nav-links .nav-cta:hover { background: transparent !important; color: #3FE0F0 !important; }
+.nav .nav-links .nav-cta:hover { background: transparent !important; color: #1C1B18 !important; }
 .nav .nav-links [hidden] { display: none !important; }
 .nav .nav-links .hide-sm { display: none; }
 .nav .nav-links .nav-main { display: none; }
@@ -49,8 +49,8 @@
 /* Menü-Knopf (unter 1180 px) */
 .nav .nav-toggle {
   display: none; flex: none; order: 9;
-  font: 500 13px/1 inherit; color: #E8E6E1; cursor: pointer;
-  background: transparent; border: 1px solid #3B3B42;
+  font: 500 13px/1 inherit; color: #1C1B18; cursor: pointer;
+  background: transparent; border: 1px solid #BDB7A8;
   border-radius: 2px; padding: 9px 14px; margin: 0 0 0 8px;
 }
 @media (max-width: 1179px) {
@@ -61,7 +61,7 @@
     flex-direction: column; align-items: stretch; gap: 2px;
     max-height: calc(100dvh - 80px); overflow-y: auto;
     padding: 10px 16px 18px;
-    background: #0B0B0D; border-bottom: 1px solid #26262B;
+    background: #F6F3EC; border-bottom: 1px solid #D9D4C8;
   }
   .nav .nav-links.open a { padding: 12px 14px; border-radius: 2px; }
   .nav .nav-links.open .nav-main, .nav .nav-links.open .hide-sm { display: block; }
@@ -72,25 +72,25 @@
 /* Suche (effects.js), Sprache (i18n.js), Konto (account-menu.js) */
 .nav .cmdk-trigger {
   display: none; align-items: center; gap: 8px; flex: none; order: 6;
-  font: inherit; font-size: 13px; color: #6E6C66; cursor: pointer;
-  background: transparent; border: 1px solid #26262B;
+  font: inherit; font-size: 13px; color: #8D8980; cursor: pointer;
+  background: transparent; border: 1px solid #D9D4C8;
   border-radius: 2px; padding: 6px 8px 6px 12px; margin: 0 4px 0 8px !important;
 }
 .nav .cmdk-trigger:hover { color: #A1A1AA; border-color: rgba(255, 255, 255, 0.14); }
-.nav .cmdk-trigger kbd { font: 500 11px/1 "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace; padding: 3px 5px; border-radius: 2px; background: #26262B; color: #A3A09A; }
+.nav .cmdk-trigger kbd { font: 500 11px/1 "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace; padding: 3px 5px; border-radius: 2px; background: #D9D4C8; color: #5C5953; }
 @media (min-width: 1400px) { .nav .cmdk-trigger { display: inline-flex; } }
 .nav .lang-switch {
   display: inline-flex; align-items: center; flex: none; order: 7; height: 32px; padding: 2px;
-  border-radius: 2px; background: transparent; border: 1px solid #3B3B42; margin: 0 0 0 6px;
+  border-radius: 2px; background: transparent; border: 1px solid #BDB7A8; margin: 0 0 0 6px;
 }
-.nav .lang-switch button { height: 26px; min-width: 34px; padding: 0 9px; border: 0; border-radius: 1px; background: transparent; color: #A3A09A; font: 500 12px/1 "JetBrains Mono", ui-monospace, monospace; cursor: pointer; }
-.nav .lang-switch button[aria-pressed="true"] { background: #E8E6E1; color: #0B0B0D; }
+.nav .lang-switch button { height: 26px; min-width: 34px; padding: 0 9px; border: 0; border-radius: 1px; background: transparent; color: #5C5953; font: 500 12px/1 "JetBrains Mono", ui-monospace, monospace; cursor: pointer; }
+.nav .lang-switch button[aria-pressed="true"] { background: #1C1B18; color: #F6F3EC; }
 .nav .wrap > .acct { order: 8; margin-left: 8px; }
-.nav .badge { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 4px; border-radius: 2px; background: #3FE0F0; color: #06181B; font-size: 11px; font-weight: 700; }
+.nav .badge { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 4px; border-radius: 2px; background: #1C1B18; color: #F6F3EC; font-size: 11px; font-weight: 700; }
 
 /* Befehlspalette (effects.js) – auch auf Seiten ohne style.css */
-.cmdk { position: fixed; inset: 0; z-index: 100; display: grid; justify-items: center; align-items: start; padding: 12vh 16px 16px; background: rgba(6, 7, 10, 0.6);  }
-.cmdk-box { width: min(620px, 100%); background: #101013; border: 1px solid #3B3B42; border-radius: 2px; overflow: hidden; color: #E8E6E1; }
+.cmdk { position: fixed; inset: 0; z-index: 100; display: grid; justify-items: center; align-items: start; padding: 12vh 16px 16px; background: rgba(28, 27, 24, 0.5);  }
+.cmdk-box { width: min(620px, 100%); background: #FFFFFF; border: 1px solid #BDB7A8; border-radius: 2px; overflow: hidden; color: #1C1B18; }
 .cmdk-input { display: flex; align-items: center; gap: 10px; padding: 0 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.09); }
 .cmdk-input svg { width: 16px; height: 16px; color: #6E6E78; flex: none; }
 .cmdk-input input { flex: 1; border: 0; background: transparent; color: #F5F5F7; padding: 16px 0; font: inherit; font-size: 15px; outline: none; box-shadow: none !important; }
@@ -99,8 +99,8 @@
 .cmdk-item { display: grid; grid-template-columns: 22px 1fr auto; gap: 10px; align-items: center; width: 100%; text-align: left; font: inherit; font-size: 14px; color: #A1A1AA; background: transparent; border: 0; border-radius: 12px; padding: 9px 10px; cursor: pointer; }
 .cmdk-item .k, .cmdk-item .g { font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: 11px; color: #6E6E78; }
 .cmdk-item .g { text-align: center; }
-.cmdk-item[aria-selected="true"] { background: #1A1A1F; color: #E8E6E1; }
-.cmdk-item[aria-selected="true"] .g, .cmdk-item mark { background: none; color: #3FE0F0; }
+.cmdk-item[aria-selected="true"] { background: #EFEBE1; color: #1C1B18; }
+.cmdk-item[aria-selected="true"] .g, .cmdk-item mark { background: none; color: #1F3A93; }
 .cmdk-foot { display: flex; gap: 16px; padding: 10px 16px; border-top: 1px solid rgba(255, 255, 255, 0.09); font-size: 12px; color: #6E6E78; }
 .cmdk-empty { padding: 28px; text-align: center; color: #6E6E78; font-size: 14px; }
 

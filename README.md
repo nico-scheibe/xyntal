@@ -17,8 +17,8 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 |---|---|
 | `public/` | Die komplette Website (HTML, CSS, JS) – das ist alles, was online muss |
 | `public/config.js` | Supabase-Adresse und öffentlicher Schlüssel |
-| `public/start.css` | Startseite: Design „Bauplan“ (Fast-Schwarz, Off-White, Cyan; Space Grotesk, IBM Plex Sans, JetBrains Mono; sichtbares 12-Spalten-Raster, keine Verläufe, kein Glas) |
-| `public/cosmos.css`, `public/backdrop.css`, `public/site-header.css`, `public/site-footer.css` | Gemeinsame Ebene der Unterseiten, Hintergrund, Kopf- und Fußzeile – gleiche Farben, Schriften und Formen wie die Startseite |
+| `public/brief.css` | Startseite als Brief: eine schmale Textspalte in Source Serif 4 auf Papier (#F6F3EC), Tinte (#1C1B18), Links in Tintenblau (#1F3A93); keine Sektionen, keine Boxen, keine Effekte |
+| `public/cosmos.css`, `public/backdrop.css`, `public/site-header.css`, `public/site-footer.css` | Gemeinsame Ebene der Unterseiten, Hintergrund, Kopf- und Fußzeile – Papier, Tinte und Serifen-Überschriften wie auf der Startseite |
 | `public/landing.js` | Startseite: Newsletter-Formular (Brevo), Einladungslink; die Swipe-Demo läuft nur noch auf Seiten mit `[data-demo]` |
 | `supabase/schema.sql` | Datenbank: Tabellen, Zugriffsregeln, Funktionen (bereits ausgeführt) |
 | `supabase/002_login_methods.sql` | Ergänzung für Google/Apple/LinkedIn/Handy-Login (bereits ausgeführt) |
@@ -47,7 +47,7 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 
 | Adresse | Inhalt |
 |---|---|
-| `/` | Startseite: Was Xyntal ist, wen man findet, die drei Formen der Zusammenarbeit, die App (Mac/Windows), wer das baut, Beta per Bewerbung, Newsletter. Demo und Karten-Builder liegen auf `/demo` und `/meine-karte` |
+| `/` | Startseite: ein Brief von Nico (was Xyntal ist, wen man findet, die drei Formen der Zusammenarbeit, App für Mac/Windows, Stand der Beta, Bewerbung), PS mit Newsletter. Demo und Karten-Builder liegen auf `/demo` und `/meine-karte` |
 | `/mitglied-werden` | Konto und Profil anlegen (mit E-Mail-Bestätigung) |
 | `/beta` | Beta-Programm: was Tester bekommen, Bewerbung nur mit Konto. Gäste legen im selben Formular ein Konto an (E-Mail/Passwort oder Google/Apple); die Bewerbung wird bis zur E-Mail-Bestätigung im Browser zwischengespeichert und danach automatisch abgeschickt. Mitglieder sehen nur die Bewerbung oder den Stand ihrer Bewerbung; Bewerbungen erscheinen im Admin-Bereich |
 | `/login` | Einloggen per E-Mail, Google, Apple, LinkedIn oder Handynummer, „Passwort vergessen?“ |
