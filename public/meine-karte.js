@@ -60,6 +60,11 @@
       return showGate(`<h2>${t("Deine Karte konnte nicht geladen werden.")}</h2><p>${esc(friendlyError(err))}</p><div class="mk-actions"><button class="btn btn-primary" type="button" data-reload>${t("Neu laden")}</button></div>`);
     }
     gate.hidden = true; app.hidden = false;
+    // Gesperrtes Konto: Karte bleibt gespeichert, ist aber eingefroren und für andere unsichtbar
+    if (me && me.banned === true && (!me.banned_until || new Date(me.banned_until) > new Date())) {
+      saveBtn.disabled = true;
+      say(t("Dein Konto ist gesperrt. Solange die Sperre läuft, kannst du deine Karte nicht ändern, und sie wird nicht angezeigt."), "error");
+    }
     if (card) {
       B.set(fromServer(card));
       pub.checked = !!card.is_public;

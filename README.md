@@ -43,6 +43,8 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 | `supabase/migrations/20261103130000_beta_accepted_sets_badge.sql` | Beta-Programm: Status „angenommen“ setzt den Beta-Tester-Badge per Trigger |
 | `supabase/migrations/20261103140000_beta_status_mail.sql` | Beta-Programm: Spalten `mailed_status`/`mailed_at` für Status-Mails über IONOS; **noch auszuführen** |
 | `supabase/migrations/20261103160000_account_requires_beta_application.sql` | Beta-Programm: Bewerbung ist Pflicht für jedes Konto (`beta_application_required`, `is_active_member` verlangt sie für neue Konten); **noch auszuführen** |
+| `supabase/migrations/20261103170000_banned_accounts.sql` | Gesperrte Konten (Bann aus dem App-Admin, Spalten `profiles.banned`/`banned_until`, vom App-Server gesetzt): kein Ändern von Profil und Karte, Karte und Profil für andere unsichtbar (nicht gelöscht), keine Mitgliedsrechte; **noch auszuführen** |
+| `supabase/migrations/20261103180000_website_ban.sql` | Sperren im Website-Admin (`admin_set_ban`, befristet oder unbefristet, `ban_active` lässt befristete Sperren von selbst enden); danach ausführen, **noch auszuführen** |
 | `ANMELDUNG-EINRICHTEN.md` | Anleitung: Brevo-SMTP einrichten; Google, Apple, LinkedIn und SMS einschalten |
 
 ## Seiten
@@ -61,7 +63,7 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 | `/boerse` | Gesuche & Angebote mit Kontaktaufnahme (Gäste sehen nur öffentliche Einträge) |
 | `/events` | Kommende und vergangene Treffen, Zu- und Absagen; Admins verwalten Termine und Teilnehmerlisten |
 | `/nachrichten` | Dieselben Gespräche wie in der Xyntal-App über den App-Server (`public/pages/nachrichten.js`, `public/chat.css`): Liste mit Filtern, Verlauf mit Einblick zur Zusammenarbeit, Gruppen, Antworten, Reaktionen, @-Erwähnungen, /projekt, GIFs, Dateien, Sprachnachrichten, Live-Updates; `?an=<Website-ID>` öffnet das Gespräch mit einem Mitglied |
-| `/mitglieder` | Freigeschaltete Profile (Gäste sehen nur öffentliche) |
+| `/mitglieder` | Mitglieder mit eingerichteter, öffentlicher Xyntal-Karte (ohne Karte keine Kachel); Gäste sehen nur öffentliche |
 | `/name` | Öffentliche Karte unter dem Wunsch-Link (`u.html`); vor einem Daki-Neustart leitet `404.html` dorthin weiter |
 | `/meine-karte` | Eigene Xyntal-Karte ansehen und gestalten, Wunsch-Link und Sichtbarkeit ändern (Login nötig; eingebettet im Profil mit `?embed=1`) |
 | `/profil` | Registerkarten Profil (Bio, Bild, Links) · Matching · Xyntal-Karte · Sicherheit (E-Mail, Passwort, 2FA, Anmeldemethoden, überall abmelden, Konto löschen) |
