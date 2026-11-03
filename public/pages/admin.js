@@ -8,12 +8,22 @@ const BETA_FOCUS = { entwicklung: "Entwicklung", design: "Design", gruendung: "G
 const BETA_HOURS = { "1-2": "1–2 Std./Woche", "3-5": "3–5 Std./Woche", "6+": "mehr als 5 Std./Woche" };
 const BETA_STATUS = { neu: "Neu", in_pruefung: "In Prüfung", eingeladen: "Eingeladen", warteliste: "Warteliste", angenommen: "Angenommen", abgelehnt: "Abgelehnt" };
 
+// Zwei Zugänge: Website-Admin (profiles.is_admin, Supabase) für Warteliste, Karten und Beta;
+// Staff-Rolle auf dem App-Server (admin-platform.js) für die Plattform-Bereiche. Wer nur eine
+// der beiden Rollen hat, sieht nur diese Gruppe in der Seitenleiste.
 async function load() {
   const me = await currentMember();
   if (!me || !me.is_admin) {
+    const platform = window.XyntalAdminPlatform ? await window.XyntalAdminPlatform.ready : { staff: false };
+    if (platform.staff) {
+      document.querySelectorAll("[data-tab][data-site], .admin-tabs-group[data-group='site']").forEach((el) => { el.hidden = true; });
+      loginView.hidden = true;
+      adminView.hidden = false;
+      return;
+    }
     document.getElementById("login-msg").textContent = me
-      ? "Dein Konto hat keine Admin-Rechte."
-      : "Bitte melde dich mit deinem Admin-Konto an: nico.scheibe18@gmail.com.";
+      ? "Dein Konto hat weder Admin-Rechte für die Website noch eine Staff-Rolle auf dem App-Server."
+      : "Bitte melde dich mit deinem Admin-Konto an.";
     loginView.hidden = false;
     adminView.hidden = true;
     return;
@@ -546,7 +556,7 @@ document.querySelectorAll("[data-tab]").forEach((btn) => btn.addEventListener("c
 }));
 
 document.querySelector('.admin-tabs').addEventListener('keydown',e=>{
-  const tabs=[...document.querySelectorAll('[data-tab]')],index=tabs.indexOf(document.activeElement);if(index<0)return;
+  const tabs=[...document.querySelectorAll('[data-tab]')].filter(t=>!t.hidden),index=tabs.indexOf(document.activeElement);if(index<0)return;
   const next=e.key==='ArrowRight'?(index+1)%tabs.length:e.key==='ArrowLeft'?(index-1+tabs.length)%tabs.length:e.key==='Home'?0:e.key==='End'?tabs.length-1:null;
   if(next!==null){e.preventDefault();tabs[next].click();tabs[next].focus();}
 });

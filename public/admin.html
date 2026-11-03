@@ -34,7 +34,7 @@
     .card-note { width: 100%; min-width: 160px; margin-top: 8px; padding: 6px 8px; border-radius: 10px; border: 1px solid var(--border); background: rgba(255,255,255,0.04); color: var(--text); font: 13px/1.4 var(--f-text); resize: vertical; }
     .card-note.is-saved { border-color: #34D399; }
   </style>
-  <link rel="stylesheet" href="admin.css?v=4">
+  <link rel="stylesheet" href="admin.css?v=6">
   <link rel="stylesheet" href="/backdrop.css?v=5">
   <link rel="stylesheet" href="/site-header.css?v=4">
 </head>
@@ -61,30 +61,68 @@
   <section class="page-head" id="top" style="padding-bottom: 40px">
     <div class="wrap">
       <div class="eyebrow"><b>xyntal</b> / admin</div>
-      <p class="admin-kicker">DEIN XYNTAL CONTROL ROOM</p><h1>Aus Menschen wird <em>Community.</em></h1><p>Warteliste, Karten und Beta an einem Ort. Behalte den Überblick und plane deinen nächsten Schritt.</p>
+      <p class="admin-kicker">DEIN XYNTAL CONTROL ROOM</p><h1>Aus Menschen wird <em>Community.</em></h1><p>Derselbe Admin-Bereich wie in der Xyntal-App – Nutzer, Moderation, Support, Sicherheit und Ankündigungen – plus Warteliste, Karten und Beta der Website.</p>
     </div>
   </section>
 
   <section class="page-body" style="padding-top: 24px">
     <!-- Kein Zugriff -->
     <div class="wrap narrow-sm" id="login-view" hidden>
-      <div class="notice" id="login-msg">Bitte melde dich mit deinem Admin-Konto an: nico.scheibe18@gmail.com.</div>
+      <div class="notice" id="login-msg">Bitte melde dich mit deinem Admin-Konto an.</div>
       <a class="btn" href="login">Zum Login</a>
     </div>
 
     <!-- Verwaltung -->
     <div class="wrap" id="admin-view" hidden>
       <div class="admin-tabs" role="tablist" aria-label="Verwaltungsbereiche">
-        <button role="tab" data-tab="overview" aria-selected="true">Übersicht</button>
-        <button role="tab" data-tab="members" aria-selected="false">Mitglieder <span id="c-members"></span></button>
-        <button role="tab" data-tab="cards" aria-selected="false">Karten <span id="c-cards"></span></button>
-        <button role="tab" data-tab="beta" aria-selected="false">Beta <span id="c-beta"></span></button>
-        <button role="tab" data-tab="signups" aria-selected="false">Archiv: Anmeldungen <span id="c-signups"></span></button>
-        <button role="tab" data-tab="newsletter" aria-selected="false">Newsletter & Brevo <span id="c-newsletter"></span></button>
+        <div class="admin-tabs-group" data-group="platform">
+          <p class="admin-tabs-title">Plattform <span class="admin-role-badge" id="admin-role" hidden></span></p>
+          <button role="tab" data-tab="platform" data-platform aria-selected="true"><i class="xa-ico" data-ico="gauge"></i>Übersicht</button>
+          <button role="tab" data-tab="users" data-platform data-perm="users.view" aria-selected="false"><i class="xa-ico" data-ico="users"></i>Nutzer <span id="c-users"></span></button>
+          <button role="tab" data-tab="console" data-platform data-perm="users.view" aria-selected="false"><i class="xa-ico" data-ico="terminal"></i>Konsole</button>
+          <button role="tab" data-tab="projects" data-platform data-perm="oversight.view" aria-selected="false"><i class="xa-ico" data-ico="kanban"></i>Projekte <span id="c-projects"></span></button>
+          <button role="tab" data-tab="workspaces" data-platform data-perm="oversight.view" aria-selected="false"><i class="xa-ico" data-ico="grid"></i>Arbeitsbereiche <span id="c-workspaces"></span></button>
+          <button role="tab" data-tab="support" data-platform data-perm="tickets.handle" aria-selected="false"><i class="xa-ico" data-ico="help"></i>Support <span id="c-support"></span></button>
+          <button role="tab" data-tab="reports" data-platform data-perm="reports.handle" aria-selected="false"><i class="xa-ico" data-ico="flag"></i>Meldungen <span id="c-reports"></span></button>
+          <button role="tab" data-tab="access" data-platform data-perm="audit.view" aria-selected="false"><i class="xa-ico" data-ico="eye"></i>Nachrichtenzugriff</button>
+          <button role="tab" data-tab="security" data-platform data-perm="security.view" aria-selected="false"><i class="xa-ico" data-ico="alert"></i>Sicherheit</button>
+          <button role="tab" data-tab="ai" data-platform data-perm="ai.view" aria-selected="false"><i class="xa-ico" data-ico="sparkles"></i>KI</button>
+          <button role="tab" data-tab="matching" data-platform data-perm="oversight.view" aria-selected="false"><i class="xa-ico" data-ico="target"></i>Matching</button>
+          <button role="tab" data-tab="health" data-platform aria-selected="false"><i class="xa-ico" data-ico="activity"></i>Systemzustand</button>
+          <button role="tab" data-tab="announcements" data-platform data-perm="announcements.manage" aria-selected="false"><i class="xa-ico" data-ico="megaphone"></i>Ankündigungen <span id="c-announcements"></span></button>
+          <button role="tab" data-tab="audit" data-platform data-perm="audit.view" aria-selected="false"><i class="xa-ico" data-ico="file"></i>Audit-Log</button>
+        </div>
+        <div class="admin-tabs-group" data-group="site">
+          <p class="admin-tabs-title">Website</p>
+          <button role="tab" data-tab="overview" data-site aria-selected="false"><i class="xa-ico" data-ico="home"></i>Warteliste &amp; Beta</button>
+          <button role="tab" data-tab="members" data-site aria-selected="false"><i class="xa-ico" data-ico="users"></i>Mitglieder <span id="c-members"></span></button>
+          <button role="tab" data-tab="cards" data-site aria-selected="false"><i class="xa-ico" data-ico="card"></i>Karten <span id="c-cards"></span></button>
+          <button role="tab" data-tab="beta" data-site aria-selected="false"><i class="xa-ico" data-ico="beta"></i>Beta <span id="c-beta"></span></button>
+          <button role="tab" data-tab="signups" data-site aria-selected="false"><i class="xa-ico" data-ico="archive"></i>Archiv: Anmeldungen <span id="c-signups"></span></button>
+          <button role="tab" data-tab="newsletter" data-site aria-selected="false"><i class="xa-ico" data-ico="mail"></i>Newsletter &amp; Brevo <span id="c-newsletter"></span></button>
+        </div>
         <button id="admin-logout" style="margin-left: auto">Ausloggen</button>
       </div>
 
-      <div data-panel="overview"><p class="empty">Übersicht wird geladen …</p></div>
+      <!-- Plattform: dieselben Bereiche wie der Admin-Bereich der Xyntal-App, über den App-Server (api.xyntal.de).
+           Servertexte (Namen, Gründe, Protokolle) werden nicht übersetzt. -->
+      <div data-panel="platform" data-no-i18n><p class="empty">Übersicht wird geladen …</p></div>
+      <div data-panel="users" data-no-i18n hidden></div>
+      <div data-panel="console" data-no-i18n hidden></div>
+      <div data-panel="projects" data-no-i18n hidden></div>
+      <div data-panel="workspaces" data-no-i18n hidden></div>
+      <div data-panel="support" data-no-i18n hidden></div>
+      <div data-panel="reports" data-no-i18n hidden></div>
+      <div data-panel="access" data-no-i18n hidden></div>
+      <div data-panel="security" data-no-i18n hidden></div>
+      <div data-panel="ai" data-no-i18n hidden></div>
+      <div data-panel="matching" data-no-i18n hidden></div>
+      <div data-panel="health" data-no-i18n hidden></div>
+      <div data-panel="announcements" data-no-i18n hidden></div>
+      <div data-panel="audit" data-no-i18n hidden></div>
+
+      <!-- Website: Warteliste, Karten, Beta (Supabase) -->
+      <div data-panel="overview" hidden><p class="empty">Übersicht wird geladen …</p></div>
       <div data-panel="members" hidden></div>
       <div data-panel="cards" hidden></div>
       <div data-panel="beta" hidden></div>
@@ -100,7 +138,10 @@
 <script src="avatars.js?v=31"></script>
 <script src="notifications.js?v=34"></script>
 <script src="effects.js?v=36"></script>
-<script src="/pages/admin.js?v=4"></script>
-<script src="/account-menu.js?v=9" defer></script>
+<script src="/app-api.js?v=4"></script>
+<script src="/world-geo.js?v=1"></script>
+<script src="/pages/admin-platform.js?v=3"></script>
+<script src="/pages/admin.js?v=5"></script>
+<script src="/account-menu.js?v=10" defer></script>
 </body>
 </html>
