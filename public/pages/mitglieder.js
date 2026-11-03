@@ -9,7 +9,7 @@
     if (!viewerIsMember) {
       document.getElementById("notice").innerHTML = `
         <div class="notice">Du siehst hier die öffentlichen Profile. Mit Konto siehst du alle und kannst sie direkt anschreiben.
-        <a class="text-link" href="mitglied-werden">Werde Mitglied</a> oder <a class="text-link" href="login">logg dich ein</a>.</div>`;
+        <a class="text-link" href="beta#bewerben">Bewirb dich für die Beta</a> oder <a class="text-link" href="login">logg dich ein</a>.</div>`;
     }
     // Xyntal-Karten (nur öffentlich freigegebene); ohne Karte das normale Profil
     let cards = new Map();
@@ -26,7 +26,7 @@
     };
     grid.innerHTML = members.length
       ? members.map(tile).join("")
-      : `<p class="empty" style="grid-column: 1 / -1">Die ersten Profile entstehen gerade. <a class="text-link" href="mitglied-werden">Sei eines der ersten Mitglieder.</a></p>`;
+      : `<p class="empty" style="grid-column: 1 / -1">Die ersten Profile entstehen gerade. <a class="text-link" href="beta#bewerben">Sei eines der ersten Mitglieder.</a></p>`;
     grid.addEventListener("click", (e) => {
       if (e.target.closest("a,button")) return;
       const card = e.target.closest("[data-profile-url]");

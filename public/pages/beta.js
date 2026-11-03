@@ -80,6 +80,8 @@ async function submitApplication(d) {
     }
   }
   const me = await currentMember().catch(() => null);
+  // Von einer Mitgliederseite hierher geschickt: das Konto gibt es schon, die Pflicht-Bewerbung fehlt noch
+  form.querySelector("[data-beta-required]").hidden = !new URLSearchParams(location.search).has("pflicht");
   form.querySelector("[data-beta-as-name]").textContent = (me && me.name) || session.user.email;
   form.querySelector("[data-beta-as-email]").textContent = me && me.name ? `(${session.user.email})` : "";
   form.querySelector("[data-beta-as]").hidden = false;

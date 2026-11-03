@@ -1,7 +1,7 @@
 # Anmeldung und E-Mail-Versand einrichten
 
 Die Website ist fertig vorbereitet: Sobald ein Anbieter in Supabase eingeschaltet ist, erscheint
-sein Button automatisch auf **/login** und **/mitglied-werden**. Du musst nur die Zugangsdaten beim
+sein Button automatisch auf **/login** und **/beta**. Du musst nur die Zugangsdaten beim
 jeweiligen Anbieter anlegen und in Supabase eintragen.
 
 **Diese Adresse brauchst du bei Google, Apple und LinkedIn als „Redirect URL“ / „Callback URL“:**
