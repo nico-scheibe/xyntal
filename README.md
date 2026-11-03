@@ -47,7 +47,7 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 |---|---|
 | `/` | Startseite: Hero, interaktive Team-Demo (Beispieldaten, nichts wird gespeichert), Geschichte „Idee → Verbindungen → Team → Fortschritt“, Einstieg |
 | `/mitglied-werden` | Konto und Profil anlegen (mit E-Mail-Bestätigung) |
-| `/beta` | Beta-Programm: was Tester bekommen, Bewerbung nur mit Konto (Gäste sehen „Konto anlegen“ / „Login“, Mitglieder das Formular oder den Stand ihrer Bewerbung); Bewerbungen erscheinen im Admin-Bereich |
+| `/beta` | Beta-Programm: was Tester bekommen, Bewerbung nur mit Konto. Gäste legen im selben Formular ein Konto an (E-Mail/Passwort oder Google/Apple); die Bewerbung wird bis zur E-Mail-Bestätigung im Browser zwischengespeichert und danach automatisch abgeschickt. Mitglieder sehen nur die Bewerbung oder den Stand ihrer Bewerbung; Bewerbungen erscheinen im Admin-Bereich |
 | `/login` | Einloggen per E-Mail, Google, Apple, LinkedIn oder Handynummer, „Passwort vergessen?“ |
 | `/passwort-neu` | Neues Passwort setzen (Link aus der E-Mail) |
 | `/profil` | Profil bearbeiten, Passwort ändern, Konto löschen |
