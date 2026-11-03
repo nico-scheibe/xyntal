@@ -61,7 +61,7 @@
     }
     gate.hidden = true; app.hidden = false;
     // Gesperrtes Konto: Karte bleibt gespeichert, ist aber eingefroren und für andere unsichtbar
-    if (me && me.banned === true) {
+    if (me && me.banned === true && (!me.banned_until || new Date(me.banned_until) > new Date())) {
       saveBtn.disabled = true;
       say(t("Dein Konto ist gesperrt. Solange die Sperre läuft, kannst du deine Karte nicht ändern, und sie wird nicht angezeigt."), "error");
     }

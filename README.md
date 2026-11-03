@@ -44,6 +44,7 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 | `supabase/migrations/20261103140000_beta_status_mail.sql` | Beta-Programm: Spalten `mailed_status`/`mailed_at` für Status-Mails über IONOS; **noch auszuführen** |
 | `supabase/migrations/20261103160000_account_requires_beta_application.sql` | Beta-Programm: Bewerbung ist Pflicht für jedes Konto (`beta_application_required`, `is_active_member` verlangt sie für neue Konten); **noch auszuführen** |
 | `supabase/migrations/20261103170000_banned_accounts.sql` | Gesperrte Konten (Bann aus dem App-Admin, Spalten `profiles.banned`/`banned_until`, vom App-Server gesetzt): kein Ändern von Profil und Karte, Karte und Profil für andere unsichtbar (nicht gelöscht), keine Mitgliedsrechte; **noch auszuführen** |
+| `supabase/migrations/20261103180000_website_ban.sql` | Sperren im Website-Admin (`admin_set_ban`, befristet oder unbefristet, `ban_active` lässt befristete Sperren von selbst enden); danach ausführen, **noch auszuführen** |
 | `ANMELDUNG-EINRICHTEN.md` | Anleitung: Brevo-SMTP einrichten; Google, Apple, LinkedIn und SMS einschalten |
 
 ## Seiten

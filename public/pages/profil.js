@@ -17,7 +17,7 @@ function render(m) {
   const fresh = new URLSearchParams(location.search).has("neu");
   let notice = "";
   // Gesperrt (Bann aus dem App-Admin): Profil und Karte sind eingefroren und für andere unsichtbar
-  const banned = m.banned === true;
+  const banned = m.banned === true && (!m.banned_until || new Date(m.banned_until) > new Date());
   for (const el of form.elements) el.disabled = banned;
   if (banned) {
     const until = m.banned_until ? new Date(m.banned_until).toLocaleString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
