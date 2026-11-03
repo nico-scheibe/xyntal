@@ -112,14 +112,19 @@ lesbar ist, kann niemand sonst Mails auslösen. Dann schickt er dem Bewerber ein
 Text-Mail über IONOS-SMTP (Port 465, TLS) und merkt in `mailed_status` / `mailed_at`, welcher
 Status zuletzt gemailt wurde. Im Admin-Bereich gibt es außerdem je Bewerbung „Status-Mail senden“.
 
-Einrichtung in Daki (Ordner `/home/container/xyntal`, nie committen):
+Einrichtung in Daki: im Ordner `/home/container/xyntal` eine Datei `.smtp.env` anlegen (nie committen):
 
-- `.ionos-user`: die IONOS-Postfachadresse, z. B. `nico@xyntal.de` (gleichzeitig SMTP-Login)
-- `.ionos-pass`: das Passwort dieses Postfachs
-- `.ionos-sender` (optional): abweichende Absenderadresse; muss zum Postfach gehören
+```
+SMTP_HOST=smtp.ionos.de
+SMTP_PORT=465
+SMTP_USER=admin@xyntal.com
+SMTP_PASS=das-Postfach-Passwort
+SMTP_FROM=Xyntal <admin@xyntal.com>
+```
 
-Alternativ als Umgebungsvariablen `IONOS_SMTP_USER`, `IONOS_SMTP_PASSWORD`, `IONOS_SENDER_EMAIL`;
-`IONOS_SMTP_HOST` (Standard `smtp.ionos.de`) und `IONOS_SMTP_PORT` (Standard `465`) nur bei Bedarf.
-Vorher `supabase/migrations/20261103140000_beta_status_mail.sql` ausführen, danach Daki neu starten.
-Der Absendername ist „Nico von Xyntal“, Antworten gehen an das Postfach. Texte der Mails stehen in
+Dieselben Namen funktionieren auch als Umgebungsvariablen des Servers. `SMTP_FROM` darf
+„Name <adresse>“ sein; die Adresse muss zum Postfach gehören. Ohne `SMTP_FROM` ist der Absender
+der Login mit dem Namen „Nico von Xyntal“. Ersatzweise werden die Einzeldateien `.ionos-user`,
+`.ionos-pass` und `.ionos-sender` gelesen. Vorher `supabase/migrations/20261103140000_beta_status_mail.sql`
+ausführen, danach Daki neu starten. Antworten gehen an das Postfach. Texte der Mails stehen in
 `server.cjs` (`STATUS_MAILS`). Prüfung ohne echte Mails: `node tests/beta-status-mail.cjs`.

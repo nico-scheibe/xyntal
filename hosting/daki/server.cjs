@@ -229,13 +229,33 @@ function smtpSend({ host, port, user, pass, from, fromName, to, subject, text })
         const reply = buffer.slice(0, end); buffer = buffer.slice(end);
         const code = Number(reply.slice(0, 3));
         const [expected, command] = steps[step];
-        if (code !== expected) return fail(new Error('SMTP ' + code + ' at step ' + step + ': ' + reply.replace(/[\r\n]+$/, '').replace(user, '[user]').slice(0, 200)));
+        if (code !== expected) return fail(new Error('SMTP ' + code + ' at step ' + step + ': ' + reply.replace(/[\r\n]+$/, '').replace(user, '[user]').replace(pass, '[pass]').slice(0, 200)));
         step++;
         if (command === null) { finished = true; clearTimeout(timer); socket.end(); return resolve(); }
         socket.write(command + '\r\n');
       }
     });
   });
+}
+// SMTP-Zugang: Umgebungsvariablen SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASS/SMTP_FROM (auch als Zeilen in .smtp.env),
+// ersatzweise die Einzeldateien .ionos-user / .ionos-pass / .ionos-sender. SMTP_FROM darf „Name <adresse>“ sein.
+function smtpConfig() {
+  const fileEnv = {};
+  try {
+    for (const line of fs.readFileSync(path.join(__dirname, '.smtp.env'), 'utf8').split(/\r?\n/)) {
+      const m = /^\s*([A-Z_]+)\s*=\s*(.*?)\s*$/.exec(line);
+      if (m) fileEnv[m[1]] = m[2].replace(/^(["'])(.*)\1$/, '$2');
+    }
+  } catch {}
+  const get = (name, file, legacy) => process.env[name] || fileEnv[name] || process.env[legacy] || (file ? readSecret(file, legacy) : '');
+  const user = get('SMTP_USER', '.ionos-user', 'IONOS_SMTP_USER').trim();
+  const pass = get('SMTP_PASS', '.ionos-pass', 'IONOS_SMTP_PASSWORD');
+  const fromRaw = get('SMTP_FROM', '.ionos-sender', 'IONOS_SENDER_EMAIL').trim();
+  const named = /^(.*?)\s*<([^<>\s]+@[^<>\s]+)>$/.exec(fromRaw);
+  return {
+    host: get('SMTP_HOST', null, 'IONOS_SMTP_HOST') || 'smtp.ionos.de', port: Number(get('SMTP_PORT', null, 'IONOS_SMTP_PORT') || 465),
+    user, pass, from: named ? named[2] : (fromRaw || user), fromName: named ? named[1].replace(/^"|"$/g, '') || 'Xyntal' : 'Nico von Xyntal',
+  };
 }
 const statusMailTransport = { send: smtpSend };
 const statusMailLimits = { count: 0, until: 0 };
@@ -256,9 +276,9 @@ async function handleBetaStatusMail(req, res) {
     });
     let data; try { data = raw === null ? null : JSON.parse(raw); } catch { data = null; }
     if (!data || typeof data !== 'object' || !/^\d{1,12}$/.test(String(data.id ?? ''))) return feedbackJson(res, 400, { error: 'Bewerbung nicht angegeben.' });
-    const user = readSecret('.ionos-user', 'IONOS_SMTP_USER'), pass = readSecret('.ionos-pass', 'IONOS_SMTP_PASSWORD');
+    const smtp = smtpConfig();
     const config = supabaseConfig();
-    if (!user || !pass || !config) return feedbackJson(res, 503, { error: 'Der Mailversand über IONOS ist auf dem Server noch nicht eingerichtet.' });
+    if (!smtp.user || !smtp.pass || !config) return feedbackJson(res, 503, { error: 'Der Mailversand über IONOS ist auf dem Server noch nicht eingerichtet.' });
     const now = Date.now();
     if (statusMailLimits.until <= now) { statusMailLimits.count = 0; statusMailLimits.until = now + 3600000; }
     if (++statusMailLimits.count > 60) return feedbackJson(res, 429, { error: 'Zu viele Status-Mails in der letzten Stunde.' });
@@ -272,11 +292,7 @@ async function handleBetaStatusMail(req, res) {
     if (!STATUS_MAILS[application.status]) return feedbackJson(res, 200, { ok: true, skipped: true, reason: 'Für den Status „Neu“ gibt es keine Mail.' });
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(application.email) || /[\r\n<>]/.test(application.name || '')) return feedbackJson(res, 400, { error: 'Bewerberdaten unbrauchbar.' });
     const { subject, text } = statusMailText(application.name || 'du', application.status);
-    await statusMailTransport.send({
-      host: process.env.IONOS_SMTP_HOST || 'smtp.ionos.de', port: Number(process.env.IONOS_SMTP_PORT || 465),
-      user, pass, from: readSecret('.ionos-sender', 'IONOS_SENDER_EMAIL') || user, fromName: 'Nico von Xyntal',
-      to: application.email, subject, text,
-    });
+    await statusMailTransport.send({ ...smtp, to: application.email, subject, text });
     // Merken, welcher Status zuletzt gemailt wurde (Spalten aus 20261103140000_beta_status_mail.sql)
     const mark = await fetch(config.url + '/rest/v1/beta_applications?id=eq.' + application.id, {
       method: 'PATCH', headers: { ...headers, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
