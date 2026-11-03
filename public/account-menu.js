@@ -273,7 +273,28 @@
           writeCache({ id: session.user.id, name: state.name, avatar: state.avatar, admin: state.admin });
         }
         render();
+        if (!state.admin) loadStaffRole(session.user.id);
       } catch { /* Initialen reichen */ }
+    }
+
+    // Staff auf dem App-Server (Inhaber, Admin, Moderation, Support, Analyse) sehen den Admin-Bereich
+    // auch ohne Website-Admin-Flag – dieselbe Prüfung wie /admin (XyntalApp.me). Läuft still:
+    // ohne App-Konto, bei 2FA-Pflicht oder offline bleibt der Eintrag einfach weg.
+    function ensureApi() {
+      if (window.XyntalApp) return Promise.resolve();
+      return (window.__xyntalAppApi = window.__xyntalAppApi || new Promise((res, rej) => {
+        const sc = document.createElement("script"); sc.src = "/app-api.js?v=4"; sc.onload = res; sc.onerror = rej; document.head.append(sc);
+      }));
+    }
+    async function loadStaffRole(userId) {
+      try {
+        await ensureApi();
+        const me = await window.XyntalApp.me({ silent: true });
+        if (!me || !me.staffRole || !state.session || state.session.user.id !== userId) return;
+        state.admin = true;
+        writeCache({ id: userId, name: state.name, avatar: state.avatar, admin: true });
+        render();
+      } catch { /* kein Staff oder nicht erreichbar */ }
     }
 
     // Eingeloggt: In der Kopfzeile „Projekt anlegen“ statt „Für die Beta bewerben“

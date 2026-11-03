@@ -295,6 +295,8 @@ SQL-Regressionstest in einer **leeren, separaten lokalen PostgreSQL-Datenbank** 
 
 `/admin` ist ausschließlich für bestehende Admin-Konten zugänglich. Die neue Übersicht
 zeigt die bestätigte Brevo-Gesamtzahl getrennt von Karten und Beta-Bewerbungen.
+Wer auf dem App-Server eine Staff-Rolle hat, sieht den Eintrag „Admin-Bereich“ im Kontomenü
+(`account-menu.js` fragt `XyntalApp.me` still ab) auch ohne `profiles.is_admin`.
 Mitglieder und Karten sind durchsuchbar. Beta-Bewerbungen bieten Suche, Bereichs-
 und Statusfilter, Sortierung, 15 Einträge pro Seite, interne Notizen und CSV-Export.
 Jeder Statuswechsel außer „Neu“ schickt dem Bewerber eine Status-Mail über IONOS
