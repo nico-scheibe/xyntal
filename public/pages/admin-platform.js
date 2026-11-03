@@ -233,7 +233,8 @@
       ]);
       S.stats = stats; S.flags = flags;
       const FLAGS = [["communities", "Communities", "Öffentliche Community-Räume und Mitgliedschaft."], ["discover", "Entdecken", "Der Entdecken-Feed mit Arbeitsbereichen und Leuten."], ["ai", "KI", "KI-Assistent und Generierung."]];
-      const on = (k) => flags.some((f) => f.key === k && f.enabled);
+      // Wie Server und App: ein nie gesetztes Flag gilt als eingeschaltet.
+      const on = (k) => { const f = flags.find((x) => x.key === k); return f ? f.enabled : true; };
       const countries = stats.usersByCountry || [];
       const max = Math.max(1, ...countries.map((c) => c.count));
       const G = window.XyntalWorldGeo;
