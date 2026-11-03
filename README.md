@@ -62,7 +62,7 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 | `/projekte` | Projekte mit offenen Rollen; Mitglieder melden sich für Rollen, Inhaber sehen die Meldungen und markieren Rollen als besetzt (`?neu=1` öffnet das Formular) |
 | `/boerse` | Gesuche & Angebote mit Kontaktaufnahme (Gäste sehen nur öffentliche Einträge) |
 | `/events` | Kommende und vergangene Treffen, Zu- und Absagen; Admins verwalten Termine und Teilnehmerlisten |
-| `/nachrichten` | Dieselben Gespräche wie in der Xyntal-App über den App-Server (`public/pages/nachrichten.js`, `public/chat.css`): Liste mit Filtern, Verlauf mit Einblick zur Zusammenarbeit, Gruppen, Antworten, Reaktionen, @-Erwähnungen, /projekt, GIFs, Dateien, Sprachnachrichten, Live-Updates; `?an=<Website-ID>` öffnet das Gespräch mit einem Mitglied |
+| `/nachrichten` | Dieselben Gespräche wie in der Xyntal-App über den App-Server (`public/pages/nachrichten.js`, `public/chat.css`): Liste mit Filtern, Verlauf mit Einblick zur Zusammenarbeit, Gruppen, Antworten, Reaktionen, @-Erwähnungen, /projekt, GIFs, Dateien, Sprachnachrichten, Link-Vorschauen (Bild vom App-Server; YouTube, TikTok, Instagram und Vimeo spielen nach Klick an Ort und Stelle, `frame-src` in `hosting/daki/server.cjs`), Live-Updates; `?an=<Website-ID>` öffnet das Gespräch mit einem Mitglied |
 | `/mitglieder` | Mitglieder mit eingerichteter, öffentlicher Xyntal-Karte (ohne Karte keine Kachel); Gäste sehen nur öffentliche |
 | `/name` | Öffentliche Karte unter dem Wunsch-Link (`u.html`); vor einem Daki-Neustart leitet `404.html` dorthin weiter |
 | `/meine-karte` | Eigene Xyntal-Karte ansehen und gestalten, Wunsch-Link und Sichtbarkeit ändern (Login nötig; eingebettet im Profil mit `?embed=1`) |
