@@ -1,8 +1,8 @@
 /* Matching auf der Website: Profil „Für besseres Matching“, Arbeitsstil-Test, „Für dich“
    und die Passung auf Mitgliederseiten. Läuft mit style.css und mit home.css (xyntal.de/name). */
 .xm, .xm-dialog, .xc {
-  --xm-accent: var(--accent, var(--c, #22E5FF));
-  --xm-soft: var(--accent-soft, rgba(63, 216, 255, 0.12));
+  --xm-accent: var(--accent, var(--c, #3FE0F0));
+  --xm-soft: var(--accent-soft, rgba(63, 224, 240, 0.12));
   --xm-line: var(--border, var(--line, #1F1C2E));
   --xm-line-2: var(--border-2, var(--line-2, #2D2A42));
   --xm-panel: var(--panel, var(--surface-solid, #0B0A12));
@@ -19,7 +19,7 @@
 .xm-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .xm-chip {
   display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 6px 12px;
-  border: 1px solid var(--xm-line-2); border-radius: 999px; background: var(--xm-panel-2);
+  border: 1px solid var(--xm-line-2); border-radius: 2px; background: var(--xm-panel-2);
   color: var(--xm-text-2); font: inherit; font-size: 13px; cursor: pointer; text-align: left;
 }
 .xm-chip:hover { color: var(--text); border-color: var(--xm-accent); }
@@ -41,7 +41,7 @@
 .xm-tz input { flex: 1 1 220px; min-width: 0; }
 
 /* Arbeitsstil-Karte im Profil */
-.xm-style { display: grid; gap: 14px; padding: 18px; border: 1px solid var(--xm-line); border-radius: 14px; background: var(--xm-panel-2); }
+.xm-style { display: grid; gap: 14px; padding: 18px; border: 1px solid var(--xm-line); border-radius: 2px; background: var(--xm-panel-2); }
 .xm-style h3 { margin: 0; font-size: 17px; }
 .xm-style p { margin: 0; color: var(--xm-text-2); font-size: 14px; }
 .xm-style-bars { display: grid; gap: 8px; }
@@ -49,7 +49,7 @@
 .xm-style-bar b { text-align: right; font-variant-numeric: tabular-nums; }
 
 /* Balken und Punktzahl */
-.xm-bar { display: block; height: 6px; border-radius: 99px; background: var(--xm-line-2); overflow: hidden; }
+.xm-bar { display: block; height: 6px; border-radius: 2px; background: var(--xm-line-2); overflow: hidden; }
 .xm-bar i { display: block; height: 100%; border-radius: inherit; background: var(--xm-accent); }
 .xm-bar i.xm-high { background: var(--xm-high); }
 .xm-bar i.xm-mid { background: var(--xm-mid); }
@@ -91,7 +91,7 @@
 .xm-list { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); }
 .xm-person {
   display: grid; gap: 12px; align-content: start; padding: 18px; min-width: 0;
-  border: 1px solid var(--xm-line); border-radius: 16px; background: var(--xm-panel);
+  border: 1px solid var(--xm-line); border-radius: 2px; background: var(--xm-panel);
 }
 .xm-person-head { display: flex; gap: 14px; align-items: center; min-width: 0; }
 .xm-person-head > div { min-width: 0; }
@@ -100,7 +100,7 @@
 .xm-person .xm-reason { margin: 0; color: var(--xm-text-2); font-size: 13.5px; }
 .xm-person .xm-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; }
 .xm-meta { display: flex; flex-wrap: wrap; gap: 6px; }
-.xm-pill { display: inline-flex; align-items: center; padding: 2px 9px; border: 1px solid var(--xm-line-2); border-radius: 99px; color: var(--xm-text-2); font-size: 12px; }
+.xm-pill { display: inline-flex; align-items: center; padding: 2px 9px; border: 1px solid var(--xm-line-2); border-radius: 2px; color: var(--xm-text-2); font-size: 12px; }
 .xm-pill.xm-on { color: var(--xm-accent); border-color: var(--xm-accent); }
 .xm-avatar {
   flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; overflow: hidden;
@@ -108,11 +108,11 @@
 }
 .xm-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .xm-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
-.xm-empty { padding: 28px; border: 1px dashed var(--xm-line-2); border-radius: 16px; color: var(--xm-text-2); text-align: center; }
+.xm-empty { padding: 28px; border: 1px dashed var(--xm-line-2); border-radius: 2px; color: var(--xm-text-2); text-align: center; }
 .xm-empty p { margin: 0 0 12px; }
 
 /* Detailansicht (Für dich) und Passungs-Box (Mitgliederseite) */
-.xm-detail { display: grid; gap: 18px; padding: clamp(18px, 3vw, 26px); border: 1px solid var(--xm-line); border-radius: 18px; background: var(--xm-panel); text-align: left; min-width: 0; }
+.xm-detail { display: grid; gap: 18px; padding: clamp(18px, 3vw, 26px); border: 1px solid var(--xm-line); border-radius: 2px; background: var(--xm-panel); text-align: left; min-width: 0; }
 .xm-detail-head { display: flex; gap: 16px; align-items: center; min-width: 0; }
 .xm-detail-head > div { min-width: 0; }
 .xm-detail-head h2 { margin: 0; font-size: 22px; overflow-wrap: anywhere; }
@@ -132,7 +132,7 @@
 .xm-block-head, .xm-stmt { display: grid; grid-template-columns: minmax(0, 1fr) 4.6em 4.6em; gap: 8px; align-items: center; }
 .xm-block-head { color: var(--xm-text-3); font-size: 12px; font-weight: 600; text-align: center; }
 .xm-block-head span:first-child { text-align: left; }
-.xm-stmt { padding: 10px 12px; border: 1px solid var(--xm-line); border-radius: 12px; background: var(--xm-panel-2); }
+.xm-stmt { padding: 10px 12px; border: 1px solid var(--xm-line); border-radius: 2px; background: var(--xm-panel-2); }
 .xm-stmt p { margin: 0; font-size: 15px; line-height: 1.45; }
 .xm-stmt.xm-most { border-color: var(--xm-high); }
 .xm-stmt.xm-least { border-color: var(--xm-low); }
@@ -155,7 +155,7 @@
 
 /* Dialoge (2FA-Code, „Passt nicht“) */
 .xm-dialog {
-  width: min(calc(100% - 32px), 460px); padding: 0; border: 1px solid var(--xm-line-2); border-radius: 18px;
+  width: min(calc(100% - 32px), 460px); padding: 0; border: 1px solid var(--xm-line-2); border-radius: 2px;
   background: var(--xm-panel); color: var(--text, #ECEBF7);
 }
 .xm-dialog::backdrop { background: rgba(3, 3, 8, 0.7); }
@@ -163,7 +163,7 @@
 .xm-dialog h2 { margin: 0; font-size: 19px; }
 .xm-dialog p { margin: 0; color: var(--xm-text-2); font-size: 14px; }
 .xm-dialog label { display: grid; gap: 6px; font-size: 13px; font-weight: 600; }
-.xm-dialog input { width: 100%; padding: 10px 12px; border: 1px solid var(--xm-line-2); border-radius: 10px; background: var(--xm-panel-2); color: inherit; font: inherit; }
+.xm-dialog input { width: 100%; padding: 10px 12px; border: 1px solid var(--xm-line-2); border-radius: 2px; background: var(--xm-panel-2); color: inherit; font: inherit; }
 .xm-dialog .btn { cursor: pointer; }
 
 /* Seiten /arbeitsstil und /fuer-dich */
@@ -178,13 +178,13 @@
 .xm-doc .card-form p { margin: 0; color: var(--xm-text-2); line-height: 1.65; }
 .xm-doc .card-form p b, .xm-doc .card-form li b { color: var(--text); }
 .xm-toc { display: flex; flex-wrap: wrap; gap: 8px; }
-.xm-toc a { padding: 6px 12px; border: 1px solid var(--xm-line-2); border-radius: 999px; color: var(--xm-text-2); font-size: 13px; text-decoration: none; }
+.xm-toc a { padding: 6px 12px; border: 1px solid var(--xm-line-2); border-radius: 2px; color: var(--xm-text-2); font-size: 13px; text-decoration: none; }
 .xm-toc a:hover, .xm-toc a:focus-visible { color: var(--text); border-color: var(--xm-accent); }
-.xm-formula { padding: 14px 16px; border: 1px solid var(--xm-line-2); border-radius: 12px; background: var(--xm-panel-2); color: var(--text) !important; font-weight: 600; }
+.xm-formula { padding: 14px 16px; border: 1px solid var(--xm-line-2); border-radius: 2px; background: var(--xm-panel-2); color: var(--text) !important; font-weight: 600; }
 .xm-defs { display: grid; gap: 14px; margin: 0; }
 .xm-defs dt { font-weight: 700; }
 .xm-defs dd { margin: 3px 0 0; color: var(--xm-text-2); line-height: 1.6; }
-.xm-table-wrap { overflow-x: auto; border: 1px solid var(--xm-line); border-radius: 12px; }
+.xm-table-wrap { overflow-x: auto; border: 1px solid var(--xm-line); border-radius: 2px; }
 .xm-table-wrap:focus-visible { outline: 2px solid var(--xm-accent); outline-offset: 2px; }
 .xm-table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
 .xm-table th, .xm-table td { padding: 9px 12px; border-bottom: 1px solid var(--xm-line); text-align: right; white-space: nowrap; }

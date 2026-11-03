@@ -457,7 +457,7 @@ main > section, .post, .listing, .member, .card, .feature, .plan { animation: ri
 .plan ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font-size: 14px; color: var(--text-2); flex: 1; }
 .plan li { display: grid; grid-template-columns: 16px 1fr; gap: 8px; }
 .plan li::before { content: "✓"; color: var(--green); font-weight: 700; }
-.plan.popular { border-color: transparent; background: linear-gradient(var(--panel), var(--panel)) padding-box, var(--grad) border-box; border: 1px solid transparent; }
+.plan.popular { border-color: var(--accent); }
 .plan .flag {
   position: absolute;
   top: -11px;
@@ -479,7 +479,7 @@ main > section, .post, .listing, .member, .card, .feature, .plan { animation: ri
   border-radius: var(--r-modal);
   border: 1px solid var(--border-2);
   background:
-    radial-gradient(closest-side at 90% 10%, rgba(191, 228, 246, 0.16), transparent 70%),
+    
     var(--panel);
 }
 @media (min-width: 860px) { .mac { grid-template-columns: 1.1fr 1fr; padding: 56px; } }
@@ -543,7 +543,7 @@ legend { font-family: "Bricolage Grotesque", sans-serif; font-size: 18px; font-w
 .event-info {
   border-radius: var(--r-card);
   padding: 28px;
-  background: linear-gradient(160deg, rgba(34, 229, 255, 0.14), rgba(191, 228, 246, 0.05)), var(--panel);
+  background: var(--panel);
   border: 1px solid var(--border-2);
 }
 .event-info dl { margin: 0; display: grid; gap: 20px; }
@@ -711,7 +711,7 @@ footer .wrap { display: grid; gap: 24px; }
 .empty-small { color: var(--text-3); font-size: 13px; margin: 0; }
 
 /* Mitgliederkarten */
-.verified-mark { display:inline-grid; place-items:center; width:18px; height:18px; margin-left:5px; vertical-align:middle; border-radius:50%; color:#fff; background:linear-gradient(135deg,#4CB7FF,#6E6CFF); box-shadow:0 0 14px rgba(76,183,255,.42); }
+.verified-mark { display:inline-grid; place-items:center; width:18px; height:18px; margin-left:5px; vertical-align:middle; border-radius:50%; color:#fff; background:#3FE0F0; color:#06181B; box-shadow:none; }
 .verified-mark svg { width:13px; height:13px; fill:none; stroke:currentColor; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; }
 .members-grid { display: grid; gap: 16px; margin-top: 8px; }
 @media (min-width: 720px) { .members-grid { grid-template-columns: repeat(2, 1fr); } }
@@ -719,7 +719,7 @@ footer .wrap { display: grid; gap: 24px; }
 .member { padding: 22px; display: grid; gap: 14px; align-content: start; }
 .member-head { display: grid; grid-template-columns: 44px 1fr; gap: 14px; align-items: center; }
 .member h3 { margin: 0; font-size: 16px; }
-.member-admin-badge { display: inline-flex; align-items: center; margin-left: 7px; padding: 3px 8px; border: 1px solid rgba(92,176,255,.34); border-radius: 999px; background: linear-gradient(120deg,rgba(64,144,255,.18),rgba(123,91,255,.16)); color: #9BCBFF; font-size: 10px; line-height: 1.3; font-weight: 700; letter-spacing: .035em; vertical-align: middle; }
+.member-admin-badge { display: inline-flex; align-items: center; margin-left: 7px; padding: 3px 8px; border: 1px solid rgba(63, 224, 240, .35); border-radius: 999px; background: rgba(63, 224, 240, .1); color: #9BCBFF; font-size: 10px; line-height: 1.3; font-weight: 700; letter-spacing: .035em; vertical-align: middle; }
 .member-headline { margin: 2px 0 0; color: var(--text-2); font-size: 13px; line-height: 1.45; }
 .member-about { margin: 0; font-size: 14px; color: var(--text-2); }
 .member-kv {
@@ -988,7 +988,7 @@ kbd {
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.25s;
-  background: radial-gradient(360px circle at var(--mx, 50%) var(--my, 50%), rgba(34, 229, 255, 0.12), transparent 60%);
+  background: none;
 }
 .feature:hover::after, .card:hover::after, .plan:hover::after, .perk:hover::after, .list li:hover::after { opacity: 1; }
 .feature .idx, .card .idx { position: absolute; top: 18px; right: 20px; font-family: var(--mono); font-size: 11px; color: var(--text-3); }
@@ -1024,8 +1024,6 @@ main > section, .card, .feature, .plan { animation: none; }
   align-items: start;
   padding: 12vh 16px 16px;
   background: rgba(6, 7, 10, 0.6);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
 }
 .cmdk-box {
   width: min(620px, 100%);
@@ -1508,13 +1506,13 @@ main section[id] { scroll-margin-top: 64px; }
   text-decoration: none; transition: border-color .15s ease, background .15s ease, transform .15s ease;
 }
 .kind-card:hover, .kind-card:focus-visible { border-color: var(--border-2); background: rgba(255, 255, 255, 0.06); transform: translateY(-1px); }
-.kind-card[aria-current="page"] { border-color: rgba(168, 85, 247, 0.55); background: linear-gradient(135deg, rgba(168, 85, 247, 0.14), rgba(99, 102, 241, 0.08)); }
+.kind-card[aria-current="page"] { border-color: var(--accent); background: var(--accent-soft); }
 .kind-icon { flex: none; width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; background: rgba(255, 255, 255, 0.06); color: var(--text); }
-.kind-card[aria-current="page"] .kind-icon { background: linear-gradient(135deg, #A855F7, #EC4899); color: #fff; }
+.kind-card[aria-current="page"] .kind-icon { background: var(--accent); color: var(--on-accent); }
 .kind-icon svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .kind-body { display: grid; gap: 4px; min-width: 0; font-size: 14px; line-height: 1.45; }
 .kind-body strong { color: var(--text); font-size: 15.5px; }
 .kind-body small { color: var(--text-3); font-size: 12.5px; }
-.kind-here { justify-self: start; padding: 2px 8px; border-radius: 999px; background: rgba(168, 85, 247, 0.2); color: #E2B8FF; font-size: 11px; font-weight: 700; letter-spacing: .02em; }
+.kind-here { justify-self: start; padding: 2px 8px; border-radius: 2px; background: var(--accent); color: var(--on-accent); font-size: 11px; font-weight: 700; letter-spacing: .02em; }
 @media (prefers-reduced-motion: reduce) { .kind-card { transition: none; } .kind-card:hover { transform: none; } }
 .project-detail-page .kind-switch { display: none; }

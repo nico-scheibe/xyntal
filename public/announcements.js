@@ -20,7 +20,7 @@
   const CSS = `
   .xy-ann{position:relative;z-index:40;margin:0;padding:0;list-style:none;font-family:var(--f-text,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif)}
   .xy-ann li{display:flex;align-items:flex-start;gap:14px;padding:11px max(16px,calc((100vw - 1160px)/2));border-left:3px solid var(--xy-ann-accent);border-bottom:1px solid rgba(255,255,255,.08);background:var(--xy-ann-soft);color:#F5F5F7;animation:xy-ann-in .24s cubic-bezier(.22,.8,.2,1)}
-  .xy-ann li.is-info{--xy-ann-accent:#B95CFF;--xy-ann-soft:rgba(185,92,255,.12)}
+  .xy-ann li.is-info{--xy-ann-accent:#3FE0F0;--xy-ann-soft:rgba(63,224,240,.12)}
   .xy-ann li.is-warning{--xy-ann-accent:#FFB84D;--xy-ann-soft:rgba(255,184,77,.12)}
   .xy-ann li.is-maintenance{--xy-ann-accent:#F56A8F;--xy-ann-soft:rgba(245,106,143,.12)}
   .xy-ann-kind{flex:none;margin-top:3px;padding:2px 8px;border-radius:999px;font:600 10px/1.5 inherit;letter-spacing:.08em;text-transform:uppercase;color:var(--xy-ann-accent);border:1px solid var(--xy-ann-accent)}

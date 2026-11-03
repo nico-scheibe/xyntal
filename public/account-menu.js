@@ -107,14 +107,14 @@
   .acct-btn{position:relative;width:38px;height:38px;padding:0;border-radius:999px;border:1px solid var(--line-2,var(--border-2,rgba(255,255,255,.16)));background:var(--surface-2,var(--panel-2,rgba(255,255,255,.07)));color:var(--text,#F5F5F7);display:grid;place-items:center;cursor:pointer;transition:border-color .15s ease,background-color .15s ease,transform .15s ease}
   .acct-btn:hover{border-color:rgba(255,255,255,.32);background:rgba(255,255,255,.1)}
   .acct-btn:active{transform:scale(.96)}
-  .acct-btn:focus-visible{outline:2px solid #3FD8FF;outline-offset:3px}
+  .acct-btn:focus-visible{outline:2px solid #3FE0F0;outline-offset:3px}
   .acct-btn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-  .acct-face{position:absolute;inset:2px;border-radius:999px;display:grid;place-items:center;overflow:hidden;font:700 13px/1 inherit;letter-spacing:.02em;color:#fff;background:linear-gradient(135deg,#B95CFF,#FF5FD2 50%,#3FD8FF)}
+  .acct-face{position:absolute;inset:2px;border-radius:999px;display:grid;place-items:center;overflow:hidden;font:700 13px/1 inherit;letter-spacing:.02em;color:#fff;background:#3FE0F0;color:#06181B}
   .acct-btn .acct-face{position:absolute;inset:2px;width:auto;height:auto;min-width:0;padding:0;border:0;box-shadow:none}
   .acct-face img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit}
   .acct-btn[aria-expanded="true"]{border-color:#3FD8FF}
   .acct-dot{position:absolute;top:-1px;right:-1px;width:11px;height:11px;border-radius:999px;background:#34D399;border:2px solid var(--bg,#07070B)}
-  .acct-menu{position:absolute;top:calc(100% + 10px);right:0;z-index:200;width:min(260px,calc(100vw - 24px));padding:6px;border-radius:16px;background:rgba(18,18,25,.96);border:1px solid rgba(255,255,255,.12);box-shadow:0 18px 50px rgba(0,0,0,.55);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);color:#F5F5F7;transform-origin:top right;animation:acct-in .16s cubic-bezier(.22,.8,.2,1)}
+  .acct-menu{position:absolute;top:calc(100% + 10px);right:0;z-index:200;width:min(260px,calc(100vw - 24px));padding:6px;border-radius:2px;background:#101013;border:1px solid #3B3B42;box-shadow:0 18px 50px rgba(0,0,0,.55);color:#F5F5F7;transform-origin:top right;animation:acct-in .16s cubic-bezier(.22,.8,.2,1)}
   .acct-menu[hidden]{display:none}
   @keyframes acct-in{from{opacity:0;transform:translateY(-4px) scale(.97)}to{opacity:1;transform:none}}
   @media (prefers-reduced-motion:reduce){.acct-menu{animation:none}}
@@ -125,7 +125,7 @@
   .acct-menu a,.acct-menu button.acct-item{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border:0;border-radius:10px;background:none;color:#E4E4E7 !important;font:500 14px/1.2 inherit;text-align:left;text-decoration:none;cursor:pointer;margin:0 !important}
   .acct-menu a:hover,.acct-menu button.acct-item:hover,.acct-menu a:focus-visible,.acct-menu button.acct-item:focus-visible{background:rgba(255,255,255,.07);color:#fff !important;outline:none}
   .acct-menu svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;opacity:.85}
-  .acct-menu a.acct-primary{justify-content:center;margin:6px 0 2px !important;padding:11px 12px;background:linear-gradient(100deg,#A855F7,#EC4899 45%,#6366F1);color:#fff !important;font-weight:600}
+  .acct-menu a.acct-primary{justify-content:center;margin:6px 0 2px !important;padding:11px 12px;background:#3FE0F0;color:#06181B !important;font-weight:600}
   .acct-menu a.acct-primary:hover{filter:brightness(1.08)}
   .acct-hint{padding:8px 12px 2px;font-size:12px;color:#A1A1AA}
   .acct-sep{height:1px;margin:4px 6px;background:rgba(255,255,255,.08)}
@@ -291,7 +291,7 @@
     loadProfile();
     // Ankündigungen aus der App (Banner unter der Kopfzeile) – nur für angemeldete Mitglieder
     if (state.session && !document.querySelector('script[src^="/announcements.js"]')) {
-      const sc = document.createElement("script"); sc.src = "/announcements.js?v=1"; sc.defer = true; document.head.append(sc);
+      const sc = document.createElement("script"); sc.src = "/announcements.js?v=99"; sc.defer = true; document.head.append(sc);
     }
     document.addEventListener("xyntal:lang", render);
     window.addEventListener("storage", (e) => { if (e.key === TOKEN) { state.session = readSession(); render(); loadProfile(); } });
