@@ -67,28 +67,39 @@
     const credit = Number(ai.creditCents || 0);
     const nearly = included > 0 && ai.reminderShare > 0 && Number(ai.includedUsedCents || 0) >= included * ai.reminderShare;
     const share = included > 0 ? Math.min(100, Math.round((usedCents / included) * 100)) : 0;
+    // An older server sends no per-request cost: then the budget stays in euros
+    // instead of reading "0 Anfragen".
+    const asRequests = call > 0;
     const includedN = requests(included, call);
     const leftN = requests(included - usedCents, call);
     const creditN = requests(Math.max(0, credit), call);
-    const intro = included > 0
-      ? t("In deinem Tarif sind etwa {n} KI-Anfragen pro Monat enthalten. Brauchst du mehr, zahlt dein Guthaben.").replace("{n}", count(includedN))
-      : t("Xyntal AI zahlst du nach Verbrauch: jede KI-Anfrage geht von deinem Guthaben ab.");
+    const intro = !asRequests
+      ? (included > 0
+        ? t("Xyntal AI zahlst du nach Verbrauch: {amount} pro Monat sind in deinem Tarif enthalten, darüber hinaus zahlt dein Guthaben.").replace("{amount}", euro(included))
+        : t("Xyntal AI zahlst du nach Verbrauch: jeder Aufruf geht von deinem Guthaben ab."))
+      : included > 0
+        ? t("In deinem Tarif sind etwa {n} KI-Anfragen pro Monat enthalten. Brauchst du mehr, zahlt dein Guthaben.").replace("{n}", count(includedN))
+        : t("Xyntal AI zahlst du nach Verbrauch: jede KI-Anfrage geht von deinem Guthaben ab.");
     const packs = (ai.packs || []).map((c) =>
-      `<button class="btn btn-small" type="button" data-pack="${esc(c)}" ${d.configured ? "" : "disabled"}>${esc(t("{n} Anfragen für {amount}").replace("{n}", count(requests(c, call))).replace("{amount}", price(c)))}</button>`).join("");
+      `<button class="btn btn-small" type="button" data-pack="${esc(c)}" ${d.configured ? "" : "disabled"}>${esc(asRequests
+        ? t("{n} Anfragen für {amount}").replace("{n}", count(requests(c, call))).replace("{amount}", price(c))
+        : t("{amount} aufladen").replace("{amount}", price(c)))}</button>`).join("");
     return `
       <section class="xm-detail xm-billing">
-        <div class="xm-billing-head"><h2>${esc(t("KI-Anfragen"))}</h2></div>
+        <div class="xm-billing-head"><h2>${esc(t(asRequests ? "KI-Anfragen" : "KI-Guthaben"))}</h2></div>
         <p class="xm-billing-text">${esc(intro)}</p>
         <dl class="xm-billing-figures">
           ${included > 0 ? `
           <div><dt>${esc(t("Diesen Monat inklusive"))}</dt>
-            <dd class="${nearly ? "xm-warn-text" : ""}">${esc(t("noch etwa {left} von {total}").replace("{left}", count(leftN)).replace("{total}", count(includedN)))}</dd>
+            <dd class="${nearly ? "xm-warn-text" : ""}">${esc(asRequests
+              ? t("noch etwa {left} von {total}").replace("{left}", count(leftN)).replace("{total}", count(includedN))
+              : t("{used} von {total} verbraucht").replace("{used}", euro(usedCents)).replace("{total}", euro(included)))}</dd>
             <div class="xm-billing-bar${nearly ? " xm-nearly" : ""}" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${share}" aria-label="${esc(t("Inklusive Anfragen verbraucht"))}"><i style="width:${share}%"></i></div>
             <small>${esc(t("Setzt sich am {date} zurück.").replace("{date}", day(ai.resetsAt)))}</small>
           </div>` : ""}
           <div><dt>${esc(t("Aus deinem Guthaben"))}</dt>
-            <dd class="${credit > 0 ? "" : "xm-warn-text"}">${esc(t("etwa {n} Anfragen").replace("{n}", count(creditN)))}</dd>
-            <small>${esc(t("Guthaben: {amount}").replace("{amount}", euro(Math.max(0, credit))))}</small>
+            <dd class="${credit > 0 ? "" : "xm-warn-text"}">${esc(asRequests ? t("etwa {n} Anfragen").replace("{n}", count(creditN)) : euro(Math.max(0, credit)))}</dd>
+            ${asRequests ? `<small>${esc(t("Guthaben: {amount}").replace("{amount}", euro(Math.max(0, credit))))}</small>` : ""}
           </div>
         </dl>
         ${nearly && ai.available ? `<p class="xm-billing-text xm-warn-text">${esc(credit > 0
