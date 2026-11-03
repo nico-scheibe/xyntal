@@ -16,6 +16,8 @@ const STATE = {
   abgelehnt: "Stand: diesmal leider nicht dabei.",
 };
 let guest = true;
+// Die Einwilligung steht bei den Anmelde-Buttons und noch einmal unten im Formular; einer der Haken reicht
+const consentGiven = () => form.elements.consent.checked || (form.elements.consent_quick && form.elements.consent_quick.checked);
 
 function updateCount() {
   const n = why.value.trim().length;
@@ -52,14 +54,22 @@ async function submitApplication(d) {
     const draft = readDraft();
     if (draft) for (const k of APPLICATION_FIELDS) if (form.elements[k] && !form.elements[k].value) form.elements[k].value = draft[k] || "";
     updateCount();
+    // Einwilligung und Rückmeldung direkt bei den Buttons, damit der Klick nicht still scheitert
+    const quickConsent = form.querySelector("[data-beta-auth-consent]");
     renderAuthOptions(form.querySelector("[data-beta-auth]"), {
-      statusEl: status, redirectPath: "beta",
+      statusEl: form.querySelector("[data-beta-auth-status]"), redirectPath: "beta",
       // Vor dem Sprung zu Google & Co. die bisherigen Eingaben sichern
       checkConsent: () => {
-        if (!form.elements.consent.checked) throw new Error("Bitte bestätige zuerst die Einwilligung unten im Formular.");
+        if (!consentGiven()) {
+          quickConsent.querySelector("input").focus();
+          throw new Error("Bitte setze zuerst den Haken bei der Einwilligung.");
+        }
         saveDraft(Object.fromEntries(new FormData(form)));
       },
-    }).then((shown) => { form.querySelector("[data-beta-auth-divider]").hidden = !shown; }).catch(() => {});
+    }).then((shown) => {
+      form.querySelector("[data-beta-auth-divider]").hidden = !shown;
+      quickConsent.hidden = !shown;
+    }).catch(() => {});
     return;
   }
   guest = false;
@@ -97,7 +107,7 @@ form.addEventListener("submit", (e) => {
       why.focus();
       throw new Error(`Erzähl mir etwas mehr über dein Vorhaben – mindestens ${MIN_WHY} Zeichen.`);
     }
-    if (!d.consent) throw new Error("Bitte bestätige, dass deine Angaben für die Auswahl gespeichert werden dürfen.");
+    if (!consentGiven()) throw new Error("Bitte bestätige, dass deine Angaben für die Auswahl gespeichert werden dürfen.");
     if (guest) {
       requireFields(d, ["name", "email", "password"], "Bitte gib Name, E-Mail und ein Passwort mit mindestens 8 Zeichen an.");
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)) throw new Error("Bitte gib eine gültige E-Mail-Adresse an.");
