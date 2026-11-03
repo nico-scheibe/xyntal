@@ -327,7 +327,7 @@
     const roleOpts = [["none", "Mitglied (keine Staff-Rolle)"], ...Object.keys(ROLE_LABEL).map((r) => [r, ROLE_LABEL[r]])];
     box.innerHTML = `<section class="xa-card xa-detail">
       <div class="xa-card-head"><div class="xa-person"><span class="admin-avatar">${esc(initials(u.displayName))}</span><div><h3>${esc(u.displayName)}${u.handle ? ` <small>@${esc(u.handle)}</small>` : ""}</h3><small>${esc(u.email)} · dabei seit ${esc(day(u.createdAt))} · 2FA ${u.twoFactor ? "an" : "aus"}</small></div></div><button data-act="close">Schließen</button></div>
-      <div class="xa-badges">${pill(roleLabel(u.staffRole), u.staffRole ? "accent" : "")}${u.verified ? pill("Verifiziert", "ok") : ""}${u.banned ? pill(u.bannedUntil ? `Gesperrt bis ${fmt(u.bannedUntil)}` : "Gesperrt", "danger") : ""}${u.mutedUntil !== null && u.mutedUntil !== undefined ? pill(u.mutedUntil ? `Stumm bis ${fmt(u.mutedUntil)}` : "Stumm", "warn") : ""}</div>
+      <div class="xa-badges">${pill(roleLabel(u.staffRole), u.staffRole ? "accent" : "")}${u.plan ? pill(u.subscribed ? `${u.plan} (Abo)` : u.planRenewsAt ? `${u.plan} bis ${day(u.planRenewsAt)}` : u.plan, u.plan !== "Start" ? "ok" : "") : ""}${u.verified ? pill("Verifiziert", "ok") : ""}${u.banned ? pill(u.bannedUntil ? `Gesperrt bis ${fmt(u.bannedUntil)}` : "Gesperrt", "danger") : ""}${u.mutedUntil !== null && u.mutedUntil !== undefined ? pill(u.mutedUntil ? `Stumm bis ${fmt(u.mutedUntil)}` : "Stumm", "warn") : ""}</div>
       ${u.headline || u.bio || u.location || u.website || u.github ? `<p class="xa-bio">${[u.headline, u.location, u.website, u.github].filter(Boolean).map(esc).join(" · ")}${u.bio ? `<br><span>${esc(u.bio)}</span>` : ""}</p>` : ""}
       <div class="xa-stats xa-stats-sm">
         ${stat("Arbeitsbereiche (Inhaber)", num(d.counts.workspacesOwned))}${stat("Mitgliedschaften", num(d.counts.memberships))}${stat("Tickets", num(d.counts.tickets))}
@@ -420,6 +420,7 @@
     ["mute", "users.ban", "mute <Konto> [Dauer] [Grund]", "Konto stummschalten: lesen ja, Nachrichten, Reaktionen und Beiträge nein."],
     ["unmute", "users.ban", "unmute <Konto>", "Stummschaltung aufheben."],
     ["kick", "content.moderate", "kick <Konto> <Arbeitsbereich> [Grund]", "Konto aus einem seiner Arbeitsbereiche entfernen. Fragt vorher nach."],
+    ["plan", "billing.manage", "plan <Konto> <Tage> [Tarif] <Grund>", "Mitgliedschaftstage gutschreiben (30, 30d, 4w). Sie zählen ab dem Ende der laufenden Mitgliedschaft. Ein kostenloses Konto braucht den Tarif (Forge, Crew, Foundry); ein bezahltes behält seinen, außer du nennst einen anderen. Die Tage laufen von selbst ab."],
     ["alts", "users.ban", "alts <Konto>", "Andere Konten, die dasselbe Gerät oder Netzwerk genutzt haben."],
     ["reports", "reports.handle", "reports", "Offene Meldungen auflisten."],
     ["note", "users.notes", "note <Konto> [Text]", "Staff-Notiz zu einem Konto; ohne Text werden die Notizen gelistet."],
@@ -464,7 +465,15 @@
     input.focus();
   };
   // ---------- Vorschläge beim Tippen (wie die Konsole in der App) ----------
-  const USER_COMMANDS = ["user", "ban", "unban", "warn", "mute", "unmute", "kick", "audit", "alts", "note"];
+  const USER_COMMANDS = ["user", "ban", "unban", "warn", "mute", "unmute", "kick", "plan", "audit", "alts", "note"];
+  // Bezahlte Tarife, die plan vergeben kann – Spiegel des Katalogs in server/src/billing/routes.ts; der Server prüft den echten.
+  const PLAN_IDS = ["Forge", "Crew", "Foundry", "Works", "Works Custom"];
+  // Tage für plan: "30", "30d"/"30t" oder "4w"; Stunden sind keine Tage.
+  function parseDays(token) {
+    const m = /^(\d{1,5})(d|t|w)?$/i.exec(token || ""); if (!m) return undefined;
+    const days = Number(m[1]) * (m[2]?.toLowerCase() === "w" ? 7 : 1);
+    return days > 0 && days <= 3650 ? days : undefined;
+  }
   function setSuggestions(list) { S.console.suggestions = list; S.console.selected = list.length ? 0 : -1; renderSuggestions(); }
   function renderSuggestions(hide = false) {
     const box = $("[data-suggest]", panel("console")); if (!box) return;
@@ -508,6 +517,11 @@
     }
     if (argIndex === 1 && (name === "ban" || name === "mute")) {
       setSuggestions(pick([["1h", "1 Stunde"], ["24h", "24 Stunden"], ["7d", "7 Tage"], ["30d", "30 Tage"], ["perm", "dauerhaft"]])); return;
+    }
+    if (name === "plan" && (argIndex === 1 || argIndex === 2)) {
+      const choices = argIndex === 1 ? [["7", "7 Tage"], ["30", "30 Tage"], ["90", "90 Tage"], ["365", "365 Tage"]] : PLAN_IDS.map((p) => [p, "Tarif"]);
+      setSuggestions(choices.filter(([v]) => v.toLowerCase().startsWith(prefix) && v.toLowerCase() !== prefix).map(([v, d]) => ({ label: v, detail: d, insert: `${v} ` })));
+      return;
     }
     if (argIndex === 1 && name === "kick") {
       const id = S.console.userIds[tokens[1].toLowerCase()];
@@ -581,6 +595,7 @@
           const x = d.user;
           print("ok", `${x.displayName}${x.handle ? ` (@${x.handle})` : ""} · ${x.email}`);
           print("info", `Konto-ID: ${x.id}`); print("info", `Staff-Rolle: ${roleLabel(x.staffRole)}`);
+          print("info", `Tarif: ${x.plan}${x.subscribed ? ` (Abo${x.planRenewsAt ? `, verlängert sich ${fmt(x.planRenewsAt)}` : ""})` : x.planRenewsAt ? ` bis ${fmt(x.planRenewsAt)}` : ""}`);
           print("info", `Status: ${x.banned ? (x.bannedUntil ? `gesperrt bis ${fmt(x.bannedUntil)}` : "dauerhaft gesperrt") : "aktiv"}${x.mutedUntil !== null && x.mutedUntil !== undefined ? ` · stumm${x.mutedUntil ? ` bis ${fmt(x.mutedUntil)}` : ""}` : ""}${x.verified ? " · verifiziert" : ""}`);
           print("info", `Dabei seit ${day(x.createdAt)} · 2FA ${x.twoFactor ? "an" : "aus"} · ${d.sessions.length} aktive Sitzung(en)`);
           print("info", `Verwarnungen: ${d.warnings.length} · offene Meldungen gegen das Konto: ${d.openReports.length}${Array.isArray(d.notes) ? ` · Staff-Notizen: ${d.notes.length}` : ""}`);
@@ -622,6 +637,21 @@
             catch (err) { if (err.status === 409 && err.details && err.details.candidates) { print("error", "Mehrere Arbeitsbereiche passen – nutze die ID:"); for (const c of err.details.candidates) print("info", `  ${c.name} · ${c.id}`); } else throw err; }
           };
           renderConsole(); return;
+        }
+        case "plan": {
+          if (!need(3)) return;
+          const days = parseDays(args[1]);
+          if (days === undefined) { print("error", `Tage sind eine ganze Zahl von Tagen: 30, 30d oder 4w. Aufruf: ${cmd[2]}`); return; }
+          // Optionaler Tarif vor dem Grund: plan @bob 30 Forge Danke ("Works Custom" sind zwei Wörter)
+          const rest = args.slice(2);
+          const planWords = [2, 1].find((n) => PLAN_IDS.some((p) => p.toLowerCase() === rest.slice(0, n).join(" ").toLowerCase())) || 0;
+          const plan = planWords ? PLAN_IDS.find((p) => p.toLowerCase() === rest.splice(0, planWords).join(" ").toLowerCase()) : undefined;
+          const why = rest.join(" ").trim();
+          if (!why) { print("error", "Gib einen Grund an – er landet im Audit-Log."); return; }
+          const u = await resolveUser(args[0]); if (!u) return;
+          const r = await api("POST", `/admin/users/${encodeURIComponent(u.id)}/plan/extend`, { days, plan, reason: why });
+          print("ok", `${u.displayName} ist bis ${fmt(r.renewsAt)} auf ${r.plan} (${r.days} Tage gutgeschrieben).`);
+          return;
         }
         case "alts": { if (!need(1)) return; const u = await resolveUser(args[0]); if (!u) return;
           const r = await api("GET", `/admin/users/${encodeURIComponent(u.id)}/linked`);
