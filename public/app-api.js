@@ -46,18 +46,20 @@
   }
 
   let exchanging = null;
-  async function session({ fresh = false } = {}) {
+  // `silent`: nichts nachfragen (kein 2FA-Dialog) – für Hintergrundaufrufe wie das
+  // Ankündigungs-Banner, die lieber still scheitern als eine Seite zu unterbrechen.
+  async function session({ fresh = false, silent = false } = {}) {
     const site = await websiteSession();
     if (!site) { forget(); throw new ApiError(401, "SIGNED_OUT", t("Bitte logg dich ein.")); }
     const cached = read(STORE);
     if (!fresh && cached && cached.sb === site.id && cached.token && Date.parse(cached.expiresAt) > Date.now() + 60000) return cached;
     if (cached && cached.sb !== site.id) forget();
     if (!site.token) throw new ApiError(401, "SIGNED_OUT", t("Deine Sitzung ist abgelaufen. Bitte logg dich neu ein."));
-    if (!exchanging) exchanging = exchange(site).finally(() => { exchanging = null; });
+    if (!exchanging) exchanging = exchange(site, "", silent).finally(() => { exchanging = null; });
     return exchanging;
   }
 
-  async function exchange(site, code = "") {
+  async function exchange(site, code = "", silent = false) {
     const res = await raw("POST", "/auth/supabase", { body: { accessToken: site.token, deviceName: "xyntal.de", code } });
     if (res.ok) {
       const s = { sb: site.id, userId: res.data.user.id, token: res.data.token, expiresAt: res.data.expiresAt };
@@ -65,9 +67,10 @@
       return s;
     }
     if (res.code === "TWOFA_REQUIRED" || res.code === "TWOFA_INVALID") {
+      if (silent) throw new ApiError(401, "TWOFA_REQUIRED", t("Dein Xyntal-App-Konto ist mit Zwei-Faktor-Anmeldung geschützt."));
       const next = await askCode(res.code === "TWOFA_INVALID");
       if (!next) throw new ApiError(401, "TWOFA_CANCELLED", t("Ohne den Code aus deiner Authenticator-App geht es hier nicht weiter."));
-      return exchange(site, next);
+      return exchange(site, next, silent);
     }
     if (res.code === "SUPABASE_MFA_REQUIRED" && typeof mfaRedirect === "function") return mfaRedirect();
     throw new ApiError(res.status, res.code, res.message);
@@ -89,16 +92,21 @@
   }
 
   // Ein API-Aufruf mit App-Sitzung; eine abgelaufene wird einmal neu getauscht.
-  async function api(method, path, body) {
-    let s = await session();
+  async function api(method, path, body, { silent = false } = {}) {
+    let s = await session({ silent });
     let res = await raw(method, path, { body, token: s.token });
     if (res.status === 401 && res.code === "UNAUTHENTICATED") {
       try { localStorage.removeItem(STORE); } catch { /* egal */ }
-      s = await session({ fresh: true });
+      s = await session({ fresh: true, silent });
       res = await raw(method, path, { body, token: s.token });
     }
     if (!res.ok) throw new ApiError(res.status, res.code, res.message, res.details);
     return res.data;
+  }
+
+  // Das eigene App-Konto (id, Name, Handle, Rolle, Staff-Rolle, Tarif) – z. B. für den Admin-Bereich.
+  async function me(options) {
+    return (await api("GET", "/auth/me", undefined, options)).user;
   }
 
   // App-2FA: Wer in der App die Zwei-Faktor-Anmeldung eingeschaltet hat, bestätigt hier einmal mit dem Code.
@@ -269,7 +277,7 @@
   }
 
   window.XyntalApp = {
-    API, ApiError, api, session, forget, esc, t,
+    API, ApiError, api, me, session, forget, esc, t,
     TAGS, tagLabel, canonicalTag, label, AVAILABILITY, INTENT, HOURS, VISIBILITY, WORK_TYPES, WORK_DIMS,
     scoreRing, explanationHtml, askDismissReason, record,
   };

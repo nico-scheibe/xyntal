@@ -289,6 +289,10 @@
     render();
     swapCta();
     loadProfile();
+    // Ankündigungen aus der App (Banner unter der Kopfzeile) – nur für angemeldete Mitglieder
+    if (state.session && !document.querySelector('script[src^="/announcements.js"]')) {
+      const sc = document.createElement("script"); sc.src = "/announcements.js?v=1"; sc.defer = true; document.head.append(sc);
+    }
     document.addEventListener("xyntal:lang", render);
     window.addEventListener("storage", (e) => { if (e.key === TOKEN) { state.session = readSession(); render(); loadProfile(); } });
     const c = client();
