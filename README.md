@@ -35,7 +35,10 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 | `supabase/016_account_cards.sql` | Karte mit Konto verknüpfen: nach Login mit derselben (bestätigten) E-Mail Karte laden/ändern (`get_my_card`, `save_my_card`); öffentliches Profil zeigt zusätzlich Über mich, Angebot, Suche, Links und Profilbild |
 | `supabase/017_security.sql` | Sicherheit im Profil: 2FA (Authenticator-App) wird in allen Tabellen, Admin-Rechten und beim Löschen durchgesetzt; `verify_my_password` prüft das aktuelle Passwort (max. 5 Versuche / 15 Min.) |
 | `supabase/018_open_projects_messages.sql` | Projekte anlegen, für Rollen melden und Nachrichten schreiben schon mit bestätigtem Konto (ohne Freischaltung); Abgelehnte ausgeschlossen; Spam-Grenzen: 5 Projekte/Tag, 30 Nachrichten und 3 neue Gespräche pro Stunde |
-| `supabase/010_beta_applications.sql` | Beta-Programm: Bewerbungen ohne Konto (nur über `apply_for_beta`), lesen und bewerten nur Admins; **noch auszuführen** |
+| `supabase/010_beta_applications.sql` | Beta-Programm: Bewerbungstabelle (ursprünglich ohne Konto), lesen und bewerten nur Admins |
+| `supabase/migrations/20261103120000_beta_requires_account.sql` | Beta-Programm: Bewerbung nur mit Konto (`apply_for_beta` nur für `authenticated`, `user_id` je Bewerbung, `get_my_beta_application` für den eigenen Stand) |
+| `supabase/migrations/20261103130000_beta_accepted_sets_badge.sql` | Beta-Programm: Status „angenommen“ setzt den Beta-Tester-Badge per Trigger |
+| `supabase/migrations/20261103140000_beta_status_mail.sql` | Beta-Programm: Spalten `mailed_status`/`mailed_at` für Status-Mails über IONOS; **noch auszuführen** |
 | `ANMELDUNG-EINRICHTEN.md` | Anleitung: Brevo-SMTP einrichten; Google, Apple, LinkedIn und SMS einschalten |
 
 ## Seiten
@@ -44,7 +47,7 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 |---|---|
 | `/` | Startseite: Hero, interaktive Team-Demo (Beispieldaten, nichts wird gespeichert), Geschichte „Idee → Verbindungen → Team → Fortschritt“, Einstieg |
 | `/mitglied-werden` | Konto und Profil anlegen (mit E-Mail-Bestätigung) |
-| `/beta` | Beta-Programm: was Tester bekommen, Bewerbung mit „Warum sollte ich dich nehmen?“; Bewerbungen erscheinen im Admin-Bereich |
+| `/beta` | Beta-Programm: was Tester bekommen, Bewerbung nur mit Konto (Gäste sehen „Konto anlegen“ / „Login“, Mitglieder das Formular oder den Stand ihrer Bewerbung); Bewerbungen erscheinen im Admin-Bereich |
 | `/login` | Einloggen per E-Mail, Google, Apple, LinkedIn oder Handynummer, „Passwort vergessen?“ |
 | `/passwort-neu` | Neues Passwort setzen (Link aus der E-Mail) |
 | `/profil` | Profil bearbeiten, Passwort ändern, Konto löschen |
@@ -288,16 +291,23 @@ SQL-Regressionstest in einer **leeren, separaten lokalen PostgreSQL-Datenbank** 
 zeigt die bestätigte Brevo-Gesamtzahl getrennt von Karten und Beta-Bewerbungen.
 Mitglieder und Karten sind durchsuchbar. Beta-Bewerbungen bieten Suche, Bereichs-
 und Statusfilter, Sortierung, 15 Einträge pro Seite, interne Notizen und CSV-Export.
-Statuswechsel verschicken keine E-Mails und vergeben keine Kontorechte.
+Jeder Statuswechsel außer „Neu“ schickt dem Bewerber eine Status-Mail über IONOS
+(siehe `hosting/daki/README.md`, Abschnitt Status-Mails); „Angenommen“ setzt den Beta-Tester-Badge.
 
 Die Erweiterung für Beta-Bewerbungen steht unter
 `supabase/migrations/20261025210417_beta_admin_workflow.sql`. Lesen, Bearbeiten und
 Löschen sind per RLS auf Admins beschränkt; direkte anonyme Tabellenzugriffe sind
-gesperrt. `apply_for_beta` ist absichtlich ein öffentlich aufrufbarer, validierender
-Schreib-Endpunkt für Bewerbungen ohne Konto. Der Supabase Advisor markiert den
-SECURITY-DEFINER-Endpunkt deshalb als Warnung; er liefert keine Bewerberdaten
-zurück. Das entspricht dem bisherigen Formularmodell und wird nicht durch eine
-öffentlich lesbare Tabelle ersetzt.
+gesperrt. Seit `supabase/migrations/20261103120000_beta_requires_account.sql` ist die Bewerbung
+an ein Konto gebunden: `apply_for_beta` ist nur für eingeloggte Nutzer aufrufbar, nimmt
+Name und E-Mail aus dem Konto und speichert die `user_id` an der Bewerbung (eine pro
+Konto). `get_my_beta_application` zeigt Mitgliedern nur Stand und Datum der eigenen
+Bewerbung, nie die Admin-Notiz. Alte Bewerbungen ohne Konto bleiben erhalten und
+werden beim nächsten Login über die E-Mail dem Konto zugeordnet; im Admin-Bereich
+stehen sie als „ohne Konto (alt)“. Seit
+`supabase/migrations/20261103130000_beta_accepted_sets_badge.sql` setzt der Status
+„angenommen“ per Trigger den Beta-Tester-Badge am verknüpften Konto (und damit die
+Desktop-Downloads im Profil); wechselt der Status wieder weg, wird der Badge entfernt.
+Der Badge lässt sich zusätzlich weiterhin von Hand am Mitglied setzen.
 
 UI-Logik prüfen: `node tests/admin-ui.cjs` (Beispieldaten, keine Live-Datenbank).
 Öffentlicher Testablauf und Feedback: `/beta#testen`.

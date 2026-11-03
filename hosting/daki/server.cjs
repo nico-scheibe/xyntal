@@ -3,6 +3,7 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
+const tls = require('node:tls');
 const { promisify } = require('node:util');
 const exec = promisify(require('node:child_process').execFile);
 const state = path.join(__dirname, '.deploy');
@@ -169,6 +170,141 @@ async function handleBetaFeedback(req, res) {
   }
 }
 
+// Beta status mail: Admin ändert den Status, der Bewerber bekommt eine E-Mail über IONOS-SMTP.
+// Zugangsdaten nur auf dem Server (.ionos-user / .ionos-pass oder IONOS_SMTP_USER / IONOS_SMTP_PASSWORD).
+// Wer die Mail auslösen darf, entscheidet Supabase: Die Bewerbung wird mit dem Token des Aufrufers gelesen,
+// und beta_applications ist per RLS nur für Admins lesbar.
+const STATUS_MAILS = {
+  in_pruefung: { subject: 'Deine Xyntal-Beta-Bewerbung ist in Prüfung', body: 'ich habe deine Bewerbung für die Xyntal-Beta gelesen und schaue sie mir gerade genauer an. Du hörst in den nächsten Tagen von mir.' },
+  eingeladen: { subject: 'Du bist zur Xyntal-Beta eingeladen', body: 'ich möchte dich gern in der Xyntal-Beta dabeihaben. Logg dich unter https://xyntal.de/login ein und vervollständige dein Profil, dann schalte ich dich frei.' },
+  warteliste: { subject: 'Du stehst auf der Warteliste für die Xyntal-Beta', body: 'danke für deine Bewerbung. Die erste Testrunde ist gerade voll, deshalb habe ich dich auf die Warteliste gesetzt. Sobald ein Platz frei wird, melde ich mich bei dir.' },
+  angenommen: { subject: 'Willkommen in der Xyntal-Beta', body: 'du bist dabei! Dein Konto ist für die Beta freigeschaltet. Unter https://xyntal.de/profil findest du jetzt die Desktop-App zum Download. Sag mir jederzeit, was gut läuft und was fehlt – dein Feedback kommt direkt bei mir an.' },
+  abgelehnt: { subject: 'Deine Xyntal-Beta-Bewerbung', body: 'danke, dass du dich für die Xyntal-Beta beworben hast. Diesmal kann ich dich leider nicht aufnehmen. Projekte, Gesuche und Nachrichten kannst du trotzdem mit deinem Konto nutzen, und ich melde mich, sobald es neue Plätze gibt.' },
+};
+const STATUS_LABELS = { in_pruefung: 'In Prüfung', eingeladen: 'Eingeladen', warteliste: 'Warteliste', angenommen: 'Angenommen', abgelehnt: 'Abgelehnt' };
+function statusMailText(name, status) {
+  const mail = STATUS_MAILS[status];
+  return { subject: mail.subject, text: ['Hallo ' + name + ',', '', mail.body, '', 'Stand deiner Bewerbung: ' + STATUS_LABELS[status], '', 'Viele Grüße', 'Nico von Xyntal', '', 'https://xyntal.de/beta · Antworte einfach auf diese E-Mail, wenn du Fragen hast.'].join('\n') };
+}
+// Supabase-Adresse und öffentlicher Schlüssel kommen aus der veröffentlichten config.js, damit nichts doppelt gepflegt wird.
+function supabaseConfig() {
+  if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) return { url: process.env.SUPABASE_URL, key: process.env.SUPABASE_ANON_KEY };
+  try {
+    const text = fs.readFileSync(path.join(root, 'config.js'), 'utf8');
+    const url = /supabaseUrl:\s*"([^"]+)"/.exec(text), key = /supabaseKey:\s*"([^"]+)"/.exec(text);
+    if (url && key) return { url: url[1], key: key[1] };
+  } catch {}
+  return null;
+}
+// Kleiner SMTP-Client für IONOS (Port 465, TLS von Anfang an). Keine Abhängigkeiten nötig.
+const b64 = (s) => Buffer.from(s, 'utf8').toString('base64');
+function smtpSend({ host, port, user, pass, from, fromName, to, subject, text }) {
+  return new Promise((resolve, reject) => {
+    const socket = tls.connect({ host, port, servername: host });
+    let buffer = '', step = 0, finished = false;
+    const fail = (error) => { if (finished) return; finished = true; socket.destroy(); reject(error); };
+    const timer = setTimeout(() => fail(new Error('SMTP timeout')), 20000);
+    const message = [
+      'From: ' + (fromName ? '=?UTF-8?B?' + b64(fromName) + '?= <' + from + '>' : from),
+      'To: <' + to + '>',
+      'Reply-To: <' + from + '>',
+      'Subject: =?UTF-8?B?' + b64(subject) + '?=',
+      'Date: ' + new Date().toUTCString(),
+      'Message-ID: <' + Date.now() + '.' + Math.random().toString(36).slice(2) + '@' + from.split('@')[1] + '>',
+      'MIME-Version: 1.0', 'Content-Type: text/plain; charset=UTF-8', 'Content-Transfer-Encoding: base64', '',
+      b64(text).replace(/.{76}/g, '$&\r\n'),
+    ].join('\r\n');
+    const steps = [
+      [220, 'EHLO xyntal.de'], [250, 'AUTH LOGIN'], [334, b64(user)], [334, b64(pass)], [235, 'MAIL FROM:<' + from + '>'],
+      [250, 'RCPT TO:<' + to + '>'], [250, 'DATA'], [354, message + '\r\n.'], [250, 'QUIT'], [221, null],
+    ];
+    socket.setEncoding('utf8');
+    socket.on('error', fail);
+    socket.on('close', () => { if (!finished) fail(new Error('SMTP connection closed')); });
+    socket.on('data', (chunk) => {
+      buffer += chunk;
+      // Antworten sind Zeilen "NNN-text" (weitere folgen) oder "NNN text" (letzte Zeile)
+      while (/^\d{3} .*\r\n/m.test(buffer)) {
+        const end = buffer.search(/^\d{3} .*\r\n/m) + /^\d{3} .*\r\n/m.exec(buffer)[0].length;
+        const reply = buffer.slice(0, end); buffer = buffer.slice(end);
+        const code = Number(reply.slice(0, 3));
+        const [expected, command] = steps[step];
+        if (code !== expected) return fail(new Error('SMTP ' + code + ' at step ' + step + ': ' + reply.replace(/[\r\n]+$/, '').replace(user, '[user]').replace(pass, '[pass]').slice(0, 200)));
+        step++;
+        if (command === null) { finished = true; clearTimeout(timer); socket.end(); return resolve(); }
+        socket.write(command + '\r\n');
+      }
+    });
+  });
+}
+// SMTP-Zugang: Umgebungsvariablen SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASS/SMTP_FROM (auch als Zeilen in .smtp.env),
+// ersatzweise die Einzeldateien .ionos-user / .ionos-pass / .ionos-sender. SMTP_FROM darf „Name <adresse>“ sein.
+function smtpConfig() {
+  const fileEnv = {};
+  try {
+    for (const line of fs.readFileSync(path.join(__dirname, '.smtp.env'), 'utf8').split(/\r?\n/)) {
+      const m = /^\s*([A-Z_]+)\s*=\s*(.*?)\s*$/.exec(line);
+      if (m) fileEnv[m[1]] = m[2].replace(/^(["'])(.*)\1$/, '$2');
+    }
+  } catch {}
+  const get = (name, file, legacy) => process.env[name] || fileEnv[name] || process.env[legacy] || (file ? readSecret(file, legacy) : '');
+  const user = get('SMTP_USER', '.ionos-user', 'IONOS_SMTP_USER').trim();
+  const pass = get('SMTP_PASS', '.ionos-pass', 'IONOS_SMTP_PASSWORD');
+  const fromRaw = get('SMTP_FROM', '.ionos-sender', 'IONOS_SENDER_EMAIL').trim();
+  const named = /^(.*?)\s*<([^<>\s]+@[^<>\s]+)>$/.exec(fromRaw);
+  return {
+    host: get('SMTP_HOST', null, 'IONOS_SMTP_HOST') || 'smtp.ionos.de', port: Number(get('SMTP_PORT', null, 'IONOS_SMTP_PORT') || 465),
+    user, pass, from: named ? named[2] : (fromRaw || user), fromName: named ? named[1].replace(/^"|"$/g, '') || 'Xyntal' : 'Nico von Xyntal',
+  };
+}
+const statusMailTransport = { send: smtpSend };
+const statusMailLimits = { count: 0, until: 0 };
+async function handleBetaStatusMail(req, res) {
+  if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return feedbackJson(res, 405, { error: 'Nur POST.' }); }
+  if (req.headers.origin && !['https://xyntal.de', 'https://www.xyntal.de'].includes(req.headers.origin)) return feedbackJson(res, 403, { error: 'Diese Anfrage ist nicht erlaubt.' });
+  const token = /^Bearer\s+([A-Za-z0-9._-]{20,4096})$/.exec(req.headers.authorization || '');
+  if (!token) return feedbackJson(res, 401, { error: 'Bitte als Admin einloggen.' });
+  if (!/^application\/json(?:\s*;|$)/i.test(req.headers['content-type'] || '')) return feedbackJson(res, 415, { error: 'Ungültiges Datenformat.' });
+  if (Number(req.headers['content-length']) > 1024) { req.resume(); return feedbackJson(res, 413, { error: 'Anfrage zu groß.' }); }
+  try {
+    const raw = await new Promise((resolve, reject) => {
+      const chunks = []; let size = 0;
+      req.setTimeout(15000, () => { reject(new Error('timeout')); req.destroy(); });
+      req.on('data', chunk => { size += chunk.length; if (size <= 1024) chunks.push(chunk); });
+      req.on('end', () => { req.setTimeout(0); resolve(size > 1024 ? null : Buffer.concat(chunks).toString('utf8')); });
+      req.on('error', reject);
+    });
+    let data; try { data = raw === null ? null : JSON.parse(raw); } catch { data = null; }
+    if (!data || typeof data !== 'object' || !/^\d{1,12}$/.test(String(data.id ?? ''))) return feedbackJson(res, 400, { error: 'Bewerbung nicht angegeben.' });
+    const smtp = smtpConfig();
+    const config = supabaseConfig();
+    if (!smtp.user || !smtp.pass || !config) return feedbackJson(res, 503, { error: 'Der Mailversand über IONOS ist auf dem Server noch nicht eingerichtet.' });
+    const now = Date.now();
+    if (statusMailLimits.until <= now) { statusMailLimits.count = 0; statusMailLimits.until = now + 3600000; }
+    if (++statusMailLimits.count > 60) return feedbackJson(res, 429, { error: 'Zu viele Status-Mails in der letzten Stunde.' });
+    // Bewerbung mit den Rechten des Aufrufers lesen: Nicht-Admins bekommen hier nichts zurück.
+    const headers = { apikey: config.key, Authorization: 'Bearer ' + token[1], Accept: 'application/json' };
+    const lookup = await fetch(config.url + '/rest/v1/beta_applications?id=eq.' + data.id + '&select=id,name,email,status', { headers, signal: AbortSignal.timeout(10000) });
+    if (lookup.status === 401) return feedbackJson(res, 401, { error: 'Deine Anmeldung ist abgelaufen. Bitte neu einloggen.' });
+    if (!lookup.ok) throw new Error('Supabase HTTP ' + lookup.status);
+    const [application] = await lookup.json();
+    if (!application) return feedbackJson(res, 403, { error: 'Bewerbung nicht gefunden oder keine Admin-Rechte.' });
+    if (!STATUS_MAILS[application.status]) return feedbackJson(res, 200, { ok: true, skipped: true, reason: 'Für den Status „Neu“ gibt es keine Mail.' });
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(application.email) || /[\r\n<>]/.test(application.name || '')) return feedbackJson(res, 400, { error: 'Bewerberdaten unbrauchbar.' });
+    const { subject, text } = statusMailText(application.name || 'du', application.status);
+    await statusMailTransport.send({ ...smtp, to: application.email, subject, text });
+    // Merken, welcher Status zuletzt gemailt wurde (Spalten aus 20261103140000_beta_status_mail.sql)
+    const mark = await fetch(config.url + '/rest/v1/beta_applications?id=eq.' + application.id, {
+      method: 'PATCH', headers: { ...headers, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify({ mailed_status: application.status, mailed_at: new Date().toISOString() }), signal: AbortSignal.timeout(10000),
+    }).then((r) => r.ok).catch(() => false);
+    return feedbackJson(res, 200, { ok: true, status: application.status, marked: mark });
+  } catch (err) {
+    console.error('[beta-status-mail] ' + err.name + ': ' + err.message);
+    if (!res.destroyed && !res.headersSent) feedbackJson(res, 502, { error: 'Die Status-Mail konnte nicht gesendet werden: ' + err.message.slice(0, 160) });
+  }
+}
+
 const types = { '.html':'text/html; charset=utf-8', '.css':'text/css; charset=utf-8', '.js':'text/javascript; charset=utf-8', '.json':'application/json', '.png':'image/png', '.jpg':'image/jpeg', '.svg':'image/svg+xml', '.webp':'image/webp', '.woff2':'font/woff2', '.woff':'font/woff', '.ico':'image/x-icon', '.txt':'text/plain; charset=utf-8', '.xml':'application/xml; charset=utf-8' };
 // Sicherheits-Header für alle Antworten. Skripte nur aus eigenen Dateien (keine Inline-Skripte);
 // Inline-Styles bleiben erlaubt, weil Seiten style-Attribute setzen.
@@ -190,6 +326,7 @@ http.createServer((req,res) => {
     return res.end();
   }
   if (pathname === '/api/beta-feedback') { handleBetaFeedback(req, res); return; }
+  if (pathname === '/api/beta-status-mail') { handleBetaStatusMail(req, res); return; }
   if (!['GET','HEAD'].includes(req.method)) { res.writeHead(405); return res.end(); }
   if (pathname === '/__deployment') {
     res.writeHead(root ? 200 : 503, {'Content-Type':'application/json','Cache-Control':'no-store'});

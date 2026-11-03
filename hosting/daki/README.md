@@ -102,3 +102,29 @@ bleiben außerhalb von `public/`; niemals Schlüssel ins Frontend oder Repositor
 Nach dem Veröffentlichen Daki für den neuen API-Endpunkt neu starten. Der Python-
 Vorschauserver bietet keinen Mailversand. Ohne verfügbaren Versand meldet das Formular
 einen Fehler und behält die Eingabe. Prüfung ohne echte E-Mails: `node tests/beta-feedback.cjs`.
+
+## Status-Mails an Beta-Bewerber (IONOS)
+
+Ändert ein Admin im Admin-Bereich den Status einer Beta-Bewerbung (außer „Neu“), ruft die
+Seite `POST /api/beta-status-mail` mit dem Supabase-Token des Admins auf. Der Server liest die
+Bewerbung mit genau diesem Token aus Supabase; weil `beta_applications` per RLS nur für Admins
+lesbar ist, kann niemand sonst Mails auslösen. Dann schickt er dem Bewerber eine kurze
+Text-Mail über IONOS-SMTP (Port 465, TLS) und merkt in `mailed_status` / `mailed_at`, welcher
+Status zuletzt gemailt wurde. Im Admin-Bereich gibt es außerdem je Bewerbung „Status-Mail senden“.
+
+Einrichtung in Daki: im Ordner `/home/container/xyntal` eine Datei `.smtp.env` anlegen (nie committen):
+
+```
+SMTP_HOST=smtp.ionos.de
+SMTP_PORT=465
+SMTP_USER=admin@xyntal.com
+SMTP_PASS=das-Postfach-Passwort
+SMTP_FROM=Xyntal <admin@xyntal.com>
+```
+
+Dieselben Namen funktionieren auch als Umgebungsvariablen des Servers. `SMTP_FROM` darf
+„Name <adresse>“ sein; die Adresse muss zum Postfach gehören. Ohne `SMTP_FROM` ist der Absender
+der Login mit dem Namen „Nico von Xyntal“. Ersatzweise werden die Einzeldateien `.ionos-user`,
+`.ionos-pass` und `.ionos-sender` gelesen. Vorher `supabase/migrations/20261103140000_beta_status_mail.sql`
+ausführen, danach Daki neu starten. Antworten gehen an das Postfach. Texte der Mails stehen in
+`server.cjs` (`STATUS_MAILS`). Prüfung ohne echte Mails: `node tests/beta-status-mail.cjs`.

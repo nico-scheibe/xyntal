@@ -6,7 +6,7 @@ Object.assign(window.XYNTAL_EN, {
   "Die richtigen Menschen.": "The right people.",
   "Du willst etwas aufbauen oder bei einer Idee mitmachen? Bring dein Vorhaben mit, lerne Menschen mit passenden Fähigkeiten kennen und gestalte Xyntal mit.": "Want to build something or join an idea? Bring your ambition, meet people with the skills you need and help shape Xyntal.",
   "Für die Beta bewerben": "Apply for the beta",
-  "Kostenlos teilnehmen. Bewerbung ohne Konto.": "Free to join. No account needed to apply.",
+  "Kostenlos teilnehmen. Bewerbung mit deinem Xyntal-Konto.": "Free to join. Apply with your Xyntal account.",
   "Dein nächster Schritt": "Your next step",
   "Aus deiner Idee": "Turn your idea",
   "wird ein Gespräch.": "into a conversation.",
@@ -29,7 +29,7 @@ Object.assign(window.XYNTAL_EN, {
   "So geht es los": "Getting started",
   "Mit deinem echten Vorhaben.": "Start with your own ambition.",
   "Erzähl, was du vorhast": "Tell me what you want to do",
-  "Bewirb dich in etwa drei Minuten. Eine fertige Idee oder ein bestehendes Unternehmen brauchst du nicht.": "Apply in about three minutes. You do not need a finished idea or an existing business.",
+  "Leg dein kostenloses Konto an und bewirb dich in etwa drei Minuten. Eine fertige Idee oder ein bestehendes Unternehmen brauchst du nicht.": "Create your free account and apply in about three minutes. You do not need a finished idea or an existing business.",
   "Wir finden deinen Einstieg": "Find your way in",
   "Ich lese deine Bewerbung persönlich. Wenn du dabei bist, bekommst du die nächsten Schritte per E-Mail.": "I personally read your application. If you are selected, you will receive the next steps by email.",
   "Loslegen und mitgestalten": "Get started and help shape it",
@@ -40,7 +40,7 @@ Object.assign(window.XYNTAL_EN, {
   "voranbringen?": "to move forward?",
   "Eine eigene Idee, ein Projekt oder Lust, bei anderen mitzubauen: Erzähl mir, was du suchst und wie Xyntal dir dabei helfen kann.": "Your own idea, a project or a desire to help others build: tell me what you are looking for and how Xyntal could help.",
   "Die Teilnahme ist kostenlos.": "Participation is free.",
-  "Für die Bewerbung brauchst du kein Konto.": "You do not need an account to apply.",
+  "Für die Bewerbung brauchst du ein kostenloses Konto.": "You need a free account to apply.",
   "Deine Angaben sind nicht öffentlich.": "Your application details are not public.",
   "Du bist schon dabei?": "Already taking part?",
   "Was funktioniert gut, wo kommst du nicht weiter?": "What works well, and where are you getting stuck?",
@@ -49,9 +49,27 @@ Object.assign(window.XYNTAL_EN, {
   "Was möchtest du mit Xyntal erreichen?": "What would you like to achieve with Xyntal?",
   "Wen suchst du, wobei brauchst du Unterstützung und was möchtest du ausprobieren? Ein paar Sätze reichen.": "Who are you looking for, where do you need support and what would you like to try? A few sentences are enough.",
   "Bewerbung angekommen": "Application received",
+  "Die Bewerbung läuft über dein Xyntal-Konto. So kann ich dich direkt freischalten, wenn du dabei bist. Das Konto ist kostenlos.": "Applications go through your Xyntal account, so I can unlock the beta for you directly if you are selected. The account is free.",
+  "Konto anlegen und bewerben": "Create an account and apply",
+  "Ich habe schon ein Konto": "I already have an account",
+  "Du bewirbst dich als": "You are applying as",
+  ". Name und E-Mail kommen aus deinem Konto.": ". Name and email come from your account.",
+  "Deine Bewerbung ist angekommen. Wenn du dabei bist, melde ich mich per E-Mail bei dir und schalte dein Konto für die Beta frei.": "Your application has been received. If you are selected, I will email you and unlock the beta for your account.",
+  "Deine Bewerbung": "Your application",
+  "Du hast dich schon beworben.": "You have already applied.",
+  "Deine erste Bewerbung zählt. Wenn sich etwas ändert, melde ich mich per E-Mail bei dir.": "Your first application counts. I will email you if anything changes.",
+  "Stand: eingegangen, noch nicht geprüft.": "Status: received, not reviewed yet.",
+  "Stand: in Prüfung.": "Status: under review.",
+  "Stand: eingeladen – die nächsten Schritte kommen per E-Mail.": "Status: invited – next steps will arrive by email.",
+  "Stand: auf der Warteliste.": "Status: on the waiting list.",
+  "Stand: angenommen – willkommen in der Beta!": "Status: accepted – welcome to the beta!",
+  "Stand: diesmal leider nicht dabei.": "Status: not selected this time.",
+  "Für die Bewerbung brauchst du ein Xyntal-Konto.": "You need a Xyntal account to apply.",
+  "Du hast dich schon beworben – deine erste Bewerbung zählt.": "You have already applied – your first application counts.",
   "Entdecke inzwischen die Projekte auf Xyntal": "Explore projects on Xyntal in the meantime"
 });
 
+window.XYNTAL_EN_PATTERNS.push([/^Eingegangen am (\S+)\. (.*)$/, (_, d, rest) => 'Received on ' + d + '. ' + (window.XYNTAL_EN[rest] || rest)]);
 window.XYNTAL_EN_PATTERNS.push([/^Erzähl mir etwas mehr über dein Vorhaben – mindestens (\d+) Zeichen\.$/, (_, n) => 'Tell me a little more about your plans — at least ' + n + ' characters.']);
 
 Object.assign(window.XYNTAL_EN, {

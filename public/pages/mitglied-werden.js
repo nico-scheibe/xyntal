@@ -1,5 +1,9 @@
 const form = document.getElementById("register");
 const status = document.getElementById("status");
+// Nach der Anmeldung weiter zum gewünschten Ziel – nur bekannte Seiten, sonst ins Profil
+const nextParam = new URLSearchParams(location.search).get("next") || "";
+const AFTER = /^[a-z-]{2,30}$/.test(nextParam) && !["login", "mitglied-werden"].includes(nextParam) ? nextParam : "profil?neu=1";
+if (AFTER !== "profil?neu=1") document.querySelectorAll('a[href="login"]').forEach((a) => { a.href = `login?next=${encodeURIComponent(AFTER)}`; });
 
 // Aus der Demo auf der Startseite: gewählte Rollen als Vorschlag für „Was suchst du gerade?“
 try {
@@ -13,7 +17,7 @@ try {
 
 renderAuthOptions(document.getElementById("auth-options"), {
   statusEl: document.getElementById("quick-status"),
-  redirectPath: "profil?neu=1",
+  redirectPath: AFTER,
   checkConsent: () => {
     if (!document.getElementById("quick-consent").checked) throw new Error("Bitte bestätige zuerst die Datenschutz-Einwilligung.");
   },
@@ -31,7 +35,7 @@ form.addEventListener("submit", (e) => {
       password: data.password,
       options: {
         data: profileFrom(data),
-        emailRedirectTo: new URL("profil?neu=1", location.href).href,
+        emailRedirectTo: new URL(AFTER, location.href).href,
       },
     }));
 
@@ -40,12 +44,12 @@ form.addEventListener("submit", (e) => {
       throw new Error("Mit dieser E-Mail gibt es schon ein Konto. Melde dich einfach an.");
     }
     if (result.session) {
-      location.href = "profil?neu=1";
+      location.href = AFTER;
       return;
     }
     form.innerHTML = `
       <div class="notice"><strong>Fast geschafft!</strong> Wir haben dir eine E-Mail an <strong>${esc(data.email)}</strong> geschickt.
-      Klick auf den Link darin, um deine Adresse zu bestätigen – danach ist dein Profil angelegt und wartet auf Freigabe.</div>`;
+      Klick auf den Link darin, um deine Adresse zu bestätigen – danach ist dein Profil angelegt${AFTER === "beta" ? " und du kannst dich für die Beta bewerben" : " und wartet auf Freigabe"}.</div>`;
     window.scrollTo({ top: form.offsetTop - 100 });
   });
 });
