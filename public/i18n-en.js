@@ -2195,7 +2195,7 @@ window.XYNTAL_EN = {
 
   // Tarif & KI-Guthaben (/tarif)
   "Die letzte Zahlung ist nicht durchgegangen. Begleiche die Rechnung im Abo-Portal, dann ist Xyntal wieder frei.": "The last payment didn't go through. Settle the invoice in the subscription portal to unlock Xyntal again.",
-  "Start ist kostenlos, so lange du willst. Bezahlte Tarife bringen mehr Arbeitsbereiche, Mitglieder, Speicher und ein KI-Budget pro Monat.": "Start is free for as long as you like. Paid plans add workspaces, members, storage and a monthly AI budget.",
+  "Start ist kostenlos, so lange du willst. Bezahlte Tarife bringen mehr Arbeitsbereiche, Mitglieder, Speicher und ein KI-Budget pro Monat.": "Starter is free for as long as you like. Paid plans add workspaces, members, storage and a monthly AI budget.",
   "Aktiv bis {date} – dann verlängert er sich, oder er endet, wenn er für eine feste Zeit gutgeschrieben wurde.": "Active until {date} – then it renews, or it ends if it was granted for a fixed time.",
   "Aktiv ohne Enddatum.": "Active with no end date.",
   "Dein Tarif": "Your plan",
@@ -2220,7 +2220,6 @@ window.XYNTAL_EN = {
   "Abrechnung": "Billing",
   "Monatlich": "Monthly",
   "Jährlich – zwei Monate gratis": "Yearly – two months free",
-  "Angebot fürs erste Upgrade: {pct} % auf den ersten Zeitraum, an der Kasse automatisch abgezogen.": "First-upgrade offer: {pct}% off the first period, taken off automatically at checkout.",
   "Endpreise. Es wird keine Umsatzsteuer berechnet (Kleinunternehmer nach § 19 UStG).": "Final prices. No VAT is charged (small business under § 19 UStG).",
   "Logg dich ein, um deinen Tarif und dein KI-Guthaben zu sehen.": "Log in to see your plan and your AI credit.",
   "Noch einmal versuchen": "Try again",

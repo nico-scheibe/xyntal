@@ -229,7 +229,6 @@
 .xm-plan { gap: 10px; }
 .xm-plan-price { margin: 0; font-size: 15px; color: var(--xm-text-2); }
 .xm-plan-price b { font-size: 24px; color: var(--text); font-variant-numeric: tabular-nums; }
-.xm-plan-price s { margin-right: 4px; }
 .xm-plan-features { margin: 0; padding-left: 18px; display: grid; gap: 4px; color: var(--xm-text-2); font-size: 13.5px; }
 .xm-warn-text, .xm-bad { color: var(--xm-low); }
 .xm-good { color: var(--xm-high); }
