@@ -15,7 +15,6 @@
   const notice = document.getElementById("notice");
   const QUICK = ["👍", "❤️", "😂", "🎉", "😮", "🙏"];
   const EMOJI = ["😀", "😂", "😊", "😍", "🤔", "😅", "😮", "😢", "😡", "👍", "👎", "👏", "🙏", "💪", "🎉", "🔥", "❤️", "💯", "✨", "🚀", "👀", "✅", "❌", "☕"];
-  const FILE_MAX = 10 * 1024 * 1024;
   const TAB = Math.random().toString(36).slice(2, 10);
   const BG_KEY = "xyntal-chat-bg";
   const CHAT_BGS = [["xyntal", "Xyntal"], ["space", "Weltall"], ["natur", "Natur"], ["tech", "Tech"], ["fun", "Fun"], ["none", "Ohne Muster"]];
@@ -730,14 +729,8 @@
     finally { btn.disabled = false; }
   }
   async function upload(file, name = file.name) {
-    if (file.size > FILE_MAX) throw new Error(`${t("Diese Datei ist zu groß (höchstens 10 MB):")} ${name}`);
-    const dataBase64 = await new Promise((resolve, reject) => {
-      const r = new FileReader();
-      r.onload = () => resolve(String(r.result).split(",")[1] || "");
-      r.onerror = () => reject(new Error(t("Die Datei konnte nicht gelesen werden.")));
-      r.readAsDataURL(file);
-    });
-    const { file: saved } = await X.api("POST", "/files", { name, mimeType: file.type || "application/octet-stream", dataBase64 });
+    // In Stücken über den App-Server: es gilt das Limit des Tarifs, der Server sagt vorher, wenn es nicht passt.
+    const { file: saved } = await X.upload(file, { name });
     return saved.id;
   }
   async function saveEdit(text) {
@@ -755,7 +748,6 @@
   function addFiles(files) {
     for (const file of files) {
       if (S.pending.length >= 10) break;
-      if (file.size > FILE_MAX) { say(`${t("Diese Datei ist zu groß (höchstens 10 MB):")} ${file.name}`, "error"); continue; }
       S.pending.push({ file, preview: /^image\//.test(file.type) ? URL.createObjectURL(file) : "" });
     }
     renderComposerTop(); syncSend();
