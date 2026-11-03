@@ -108,8 +108,8 @@ einen Fehler und behält die Eingabe. Prüfung ohne echte E-Mails: `node tests/b
 Ändert ein Admin im Admin-Bereich den Status einer Beta-Bewerbung (außer „Neu“), ruft die
 Seite `POST /api/beta-status-mail` mit dem Supabase-Token des Admins auf. Der Server liest die
 Bewerbung mit genau diesem Token aus Supabase; weil `beta_applications` per RLS nur für Admins
-lesbar ist, kann niemand sonst Mails auslösen. Dann schickt er dem Bewerber eine kurze
-Text-Mail über IONOS-SMTP (Port 465, TLS) und merkt in `mailed_status` / `mailed_at`, welcher
+lesbar ist, kann niemand sonst Mails auslösen. Dann schickt er dem Bewerber eine gestaltete
+HTML-Mail (mit Textfassung als Fallback) über IONOS-SMTP (Port 465, TLS) und merkt in `mailed_status` / `mailed_at`, welcher
 Status zuletzt gemailt wurde. Im Admin-Bereich gibt es außerdem je Bewerbung „Status-Mail senden“.
 
 Einrichtung in Daki: im Ordner `/home/container/xyntal` eine Datei `.smtp.env` anlegen (nie committen):
@@ -126,5 +126,6 @@ Dieselben Namen funktionieren auch als Umgebungsvariablen des Servers. `SMTP_FRO
 „Name <adresse>“ sein; die Adresse muss zum Postfach gehören. Ohne `SMTP_FROM` ist der Absender
 der Login mit dem Namen „Nico von Xyntal“. Ersatzweise werden die Einzeldateien `.ionos-user`,
 `.ionos-pass` und `.ionos-sender` gelesen. Vorher `supabase/migrations/20261103140000_beta_status_mail.sql`
-ausführen, danach Daki neu starten. Antworten gehen an das Postfach. Texte der Mails stehen in
-`server.cjs` (`STATUS_MAILS`). Prüfung ohne echte Mails: `node tests/beta-status-mail.cjs`.
+ausführen, danach Daki neu starten. Antworten gehen an das Postfach. Je Status gibt es eine eigene Mail mit Überschrift, Text, Akzentfarbe und Button
+(`STATUS_MAILS` in `server.cjs`, Look wie die Anmelde-Mails). Vorschau aller fünf Mails als HTML:
+`node tests/beta-status-mail-preview.cjs <Ordner>`. Prüfung ohne echte Mails: `node tests/beta-status-mail.cjs`.

@@ -16,3 +16,4 @@ supabase/.temp/
 .app-deploy/
 .app-data/
 auto-app-backend.cjs
+.mail-preview/

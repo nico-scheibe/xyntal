@@ -175,16 +175,46 @@ async function handleBetaFeedback(req, res) {
 // Wer die Mail auslösen darf, entscheidet Supabase: Die Bewerbung wird mit dem Token des Aufrufers gelesen,
 // und beta_applications ist per RLS nur für Admins lesbar.
 const STATUS_MAILS = {
-  in_pruefung: { subject: 'Deine Xyntal-Beta-Bewerbung ist in Prüfung', body: 'ich habe deine Bewerbung für die Xyntal-Beta gelesen und schaue sie mir gerade genauer an. Du hörst in den nächsten Tagen von mir.' },
-  eingeladen: { subject: 'Du bist zur Xyntal-Beta eingeladen', body: 'ich möchte dich gern in der Xyntal-Beta dabeihaben. Logg dich unter https://xyntal.de/login ein und vervollständige dein Profil, dann schalte ich dich frei.' },
-  warteliste: { subject: 'Du stehst auf der Warteliste für die Xyntal-Beta', body: 'danke für deine Bewerbung. Die erste Testrunde ist gerade voll, deshalb habe ich dich auf die Warteliste gesetzt. Sobald ein Platz frei wird, melde ich mich bei dir.' },
-  angenommen: { subject: 'Willkommen in der Xyntal-Beta', body: 'du bist dabei! Dein Konto ist für die Beta freigeschaltet. Unter https://xyntal.de/profil findest du jetzt die Desktop-App zum Download. Sag mir jederzeit, was gut läuft und was fehlt – dein Feedback kommt direkt bei mir an.' },
-  abgelehnt: { subject: 'Deine Xyntal-Beta-Bewerbung', body: 'danke, dass du dich für die Xyntal-Beta beworben hast. Diesmal kann ich dich leider nicht aufnehmen. Projekte, Gesuche und Nachrichten kannst du trotzdem mit deinem Konto nutzen, und ich melde mich, sobald es neue Plätze gibt.' },
+  in_pruefung: {
+    subject: 'Deine Xyntal-Beta-Bewerbung ist in Prüfung', kicker: 'Beta-Bewerbung · In Prüfung', accent: '#60a5fa',
+    heading: 'Ich schaue mir deine Bewerbung an.',
+    paragraphs: ['ich habe deine Bewerbung für die Xyntal-Beta gelesen und schaue sie mir gerade genauer an. Ich lese jede Bewerbung selbst, deshalb dauert das ein paar Tage.', 'Du hörst von mir, sobald ich entschieden habe. Bis dahin kannst du dein Profil schon einmal vervollständigen – das hilft mir bei der Einschätzung.'],
+    button: 'Mein Profil ansehen', link: 'https://xyntal.de/profil',
+  },
+  eingeladen: {
+    subject: 'Du bist zur Xyntal-Beta eingeladen', kicker: 'Beta-Bewerbung · Eingeladen', accent: '#a855f7',
+    heading: 'Du bist eingeladen.',
+    paragraphs: ['ich möchte dich gern in der Xyntal-Beta dabeihaben. Dein Vorhaben passt gut zu dem, was wir gerade testen.', 'Logg dich ein und vervollständige dein Profil: Was du baust, was du kannst und wen du suchst. Sobald das steht, schalte ich dich frei und du bekommst Zugang zur Desktop-App.'],
+    button: 'Jetzt einloggen', link: 'https://xyntal.de/login?next=profil',
+  },
+  warteliste: {
+    subject: 'Du stehst auf der Warteliste für die Xyntal-Beta', kicker: 'Beta-Bewerbung · Warteliste', accent: '#f59e0b',
+    heading: 'Du stehst auf der Warteliste.',
+    paragraphs: ['danke für deine Bewerbung. Die erste Testrunde ist gerade voll, deshalb habe ich dich auf die Warteliste gesetzt. Sobald ein Platz frei wird, melde ich mich bei dir.', 'Projekte, Gesuche und Nachrichten kannst du mit deinem Konto schon jetzt nutzen – so bist du nicht untätig, bis es losgeht.'],
+    button: 'Projekte entdecken', link: 'https://xyntal.de/projekte',
+  },
+  angenommen: {
+    subject: 'Willkommen in der Xyntal-Beta', kicker: 'Beta-Bewerbung · Angenommen', accent: '#34d399',
+    heading: 'Du bist dabei. Willkommen in der Beta!',
+    paragraphs: ['dein Konto ist für die Beta freigeschaltet. In deinem Profil findest du ab sofort die Desktop-App für Mac und Windows zum Download.', 'Probier alles aus, bau dein Projekt auf und sag mir, was gut läuft und was fehlt. Dein Feedback kommt direkt bei mir an und entscheidet mit, was als Nächstes gebaut wird.'],
+    button: 'Desktop-App herunterladen', link: 'https://xyntal.de/profil',
+  },
+  abgelehnt: {
+    subject: 'Deine Xyntal-Beta-Bewerbung', kicker: 'Beta-Bewerbung · Diesmal nicht', accent: '#8a8a95',
+    heading: 'Diesmal leider nicht.',
+    paragraphs: ['danke, dass du dich für die Xyntal-Beta beworben hast. Diesmal kann ich dich leider nicht aufnehmen – die Plätze der ersten Runde sind begrenzt und ich muss sehr eng auswählen.', 'Projekte, Gesuche und Nachrichten kannst du mit deinem Konto trotzdem nutzen. Und ich melde mich, sobald es neue Plätze gibt.'],
+    button: 'Projekte entdecken', link: 'https://xyntal.de/projekte',
+  },
 };
 const STATUS_LABELS = { in_pruefung: 'In Prüfung', eingeladen: 'Eingeladen', warteliste: 'Warteliste', angenommen: 'Angenommen', abgelehnt: 'Abgelehnt' };
+const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+// Gleicher Look wie die Anmelde-Mails (supabase/functions/send-auth-email): dunkle Karte, Farbverlauf, Logo, Button.
 function statusMailText(name, status) {
   const mail = STATUS_MAILS[status];
-  return { subject: mail.subject, text: ['Hallo ' + name + ',', '', mail.body, '', 'Stand deiner Bewerbung: ' + STATUS_LABELS[status], '', 'Viele Grüße', 'Nico von Xyntal', '', 'https://xyntal.de/beta · Antworte einfach auf diese E-Mail, wenn du Fragen hast.'].join('\n') };
+  const safeName = escapeHtml(name);
+  const text = ['Hallo ' + name + ',', '', ...mail.paragraphs.flatMap((p) => [p, '']), 'Stand deiner Bewerbung: ' + STATUS_LABELS[status], '', mail.button + ': ' + mail.link, '', 'Viele Grüße', 'Nico von Xyntal', '', 'Antworte einfach auf diese E-Mail, wenn du Fragen hast.', 'https://xyntal.de/impressum · https://xyntal.de/impressum#datenschutz'].join('\n');
+  const html = `<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><title>${escapeHtml(mail.subject)}</title></head><body style="margin:0;background:#07070b;color:#f5f5f7;font-family:Arial,sans-serif"><div style="display:none;max-height:0;overflow:hidden;opacity:0">${escapeHtml(mail.heading)} Stand deiner Bewerbung: ${STATUS_LABELS[status]}</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#07070b"><tr><td align="center" style="padding:40px 14px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px"><tr><td align="center" style="padding:0 0 26px"><a href="https://xyntal.de/"><img src="https://xyntal.de/email/logo.png" width="113" height="31" alt="Xyntal" style="display:block;border:0"></a></td></tr><tr><td style="padding:1px;border-radius:24px;background:#26262f"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="padding:40px;background:#121219;border-radius:23px"><div style="height:4px;background:linear-gradient(90deg,#a855f7,#ec4899,#6366f1);border-radius:4px"></div><p style="margin:28px 0 8px;color:${mail.accent};font-size:12px;letter-spacing:.08em;text-transform:uppercase">${escapeHtml(mail.kicker)}</p><h1 style="margin:0 0 16px;font-size:30px;line-height:1.15">${escapeHtml(mail.heading)}</h1><p style="margin:0 0 16px;color:#f5f5f7;font-size:16px;line-height:1.6">Hallo ${safeName},</p>${mail.paragraphs.map((p) => `<p style="margin:0 0 16px;color:#b4b4be;font-size:16px;line-height:1.6">${escapeHtml(p)}</p>`).join('')}<table role="presentation" cellpadding="0" cellspacing="0" style="margin:12px 0 28px"><tr><td style="padding:12px 16px;border-radius:14px;background:#1a1a23;border:1px solid #26262f"><span style="color:#8a8a95;font-size:12px;letter-spacing:.08em;text-transform:uppercase">Stand deiner Bewerbung</span><br><span style="color:${mail.accent};font-size:16px;font-weight:bold">${STATUS_LABELS[status]}</span></td></tr></table><a href="${escapeHtml(mail.link)}" style="display:inline-block;padding:16px 26px;border-radius:999px;background:#a855f7;background-image:linear-gradient(100deg,#a855f7,#ec4899 50%,#6366f1);color:#fff;font-weight:bold;text-decoration:none">${escapeHtml(mail.button)} &rarr;</a><hr style="margin:28px 0 16px;border:0;border-top:1px solid #26262f"><p style="margin:0 0 6px;color:#f5f5f7;font-size:14px;line-height:1.5">Viele Grüße<br>Nico von Xyntal</p><p style="margin:0;color:#8a8a95;font-size:13px;line-height:1.5">Antworte einfach auf diese E-Mail, wenn du Fragen hast.</p></td></tr></table></td></tr><tr><td align="center" style="padding:24px 10px 0;color:#8a8a95;font-size:12px">Stop swiping. <span style="color:#e879f9">Start building.</span><br><a href="https://xyntal.de/impressum" style="color:#8a8a95">Impressum</a> · <a href="https://xyntal.de/impressum#datenschutz" style="color:#8a8a95">Datenschutz</a></td></tr></table></td></tr></table></body></html>`;
+  return { subject: mail.subject, text, html };
 }
 // Supabase-Adresse und öffentlicher Schlüssel kommen aus der veröffentlichten config.js, damit nichts doppelt gepflegt wird.
 function supabaseConfig() {
@@ -198,7 +228,15 @@ function supabaseConfig() {
 }
 // Kleiner SMTP-Client für IONOS (Port 465, TLS von Anfang an). Keine Abhängigkeiten nötig.
 const b64 = (s) => Buffer.from(s, 'utf8').toString('base64');
-function smtpSend({ host, port, user, pass, from, fromName, to, subject, text }) {
+// Text immer, HTML dazu als multipart/alternative; alles base64, damit Umlaute und lange Zeilen sicher ankommen.
+const wrap76 = (s) => b64(s).replace(/.{76}/g, '$&\r\n');
+function mimeBody(text, html) {
+  const part = (type, content) => ['Content-Type: ' + type + '; charset=UTF-8', 'Content-Transfer-Encoding: base64', '', wrap76(content)];
+  if (!html) return part('text/plain', text);
+  const boundary = 'xy-' + Date.now().toString(36) + Math.random().toString(36).slice(2);
+  return ['Content-Type: multipart/alternative; boundary="' + boundary + '"', '', '--' + boundary, ...part('text/plain', text), '', '--' + boundary, ...part('text/html', html), '', '--' + boundary + '--'];
+}
+function smtpSend({ host, port, user, pass, from, fromName, to, subject, text, html }) {
   return new Promise((resolve, reject) => {
     const socket = tls.connect({ host, port, servername: host });
     let buffer = '', step = 0, finished = false;
@@ -211,8 +249,7 @@ function smtpSend({ host, port, user, pass, from, fromName, to, subject, text })
       'Subject: =?UTF-8?B?' + b64(subject) + '?=',
       'Date: ' + new Date().toUTCString(),
       'Message-ID: <' + Date.now() + '.' + Math.random().toString(36).slice(2) + '@' + from.split('@')[1] + '>',
-      'MIME-Version: 1.0', 'Content-Type: text/plain; charset=UTF-8', 'Content-Transfer-Encoding: base64', '',
-      b64(text).replace(/.{76}/g, '$&\r\n'),
+      'MIME-Version: 1.0', ...mimeBody(text, html),
     ].join('\r\n');
     const steps = [
       [220, 'EHLO xyntal.de'], [250, 'AUTH LOGIN'], [334, b64(user)], [334, b64(pass)], [235, 'MAIL FROM:<' + from + '>'],
@@ -291,8 +328,8 @@ async function handleBetaStatusMail(req, res) {
     if (!application) return feedbackJson(res, 403, { error: 'Bewerbung nicht gefunden oder keine Admin-Rechte.' });
     if (!STATUS_MAILS[application.status]) return feedbackJson(res, 200, { ok: true, skipped: true, reason: 'Für den Status „Neu“ gibt es keine Mail.' });
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(application.email) || /[\r\n<>]/.test(application.name || '')) return feedbackJson(res, 400, { error: 'Bewerberdaten unbrauchbar.' });
-    const { subject, text } = statusMailText(application.name || 'du', application.status);
-    await statusMailTransport.send({ ...smtp, to: application.email, subject, text });
+    const { subject, text, html } = statusMailText(application.name || 'du', application.status);
+    await statusMailTransport.send({ ...smtp, to: application.email, subject, text, html });
     // Merken, welcher Status zuletzt gemailt wurde (Spalten aus 20261103140000_beta_status_mail.sql)
     const mark = await fetch(config.url + '/rest/v1/beta_applications?id=eq.' + application.id, {
       method: 'PATCH', headers: { ...headers, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
