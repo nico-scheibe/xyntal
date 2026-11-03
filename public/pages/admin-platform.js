@@ -1,0 +1,958 @@
+// /admin – Plattform: derselbe Admin-Bereich wie in der Xyntal-App, über den App-Server
+// (app-api.js, api.xyntal.de). Jeder Bereich spricht genau die Routen, die auch die
+// Desktop-App nutzt (server/src/admin/*); die Rechte prüft ausschließlich der Server –
+// die Seitenleiste blendet nur aus, was die eigene Staff-Rolle ohnehin nicht darf.
+// Die Website-Bereiche (Warteliste, Karten, Beta) bleiben in admin.js.
+(() => {
+  const X = window.XyntalApp;
+  if (!X) return;
+  const { esc } = X;
+  const api = (method, path, body) => X.api(method, path, body);
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const panel = (key) => document.querySelector(`[data-panel="${key}"]`);
+  const q = (params) => {
+    const u = new URLSearchParams();
+    for (const [k, v] of Object.entries(params)) if (v !== undefined && v !== null && v !== "") u.set(k, v);
+    const s = u.toString();
+    return s ? `?${s}` : "";
+  };
+
+  const S = {
+    me: null, role: null, matrix: {}, staff: false,
+    stats: null, flags: [],
+    users: { query: "", list: [], detail: null },
+    workspaces: { list: [], members: new Map(), open: "" },
+    projects: [], conversations: [],
+    support: { tickets: [], filter: { status: "", mine: false, archived: false }, open: "", detail: null },
+    reports: { status: "open", list: [] },
+    access: { scope: "active", grants: [] },
+    audit: { action: "", query: "", entries: [] },
+    announcements: [],
+    console: { lines: [], history: [], pos: -1, pending: null, pendingText: "" },
+  };
+
+  // ---------- Hilfen ----------
+  const ROLE_LABEL = { owner: "Inhaber", admin: "Admin", moderator: "Moderator", support: "Support", analyst: "Analyst" };
+  const roleLabel = (r) => (r ? ROLE_LABEL[r] || r : "Mitglied");
+  const can = (perm) => !perm || (S.role && Array.isArray(S.matrix[S.role]) && S.matrix[S.role].includes(perm));
+  const num = (n) => Number(n || 0).toLocaleString("de-DE");
+  const fmt = (iso) => { if (!iso) return "–"; const d = new Date(iso); return Number.isNaN(d.getTime()) ? "–" : d.toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" }); };
+  const day = (iso) => { if (!iso) return "–"; const d = new Date(iso); return Number.isNaN(d.getTime()) ? "–" : d.toLocaleDateString("de-DE", { dateStyle: "medium" }); };
+  function ago(iso) {
+    const ms = Date.now() - new Date(iso).getTime();
+    if (!Number.isFinite(ms) || ms < 60000) return "gerade eben";
+    const m = Math.floor(ms / 60000); if (m < 60) return `vor ${m} Min.`;
+    const h = Math.floor(m / 60); if (h < 24) return `vor ${h} Std.`;
+    return `vor ${Math.floor(h / 24)} T.`;
+  }
+  function bytes(n) {
+    n = Number(n || 0);
+    if (n < 1024) return `${n} B`;
+    if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+    if (n < 1024 * 1024 * 1024) return `${(n / 1024 / 1024).toFixed(1)} MB`;
+    return `${(n / 1024 / 1024 / 1024).toFixed(2)} GB`;
+  }
+  function duration(seconds) {
+    seconds = Number(seconds || 0);
+    const d = Math.floor(seconds / 86400), h = Math.floor((seconds % 86400) / 3600), m = Math.floor((seconds % 3600) / 60);
+    return d ? `${d} T. ${h} Std.` : h ? `${h} Std. ${m} Min.` : `${m} Min.`;
+  }
+  const initials = (name) => (String(name || "?").trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join("") || "?").toUpperCase();
+  const pill = (text, tone = "") => `<span class="ad-pill ${tone ? `ad-pill-${tone}` : ""}">${esc(text)}</span>`;
+  const empty = (text) => `<p class="ad-empty">${esc(text)}</p>`;
+  const loading = (text = "Wird geladen …") => `<p class="ad-loading" role="status">${esc(text)}</p>`;
+  const head = (kicker, title, text, actions = "") => `
+    <div class="panel-heading"><div><p class="admin-kicker">${esc(kicker)}</p><h2>${esc(title)}</h2>${text ? `<p class="hint">${esc(text)}</p>` : ""}</div>${actions ? `<div class="row-actions">${actions}</div>` : ""}</div>`;
+  const stat = (label, value, hint = "", tone = "") => `<article class="ad-stat ${tone ? `ad-stat-${tone}` : ""}"><b>${esc(value)}</b><span>${esc(label)}</span>${hint ? `<small>${esc(hint)}</small>` : ""}</article>`;
+  const table = (cols, rows) => `<div class="table-wrap"><table><thead><tr>${cols.map((c) => `<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${rows}</tbody></table></div>`;
+
+  function reason(err) {
+    if (!err) return "Das hat nicht geklappt.";
+    if (err.code === "SIGNED_OUT" || err.code === "TWOFA_CANCELLED") return "Bitte logg dich ein.";
+    if (err.status === 403) return "Deine Rolle erlaubt das nicht.";
+    if (err.code === "NETWORK") return "Der App-Server ist gerade nicht erreichbar.";
+    return err.message || "Das hat nicht geklappt.";
+  }
+  // Statuszeile oben im Bereich (Ergebnis einer Aktion)
+  function say(key, text, ok = true) {
+    const p = panel(key); if (!p) return;
+    let line = p.querySelector("[data-ad-message]");
+    if (!line) { line = document.createElement("p"); line.className = "admin-message"; line.dataset.adMessage = "1"; line.setAttribute("role", "status"); p.prepend(line); }
+    line.classList.toggle("is-error", !ok);
+    line.textContent = text;
+  }
+
+  // Dialog mit Feldern (Grund, Dauer, Passwort …). Löst mit den Werten auf, null bei Abbruch.
+  function ask({ title, text = "", fields = [], confirm = "Bestätigen", danger = false }) {
+    return new Promise((resolve) => {
+      const dlg = document.createElement("dialog");
+      dlg.className = "ad-dialog";
+      dlg.innerHTML = `<form method="dialog" class="ad-dialog-body">
+        <h2>${esc(title)}</h2>${text ? `<p>${esc(text)}</p>` : ""}
+        ${fields.map((f) => {
+          if (f.type === "select") return `<label>${esc(f.label)}<select name="${esc(f.name)}">${f.options.map(([v, l]) => `<option value="${esc(v)}" ${f.value === v ? "selected" : ""}>${esc(l)}</option>`).join("")}</select></label>`;
+          if (f.type === "textarea") return `<label>${esc(f.label)}<textarea name="${esc(f.name)}" maxlength="${f.max || 500}" ${f.required ? "required" : ""} placeholder="${esc(f.placeholder || "")}"></textarea></label>`;
+          if (f.type === "checkbox") return `<label class="ad-check"><input type="checkbox" name="${esc(f.name)}"> ${esc(f.label)}</label>`;
+          return `<label>${esc(f.label)}<input name="${esc(f.name)}" type="${esc(f.type || "text")}" ${f.required ? "required" : ""} maxlength="${f.max || 500}" placeholder="${esc(f.placeholder || "")}" value="${esc(f.value || "")}" ${f.type === "password" ? 'autocomplete="current-password"' : ""}></label>`;
+        }).join("")}
+        <div class="ad-row"><button class="btn btn-small ${danger ? "ad-btn-danger" : ""}" value="ok">${esc(confirm)}</button><button class="btn btn-small btn-ghost" value="cancel" formnovalidate>Abbrechen</button></div>
+      </form>`;
+      document.body.append(dlg);
+      dlg.addEventListener("close", () => {
+        const out = {};
+        if (dlg.returnValue === "ok") for (const f of fields) {
+          const el = dlg.querySelector(`[name="${f.name}"]`);
+          out[f.name] = f.type === "checkbox" ? el.checked : (el.value || "").trim();
+        }
+        dlg.remove();
+        resolve(dlg.returnValue === "ok" ? out : null);
+      });
+      dlg.showModal();
+      const first = dlg.querySelector("input, textarea, select"); if (first) first.focus();
+    });
+  }
+  // Fensterchen mit Inhalt (Verlauf, Kontext)
+  function modal(title, html) {
+    const dlg = document.createElement("dialog");
+    dlg.className = "ad-dialog ad-dialog-wide";
+    dlg.innerHTML = `<div class="ad-dialog-body"><div class="ad-dialog-head"><h2>${esc(title)}</h2><button type="button" class="ad-close" aria-label="Schließen">×</button></div><div class="ad-dialog-content">${html}</div></div>`;
+    document.body.append(dlg);
+    dlg.querySelector(".ad-close").addEventListener("click", () => dlg.close());
+    dlg.addEventListener("click", (e) => { if (e.target === dlg) dlg.close(); });
+    dlg.addEventListener("close", () => dlg.remove());
+    dlg.showModal();
+    return dlg;
+  }
+
+  // ---------- Start: eigenes Konto und Rechte ----------
+  const platformTabs = [...document.querySelectorAll("[data-tab][data-platform]")];
+  const platformKeys = platformTabs.map((b) => b.dataset.tab);
+  let readyResolve;
+  window.XyntalAdminPlatform = { ready: new Promise((r) => { readyResolve = r; }) };
+
+  function gate(text) {
+    for (const key of platformKeys) {
+      const p = panel(key); if (p) p.innerHTML = `<div class="admin-empty"><span aria-hidden="true">⌘</span><h3>Plattform-Verwaltung</h3><p>${esc(text)}</p></div>`;
+    }
+    readyResolve({ staff: false });
+  }
+
+  async function boot() {
+    try { S.me = await X.me(); }
+    catch (err) {
+      gate(err && (err.code === "SIGNED_OUT" || err.code === "TWOFA_CANCELLED") ? "Bitte logg dich ein, um die Plattform zu verwalten."
+        : err && err.code === "NETWORK" ? "Der App-Server ist gerade nicht erreichbar." : reason(err));
+      return;
+    }
+    if (!S.me.staffRole) { gate("Dein App-Konto hat keine Staff-Rolle. Rollen vergibt ein Inhaber in der App oder hier unter „Nutzer“."); return; }
+    try { const r = await api("GET", "/admin/rbac"); S.matrix = r.matrix || {}; S.role = r.role || S.me.staffRole; }
+    catch (err) { gate(reason(err)); return; }
+    S.staff = true;
+    const badge = document.getElementById("admin-role");
+    if (badge) { badge.textContent = roleLabel(S.role); badge.hidden = false; }
+    for (const b of platformTabs) if (!can(b.dataset.perm)) b.hidden = true;
+    readyResolve({ staff: true });
+    const current = platformTabs.find((b) => b.getAttribute("aria-selected") === "true");
+    if (current) open(current.dataset.tab);
+    loadCounts();
+  }
+
+  async function loadCounts() {
+    try {
+      const { stats } = await api("GET", "/admin/stats");
+      S.stats = stats;
+      const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v ? `(${num(v)})` : ""; };
+      set("c-users", stats.users); set("c-projects", stats.projects); set("c-workspaces", stats.workspaces);
+      set("c-support", stats.openTickets); set("c-reports", stats.openReports);
+    } catch { /* Zahlen sind Beiwerk */ }
+  }
+
+  const loaders = {};
+  function open(key) {
+    if (!S.staff || !loaders[key]) return;
+    const b = platformTabs.find((t) => t.dataset.tab === key);
+    if (b && !can(b.dataset.perm)) { panel(key).innerHTML = empty("Deine Rolle erlaubt diesen Bereich nicht."); return; }
+    loaders[key]();
+  }
+  for (const b of platformTabs) b.addEventListener("click", () => open(b.dataset.tab));
+
+  // ---------- Übersicht ----------
+  loaders.platform = async () => {
+    const p = panel("platform");
+    p.innerHTML = loading();
+    try {
+      const [{ stats }, flags, audit] = await Promise.all([
+        api("GET", "/admin/stats"),
+        api("GET", "/admin/flags").then((r) => r.flags).catch(() => []),
+        can("audit.view") ? api("GET", "/admin/audit").then((r) => r.entries.slice(0, 8)).catch(() => []) : Promise.resolve([]),
+      ]);
+      S.stats = stats; S.flags = flags;
+      const FLAGS = [["communities", "Communities", "Öffentliche Community-Räume und Mitgliedschaft."], ["discover", "Entdecken", "Der Entdecken-Feed mit Arbeitsbereichen und Leuten."], ["ai", "KI", "KI-Assistent und Generierung."]];
+      const on = (k) => flags.some((f) => f.key === k && f.enabled);
+      const countries = (stats.usersByCountry || []).slice(0, 12);
+      const max = Math.max(1, ...countries.map((c) => c.count));
+      p.innerHTML = `
+        ${head("PLATTFORM", "Übersicht", "Die Plattform auf einen Blick: Konten, Aktivität und Moderationslast.", `<button data-act="refresh">Aktualisieren</button>`)}
+        <div class="ad-stats">
+          ${stat("Nutzer", num(stats.users), `${num(stats.newUsers24h)} neu in 24 Std.`)}
+          ${stat("Staff", num(stats.staff))}
+          ${stat("Verifiziert", num(stats.verifiedUsers))}
+          ${stat("Gesperrt", num(stats.bannedUsers), "", stats.bannedUsers ? "warn" : "")}
+          ${stat("Aktive Sitzungen", num(stats.activeSessions))}
+          ${stat("Arbeitsbereiche", num(stats.workspaces))}
+          ${stat("Projekte", num(stats.projects))}
+          ${stat("Gespräche", num(stats.conversations), `${num(stats.messages)} Nachrichten`)}
+          ${stat("Offene Tickets", num(stats.openTickets), "", stats.openTickets ? "accent" : "")}
+          ${stat("Offene Meldungen", num(stats.openReports), "", stats.openReports ? "warn" : "")}
+          ${stat("Fehlgeschlagene Logins (24h)", num(stats.loginFails24h), "", stats.loginFails24h >= 10 ? "warn" : "")}
+          ${stat("KI-Anfragen (24h)", num(stats.aiRequests24h))}
+        </div>
+        <div class="ad-cols">
+          <section class="ad-card">
+            <h3>Feature-Flags</h3><p class="hint">Bereiche für alle ein- oder ausschalten. Änderungen gelten sofort.</p>
+            <ul class="ad-list">${FLAGS.map(([k, l, d]) => `<li><div><b>${esc(l)}</b><small>${esc(d)}</small></div><button class="ad-switch" role="switch" aria-checked="${on(k)}" data-flag="${k}" ${can("flags.manage") ? "" : "disabled"} aria-label="${esc(l)} ${on(k) ? "ausschalten" : "einschalten"}"><i></i></button></li>`).join("")}</ul>
+          </section>
+          <section class="ad-card">
+            <h3>Mitglieder nach Land</h3><p class="hint">Selbst angegebene Länder im Profil.</p>
+            ${countries.length ? `<ul class="ad-bars">${countries.map((c) => `<li><span>${esc(c.code)}</span><i style="width:${Math.round((c.count / max) * 100)}%"></i><b>${num(c.count)}</b></li>`).join("")}</ul>` : empty("Noch keine Länderangaben.")}
+          </section>
+        </div>
+        ${can("audit.view") ? `<section class="ad-card"><div class="ad-card-head"><h3>Letzte Admin-Aktionen</h3><button data-goto="audit">Audit-Log</button></div>
+          ${audit.length ? `<ul class="ad-feed">${audit.map((a) => `<li><code>${esc(a.action)}</code><span>${esc(a.actor || a.actorEmail || "System")}</span>${a.reason ? `<em>${esc(a.reason)}</em>` : ""}<small title="${esc(fmt(a.createdAt))}">${esc(ago(a.createdAt))}</small></li>`).join("")}</ul>` : empty("Noch nichts.")}</section>` : ""}`;
+      p.querySelector('[data-act="refresh"]').addEventListener("click", () => { loaders.platform(); loadCounts(); });
+      p.querySelectorAll("[data-flag]").forEach((b) => b.addEventListener("click", async () => {
+        const next = b.getAttribute("aria-checked") !== "true";
+        b.disabled = true;
+        try { await api("POST", "/admin/flags", { key: b.dataset.flag, enabled: next }); b.setAttribute("aria-checked", String(next)); say("platform", `Flag „${b.dataset.flag}“ ${next ? "eingeschaltet" : "ausgeschaltet"}.`); }
+        catch (err) { say("platform", reason(err), false); }
+        finally { b.disabled = false; }
+      }));
+    } catch (err) { p.innerHTML = head("PLATTFORM", "Übersicht", "") + empty(reason(err)); }
+  };
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-goto]"); if (!b) return;
+    document.querySelector(`[data-tab="${b.dataset.goto}"]`)?.click();
+  });
+
+  // ---------- Nutzer ----------
+  loaders.users = async () => {
+    const p = panel("users");
+    if (!p.querySelector("[data-users-list]")) {
+      p.innerHTML = `${head("KONTEN", "Nutzer", "Konten suchen, Sitzungen und Verlauf prüfen und handeln. Jede Aktion landet im Audit-Log.")}
+        <div class="admin-filters"><label class="admin-search">Nutzer suchen<input type="search" data-users-search placeholder="Name, E-Mail oder @handle" value="${esc(S.users.query)}"></label></div>
+        <div data-users-list>${loading()}</div><div data-user-detail hidden></div>`;
+      let timer;
+      p.querySelector("[data-users-search]").addEventListener("input", (e) => { clearTimeout(timer); S.users.query = e.target.value; timer = setTimeout(loadUsers, 250); });
+      p.querySelector("[data-users-list]").addEventListener("click", (e) => { const row = e.target.closest("[data-user-id]"); if (row) openUser(row.dataset.userId); });
+      p.querySelector("[data-user-detail]").addEventListener("click", userDetailClick);
+      p.querySelector("[data-user-detail]").addEventListener("submit", userDetailSubmit);
+    }
+    await loadUsers();
+  };
+  async function loadUsers() {
+    const list = $("[data-users-list]", panel("users"));
+    try {
+      const { users } = await api("GET", `/admin/users${q({ q: S.users.query })}`);
+      S.users.list = users;
+      list.innerHTML = users.length ? table(["Konto", "Rolle & Status", "Sitzungen", "Dabei seit"], users.map((u) => `
+        <tr data-user-id="${esc(u.id)}" tabindex="0" class="ad-clickable">
+          <td><div class="ad-person"><span class="admin-avatar">${esc(initials(u.displayName))}</span><div><b>${esc(u.displayName || "(ohne Namen)")}</b>${u.handle ? ` <small>@${esc(u.handle)}</small>` : ""}<br><small>${esc(u.email)}</small></div></div></td>
+          <td>${pill(roleLabel(u.staffRole), u.staffRole ? "accent" : "")} ${u.verified ? pill("Verifiziert", "ok") : ""} ${u.banned ? pill(u.bannedUntil ? `Gesperrt bis ${fmt(u.bannedUntil)}` : "Gesperrt", "danger") : ""} ${u.mutedUntil !== null && u.mutedUntil !== undefined ? pill(u.mutedUntil ? `Stumm bis ${fmt(u.mutedUntil)}` : "Stumm", "warn") : ""}</td>
+          <td>${num(u.activeSessions)}</td><td><small>${esc(day(u.createdAt))}</small></td></tr>`).join(""))
+        : empty(S.users.query ? "Kein Konto passt zu dieser Suche." : "Noch keine Konten.");
+    } catch (err) { list.innerHTML = empty(reason(err)); }
+  }
+  async function openUser(id) {
+    const box = $("[data-user-detail]", panel("users"));
+    box.hidden = false; box.innerHTML = loading("Konto wird geladen …"); box.scrollIntoView({ behavior: "smooth", block: "start" });
+    try { S.users.detail = await api("GET", `/admin/users/${encodeURIComponent(id)}`); renderUser(); }
+    catch (err) { box.innerHTML = `<div class="ad-card">${empty(reason(err))}<button data-act="close">Schließen</button></div>`; }
+  }
+  function renderUser() {
+    const d = S.users.detail, u = d.user, box = $("[data-user-detail]", panel("users"));
+    const me = u.id === S.me.id;
+    const roleOpts = [["none", "Mitglied (keine Staff-Rolle)"], ...Object.keys(ROLE_LABEL).map((r) => [r, ROLE_LABEL[r]])];
+    box.innerHTML = `<section class="ad-card ad-detail">
+      <div class="ad-card-head"><div class="ad-person"><span class="admin-avatar">${esc(initials(u.displayName))}</span><div><h3>${esc(u.displayName)}${u.handle ? ` <small>@${esc(u.handle)}</small>` : ""}</h3><small>${esc(u.email)} · dabei seit ${esc(day(u.createdAt))} · 2FA ${u.twoFactor ? "an" : "aus"}</small></div></div><button data-act="close">Schließen</button></div>
+      <div class="ad-badges">${pill(roleLabel(u.staffRole), u.staffRole ? "accent" : "")}${u.verified ? pill("Verifiziert", "ok") : ""}${u.banned ? pill(u.bannedUntil ? `Gesperrt bis ${fmt(u.bannedUntil)}` : "Gesperrt", "danger") : ""}${u.mutedUntil !== null && u.mutedUntil !== undefined ? pill(u.mutedUntil ? `Stumm bis ${fmt(u.mutedUntil)}` : "Stumm", "warn") : ""}</div>
+      ${u.headline || u.bio || u.location || u.website || u.github ? `<p class="ad-bio">${[u.headline, u.location, u.website, u.github].filter(Boolean).map(esc).join(" · ")}${u.bio ? `<br><span>${esc(u.bio)}</span>` : ""}</p>` : ""}
+      <div class="ad-stats ad-stats-sm">
+        ${stat("Arbeitsbereiche (Inhaber)", num(d.counts.workspacesOwned))}${stat("Mitgliedschaften", num(d.counts.memberships))}${stat("Tickets", num(d.counts.tickets))}
+        ${stat("Follower", num(d.counts.followers))}${stat("Folgt", num(d.counts.following))}${stat("Meldungen gegen", num(d.counts.reportsAgainst), "", d.counts.reportsAgainst ? "warn" : "")}
+      </div>
+      <h4>Aktionen</h4>
+      <div class="row-actions ad-actions">
+        ${can("users.verify") ? `<button data-act="verify" data-on="${u.verified}">${u.verified ? "Verifizierung entfernen" : "Verifizieren"}</button>` : ""}
+        ${can("users.ban") && !me ? `<button data-act="warn">Verwarnen</button>` : ""}
+        ${can("users.ban") && !me ? (u.banned ? `<button data-act="unban">Sperre aufheben</button>` : `<button class="admin-danger" data-act="ban">Sperren</button>`) : ""}
+        ${can("users.ban") && !me ? (u.mutedUntil !== null && u.mutedUntil !== undefined ? `<button data-act="unmute">Stummschaltung aufheben</button>` : `<button data-act="mute">Stummschalten</button>`) : ""}
+        ${can("users.reset2fa") ? `<button data-act="reset2fa">2FA zurücksetzen</button>` : ""}
+        ${can("users.ban") ? `<button data-act="kill">Alle Sitzungen beenden</button>` : ""}
+        ${can("users.ban") ? `<button data-act="alts">Verknüpfte Konten</button>` : ""}
+        ${can("users.delete") && !me && u.staffRole !== "owner" ? `<button class="admin-danger" data-act="delete">Konto löschen</button>` : ""}
+      </div>
+      ${can("staff.manage") && !me ? `<form class="ad-inline" data-form="role"><label>Staff-Rolle<select name="staffRole">${roleOpts.map(([v, l]) => `<option value="${v}" ${(u.staffRole || "none") === v ? "selected" : ""}>${esc(l)}</option>`).join("")}</select></label><label>Grund<input name="reason" maxlength="500" placeholder="optional"></label><button>Rolle setzen</button></form>` : ""}
+      <div class="ad-cols">
+        <section><h4>Sitzungen (${d.sessions.length})</h4>${d.sessions.length ? `<ul class="ad-list ad-list-plain">${d.sessions.map((s) => `<li><div><b>${esc(s.deviceName || "Gerät")}</b><small>${esc(s.ip || "")} · zuletzt ${esc(ago(s.lastSeenAt || s.createdAt))}</small></div></li>`).join("")}</ul>` : empty("Keine aktiven Sitzungen.")}</section>
+        <section><h4>Letzte Anmeldungen</h4>${d.authEvents.length ? `<ul class="ad-list ad-list-plain">${d.authEvents.map((e) => `<li><div><b>${esc(e.type)}</b><small>${esc([e.ip, e.device].filter(Boolean).join(" · "))} · ${esc(fmt(e.createdAt))}</small></div></li>`).join("")}</ul>` : empty("Keine Ereignisse.")}</section>
+        <section><h4>Verwarnungen (${d.warnings.length})</h4>${d.warnings.length ? `<ul class="ad-list ad-list-plain">${d.warnings.map((w) => `<li><div><b>${esc(w.reason)}</b><small>${esc(w.actor || "Staff")} · ${esc(fmt(w.createdAt))}</small></div></li>`).join("")}</ul>` : empty("Keine Verwarnungen.")}</section>
+        <section><h4>Offene Meldungen (${d.openReports.length})</h4>${d.openReports.length ? `<ul class="ad-list ad-list-plain">${d.openReports.map((r) => `<li><div><b>${esc(r.reason)}</b><small>von ${esc(r.reporter || "?")} · ${esc(fmt(r.createdAt))}</small></div></li>`).join("")}</ul>` : empty("Keine offenen Meldungen.")}</section>
+        <section><h4>Arbeitsbereiche (${d.memberships.length})</h4>${d.memberships.length ? `<ul class="ad-list ad-list-plain">${d.memberships.map((m) => `<li><div><b>${esc(m.name)}</b><small>${esc(m.role)}${m.slug ? ` · ${esc(m.slug)}` : ""}</small></div></li>`).join("")}</ul>` : empty("In keinem Arbeitsbereich.")}</section>
+        ${Array.isArray(d.notes) ? `<section><h4>Staff-Notizen (${d.notes.length})</h4><p class="hint">Nur Staff sieht diese Notizen.</p>
+          <form class="ad-inline" data-form="note"><textarea name="body" maxlength="2000" required placeholder="Was das Team über dieses Konto wissen sollte …"></textarea><button>Notiz hinzufügen</button></form>
+          ${d.notes.length ? `<ul class="ad-list ad-list-plain">${d.notes.map((n) => `<li><div><b>${esc(n.body)}</b><small>${esc(n.author ? n.author.displayName : "Staff")} · ${esc(fmt(n.createdAt))}</small></div><button data-act="note-delete" data-note="${esc(n.id)}" aria-label="Notiz löschen">Löschen</button></li>`).join("")}</ul>` : ""}</section>` : ""}
+      </div></section>`;
+  }
+  async function userAction(label, fn) {
+    try { await fn(); say("users", label); const id = S.users.detail && S.users.detail.user.id; await loadUsers(); if (id) await openUser(id); }
+    catch (err) { say("users", reason(err), false); }
+  }
+  const DURATIONS = [["", "Unbefristet"], ["30", "30 Minuten"], ["720", "12 Stunden"], ["1440", "1 Tag"], ["10080", "7 Tage"], ["20160", "2 Wochen"], ["43200", "30 Tage"]];
+  async function userDetailClick(e) {
+    const b = e.target.closest("button[data-act]"); if (!b) return;
+    const d = S.users.detail; if (!d && b.dataset.act !== "close") return;
+    const u = d && d.user, id = u && encodeURIComponent(u.id), name = u && u.displayName;
+    switch (b.dataset.act) {
+      case "close": { const box = $("[data-user-detail]", panel("users")); box.hidden = true; box.innerHTML = ""; S.users.detail = null; return; }
+      case "verify": { const next = b.dataset.on !== "true"; return userAction(next ? `${name} ist jetzt verifiziert.` : `Verifizierung von ${name} entfernt.`, () => api("POST", `/admin/users/${id}/verify`, { verified: next })); }
+      case "warn": { const a = await ask({ title: `${name} verwarnen`, text: "Die Person sieht die Verwarnung sofort in der App.", fields: [{ name: "reason", label: "Grund", type: "textarea", required: true }], confirm: "Verwarnen" }); if (!a) return;
+        return userAction(`${name} wurde verwarnt und benachrichtigt.`, () => api("POST", `/admin/users/${id}/warn`, { reason: a.reason })); }
+      case "ban": { const a = await ask({ title: `${name} sperren`, text: "Alle Sitzungen werden beendet. Ein Grund ist Pflicht.", danger: true, confirm: "Sperren", fields: [
+          { name: "reason", label: "Grund", type: "textarea", required: true }, { name: "duration", label: "Dauer", type: "select", options: DURATIONS },
+          { name: "banDevice", label: "Auch die Geräte des Kontos blockieren", type: "checkbox" }, { name: "banIp", label: "Auch die Netzwerke des Kontos blockieren", type: "checkbox" }] }); if (!a) return;
+        return userAction(`${name} ist gesperrt.`, () => api("POST", `/admin/users/${id}/ban`, { banned: true, reason: a.reason, durationMinutes: a.duration ? Number(a.duration) : undefined, banDevice: a.banDevice, banIp: a.banIp })); }
+      case "unban": return userAction(`Sperre von ${name} aufgehoben.`, () => api("POST", `/admin/users/${id}/ban`, { banned: false }));
+      case "mute": { const a = await ask({ title: `${name} stummschalten`, text: "Das Konto kann lesen, aber keine Nachrichten, Reaktionen oder Beiträge schreiben.", confirm: "Stummschalten", fields: [{ name: "duration", label: "Dauer", type: "select", options: DURATIONS }, { name: "reason", label: "Grund", type: "textarea" }] }); if (!a) return;
+        return userAction(`${name} ist stummgeschaltet.`, () => api("POST", `/admin/users/${id}/mute`, { durationMinutes: a.duration ? Number(a.duration) : undefined, reason: a.reason })); }
+      case "unmute": return userAction(`${name} kann wieder schreiben.`, () => api("POST", `/admin/users/${id}/unmute`, {}));
+      case "reset2fa": { const a = await ask({ title: `2FA von ${name} zurücksetzen`, text: "Authenticator und Wiederherstellungscodes werden entfernt; die Person kann sich mit dem Passwort anmelden.", confirm: "Zurücksetzen", fields: [{ name: "reason", label: "Grund", type: "textarea" }] }); if (!a) return;
+        return userAction(`2FA von ${name} zurückgesetzt.`, () => api("POST", `/admin/users/${id}/reset-2fa`, { reason: a.reason })); }
+      case "kill": { const a = await ask({ title: `Alle Sitzungen von ${name} beenden`, text: "Die Person wird überall sofort abgemeldet.", confirm: "Sitzungen beenden", fields: [{ name: "reason", label: "Grund", type: "textarea" }] }); if (!a) return;
+        return userAction(`Sitzungen von ${name} beendet.`, () => api("POST", `/admin/users/${id}/kill-sessions`, { reason: a.reason })); }
+      case "alts": {
+        try {
+          const r = await api("GET", `/admin/users/${id}/linked`);
+          modal(`Verknüpfte Konten von ${name}`, `<p class="hint">Konten, die in den letzten 90 Tagen dasselbe Gerät oder Netzwerk genutzt haben. Ein geteiltes Netzwerk kann auch ein Büro oder Haushalt sein; ein geteiltes Gerät sagt mehr.</p>
+            <p><small>Geräte: ${num(r.devices.length)} · Netzwerke: ${num(r.ips.length)}</small></p>
+            ${r.accounts.length ? `<ul class="ad-list ad-list-plain">${r.accounts.map((a) => `<li><div><b>${esc(a.displayName || a.email)}</b><small>${esc(a.email)}${a.handle ? ` · @${esc(a.handle)}` : ""} · ${esc((a.via || []).map((v) => (v === "device" ? "gleiches Gerät" : "gleiches Netzwerk")).join(", "))}</small></div></li>`).join("")}</ul>` : empty("Kein anderes Konto hat dasselbe Gerät oder Netzwerk genutzt.")}`);
+        } catch (err) { say("users", reason(err), false); }
+        return;
+      }
+      case "delete": { const a = await ask({ title: `Konto von ${name} löschen`, text: "Unwiderruflich: Sitzungen, Mitgliedschaften und Nachrichten werden mit entfernt. Bestätige mit deinem Passwort.", danger: true, confirm: "Endgültig löschen", fields: [{ name: "reason", label: "Grund", type: "textarea", required: true }, { name: "password", label: "Dein Passwort", type: "password", required: true }] }); if (!a) return;
+        try { await api("POST", `/admin/users/${id}/delete`, { reason: a.reason, password: a.password }); say("users", `Konto von ${name} gelöscht.`); $("[data-user-detail]", panel("users")).hidden = true; S.users.detail = null; await loadUsers(); loadCounts(); }
+        catch (err) { say("users", reason(err), false); }
+        return; }
+      case "note-delete": return userAction("Notiz gelöscht.", () => api("DELETE", `/admin/users/${id}/notes/${encodeURIComponent(b.dataset.note)}`));
+      default: return;
+    }
+  }
+  async function userDetailSubmit(e) {
+    const form = e.target.closest("form[data-form]"); if (!form) return;
+    e.preventDefault();
+    const u = S.users.detail.user, id = encodeURIComponent(u.id);
+    if (form.dataset.form === "role") {
+      const v = form.staffRole.value;
+      return userAction(`Staff-Rolle von ${u.displayName}: ${v === "none" ? "Mitglied" : roleLabel(v)}.`, () => api("POST", `/admin/users/${id}/staff-role`, { staffRole: v, reason: form.reason.value }));
+    }
+    if (form.dataset.form === "note") return userAction("Notiz hinzugefügt. Nur Staff sieht sie.", () => api("POST", `/admin/users/${id}/notes`, { body: form.body.value }));
+  }
+
+  // ---------- Konsole ----------
+  const COMMANDS = [
+    ["help", "", "help [Befehl]", "Befehle auflisten oder einen erklären."],
+    ["user", "users.view", "user <@handle|E-Mail|ID>", "Konto anzeigen: Status, Rolle, Verwarnungen, Meldungen, Arbeitsbereiche."],
+    ["ban", "users.ban", "ban <Konto> [Dauer] <Grund> [--device] [--ip]", "Konto sperren, dauerhaft oder befristet (30m, 12h, 7d, 2w). --device und --ip blockieren auch Anmeldung und Registrierung von den Geräten und Netzwerken des Kontos. Fragt vorher nach."],
+    ["unban", "users.ban", "unban <Konto>", "Sperre aufheben."],
+    ["warn", "users.ban", "warn <Konto> <Grund>", "Konto verwarnen. Die Person sieht die Verwarnung in der App."],
+    ["mute", "users.ban", "mute <Konto> [Dauer] [Grund]", "Konto stummschalten: lesen ja, Nachrichten, Reaktionen und Beiträge nein."],
+    ["unmute", "users.ban", "unmute <Konto>", "Stummschaltung aufheben."],
+    ["kick", "content.moderate", "kick <Konto> <Arbeitsbereich> [Grund]", "Konto aus einem seiner Arbeitsbereiche entfernen. Fragt vorher nach."],
+    ["alts", "users.ban", "alts <Konto>", "Andere Konten, die dasselbe Gerät oder Netzwerk genutzt haben."],
+    ["reports", "reports.handle", "reports", "Offene Meldungen auflisten."],
+    ["note", "users.notes", "note <Konto> [Text]", "Staff-Notiz zu einem Konto; ohne Text werden die Notizen gelistet."],
+    ["audit", "audit.view", "audit [Konto]", "Die letzten Audit-Einträge, oder die zu einem Konto."],
+    ["clear", "", "clear", "Konsole leeren."],
+  ];
+  loaders.console = () => {
+    const p = panel("console");
+    if (p.querySelector("[data-console]")) return;
+    p.innerHTML = `${head("MODERATION", "Konsole", "Moderation per Befehl. Jeder Befehl wird auf dem Server gegen deine Rolle geprüft und ins Audit-Log geschrieben.")}
+      <div class="ad-console" data-console>
+        <div class="ad-console-log" data-log role="log" aria-live="polite" aria-label="Konsolenausgabe"></div>
+        <form class="ad-console-form" data-console-form><span class="ad-prompt" aria-hidden="true">›</span><input data-console-input autocomplete="off" spellcheck="false" placeholder="help, user @handle, note @handle Text, ban @handle 7d Grund …" aria-label="Konsolenbefehl"><button>Ausführen</button></form>
+        <p class="hint">Konten per @handle, E-Mail oder ID ansprechen. Dauern: 30m, 12h, 7d, 2w, perm. Ein führender / ist erlaubt.</p>
+      </div>`;
+    const input = p.querySelector("[data-console-input]");
+    p.querySelector("[data-console-form]").addEventListener("submit", (e) => { e.preventDefault(); const v = input.value; input.value = ""; submitConsole(v); });
+    input.addEventListener("keydown", (e) => {
+      const h = S.console.history;
+      if (e.key === "ArrowUp" && h.length) { e.preventDefault(); S.console.pos = S.console.pos < 0 ? h.length - 1 : Math.max(0, S.console.pos - 1); input.value = h[S.console.pos]; }
+      else if (e.key === "ArrowDown" && S.console.pos >= 0) { e.preventDefault(); S.console.pos = S.console.pos + 1 >= h.length ? -1 : S.console.pos + 1; input.value = S.console.pos < 0 ? "" : h[S.console.pos]; }
+      else if (e.key === "Tab" && input.value && !input.value.includes(" ")) { const m = COMMANDS.map((c) => c[0]).filter((c) => c.startsWith(input.value.replace(/^\//, ""))); if (m.length === 1) { e.preventDefault(); input.value = `${m[0]} `; } }
+    });
+    renderConsole();
+    if (!S.console.lines.length) print("info", "Tipp help ein, um die Befehle deiner Rolle zu sehen.");
+    input.focus();
+  };
+  function print(kind, text) {
+    S.console.lines.push({ kind, text });
+    if (S.console.lines.length > 500) S.console.lines.splice(0, S.console.lines.length - 500);
+    renderConsole();
+  }
+  function renderConsole() {
+    const log = $("[data-log]", panel("console")); if (!log) return;
+    log.innerHTML = S.console.lines.map((l) => `<div class="ad-line ad-line-${l.kind}">${l.kind === "input" ? "<span>›</span> " : ""}${esc(l.text)}</div>`).join("")
+      + (S.console.pending ? `<div class="ad-line ad-line-ask">${esc(S.console.pendingText)} — y zum Bestätigen, alles andere bricht ab.</div>` : "");
+    log.scrollTop = log.scrollHeight;
+  }
+  const DUR_RE = /^(\d+)(m|h|d|w)$/i;
+  function parseDur(token) {
+    if (!token) return undefined;
+    if (/^perm(anent)?$/i.test(token)) return null;
+    const m = DUR_RE.exec(token); if (!m) return undefined;
+    return Number(m[1]) * { m: 1, h: 60, d: 1440, w: 10080 }[m[2].toLowerCase()];
+  }
+  async function resolveUser(term) {
+    try { return (await api("GET", `/admin/users/resolve${q({ q: term })}`)).user; }
+    catch (err) {
+      if (err.status === 409 && err.details && Array.isArray(err.details.candidates)) {
+        print("error", "Mehrere Konten passen – nutze @handle, E-Mail oder ID:");
+        for (const c of err.details.candidates) print("info", `  ${c.displayName} · ${c.email}${c.handle ? ` · @${c.handle}` : ""} · ${c.id}`);
+        return null;
+      }
+      print("error", err.status === 404 ? "Kein Konto passt dazu." : reason(err));
+      return null;
+    }
+  }
+  async function submitConsole(raw) {
+    const line = raw.trim(); if (!line) return;
+    print("input", line);
+    const h = S.console.history; if (!h.length || h[h.length - 1] !== line) h.push(line); if (h.length > 100) h.shift(); S.console.pos = -1;
+    if (S.console.pending) {
+      const fn = S.console.pending; S.console.pending = null; S.console.pendingText = "";
+      if (/^(y|yes|j|ja|\/confirm)$/i.test(line)) { try { await fn(); } catch (err) { print("error", reason(err)); } }
+      else print("info", "Abgebrochen.");
+      renderConsole(); return;
+    }
+    const args = line.replace(/^\//, "").split(/\s+/);
+    const name = args.shift().toLowerCase();
+    const cmd = COMMANDS.find((c) => c[0] === name);
+    if (!cmd) { print("error", `Unbekannter Befehl ${name}. Tipp help ein.`); return; }
+    if (!can(cmd[1])) { print("error", "Deine Rolle erlaubt diesen Befehl nicht."); return; }
+    const need = (n) => { if (args.length < n) { print("error", `Aufruf: ${cmd[2]}`); return false; } return true; };
+    try {
+      switch (name) {
+        case "help": {
+          if (args[0]) { const c = COMMANDS.find((x) => x[0] === args[0].replace(/^\//, "")); if (c) { print("info", c[2]); print("info", c[3]); } else print("error", `Unbekannter Befehl ${args[0]}.`); return; }
+          for (const c of COMMANDS) if (can(c[1])) print("info", `${c[2].padEnd(46)} ${c[3]}`);
+          return;
+        }
+        case "clear": S.console.lines = []; renderConsole(); return;
+        case "user": {
+          if (!need(1)) return; const u = await resolveUser(args[0]); if (!u) return;
+          const d = await api("GET", `/admin/users/${encodeURIComponent(u.id)}`);
+          const x = d.user;
+          print("ok", `${x.displayName}${x.handle ? ` (@${x.handle})` : ""} · ${x.email}`);
+          print("info", `Konto-ID: ${x.id}`); print("info", `Staff-Rolle: ${roleLabel(x.staffRole)}`);
+          print("info", `Status: ${x.banned ? (x.bannedUntil ? `gesperrt bis ${fmt(x.bannedUntil)}` : "dauerhaft gesperrt") : "aktiv"}${x.mutedUntil !== null && x.mutedUntil !== undefined ? ` · stumm${x.mutedUntil ? ` bis ${fmt(x.mutedUntil)}` : ""}` : ""}${x.verified ? " · verifiziert" : ""}`);
+          print("info", `Dabei seit ${day(x.createdAt)} · 2FA ${x.twoFactor ? "an" : "aus"} · ${d.sessions.length} aktive Sitzung(en)`);
+          print("info", `Verwarnungen: ${d.warnings.length} · offene Meldungen gegen das Konto: ${d.openReports.length}${Array.isArray(d.notes) ? ` · Staff-Notizen: ${d.notes.length}` : ""}`);
+          print("info", `Arbeitsbereiche: ${d.memberships.length ? d.memberships.map((m) => `${m.name} (${m.role})`).join(", ") : "keine"}`);
+          return;
+        }
+        case "ban": {
+          if (!need(2)) return;
+          const flags = { banDevice: false, banIp: false };
+          const rest = args.slice(1).filter((a) => { if (a === "--device") { flags.banDevice = true; return false; } if (a === "--ip") { flags.banIp = true; return false; } if (a.startsWith("--")) { print("error", `Unbekannte Option ${a}. ban kennt --device und --ip.`); return false; } return true; });
+          const u = await resolveUser(args[0]); if (!u) return;
+          let minutes = parseDur(rest[0]); const durToken = minutes !== undefined ? rest.shift() : "";
+          const why = rest.join(" ").trim();
+          if (!why) { print("error", `Eine Sperre braucht einen Grund. Aufruf: ${cmd[2]}`); return; }
+          S.console.pendingText = minutes ? `${u.displayName} für ${durToken} sperren? Grund: ${why}` : `${u.displayName} dauerhaft sperren? Grund: ${why}`;
+          S.console.pending = async () => {
+            const r = await api("POST", `/admin/users/${encodeURIComponent(u.id)}/ban`, { banned: true, reason: why, durationMinutes: minutes || undefined, ...flags });
+            print("ok", r.until ? `${u.displayName} ist bis ${fmt(r.until)} gesperrt. Die Sitzungen wurden beendet.` : `${u.displayName} ist dauerhaft gesperrt. Die Sitzungen wurden beendet.`);
+            if (r.devices || r.ips) print("info", `Ebenfalls blockiert: ${r.devices || 0} Gerät(e), ${r.ips || 0} Netzwerk(e).`);
+            loadCounts();
+          };
+          renderConsole(); return;
+        }
+        case "unban": { if (!need(1)) return; const u = await resolveUser(args[0]); if (!u) return;
+          const r = await api("POST", `/admin/users/${encodeURIComponent(u.id)}/ban`, { banned: false }); print("ok", r.changed ? `${u.displayName} ist nicht mehr gesperrt.` : `${u.displayName} war nicht gesperrt.`); return; }
+        case "warn": { if (!need(2)) return; const u = await resolveUser(args[0]); if (!u) return;
+          const r = await api("POST", `/admin/users/${encodeURIComponent(u.id)}/warn`, { reason: args.slice(1).join(" ") }); print("ok", `${u.displayName} wurde verwarnt und benachrichtigt. Verwarnungen bisher: ${r.warnings}.`); return; }
+        case "mute": { if (!need(1)) return; const u = await resolveUser(args[0]); if (!u) return;
+          const rest = args.slice(1); let minutes = parseDur(rest[0]); if (minutes !== undefined) rest.shift();
+          const r = await api("POST", `/admin/users/${encodeURIComponent(u.id)}/mute`, { durationMinutes: minutes || undefined, reason: rest.join(" ") });
+          print("ok", r.until ? `${u.displayName} ist bis ${fmt(r.until)} stummgeschaltet.` : `${u.displayName} ist stummgeschaltet, bis du es mit unmute aufhebst.`); return; }
+        case "unmute": { if (!need(1)) return; const u = await resolveUser(args[0]); if (!u) return;
+          const r = await api("POST", `/admin/users/${encodeURIComponent(u.id)}/unmute`, {}); print("ok", r.changed ? `${u.displayName} kann wieder schreiben.` : `${u.displayName} war nicht stummgeschaltet.`); return; }
+        case "kick": { if (!need(2)) return; const u = await resolveUser(args[0]); if (!u) return;
+          const ws = args[1], why = args.slice(2).join(" ");
+          S.console.pendingText = `${u.displayName} aus dem Arbeitsbereich „${ws}“ entfernen?`;
+          S.console.pending = async () => {
+            try { const r = await api("POST", `/admin/users/${encodeURIComponent(u.id)}/kick`, { workspace: ws, reason: why }); print("ok", `${u.displayName} wurde aus „${r.workspace.name}“ entfernt und benachrichtigt.`); }
+            catch (err) { if (err.status === 409 && err.details && err.details.candidates) { print("error", "Mehrere Arbeitsbereiche passen – nutze die ID:"); for (const c of err.details.candidates) print("info", `  ${c.name} · ${c.id}`); } else throw err; }
+          };
+          renderConsole(); return;
+        }
+        case "alts": { if (!need(1)) return; const u = await resolveUser(args[0]); if (!u) return;
+          const r = await api("GET", `/admin/users/${encodeURIComponent(u.id)}/linked`);
+          print("info", `${u.displayName} nutzte (letzte 90 Tage): Geräte ${r.devices.length} · Netzwerke ${r.ips.length}`);
+          if (!r.accounts.length) { print("ok", "Kein anderes Konto hat dasselbe Gerät oder Netzwerk genutzt."); return; }
+          print("info", "Andere Konten auf demselben Gerät oder Netzwerk:");
+          for (const a of r.accounts) print("info", `  ${a.displayName || a.email} · ${a.email}${a.handle ? ` · @${a.handle}` : ""} · ${(a.via || []).map((v) => (v === "device" ? "Gerät" : "Netzwerk")).join(" + ")}${a.banned ? " · gesperrt" : ""}`);
+          print("info", "Ein geteiltes Netzwerk kann auch ein Büro oder Haushalt sein; ein geteiltes Gerät sagt mehr.");
+          return; }
+        case "reports": { const { reports } = await api("GET", "/admin/reports?status=open");
+          if (!reports.length) { print("ok", "Keine offenen Meldungen."); return; }
+          for (const r of reports) print("info", `${r.targetType}: ${r.targetLabel || r.targetId} · ${r.reason} · von ${r.reporter || "?"} · ${ago(r.createdAt)}`);
+          print("info", "Erledigen unter „Meldungen“."); return; }
+        case "note": { if (!need(1)) return; const u = await resolveUser(args[0]); if (!u) return;
+          const text = args.slice(1).join(" ").trim();
+          if (text) { await api("POST", `/admin/users/${encodeURIComponent(u.id)}/notes`, { body: text }); print("ok", `Notiz zu ${u.displayName} hinzugefügt. Nur Staff sieht sie.`); return; }
+          const { notes } = await api("GET", `/admin/users/${encodeURIComponent(u.id)}/notes`);
+          if (!notes.length) { print("info", `Noch keine Notizen zu ${u.displayName}. Hinzufügen mit: note ${args[0]} <Text>`); return; }
+          print("info", `Notizen zu ${u.displayName} (${notes.length}):`);
+          for (const n of notes) print("info", `  ${fmt(n.createdAt)} · ${n.author ? n.author.displayName : "Staff"}: ${n.body}`);
+          return; }
+        case "audit": {
+          let path = "/admin/audit", label = "Letzte Audit-Einträge:";
+          if (args[0]) { const u = await resolveUser(args[0]); if (!u) return; path += q({ target: u.id }); label = `Audit-Einträge zu ${u.displayName}:`; }
+          const { entries } = await api("GET", path);
+          if (!entries.length) { print("info", "Keine Audit-Einträge."); return; }
+          print("info", label);
+          for (const a of entries.slice(0, 25)) print("info", `  ${fmt(a.createdAt)} · ${a.action} · ${a.actor || a.actorEmail || "System"} → ${a.target || ""}${a.reason ? ` · ${a.reason}` : ""}`);
+          return;
+        }
+        default: return;
+      }
+    } catch (err) { print("error", reason(err)); }
+  }
+
+  // ---------- Rollen ----------
+  loaders.roles = () => {
+    const p = panel("roles");
+    const PERMS = [["users.view", "Nutzer ansehen"], ["users.role", "Rollen ändern"], ["users.ban", "Nutzer sperren"], ["users.verify", "Nutzer verifizieren"], ["users.delete", "Nutzer löschen"], ["users.reset2fa", "2FA zurücksetzen"], ["users.notes", "Staff-Notizen"],
+      ["staff.manage", "Staff verwalten"], ["billing.manage", "Tarife zuweisen"], ["oversight.view", "Übersicht"], ["content.moderate", "Inhalte moderieren"], ["workspaces.delete", "Arbeitsbereiche löschen"], ["reports.handle", "Meldungen bearbeiten"], ["tickets.handle", "Tickets bearbeiten"],
+      ["security.view", "Sicherheit"], ["announcements.manage", "Ankündigungen"], ["flags.manage", "Feature-Flags"], ["ai.view", "KI-Protokolle"], ["audit.view", "Audit-Log"],
+      ["view_support_threads", "Geteilte Support-Gespräche"], ["view_reported_messages", "Gemeldete Nachrichten"], ["emergency_message_access", "Notfallzugriff auf Nachrichten"]];
+    const roles = Object.keys(ROLE_LABEL);
+    p.innerHTML = `${head("RECHTE", "Rollen & Berechtigungen", "Was jede Staff-Rolle darf. Rollen werden pro Konto unter „Nutzer“ vergeben. Der Server setzt jede Berechtigung durch – diese Tabelle spiegelt sie nur. Deine Rolle ist hervorgehoben.")}
+      ${table(["Berechtigung", ...roles.map((r) => ROLE_LABEL[r])], PERMS.map(([perm, label]) => `<tr><td>${esc(label)}<br><small><code>${esc(perm)}</code></small></td>${roles.map((r) => `<td class="${r === S.role ? "ad-me" : ""}">${(S.matrix[r] || []).includes(perm) ? '<span class="ad-yes">✓</span>' : '<span class="ad-no" aria-label="nicht erteilt">–</span>'}</td>`).join("")}</tr>`).join(""))}`;
+  };
+
+  // ---------- Projekte ----------
+  loaders.projects = async () => {
+    const p = panel("projects");
+    p.innerHTML = `${head("AUFSICHT", "Projekte", "Alle Projekte über alle Arbeitsbereiche. Archivieren, löschen oder wiederherstellen – jede Aktion mit Grund im Audit-Log.")}
+      <div class="admin-filters"><label class="admin-search">Projekte filtern<input type="search" data-filter placeholder="Name, Inhaber, Arbeitsbereich …"></label></div><div data-list>${loading()}</div>`;
+    const render = () => {
+      const f = (p.querySelector("[data-filter]").value || "").toLowerCase();
+      const rows = S.projects.filter((x) => !f || [x.name, x.owner, x.ownerEmail, x.workspaceName].some((v) => String(v || "").toLowerCase().includes(f)));
+      p.querySelector("[data-list]").innerHTML = rows.length ? table(["Projekt", "Arbeitsbereich", "Inhaber", "Status", "Erstellt", "Aktionen"], rows.map((x) => `<tr>
+        <td><b>${esc(x.name || "Ohne Titel")}</b></td><td>${esc(x.workspaceName)}</td><td>${esc(x.owner)}<br><small>${esc(x.ownerEmail)}</small></td>
+        <td>${x.deleted ? pill("Gelöscht", "danger") : x.archived ? pill("Archiviert", "warn") : pill(x.status || "Aktiv", "ok")}</td><td><small>${esc(day(x.createdAt))}</small></td>
+        <td><div class="row-actions">${can("content.moderate") ? (x.deleted ? `<button data-act="restore" data-id="${esc(x.id)}">Wiederherstellen</button>` : `${x.archived ? `<button data-act="unarchive" data-id="${esc(x.id)}">Aus Archiv holen</button>` : `<button data-act="archive" data-id="${esc(x.id)}">Archivieren</button>`}<button class="admin-danger" data-act="delete" data-id="${esc(x.id)}">Löschen</button>`) : ""}</div></td></tr>`).join(""))
+        : empty(S.projects.length ? "Kein Projekt passt zum Filter." : "Noch keine Projekte.");
+    };
+    p.querySelector("[data-filter]").addEventListener("input", render);
+    p.querySelector("[data-list]").addEventListener("click", async (e) => {
+      const b = e.target.closest("button[data-act]"); if (!b) return;
+      const x = S.projects.find((y) => y.id === b.dataset.id); if (!x) return;
+      const L = { archive: ["archivieren", "Archivieren"], unarchive: ["aus dem Archiv holen", "Aus Archiv holen"], delete: ["löschen", "Löschen"], restore: ["wiederherstellen", "Wiederherstellen"] };
+      const [verb, confirm] = L[b.dataset.act];
+      const a = await ask({ title: `„${x.name}“ ${verb}`, text: b.dataset.act === "delete" ? "Das Projekt wird für Mitglieder unsichtbar; es kann wiederhergestellt werden." : "", danger: b.dataset.act === "delete", confirm, fields: [{ name: "reason", label: "Grund", type: "textarea" }] }); if (!a) return;
+      try { await api("POST", `/admin/projects/${encodeURIComponent(x.id)}/action`, { action: b.dataset.act, reason: a.reason }); say("projects", `„${x.name}“: ${verb} erledigt.`); await loaders.projects(); loadCounts(); }
+      catch (err) { say("projects", reason(err), false); }
+    });
+    try { S.projects = (await api("GET", "/admin/projects")).projects; render(); }
+    catch (err) { p.querySelector("[data-list]").innerHTML = empty(reason(err)); }
+  };
+
+  // ---------- Arbeitsbereiche ----------
+  loaders.workspaces = async () => {
+    const p = panel("workspaces");
+    p.innerHTML = `${head("AUFSICHT", "Arbeitsbereiche", "Alle Arbeitsbereiche der Plattform. Eine Zeile anklicken zeigt die Mitglieder; archivieren oder wiederherstellen mit Grund im Audit-Log.")}
+      <div class="admin-filters"><label class="admin-search">Arbeitsbereiche filtern<input type="search" data-filter placeholder="Name, Inhaber, Typ …"></label></div><div data-list>${loading()}</div>`;
+    const render = () => {
+      const f = (p.querySelector("[data-filter]").value || "").toLowerCase();
+      const rows = S.workspaces.list.filter((x) => !f || [x.name, x.owner, x.ownerEmail, x.type].some((v) => String(v || "").toLowerCase().includes(f)));
+      p.querySelector("[data-list]").innerHTML = rows.length ? table(["Arbeitsbereich", "Typ", "Inhaber", "Mitglieder", "Projekte", "Elemente", "Speicher", "Aktionen"], rows.map((x) => {
+        const members = S.workspaces.members.get(x.id);
+        return `<tr class="ad-clickable" data-ws="${esc(x.id)}" tabindex="0"><td><b>${esc(x.name || "Ohne Titel")}</b>${x.archived ? ` ${pill("Archiviert", "warn")}` : ""}<br><small>seit ${esc(day(x.createdAt))}</small></td><td>${esc(x.type || "")}</td><td>${esc(x.owner)}<br><small>${esc(x.ownerEmail)}</small></td>
+          <td>${num(x.memberCount)}</td><td>${num(x.projectCount)}</td><td>${num(x.itemCount)}</td><td>${esc(bytes(x.storageBytes))}</td>
+          <td><div class="row-actions">${can("content.moderate") ? (x.archived ? `<button data-act="restore" data-id="${esc(x.id)}">Wiederherstellen</button>` : `<button data-act="archive" data-id="${esc(x.id)}">Archivieren</button>`) : ""}${can("workspaces.delete") && x.archived ? `<button class="admin-danger" data-act="purge" data-id="${esc(x.id)}">Endgültig löschen</button>` : ""}</div></td></tr>
+          ${S.workspaces.open === x.id ? `<tr class="ad-subrow"><td colspan="8">${members === undefined ? loading("Mitglieder werden geladen …") : members.length ? `<ul class="ad-list ad-list-plain ad-list-inline">${members.map((m) => `<li><div><b>${esc(m.displayName)}</b><small>${esc(m.email)} · ${esc(m.role)} · seit ${esc(day(m.joinedAt))}</small></div></li>`).join("")}</ul>` : empty("Keine Mitglieder geladen.")}</td></tr>` : ""}`;
+      }).join("")) : empty(S.workspaces.list.length ? "Kein Arbeitsbereich passt zum Filter." : "Noch keine Arbeitsbereiche.");
+    };
+    p.querySelector("[data-filter]").addEventListener("input", render);
+    p.querySelector("[data-list]").addEventListener("click", async (e) => {
+      const b = e.target.closest("button[data-act]");
+      if (!b) {
+        const row = e.target.closest("[data-ws]"); if (!row) return;
+        const id = row.dataset.ws;
+        S.workspaces.open = S.workspaces.open === id ? "" : id; render();
+        if (S.workspaces.open && !S.workspaces.members.has(id)) {
+          try { S.workspaces.members.set(id, (await api("GET", `/admin/workspaces/${encodeURIComponent(id)}/members`)).members); } catch { S.workspaces.members.set(id, []); }
+          render();
+        }
+        return;
+      }
+      const x = S.workspaces.list.find((y) => y.id === b.dataset.id); if (!x) return;
+      try {
+        if (b.dataset.act === "purge") {
+          const a = await ask({ title: "Arbeitsbereich endgültig löschen", text: `„${x.name}“ wird mit allen Projekten, Aufgaben, Dateien, Chats und Mitgliedschaften gelöscht (${num(x.memberCount)} Mitglieder, ${num(x.projectCount)} Projekte). Das lässt sich nicht rückgängig machen.`, danger: true, confirm: "Endgültig löschen",
+            fields: [{ name: "confirmName", label: `Zur Bestätigung den Namen eingeben: ${x.name}`, required: true }, { name: "reason", label: "Grund", type: "textarea", required: true }] }); if (!a) return;
+          const r = await api("POST", `/admin/workspaces/${encodeURIComponent(x.id)}/delete`, { confirmName: a.confirmName, reason: a.reason });
+          say("workspaces", `„${x.name}“ gelöscht: ${num(r.removed.members)} Mitgliedschaften, ${num(r.removed.projects)} Projekte, ${num(r.removed.files)} Dateien.`);
+        } else {
+          const archive = b.dataset.act === "archive";
+          const a = await ask({ title: archive ? "Arbeitsbereich archivieren" : "Arbeitsbereich wiederherstellen", text: archive ? `„${x.name}“ archivieren? Mitglieder verlieren den Zugriff, bis er wiederhergestellt wird.` : `„${x.name}“ für seine Mitglieder wiederherstellen?`, confirm: archive ? "Archivieren" : "Wiederherstellen", fields: [{ name: "reason", label: "Grund", type: "textarea" }] }); if (!a) return;
+          await api("POST", `/admin/workspaces/${encodeURIComponent(x.id)}/action`, { action: b.dataset.act, reason: a.reason });
+          say("workspaces", `„${x.name}“ ${archive ? "archiviert" : "wiederhergestellt"}.`);
+        }
+        await loaders.workspaces(); loadCounts();
+      } catch (err) { say("workspaces", reason(err), false); }
+    });
+    try { S.workspaces.list = (await api("GET", "/admin/workspaces")).workspaces; render(); }
+    catch (err) { p.querySelector("[data-list]").innerHTML = empty(reason(err)); }
+  };
+
+  // ---------- Gesprächsverlauf (Support-Freigabe, Notfallzugriff) ----------
+  function messageList(messages, highlightId = "") {
+    return messages.length ? `<ol class="ad-thread">${messages.map((m) => `<li class="${m.id === highlightId ? "is-reported" : ""} ${m.deletedAt || m.deleted ? "is-deleted" : ""}"><b>${esc(m.author || "?")}</b><small>${esc(fmt(m.createdAt || m.ts || m.time))}${m.deletedAt || m.deleted ? " · gelöscht" : ""}${m.kind && m.kind !== "text" ? ` · ${esc(m.kind)}` : ""}</small><p>${esc(m.body || (m.gif ? "GIF" : ""))}</p></li>`).join("")}</ol>` : empty("Keine Nachrichten in diesem Fenster.");
+  }
+  async function openThread(conversationId) {
+    try {
+      const r = await api("GET", `/admin/conversations/${encodeURIComponent(conversationId)}/thread?limit=40`);
+      const via = r.via === "emergency" ? "Notfallzugriff" : r.via === "consent" ? "vom Mitglied geteilt" : r.via === "report" ? "gemeldete Nachricht" : r.via || "";
+      modal(r.conversation.title || "Gespräch", `<p class="hint">Zugriff: ${esc(via)} · bis ${esc(fmt(r.grant.expiresAt))}${r.grant.reason ? ` · Grund: ${esc(r.grant.reason)}` : ""}. Jeder Aufruf wird im Audit-Log festgehalten.</p>
+        <p><small>Mitglieder: ${r.members.map((m) => esc(m.displayName)).join(", ")}</small></p>${messageList(r.messages)}${r.hasMore ? '<p class="hint">Ältere Nachrichten gibt es in der App.</p>' : ""}`);
+    } catch (err) { modal("Gespräch", empty(reason(err))); }
+  }
+
+  // ---------- Support ----------
+  const T_STATUS = { Open: "Offen", "In Progress": "In Arbeit", Waiting: "Wartet", Resolved: "Gelöst", Closed: "Geschlossen" };
+  const T_PRIO = { Low: "Niedrig", Normal: "Normal", High: "Hoch", Urgent: "Dringend" };
+  const prioTone = (p) => (p === "Urgent" ? "danger" : p === "High" ? "warn" : "");
+  loaders.support = async () => {
+    const p = panel("support");
+    if (!p.querySelector("[data-queue]")) {
+      p.innerHTML = `${head("SUPPORT", "Support", "Die ganze Warteschlange: antworten, interne Notizen, Status und Priorität setzen, Tickets dir zuweisen.")}
+        <div class="card-filters" data-support-filters>
+          <button data-sf="status" data-v="" aria-pressed="true">Warteschlange</button>${Object.entries(T_STATUS).filter(([k]) => k !== "Closed").map(([k, l]) => `<button data-sf="status" data-v="${k}" aria-pressed="false">${esc(l)}</button>`).join("")}
+          <button data-sf="archived" aria-pressed="false">Geschlossen</button><button data-sf="mine" aria-pressed="false">Mir zugewiesen</button>
+        </div>
+        <div class="ad-split"><div data-queue>${loading()}</div><div data-ticket><p class="ad-empty">Wähle ein Ticket, um das Gespräch zu sehen.</p></div></div>`;
+      p.querySelector("[data-support-filters]").addEventListener("click", (e) => {
+        const b = e.target.closest("[data-sf]"); if (!b) return;
+        const f = S.support.filter;
+        if (b.dataset.sf === "status") { f.status = b.dataset.v; f.archived = false; } else if (b.dataset.sf === "archived") { f.archived = !f.archived; f.status = ""; } else f.mine = !f.mine;
+        p.querySelectorAll("[data-sf]").forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.sf === "status" ? (!f.archived && f.status === x.dataset.v) : x.dataset.sf === "archived" ? f.archived : f.mine)));
+        loadTickets();
+      });
+      p.querySelector("[data-queue]").addEventListener("click", (e) => { const row = e.target.closest("[data-ticket-id]"); if (row) openTicket(row.dataset.ticketId); });
+      p.querySelector("[data-ticket]").addEventListener("click", ticketClick);
+      p.querySelector("[data-ticket]").addEventListener("submit", ticketSubmit);
+      p.querySelector("[data-ticket]").addEventListener("change", ticketChange);
+    }
+    await loadTickets();
+    if (S.support.open) openTicket(S.support.open);
+  };
+  async function loadTickets() {
+    const box = $("[data-queue]", panel("support"));
+    const f = S.support.filter;
+    try {
+      const { tickets } = await api("GET", `/admin/support/tickets${q({ status: f.status, mine: f.mine ? "1" : "", archived: f.archived ? "1" : "" })}`);
+      S.support.tickets = tickets;
+      box.innerHTML = tickets.length ? `<ul class="ad-tickets">${tickets.map((t) => `<li><button data-ticket-id="${esc(t.id)}" aria-pressed="${S.support.open === t.id}"><b>${esc(t.subject)}</b><span>${esc(t.requester)} · ${esc(t.category || "")}</span><span>${pill(T_STATUS[t.status] || t.status)} ${pill(T_PRIO[t.priority] || t.priority, prioTone(t.priority))} ${t.assignee ? pill(`→ ${t.assignee}`, "accent") : pill("Nicht zugewiesen")}</span><small>${esc(ago(t.updatedAt))} · ${num(t.messageCount)} Nachrichten</small></button></li>`).join("")}</ul>` : empty(f.archived ? "Keine geschlossenen Tickets." : "Keine Tickets in der Warteschlange.");
+    } catch (err) { box.innerHTML = empty(reason(err)); }
+  }
+  async function openTicket(id) {
+    const box = $("[data-ticket]", panel("support"));
+    S.support.open = id;
+    $("[data-queue]", panel("support")).querySelectorAll("[data-ticket-id]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.ticketId === id)));
+    box.innerHTML = loading("Ticket wird geladen …");
+    try { S.support.detail = await api("GET", `/support/tickets/${encodeURIComponent(id)}`); renderTicket(); }
+    catch (err) { box.innerHTML = empty(reason(err)); }
+  }
+  function renderTicket() {
+    const { ticket: t, messages } = S.support.detail, box = $("[data-ticket]", panel("support"));
+    const mine = t.assigneeId === S.me.id;
+    box.innerHTML = `<section class="ad-card">
+      <div class="ad-card-head"><div><h3>${esc(t.subject)}</h3><small>von ${esc(t.requester)} (${esc(t.requesterEmail)}) · ${esc(t.category || "")} · erstellt ${esc(fmt(t.createdAt))}</small></div></div>
+      <div class="ad-inline ad-ticket-controls">
+        <label>Status<select data-ticket-status>${Object.entries(T_STATUS).map(([k, l]) => `<option value="${k}" ${t.status === k ? "selected" : ""}>${esc(l)}</option>`).join("")}</select></label>
+        <label>Priorität<select data-ticket-priority>${Object.entries(T_PRIO).map(([k, l]) => `<option value="${k}" ${t.priority === k ? "selected" : ""}>${esc(l)}</option>`).join("")}</select></label>
+        <span class="hint">${t.assignee ? `Zugewiesen an ${esc(t.assignee)}` : "Nicht zugewiesen"}</span>
+        ${mine ? `<button data-act="unassign">Zuweisung aufheben</button>` : `<button data-act="assign">Mir zuweisen</button>`}
+        ${t.status === "Closed" ? `<button data-act="reopen">Wieder öffnen</button>` : ""}
+      </div>
+      ${t.conversationId ? `<p class="hint">Verknüpftes Gespräch: ${esc(t.conversationTitle || t.conversationId)} – ${t.threadAccessActive ? `vom Mitglied geteilt; jeder Aufruf wird im Audit-Log festgehalten. <button data-act="thread" data-conv="${esc(t.conversationId)}">Gespräch öffnen</button>` : "nicht mehr geteilt (zurückgezogen oder Ticket geschlossen). Bitte die Person, es erneut zu teilen."}${can("emergency_message_access") ? ` <button data-act="emergency" data-conv="${esc(t.conversationId)}">Notfallzugriff …</button>` : ""}</p>` : ""}
+      ${messages.length ? `<ol class="ad-thread">${messages.map((m) => `<li class="${m.isStaff ? "is-staff" : ""} ${m.isInternal ? "is-internal" : ""}"><b>${esc(m.author)}${m.isStaff ? ` ${pill("Staff", "accent")}` : ""}${m.isInternal ? ` ${pill("Interne Notiz", "warn")}` : ""}</b><small>${esc(fmt(m.createdAt))}</small><p>${esc(m.body)}</p></li>`).join("")}</ol>` : empty("Noch keine Nachrichten in diesem Ticket.")}
+      <form class="ad-inline ad-reply" data-form="reply"><textarea name="body" maxlength="8000" required placeholder="Antwort schreiben oder interne Notiz nur für Staff …"></textarea><div class="row-actions"><button value="reply">Antworten</button><button value="internal" class="btn-ghost" data-internal>Interne Notiz</button></div></form>
+    </section>`;
+  }
+  async function ticketAct(label, fn) {
+    try { await fn(); say("support", label); await loadTickets(); if (S.support.open) await openTicket(S.support.open); loadCounts(); }
+    catch (err) { say("support", reason(err), false); }
+  }
+  async function ticketClick(e) {
+    const b = e.target.closest("button[data-act]"); if (!b) return;
+    const t = S.support.detail && S.support.detail.ticket; if (!t) return;
+    const id = encodeURIComponent(t.id);
+    if (b.dataset.act === "assign") return ticketAct("Ticket dir zugewiesen.", () => api("POST", `/support/tickets/${id}/assign`, { assigneeId: "me" }));
+    if (b.dataset.act === "unassign") return ticketAct("Zuweisung aufgehoben.", () => api("POST", `/support/tickets/${id}/assign`, { assigneeId: "" }));
+    if (b.dataset.act === "reopen") return ticketAct("Ticket wieder geöffnet.", () => api("POST", `/support/tickets/${id}/status`, { status: "Open" }));
+    if (b.dataset.act === "thread") return openThread(b.dataset.conv);
+    if (b.dataset.act === "emergency") return emergencyAccess(b.dataset.conv, () => openTicket(t.id));
+  }
+  async function ticketChange(e) {
+    const t = S.support.detail && S.support.detail.ticket; if (!t) return;
+    const id = encodeURIComponent(t.id);
+    if (e.target.matches("[data-ticket-status]")) return ticketAct(`Status: ${T_STATUS[e.target.value] || e.target.value}.`, () => api("POST", `/support/tickets/${id}/status`, { status: e.target.value }));
+    if (e.target.matches("[data-ticket-priority]")) return ticketAct(`Priorität: ${T_PRIO[e.target.value] || e.target.value}.`, () => api("POST", `/support/tickets/${id}/priority`, { priority: e.target.value }));
+  }
+  async function ticketSubmit(e) {
+    const form = e.target.closest("form[data-form='reply']"); if (!form) return;
+    e.preventDefault();
+    const t = S.support.detail.ticket, internal = e.submitter && e.submitter.hasAttribute("data-internal");
+    const body = form.body.value.trim(); if (!body) return;
+    return ticketAct(internal ? "Interne Notiz gespeichert." : "Antwort gesendet.", () => api("POST", `/support/tickets/${encodeURIComponent(t.id)}/messages`, { body, internal }));
+  }
+  async function emergencyAccess(conversationId, after) {
+    const a = await ask({ title: "Notfallzugriff auf ein privates Gespräch", text: "Nur für den Ernstfall: Der Zugriff ist zeitlich begrenzt, braucht einen Grund, wird allen Mitgliedern des Gesprächs angezeigt und vollständig protokolliert.", danger: true, confirm: "Zugriff gewähren",
+      fields: [{ name: "reason", label: "Grund (mindestens 10 Zeichen)", type: "textarea", required: true }, { name: "durationMinutes", label: "Dauer", type: "select", options: [["30", "30 Minuten"], ["60", "1 Stunde"], ["240", "4 Stunden"], ["1440", "24 Stunden"]] }] });
+    if (!a) return;
+    try {
+      const r = await api("POST", `/admin/conversations/${encodeURIComponent(conversationId)}/emergency-access`, { reason: a.reason, durationMinutes: Number(a.durationMinutes) });
+      say("support", r.grant.alreadyActive ? `Du hast bereits Zugriff bis ${fmt(r.grant.expiresAt)}.` : `Notfallzugriff gewährt bis ${fmt(r.grant.expiresAt)}.`);
+      if (after) after();
+    } catch (err) { say("support", reason(err), false); say("access", reason(err), false); }
+  }
+
+  // ---------- Meldungen ----------
+  const R_TYPE = { user: "Konto", message: "Nachricht", project: "Projekt", community: "Community", workspace: "Arbeitsbereich" };
+  loaders.reports = async () => {
+    const p = panel("reports");
+    p.innerHTML = `${head("MODERATION", "Meldungen", "Von Mitgliedern eingereichte Meldungen. Offene erledigen – der Grund landet im Audit-Log.")}
+      <div class="card-filters">${[["open", "Offen"], ["resolved", "Erledigt"], ["dismissed", "Verworfen"], ["all", "Alle"]].map(([k, l]) => `<button data-rs="${k}" aria-pressed="${S.reports.status === k}">${l}</button>`).join("")}</div><div data-list>${loading()}</div>`;
+    p.querySelectorAll("[data-rs]").forEach((b) => b.addEventListener("click", () => { S.reports.status = b.dataset.rs; loaders.reports(); }));
+    p.querySelector("[data-list]").addEventListener("click", async (e) => {
+      const b = e.target.closest("button[data-act]"); if (!b) return;
+      const r = S.reports.list.find((x) => x.id === b.dataset.id); if (!r) return;
+      if (b.dataset.act === "context") {
+        try {
+          const c = await api("GET", `/admin/reports/${encodeURIComponent(r.id)}/context`);
+          modal(`Gemeldete Nachricht im Zusammenhang`, `<p class="hint">Begrenztes Fenster um die gemeldete Nachricht – nie das ganze Gespräch. Der Aufruf wird im Audit-Log festgehalten.</p><p><small>${esc(c.conversation.title || "Gespräch")}</small></p>${messageList(c.messages, c.reportedMessageId)}`);
+        } catch (err) { say("reports", reason(err), false); }
+        return;
+      }
+      const L = { dismiss: ["Meldung verwerfen", "Verwerfen", false], warn: ["Konto verwarnen", "Verwarnen", false], ban: ["Konto sperren", "Sperren", true], remove: ["Inhalt entfernen", "Entfernen", true] };
+      const [title, confirm, danger] = L[b.dataset.act];
+      const a = await ask({ title, text: `${R_TYPE[r.targetType] || r.targetType}: ${r.targetLabel || r.targetId} · gemeldet wegen „${r.reason}“`, danger, confirm, fields: [{ name: "reason", label: "Begründung", type: "textarea", required: b.dataset.act !== "dismiss" }] }); if (!a) return;
+      try { await api("POST", `/admin/reports/${encodeURIComponent(r.id)}/resolve`, { action: b.dataset.act, reason: a.reason }); say("reports", `Meldung erledigt: ${confirm.toLowerCase()}.`); await loaders.reports(); loadCounts(); }
+      catch (err) { say("reports", reason(err), false); }
+    });
+    try {
+      S.reports.list = (await api("GET", `/admin/reports?status=${S.reports.status}`)).reports;
+      const L = S.reports.list;
+      p.querySelector("[data-list]").innerHTML = L.length ? `<div class="ad-reports">${L.map((r) => `<article class="ad-card ad-report">
+        <div class="ad-card-head"><div><b>${esc(R_TYPE[r.targetType] || r.targetType)}: ${esc(r.targetLabel || r.targetId)}</b><br><small>gemeldet von ${esc(r.reporter || "?")} (${esc(r.reporterEmail || "")}) · ${esc(fmt(r.createdAt))}</small></div>${r.status === "open" ? pill("Offen", "warn") : r.status === "resolved" ? pill(`Erledigt: ${r.resolution || ""}`, "ok") : pill("Verworfen")}</div>
+        <p><b>${esc(r.reason)}</b>${r.details ? `<br><span class="ad-pre">${esc(r.details)}</span>` : ""}</p>
+        ${r.resolver ? `<small>Bearbeitet von ${esc(r.resolver)} · ${esc(fmt(r.resolvedAt))}</small>` : ""}
+        <div class="row-actions">
+          ${r.targetType === "message" && can("view_reported_messages") ? `<button data-act="context" data-id="${esc(r.id)}">Im Zusammenhang ansehen</button>` : ""}
+          ${r.status === "open" && can("reports.handle") ? `<button data-act="dismiss" data-id="${esc(r.id)}">Verwerfen</button>${r.targetType === "user" ? `<button data-act="warn" data-id="${esc(r.id)}">Verwarnen</button><button class="admin-danger" data-act="ban" data-id="${esc(r.id)}">Konto sperren</button>` : `<button class="admin-danger" data-act="remove" data-id="${esc(r.id)}">Inhalt entfernen</button>`}` : ""}
+        </div></article>`).join("")}</div>`
+        : empty({ open: "Keine offenen Meldungen. Die Warteschlange ist leer.", resolved: "Keine erledigten Meldungen.", dismissed: "Keine verworfenen Meldungen.", all: "Noch keine Meldungen." }[S.reports.status]);
+    } catch (err) { p.querySelector("[data-list]").innerHTML = empty(reason(err)); }
+  };
+
+  // ---------- Nachrichtenzugriff ----------
+  loaders.access = async () => {
+    const p = panel("access");
+    p.innerHTML = `${head("TRANSPARENZ", "Nachrichtenzugriff", "Private Gespräche sind standardmäßig nur für Mitglieder. Jeder Weg für Staff hinein – eine Support-Freigabe, eine gemeldete Nachricht oder ein Notfallzugriff – steht hier und im Audit-Log.")}
+      <div class="card-filters"><button data-as="active" aria-pressed="${S.access.scope === "active"}">Aktiv</button><button data-as="all" aria-pressed="${S.access.scope === "all"}">Alle (auch abgelaufene)</button></div>
+      <div data-list>${loading()}</div>
+      ${can("oversight.view") ? `<h3 class="ad-h3">Gespräche</h3><p class="hint">Alle Gespräche der Plattform – ohne Inhalte. ${can("emergency_message_access") ? "Ein Notfallzugriff ist zeitlich begrenzt, braucht einen Grund und wird den Mitgliedern angezeigt." : ""}</p><div class="admin-filters"><label class="admin-search">Gespräche filtern<input type="search" data-cfilter placeholder="Titel, Ersteller …"></label></div><div data-convs>${loading()}</div>` : ""}`;
+    p.querySelectorAll("[data-as]").forEach((b) => b.addEventListener("click", () => { S.access.scope = b.dataset.as; loaders.access(); }));
+    if (!p.dataset.bound) p.addEventListener("click", async (e) => {
+      const b = e.target.closest("button[data-act]"); if (!b) return;
+      if (b.dataset.act === "thread") return openThread(b.dataset.conv);
+      if (b.dataset.act === "emergency") return emergencyAccess(b.dataset.conv, () => loaders.access());
+      if (b.dataset.act === "revoke") {
+        const a = await ask({ title: "Zugriff beenden", text: "Der Zugriff endet sofort; die Mitglieder des Gesprächs sehen das.", confirm: "Zugriff beenden" }); if (!a) return;
+        try { await api("POST", `/admin/message-access/${encodeURIComponent(b.dataset.id)}/revoke`, {}); say("access", "Zugriff beendet."); loaders.access(); }
+        catch (err) { say("access", reason(err), false); }
+      }
+    });
+    p.dataset.bound = "1";
+    try {
+      const { grants } = await api("GET", `/admin/message-access${q({ scope: S.access.scope })}`);
+      S.access.grants = grants;
+      const K = { emergency: ["Notfallzugriff", "danger"], consent: ["Support-Freigabe", "accent"], report: ["Meldung", "warn"] };
+      p.querySelector("[data-list]").innerHTML = grants.length ? table(["Gespräch", "Art", "Für", "Grund", "Gültig", "Zugriffe", "Aktionen"], grants.map((g) => `<tr>
+        <td><b>${esc(g.conversationTitle || g.conversationId)}</b><br><small>${esc(g.conversationKind || "")}${g.ticketSubject ? ` · Ticket: ${esc(g.ticketSubject)}` : ""}</small></td>
+        <td>${pill((K[g.kind] || [g.kind])[0], (K[g.kind] || [])[1])}</td>
+        <td>${esc(g.grantee || "Support-Team")}<br><small>freigegeben von ${esc(g.grantedBy || "?")}</small></td><td><small>${esc(g.reason || "")}</small></td>
+        <td><small>${esc(fmt(g.createdAt))} – ${esc(fmt(g.expiresAt))}${g.revokedAt ? `<br>beendet ${esc(fmt(g.revokedAt))}${g.revokedBy ? ` von ${esc(g.revokedBy)}` : ""}` : ""}</small> ${g.active ? pill("aktiv", "ok") : ""}</td>
+        <td>${num(g.accessCount)}${g.lastAccessedAt ? `<br><small>zuletzt ${esc(ago(g.lastAccessedAt))}</small>` : ""}</td>
+        <td><div class="row-actions">${g.active ? `<button data-act="thread" data-conv="${esc(g.conversationId)}">Gespräch öffnen</button><button class="admin-danger" data-act="revoke" data-id="${esc(g.id)}">Zugriff beenden</button>` : ""}</div></td></tr>`).join(""))
+        : empty(S.access.scope === "active" ? "Keine aktiven Zugriffe – kein Staff-Mitglied kann gerade ein privates Gespräch lesen." : "Es wurde noch nie ein Zugriff erteilt.");
+    } catch (err) { p.querySelector("[data-list]").innerHTML = empty(reason(err)); }
+    if (can("oversight.view")) {
+      const render = () => {
+        const f = (p.querySelector("[data-cfilter]").value || "").toLowerCase();
+        const rows = S.conversations.filter((c) => !f || [c.title, c.creator, c.creatorEmail, c.kind].some((v) => String(v || "").toLowerCase().includes(f)));
+        p.querySelector("[data-convs]").innerHTML = rows.length ? table(["Gespräch", "Art", "Erstellt von", "Mitglieder", "Nachrichten", "Erstellt", "Aktionen"], rows.slice(0, 100).map((c) => `<tr><td><b>${esc(c.title || "Ohne Titel")}</b><br><small><code>${esc(c.id)}</code></small></td><td>${esc(c.kind)}</td><td>${esc(c.creator)}<br><small>${esc(c.creatorEmail)}</small></td><td>${num(c.memberCount)}</td><td>${num(c.messageCount)}</td><td><small>${esc(day(c.createdAt))}</small></td><td>${can("emergency_message_access") ? `<button data-act="emergency" data-conv="${esc(c.id)}">Notfallzugriff …</button>` : ""}</td></tr>`).join("")) + (rows.length > 100 ? `<p class="hint">${num(rows.length - 100)} weitere – Filter eingrenzen.</p>` : "") : empty("Keine Gespräche.");
+      };
+      p.querySelector("[data-cfilter]").addEventListener("input", render);
+      try { S.conversations = (await api("GET", "/admin/conversations")).conversations; render(); }
+      catch (err) { p.querySelector("[data-convs]").innerHTML = empty(reason(err)); }
+    }
+  };
+
+  // ---------- Sicherheit ----------
+  loaders.security = async () => {
+    const p = panel("security");
+    p.innerHTML = head("SICHERHEIT", "Sicherheit", "Anmeldesignale der ganzen Plattform. Jeder Anmeldeversuch wird serverseitig festgehalten.", `<button data-act="refresh">Aktualisieren</button>`) + loading();
+    p.querySelector('[data-act="refresh"]').addEventListener("click", loaders.security);
+    try {
+      const r = await api("GET", "/admin/security");
+      const s = r.summary;
+      p.querySelector(".ad-loading").outerHTML = `<div class="ad-stats">${stat("Fehlgeschlagene Logins (24h)", num(s.fails24h), "", s.fails24h >= 10 ? "warn" : "")}${stat("Erfolgreiche Logins (24h)", num(s.success24h))}${stat("Gesperrte Konten", num(s.bannedUsers))}${stat("Konten mit 2FA", num(s.twoFactorUsers))}${stat("Aktive Sitzungen", num(s.activeSessions))}</div>
+        <h3 class="ad-h3">Auffällige IP-Adressen</h3><p class="hint">Adressen mit wiederholt fehlgeschlagenen Versuchen in 24 Stunden – kann auf Brute-Force hindeuten.</p>
+        ${r.suspiciousIps.length ? table(["IP-Adresse", "Versuche", "Letzter Versuch"], r.suspiciousIps.map((x) => `<tr><td><code>${esc(x.ip)}</code></td><td>${num(x.attempts)}</td><td><small>${esc(fmt(x.lastAt))}</small></td></tr>`).join("")) : empty("Keine auffälligen IPs – keine wiederholten Fehlversuche.")}
+        <h3 class="ad-h3">Letzte Anmeldeereignisse</h3>
+        ${r.events.length ? table(["Ereignis", "Konto", "IP", "Gerät", "Zeit"], r.events.map((e) => `<tr><td>${pill(e.type, e.type === "login.success" ? "ok" : "warn")}</td><td>${esc(e.displayName || "")}<br><small>${esc(e.email || "")}</small></td><td><code>${esc(e.ip || "")}</code></td><td><small>${esc(e.device || "")}</small></td><td><small>${esc(fmt(e.createdAt))}</small></td></tr>`).join("")) : empty("Noch keine Anmeldeereignisse.")}`;
+    } catch (err) { p.querySelector(".ad-loading").outerHTML = empty(reason(err)); }
+  };
+
+  // ---------- KI ----------
+  loaders.ai = async () => {
+    const p = panel("ai");
+    p.innerHTML = head("KI", "KI", "Nutzung des KI-Proxys auf der ganzen Plattform. Token-Zahlen meldet das Modell bei jeder Antwort; Kosten werden nicht angezeigt.", `<button data-act="refresh">Aktualisieren</button>`) + loading();
+    p.querySelector('[data-act="refresh"]').addEventListener("click", loaders.ai);
+    try {
+      const r = await api("GET", "/admin/ai");
+      p.querySelector(".ad-loading").outerHTML = `${r.configured ? "" : '<div class="notice">Auf dem Server ist kein API-Schlüssel für den KI-Proxy hinterlegt – „KI fragen“ ist nicht verfügbar, es entsteht keine Nutzung.</div>'}
+        <div class="ad-stats">${stat("Anfragen", num(r.totals.requests))}${stat("Eingabe-Tokens", num(r.totals.inputTokens))}${stat("Ausgabe-Tokens", num(r.totals.outputTokens))}${stat("Ablehnungen", num(r.totals.refusals), "", r.totals.refusals ? "warn" : "")}</div>
+        <h3 class="ad-h3">Nutzung je Konto</h3>
+        ${r.perUser.length ? table(["Konto", "Anfragen", "Tokens", "Ablehnungen"], r.perUser.map((u) => `<tr><td>${esc(u.displayName || "Gelöschtes Konto")}<br><small>${esc(u.email || "")}</small></td><td>${num(u.requests)}</td><td>${num(u.tokens)}</td><td>${num(u.refusals)}</td></tr>`).join("")) : empty(r.configured ? "Noch keine KI-Nutzung." : "Keine Nutzung – der KI-Proxy ist nicht eingerichtet.")}
+        <h3 class="ad-h3">Letzte Ablehnungen</h3>
+        ${r.recentRefusals.length ? table(["Konto", "Zeit"], r.recentRefusals.map((u) => `<tr><td>${esc(u.displayName || "")}<br><small>${esc(u.email || "")}</small></td><td><small>${esc(fmt(u.createdAt))}</small></td></tr>`).join("")) : empty("Keine Ablehnungen.")}`;
+    } catch (err) { p.querySelector(".ad-loading").outerHTML = empty(reason(err)); }
+  };
+
+  // ---------- Matching ----------
+  loaders.matching = async () => {
+    const p = panel("matching");
+    p.innerHTML = head("MATCHING", "Matching", "Jede Match-Benachrichtigung, die der Durchlauf je verschickt hat, und was daraus wurde.", `<button data-act="refresh">Aktualisieren</button>`) + loading();
+    p.querySelector('[data-act="refresh"]').addEventListener("click", loaders.matching);
+    try {
+      const { analytics: a } = await api("GET", "/admin/matching-analytics");
+      const n = a.notifications, i = a.interactions;
+      const max = Math.max(1, ...a.series14d.map((d) => d.n));
+      p.querySelector(".ad-loading").outerHTML = `<div class="ad-stats">${stat("Verschickt", num(n.total))}${stat("Geöffnet", num(n.opened), `${n.ctr} % Klickrate`)}${stat("Verworfen", num(n.dismissed), `${n.dismissRate} % Verwerfrate`)}${stat("Noch ungesehen", num(n.byType.reduce((s, t) => s + t.unseen, 0)))}</div>
+        <h3 class="ad-h3">Benachrichtigungen – letzte 14 Tage</h3>
+        ${a.series14d.length ? `<ul class="ad-bars ad-bars-cols">${a.series14d.map((d) => `<li><i style="height:${Math.max(4, Math.round((d.n / max) * 100))}%" title="${esc(d.d)}: ${num(d.n)}"></i><span>${esc(d.d.slice(5))}</span><b>${num(d.n)}</b></li>`).join("")}</ul>` : empty("Noch keine Match-Benachrichtigungen – der Durchlauf läuft alle 15 Minuten und meldet nur oberhalb der Qualitätsschwelle.")}
+        <h3 class="ad-h3">Nach Empfehlungstyp</h3>
+        ${n.byType.length ? table(["Typ", "Verschickt", "Geöffnet", "Klickrate", "Verworfen", "Verwerfrate", "Ungesehen"], n.byType.map((t) => `<tr><td>${esc(t.type)}</td><td>${num(t.total)}</td><td>${num(t.opened)}</td><td>${t.ctr} %</td><td>${num(t.dismissed)}</td><td>${t.dismissRate} %</td><td>${num(t.unseen)}</td></tr>`).join("")) : empty("Noch nichts.")}
+        <h3 class="ad-h3">Interaktionen</h3><p class="hint">Was Mitglieder auf den Matching-Flächen selbst getan haben – speichern, verwerfen, Gespräch beginnen (das Ehrlichste, was einer Conversion nahekommt).</p>
+        <div class="ad-stats">${stat("Gespeichert (gesamt)", num(i.allTime.saved), `${num(i.last30d.saved)} in 30 Tagen`)}${stat("Verworfen (gesamt)", num(i.allTime.dismissed), `${num(i.last30d.dismissed)} in 30 Tagen`)}${stat("Kontaktiert (gesamt)", num(i.allTime.contacted), `${num(i.last30d.contacted)} in 30 Tagen`)}${stat("Angesehen (gesamt)", num(i.allTime.viewed))}</div>`;
+    } catch (err) { p.querySelector(".ad-loading").outerHTML = empty(reason(err)); }
+  };
+
+  // ---------- Systemzustand ----------
+  loaders.health = async () => {
+    const p = panel("health");
+    p.innerHTML = head("BETRIEB", "Systemzustand", "Echte Zahlen von Server, Datenbank und Speicher. Was noch nicht gemessen wird, steht als solches da.", `<button data-act="refresh">Aktualisieren</button><button data-act="ping">Verbindung testen</button>`) + loading();
+    p.querySelector('[data-act="refresh"]').addEventListener("click", loaders.health);
+    p.querySelector('[data-act="ping"]').addEventListener("click", async () => {
+      const t0 = performance.now();
+      try { await X.me(); say("health", `Verbindung zu ${X.API} steht – Antwort in ${Math.round(performance.now() - t0)} ms.`); }
+      catch (err) { say("health", reason(err), false); }
+    });
+    try {
+      const { health: h } = await api("GET", "/admin/health");
+      const kv = (k, v) => `<li><span>${esc(k)}</span><b>${esc(v)}</b></li>`;
+      p.querySelector(".ad-loading").outerHTML = `<div class="ad-cols">
+        <section class="ad-card"><h3>Server</h3><ul class="ad-kv">${kv("Version", h.serverVersion)}${kv("Node", h.nodeVersion)}${kv("Läuft seit", duration(h.uptimeSeconds))}${kv("Adresse", X.API)}</ul></section>
+        <section class="ad-card"><h3>Datenbank</h3><ul class="ad-kv">${kv("Größe", bytes(h.dbSizeBytes))}${kv("Journal", h.walMode)}${kv("Audit-Einträge", num(h.auditEntries))}</ul></section>
+        <section class="ad-card"><h3>Speicher</h3><ul class="ad-kv">${kv("RSS", bytes(h.rssBytes))}${kv("Heap belegt", bytes(h.heapUsedBytes))}</ul></section>
+        <section class="ad-card"><h3>Noch nicht gemessen</h3><p class="hint">Diese Teilsysteme sind noch nicht Teil der Plattform, deshalb gibt es nichts Echtes zu zeigen – sie stehen hier ehrlich statt mit Platzhalterzahlen.</p><ul class="ad-kv">${kv("Hintergrund-Warteschlangen", "–")}${kv("E-Mail-Zustellung", "–")}${kv("Antwortzeiten (p95)", "–")}</ul></section></div>`;
+    } catch (err) { p.querySelector(".ad-loading").outerHTML = empty(reason(err)); }
+  };
+
+  // ---------- Ankündigungen ----------
+  const A_KIND = { info: ["Hinweis", "accent"], warning: ["Warnung", "warn"], maintenance: ["Wartung", "danger"] };
+  loaders.announcements = async () => {
+    const p = panel("announcements");
+    if (!p.querySelector("[data-ann-form]")) {
+      p.innerHTML = `${head("KOMMUNIKATION", "Ankündigungen", "Banner für alle Mitglieder – in der Xyntal-App und auf xyntal.de – veröffentlichen und schalten, welche gerade live sind.")}
+        <form class="ad-card ad-inline ad-ann-form" data-ann-form>
+          <h3>Neue Ankündigung</h3>
+          <label>Titel<input name="title" maxlength="160" required placeholder="Kurze Überschrift (Pflicht)"></label>
+          <label>Text<textarea name="body" maxlength="2000" placeholder="Was sollen alle wissen?"></textarea></label>
+          <div class="ad-row"><label>Art<select name="kind">${Object.entries(A_KIND).map(([k, [l]]) => `<option value="${k}">${esc(l)}</option>`).join("")}</select></label>
+          <label>Endet am (optional)<input name="endsAt" type="datetime-local"></label></div>
+          <div class="row-actions"><button>Veröffentlichen</button><span class="hint">Erscheint sofort als Banner, bis du es ausblendest oder das Ende erreicht ist.</span></div>
+        </form><div data-list>${loading()}</div>`;
+      p.querySelector("[data-ann-form]").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const f = e.target, endsAt = f.endsAt.value ? new Date(f.endsAt.value).toISOString() : "";
+        try { await api("POST", "/admin/announcements", { title: f.title.value, body: f.body.value, kind: f.kind.value, endsAt }); say("announcements", "Ankündigung veröffentlicht."); f.reset(); await loadAnnouncements(); }
+        catch (err) { say("announcements", reason(err), false); }
+      });
+      p.querySelector("[data-list]").addEventListener("click", async (e) => {
+        const b = e.target.closest("button[data-act]"); if (!b) return;
+        const a = S.announcements.find((x) => x.id === b.dataset.id); if (!a) return;
+        try {
+          if (b.dataset.act === "toggle") { await api("POST", `/admin/announcements/${encodeURIComponent(a.id)}/active`, { active: !a.active }); say("announcements", a.active ? "Ankündigung ausgeblendet." : "Ankündigung ist live."); }
+          else { const ok = await ask({ title: "Ankündigung löschen", text: `„${a.title}“ endgültig löschen?`, danger: true, confirm: "Löschen" }); if (!ok) return; await api("DELETE", `/admin/announcements/${encodeURIComponent(a.id)}`); say("announcements", "Ankündigung gelöscht."); }
+          await loadAnnouncements();
+        } catch (err) { say("announcements", reason(err), false); }
+      });
+    }
+    await loadAnnouncements();
+  };
+  async function loadAnnouncements() {
+    const box = $("[data-list]", panel("announcements"));
+    try {
+      S.announcements = (await api("GET", "/admin/announcements")).announcements;
+      const live = S.announcements.filter((a) => a.active && (!a.endsAt || new Date(a.endsAt) > new Date())).length;
+      const c = document.getElementById("c-announcements"); if (c) c.textContent = live ? `(${live} live)` : "";
+      box.innerHTML = `<h3 class="ad-h3">Veröffentlicht</h3>` + (S.announcements.length ? `<ul class="ad-announcements">${S.announcements.map((a) => {
+        const over = a.endsAt && new Date(a.endsAt) <= new Date();
+        return `<li class="ad-ann ad-ann-${esc(a.kind)}"><div><b>${esc(a.title)}</b> ${pill(A_KIND[a.kind] ? A_KIND[a.kind][0] : a.kind, A_KIND[a.kind] && A_KIND[a.kind][1])} ${a.active && !over ? pill("Live", "ok") : pill(over ? "Abgelaufen" : "Ausgeblendet")}${a.body ? `<p>${esc(a.body)}</p>` : ""}<small>${esc(a.author || "Staff")} · ${esc(fmt(a.createdAt))}${a.endsAt ? ` · endet ${esc(fmt(a.endsAt))}` : ""}</small></div>
+          <div class="row-actions"><button data-act="toggle" data-id="${esc(a.id)}">${a.active ? "Ausblenden" : "Live schalten"}</button><button class="admin-danger" data-act="delete" data-id="${esc(a.id)}">Löschen</button></div></li>`;
+      }).join("")}</ul>` : empty("Noch nichts veröffentlicht."));
+    } catch (err) { box.innerHTML = empty(reason(err)); }
+  }
+
+  // ---------- Audit-Log ----------
+  loaders.audit = async () => {
+    const p = panel("audit");
+    if (!p.querySelector("[data-audit-filters]")) {
+      p.innerHTML = `${head("PROTOKOLL", "Audit-Log", "Nur anfügend: Jeder Eintrag ist dauerhaft – das Protokoll kann weder bearbeitet noch gelöscht werden.")}
+        <div class="admin-filters" data-audit-filters><label>Aktion<select data-audit-action><option value="">Alle Aktionen</option>${["user.", "project.", "workspace.", "report.", "announcement.", "flag.", "access."].map((a) => `<option value="${a}" ${S.audit.action === a ? "selected" : ""}>${a}*</option>`).join("")}</select></label><label class="admin-search">Durchsuchen<input type="search" data-audit-q placeholder="Akteur, Ziel, Grund, IP …" value="${esc(S.audit.query)}"></label></div><div data-list>${loading()}</div>`;
+      let timer;
+      p.querySelector("[data-audit-action]").addEventListener("change", (e) => { S.audit.action = e.target.value; loadAudit(); });
+      p.querySelector("[data-audit-q]").addEventListener("input", (e) => { clearTimeout(timer); S.audit.query = e.target.value; timer = setTimeout(loadAudit, 250); });
+    }
+    await loadAudit();
+  };
+  const show = (v) => (v === null || v === undefined || v === "" ? "" : typeof v === "object" ? JSON.stringify(v) : String(v));
+  async function loadAudit() {
+    const box = $("[data-list]", panel("audit"));
+    try {
+      const { entries } = await api("GET", `/admin/audit${q({ action: S.audit.action, q: S.audit.query })}`);
+      S.audit.entries = entries;
+      box.innerHTML = entries.length ? table(["Wann", "Aktion", "Akteur", "Ziel", "Vorher → Nachher", "IP"], entries.map((a) => `<tr><td><small>${esc(fmt(a.createdAt))}</small></td><td><code>${esc(a.action)}</code></td><td>${esc(a.actor || "System")}<br><small>${esc(a.actorEmail || "")}</small></td><td><small><code>${esc(a.target || "")}</code></small>${a.reason ? `<br><small>Grund: ${esc(a.reason)}</small>` : ""}</td><td><small class="ad-pre">${esc(show(a.before))}${show(a.before) || show(a.after) ? " → " : ""}${esc(show(a.after))}${a.meta ? `<br>${esc(show(a.meta))}` : ""}</small></td><td><small><code>${esc(a.ip || "")}</code></small></td></tr>`).join("")) : empty("Noch nichts.");
+    } catch (err) { box.innerHTML = empty(reason(err)); }
+  }
+
+  boot();
+})();
