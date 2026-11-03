@@ -1051,14 +1051,16 @@
   // ---------- KI ----------
   loaders.ai = async () => {
     const p = panel("ai");
-    p.innerHTML = head("KI", "KI", "Nutzung des KI-Proxys auf der ganzen Plattform. Token-Zahlen meldet das Modell bei jeder Antwort; Kosten werden nicht angezeigt.", `<button data-act="refresh">Aktualisieren</button>`) + loading();
+    p.innerHTML = head("KI", "KI", "Nutzung des KI-Proxys auf der ganzen Plattform. Token-Zahlen meldet das Modell bei jeder Antwort; Kosten sind, was jeder Aufruf zum Guthabenpreis gekostet hat.", `<button data-act="refresh">Aktualisieren</button>`) + loading();
+    // Einzelne Aufrufe kosten Bruchteile eines Cents: kleine Beträge mit vier Nachkommastellen statt 0,00 €.
+    const eur = (cents) => (cents === null || cents === undefined ? "–" : (cents / 100).toLocaleString("de-DE", { minimumFractionDigits: cents !== 0 && Math.abs(cents) < 1 ? 4 : 2, maximumFractionDigits: cents !== 0 && Math.abs(cents) < 1 ? 4 : 2 }) + " €");
     p.querySelector('[data-act="refresh"]').addEventListener("click", loaders.ai);
     try {
       const r = await api("GET", "/admin/ai");
       p.querySelector(".xa-loading").outerHTML = `${r.configured ? "" : '<div class="notice">Auf dem Server ist kein API-Schlüssel für den KI-Proxy hinterlegt – „KI fragen“ ist nicht verfügbar, es entsteht keine Nutzung.</div>'}
-        <div class="xa-stats">${stat("Anfragen", num(r.totals.requests))}${stat("Eingabe-Tokens", num(r.totals.inputTokens))}${stat("Ausgabe-Tokens", num(r.totals.outputTokens))}${stat("Ablehnungen", num(r.totals.refusals), "", r.totals.refusals ? "warn" : "")}</div>
+        <div class="xa-stats">${stat("Anfragen", num(r.totals.requests))}${stat("Eingabe-Tokens", num(r.totals.inputTokens))}${stat("Ausgabe-Tokens", num(r.totals.outputTokens))}${stat("Ablehnungen", num(r.totals.refusals), "", r.totals.refusals ? "warn" : "")}${stat("Berechnet diesen Monat", eur(r.totals.monthCents ?? 0))}${stat("Berechnet gesamt", eur(r.totals.costCents ?? 0))}${stat("Modellkosten (geschätzt)", eur(r.totals.modelCostCents ?? 0))}</div>
         <h3 class="xa-h3">Nutzung je Konto</h3>
-        ${r.perUser.length ? table(["Konto", "Anfragen", "Tokens", "Ablehnungen"], r.perUser.map((u) => `<tr><td>${esc(u.displayName || "Gelöschtes Konto")}<br><small>${esc(u.email || "")}</small></td><td>${num(u.requests)}</td><td>${num(u.tokens)}</td><td>${num(u.refusals)}</td></tr>`).join("")) : empty(r.configured ? "Noch keine KI-Nutzung." : "Keine Nutzung – der KI-Proxy ist nicht eingerichtet.")}
+        ${r.perUser.length ? table(["Konto", "Anfragen", "Tokens", "Diesen Monat", "Kosten", "Guthaben übrig", "Ablehnungen"], r.perUser.map((u) => `<tr><td>${esc(u.displayName || "Gelöschtes Konto")}<br><small>${esc(u.email || "")}</small></td><td>${num(u.requests)}</td><td>${num(u.tokens)}</td><td>${eur(u.monthCents ?? 0)}</td><td title="davon aus Guthaben: ${eur(u.creditPaidCents ?? 0)}"><b>${eur(u.costCents ?? 0)}</b></td><td>${eur(u.creditCents)}</td><td>${num(u.refusals)}</td></tr>`).join("")) : empty(r.configured ? "Noch keine KI-Nutzung." : "Keine Nutzung – der KI-Proxy ist nicht eingerichtet.")}
         <h3 class="xa-h3">Letzte Ablehnungen</h3>
         ${r.recentRefusals.length ? table(["Konto", "Zeit"], r.recentRefusals.map((u) => `<tr><td>${esc(u.displayName || "")}<br><small>${esc(u.email || "")}</small></td><td><small>${esc(fmt(u.createdAt))}</small></td></tr>`).join("")) : empty("Keine Ablehnungen.")}`;
     } catch (err) { p.querySelector(".xa-loading").outerHTML = empty(reason(err)); }
