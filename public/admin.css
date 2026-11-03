@@ -213,6 +213,11 @@
 .xa-line { white-space:pre-wrap; overflow-wrap:anywhere; }
 .xa-line-input { color:#ECEAE4; } .xa-line-input span { color:#BF9AF6; }
 .xa-line-ok { color:#7DE6BF; } .xa-line-error { color:#E0705F; } .xa-line-ask { color:#D9B25F; }
+.xa-suggest { display:grid; gap:2px; padding:4px; border:1px solid var(--admin-line); border-radius: 2px; background:#0B0B12; }
+.xa-suggest button { display:flex; align-items:baseline; gap:10px; width:100%; min-height:0; padding:7px 10px; border:0; border-radius: 2px; background:transparent; color:#ECEAE4; text-align:left; cursor:pointer; font:12.5px/1.4 var(--f-mono,"JetBrains Mono",monospace); }
+.xa-suggest button b { font-weight:600; white-space:nowrap; }
+.xa-suggest button span { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#AAA7B8; font:12px/1.4 var(--f-text,sans-serif); }
+.xa-suggest button:hover, .xa-suggest button.is-active { background:rgba(236, 234, 228, .1); }
 .xa-console-form { display:flex; align-items:center; gap:8px; padding:4px 4px 4px 14px; border:1px solid var(--admin-line); border-radius: 2px; background:#0B0B12; }
 .xa-console-form:focus-within { border-color:rgba(236, 234, 228, .5); }
 .xa-prompt { color:#BF9AF6; font:600 16px/1 var(--f-mono,monospace); }

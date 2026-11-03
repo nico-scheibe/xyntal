@@ -28,7 +28,7 @@
     access: { scope: "active", grants: [] },
     audit: { action: "", query: "", entries: [] },
     announcements: [],
-    console: { lines: [], history: [], pos: -1, pending: null, pendingText: "" },
+    console: { lines: [], history: [], pos: -1, pending: null, pendingText: "", suggestions: [], selected: -1, seq: 0, userIds: {} },
   };
 
   // ---------- Hilfen ----------
@@ -432,21 +432,95 @@
     p.innerHTML = `${head("MODERATION", "Konsole", "Moderation per Befehl. Jeder Befehl wird auf dem Server gegen deine Rolle geprüft und ins Audit-Log geschrieben.")}
       <div class="xa-console" data-console>
         <div class="xa-console-log" data-log role="log" aria-live="polite" aria-label="Konsolenausgabe"></div>
-        <form class="xa-console-form" data-console-form><span class="xa-prompt" aria-hidden="true">›</span><input data-console-input autocomplete="off" spellcheck="false" placeholder="help, user @handle, note @handle Text, ban @handle 7d Grund …" aria-label="Konsolenbefehl"><button>Ausführen</button></form>
+        <div class="xa-suggest" data-suggest role="listbox" aria-label="Vorschläge" hidden></div>
+        <form class="xa-console-form" data-console-form><span class="xa-prompt" aria-hidden="true">›</span><input data-console-input autocomplete="off" spellcheck="false" placeholder="help, user @handle, note @handle Text, ban @handle 7d Grund …" aria-label="Konsolenbefehl" aria-autocomplete="list" aria-controls="xa-suggest-list"><button>Ausführen</button></form>
         <p class="hint">Konten per @handle, E-Mail oder ID ansprechen. Dauern: 30m, 12h, 7d, 2w, perm. Ein führender / ist erlaubt.</p>
       </div>`;
     const input = p.querySelector("[data-console-input]");
-    p.querySelector("[data-console-form]").addEventListener("submit", (e) => { e.preventDefault(); const v = input.value; input.value = ""; submitConsole(v); });
+    const box = p.querySelector("[data-suggest]"); box.id = "xa-suggest-list";
+    p.querySelector("[data-console-form]").addEventListener("submit", (e) => { e.preventDefault(); const v = input.value; input.value = ""; setSuggestions([]); submitConsole(v); });
+    input.addEventListener("input", () => { S.console.pos = -1; updateSuggestions(input.value); });
+    input.addEventListener("blur", () => { setTimeout(() => { if (document.activeElement !== input && !box.contains(document.activeElement)) renderSuggestions(true); }, 120); });
+    input.addEventListener("focus", () => renderSuggestions());
     input.addEventListener("keydown", (e) => {
-      const h = S.console.history;
+      const h = S.console.history, list = S.console.suggestions, open = list.length && !box.hidden;
+      if (open && (e.key === "ArrowDown" || e.key === "ArrowUp")) { e.preventDefault(); const n = list.length; S.console.selected = e.key === "ArrowDown" ? (S.console.selected + 1) % n : (S.console.selected - 1 + n) % n; renderSuggestions(); return; }
+      if (open && (e.key === "Tab" || (e.key === "Enter" && S.console.selected >= 0))) { e.preventDefault(); complete(Math.max(0, S.console.selected)); return; }
+      if (e.key === "Escape" && open) { e.preventDefault(); setSuggestions([]); return; }
       if (e.key === "ArrowUp" && h.length) { e.preventDefault(); S.console.pos = S.console.pos < 0 ? h.length - 1 : Math.max(0, S.console.pos - 1); input.value = h[S.console.pos]; }
       else if (e.key === "ArrowDown" && S.console.pos >= 0) { e.preventDefault(); S.console.pos = S.console.pos + 1 >= h.length ? -1 : S.console.pos + 1; input.value = S.console.pos < 0 ? "" : h[S.console.pos]; }
-      else if (e.key === "Tab" && input.value && !input.value.includes(" ")) { const m = COMMANDS.map((c) => c[0]).filter((c) => c.startsWith(input.value.replace(/^\//, ""))); if (m.length === 1) { e.preventDefault(); input.value = `${m[0]} `; } }
     });
+    box.addEventListener("mousedown", (e) => e.preventDefault()); // Fokus bleibt in der Eingabe
+    box.addEventListener("click", (e) => { const b = e.target.closest("[data-index]"); if (b) { complete(Number(b.dataset.index)); input.focus(); } });
+    // Vorschlag übernehmen: ersetzt das gerade getippte Wort (bzw. hängt an), wie in der App
+    function complete(i) {
+      const s = S.console.suggestions[i]; if (!s) return;
+      const v = input.value, cut = v.endsWith(" ") ? v.length : v.lastIndexOf(" ") + 1;
+      input.value = v.slice(0, cut) + s.insert;
+      setSuggestions([]); updateSuggestions(input.value);
+    }
     renderConsole();
     if (!S.console.lines.length) print("info", "Tipp help ein, um die Befehle deiner Rolle zu sehen.");
     input.focus();
   };
+  // ---------- Vorschläge beim Tippen (wie die Konsole in der App) ----------
+  const USER_COMMANDS = ["user", "ban", "unban", "warn", "mute", "unmute", "kick", "audit", "alts", "note"];
+  function setSuggestions(list) { S.console.suggestions = list; S.console.selected = list.length ? 0 : -1; renderSuggestions(); }
+  function renderSuggestions(hide = false) {
+    const box = $("[data-suggest]", panel("console")); if (!box) return;
+    const list = S.console.suggestions;
+    box.hidden = hide || !list.length;
+    if (box.hidden) { box.innerHTML = ""; return; }
+    box.innerHTML = list.map((s, i) => `<button type="button" role="option" data-index="${i}" aria-selected="${i === S.console.selected}" class="${i === S.console.selected ? "is-active" : ""}"><b>${esc(s.label)}</b><span>${esc(s.detail)}</span></button>`).join("");
+  }
+  async function updateSuggestions(line) {
+    const seq = ++S.console.seq;
+    const slash = line.startsWith("/");
+    if ((!slash && !line.trim()) || S.console.pending) { setSuggestions([]); return; }
+    const trailing = line.endsWith(" ");
+    const tokens = (slash ? line.slice(1) : line).trim().split(/\s+/).filter(Boolean);
+    const partial = trailing || !tokens.length ? "" : tokens[tokens.length - 1];
+    const argIndex = !tokens.length ? -1 : (trailing ? tokens.length - 1 : tokens.length - 2);
+    const prefix = partial.toLowerCase();
+    const pick = (pairs, prepend = "") => pairs.filter(([k]) => k.startsWith(prefix) && k !== prefix).map(([k, d]) => ({ label: k, detail: d, insert: `${prepend}${k} ` }));
+    if (argIndex < 0) { setSuggestions(pick(COMMANDS.filter((c) => can(c[1])).map((c) => [c[0], c[3]]), slash ? "/" : "")); return; }
+    const name = tokens[0].toLowerCase();
+    const cmd = COMMANDS.find((c) => c[0] === name);
+    if (!cmd || !can(cmd[1])) { setSuggestions([]); return; }
+    if (name === "ban" && argIndex >= 1 && partial.startsWith("-")) {
+      setSuggestions(pick([["--device", "auch die Geräte des Kontos blockieren"], ["--ip", "auch die Netzwerke des Kontos blockieren"]].filter(([f]) => !tokens.includes(f)))); return;
+    }
+    if (argIndex === 0 && USER_COMMANDS.includes(name)) {
+      if (!partial || !can("users.view")) { setSuggestions([]); return; }
+      try {
+        const { users } = await api("GET", `/admin/users${q({ q: partial })}`);
+        if (seq !== S.console.seq) return;
+        setSuggestions((users || []).slice(0, 8).map((u) => {
+          const insert = u.handle ? `@${u.handle}` : u.email;
+          S.console.userIds[insert.toLowerCase()] = u.id;
+          let detail = u.handle ? `@${u.handle} · ${u.email}` : u.email;
+          if (u.banned) detail += " · gesperrt";
+          if (u.staffRole) detail += ` · ${roleLabel(u.staffRole)}`;
+          return { label: u.displayName, detail, insert: `${insert} ` };
+        }));
+      } catch { if (seq === S.console.seq) setSuggestions([]); }
+      return;
+    }
+    if (argIndex === 1 && (name === "ban" || name === "mute")) {
+      setSuggestions(pick([["1h", "1 Stunde"], ["24h", "24 Stunden"], ["7d", "7 Tage"], ["30d", "30 Tage"], ["perm", "dauerhaft"]])); return;
+    }
+    if (argIndex === 1 && name === "kick") {
+      const id = S.console.userIds[tokens[1].toLowerCase()];
+      if (!id) { setSuggestions([]); return; }
+      try {
+        const d = await api("GET", `/admin/users/${encodeURIComponent(id)}`);
+        if (seq !== S.console.seq) return;
+        setSuggestions((d.memberships || []).filter((m) => m.name.toLowerCase().includes(prefix)).slice(0, 8).map((m) => ({ label: m.name, detail: m.role || "", insert: `${m.id} ` })));
+      } catch { if (seq === S.console.seq) setSuggestions([]); }
+      return;
+    }
+    setSuggestions([]);
+  }
   function print(kind, text) {
     S.console.lines.push({ kind, text });
     if (S.console.lines.length > 500) S.console.lines.splice(0, S.console.lines.length - 500);
