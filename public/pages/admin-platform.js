@@ -327,7 +327,7 @@
     const roleOpts = [["none", "Mitglied (keine Staff-Rolle)"], ...Object.keys(ROLE_LABEL).map((r) => [r, ROLE_LABEL[r]])];
     box.innerHTML = `<section class="xa-card xa-detail">
       <div class="xa-card-head"><div class="xa-person"><span class="admin-avatar">${esc(initials(u.displayName))}</span><div><h3>${esc(u.displayName)}${u.handle ? ` <small>@${esc(u.handle)}</small>` : ""}</h3><small>${esc(u.email)} · dabei seit ${esc(day(u.createdAt))} · 2FA ${u.twoFactor ? "an" : "aus"}</small></div></div><button data-act="close">Schließen</button></div>
-      <div class="xa-badges">${pill(roleLabel(u.staffRole), u.staffRole ? "accent" : "")}${u.plan ? pill(u.subscribed ? `${u.plan} (Abo)` : u.planRenewsAt ? `${u.plan} bis ${day(u.planRenewsAt)}` : u.plan, u.plan !== "Start" ? "ok" : "") : ""}${u.verified ? pill("Verifiziert", "ok") : ""}${u.banned ? pill(u.bannedUntil ? `Gesperrt bis ${fmt(u.bannedUntil)}` : "Gesperrt", "danger") : ""}${u.mutedUntil !== null && u.mutedUntil !== undefined ? pill(u.mutedUntil ? `Stumm bis ${fmt(u.mutedUntil)}` : "Stumm", "warn") : ""}</div>
+      <div class="xa-badges">${pill(roleLabel(u.staffRole), u.staffRole ? "accent" : "")}${u.plan ? pill(u.subscribed ? `${u.plan} (Abo)` : u.planRenewsAt ? `${u.plan} bis ${day(u.planRenewsAt)}` : u.plan, u.plan !== "Start" ? "ok" : "") : ""}${u.aiCreditCents ? pill(`KI-Guthaben ${euro(u.aiCreditCents)}`, "accent") : ""}${u.verified ? pill("Verifiziert", "ok") : ""}${u.banned ? pill(u.bannedUntil ? `Gesperrt bis ${fmt(u.bannedUntil)}` : "Gesperrt", "danger") : ""}${u.mutedUntil !== null && u.mutedUntil !== undefined ? pill(u.mutedUntil ? `Stumm bis ${fmt(u.mutedUntil)}` : "Stumm", "warn") : ""}</div>
       ${u.headline || u.bio || u.location || u.website || u.github ? `<p class="xa-bio">${[u.headline, u.location, u.website, u.github].filter(Boolean).map(esc).join(" · ")}${u.bio ? `<br><span>${esc(u.bio)}</span>` : ""}</p>` : ""}
       <div class="xa-stats xa-stats-sm">
         ${stat("Arbeitsbereiche (Inhaber)", num(d.counts.workspacesOwned))}${stat("Mitgliedschaften", num(d.counts.memberships))}${stat("Tickets", num(d.counts.tickets))}
@@ -421,6 +421,7 @@
     ["unmute", "users.ban", "unmute <Konto>", "Stummschaltung aufheben."],
     ["kick", "content.moderate", "kick <Konto> <Arbeitsbereich> [Grund]", "Konto aus einem seiner Arbeitsbereiche entfernen. Fragt vorher nach."],
     ["plan", "billing.manage", "plan <Konto> <Tage> [Tarif] <Grund>", "Mitgliedschaftstage gutschreiben (30, 30d, 4w). Sie zählen ab dem Ende der laufenden Mitgliedschaft. Ein kostenloses Konto braucht den Tarif (Forge, Crew, Foundry); ein bezahltes behält seinen, außer du nennst einen anderen. Die Tage laufen von selbst ab."],
+    ["credit", "billing.manage", "credit <Konto> <Euro> <Grund>", "KI-Guthaben gutschreiben (5, 2,50; negativ korrigiert). Das Konto bezahlt seine KI-Aufrufe daraus, sobald das Inklusivbudget des Tarifs aufgebraucht ist."],
     ["alts", "users.ban", "alts <Konto>", "Andere Konten, die dasselbe Gerät oder Netzwerk genutzt haben."],
     ["reports", "reports.handle", "reports", "Offene Meldungen auflisten."],
     ["note", "users.notes", "note <Konto> [Text]", "Staff-Notiz zu einem Konto; ohne Text werden die Notizen gelistet."],
@@ -465,7 +466,14 @@
     input.focus();
   };
   // ---------- Vorschläge beim Tippen (wie die Konsole in der App) ----------
-  const USER_COMMANDS = ["user", "ban", "unban", "warn", "mute", "unmute", "kick", "plan", "audit", "alts", "note"];
+  const USER_COMMANDS = ["user", "ban", "unban", "warn", "mute", "unmute", "kick", "plan", "credit", "audit", "alts", "note"];
+  const euro = (cents) => (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
+  // Euro für credit: "5", "5.50", "5,50", "-2" → Cent; nie null, höchstens 500 € wie auf dem Server.
+  function parseEuroCents(token) {
+    const m = /^(-?)(\d{1,3})(?:[.,](\d{1,2}))?$/.exec(token || ""); if (!m) return undefined;
+    const cents = Number(m[2]) * 100 + Number((m[3] || "").padEnd(2, "0"));
+    return cents > 0 && cents <= 50000 ? (m[1] ? -cents : cents) : undefined;
+  }
   // Bezahlte Tarife, die plan vergeben kann – Spiegel des Katalogs in server/src/billing/routes.ts; der Server prüft den echten.
   const PLAN_IDS = ["Forge", "Crew", "Foundry", "Works", "Works Custom"];
   // Tage für plan: "30", "30d"/"30t" oder "4w"; Stunden sind keine Tage.
@@ -595,6 +603,7 @@
           const x = d.user;
           print("ok", `${x.displayName}${x.handle ? ` (@${x.handle})` : ""} · ${x.email}`);
           print("info", `Konto-ID: ${x.id}`); print("info", `Staff-Rolle: ${roleLabel(x.staffRole)}`);
+          if (x.aiCreditCents !== undefined) print("info", `KI-Guthaben: ${euro(x.aiCreditCents)}`);
           print("info", `Tarif: ${x.plan}${x.subscribed ? ` (Abo${x.planRenewsAt ? `, verlängert sich ${fmt(x.planRenewsAt)}` : ""})` : x.planRenewsAt ? ` bis ${fmt(x.planRenewsAt)}` : ""}`);
           print("info", `Status: ${x.banned ? (x.bannedUntil ? `gesperrt bis ${fmt(x.bannedUntil)}` : "dauerhaft gesperrt") : "aktiv"}${x.mutedUntil !== null && x.mutedUntil !== undefined ? ` · stumm${x.mutedUntil ? ` bis ${fmt(x.mutedUntil)}` : ""}` : ""}${x.verified ? " · verifiziert" : ""}`);
           print("info", `Dabei seit ${day(x.createdAt)} · 2FA ${x.twoFactor ? "an" : "aus"} · ${d.sessions.length} aktive Sitzung(en)`);
@@ -651,6 +660,15 @@
           const u = await resolveUser(args[0]); if (!u) return;
           const r = await api("POST", `/admin/users/${encodeURIComponent(u.id)}/plan/extend`, { days, plan, reason: why });
           print("ok", `${u.displayName} ist bis ${fmt(r.renewsAt)} auf ${r.plan} (${r.days} Tage gutgeschrieben).`);
+          return;
+        }
+        case "credit": {
+          if (!need(3)) return;
+          const cents = parseEuroCents(args[1]);
+          if (cents === undefined) { print("error", `Der Betrag ist in Euro, höchstens zwei Nachkommastellen und höchstens 500: 5, 2,50, -1. Aufruf: ${cmd[2]}`); return; }
+          const u = await resolveUser(args[0]); if (!u) return;
+          const r = await api("POST", `/admin/users/${encodeURIComponent(u.id)}/ai-credit`, { cents, reason: args.slice(2).join(" ") });
+          print("ok", `${u.displayName} hat jetzt ${euro(r.creditCents)} KI-Guthaben.`);
           return;
         }
         case "alts": { if (!need(1)) return; const u = await resolveUser(args[0]); if (!u) return;
