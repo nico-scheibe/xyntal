@@ -1,10 +1,12 @@
 const form = document.getElementById("beta-form");
-const gate = document.getElementById("beta-gate");
 const status = document.getElementById("beta-status");
 const done = document.getElementById("beta-done");
+const confirmBox = document.getElementById("beta-confirm");
 const why = form.elements.why;
 const whyCount = document.getElementById("why-count");
 const MIN_WHY = 80;
+const DRAFT_KEY = "xyntal-beta-draft";
+const APPLICATION_FIELDS = ["focus", "project", "why", "hours", "link"];
 const STATE = {
   neu: "Stand: eingegangen, noch nicht geprüft.",
   in_pruefung: "Stand: in Prüfung.",
@@ -13,6 +15,7 @@ const STATE = {
   angenommen: "Stand: angenommen – willkommen in der Beta!",
   abgelehnt: "Stand: diesmal leider nicht dabei.",
 };
+let guest = true;
 
 function updateCount() {
   const n = why.value.trim().length;
@@ -21,17 +24,67 @@ function updateCount() {
 }
 why.addEventListener("input", updateCount);
 
-// Bewerben geht nur mit Konto: Gäste sehen den Einstieg, Mitglieder das Formular oder ihren Stand
+// Zwischenspeicher für die Bewerbung, solange die E-Mail-Bestätigung oder der Login läuft
+const readDraft = () => { try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || "null"); } catch { return null; } };
+const saveDraft = (d) => { try { localStorage.setItem(DRAFT_KEY, JSON.stringify(Object.fromEntries(APPLICATION_FIELDS.map((k) => [k, d[k] || ""])))); } catch { /* ohne Speicher geht es ohne Entwurf weiter */ } };
+const clearDraft = () => { try { localStorage.removeItem(DRAFT_KEY); } catch {} };
+const applicationFrom = (d) => ({ p_focus: d.focus, p_project: d.project, p_why: d.why, p_hours: d.hours, p_link: normalizeUrl(d.link) });
+
+async function submitApplication(d) {
+  const { error } = await sb.rpc("apply_for_beta", applicationFrom(d));
+  if (!error) return { ok: true };
+  if (/could not find the function|schema cache/i.test(error.message || "")) {
+    throw new Error("Bewerbungen sind gleich möglich – die Datenbank wird gerade eingerichtet. Bitte versuch es später noch einmal.");
+  }
+  if (/schon beworben/i.test(error.message || "")) {
+    const { data: mine } = await sb.rpc("get_my_beta_application");
+    return { ok: true, mine: mine || { status: "neu" } };
+  }
+  throw new Error(friendlyError(error));
+}
+
+// Gäste legen im selben Formular ein Konto an; Mitglieder sehen nur die Bewerbung oder ihren Stand
 (async () => {
-  const me = await currentMember();
-  if (!me) { gate.hidden = false; return; }
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) {
+    form.querySelector("[data-beta-account]").hidden = false;
+    form.querySelector("[data-beta-sub]").hidden = false;
+    const draft = readDraft();
+    if (draft) for (const k of APPLICATION_FIELDS) if (form.elements[k] && !form.elements[k].value) form.elements[k].value = draft[k] || "";
+    updateCount();
+    renderAuthOptions(form.querySelector("[data-beta-auth]"), {
+      statusEl: status, redirectPath: "beta",
+      // Vor dem Sprung zu Google & Co. die bisherigen Eingaben sichern
+      checkConsent: () => {
+        if (!form.elements.consent.checked) throw new Error("Bitte bestätige zuerst die Einwilligung unten im Formular.");
+        saveDraft(Object.fromEntries(new FormData(form)));
+      },
+    }).then((shown) => { form.querySelector("[data-beta-auth-divider]").hidden = !shown; }).catch(() => {});
+    return;
+  }
+  guest = false;
   const { data: mine } = await sb.rpc("get_my_beta_application");
-  if (mine) { showDone(mine); return; }
-  form.querySelector("[data-beta-as-name]").textContent = me.name || me.email;
-  form.querySelector("[data-beta-as-email]").textContent = me.name ? `(${me.email})` : "";
+  if (mine) { clearDraft(); showDone(mine); return; }
+  // Nach E-Mail-Bestätigung oder Login: zwischengespeicherte Bewerbung automatisch abschicken
+  const draft = readDraft();
+  if (draft && draft.focus && draft.hours && (draft.why || "").length >= MIN_WHY) {
+    try {
+      const result = await submitApplication(draft);
+      clearDraft();
+      showDone(result.mine);
+      return;
+    } catch (err) {
+      for (const k of APPLICATION_FIELDS) if (form.elements[k]) form.elements[k].value = draft[k] || "";
+      updateCount();
+      setStatus(status, err.message, "error");
+    }
+  }
+  const me = await currentMember().catch(() => null);
+  form.querySelector("[data-beta-as-name]").textContent = (me && me.name) || session.user.email;
+  form.querySelector("[data-beta-as-email]").textContent = me && me.name ? `(${session.user.email})` : "";
   form.querySelector("[data-beta-as]").hidden = false;
-  form.hidden = false;
-})().catch(() => { gate.hidden = false; });
+  form.querySelector("[data-beta-submit]").textContent = "Bewerbung abschicken";
+})().catch((err) => setStatus(status, friendlyError(err), "error"));
 
 form.addEventListener("submit", (e) => {
   e.preventDefault();
@@ -43,28 +96,40 @@ form.addEventListener("submit", (e) => {
       throw new Error(`Erzähl mir etwas mehr über dein Vorhaben – mindestens ${MIN_WHY} Zeichen.`);
     }
     if (!d.consent) throw new Error("Bitte bestätige, dass deine Angaben für die Auswahl gespeichert werden dürfen.");
-    const { error } = await sb.rpc("apply_for_beta", {
-      p_focus: d.focus, p_project: d.project, p_why: d.why, p_hours: d.hours, p_link: normalizeUrl(d.link),
-    });
-    if (error) {
-      if (/could not find the function|schema cache/i.test(error.message || "")) {
-        throw new Error("Bewerbungen sind gleich möglich – die Datenbank wird gerade eingerichtet. Bitte versuch es später noch einmal.");
+    if (guest) {
+      requireFields(d, ["name", "email", "password"], "Bitte gib Name, E-Mail und ein Passwort mit mindestens 8 Zeichen an.");
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)) throw new Error("Bitte gib eine gültige E-Mail-Adresse an.");
+      if (d.password.length < 8) throw new Error("Dein Passwort braucht mindestens 8 Zeichen.");
+      saveDraft(d);
+      const result = unwrap(await sb.auth.signUp({
+        email: d.email.trim(), password: d.password,
+        options: {
+          data: profileFrom({ name: d.name.trim(), headline: (d.project || d.why).trim().slice(0, 120) }),
+          emailRedirectTo: new URL("beta", location.href).href,
+        },
+      }));
+      // Supabase meldet bei schon vorhandener E-Mail keinen Fehler, sondern ein Konto ohne Identitäten
+      if (result.user && result.user.identities && result.user.identities.length === 0) {
+        throw new Error("Mit dieser E-Mail gibt es schon ein Konto. Logg dich ein, dann füllst du nur noch die Bewerbung aus.");
       }
-      if (/schon beworben/i.test(error.message || "")) {
-        const { data: mine } = await sb.rpc("get_my_beta_application");
-        showDone(mine || { status: "neu" });
+      if (!result.session) {
+        form.hidden = true;
+        confirmBox.querySelector("[data-beta-confirm-email]").textContent = d.email.trim();
+        confirmBox.hidden = false;
+        confirmBox.focus();
         return;
       }
-      if (/Xyntal-Konto/.test(error.message || "")) { form.hidden = true; gate.hidden = false; return; }
-      throw new Error(friendlyError(error));
+      guest = false;
     }
-    showDone();
+    const result = await submitApplication(d);
+    clearDraft();
+    showDone(result.mine);
   });
 });
 
 function showDone(mine) {
   form.hidden = true;
-  gate.hidden = true;
+  confirmBox.hidden = true;
   if (mine) {
     done.querySelector(".beta-done-line").textContent = "Deine Bewerbung";
     done.querySelector("#beta-done-head").textContent = "Du hast dich schon beworben.";
