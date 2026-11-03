@@ -1046,7 +1046,7 @@
     try {
       const { entries } = await api("GET", `/admin/audit${q({ action: S.audit.action, q: S.audit.query })}`);
       S.audit.entries = entries;
-      box.innerHTML = entries.length ? table(["Wann", "Aktion", "Akteur", "Ziel", "Vorher → Nachher", "IP"], entries.map((a) => `<tr><td><small>${esc(fmt(a.createdAt))}</small></td><td><code>${esc(a.action)}</code></td><td>${esc(a.actor || "System")}<br><small>${esc(a.actorEmail || "")}</small></td><td><small><code>${esc(a.target || "")}</code></small>${a.reason ? `<br><small>Grund: ${esc(a.reason)}</small>` : ""}</td><td><small class="xa-pre">${esc(show(a.before))}${show(a.before) || show(a.after) ? " → " : ""}${esc(show(a.after))}${a.meta ? `<br>${esc(show(a.meta))}` : ""}</small></td><td><small><code>${esc(a.ip || "")}</code></small></td></tr>`).join("")) : empty("Noch nichts.");
+      box.innerHTML = entries.length ? `<div class="xa-audit">${table(["Wann", "Aktion", "Akteur", "Ziel", "Vorher → Nachher", "IP"], entries.map((a) => `<tr><td><small>${esc(fmt(a.createdAt))}</small></td><td><code>${esc(a.action)}</code></td><td>${esc(a.actor || "System")}<br><small>${esc(a.actorEmail || "")}</small></td><td><small><code>${esc(a.target || "")}</code></small>${a.reason ? `<br><small>Grund: ${esc(a.reason)}</small>` : ""}</td><td><small class="xa-pre">${esc(show(a.before))}${show(a.before) || show(a.after) ? " → " : ""}${esc(show(a.after))}${a.meta ? `<br>${esc(show(a.meta))}` : ""}</small></td><td><small><code title="${esc(a.ip || "")}">${esc(a.ip || "")}</code></small></td></tr>`).join(""))}</div>` : empty("Noch nichts.");
     } catch (err) { box.innerHTML = empty(reason(err)); }
   }
 
