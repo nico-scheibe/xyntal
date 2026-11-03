@@ -11,7 +11,8 @@
   const returnTo = location.origin + location.pathname;
   let data = null, yearly = false, busy = false;
 
-  const locale = () => (document.documentElement.lang === "en" ? "en-GB" : "de-DE");
+  const lang = () => (window.XyntalI18n ? window.XyntalI18n.get() : document.documentElement.lang === "en" ? "en" : "de");
+  const locale = () => (lang() === "en" ? "en-GB" : "de-DE");
   // Einzelne KI-Aufrufe kosten Bruchteile eines Cents; Guthaben und Budget sind ganze Cent.
   const euro = (cents) => (Number(cents || 0) / 100).toLocaleString(locale(), { style: "currency", currency: "EUR" });
   const price = (cents) => {
@@ -32,6 +33,9 @@
     return Math.floor(n / step) * step;
   };
   const count = (n) => Number(n).toLocaleString(locale());
+  // Tarifnamen sind Markennamen und bleiben unübersetzt – bis auf den kostenlosen:
+  // „Start“ liest sich auf Englisch wie ein Knopf, dort heißt er „Starter“.
+  const planName = (id) => ((id === "Start" || id === "Free") && lang() === "en" ? "Starter" : id);
   const say = (text, kind = "") => { notice.innerHTML = text ? `<p class="xm-status ${kind}" role="status">${esc(text)}</p>` : ""; };
   const fail = (err) => (err && err.message) || t("Das hat nicht geklappt. Versuch es gleich noch einmal.");
 
@@ -50,7 +54,7 @@
       <section class="xm-detail xm-billing">
         <div class="xm-billing-head">
           <h2>${esc(t("Dein Tarif"))}</h2>
-          <span class="xm-pill xm-on" data-no-i18n>${esc(d.plan)}</span>
+          <span class="xm-pill xm-on" data-no-i18n>${esc(planName(d.plan))}</span>
           ${d.locked ? `<span class="xm-pill xm-warn">${esc(t("Zahlung überfällig"))}</span>` : ""}
         </div>
         <p class="xm-billing-text ${d.locked ? "xm-bad" : ""}">${esc(status)}</p>
@@ -131,14 +135,11 @@
     if (!free || !plans.length) return "";
     const cards = plans.map((p) => {
       const full = yearly ? p.yearlyPriceCents : p.priceCents;
-      const cut = yearly ? p.discountedYearlyPriceCents : p.discountedPriceCents;
       const unit = t(yearly ? "/Jahr" : "/Monat");
       return `
         <article class="xm-person xm-plan">
           <div class="xm-billing-head"><h3 data-no-i18n>${esc(p.name)}</h3></div>
-          <p class="xm-plan-price">${cut !== null && cut !== undefined
-            ? `<s>${esc(price(full))}</s> <b>${esc(price(cut))}</b>${esc(unit)}`
-            : `<b>${esc(price(full))}</b>${esc(unit)}`}</p>
+          <p class="xm-plan-price"><b>${esc(price(full))}</b>${esc(unit)}</p>
           <p class="xm-billing-text" data-no-i18n>${esc(p.blurb)}</p>
           <ul class="xm-plan-features" data-no-i18n>${planFeatures(p, d).map((f) => `<li>${esc(f)}</li>`).join("")}</ul>
           <div class="xm-actions"><button class="btn btn-small" type="button" data-upgrade="${esc(p.id)}" ${d.configured ? "" : "disabled"}>${esc(t("{plan} wählen").replace("{plan}", p.name))}</button></div>
@@ -153,7 +154,6 @@
             <button type="button" class="xm-chip" aria-pressed="${yearly}" data-interval="year">${esc(t("Jährlich – zwei Monate gratis"))}</button>
           </div>
         </div>
-        ${d.discount && d.discount.eligible ? `<p class="xm-billing-text xm-good">${esc(t("Angebot fürs erste Upgrade: {pct} % auf den ersten Zeitraum, an der Kasse automatisch abgezogen.").replace("{pct}", d.discount.percent))}</p>` : ""}
         <div class="xm-list">${cards}</div>
         <p class="xm-billing-hint">${esc(t("Endpreise. Es wird keine Umsatzsteuer berechnet (Kleinunternehmer nach § 19 UStG)."))}</p>
       </div>`;
@@ -213,5 +213,9 @@
 
   // Beschreibung und Feature-Zeilen kommen vom Server in der Seitensprache: neu holen.
   document.addEventListener("xyntal:lang", load);
-  load();
+  // Erst nach den verzögert geladenen Skripten rendern: sonst steht der Text vor
+  // der Übersetzung (i18n.js) auf der Seite, und eingefüllte Sätze wie
+  // „Aktiv bis …“ blieben auf Englisch deutsch.
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", load, { once: true });
+  else load();
 })();
