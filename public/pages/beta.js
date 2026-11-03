@@ -96,6 +96,9 @@ async function submitApplication(d) {
   form.querySelector("[data-beta-as-email]").textContent = me && me.name ? `(${session.user.email})` : "";
   form.querySelector("[data-beta-as]").hidden = false;
   form.querySelector("[data-beta-submit]").textContent = "Bewerbung abschicken";
+  // Konto ist da, Bewerbung fehlt: direkt zum Formular statt oben auf der Seite zu landen
+  document.getElementById("bewerben").scrollIntoView({ block: "start" });
+  form.elements.focus.focus({ preventScroll: true });
 })().catch((err) => setStatus(status, friendlyError(err), "error"));
 
 form.addEventListener("submit", (e) => {
