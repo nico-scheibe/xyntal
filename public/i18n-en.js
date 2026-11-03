@@ -2158,9 +2158,6 @@ window.XYNTAL_EN = {
   "zeigt die Oberfläche mit Beispieldaten.": "shows the interface with sample data.",
   "Wie komme ich rein?": "How do I get in?",
   "Per Bewerbung: Konto anlegen, drei Fragen beantworten (was baust du, wen suchst du, wie viel Zeit hast du). Ich lese jede selbst und antworte per E-Mail. In der Beta kostet Xyntal nichts.": "By applying: create an account, answer three questions (what are you building, who are you looking for, how much time do you have). I read every one myself and reply by email. During the beta, Xyntal costs nothing.",
-  "Wer steckt dahinter?": "Who is behind it?",
-  "Nico Scheibe, allein, in Regensburg. Fragen an": "Nico Scheibe, on his own, in Regensburg. Questions to",
-  "oder auf": "or on",
   "Die Beta läuft. Zugang per Bewerbung.": "The beta is running. Access by application.",
   "Noch nichts Konkretes vor? Dann sag ich dir Bescheid, wenn Xyntal für alle offen ist. Keine Werbung, nur Mails, wenn es wirklich etwas Neues gibt.": "Nothing concrete planned yet? Then I'll let you know when Xyntal opens to everyone. No advertising, just an email when there's really something new.",
 };
