@@ -191,11 +191,11 @@
       } else {
         btn.innerHTML = ICON_USER;
         const next = location.pathname.replace(/^\/|\.html$/g, "");
-        const loginHref = /^[a-z-]{2,30}$/.test(next) && !["login", "mitglied-werden"].includes(next) ? `/login?next=${next}` : "/login";
+        const loginHref = /^[a-z-]{2,30}$/.test(next) && next !== "login" ? `/login?next=${next}` : "/login";
         menu.innerHTML = `
           <a href="${loginHref}" role="menuitem">${ICONS.login}${t("Einloggen")}</a>
           <div class="acct-hint">${t("Noch kein Konto?")}</div>
-          <a class="acct-primary" href="/mitglied-werden" role="menuitem">${ICONS.neu}${t("Konto anlegen")}</a>`;
+          <a class="acct-primary" href="/beta#bewerben" role="menuitem">${ICONS.neu}${t("Konto anlegen")}</a>`;
       }
       menu.setAttribute("role", "menu");
     }

@@ -40,7 +40,7 @@
         ]
       : [
           { label: "Login", href: "login", glyph: "→", keys: "anmelden einloggen" },
-          { label: "Konto anlegen", href: "mitglied-werden", glyph: "+", keys: "registrieren mitglied werden" },
+          { label: "Konto anlegen", href: "beta#bewerben", glyph: "+", keys: "registrieren mitglied werden beta bewerben" },
           { label: "Impressum & Datenschutz", href: "impressum", glyph: "§", keys: "rechtliches datenschutz" },
         ];
   };

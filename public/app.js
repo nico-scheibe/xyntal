@@ -122,11 +122,29 @@ async function mfaPending() {
     return !!data && data.nextLevel === "aal2" && data.currentLevel !== "aal2";
   } catch { return false; }
 }
+// Name der aktuellen Seite, z. B. "profil"
+function pageName() {
+  return location.pathname.replace(/^\/+/, "").replace(/\.html$/, "");
+}
 // Zur Code-Abfrage und danach zurück auf diese Seite
 function mfaRedirect() {
-  const page = location.pathname.replace(/^\/+/, "").replace(/\.html$/, "");
+  const page = pageName();
   if (page === "login") return Promise.resolve(null);  // dort wird der Code abgefragt
   location.replace(`login?mfa=1&next=${encodeURIComponent(/^[a-z-]{2,30}$/.test(page) ? page : "profil")}`);
+  return new Promise(() => {});
+}
+
+// Pflicht-Bewerbung: Ein Konto, das über Google & Co. vor der Bewerbung entstanden ist, muss sie nachholen.
+// Die Datenbank entscheidet (beta_application_required, siehe supabase/migrations/…_account_requires_beta_application.sql).
+async function betaApplicationPending() {
+  try {
+    const { data } = await sb.rpc("beta_application_required");
+    return data === true;
+  } catch { return false; }
+}
+// Zur Bewerbung; die Seite bleibt bis zum Wechsel stehen
+function betaRedirect() {
+  location.replace("beta?pflicht=1#bewerben");
   return new Promise(() => {});
 }
 
@@ -135,6 +153,7 @@ async function currentMember() {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) return null;
   if (await mfaPending()) return mfaRedirect();
+  if (pageName() !== "beta" && await betaApplicationPending()) return betaRedirect();
   const { data: profile } = await sb.from("profiles").select("*").eq("id", session.user.id).maybeSingle();
   return profile ? { ...profile, email: session.user.email } : null;
 }
@@ -173,8 +192,6 @@ function memberCard(m, opts = {}) {
     slot.textContent = "Mein Profil";
     slot.href = "profil";
     slot.classList.remove("hide-sm");
-    // Angemeldet: „Projekt starten“ führt direkt zum Projektformular statt zur Anmeldung
-    document.querySelectorAll('.nav-links a.btn[href="mitglied-werden"]').forEach((a) => { a.href = "projekte?neu=1"; a.textContent = "Projekt anlegen"; });
   }
 })();
 
@@ -349,7 +366,7 @@ function accessNotice(v, what, { open = false } = {}) {
   if (v.me) {
     return `<div class="notice">Dein Profil wartet noch auf Freigabe. Danach kannst du ${what} und siehst alle Inhalte.</div>`;
   }
-  return `<div class="notice">Du siehst hier, was Mitglieder öffentlich geteilt haben. <a class="text-link" href="mitglied-werden">Werde Mitglied</a> oder <a class="text-link" href="login">logg dich ein</a>, um ${what}${open ? " zu können" : " und alles zu sehen"}.</div>`;
+  return `<div class="notice">Du siehst hier, was Mitglieder öffentlich geteilt haben. <a class="text-link" href="beta#bewerben">Bewirb dich für die Beta</a> oder <a class="text-link" href="login">logg dich ein</a>, um ${what}${open ? " zu können" : " und alles zu sehen"}.</div>`;
 }
 
 // Navigation: Link zu Nachrichten mit Zähler ungelesener Nachrichten

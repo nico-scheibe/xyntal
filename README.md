@@ -42,6 +42,7 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 | `supabase/migrations/20261103120000_beta_requires_account.sql` | Beta-Programm: Bewerbung nur mit Konto (`apply_for_beta` nur für `authenticated`, `user_id` je Bewerbung, `get_my_beta_application` für den eigenen Stand) |
 | `supabase/migrations/20261103130000_beta_accepted_sets_badge.sql` | Beta-Programm: Status „angenommen“ setzt den Beta-Tester-Badge per Trigger |
 | `supabase/migrations/20261103140000_beta_status_mail.sql` | Beta-Programm: Spalten `mailed_status`/`mailed_at` für Status-Mails über IONOS; **noch auszuführen** |
+| `supabase/migrations/20261103160000_account_requires_beta_application.sql` | Beta-Programm: Bewerbung ist Pflicht für jedes Konto (`beta_application_required`, `is_active_member` verlangt sie für neue Konten); **noch auszuführen** |
 | `ANMELDUNG-EINRICHTEN.md` | Anleitung: Brevo-SMTP einrichten; Google, Apple, LinkedIn und SMS einschalten |
 
 ## Seiten
@@ -50,7 +51,7 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 |---|---|
 | `/` | Startseite: Einstieg, Zitat von Nico, Fragen und Antworten (für wen, Unterschied zu LinkedIn/Discord, Mac/Windows, was schon geht, Bewerbung, wer dahintersteht), Beta-Link, Newsletter. Demo und Karten-Builder liegen auf `/demo` und `/meine-karte` |
 | `/brief` | Der Brief von Nico: warum es Xyntal gibt, Stand der Beta, Bewerbung |
-| `/mitglied-werden` | Konto und Profil anlegen (mit E-Mail-Bestätigung) |
+| `/mitglied-werden` | Nur noch Weiterleitung auf `/beta#bewerben`: ein Konto gibt es ausschließlich mit der Beta-Bewerbung (alte Links, Aliase `/register`, `/signup`, `/registrieren` und die Desktop-App landen dort) |
 | `/beta` | Beta-Programm: was Tester bekommen, Bewerbung nur mit Konto. Gäste legen im selben Formular ein Konto an (E-Mail/Passwort oder Google/Apple); die Bewerbung wird bis zur E-Mail-Bestätigung im Browser zwischengespeichert und danach automatisch abgeschickt. Mitglieder sehen nur die Bewerbung oder den Stand ihrer Bewerbung; Bewerbungen erscheinen im Admin-Bereich |
 | `/login` | Einloggen per E-Mail, Google, Apple, LinkedIn oder Handynummer, „Passwort vergessen?“ |
 | `/passwort-neu` | Neues Passwort setzen (Link aus der E-Mail) |
@@ -79,7 +80,7 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 
 ## Admin werden
 
-1. Auf `/mitglied-werden` ein Konto anlegen und die E-Mail bestätigen.
+1. Auf `/beta` ein Konto anlegen (Konto und Bewerbung in einem Schritt) und die E-Mail bestätigen.
 2. Im Supabase-Dashboard → SQL Editor ausführen:
 
 ```sql
@@ -146,7 +147,7 @@ SQL-Regressionstest in einer **leeren, separaten lokalen PostgreSQL-Datenbank** 
 `authenticated`): `psql -v ON_ERROR_STOP=1 -d TESTDATENBANK -f tests/projects.sql`. Erwartete letzte Ausgabe: `projects ok`.
 
 Die Demo auf der Startseite gibt die Rollen des Demo-Teams über den lokalen Browser-Speicher
-(`xyntal-wunschrollen`) als Vorschlag an `/mitglied-werden` und das Projektformular weiter.
+(`xyntal-wunschrollen`) als Vorschlag an das Projektformular weiter.
 Das Vorschaubild für geteilte Links ist `public/og-image.jpg` (1200 × 630).
 
 ## Benachrichtigungen aktivieren
@@ -313,6 +314,16 @@ stehen sie als „ohne Konto (alt)“. Seit
 „angenommen“ per Trigger den Beta-Tester-Badge am verknüpften Konto (und damit die
 Desktop-Downloads im Profil); wechselt der Status wieder weg, wird der Badge entfernt.
 Der Badge lässt sich zusätzlich weiterhin von Hand am Mitglied setzen.
+
+Seit `supabase/migrations/20261103160000_account_requires_beta_application.sql` gilt die
+Umkehrung: **Die Bewerbung ist Pflicht für jedes Konto.** `/mitglied-werden` leitet nur noch auf
+`/beta` weiter, alle „Konto anlegen“-Links führen dorthin. Weil Google, Apple, LinkedIn und SMS
+(auf `/login`) das Konto trotzdem vor der Bewerbung anlegen, prüft `beta_application_required()`,
+ob einem Konto die Bewerbung fehlt: `is_active_member()` (Projekte, Nachrichten, Kommentare) ist
+dann `false`, und `currentMember()` in `public/app.js` schickt solche Konten auf jeder
+Mitgliederseite nach `/beta?pflicht=1`, wo nur noch die Bewerbung auszufüllen ist. Betroffen sind
+Konten, die ab dem 3. 11. 2026 18:00 UTC angelegt wurden; ältere Konten bleiben unberührt. Alte
+Bewerbungen ohne Konto zählen über die E-Mail-Adresse.
 
 UI-Logik prüfen: `node tests/admin-ui.cjs` (Beispieldaten, keine Live-Datenbank).
 Öffentlicher Testablauf und Feedback: `/beta#testen`.

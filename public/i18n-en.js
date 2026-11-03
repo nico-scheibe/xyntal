@@ -297,6 +297,8 @@ window.XYNTAL_EN = {
   "Du": "You",
   "Gespeichert.": "Saved.",
   "Werde Mitglied": "Become a member",
+  "Bewirb dich für die Beta": "Apply for the beta",
+  "Ein Xyntal-Konto bekommst du mit deiner Bewerbung für die Beta: Konto und Bewerbung in einem Schritt, in etwa drei Minuten.": "You get a Xyntal account with your application for the beta: account and application in one step, in about three minutes.",
   "logg dich ein": "sign in",
   "Du siehst hier, was Mitglieder öffentlich geteilt haben.": "You're seeing what members have shared publicly.",
   "Zum Login": "Go to sign in",

@@ -6,6 +6,8 @@ Object.assign(window.XYNTAL_EN, {
   "Die richtigen Menschen.": "The right people.",
   "Du willst etwas aufbauen oder bei einer Idee mitmachen? Bring dein Vorhaben mit, lerne Menschen mit passenden Fähigkeiten kennen und gestalte Xyntal mit.": "Want to build something or join an idea? Bring your ambition, meet people with the skills you need and help shape Xyntal.",
   "Für die Beta bewerben": "Apply for the beta",
+  "Dein Konto ist angelegt. Damit du Xyntal nutzen kannst, fehlt nur noch deine Bewerbung – sie gehört zu jedem Konto dazu.": "Your account exists. To use Xyntal, all that's missing is your application – it is part of every account.",
+  "Dein Xyntal-Konto entsteht mit der Bewerbung. Einen anderen Weg gibt es nicht.": "Your Xyntal account is created with your application. There is no other way.",
   "Kostenlos. Konto anlegen und bewerben in einem Schritt.": "Free. Create your account and apply in one step.",
   "Dein nächster Schritt": "Your next step",
   "Aus deiner Idee": "Turn your idea",
