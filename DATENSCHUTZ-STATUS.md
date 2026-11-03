@@ -10,7 +10,7 @@
 - Supabase-JavaScript 2.117.2 lokal in public/vendor; npm-Tarball-Integrität überprüft, Bundle bytegleich zur bisherigen CDN-Datei. Alle zwölf Seiten ohne externe Script-URLs. Keine jsDelivr-Verbindung mehr für die Bibliothek.
 - Newsletter: Brevo-Formular mit verpflichtender Einwilligung und Double-Opt-in. Neue Abonnenten werden erst nach E-Mail-Bestätigung in die separate Brevo-Liste „Xyntal Newsletter – bestätigt“ aufgenommen. Abmeldung erfolgt über den Link in jeder Newsletter-Mail. Die frühere lokale Tabelle bleibt nur als Archiv bestehen.
 
-- Beta-Programm (23.10.2026): Bewerbung ohne Konto mit Pflicht-Einwilligung, Abschnitt 6 der Datenschutzerklärung, nur Admins lesen die Bewerbungen. Keine automatische Löschung; Löschung auf Anfrage beschrieben.
+- Beta-Programm (23.10.2026, seit 03.11.2026 nur mit Konto): Bewerbung mit Pflicht-Einwilligung, Name und E-Mail aus dem Konto, Bewerbung mit `user_id` verknüpft, Abschnitt 6 der Datenschutzerklärung, nur Admins lesen die Bewerbungen. Keine automatische Löschung; Löschung auf Anfrage beschrieben.
 
 - Hosting (23.10.2026): Abschnitt 2 von GitHub Pages auf Daki mit Cloudflare (DNS, HTTPS, Tunnel) umgestellt; IONOS nur Registrar und E-Mail. Firmierung und Sitz von Daki sowie Protokollierung bei Daki und Cloudflare noch nicht bestätigt.
 
