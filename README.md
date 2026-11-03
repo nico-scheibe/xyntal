@@ -37,7 +37,8 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 | `supabase/018_open_projects_messages.sql` | Projekte anlegen, für Rollen melden und Nachrichten schreiben schon mit bestätigtem Konto (ohne Freischaltung); Abgelehnte ausgeschlossen; Spam-Grenzen: 5 Projekte/Tag, 30 Nachrichten und 3 neue Gespräche pro Stunde |
 | `supabase/010_beta_applications.sql` | Beta-Programm: Bewerbungstabelle (ursprünglich ohne Konto), lesen und bewerten nur Admins |
 | `supabase/migrations/20261103120000_beta_requires_account.sql` | Beta-Programm: Bewerbung nur mit Konto (`apply_for_beta` nur für `authenticated`, `user_id` je Bewerbung, `get_my_beta_application` für den eigenen Stand) |
-| `supabase/migrations/20261103130000_beta_accepted_sets_badge.sql` | Beta-Programm: Status „angenommen“ setzt den Beta-Tester-Badge per Trigger; **noch auszuführen** |
+| `supabase/migrations/20261103130000_beta_accepted_sets_badge.sql` | Beta-Programm: Status „angenommen“ setzt den Beta-Tester-Badge per Trigger |
+| `supabase/migrations/20261103140000_beta_status_mail.sql` | Beta-Programm: Spalten `mailed_status`/`mailed_at` für Status-Mails über IONOS; **noch auszuführen** |
 | `ANMELDUNG-EINRICHTEN.md` | Anleitung: Brevo-SMTP einrichten; Google, Apple, LinkedIn und SMS einschalten |
 
 ## Seiten
@@ -290,7 +291,8 @@ SQL-Regressionstest in einer **leeren, separaten lokalen PostgreSQL-Datenbank** 
 zeigt die bestätigte Brevo-Gesamtzahl getrennt von Karten und Beta-Bewerbungen.
 Mitglieder und Karten sind durchsuchbar. Beta-Bewerbungen bieten Suche, Bereichs-
 und Statusfilter, Sortierung, 15 Einträge pro Seite, interne Notizen und CSV-Export.
-Statuswechsel verschicken keine E-Mails und vergeben keine Kontorechte.
+Jeder Statuswechsel außer „Neu“ schickt dem Bewerber eine Status-Mail über IONOS
+(siehe `hosting/daki/README.md`, Abschnitt Status-Mails); „Angenommen“ setzt den Beta-Tester-Badge.
 
 Die Erweiterung für Beta-Bewerbungen steht unter
 `supabase/migrations/20261025210417_beta_admin_workflow.sql`. Lesen, Bearbeiten und
