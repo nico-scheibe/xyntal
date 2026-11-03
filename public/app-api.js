@@ -104,6 +104,39 @@
     return res.data;
   }
 
+  // Datei hochladen, in Stücken (POST /files/uploads, PUT je Stück, POST …/complete).
+  // So gilt das Tarif-Limit pro Datei statt der Grenze einer einzelnen Anfrage;
+  // eine zu große Datei lehnt der Server ab, bevor ein Byte übertragen ist.
+  async function upload(file, { name = file.name, meta = {}, onProgress } = {}) {
+    const start = await api("POST", "/files/uploads", { ...meta, name, mimeType: file.type || "application/octet-stream", size: file.size });
+    const { id, chunkSize } = start.upload;
+    try {
+      for (let offset = 0, index = 0; offset < file.size; offset += chunkSize, index++) {
+        const chunk = file.slice(offset, Math.min(offset + chunkSize, file.size));
+        let s = await session();
+        let res;
+        for (let attempt = 0; attempt < 2; attempt++) {
+          try {
+            res = await fetch(`${API}/files/uploads/${encodeURIComponent(id)}/chunks/${index}`, {
+              method: "PUT", body: chunk,
+              headers: { accept: "application/json", "content-type": "application/octet-stream", authorization: `Bearer ${s.token}` },
+            });
+          } catch { res = null; }
+          if (res && res.status !== 401) break;
+          if (res && res.status === 401) s = await session({ fresh: true });
+        }
+        if (!res) throw new ApiError(0, "NETWORK", t("Der Matching-Server ist gerade nicht erreichbar. Versuch es gleich noch einmal."));
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok) throw new ApiError(res.status, json.error?.code, json.error?.message || t("Das hat nicht geklappt. Versuch es gleich noch einmal."));
+        if (onProgress) onProgress(Math.min(offset + chunkSize, file.size), file.size);
+      }
+      return await api("POST", `/files/uploads/${encodeURIComponent(id)}/complete`, {});
+    } catch (err) {
+      api("DELETE", `/files/uploads/${encodeURIComponent(id)}`, undefined, { silent: true }).catch(() => {});
+      throw err;
+    }
+  }
+
   // Das eigene App-Konto (id, Name, Handle, Rolle, Staff-Rolle, Tarif) – z. B. für den Admin-Bereich.
   async function me(options) {
     return (await api("GET", "/auth/me", undefined, options)).user;
@@ -277,7 +310,7 @@
   }
 
   window.XyntalApp = {
-    API, ApiError, api, me, session, forget, esc, t,
+    API, ApiError, api, upload, me, session, forget, esc, t,
     TAGS, tagLabel, canonicalTag, label, AVAILABILITY, INTENT, HOURS, VISIBILITY, WORK_TYPES, WORK_DIMS,
     scoreRing, explanationHtml, askDismissReason, record,
   };
