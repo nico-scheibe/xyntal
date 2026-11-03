@@ -58,12 +58,12 @@
     return d ? `${d} T. ${h} Std.` : h ? `${h} Std. ${m} Min.` : `${m} Min.`;
   }
   const initials = (name) => (String(name || "?").trim().split(/\s+/).map((w) => w[0]).slice(0, 2).join("") || "?").toUpperCase();
-  const pill = (text, tone = "") => `<span class="ad-pill ${tone ? `ad-pill-${tone}` : ""}">${esc(text)}</span>`;
-  const empty = (text) => `<p class="ad-empty">${esc(text)}</p>`;
-  const loading = (text = "Wird geladen …") => `<p class="ad-loading" role="status">${esc(text)}</p>`;
+  const pill = (text, tone = "") => `<span class="xa-pill ${tone ? `xa-pill-${tone}` : ""}">${esc(text)}</span>`;
+  const empty = (text) => `<p class="xa-empty">${esc(text)}</p>`;
+  const loading = (text = "Wird geladen …") => `<p class="xa-loading" role="status">${esc(text)}</p>`;
   const head = (kicker, title, text, actions = "") => `
     <div class="panel-heading"><div><p class="admin-kicker">${esc(kicker)}</p><h2>${esc(title)}</h2>${text ? `<p class="hint">${esc(text)}</p>` : ""}</div>${actions ? `<div class="row-actions">${actions}</div>` : ""}</div>`;
-  const stat = (label, value, hint = "", tone = "") => `<article class="ad-stat ${tone ? `ad-stat-${tone}` : ""}"><b>${esc(value)}</b><span>${esc(label)}</span>${hint ? `<small>${esc(hint)}</small>` : ""}</article>`;
+  const stat = (label, value, hint = "", tone = "") => `<article class="xa-stat ${tone ? `xa-stat-${tone}` : ""}"><b>${esc(value)}</b><span>${esc(label)}</span>${hint ? `<small>${esc(hint)}</small>` : ""}</article>`;
   const table = (cols, rows) => `<div class="table-wrap"><table><thead><tr>${cols.map((c) => `<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${rows}</tbody></table></div>`;
 
   function reason(err) {
@@ -76,8 +76,8 @@
   // Statuszeile oben im Bereich (Ergebnis einer Aktion)
   function say(key, text, ok = true) {
     const p = panel(key); if (!p) return;
-    let line = p.querySelector("[data-ad-message]");
-    if (!line) { line = document.createElement("p"); line.className = "admin-message"; line.dataset.adMessage = "1"; line.setAttribute("role", "status"); p.prepend(line); }
+    let line = p.querySelector("[data-xa-message]");
+    if (!line) { line = document.createElement("p"); line.className = "admin-message"; line.dataset.xaMessage = "1"; line.setAttribute("role", "status"); p.prepend(line); }
     line.classList.toggle("is-error", !ok);
     line.textContent = text;
   }
@@ -86,16 +86,16 @@
   function ask({ title, text = "", fields = [], confirm = "Bestätigen", danger = false }) {
     return new Promise((resolve) => {
       const dlg = document.createElement("dialog");
-      dlg.className = "ad-dialog";
-      dlg.innerHTML = `<form method="dialog" class="ad-dialog-body">
+      dlg.className = "xa-dialog";
+      dlg.innerHTML = `<form method="dialog" class="xa-dialog-body">
         <h2>${esc(title)}</h2>${text ? `<p>${esc(text)}</p>` : ""}
         ${fields.map((f) => {
           if (f.type === "select") return `<label>${esc(f.label)}<select name="${esc(f.name)}">${f.options.map(([v, l]) => `<option value="${esc(v)}" ${f.value === v ? "selected" : ""}>${esc(l)}</option>`).join("")}</select></label>`;
           if (f.type === "textarea") return `<label>${esc(f.label)}<textarea name="${esc(f.name)}" maxlength="${f.max || 500}" ${f.required ? "required" : ""} placeholder="${esc(f.placeholder || "")}"></textarea></label>`;
-          if (f.type === "checkbox") return `<label class="ad-check"><input type="checkbox" name="${esc(f.name)}"> ${esc(f.label)}</label>`;
+          if (f.type === "checkbox") return `<label class="xa-check"><input type="checkbox" name="${esc(f.name)}"> ${esc(f.label)}</label>`;
           return `<label>${esc(f.label)}<input name="${esc(f.name)}" type="${esc(f.type || "text")}" ${f.required ? "required" : ""} maxlength="${f.max || 500}" placeholder="${esc(f.placeholder || "")}" value="${esc(f.value || "")}" ${f.type === "password" ? 'autocomplete="current-password"' : ""}></label>`;
         }).join("")}
-        <div class="ad-row"><button class="btn btn-small ${danger ? "ad-btn-danger" : ""}" value="ok">${esc(confirm)}</button><button class="btn btn-small btn-ghost" value="cancel" formnovalidate>Abbrechen</button></div>
+        <div class="xa-row"><button class="btn btn-small ${danger ? "xa-btn-danger" : ""}" value="ok">${esc(confirm)}</button><button class="btn btn-small btn-ghost" value="cancel" formnovalidate>Abbrechen</button></div>
       </form>`;
       document.body.append(dlg);
       dlg.addEventListener("close", () => {
@@ -114,10 +114,10 @@
   // Fensterchen mit Inhalt (Verlauf, Kontext)
   function modal(title, html) {
     const dlg = document.createElement("dialog");
-    dlg.className = "ad-dialog ad-dialog-wide";
-    dlg.innerHTML = `<div class="ad-dialog-body"><div class="ad-dialog-head"><h2>${esc(title)}</h2><button type="button" class="ad-close" aria-label="Schließen">×</button></div><div class="ad-dialog-content">${html}</div></div>`;
+    dlg.className = "xa-dialog xa-dialog-wide";
+    dlg.innerHTML = `<div class="xa-dialog-body"><div class="xa-dialog-head"><h2>${esc(title)}</h2><button type="button" class="xa-close" aria-label="Schließen">×</button></div><div class="xa-dialog-content">${html}</div></div>`;
     document.body.append(dlg);
-    dlg.querySelector(".ad-close").addEventListener("click", () => dlg.close());
+    dlg.querySelector(".xa-close").addEventListener("click", () => dlg.close());
     dlg.addEventListener("click", (e) => { if (e.target === dlg) dlg.close(); });
     dlg.addEventListener("close", () => dlg.remove());
     dlg.showModal();
@@ -176,6 +176,51 @@
   }
   for (const b of platformTabs) b.addEventListener("click", () => open(b.dataset.tab));
 
+  // Weltkarte wie in der App (AdminWorldMap.qml): vorprojizierte Länder aus world-geo.js,
+  // Füllung nach Mitgliederzahl (Wurzel, damit ein einzelnes Mitglied sichtbar bleibt), Hover-Tipp.
+  function drawMap(canvas, tip, countries, max) {
+    const G = window.XyntalWorldGeo;
+    if (!canvas || !G) { if (canvas) canvas.closest(".xa-map").innerHTML = empty("Kartendaten nicht geladen."); return; }
+    const counts = new Map(countries.map((c) => [c.code, c.count]));
+    const ctx = canvas.getContext("2d");
+    const s = canvas.width / G.mapWidth;
+    let hovered = "";
+    const paint = () => {
+      ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.scale(s, s); ctx.lineWidth = 0.8 / s;
+      for (const c of G.countries) {
+        ctx.beginPath();
+        for (const f of c.p) { ctx.moveTo(f[0], f[1]); for (let k = 2; k < f.length; k += 2) ctx.lineTo(f[k], f[k + 1]); ctx.closePath(); }
+        const n = counts.get(c.c);
+        ctx.fillStyle = n ? `rgba(185,92,255,${(0.2 + 0.75 * Math.sqrt(n / max)).toFixed(2)})` : "rgba(255,255,255,0.07)";
+        ctx.fill();
+        ctx.strokeStyle = c.c === hovered ? "#D9BBFF" : "rgba(255,255,255,0.12)";
+        ctx.stroke();
+      }
+    };
+    const countryAt = (mx, my) => {
+      const x = mx * G.mapWidth / canvas.clientWidth, y = my * G.mapWidth / canvas.clientWidth;
+      for (let i = G.countries.length - 1; i >= 0; --i) {
+        for (const f of G.countries[i].p) {
+          let inside = false;
+          for (let k = 0, l = f.length - 2; k < f.length; l = k, k += 2) {
+            if ((f[k + 1] > y) !== (f[l + 1] > y) && x < (f[l] - f[k]) * (y - f[k + 1]) / (f[l + 1] - f[k + 1]) + f[k]) inside = !inside;
+          }
+          if (inside) return G.countries[i].c;
+        }
+      }
+      return "";
+    };
+    canvas.addEventListener("mousemove", (e) => {
+      const r = canvas.getBoundingClientRect(), code = countryAt(e.clientX - r.left, e.clientY - r.top);
+      if (code !== hovered) { hovered = code; paint(); }
+      if (!code) { tip.hidden = true; return; }
+      tip.hidden = false; tip.textContent = `${G.nameOf(code)}: ${num(counts.get(code) || 0)}`;
+      tip.style.left = `${e.clientX - r.left + 12}px`; tip.style.top = `${e.clientY - r.top + 12}px`;
+    });
+    canvas.addEventListener("mouseleave", () => { hovered = ""; tip.hidden = true; paint(); });
+    paint();
+  }
+
   // ---------- Übersicht ----------
   loaders.platform = async () => {
     const p = panel("platform");
@@ -189,11 +234,12 @@
       S.stats = stats; S.flags = flags;
       const FLAGS = [["communities", "Communities", "Öffentliche Community-Räume und Mitgliedschaft."], ["discover", "Entdecken", "Der Entdecken-Feed mit Arbeitsbereichen und Leuten."], ["ai", "KI", "KI-Assistent und Generierung."]];
       const on = (k) => flags.some((f) => f.key === k && f.enabled);
-      const countries = (stats.usersByCountry || []).slice(0, 12);
+      const countries = stats.usersByCountry || [];
       const max = Math.max(1, ...countries.map((c) => c.count));
+      const G = window.XyntalWorldGeo;
       p.innerHTML = `
         ${head("PLATTFORM", "Übersicht", "Die Plattform auf einen Blick: Konten, Aktivität und Moderationslast.", `<button data-act="refresh">Aktualisieren</button>`)}
-        <div class="ad-stats">
+        <div class="xa-stats">
           ${stat("Nutzer", num(stats.users), `${num(stats.newUsers24h)} neu in 24 Std.`)}
           ${stat("Staff", num(stats.staff))}
           ${stat("Verifiziert", num(stats.verifiedUsers))}
@@ -207,19 +253,21 @@
           ${stat("Fehlgeschlagene Logins (24h)", num(stats.loginFails24h), "", stats.loginFails24h >= 10 ? "warn" : "")}
           ${stat("KI-Anfragen (24h)", num(stats.aiRequests24h))}
         </div>
-        <div class="ad-cols">
-          <section class="ad-card">
+        <div class="xa-cols">
+          <section class="xa-card">
             <h3>Feature-Flags</h3><p class="hint">Bereiche für alle ein- oder ausschalten. Änderungen gelten sofort.</p>
-            <ul class="ad-list">${FLAGS.map(([k, l, d]) => `<li><div><b>${esc(l)}</b><small>${esc(d)}</small></div><button class="ad-switch" role="switch" aria-checked="${on(k)}" data-flag="${k}" ${can("flags.manage") ? "" : "disabled"} aria-label="${esc(l)} ${on(k) ? "ausschalten" : "einschalten"}"><i></i></button></li>`).join("")}</ul>
+            <ul class="xa-list">${FLAGS.map(([k, l, d]) => `<li><div><b>${esc(l)}</b><small>${esc(d)}</small></div><button class="xa-switch" role="switch" aria-checked="${on(k)}" data-flag="${k}" ${can("flags.manage") ? "" : "disabled"} aria-label="${esc(l)} ${on(k) ? "ausschalten" : "einschalten"}"><i></i></button></li>`).join("")}</ul>
           </section>
-          <section class="ad-card">
-            <h3>Mitglieder nach Land</h3><p class="hint">Selbst angegebene Länder im Profil.</p>
-            ${countries.length ? `<ul class="ad-bars">${countries.map((c) => `<li><span>${esc(c.code)}</span><i style="width:${Math.round((c.count / max) * 100)}%"></i><b>${num(c.count)}</b></li>`).join("")}</ul>` : empty("Noch keine Länderangaben.")}
+          <section class="xa-card xa-map-card">
+            <h3>Mitglieder nach Land</h3><p class="hint">Selbst angegebene Länder im Profil. ${num(stats.users - countries.reduce((n, c) => n + c.count, 0))} ohne Angabe.</p>
+            <div class="xa-map"><canvas data-map width="1000" height="423" role="img" aria-label="Weltkarte der Mitgliederländer"></canvas><div class="xa-map-tip" data-map-tip hidden></div></div>
+            ${countries.length ? `<ul class="xa-bars">${countries.slice(0, 8).map((c) => `<li><span title="${esc(G ? G.nameOf(c.code) : c.code)}">${esc(c.code)}</span><i style="width:${Math.round((c.count / max) * 100)}%"></i><b>${num(c.count)}</b></li>`).join("")}</ul>` : empty("Noch keine Länderangaben.")}
           </section>
         </div>
-        ${can("audit.view") ? `<section class="ad-card"><div class="ad-card-head"><h3>Letzte Admin-Aktionen</h3><button data-goto="audit">Audit-Log</button></div>
-          ${audit.length ? `<ul class="ad-feed">${audit.map((a) => `<li><code>${esc(a.action)}</code><span>${esc(a.actor || a.actorEmail || "System")}</span>${a.reason ? `<em>${esc(a.reason)}</em>` : ""}<small title="${esc(fmt(a.createdAt))}">${esc(ago(a.createdAt))}</small></li>`).join("")}</ul>` : empty("Noch nichts.")}</section>` : ""}`;
+        ${can("audit.view") ? `<section class="xa-card"><div class="xa-card-head"><h3>Letzte Admin-Aktionen</h3><button data-goto="audit">Audit-Log</button></div>
+          ${audit.length ? `<ul class="xa-feed">${audit.map((a) => `<li><code>${esc(a.action)}</code><span>${esc(a.actor || a.actorEmail || "System")}</span>${a.reason ? `<em>${esc(a.reason)}</em>` : ""}<small title="${esc(fmt(a.createdAt))}">${esc(ago(a.createdAt))}</small></li>`).join("")}</ul>` : empty("Noch nichts.")}</section>` : ""}`;
       p.querySelector('[data-act="refresh"]').addEventListener("click", () => { loaders.platform(); loadCounts(); });
+      drawMap(p.querySelector("[data-map]"), p.querySelector("[data-map-tip]"), countries, max);
       p.querySelectorAll("[data-flag]").forEach((b) => b.addEventListener("click", async () => {
         const next = b.getAttribute("aria-checked") !== "true";
         b.disabled = true;
@@ -244,6 +292,7 @@
       let timer;
       p.querySelector("[data-users-search]").addEventListener("input", (e) => { clearTimeout(timer); S.users.query = e.target.value; timer = setTimeout(loadUsers, 250); });
       p.querySelector("[data-users-list]").addEventListener("click", (e) => { const row = e.target.closest("[data-user-id]"); if (row) openUser(row.dataset.userId); });
+      p.querySelector("[data-users-list]").addEventListener("keydown", (e) => { if (e.key !== "Enter" && e.key !== " ") return; const row = e.target.closest("[data-user-id]"); if (row) { e.preventDefault(); openUser(row.dataset.userId); } });
       p.querySelector("[data-user-detail]").addEventListener("click", userDetailClick);
       p.querySelector("[data-user-detail]").addEventListener("submit", userDetailSubmit);
     }
@@ -253,10 +302,13 @@
     const list = $("[data-users-list]", panel("users"));
     try {
       const { users } = await api("GET", `/admin/users${q({ q: S.users.query })}`);
+      // Wie in der App zuerst das Team (Inhaber, Admin, Moderator, Support, Analyst), dann die Mitglieder.
+      const RANK = { owner: 5, admin: 4, moderator: 3, support: 2, analyst: 1 };
+      users.sort((x, y) => (RANK[y.staffRole] || 0) - (RANK[x.staffRole] || 0) || new Date(y.createdAt) - new Date(x.createdAt));
       S.users.list = users;
       list.innerHTML = users.length ? table(["Konto", "Rolle & Status", "Sitzungen", "Dabei seit"], users.map((u) => `
-        <tr data-user-id="${esc(u.id)}" tabindex="0" class="ad-clickable">
-          <td><div class="ad-person"><span class="admin-avatar">${esc(initials(u.displayName))}</span><div><b>${esc(u.displayName || "(ohne Namen)")}</b>${u.handle ? ` <small>@${esc(u.handle)}</small>` : ""}<br><small>${esc(u.email)}</small></div></div></td>
+        <tr data-user-id="${esc(u.id)}" tabindex="0" class="xa-clickable">
+          <td><div class="xa-person"><span class="admin-avatar">${esc(initials(u.displayName))}</span><div><b>${esc(u.displayName || "(ohne Namen)")}</b>${u.handle ? ` <small>@${esc(u.handle)}</small>` : ""}<br><small>${esc(u.email)}</small></div></div></td>
           <td>${pill(roleLabel(u.staffRole), u.staffRole ? "accent" : "")} ${u.verified ? pill("Verifiziert", "ok") : ""} ${u.banned ? pill(u.bannedUntil ? `Gesperrt bis ${fmt(u.bannedUntil)}` : "Gesperrt", "danger") : ""} ${u.mutedUntil !== null && u.mutedUntil !== undefined ? pill(u.mutedUntil ? `Stumm bis ${fmt(u.mutedUntil)}` : "Stumm", "warn") : ""}</td>
           <td>${num(u.activeSessions)}</td><td><small>${esc(day(u.createdAt))}</small></td></tr>`).join(""))
         : empty(S.users.query ? "Kein Konto passt zu dieser Suche." : "Noch keine Konten.");
@@ -266,22 +318,22 @@
     const box = $("[data-user-detail]", panel("users"));
     box.hidden = false; box.innerHTML = loading("Konto wird geladen …"); box.scrollIntoView({ behavior: "smooth", block: "start" });
     try { S.users.detail = await api("GET", `/admin/users/${encodeURIComponent(id)}`); renderUser(); }
-    catch (err) { box.innerHTML = `<div class="ad-card">${empty(reason(err))}<button data-act="close">Schließen</button></div>`; }
+    catch (err) { box.innerHTML = `<div class="xa-card">${empty(reason(err))}<button data-act="close">Schließen</button></div>`; }
   }
   function renderUser() {
     const d = S.users.detail, u = d.user, box = $("[data-user-detail]", panel("users"));
     const me = u.id === S.me.id;
     const roleOpts = [["none", "Mitglied (keine Staff-Rolle)"], ...Object.keys(ROLE_LABEL).map((r) => [r, ROLE_LABEL[r]])];
-    box.innerHTML = `<section class="ad-card ad-detail">
-      <div class="ad-card-head"><div class="ad-person"><span class="admin-avatar">${esc(initials(u.displayName))}</span><div><h3>${esc(u.displayName)}${u.handle ? ` <small>@${esc(u.handle)}</small>` : ""}</h3><small>${esc(u.email)} · dabei seit ${esc(day(u.createdAt))} · 2FA ${u.twoFactor ? "an" : "aus"}</small></div></div><button data-act="close">Schließen</button></div>
-      <div class="ad-badges">${pill(roleLabel(u.staffRole), u.staffRole ? "accent" : "")}${u.verified ? pill("Verifiziert", "ok") : ""}${u.banned ? pill(u.bannedUntil ? `Gesperrt bis ${fmt(u.bannedUntil)}` : "Gesperrt", "danger") : ""}${u.mutedUntil !== null && u.mutedUntil !== undefined ? pill(u.mutedUntil ? `Stumm bis ${fmt(u.mutedUntil)}` : "Stumm", "warn") : ""}</div>
-      ${u.headline || u.bio || u.location || u.website || u.github ? `<p class="ad-bio">${[u.headline, u.location, u.website, u.github].filter(Boolean).map(esc).join(" · ")}${u.bio ? `<br><span>${esc(u.bio)}</span>` : ""}</p>` : ""}
-      <div class="ad-stats ad-stats-sm">
+    box.innerHTML = `<section class="xa-card xa-detail">
+      <div class="xa-card-head"><div class="xa-person"><span class="admin-avatar">${esc(initials(u.displayName))}</span><div><h3>${esc(u.displayName)}${u.handle ? ` <small>@${esc(u.handle)}</small>` : ""}</h3><small>${esc(u.email)} · dabei seit ${esc(day(u.createdAt))} · 2FA ${u.twoFactor ? "an" : "aus"}</small></div></div><button data-act="close">Schließen</button></div>
+      <div class="xa-badges">${pill(roleLabel(u.staffRole), u.staffRole ? "accent" : "")}${u.verified ? pill("Verifiziert", "ok") : ""}${u.banned ? pill(u.bannedUntil ? `Gesperrt bis ${fmt(u.bannedUntil)}` : "Gesperrt", "danger") : ""}${u.mutedUntil !== null && u.mutedUntil !== undefined ? pill(u.mutedUntil ? `Stumm bis ${fmt(u.mutedUntil)}` : "Stumm", "warn") : ""}</div>
+      ${u.headline || u.bio || u.location || u.website || u.github ? `<p class="xa-bio">${[u.headline, u.location, u.website, u.github].filter(Boolean).map(esc).join(" · ")}${u.bio ? `<br><span>${esc(u.bio)}</span>` : ""}</p>` : ""}
+      <div class="xa-stats xa-stats-sm">
         ${stat("Arbeitsbereiche (Inhaber)", num(d.counts.workspacesOwned))}${stat("Mitgliedschaften", num(d.counts.memberships))}${stat("Tickets", num(d.counts.tickets))}
         ${stat("Follower", num(d.counts.followers))}${stat("Folgt", num(d.counts.following))}${stat("Meldungen gegen", num(d.counts.reportsAgainst), "", d.counts.reportsAgainst ? "warn" : "")}
       </div>
       <h4>Aktionen</h4>
-      <div class="row-actions ad-actions">
+      <div class="row-actions xa-actions">
         ${can("users.verify") ? `<button data-act="verify" data-on="${u.verified}">${u.verified ? "Verifizierung entfernen" : "Verifizieren"}</button>` : ""}
         ${can("users.ban") && !me ? `<button data-act="warn">Verwarnen</button>` : ""}
         ${can("users.ban") && !me ? (u.banned ? `<button data-act="unban">Sperre aufheben</button>` : `<button class="admin-danger" data-act="ban">Sperren</button>`) : ""}
@@ -291,16 +343,16 @@
         ${can("users.ban") ? `<button data-act="alts">Verknüpfte Konten</button>` : ""}
         ${can("users.delete") && !me && u.staffRole !== "owner" ? `<button class="admin-danger" data-act="delete">Konto löschen</button>` : ""}
       </div>
-      ${can("staff.manage") && !me ? `<form class="ad-inline" data-form="role"><label>Staff-Rolle<select name="staffRole">${roleOpts.map(([v, l]) => `<option value="${v}" ${(u.staffRole || "none") === v ? "selected" : ""}>${esc(l)}</option>`).join("")}</select></label><label>Grund<input name="reason" maxlength="500" placeholder="optional"></label><button>Rolle setzen</button></form>` : ""}
-      <div class="ad-cols">
-        <section><h4>Sitzungen (${d.sessions.length})</h4>${d.sessions.length ? `<ul class="ad-list ad-list-plain">${d.sessions.map((s) => `<li><div><b>${esc(s.deviceName || "Gerät")}</b><small>${esc(s.ip || "")} · zuletzt ${esc(ago(s.lastSeenAt || s.createdAt))}</small></div></li>`).join("")}</ul>` : empty("Keine aktiven Sitzungen.")}</section>
-        <section><h4>Letzte Anmeldungen</h4>${d.authEvents.length ? `<ul class="ad-list ad-list-plain">${d.authEvents.map((e) => `<li><div><b>${esc(e.type)}</b><small>${esc([e.ip, e.device].filter(Boolean).join(" · "))} · ${esc(fmt(e.createdAt))}</small></div></li>`).join("")}</ul>` : empty("Keine Ereignisse.")}</section>
-        <section><h4>Verwarnungen (${d.warnings.length})</h4>${d.warnings.length ? `<ul class="ad-list ad-list-plain">${d.warnings.map((w) => `<li><div><b>${esc(w.reason)}</b><small>${esc(w.actor || "Staff")} · ${esc(fmt(w.createdAt))}</small></div></li>`).join("")}</ul>` : empty("Keine Verwarnungen.")}</section>
-        <section><h4>Offene Meldungen (${d.openReports.length})</h4>${d.openReports.length ? `<ul class="ad-list ad-list-plain">${d.openReports.map((r) => `<li><div><b>${esc(r.reason)}</b><small>von ${esc(r.reporter || "?")} · ${esc(fmt(r.createdAt))}</small></div></li>`).join("")}</ul>` : empty("Keine offenen Meldungen.")}</section>
-        <section><h4>Arbeitsbereiche (${d.memberships.length})</h4>${d.memberships.length ? `<ul class="ad-list ad-list-plain">${d.memberships.map((m) => `<li><div><b>${esc(m.name)}</b><small>${esc(m.role)}${m.slug ? ` · ${esc(m.slug)}` : ""}</small></div></li>`).join("")}</ul>` : empty("In keinem Arbeitsbereich.")}</section>
+      ${can("staff.manage") && !me ? `<form class="xa-inline" data-form="role"><label>Staff-Rolle<select name="staffRole">${roleOpts.map(([v, l]) => `<option value="${v}" ${(u.staffRole || "none") === v ? "selected" : ""}>${esc(l)}</option>`).join("")}</select></label><label>Grund<input name="reason" maxlength="500" placeholder="optional"></label><button>Rolle setzen</button></form>` : ""}
+      <div class="xa-cols">
+        <section><h4>Sitzungen (${d.sessions.length})</h4>${d.sessions.length ? `<ul class="xa-list xa-list-plain">${d.sessions.map((s) => `<li><div><b>${esc(s.deviceName || "Gerät")}</b><small>${esc(s.ip || "")} · zuletzt ${esc(ago(s.lastSeenAt || s.createdAt))}</small></div></li>`).join("")}</ul>` : empty("Keine aktiven Sitzungen.")}</section>
+        <section><h4>Letzte Anmeldungen</h4>${d.authEvents.length ? `<ul class="xa-list xa-list-plain">${d.authEvents.map((e) => `<li><div><b>${esc(e.type)}</b><small>${esc([e.ip, e.device].filter(Boolean).join(" · "))} · ${esc(fmt(e.createdAt))}</small></div></li>`).join("")}</ul>` : empty("Keine Ereignisse.")}</section>
+        <section><h4>Verwarnungen (${d.warnings.length})</h4>${d.warnings.length ? `<ul class="xa-list xa-list-plain">${d.warnings.map((w) => `<li><div><b>${esc(w.reason)}</b><small>${esc(w.actor || "Staff")} · ${esc(fmt(w.createdAt))}</small></div></li>`).join("")}</ul>` : empty("Keine Verwarnungen.")}</section>
+        <section><h4>Offene Meldungen (${d.openReports.length})</h4>${d.openReports.length ? `<ul class="xa-list xa-list-plain">${d.openReports.map((r) => `<li><div><b>${esc(r.reason)}</b><small>von ${esc(r.reporter || "?")} · ${esc(fmt(r.createdAt))}</small></div></li>`).join("")}</ul>` : empty("Keine offenen Meldungen.")}</section>
+        <section><h4>Arbeitsbereiche (${d.memberships.length})</h4>${d.memberships.length ? `<ul class="xa-list xa-list-plain">${d.memberships.map((m) => `<li><div><b>${esc(m.name)}</b><small>${esc(m.role)}${m.slug ? ` · ${esc(m.slug)}` : ""}</small></div></li>`).join("")}</ul>` : empty("In keinem Arbeitsbereich.")}</section>
         ${Array.isArray(d.notes) ? `<section><h4>Staff-Notizen (${d.notes.length})</h4><p class="hint">Nur Staff sieht diese Notizen.</p>
-          <form class="ad-inline" data-form="note"><textarea name="body" maxlength="2000" required placeholder="Was das Team über dieses Konto wissen sollte …"></textarea><button>Notiz hinzufügen</button></form>
-          ${d.notes.length ? `<ul class="ad-list ad-list-plain">${d.notes.map((n) => `<li><div><b>${esc(n.body)}</b><small>${esc(n.author ? n.author.displayName : "Staff")} · ${esc(fmt(n.createdAt))}</small></div><button data-act="note-delete" data-note="${esc(n.id)}" aria-label="Notiz löschen">Löschen</button></li>`).join("")}</ul>` : ""}</section>` : ""}
+          <form class="xa-inline" data-form="note"><textarea name="body" maxlength="2000" required placeholder="Was das Team über dieses Konto wissen sollte …"></textarea><button>Notiz hinzufügen</button></form>
+          ${d.notes.length ? `<ul class="xa-list xa-list-plain">${d.notes.map((n) => `<li><div><b>${esc(n.body)}</b><small>${esc(n.author ? n.author.displayName : "Staff")} · ${esc(fmt(n.createdAt))}</small></div><button data-act="note-delete" data-note="${esc(n.id)}" aria-label="Notiz löschen">Löschen</button></li>`).join("")}</ul>` : ""}</section>` : ""}
       </div></section>`;
   }
   async function userAction(label, fn) {
@@ -334,7 +386,7 @@
           const r = await api("GET", `/admin/users/${id}/linked`);
           modal(`Verknüpfte Konten von ${name}`, `<p class="hint">Konten, die in den letzten 90 Tagen dasselbe Gerät oder Netzwerk genutzt haben. Ein geteiltes Netzwerk kann auch ein Büro oder Haushalt sein; ein geteiltes Gerät sagt mehr.</p>
             <p><small>Geräte: ${num(r.devices.length)} · Netzwerke: ${num(r.ips.length)}</small></p>
-            ${r.accounts.length ? `<ul class="ad-list ad-list-plain">${r.accounts.map((a) => `<li><div><b>${esc(a.displayName || a.email)}</b><small>${esc(a.email)}${a.handle ? ` · @${esc(a.handle)}` : ""} · ${esc((a.via || []).map((v) => (v === "device" ? "gleiches Gerät" : "gleiches Netzwerk")).join(", "))}</small></div></li>`).join("")}</ul>` : empty("Kein anderes Konto hat dasselbe Gerät oder Netzwerk genutzt.")}`);
+            ${r.accounts.length ? `<ul class="xa-list xa-list-plain">${r.accounts.map((a) => `<li><div><b>${esc(a.displayName || a.email)}</b><small>${esc(a.email)}${a.handle ? ` · @${esc(a.handle)}` : ""} · ${esc((a.via || []).map((v) => (v === "device" ? "gleiches Gerät" : "gleiches Netzwerk")).join(", "))}</small></div></li>`).join("")}</ul>` : empty("Kein anderes Konto hat dasselbe Gerät oder Netzwerk genutzt.")}`);
         } catch (err) { say("users", reason(err), false); }
         return;
       }
@@ -377,9 +429,9 @@
     const p = panel("console");
     if (p.querySelector("[data-console]")) return;
     p.innerHTML = `${head("MODERATION", "Konsole", "Moderation per Befehl. Jeder Befehl wird auf dem Server gegen deine Rolle geprüft und ins Audit-Log geschrieben.")}
-      <div class="ad-console" data-console>
-        <div class="ad-console-log" data-log role="log" aria-live="polite" aria-label="Konsolenausgabe"></div>
-        <form class="ad-console-form" data-console-form><span class="ad-prompt" aria-hidden="true">›</span><input data-console-input autocomplete="off" spellcheck="false" placeholder="help, user @handle, note @handle Text, ban @handle 7d Grund …" aria-label="Konsolenbefehl"><button>Ausführen</button></form>
+      <div class="xa-console" data-console>
+        <div class="xa-console-log" data-log role="log" aria-live="polite" aria-label="Konsolenausgabe"></div>
+        <form class="xa-console-form" data-console-form><span class="xa-prompt" aria-hidden="true">›</span><input data-console-input autocomplete="off" spellcheck="false" placeholder="help, user @handle, note @handle Text, ban @handle 7d Grund …" aria-label="Konsolenbefehl"><button>Ausführen</button></form>
         <p class="hint">Konten per @handle, E-Mail oder ID ansprechen. Dauern: 30m, 12h, 7d, 2w, perm. Ein führender / ist erlaubt.</p>
       </div>`;
     const input = p.querySelector("[data-console-input]");
@@ -401,8 +453,8 @@
   }
   function renderConsole() {
     const log = $("[data-log]", panel("console")); if (!log) return;
-    log.innerHTML = S.console.lines.map((l) => `<div class="ad-line ad-line-${l.kind}">${l.kind === "input" ? "<span>›</span> " : ""}${esc(l.text)}</div>`).join("")
-      + (S.console.pending ? `<div class="ad-line ad-line-ask">${esc(S.console.pendingText)} — y zum Bestätigen, alles andere bricht ab.</div>` : "");
+    log.innerHTML = S.console.lines.map((l) => `<div class="xa-line xa-line-${l.kind}">${l.kind === "input" ? "<span>›</span> " : ""}${esc(l.text)}</div>`).join("")
+      + (S.console.pending ? `<div class="xa-line xa-line-ask">${esc(S.console.pendingText)} — y zum Bestätigen, alles andere bricht ab.</div>` : "");
     log.scrollTop = log.scrollHeight;
   }
   const DUR_RE = /^(\d+)(m|h|d|w)$/i;
@@ -530,68 +582,77 @@
     } catch (err) { print("error", reason(err)); }
   }
 
-  // ---------- Rollen ----------
-  loaders.roles = () => {
-    const p = panel("roles");
-    const PERMS = [["users.view", "Nutzer ansehen"], ["users.role", "Rollen ändern"], ["users.ban", "Nutzer sperren"], ["users.verify", "Nutzer verifizieren"], ["users.delete", "Nutzer löschen"], ["users.reset2fa", "2FA zurücksetzen"], ["users.notes", "Staff-Notizen"],
-      ["staff.manage", "Staff verwalten"], ["billing.manage", "Tarife zuweisen"], ["oversight.view", "Übersicht"], ["content.moderate", "Inhalte moderieren"], ["workspaces.delete", "Arbeitsbereiche löschen"], ["reports.handle", "Meldungen bearbeiten"], ["tickets.handle", "Tickets bearbeiten"],
-      ["security.view", "Sicherheit"], ["announcements.manage", "Ankündigungen"], ["flags.manage", "Feature-Flags"], ["ai.view", "KI-Protokolle"], ["audit.view", "Audit-Log"],
-      ["view_support_threads", "Geteilte Support-Gespräche"], ["view_reported_messages", "Gemeldete Nachrichten"], ["emergency_message_access", "Notfallzugriff auf Nachrichten"]];
-    const roles = Object.keys(ROLE_LABEL);
-    p.innerHTML = `${head("RECHTE", "Rollen & Berechtigungen", "Was jede Staff-Rolle darf. Rollen werden pro Konto unter „Nutzer“ vergeben. Der Server setzt jede Berechtigung durch – diese Tabelle spiegelt sie nur. Deine Rolle ist hervorgehoben.")}
-      ${table(["Berechtigung", ...roles.map((r) => ROLE_LABEL[r])], PERMS.map(([perm, label]) => `<tr><td>${esc(label)}<br><small><code>${esc(perm)}</code></small></td>${roles.map((r) => `<td class="${r === S.role ? "ad-me" : ""}">${(S.matrix[r] || []).includes(perm) ? '<span class="ad-yes">✓</span>' : '<span class="ad-no" aria-label="nicht erteilt">–</span>'}</td>`).join("")}</tr>`).join(""))}`;
-  };
-
-  // ---------- Projekte ----------
+  // ---------- Projekte (nach Inhaber) ----------
+  // Wie gewünscht nicht jedes Projekt einzeln: zuerst die Inhaber mit Anzahl, ein Klick zeigt
+  // die Projekte dieser Person mit den Aktionen (Archivieren, Löschen, Wiederherstellen).
+  const ownerKey = (x) => x.ownerEmail || x.owner || "?";
+  function groupByOwner(list) {
+    const m = new Map();
+    for (const x of list) { const k = ownerKey(x); if (!m.has(k)) m.set(k, { key: k, owner: x.owner || "(ohne Namen)", email: x.ownerEmail || "", items: [] }); m.get(k).items.push(x); }
+    return [...m.values()].sort((a, b) => b.items.length - a.items.length || a.owner.localeCompare(b.owner));
+  }
+  function ownerList(groups, open, filter, unit) {
+    const f = (filter || "").toLowerCase();
+    const rows = groups.filter((g) => !f || [g.owner, g.email, ...g.items.map((i) => i.name)].some((v) => String(v || "").toLowerCase().includes(f)));
+    return rows.length ? `<ul class="xa-owners">${rows.map((g) => `<li><button data-owner="${esc(g.key)}" aria-expanded="${open === g.key}"><span class="admin-avatar">${esc(initials(g.owner))}</span><span class="xa-owner-name"><b>${esc(g.owner)}</b><small>${esc(g.email)}</small></span><span class="xa-owner-count">${num(g.items.length)} ${esc(g.items.length === 1 ? unit[0] : unit[1])}</span><i aria-hidden="true">${open === g.key ? "▾" : "▸"}</i></button></li>`).join("")}</ul>` : "";
+  }
   loaders.projects = async () => {
     const p = panel("projects");
-    p.innerHTML = `${head("AUFSICHT", "Projekte", "Alle Projekte über alle Arbeitsbereiche. Archivieren, löschen oder wiederherstellen – jede Aktion mit Grund im Audit-Log.")}
-      <div class="admin-filters"><label class="admin-search">Projekte filtern<input type="search" data-filter placeholder="Name, Inhaber, Arbeitsbereich …"></label></div><div data-list>${loading()}</div>`;
+    p.innerHTML = `${head("AUFSICHT", "Projekte", "Alle Projekte, nach Inhaber gruppiert. Eine Person anklicken zeigt ihre Projekte; archivieren, löschen oder wiederherstellen – jede Aktion mit Grund im Audit-Log.")}
+      <div class="admin-filters"><label class="admin-search">Inhaber oder Projekt filtern<input type="search" data-filter placeholder="Name, E-Mail, Projekt …"></label></div><div data-list>${loading()}</div>`;
+    let open = "";
     const render = () => {
-      const f = (p.querySelector("[data-filter]").value || "").toLowerCase();
-      const rows = S.projects.filter((x) => !f || [x.name, x.owner, x.ownerEmail, x.workspaceName].some((v) => String(v || "").toLowerCase().includes(f)));
-      p.querySelector("[data-list]").innerHTML = rows.length ? table(["Projekt", "Arbeitsbereich", "Inhaber", "Status", "Erstellt", "Aktionen"], rows.map((x) => `<tr>
-        <td><b>${esc(x.name || "Ohne Titel")}</b></td><td>${esc(x.workspaceName)}</td><td>${esc(x.owner)}<br><small>${esc(x.ownerEmail)}</small></td>
+      const groups = groupByOwner(S.projects);
+      const list = ownerList(groups, open, p.querySelector("[data-filter]").value, ["Projekt", "Projekte"]);
+      p.querySelector("[data-list]").innerHTML = list || empty(S.projects.length ? "Niemand passt zum Filter." : "Noch keine Projekte.");
+      const g = groups.find((x) => x.key === open); if (!g) return;
+      const li = p.querySelector(`[data-owner="${CSS.escape(open)}"]`)?.closest("li"); if (!li) return;
+      li.insertAdjacentHTML("beforeend", `<div class="xa-owner-items">${table(["Projekt", "Arbeitsbereich", "Status", "Erstellt", "Aktionen"], g.items.map((x) => `<tr>
+        <td><b>${esc(x.name || "Ohne Titel")}</b></td><td>${esc(x.workspaceName)}</td>
         <td>${x.deleted ? pill("Gelöscht", "danger") : x.archived ? pill("Archiviert", "warn") : pill(x.status || "Aktiv", "ok")}</td><td><small>${esc(day(x.createdAt))}</small></td>
-        <td><div class="row-actions">${can("content.moderate") ? (x.deleted ? `<button data-act="restore" data-id="${esc(x.id)}">Wiederherstellen</button>` : `${x.archived ? `<button data-act="unarchive" data-id="${esc(x.id)}">Aus Archiv holen</button>` : `<button data-act="archive" data-id="${esc(x.id)}">Archivieren</button>`}<button class="admin-danger" data-act="delete" data-id="${esc(x.id)}">Löschen</button>`) : ""}</div></td></tr>`).join(""))
-        : empty(S.projects.length ? "Kein Projekt passt zum Filter." : "Noch keine Projekte.");
+        <td><div class="row-actions">${can("content.moderate") ? (x.deleted ? `<button data-act="restore" data-id="${esc(x.id)}">Wiederherstellen</button>` : `${x.archived ? `<button data-act="unarchive" data-id="${esc(x.id)}">Aus Archiv holen</button>` : `<button data-act="archive" data-id="${esc(x.id)}">Archivieren</button>`}<button class="admin-danger" data-act="delete" data-id="${esc(x.id)}">Löschen</button>`) : ""}</div></td></tr>`).join(""))}</div>`);
     };
     p.querySelector("[data-filter]").addEventListener("input", render);
     p.querySelector("[data-list]").addEventListener("click", async (e) => {
+      const o = e.target.closest("[data-owner]"); if (o) { open = open === o.dataset.owner ? "" : o.dataset.owner; render(); return; }
       const b = e.target.closest("button[data-act]"); if (!b) return;
       const x = S.projects.find((y) => y.id === b.dataset.id); if (!x) return;
       const L = { archive: ["archivieren", "Archivieren"], unarchive: ["aus dem Archiv holen", "Aus Archiv holen"], delete: ["löschen", "Löschen"], restore: ["wiederherstellen", "Wiederherstellen"] };
       const [verb, confirm] = L[b.dataset.act];
       const a = await ask({ title: `„${x.name}“ ${verb}`, text: b.dataset.act === "delete" ? "Das Projekt wird für Mitglieder unsichtbar; es kann wiederhergestellt werden." : "", danger: b.dataset.act === "delete", confirm, fields: [{ name: "reason", label: "Grund", type: "textarea" }] }); if (!a) return;
-      try { await api("POST", `/admin/projects/${encodeURIComponent(x.id)}/action`, { action: b.dataset.act, reason: a.reason }); say("projects", `„${x.name}“: ${verb} erledigt.`); await loaders.projects(); loadCounts(); }
+      try { await api("POST", `/admin/projects/${encodeURIComponent(x.id)}/action`, { action: b.dataset.act, reason: a.reason }); say("projects", `„${x.name}“: ${verb} erledigt.`); S.projects = (await api("GET", "/admin/projects")).projects; render(); loadCounts(); }
       catch (err) { say("projects", reason(err), false); }
     });
     try { S.projects = (await api("GET", "/admin/projects")).projects; render(); }
     catch (err) { p.querySelector("[data-list]").innerHTML = empty(reason(err)); }
   };
 
-  // ---------- Arbeitsbereiche ----------
+  // ---------- Arbeitsbereiche (nach Inhaber) ----------
   loaders.workspaces = async () => {
     const p = panel("workspaces");
-    p.innerHTML = `${head("AUFSICHT", "Arbeitsbereiche", "Alle Arbeitsbereiche der Plattform. Eine Zeile anklicken zeigt die Mitglieder; archivieren oder wiederherstellen mit Grund im Audit-Log.")}
-      <div class="admin-filters"><label class="admin-search">Arbeitsbereiche filtern<input type="search" data-filter placeholder="Name, Inhaber, Typ …"></label></div><div data-list>${loading()}</div>`;
+    p.innerHTML = `${head("AUFSICHT", "Arbeitsbereiche", "Alle Arbeitsbereiche, nach Inhaber gruppiert. Eine Person anklicken zeigt ihre Arbeitsbereiche; „Mitglieder“ klappt die Mitgliederliste auf.")}
+      <div class="admin-filters"><label class="admin-search">Inhaber oder Arbeitsbereich filtern<input type="search" data-filter placeholder="Name, E-Mail, Arbeitsbereich …"></label></div><div data-list>${loading()}</div>`;
+    let open = "";
     const render = () => {
-      const f = (p.querySelector("[data-filter]").value || "").toLowerCase();
-      const rows = S.workspaces.list.filter((x) => !f || [x.name, x.owner, x.ownerEmail, x.type].some((v) => String(v || "").toLowerCase().includes(f)));
-      p.querySelector("[data-list]").innerHTML = rows.length ? table(["Arbeitsbereich", "Typ", "Inhaber", "Mitglieder", "Projekte", "Elemente", "Speicher", "Aktionen"], rows.map((x) => {
+      const groups = groupByOwner(S.workspaces.list);
+      const list = ownerList(groups, open, p.querySelector("[data-filter]").value, ["Arbeitsbereich", "Arbeitsbereiche"]);
+      p.querySelector("[data-list]").innerHTML = list || empty(S.workspaces.list.length ? "Niemand passt zum Filter." : "Noch keine Arbeitsbereiche.");
+      const g = groups.find((x) => x.key === open); if (!g) return;
+      const li = p.querySelector(`[data-owner="${CSS.escape(open)}"]`)?.closest("li"); if (!li) return;
+      li.insertAdjacentHTML("beforeend", `<div class="xa-owner-items">${table(["Arbeitsbereich", "Typ", "Mitglieder", "Projekte", "Elemente", "Speicher", "Aktionen"], g.items.map((x) => {
         const members = S.workspaces.members.get(x.id);
-        return `<tr class="ad-clickable" data-ws="${esc(x.id)}" tabindex="0"><td><b>${esc(x.name || "Ohne Titel")}</b>${x.archived ? ` ${pill("Archiviert", "warn")}` : ""}<br><small>seit ${esc(day(x.createdAt))}</small></td><td>${esc(x.type || "")}</td><td>${esc(x.owner)}<br><small>${esc(x.ownerEmail)}</small></td>
-          <td>${num(x.memberCount)}</td><td>${num(x.projectCount)}</td><td>${num(x.itemCount)}</td><td>${esc(bytes(x.storageBytes))}</td>
+        return `<tr><td><b>${esc(x.name || "Ohne Titel")}</b>${x.archived ? ` ${pill("Archiviert", "warn")}` : ""}<br><small>seit ${esc(day(x.createdAt))}</small></td><td>${esc(x.type || "")}</td>
+          <td><button data-members="${esc(x.id)}" aria-expanded="${S.workspaces.open === x.id}">${num(x.memberCount)} Mitglieder</button></td><td>${num(x.projectCount)}</td><td>${num(x.itemCount)}</td><td>${esc(bytes(x.storageBytes))}</td>
           <td><div class="row-actions">${can("content.moderate") ? (x.archived ? `<button data-act="restore" data-id="${esc(x.id)}">Wiederherstellen</button>` : `<button data-act="archive" data-id="${esc(x.id)}">Archivieren</button>`) : ""}${can("workspaces.delete") && x.archived ? `<button class="admin-danger" data-act="purge" data-id="${esc(x.id)}">Endgültig löschen</button>` : ""}</div></td></tr>
-          ${S.workspaces.open === x.id ? `<tr class="ad-subrow"><td colspan="8">${members === undefined ? loading("Mitglieder werden geladen …") : members.length ? `<ul class="ad-list ad-list-plain ad-list-inline">${members.map((m) => `<li><div><b>${esc(m.displayName)}</b><small>${esc(m.email)} · ${esc(m.role)} · seit ${esc(day(m.joinedAt))}</small></div></li>`).join("")}</ul>` : empty("Keine Mitglieder geladen.")}</td></tr>` : ""}`;
-      }).join("")) : empty(S.workspaces.list.length ? "Kein Arbeitsbereich passt zum Filter." : "Noch keine Arbeitsbereiche.");
+          ${S.workspaces.open === x.id ? `<tr class="xa-subrow"><td colspan="7">${members === undefined ? loading("Mitglieder werden geladen …") : members.length ? `<ul class="xa-list xa-list-plain xa-list-inline">${members.map((m) => `<li><div><b>${esc(m.displayName)}</b><small>${esc(m.email)} · ${esc(m.role)} · seit ${esc(day(m.joinedAt))}</small></div></li>`).join("")}</ul>` : empty("Keine Mitglieder geladen.")}</td></tr>` : ""}`;
+      }).join(""))}</div>`);
     };
     p.querySelector("[data-filter]").addEventListener("input", render);
     p.querySelector("[data-list]").addEventListener("click", async (e) => {
-      const b = e.target.closest("button[data-act]");
-      if (!b) {
-        const row = e.target.closest("[data-ws]"); if (!row) return;
-        const id = row.dataset.ws;
+      const o = e.target.closest("[data-owner]"); if (o) { open = open === o.dataset.owner ? "" : o.dataset.owner; render(); return; }
+      const mb = e.target.closest("[data-members]");
+      if (mb) {
+        const id = mb.dataset.members;
         S.workspaces.open = S.workspaces.open === id ? "" : id; render();
         if (S.workspaces.open && !S.workspaces.members.has(id)) {
           try { S.workspaces.members.set(id, (await api("GET", `/admin/workspaces/${encodeURIComponent(id)}/members`)).members); } catch { S.workspaces.members.set(id, []); }
@@ -599,6 +660,7 @@
         }
         return;
       }
+      const b = e.target.closest("button[data-act]"); if (!b) return;
       const x = S.workspaces.list.find((y) => y.id === b.dataset.id); if (!x) return;
       try {
         if (b.dataset.act === "purge") {
@@ -612,7 +674,7 @@
           await api("POST", `/admin/workspaces/${encodeURIComponent(x.id)}/action`, { action: b.dataset.act, reason: a.reason });
           say("workspaces", `„${x.name}“ ${archive ? "archiviert" : "wiederhergestellt"}.`);
         }
-        await loaders.workspaces(); loadCounts();
+        S.workspaces.list = (await api("GET", "/admin/workspaces")).workspaces; render(); loadCounts();
       } catch (err) { say("workspaces", reason(err), false); }
     });
     try { S.workspaces.list = (await api("GET", "/admin/workspaces")).workspaces; render(); }
@@ -621,7 +683,7 @@
 
   // ---------- Gesprächsverlauf (Support-Freigabe, Notfallzugriff) ----------
   function messageList(messages, highlightId = "") {
-    return messages.length ? `<ol class="ad-thread">${messages.map((m) => `<li class="${m.id === highlightId ? "is-reported" : ""} ${m.deletedAt || m.deleted ? "is-deleted" : ""}"><b>${esc(m.author || "?")}</b><small>${esc(fmt(m.createdAt || m.ts || m.time))}${m.deletedAt || m.deleted ? " · gelöscht" : ""}${m.kind && m.kind !== "text" ? ` · ${esc(m.kind)}` : ""}</small><p>${esc(m.body || (m.gif ? "GIF" : ""))}</p></li>`).join("")}</ol>` : empty("Keine Nachrichten in diesem Fenster.");
+    return messages.length ? `<ol class="xa-thread">${messages.map((m) => `<li class="${m.id === highlightId ? "is-reported" : ""} ${m.deletedAt || m.deleted ? "is-deleted" : ""}"><b>${esc(m.author || "?")}</b><small>${esc(fmt(m.createdAt || m.ts || m.time))}${m.deletedAt || m.deleted ? " · gelöscht" : ""}${m.kind && m.kind !== "text" ? ` · ${esc(m.kind)}` : ""}</small><p>${esc(m.body || (m.gif ? "GIF" : ""))}</p></li>`).join("")}</ol>` : empty("Keine Nachrichten in diesem Fenster.");
   }
   async function openThread(conversationId) {
     try {
@@ -644,7 +706,7 @@
           <button data-sf="status" data-v="" aria-pressed="true">Warteschlange</button>${Object.entries(T_STATUS).filter(([k]) => k !== "Closed").map(([k, l]) => `<button data-sf="status" data-v="${k}" aria-pressed="false">${esc(l)}</button>`).join("")}
           <button data-sf="archived" aria-pressed="false">Geschlossen</button><button data-sf="mine" aria-pressed="false">Mir zugewiesen</button>
         </div>
-        <div class="ad-split"><div data-queue>${loading()}</div><div data-ticket><p class="ad-empty">Wähle ein Ticket, um das Gespräch zu sehen.</p></div></div>`;
+        <div class="xa-split"><div data-queue>${loading()}</div><div data-ticket><p class="xa-empty">Wähle ein Ticket, um das Gespräch zu sehen.</p></div></div>`;
       p.querySelector("[data-support-filters]").addEventListener("click", (e) => {
         const b = e.target.closest("[data-sf]"); if (!b) return;
         const f = S.support.filter;
@@ -666,7 +728,7 @@
     try {
       const { tickets } = await api("GET", `/admin/support/tickets${q({ status: f.status, mine: f.mine ? "1" : "", archived: f.archived ? "1" : "" })}`);
       S.support.tickets = tickets;
-      box.innerHTML = tickets.length ? `<ul class="ad-tickets">${tickets.map((t) => `<li><button data-ticket-id="${esc(t.id)}" aria-pressed="${S.support.open === t.id}"><b>${esc(t.subject)}</b><span>${esc(t.requester)} · ${esc(t.category || "")}</span><span>${pill(T_STATUS[t.status] || t.status)} ${pill(T_PRIO[t.priority] || t.priority, prioTone(t.priority))} ${t.assignee ? pill(`→ ${t.assignee}`, "accent") : pill("Nicht zugewiesen")}</span><small>${esc(ago(t.updatedAt))} · ${num(t.messageCount)} Nachrichten</small></button></li>`).join("")}</ul>` : empty(f.archived ? "Keine geschlossenen Tickets." : "Keine Tickets in der Warteschlange.");
+      box.innerHTML = tickets.length ? `<ul class="xa-tickets">${tickets.map((t) => `<li><button data-ticket-id="${esc(t.id)}" aria-pressed="${S.support.open === t.id}"><b>${esc(t.subject)}</b><span>${esc(t.requester)} · ${esc(t.category || "")}</span><span>${pill(T_STATUS[t.status] || t.status)} ${pill(T_PRIO[t.priority] || t.priority, prioTone(t.priority))} ${t.assignee ? pill(`→ ${t.assignee}`, "accent") : pill("Nicht zugewiesen")}</span><small>${esc(ago(t.updatedAt))} · ${num(t.messageCount)} Nachrichten</small></button></li>`).join("")}</ul>` : empty(f.archived ? "Keine geschlossenen Tickets." : "Keine Tickets in der Warteschlange.");
     } catch (err) { box.innerHTML = empty(reason(err)); }
   }
   async function openTicket(id) {
@@ -680,9 +742,9 @@
   function renderTicket() {
     const { ticket: t, messages } = S.support.detail, box = $("[data-ticket]", panel("support"));
     const mine = t.assigneeId === S.me.id;
-    box.innerHTML = `<section class="ad-card">
-      <div class="ad-card-head"><div><h3>${esc(t.subject)}</h3><small>von ${esc(t.requester)} (${esc(t.requesterEmail)}) · ${esc(t.category || "")} · erstellt ${esc(fmt(t.createdAt))}</small></div></div>
-      <div class="ad-inline ad-ticket-controls">
+    box.innerHTML = `<section class="xa-card">
+      <div class="xa-card-head"><div><h3>${esc(t.subject)}</h3><small>von ${esc(t.requester)} (${esc(t.requesterEmail)}) · ${esc(t.category || "")} · erstellt ${esc(fmt(t.createdAt))}</small></div></div>
+      <div class="xa-inline xa-ticket-controls">
         <label>Status<select data-ticket-status>${Object.entries(T_STATUS).map(([k, l]) => `<option value="${k}" ${t.status === k ? "selected" : ""}>${esc(l)}</option>`).join("")}</select></label>
         <label>Priorität<select data-ticket-priority>${Object.entries(T_PRIO).map(([k, l]) => `<option value="${k}" ${t.priority === k ? "selected" : ""}>${esc(l)}</option>`).join("")}</select></label>
         <span class="hint">${t.assignee ? `Zugewiesen an ${esc(t.assignee)}` : "Nicht zugewiesen"}</span>
@@ -690,8 +752,8 @@
         ${t.status === "Closed" ? `<button data-act="reopen">Wieder öffnen</button>` : ""}
       </div>
       ${t.conversationId ? `<p class="hint">Verknüpftes Gespräch: ${esc(t.conversationTitle || t.conversationId)} – ${t.threadAccessActive ? `vom Mitglied geteilt; jeder Aufruf wird im Audit-Log festgehalten. <button data-act="thread" data-conv="${esc(t.conversationId)}">Gespräch öffnen</button>` : "nicht mehr geteilt (zurückgezogen oder Ticket geschlossen). Bitte die Person, es erneut zu teilen."}${can("emergency_message_access") ? ` <button data-act="emergency" data-conv="${esc(t.conversationId)}">Notfallzugriff …</button>` : ""}</p>` : ""}
-      ${messages.length ? `<ol class="ad-thread">${messages.map((m) => `<li class="${m.isStaff ? "is-staff" : ""} ${m.isInternal ? "is-internal" : ""}"><b>${esc(m.author)}${m.isStaff ? ` ${pill("Staff", "accent")}` : ""}${m.isInternal ? ` ${pill("Interne Notiz", "warn")}` : ""}</b><small>${esc(fmt(m.createdAt))}</small><p>${esc(m.body)}</p></li>`).join("")}</ol>` : empty("Noch keine Nachrichten in diesem Ticket.")}
-      <form class="ad-inline ad-reply" data-form="reply"><textarea name="body" maxlength="8000" required placeholder="Antwort schreiben oder interne Notiz nur für Staff …"></textarea><div class="row-actions"><button value="reply">Antworten</button><button value="internal" class="btn-ghost" data-internal>Interne Notiz</button></div></form>
+      ${messages.length ? `<ol class="xa-thread">${messages.map((m) => `<li class="${m.isStaff ? "is-staff" : ""} ${m.isInternal ? "is-internal" : ""}"><b>${esc(m.author)}${m.isStaff ? ` ${pill("Staff", "accent")}` : ""}${m.isInternal ? ` ${pill("Interne Notiz", "warn")}` : ""}</b><small>${esc(fmt(m.createdAt))}</small><p>${esc(m.body)}</p></li>`).join("")}</ol>` : empty("Noch keine Nachrichten in diesem Ticket.")}
+      <form class="xa-inline xa-reply" data-form="reply"><textarea name="body" maxlength="8000" required placeholder="Antwort schreiben oder interne Notiz nur für Staff …"></textarea><div class="row-actions"><button value="reply">Antworten</button><button value="internal" class="btn-ghost" data-internal>Interne Notiz</button></div></form>
     </section>`;
   }
   async function ticketAct(label, fn) {
@@ -758,9 +820,9 @@
     try {
       S.reports.list = (await api("GET", `/admin/reports?status=${S.reports.status}`)).reports;
       const L = S.reports.list;
-      p.querySelector("[data-list]").innerHTML = L.length ? `<div class="ad-reports">${L.map((r) => `<article class="ad-card ad-report">
-        <div class="ad-card-head"><div><b>${esc(R_TYPE[r.targetType] || r.targetType)}: ${esc(r.targetLabel || r.targetId)}</b><br><small>gemeldet von ${esc(r.reporter || "?")} (${esc(r.reporterEmail || "")}) · ${esc(fmt(r.createdAt))}</small></div>${r.status === "open" ? pill("Offen", "warn") : r.status === "resolved" ? pill(`Erledigt: ${r.resolution || ""}`, "ok") : pill("Verworfen")}</div>
-        <p><b>${esc(r.reason)}</b>${r.details ? `<br><span class="ad-pre">${esc(r.details)}</span>` : ""}</p>
+      p.querySelector("[data-list]").innerHTML = L.length ? `<div class="xa-reports">${L.map((r) => `<article class="xa-card xa-report">
+        <div class="xa-card-head"><div><b>${esc(R_TYPE[r.targetType] || r.targetType)}: ${esc(r.targetLabel || r.targetId)}</b><br><small>gemeldet von ${esc(r.reporter || "?")} (${esc(r.reporterEmail || "")}) · ${esc(fmt(r.createdAt))}</small></div>${r.status === "open" ? pill("Offen", "warn") : r.status === "resolved" ? pill(`Erledigt: ${r.resolution || ""}`, "ok") : pill("Verworfen")}</div>
+        <p><b>${esc(r.reason)}</b>${r.details ? `<br><span class="xa-pre">${esc(r.details)}</span>` : ""}</p>
         ${r.resolver ? `<small>Bearbeitet von ${esc(r.resolver)} · ${esc(fmt(r.resolvedAt))}</small>` : ""}
         <div class="row-actions">
           ${r.targetType === "message" && can("view_reported_messages") ? `<button data-act="context" data-id="${esc(r.id)}">Im Zusammenhang ansehen</button>` : ""}
@@ -776,7 +838,7 @@
     p.innerHTML = `${head("TRANSPARENZ", "Nachrichtenzugriff", "Private Gespräche sind standardmäßig nur für Mitglieder. Jeder Weg für Staff hinein – eine Support-Freigabe, eine gemeldete Nachricht oder ein Notfallzugriff – steht hier und im Audit-Log.")}
       <div class="card-filters"><button data-as="active" aria-pressed="${S.access.scope === "active"}">Aktiv</button><button data-as="all" aria-pressed="${S.access.scope === "all"}">Alle (auch abgelaufene)</button></div>
       <div data-list>${loading()}</div>
-      ${can("oversight.view") ? `<h3 class="ad-h3">Gespräche</h3><p class="hint">Alle Gespräche der Plattform – ohne Inhalte. ${can("emergency_message_access") ? "Ein Notfallzugriff ist zeitlich begrenzt, braucht einen Grund und wird den Mitgliedern angezeigt." : ""}</p><div class="admin-filters"><label class="admin-search">Gespräche filtern<input type="search" data-cfilter placeholder="Titel, Ersteller …"></label></div><div data-convs>${loading()}</div>` : ""}`;
+      ${can("oversight.view") ? `<h3 class="xa-h3">Gespräche</h3><p class="hint">Alle Gespräche der Plattform – ohne Inhalte. ${can("emergency_message_access") ? "Ein Notfallzugriff ist zeitlich begrenzt, braucht einen Grund und wird den Mitgliedern angezeigt." : ""}</p><div class="admin-filters"><label class="admin-search">Gespräche filtern<input type="search" data-cfilter placeholder="Titel, Ersteller …"></label></div><div data-convs>${loading()}</div>` : ""}`;
     p.querySelectorAll("[data-as]").forEach((b) => b.addEventListener("click", () => { S.access.scope = b.dataset.as; loaders.access(); }));
     if (!p.dataset.bound) p.addEventListener("click", async (e) => {
       const b = e.target.closest("button[data-act]"); if (!b) return;
@@ -814,20 +876,53 @@
     }
   };
 
-  // ---------- Sicherheit ----------
+  // ---------- Sicherheit (nach Nutzer) ----------
+  // Kennzahlen oben; darunter jede Person mit ihren Anmeldeereignissen. Ein Klick zeigt alles
+  // zu diesem Konto: Ereignisse, aktive Sitzungen, 2FA, Sperre. Fehlversuche ohne Konto
+  // (unbekannte E-Mail) stehen als eigene Gruppe, die auffälligen IPs darunter.
   loaders.security = async () => {
     const p = panel("security");
-    p.innerHTML = head("SICHERHEIT", "Sicherheit", "Anmeldesignale der ganzen Plattform. Jeder Anmeldeversuch wird serverseitig festgehalten.", `<button data-act="refresh">Aktualisieren</button>`) + loading();
+    p.innerHTML = head("SICHERHEIT", "Sicherheit", "Anmeldesignale je Konto. Jeder Anmeldeversuch wird serverseitig festgehalten.", `<button data-act="refresh">Aktualisieren</button>`) + loading();
     p.querySelector('[data-act="refresh"]').addEventListener("click", loaders.security);
     try {
-      const r = await api("GET", "/admin/security");
+      const [r, { users }] = await Promise.all([api("GET", "/admin/security"), can("users.view") ? api("GET", "/admin/users") : Promise.resolve({ users: [] })]);
       const s = r.summary;
-      p.querySelector(".ad-loading").outerHTML = `<div class="ad-stats">${stat("Fehlgeschlagene Logins (24h)", num(s.fails24h), "", s.fails24h >= 10 ? "warn" : "")}${stat("Erfolgreiche Logins (24h)", num(s.success24h))}${stat("Gesperrte Konten", num(s.bannedUsers))}${stat("Konten mit 2FA", num(s.twoFactorUsers))}${stat("Aktive Sitzungen", num(s.activeSessions))}</div>
-        <h3 class="ad-h3">Auffällige IP-Adressen</h3><p class="hint">Adressen mit wiederholt fehlgeschlagenen Versuchen in 24 Stunden – kann auf Brute-Force hindeuten.</p>
-        ${r.suspiciousIps.length ? table(["IP-Adresse", "Versuche", "Letzter Versuch"], r.suspiciousIps.map((x) => `<tr><td><code>${esc(x.ip)}</code></td><td>${num(x.attempts)}</td><td><small>${esc(fmt(x.lastAt))}</small></td></tr>`).join("")) : empty("Keine auffälligen IPs – keine wiederholten Fehlversuche.")}
-        <h3 class="ad-h3">Letzte Anmeldeereignisse</h3>
-        ${r.events.length ? table(["Ereignis", "Konto", "IP", "Gerät", "Zeit"], r.events.map((e) => `<tr><td>${pill(e.type, e.type === "login.success" ? "ok" : "warn")}</td><td>${esc(e.displayName || "")}<br><small>${esc(e.email || "")}</small></td><td><code>${esc(e.ip || "")}</code></td><td><small>${esc(e.device || "")}</small></td><td><small>${esc(fmt(e.createdAt))}</small></td></tr>`).join("")) : empty("Noch keine Anmeldeereignisse.")}`;
-    } catch (err) { p.querySelector(".ad-loading").outerHTML = empty(reason(err)); }
+      const byUser = new Map();
+      for (const u of users) byUser.set((u.email || "").toLowerCase(), { user: u, events: [] });
+      const unknown = [];
+      for (const e of r.events) { const g = byUser.get((e.email || "").toLowerCase()); if (g) g.events.push(e); else unknown.push(e); }
+      const groups = [...byUser.values()].sort((a, b) => b.events.length - a.events.length || new Date(b.user.createdAt) - new Date(a.user.createdAt));
+      const fails = (ev) => ev.filter((e) => e.type !== "login.success").length;
+      let open = "";
+      const eventRows = (ev) => ev.length ? table(["Ereignis", "IP", "Gerät", "Zeit"], ev.map((e) => `<tr><td>${pill(e.type, e.type === "login.success" ? "ok" : "warn")}</td><td><code>${esc(e.ip || "")}</code></td><td><small>${esc(e.device || "")}</small></td><td><small>${esc(fmt(e.createdAt))}</small></td></tr>`).join("")) : empty("Keine Anmeldeereignisse in den letzten 100 Einträgen.");
+      const render = () => {
+        const box = p.querySelector("[data-sec-list]");
+        box.innerHTML = `<ul class="xa-owners">${groups.map((g) => { const u = g.user, f = fails(g.events); return `<li><button data-sec-user="${esc(u.id)}" aria-expanded="${open === u.id}"><span class="admin-avatar">${esc(initials(u.displayName))}</span><span class="xa-owner-name"><b>${esc(u.displayName)}</b><small>${esc(u.email)}</small></span><span class="xa-owner-count">${num(g.events.length)} Ereignisse${f ? ` · <em>${num(f)} fehlgeschlagen</em>` : ""} · ${num(u.activeSessions)} Sitzungen${u.banned ? " · gesperrt" : ""}</span><i aria-hidden="true">${open === u.id ? "▾" : "▸"}</i></button>${open === u.id ? `<div class="xa-owner-items" data-sec-detail>${loading("Konto wird geladen …")}</div>` : ""}</li>`; }).join("")}
+          ${unknown.length ? `<li><button data-sec-user="unknown" aria-expanded="${open === "unknown"}"><span class="admin-avatar">?</span><span class="xa-owner-name"><b>Ohne Konto</b><small>Versuche mit unbekannter E-Mail</small></span><span class="xa-owner-count">${num(unknown.length)} Ereignisse</span><i aria-hidden="true">${open === "unknown" ? "▾" : "▸"}</i></button>${open === "unknown" ? `<div class="xa-owner-items">${eventRows(unknown)}</div>` : ""}</li>` : ""}</ul>`;
+      };
+      p.querySelector(".xa-loading").outerHTML = `<div class="xa-stats">${stat("Fehlgeschlagene Logins (24h)", num(s.fails24h), "", s.fails24h >= 10 ? "warn" : "")}${stat("Erfolgreiche Logins (24h)", num(s.success24h))}${stat("Gesperrte Konten", num(s.bannedUsers))}${stat("Konten mit 2FA", num(s.twoFactorUsers))}${stat("Aktive Sitzungen", num(s.activeSessions))}</div>
+        <h3 class="xa-h3">Nach Konto</h3><div data-sec-list></div>
+        <h3 class="xa-h3">Auffällige IP-Adressen</h3><p class="hint">Adressen mit wiederholt fehlgeschlagenen Versuchen in 24 Stunden – kann auf Brute-Force hindeuten.</p>
+        ${r.suspiciousIps.length ? table(["IP-Adresse", "Versuche", "Letzter Versuch"], r.suspiciousIps.map((x) => `<tr><td><code>${esc(x.ip)}</code></td><td>${num(x.attempts)}</td><td><small>${esc(fmt(x.lastAt))}</small></td></tr>`).join("")) : empty("Keine auffälligen IPs – keine wiederholten Fehlversuche.")}`;
+      render();
+      p.querySelector("[data-sec-list]").addEventListener("click", async (e) => {
+        const b = e.target.closest("[data-sec-user]"); if (!b) return;
+        open = open === b.dataset.secUser ? "" : b.dataset.secUser; render();
+        if (!open || open === "unknown") return;
+        const g = byUser.get((groups.find((x) => x.user.id === open) || { user: {} }).user.email?.toLowerCase());
+        const box = p.querySelector("[data-sec-detail]"); if (!g || !box) return;
+        try {
+          const d = await api("GET", `/admin/users/${encodeURIComponent(open)}`);
+          const u = d.user;
+          box.innerHTML = `<div class="xa-badges">${pill(roleLabel(u.staffRole), u.staffRole ? "accent" : "")}${pill(u.twoFactor ? "2FA an" : "2FA aus", u.twoFactor ? "ok" : "warn")}${u.banned ? pill(u.bannedUntil ? `Gesperrt bis ${fmt(u.bannedUntil)}` : "Gesperrt", "danger") : pill("Nicht gesperrt", "ok")}${u.verified ? pill("Verifiziert", "ok") : ""}</div>
+            <div class="xa-cols"><section><h4>Aktive Sitzungen (${d.sessions.length})</h4>${d.sessions.length ? `<ul class="xa-list xa-list-plain">${d.sessions.map((x) => `<li><div><b>${esc(x.deviceName || "Gerät")}</b><small>${esc(x.ip || "")} · seit ${esc(fmt(x.createdAt))} · zuletzt ${esc(ago(x.lastSeenAt || x.createdAt))}</small></div></li>`).join("")}</ul>` : empty("Keine aktiven Sitzungen.")}</section>
+            <section><h4>Verwarnungen (${d.warnings.length})</h4>${d.warnings.length ? `<ul class="xa-list xa-list-plain">${d.warnings.map((w) => `<li><div><b>${esc(w.reason)}</b><small>${esc(w.actor || "Staff")} · ${esc(fmt(w.createdAt))}</small></div></li>`).join("")}</ul>` : empty("Keine Verwarnungen.")}</section></div>
+            <h4>Anmeldeereignisse</h4>${eventRows(g.events.length ? g.events : d.authEvents)}
+            <div class="row-actions"><button data-goto-user="${esc(u.id)}">Konto unter „Nutzer“ öffnen</button></div>`;
+        } catch (err) { box.innerHTML = empty(reason(err)); }
+      });
+      p.querySelector("[data-sec-list]").addEventListener("click", (e) => { const b = e.target.closest("[data-goto-user]"); if (!b) return; document.querySelector('[data-tab="users"]')?.click(); setTimeout(() => openUser(b.dataset.gotoUser), 400); });
+    } catch (err) { p.querySelector(".xa-loading").outerHTML = empty(reason(err)); }
   };
 
   // ---------- KI ----------
@@ -837,13 +932,13 @@
     p.querySelector('[data-act="refresh"]').addEventListener("click", loaders.ai);
     try {
       const r = await api("GET", "/admin/ai");
-      p.querySelector(".ad-loading").outerHTML = `${r.configured ? "" : '<div class="notice">Auf dem Server ist kein API-Schlüssel für den KI-Proxy hinterlegt – „KI fragen“ ist nicht verfügbar, es entsteht keine Nutzung.</div>'}
-        <div class="ad-stats">${stat("Anfragen", num(r.totals.requests))}${stat("Eingabe-Tokens", num(r.totals.inputTokens))}${stat("Ausgabe-Tokens", num(r.totals.outputTokens))}${stat("Ablehnungen", num(r.totals.refusals), "", r.totals.refusals ? "warn" : "")}</div>
-        <h3 class="ad-h3">Nutzung je Konto</h3>
+      p.querySelector(".xa-loading").outerHTML = `${r.configured ? "" : '<div class="notice">Auf dem Server ist kein API-Schlüssel für den KI-Proxy hinterlegt – „KI fragen“ ist nicht verfügbar, es entsteht keine Nutzung.</div>'}
+        <div class="xa-stats">${stat("Anfragen", num(r.totals.requests))}${stat("Eingabe-Tokens", num(r.totals.inputTokens))}${stat("Ausgabe-Tokens", num(r.totals.outputTokens))}${stat("Ablehnungen", num(r.totals.refusals), "", r.totals.refusals ? "warn" : "")}</div>
+        <h3 class="xa-h3">Nutzung je Konto</h3>
         ${r.perUser.length ? table(["Konto", "Anfragen", "Tokens", "Ablehnungen"], r.perUser.map((u) => `<tr><td>${esc(u.displayName || "Gelöschtes Konto")}<br><small>${esc(u.email || "")}</small></td><td>${num(u.requests)}</td><td>${num(u.tokens)}</td><td>${num(u.refusals)}</td></tr>`).join("")) : empty(r.configured ? "Noch keine KI-Nutzung." : "Keine Nutzung – der KI-Proxy ist nicht eingerichtet.")}
-        <h3 class="ad-h3">Letzte Ablehnungen</h3>
+        <h3 class="xa-h3">Letzte Ablehnungen</h3>
         ${r.recentRefusals.length ? table(["Konto", "Zeit"], r.recentRefusals.map((u) => `<tr><td>${esc(u.displayName || "")}<br><small>${esc(u.email || "")}</small></td><td><small>${esc(fmt(u.createdAt))}</small></td></tr>`).join("")) : empty("Keine Ablehnungen.")}`;
-    } catch (err) { p.querySelector(".ad-loading").outerHTML = empty(reason(err)); }
+    } catch (err) { p.querySelector(".xa-loading").outerHTML = empty(reason(err)); }
   };
 
   // ---------- Matching ----------
@@ -855,14 +950,14 @@
       const { analytics: a } = await api("GET", "/admin/matching-analytics");
       const n = a.notifications, i = a.interactions;
       const max = Math.max(1, ...a.series14d.map((d) => d.n));
-      p.querySelector(".ad-loading").outerHTML = `<div class="ad-stats">${stat("Verschickt", num(n.total))}${stat("Geöffnet", num(n.opened), `${n.ctr} % Klickrate`)}${stat("Verworfen", num(n.dismissed), `${n.dismissRate} % Verwerfrate`)}${stat("Noch ungesehen", num(n.byType.reduce((s, t) => s + t.unseen, 0)))}</div>
-        <h3 class="ad-h3">Benachrichtigungen – letzte 14 Tage</h3>
-        ${a.series14d.length ? `<ul class="ad-bars ad-bars-cols">${a.series14d.map((d) => `<li><i style="height:${Math.max(4, Math.round((d.n / max) * 100))}%" title="${esc(d.d)}: ${num(d.n)}"></i><span>${esc(d.d.slice(5))}</span><b>${num(d.n)}</b></li>`).join("")}</ul>` : empty("Noch keine Match-Benachrichtigungen – der Durchlauf läuft alle 15 Minuten und meldet nur oberhalb der Qualitätsschwelle.")}
-        <h3 class="ad-h3">Nach Empfehlungstyp</h3>
+      p.querySelector(".xa-loading").outerHTML = `<div class="xa-stats">${stat("Verschickt", num(n.total))}${stat("Geöffnet", num(n.opened), `${n.ctr} % Klickrate`)}${stat("Verworfen", num(n.dismissed), `${n.dismissRate} % Verwerfrate`)}${stat("Noch ungesehen", num(n.byType.reduce((s, t) => s + t.unseen, 0)))}</div>
+        <h3 class="xa-h3">Benachrichtigungen – letzte 14 Tage</h3>
+        ${a.series14d.length ? `<ul class="xa-bars xa-bars-cols">${a.series14d.map((d) => `<li><i style="height:${Math.max(4, Math.round((d.n / max) * 100))}%" title="${esc(d.d)}: ${num(d.n)}"></i><span>${esc(d.d.slice(5))}</span><b>${num(d.n)}</b></li>`).join("")}</ul>` : empty("Noch keine Match-Benachrichtigungen – der Durchlauf läuft alle 15 Minuten und meldet nur oberhalb der Qualitätsschwelle.")}
+        <h3 class="xa-h3">Nach Empfehlungstyp</h3>
         ${n.byType.length ? table(["Typ", "Verschickt", "Geöffnet", "Klickrate", "Verworfen", "Verwerfrate", "Ungesehen"], n.byType.map((t) => `<tr><td>${esc(t.type)}</td><td>${num(t.total)}</td><td>${num(t.opened)}</td><td>${t.ctr} %</td><td>${num(t.dismissed)}</td><td>${t.dismissRate} %</td><td>${num(t.unseen)}</td></tr>`).join("")) : empty("Noch nichts.")}
-        <h3 class="ad-h3">Interaktionen</h3><p class="hint">Was Mitglieder auf den Matching-Flächen selbst getan haben – speichern, verwerfen, Gespräch beginnen (das Ehrlichste, was einer Conversion nahekommt).</p>
-        <div class="ad-stats">${stat("Gespeichert (gesamt)", num(i.allTime.saved), `${num(i.last30d.saved)} in 30 Tagen`)}${stat("Verworfen (gesamt)", num(i.allTime.dismissed), `${num(i.last30d.dismissed)} in 30 Tagen`)}${stat("Kontaktiert (gesamt)", num(i.allTime.contacted), `${num(i.last30d.contacted)} in 30 Tagen`)}${stat("Angesehen (gesamt)", num(i.allTime.viewed))}</div>`;
-    } catch (err) { p.querySelector(".ad-loading").outerHTML = empty(reason(err)); }
+        <h3 class="xa-h3">Interaktionen</h3><p class="hint">Was Mitglieder auf den Matching-Flächen selbst getan haben – speichern, verwerfen, Gespräch beginnen (das Ehrlichste, was einer Conversion nahekommt).</p>
+        <div class="xa-stats">${stat("Gespeichert (gesamt)", num(i.allTime.saved), `${num(i.last30d.saved)} in 30 Tagen`)}${stat("Verworfen (gesamt)", num(i.allTime.dismissed), `${num(i.last30d.dismissed)} in 30 Tagen`)}${stat("Kontaktiert (gesamt)", num(i.allTime.contacted), `${num(i.last30d.contacted)} in 30 Tagen`)}${stat("Angesehen (gesamt)", num(i.allTime.viewed))}</div>`;
+    } catch (err) { p.querySelector(".xa-loading").outerHTML = empty(reason(err)); }
   };
 
   // ---------- Systemzustand ----------
@@ -878,12 +973,12 @@
     try {
       const { health: h } = await api("GET", "/admin/health");
       const kv = (k, v) => `<li><span>${esc(k)}</span><b>${esc(v)}</b></li>`;
-      p.querySelector(".ad-loading").outerHTML = `<div class="ad-cols">
-        <section class="ad-card"><h3>Server</h3><ul class="ad-kv">${kv("Version", h.serverVersion)}${kv("Node", h.nodeVersion)}${kv("Läuft seit", duration(h.uptimeSeconds))}${kv("Adresse", X.API)}</ul></section>
-        <section class="ad-card"><h3>Datenbank</h3><ul class="ad-kv">${kv("Größe", bytes(h.dbSizeBytes))}${kv("Journal", h.walMode)}${kv("Audit-Einträge", num(h.auditEntries))}</ul></section>
-        <section class="ad-card"><h3>Speicher</h3><ul class="ad-kv">${kv("RSS", bytes(h.rssBytes))}${kv("Heap belegt", bytes(h.heapUsedBytes))}</ul></section>
-        <section class="ad-card"><h3>Noch nicht gemessen</h3><p class="hint">Diese Teilsysteme sind noch nicht Teil der Plattform, deshalb gibt es nichts Echtes zu zeigen – sie stehen hier ehrlich statt mit Platzhalterzahlen.</p><ul class="ad-kv">${kv("Hintergrund-Warteschlangen", "–")}${kv("E-Mail-Zustellung", "–")}${kv("Antwortzeiten (p95)", "–")}</ul></section></div>`;
-    } catch (err) { p.querySelector(".ad-loading").outerHTML = empty(reason(err)); }
+      p.querySelector(".xa-loading").outerHTML = `<div class="xa-cols">
+        <section class="xa-card"><h3>Server</h3><ul class="xa-kv">${kv("Version", h.serverVersion)}${kv("Node", h.nodeVersion)}${kv("Läuft seit", duration(h.uptimeSeconds))}${kv("Adresse", X.API)}</ul></section>
+        <section class="xa-card"><h3>Datenbank</h3><ul class="xa-kv">${kv("Größe", bytes(h.dbSizeBytes))}${kv("Journal", h.walMode)}${kv("Audit-Einträge", num(h.auditEntries))}</ul></section>
+        <section class="xa-card"><h3>Speicher</h3><ul class="xa-kv">${kv("RSS", bytes(h.rssBytes))}${kv("Heap belegt", bytes(h.heapUsedBytes))}</ul></section>
+        <section class="xa-card"><h3>Noch nicht gemessen</h3><p class="hint">Diese Teilsysteme sind noch nicht Teil der Plattform, deshalb gibt es nichts Echtes zu zeigen – sie stehen hier ehrlich statt mit Platzhalterzahlen.</p><ul class="xa-kv">${kv("Hintergrund-Warteschlangen", "–")}${kv("E-Mail-Zustellung", "–")}${kv("Antwortzeiten (p95)", "–")}</ul></section></div>`;
+    } catch (err) { p.querySelector(".xa-loading").outerHTML = empty(reason(err)); }
   };
 
   // ---------- Ankündigungen ----------
@@ -892,11 +987,11 @@
     const p = panel("announcements");
     if (!p.querySelector("[data-ann-form]")) {
       p.innerHTML = `${head("KOMMUNIKATION", "Ankündigungen", "Banner für alle Mitglieder – in der Xyntal-App und auf xyntal.de – veröffentlichen und schalten, welche gerade live sind.")}
-        <form class="ad-card ad-inline ad-ann-form" data-ann-form>
+        <form class="xa-card xa-inline xa-ann-form" data-ann-form>
           <h3>Neue Ankündigung</h3>
           <label>Titel<input name="title" maxlength="160" required placeholder="Kurze Überschrift (Pflicht)"></label>
           <label>Text<textarea name="body" maxlength="2000" placeholder="Was sollen alle wissen?"></textarea></label>
-          <div class="ad-row"><label>Art<select name="kind">${Object.entries(A_KIND).map(([k, [l]]) => `<option value="${k}">${esc(l)}</option>`).join("")}</select></label>
+          <div class="xa-row"><label>Art<select name="kind">${Object.entries(A_KIND).map(([k, [l]]) => `<option value="${k}">${esc(l)}</option>`).join("")}</select></label>
           <label>Endet am (optional)<input name="endsAt" type="datetime-local"></label></div>
           <div class="row-actions"><button>Veröffentlichen</button><span class="hint">Erscheint sofort als Banner, bis du es ausblendest oder das Ende erreicht ist.</span></div>
         </form><div data-list>${loading()}</div>`;
@@ -924,9 +1019,9 @@
       S.announcements = (await api("GET", "/admin/announcements")).announcements;
       const live = S.announcements.filter((a) => a.active && (!a.endsAt || new Date(a.endsAt) > new Date())).length;
       const c = document.getElementById("c-announcements"); if (c) c.textContent = live ? `(${live} live)` : "";
-      box.innerHTML = `<h3 class="ad-h3">Veröffentlicht</h3>` + (S.announcements.length ? `<ul class="ad-announcements">${S.announcements.map((a) => {
+      box.innerHTML = `<h3 class="xa-h3">Veröffentlicht</h3>` + (S.announcements.length ? `<ul class="xa-announcements">${S.announcements.map((a) => {
         const over = a.endsAt && new Date(a.endsAt) <= new Date();
-        return `<li class="ad-ann ad-ann-${esc(a.kind)}"><div><b>${esc(a.title)}</b> ${pill(A_KIND[a.kind] ? A_KIND[a.kind][0] : a.kind, A_KIND[a.kind] && A_KIND[a.kind][1])} ${a.active && !over ? pill("Live", "ok") : pill(over ? "Abgelaufen" : "Ausgeblendet")}${a.body ? `<p>${esc(a.body)}</p>` : ""}<small>${esc(a.author || "Staff")} · ${esc(fmt(a.createdAt))}${a.endsAt ? ` · endet ${esc(fmt(a.endsAt))}` : ""}</small></div>
+        return `<li class="xa-ann xa-ann-${esc(a.kind)}"><div><b>${esc(a.title)}</b> ${pill(A_KIND[a.kind] ? A_KIND[a.kind][0] : a.kind, A_KIND[a.kind] && A_KIND[a.kind][1])} ${a.active && !over ? pill("Live", "ok") : pill(over ? "Abgelaufen" : "Ausgeblendet")}${a.body ? `<p>${esc(a.body)}</p>` : ""}<small>${esc(a.author || "Staff")} · ${esc(fmt(a.createdAt))}${a.endsAt ? ` · endet ${esc(fmt(a.endsAt))}` : ""}</small></div>
           <div class="row-actions"><button data-act="toggle" data-id="${esc(a.id)}">${a.active ? "Ausblenden" : "Live schalten"}</button><button class="admin-danger" data-act="delete" data-id="${esc(a.id)}">Löschen</button></div></li>`;
       }).join("")}</ul>` : empty("Noch nichts veröffentlicht."));
     } catch (err) { box.innerHTML = empty(reason(err)); }
@@ -950,7 +1045,7 @@
     try {
       const { entries } = await api("GET", `/admin/audit${q({ action: S.audit.action, q: S.audit.query })}`);
       S.audit.entries = entries;
-      box.innerHTML = entries.length ? table(["Wann", "Aktion", "Akteur", "Ziel", "Vorher → Nachher", "IP"], entries.map((a) => `<tr><td><small>${esc(fmt(a.createdAt))}</small></td><td><code>${esc(a.action)}</code></td><td>${esc(a.actor || "System")}<br><small>${esc(a.actorEmail || "")}</small></td><td><small><code>${esc(a.target || "")}</code></small>${a.reason ? `<br><small>Grund: ${esc(a.reason)}</small>` : ""}</td><td><small class="ad-pre">${esc(show(a.before))}${show(a.before) || show(a.after) ? " → " : ""}${esc(show(a.after))}${a.meta ? `<br>${esc(show(a.meta))}` : ""}</small></td><td><small><code>${esc(a.ip || "")}</code></small></td></tr>`).join("")) : empty("Noch nichts.");
+      box.innerHTML = entries.length ? table(["Wann", "Aktion", "Akteur", "Ziel", "Vorher → Nachher", "IP"], entries.map((a) => `<tr><td><small>${esc(fmt(a.createdAt))}</small></td><td><code>${esc(a.action)}</code></td><td>${esc(a.actor || "System")}<br><small>${esc(a.actorEmail || "")}</small></td><td><small><code>${esc(a.target || "")}</code></small>${a.reason ? `<br><small>Grund: ${esc(a.reason)}</small>` : ""}</td><td><small class="xa-pre">${esc(show(a.before))}${show(a.before) || show(a.after) ? " → " : ""}${esc(show(a.after))}${a.meta ? `<br>${esc(show(a.meta))}` : ""}</small></td><td><small><code>${esc(a.ip || "")}</code></small></td></tr>`).join("")) : empty("Noch nichts.");
     } catch (err) { box.innerHTML = empty(reason(err)); }
   }
 
