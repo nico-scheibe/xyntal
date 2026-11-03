@@ -17,7 +17,10 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 |---|---|
 | `public/` | Die komplette Website (HTML, CSS, JS) – das ist alles, was online muss |
 | `public/config.js` | Supabase-Adresse und öffentlicher Schlüssel |
-| `public/landing.css`, `public/landing.js` | Startseite: eigenes Design (Anthrazit + Eisblau) und interaktive Demo mit Beispieldaten, ohne Supabase |
+| `public/front.css` | Startseite: dunkles Grau (#1C1C1C), Off-White (#ECEAE4), Serifen-Überschriften (Source Serif 4), Text in IBM Plex Sans; Einstieg, Zitat, Fragen und Antworten, Beta-Link, Newsletter. Keine Karten, keine Verläufe, keine Effekte |
+| `public/brief.html`, `public/brief.css` | Der Brief von Nico als eigene Seite (`/brief`): eine schmale Textspalte in Serifenschrift |
+| `public/cosmos.css`, `public/backdrop.css`, `public/site-header.css`, `public/site-footer.css` | Gemeinsame Ebene der Unterseiten, Hintergrund, Kopf- und Fußzeile – dasselbe Grau, dieselben Schriften wie die Startseite |
+| `public/landing.js` | Startseite: Newsletter-Formular (Brevo), Einladungslink; die Swipe-Demo läuft nur noch auf Seiten mit `[data-demo]` |
 | `supabase/schema.sql` | Datenbank: Tabellen, Zugriffsregeln, Funktionen (bereits ausgeführt) |
 | `supabase/002_login_methods.sql` | Ergänzung für Google/Apple/LinkedIn/Handy-Login (bereits ausgeführt) |
 | `supabase/003_community.sql` | Community: Feed, Kommentare, Likes, Börse, Direktnachrichten (bereits ausgeführt) |
@@ -45,7 +48,8 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 
 | Adresse | Inhalt |
 |---|---|
-| `/` | Startseite: Hero, interaktive Team-Demo (Beispieldaten, nichts wird gespeichert), Geschichte „Idee → Verbindungen → Team → Fortschritt“, Einstieg |
+| `/` | Startseite: Einstieg, Zitat von Nico, Fragen und Antworten (für wen, Unterschied zu LinkedIn/Discord, Mac/Windows, was schon geht, Bewerbung, wer dahintersteht), Beta-Link, Newsletter. Demo und Karten-Builder liegen auf `/demo` und `/meine-karte` |
+| `/brief` | Der Brief von Nico: warum es Xyntal gibt, Stand der Beta, Bewerbung |
 | `/mitglied-werden` | Konto und Profil anlegen (mit E-Mail-Bestätigung) |
 | `/beta` | Beta-Programm: was Tester bekommen, Bewerbung nur mit Konto. Gäste legen im selben Formular ein Konto an (E-Mail/Passwort oder Google/Apple); die Bewerbung wird bis zur E-Mail-Bestätigung im Browser zwischengespeichert und danach automatisch abgeschickt. Mitglieder sehen nur die Bewerbung oder den Stand ihrer Bewerbung; Bewerbungen erscheinen im Admin-Bereich |
 | `/login` | Einloggen per E-Mail, Google, Apple, LinkedIn oder Handynummer, „Passwort vergessen?“ |
