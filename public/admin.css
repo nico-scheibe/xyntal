@@ -276,3 +276,20 @@
 .xa-map canvas { display:block; width:100%; height:auto; border-radius:12px; background:radial-gradient(ellipse at 50% 40%,rgba(63,216,255,.05),transparent 70%); }
 .xa-map-tip { position:absolute; z-index:2; padding:5px 9px; border-radius:8px; background:#1A1A26; border:1px solid var(--admin-line); color:#F5F0FF; font-size:12px; pointer-events:none; white-space:nowrap; }
 @media(max-width:700px) { .xa-owners > li > button { flex-wrap:wrap; } .xa-owner-count { width:100%; padding-left:50px; } }
+
+/* Audit-Log: feste Spalten, IPs und Aktionen nicht zeichenweise umbrechen, Vorher/Nachher bekommt den Platz */
+.admin-app td code { overflow-wrap:normal; white-space:nowrap; }
+.xa-audit table { table-layout:fixed; }
+.xa-audit th:nth-child(1), .xa-audit td:nth-child(1) { width:92px; }
+.xa-audit th:nth-child(2), .xa-audit td:nth-child(2) { width:150px; }
+.xa-audit th:nth-child(3), .xa-audit td:nth-child(3) { width:18%; }
+.xa-audit th:nth-child(4), .xa-audit td:nth-child(4) { width:22%; }
+.xa-audit th:nth-child(6), .xa-audit td:nth-child(6) { width:150px; }
+.xa-audit td { overflow-wrap:anywhere; }
+.xa-audit td:nth-child(2) code, .xa-audit td:nth-child(4) code, .xa-audit td:nth-child(6) code { white-space:normal; overflow-wrap:anywhere; word-break:normal; }
+.xa-audit td:nth-child(1) small, .xa-audit td:nth-child(6) small { white-space:nowrap; }
+.xa-audit td:nth-child(6) code { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block; }
+.xa-audit td:nth-child(2) code { white-space:nowrap; }
+.xa-audit td small { display:inline; }
+.xa-audit th, .xa-audit td { padding:14px 12px; }
+@media(max-width:900px) { .xa-audit table { table-layout:auto; min-width:760px; } }
