@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Xyntal – Ein Brief von Nico</title>
+  <title>Xyntal – Finde die Leute, mit denen du etwas aufbaust</title>
   <meta name="description" content="Xyntal hilft dir, gezielt Leute zu finden, mit denen du etwas aufbauen kannst: Mitgründer, Projektpartner und Leute, die schon weiter sind. Beta per Bewerbung, App für Mac und Windows.">
-  <meta name="theme-color" content="#F6F3EC">
-  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#1C1C1C">
+  <meta name="color-scheme" content="dark">
   <meta name="format-detection" content="telephone=no">
   <meta property="og:title" content="Xyntal – Finde die Leute, mit denen du etwas aufbaust">
   <meta property="og:description" content="Mitgründer, Projektpartner und Leute, die schon weiter sind. Beta per Bewerbung, App für Mac und Windows.">
@@ -22,13 +22,13 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="stylesheet" href="fonts/fonts.css?v=33">
-  <script src="i18n-en.js?v=72" defer></script>
+  <script src="i18n-en.js?v=73" defer></script>
   <script src="i18n.js?v=31" defer></script>
-  <link rel="stylesheet" href="/site-footer.css?v=3">
-  <link rel="stylesheet" href="/site-header.css?v=5">
-  <link rel="stylesheet" href="brief.css?v=1">
+  <link rel="stylesheet" href="/site-footer.css?v=4">
+  <link rel="stylesheet" href="/site-header.css?v=6">
+  <link rel="stylesheet" href="front.css?v=1">
 </head>
-<body class="home brief">
+<body class="home front">
 <a class="skip" href="#inhalt">Zum Inhalt springen</a>
 
 <header class="nav">
@@ -47,42 +47,58 @@
   </div>
 </header>
 
-<main id="inhalt" class="letter">
+<main id="inhalt" class="front-main">
 
-  <p class="letter-date"><span data-no-i18n>Regensburg, </span>November 2026</p>
+  <section class="opener" aria-labelledby="opener-title">
+    <h1 id="opener-title" class="opener-title">Du hast eine Idee.<br>Dir fehlt jemand, der sie mit dir baut.</h1>
+    <div class="opener-side">
+      <p>Xyntal hilft dir, gezielt Leute zu finden, mit denen du etwas aufbauen kannst: Mitgründer, Projektpartner und Leute, die schon ein Stück weiter sind. Du beschreibst, was du vorhast. Xyntal zeigt dir, wer dazu passt und warum.</p>
+      <p class="opener-actions"><a class="button" href="/beta">Für die Beta bewerben</a> <a class="plainlink" href="/brief">Oder erst den Brief lesen, warum es Xyntal gibt</a></p>
+    </div>
+  </section>
 
-  <p>Hallo,</p>
+  <blockquote class="voice">
+    <p>„Die richtigen Leute findet man nicht durch Zufall. Also baue ich das Werkzeug, das mir gefehlt hat.“</p>
+    <footer><span data-no-i18n>Nico Scheibe</span>, baut Xyntal seit 2025 in Regensburg. <a href="/brief">Der ganze Brief</a></footer>
+  </blockquote>
 
-  <p>ich bin Nico, und ich baue Xyntal. Das ist keine Firma mit Team und Büro, das bin ich, seit 2025, an meinem Schreibtisch. Ich schreibe dir das als Brief, weil eine Landingpage mit großen Versprechen nicht das ist, was ich dir sagen will.</p>
+  <section class="qa" aria-labelledby="qa-title">
+    <h2 id="qa-title" class="sr-only">Fragen und Antworten</h2>
+    <dl>
+      <div>
+        <dt>Für wen ist das?</dt>
+        <dd>Für Leute mit einem konkreten Vorhaben, meist ein digitales Produkt, die dafür jemanden suchen. Und für Leute, die bei so etwas mitbauen wollen: als Mitgründer:in, bezahlt für eine klare Aufgabe, oder als Nebenprojekt mit abgesprochenen Stunden.</dd>
+      </div>
+      <div>
+        <dt>Was unterscheidet das von LinkedIn oder Discord?</dt>
+        <dd>Dort steht, was Leute können. Hier steht zusätzlich, wie viel Zeit sie gerade haben, was sie erwarten und zu welchen Bedingungen sie einsteigen würden. Jeder Vorschlag kommt mit einer Begründung: Fähigkeiten, Zeit, Arbeitsweise.</dd>
+      </div>
+      <div>
+        <dt>Worauf läuft es?</dt>
+        <dd>Auf dem Rechner, als App für Mac und Windows. Diese Website ist der Eingang: Profil anlegen, bewerben, Projekte ansehen. Die Arbeit passiert in der App. Linux und Handy gibt es noch nicht.</dd>
+      </div>
+      <div>
+        <dt>Was funktioniert schon, was nicht?</dt>
+        <dd>Profile, Projekte mit offenen Rollen, Gesuche und Nachrichten funktionieren. Die Vorschläge und die gemeinsamen Arbeitsbereiche sind noch im Bau. <a href="/demo">Die Demo</a> zeigt die Oberfläche mit Beispieldaten.</dd>
+      </div>
+      <div>
+        <dt>Wie komme ich rein?</dt>
+        <dd>Per Bewerbung: Konto anlegen, drei Fragen beantworten (was baust du, wen suchst du, wie viel Zeit hast du). Ich lese jede selbst und antworte per E-Mail. In der Beta kostet Xyntal nichts.</dd>
+      </div>
+      <div>
+        <dt>Wer steckt dahinter?</dt>
+        <dd>Nico Scheibe, allein, seit 2025, in Regensburg. Fragen an <a href="mailto:admin@xyntal.com" data-no-i18n>admin@xyntal.com</a> oder auf <a href="https://www.linkedin.com/in/nico-scheibe-781a20445" target="_blank" rel="noopener">LinkedIn<span class="sr-only"> (öffnet in neuem Tab)</span></a>.</dd>
+      </div>
+    </dl>
+  </section>
 
-  <p>Angefangen hat es mit einem Problem, das ich selbst hatte: Ich wollte etwas Eigenes aufbauen und hatte niemanden, mit dem ich es hätte tun können. Nicht, weil es die Leute nicht gibt. Sondern weil man sie nicht findet. LinkedIn ist zum Zeigen da, Discord zum Reden, Meetups zum Zufall. Nirgends steht, wer gerade wirklich Zeit hat, was die Person kann und was sie erwartet.</p>
+  <section class="closer beta-cta" aria-labelledby="closer-title">
+    <h2 id="closer-title">Die Beta läuft. Zugang per Bewerbung.</h2>
+    <p><a class="button" href="/beta">Für die Beta bewerben</a></p>
+  </section>
 
-  <p>Xyntal soll genau das lösen. Du beschreibst, was du vorhast, und Xyntal zeigt dir Leute, die dazu passen, und sagt dir, warum. Es geht um drei Arten von Menschen:</p>
-
-  <ul>
-    <li><b>Mitgründer:innen</b>, die mit dir eine Firma aufbauen und das Risiko teilen.</li>
-    <li><b>Projektpartner</b>, die ein bestimmtes Stück mit dir bauen: die App, das Design, den ersten Vertrieb. Zeitlich begrenzt, bezahlt oder gegen Anteile.</li>
-    <li><b>Leute, die schon weiter sind</b>, und dir in einem Gespräch ersparen, was sie vor einem Jahr selbst erst lernen mussten.</li>
-  </ul>
-
-  <p>Eine Sache ist mir dabei wichtig: Die Bedingungen stehen am Anfang, nicht am Ende. Jedes Projekt auf Xyntal sagt, ob es um Mitgründung mit Anteilen geht, um bezahlte Mitarbeit oder um ein Nebenprojekt ohne Geld, mit abgesprochenen Stunden pro Woche. Bevor jemand Zeit investiert.</p>
-
-  <p>Xyntal ist eine App für den Rechner, für Mac und Windows. Darin sind dein Profil, die Vorschläge, die Gespräche und ein gemeinsamer Arbeitsbereich für jedes Projekt. Diese Website ist nur der Eingang. Wenn du sehen willst, wie die App aussieht, gibt es <a href="/demo">eine Demo mit Beispieldaten</a>.</p>
-
-  <p>Wo wir stehen, ehrlich: Die Beta läuft. Profile, Projekte mit offenen Rollen, Gesuche und Nachrichten funktionieren. Die Vorschläge und die gemeinsamen Arbeitsbereiche sind noch im Bau. Es gibt Ecken, die nicht fertig sind, und wenn du eine findest, will ich davon hören.</p>
-
-  <p>Rein kommt man per Bewerbung. Nicht, um es exklusiv zu machen, sondern damit am Anfang Leute drin sind, die wirklich etwas vorhaben, und damit ich mit jedem Einzelnen sprechen kann. Die Bewerbung sind drei Fragen: Was baust du, wen suchst du, wie viel Zeit hast du. Ich lese jede selbst und antworte per E-Mail. In der Beta kostet Xyntal nichts.</p>
-
-  <p>Wenn das nach dir klingt:</p>
-
-  <p class="letter-cta beta-cta"><a class="button" href="/beta">Für die Beta bewerben</a></p>
-
-  <p>Und wenn du Fragen hast, schreib mir einfach: <a href="mailto:admin@xyntal.com" data-no-i18n>admin@xyntal.com</a>.</p>
-
-  <p class="letter-sign">Nico<br><span>Nico Scheibe, Gründer von Xyntal · <a href="https://www.linkedin.com/in/nico-scheibe-781a20445" target="_blank" rel="noopener">LinkedIn<span class="sr-only"> (öffnet in neuem Tab)</span></a></span></p>
-
-  <section class="letter-ps news" id="warteliste" aria-labelledby="ps-title">
-    <p id="ps-title"><b>PS.</b> Noch nichts Konkretes vor? Dann sag ich dir Bescheid, wenn Xyntal für alle offen ist. Keine Werbung, nur Mails, wenn es wirklich etwas Neues gibt.</p>
+  <section class="news" id="warteliste" aria-labelledby="news-title">
+    <p id="news-title">Noch nichts Konkretes vor? Dann sag ich dir Bescheid, wenn Xyntal für alle offen ist. Keine Werbung, nur Mails, wenn es wirklich etwas Neues gibt.</p>
     <form class="waitlist-form" data-waitlist novalidate>
       <div class="waitlist-row">
         <label class="sr-only" for="wl-email">E-Mail-Adresse</label>
@@ -155,6 +171,6 @@
 <script src="landing.js?v=swipe-54" defer></script>
 <script src="home-nav.js?v=7" defer></script>
 <script src="/effects.js?v=36" defer></script>
-<script src="/account-menu.js?v=11" defer></script>
+<script src="/account-menu.js?v=12" defer></script>
 </body>
 </html>

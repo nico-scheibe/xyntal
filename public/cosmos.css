@@ -5,23 +5,23 @@
    keine Verläufe, kein Glas, keine Effekte im Hintergrund.
    ===================================================================== */
 :root {
-  --bg: #F6F3EC;
-  --panel: #FFFFFF;
-  --panel-2: #EFEBE1;
-  --panel-3: #E6E1D5;
-  --border: #D9D4C8;
-  --border-2: #BDB7A8;
-  --text: #1C1B18;
-  --text-2: #5C5953;
-  --text-3: #8D8980;
-  --accent: #1F3A93;
-  --accent-2: #1F3A93;
-  --accent-soft: rgba(31, 58, 147, 0.1);
-  --cyan: #1F3A93;
-  --grad: #1C1B18;
-  --grad-btn: #1C1B18;
-  --on-accent: #F6F3EC;
-  --x-violet: #1F3A93; --x-pink: #1F3A93; --x-blue: #1F3A93; --x-cyan: #1F3A93;
+  --bg: #1C1C1C;
+  --panel: #242424;
+  --panel-2: #2A2A2A;
+  --panel-3: #303030;
+  --border: #333333;
+  --border-2: #4A4A4A;
+  --text: #ECEAE4;
+  --text-2: #A09E98;
+  --text-3: #73716B;
+  --accent: #ECEAE4;
+  --accent-2: #ECEAE4;
+  --accent-soft: rgba(236, 234, 228, 0.1);
+  --cyan: #ECEAE4;
+  --grad: #ECEAE4;
+  --grad-btn: #ECEAE4;
+  --on-accent: #1C1C1C;
+  --x-violet: #ECEAE4; --x-pink: #ECEAE4; --x-blue: #ECEAE4; --x-cyan: #ECEAE4;
   --x-grad: var(--grad);
   --r-card: 2px; --r-ctl: 2px; --r-modal: 2px;
   --f: "Source Serif 4", Georgia, "Times New Roman", serif; --f-unused: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -29,7 +29,7 @@
   --mono: "JetBrains Mono", ui-monospace, "SF Mono", "Cascadia Code", Consolas, Menlo, monospace;
   --f-hack: var(--f);
 }
-html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scrollbar-color: #BDB7A8 transparent; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scrollbar-color: #4A4A4A transparent; }
 body {
   background: var(--bg);
   font-family: var(--f-text);

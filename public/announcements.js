@@ -19,7 +19,7 @@
 
   const CSS = `
   .xy-ann{position:relative;z-index:40;margin:0;padding:0;list-style:none;font-family:var(--f-text,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif)}
-  .xy-ann li{display:flex;align-items:flex-start;gap:14px;padding:11px max(16px,calc((100vw - 1160px)/2));border-left:3px solid var(--xy-ann-accent);border-bottom:1px solid rgba(255,255,255,.08);background:var(--xy-ann-soft);color:#F5F5F7;animation:xy-ann-in .24s cubic-bezier(.22,.8,.2,1)}
+  .xy-ann li{display:flex;align-items:flex-start;gap:14px;padding:11px max(16px,calc((100vw - 1160px)/2));border-left:3px solid var(--xy-ann-accent);border-bottom:1px solid rgba(0, 0, 0, .08);background:var(--xy-ann-soft);color:#F5F5F7;animation:xy-ann-in .24s cubic-bezier(.22,.8,.2,1)}
   .xy-ann li.is-info{--xy-ann-accent:#3FE0F0;--xy-ann-soft:rgba(63,224,240,.12)}
   .xy-ann li.is-warning{--xy-ann-accent:#FFB84D;--xy-ann-soft:rgba(255,184,77,.12)}
   .xy-ann li.is-maintenance{--xy-ann-accent:#F56A8F;--xy-ann-soft:rgba(245,106,143,.12)}
@@ -28,7 +28,7 @@
   .xy-ann-text b{font-size:13.5px;font-weight:600}
   .xy-ann-text p{margin:0;font-size:12.5px;line-height:1.5;color:rgba(245,245,247,.78);white-space:pre-wrap;overflow-wrap:anywhere}
   .xy-ann-x{flex:none;width:30px;height:30px;border:0;border-radius:8px;background:transparent;color:rgba(245,245,247,.7);font-size:20px;line-height:1;cursor:pointer}
-  .xy-ann-x:hover{background:rgba(255,255,255,.1);color:#fff}
+  .xy-ann-x:hover{background:rgba(0, 0, 0, .1);color:#fff}
   .xy-ann-x:focus-visible{outline:2px solid #3FD8FF;outline-offset:2px}
   @keyframes xy-ann-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
   @media (prefers-reduced-motion:reduce){.xy-ann li{animation:none}}

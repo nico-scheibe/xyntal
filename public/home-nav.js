@@ -8,7 +8,7 @@
 
   document.body.classList.add("is-member");
   const css = document.createElement("link");
-  css.rel = "stylesheet"; css.href = "home-app.css?v=4";
+  css.rel = "stylesheet"; css.href = "home-app.css?v=5";
   document.head.append(css);
   // Inhalte der Startseite für Mitglieder: statt Warteliste direkt loslegen
   // Startseite (start.css): Mitglieder sehen statt der Beta-Bewerbung den Weg in die Projekte

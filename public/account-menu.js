@@ -104,8 +104,8 @@
 
   const CSS = `
   .acct{position:relative;flex:none;display:flex;align-items:center;margin-left:10px;order:5;font-family:var(--f-text,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif)}
-  .acct-btn{position:relative;width:38px;height:38px;padding:0;border-radius:999px;border:1px solid var(--line-2,var(--border-2,rgba(255,255,255,.16)));background:var(--surface-2,var(--panel-2,rgba(255,255,255,.07)));color:var(--text,#F5F5F7);display:grid;place-items:center;cursor:pointer;transition:border-color .15s ease,background-color .15s ease,transform .15s ease}
-  .acct-btn:hover{border-color:rgba(255,255,255,.32);background:rgba(255,255,255,.1)}
+  .acct-btn{position:relative;width:38px;height:38px;padding:0;border-radius:999px;border:1px solid var(--line-2,var(--border-2,rgba(0, 0, 0, .16)));background:var(--surface-2,var(--panel-2,rgba(0, 0, 0, .07)));color:var(--text,#F5F5F7);display:grid;place-items:center;cursor:pointer;transition:border-color .15s ease,background-color .15s ease,transform .15s ease}
+  .acct-btn:hover{border-color:rgba(0, 0, 0, .32);background:rgba(0, 0, 0, .1)}
   .acct-btn:active{transform:scale(.96)}
   .acct-btn:focus-visible{outline:2px solid #3FE0F0;outline-offset:3px}
   .acct-btn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -118,17 +118,17 @@
   .acct-menu[hidden]{display:none}
   @keyframes acct-in{from{opacity:0;transform:translateY(-4px) scale(.97)}to{opacity:1;transform:none}}
   @media (prefers-reduced-motion:reduce){.acct-menu{animation:none}}
-  .acct-head{padding:10px 12px 10px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:4px}
+  .acct-head{padding:10px 12px 10px;border-bottom:1px solid rgba(0, 0, 0, .08);margin-bottom:4px}
   .acct-head small{display:block;font-size:11.5px;color:#A1A1AA;margin-bottom:3px}
   .acct-head b{display:block;font-size:14.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .acct-head span{display:block;font-size:12.5px;color:#A1A1AA;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
   .acct-menu a,.acct-menu button.acct-item{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border:0;border-radius:10px;background:none;color:#E4E4E7 !important;font:500 14px/1.2 inherit;text-align:left;text-decoration:none;cursor:pointer;margin:0 !important}
-  .acct-menu a:hover,.acct-menu button.acct-item:hover,.acct-menu a:focus-visible,.acct-menu button.acct-item:focus-visible{background:rgba(255,255,255,.07);color:#fff !important;outline:none}
+  .acct-menu a:hover,.acct-menu button.acct-item:hover,.acct-menu a:focus-visible,.acct-menu button.acct-item:focus-visible{background:rgba(0, 0, 0, .07);color:#fff !important;outline:none}
   .acct-menu svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;opacity:.85}
   .acct-menu a.acct-primary{justify-content:center;margin:6px 0 2px !important;padding:11px 12px;background:#3FE0F0;color:#06181B !important;font-weight:600}
   .acct-menu a.acct-primary:hover{filter:brightness(1.08)}
   .acct-hint{padding:8px 12px 2px;font-size:12px;color:#A1A1AA}
-  .acct-sep{height:1px;margin:4px 6px;background:rgba(255,255,255,.08)}
+  .acct-sep{height:1px;margin:4px 6px;background:rgba(0, 0, 0, .08)}
   .acct-out{color:#FF8A9B !important}
   [data-account]{display:none !important}
   .nav .wrap>.acct{margin-left:8px}
@@ -291,7 +291,7 @@
     loadProfile();
     // Ankündigungen aus der App (Banner unter der Kopfzeile) – nur für angemeldete Mitglieder
     if (state.session && !document.querySelector('script[src^="/announcements.js"]')) {
-      const sc = document.createElement("script"); sc.src = "/announcements.js?v=99"; sc.defer = true; document.head.append(sc);
+      const sc = document.createElement("script"); sc.src = "/announcements.js?v=100"; sc.defer = true; document.head.append(sc);
     }
     document.addEventListener("xyntal:lang", render);
     window.addEventListener("storage", (e) => { if (e.key === TOKEN) { state.session = readSession(); render(); loadProfile(); } });

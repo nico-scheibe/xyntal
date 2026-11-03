@@ -1,17 +1,17 @@
 /* Matching auf der Website: Profil „Für besseres Matching“, Arbeitsstil-Test, „Für dich“
    und die Passung auf Mitgliederseiten. Läuft mit style.css und mit home.css (xyntal.de/name). */
 .xm, .xm-dialog, .xc {
-  --xm-accent: var(--accent, var(--c, #1F3A93));
-  --xm-soft: var(--accent-soft, rgba(31, 58, 147, 0.12));
-  --xm-line: var(--border, var(--line, #D9D4C8));
-  --xm-line-2: var(--border-2, var(--line-2, #BDB7A8));
-  --xm-panel: var(--panel, var(--surface-solid, #FFFFFF));
-  --xm-panel-2: var(--panel-2, var(--surface-2, #EFEBE1));
-  --xm-text-2: var(--text-2, #5C5953);
-  --xm-text-3: var(--text-3, #8D8980);
+  --xm-accent: var(--accent, var(--c, #ECEAE4));
+  --xm-soft: var(--accent-soft, rgba(236, 234, 228, 0.12));
+  --xm-line: var(--border, var(--line, #333333));
+  --xm-line-2: var(--border-2, var(--line-2, #4A4A4A));
+  --xm-panel: var(--panel, var(--surface-solid, #242424));
+  --xm-panel-2: var(--panel-2, var(--surface-2, #2A2A2A));
+  --xm-text-2: var(--text-2, #A09E98);
+  --xm-text-3: var(--text-3, #73716B);
   --xm-high: var(--green, var(--ok, #3CCF8E));
-  --xm-mid: var(--amber, #9A6400);
-  --xm-low: var(--pink, #B3261E);
+  --xm-mid: var(--amber, #D9B25F);
+  --xm-low: var(--pink, #E0705F);
 }
 .xm [hidden], .xm-dialog [hidden] { display: none !important; }
 
@@ -156,9 +156,9 @@
 /* Dialoge (2FA-Code, „Passt nicht“) */
 .xm-dialog {
   width: min(calc(100% - 32px), 460px); padding: 0; border: 1px solid var(--xm-line-2); border-radius: 2px;
-  background: var(--xm-panel); color: var(--text, #1C1B18);
+  background: var(--xm-panel); color: var(--text, #ECEAE4);
 }
-.xm-dialog::backdrop { background: rgba(255, 255, 255, 0.7); }
+.xm-dialog::backdrop { background: rgba(0, 0, 0, 0.7); }
 .xm-dialog-body { display: grid; gap: 14px; padding: 22px; }
 .xm-dialog h2 { margin: 0; font-size: 19px; }
 .xm-dialog p { margin: 0; color: var(--xm-text-2); font-size: 14px; }

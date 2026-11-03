@@ -1,7 +1,7 @@
 /* Xyntal – gemeinsamer Hintergrund für alle Seiten.
    Seit dem Umbau der Startseite („Bauplan“): eine ruhige, einfarbige Papierfläche.
    Keine Farbwolken, keine Sterne, kein Korn – der Logo-Verlauf bleibt dem Logo vorbehalten. */
-html { background: #F6F3EC; }
+html { background: #1C1C1C; }
 body { background: transparent !important; }
 body::before { display: none !important; } /* alte Hintergründe aus style.css / cosmos.css */
 .aurora { display: none !important; }       /* alter Hintergrund der Startseite */
