@@ -1251,6 +1251,10 @@ window.XYNTAL_EN = {
   "Du siehst hier die öffentlichen Profile. Freigeschaltete Mitglieder sehen alle.": "You're seeing public profiles. Activated members see everyone.",
   "Die ersten Profile entstehen gerade.": "The first profiles are being created.",
   "Sei eines der ersten Mitglieder.": "Be one of the first members.",
+  "Noch keine Karten.": "No cards yet.",
+  "Richte deine Karte ein": "Set up your card",
+  ", dann erscheinst du hier.": ", and you'll appear here.",
+  "Deine Karte fehlt noch.": "Your card is still missing.",
   "Arbeitet an": "Working on",
 
   /* ---------- Nachrichten ---------- */
