@@ -327,7 +327,7 @@
     const roleOpts = [["none", "Mitglied (keine Staff-Rolle)"], ...Object.keys(ROLE_LABEL).map((r) => [r, ROLE_LABEL[r]])];
     box.innerHTML = `<section class="xa-card xa-detail">
       <div class="xa-card-head"><div class="xa-person"><span class="admin-avatar">${esc(initials(u.displayName))}</span><div><h3>${esc(u.displayName)}${u.handle ? ` <small>@${esc(u.handle)}</small>` : ""}</h3><small>${esc(u.email)} · dabei seit ${esc(day(u.createdAt))} · 2FA ${u.twoFactor ? "an" : "aus"}</small></div></div><button data-act="close">Schließen</button></div>
-      <div class="xa-badges">${pill(roleLabel(u.staffRole), u.staffRole ? "accent" : "")}${u.verified ? pill("Verifiziert", "ok") : ""}${u.banned ? pill(u.bannedUntil ? `Gesperrt bis ${fmt(u.bannedUntil)}` : "Gesperrt", "danger") : ""}${u.mutedUntil !== null && u.mutedUntil !== undefined ? pill(u.mutedUntil ? `Stumm bis ${fmt(u.mutedUntil)}` : "Stumm", "warn") : ""}</div>
+      <div class="xa-badges">${pill(roleLabel(u.staffRole), u.staffRole ? "accent" : "")}${u.plan ? pill(u.subscribed ? `${u.plan} (Abo)` : u.planRenewsAt ? `${u.plan} bis ${day(u.planRenewsAt)}` : u.plan, u.plan !== "Start" ? "ok" : "") : ""}${u.aiCreditCents ? pill(`KI-Guthaben ${euro(u.aiCreditCents)}`, "accent") : ""}${u.verified ? pill("Verifiziert", "ok") : ""}${u.banned ? pill(u.bannedUntil ? `Gesperrt bis ${fmt(u.bannedUntil)}` : "Gesperrt", "danger") : ""}${u.mutedUntil !== null && u.mutedUntil !== undefined ? pill(u.mutedUntil ? `Stumm bis ${fmt(u.mutedUntil)}` : "Stumm", "warn") : ""}</div>
       ${u.headline || u.bio || u.location || u.website || u.github ? `<p class="xa-bio">${[u.headline, u.location, u.website, u.github].filter(Boolean).map(esc).join(" · ")}${u.bio ? `<br><span>${esc(u.bio)}</span>` : ""}</p>` : ""}
       <div class="xa-stats xa-stats-sm">
         ${stat("Arbeitsbereiche (Inhaber)", num(d.counts.workspacesOwned))}${stat("Mitgliedschaften", num(d.counts.memberships))}${stat("Tickets", num(d.counts.tickets))}
@@ -420,6 +420,8 @@
     ["mute", "users.ban", "mute <Konto> [Dauer] [Grund]", "Konto stummschalten: lesen ja, Nachrichten, Reaktionen und Beiträge nein."],
     ["unmute", "users.ban", "unmute <Konto>", "Stummschaltung aufheben."],
     ["kick", "content.moderate", "kick <Konto> <Arbeitsbereich> [Grund]", "Konto aus einem seiner Arbeitsbereiche entfernen. Fragt vorher nach."],
+    ["plan", "billing.manage", "plan <Konto> <Tage> [Tarif] <Grund>", "Mitgliedschaftstage gutschreiben (30, 30d, 4w). Sie zählen ab dem Ende der laufenden Mitgliedschaft. Ein kostenloses Konto braucht den Tarif (Forge, Crew, Foundry); ein bezahltes behält seinen, außer du nennst einen anderen. Die Tage laufen von selbst ab."],
+    ["credit", "billing.manage", "credit <Konto> <Euro> <Grund>", "KI-Guthaben gutschreiben (5, 2,50; negativ korrigiert). Das Konto bezahlt seine KI-Aufrufe daraus, sobald das Inklusivbudget des Tarifs aufgebraucht ist."],
     ["alts", "users.ban", "alts <Konto>", "Andere Konten, die dasselbe Gerät oder Netzwerk genutzt haben."],
     ["reports", "reports.handle", "reports", "Offene Meldungen auflisten."],
     ["note", "users.notes", "note <Konto> [Text]", "Staff-Notiz zu einem Konto; ohne Text werden die Notizen gelistet."],
@@ -464,7 +466,22 @@
     input.focus();
   };
   // ---------- Vorschläge beim Tippen (wie die Konsole in der App) ----------
-  const USER_COMMANDS = ["user", "ban", "unban", "warn", "mute", "unmute", "kick", "audit", "alts", "note"];
+  const USER_COMMANDS = ["user", "ban", "unban", "warn", "mute", "unmute", "kick", "plan", "credit", "audit", "alts", "note"];
+  const euro = (cents) => (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
+  // Euro für credit: "5", "5.50", "5,50", "-2" → Cent; nie null, höchstens 500 € wie auf dem Server.
+  function parseEuroCents(token) {
+    const m = /^(-?)(\d{1,3})(?:[.,](\d{1,2}))?$/.exec(token || ""); if (!m) return undefined;
+    const cents = Number(m[2]) * 100 + Number((m[3] || "").padEnd(2, "0"));
+    return cents > 0 && cents <= 50000 ? (m[1] ? -cents : cents) : undefined;
+  }
+  // Bezahlte Tarife, die plan vergeben kann – Spiegel des Katalogs in server/src/billing/routes.ts; der Server prüft den echten.
+  const PLAN_IDS = ["Forge", "Crew", "Foundry", "Works", "Works Custom"];
+  // Tage für plan: "30", "30d"/"30t" oder "4w"; Stunden sind keine Tage.
+  function parseDays(token) {
+    const m = /^(\d{1,5})(d|t|w)?$/i.exec(token || ""); if (!m) return undefined;
+    const days = Number(m[1]) * (m[2]?.toLowerCase() === "w" ? 7 : 1);
+    return days > 0 && days <= 3650 ? days : undefined;
+  }
   function setSuggestions(list) { S.console.suggestions = list; S.console.selected = list.length ? 0 : -1; renderSuggestions(); }
   function renderSuggestions(hide = false) {
     const box = $("[data-suggest]", panel("console")); if (!box) return;
@@ -508,6 +525,11 @@
     }
     if (argIndex === 1 && (name === "ban" || name === "mute")) {
       setSuggestions(pick([["1h", "1 Stunde"], ["24h", "24 Stunden"], ["7d", "7 Tage"], ["30d", "30 Tage"], ["perm", "dauerhaft"]])); return;
+    }
+    if (name === "plan" && (argIndex === 1 || argIndex === 2)) {
+      const choices = argIndex === 1 ? [["7", "7 Tage"], ["30", "30 Tage"], ["90", "90 Tage"], ["365", "365 Tage"]] : PLAN_IDS.map((p) => [p, "Tarif"]);
+      setSuggestions(choices.filter(([v]) => v.toLowerCase().startsWith(prefix) && v.toLowerCase() !== prefix).map(([v, d]) => ({ label: v, detail: d, insert: `${v} ` })));
+      return;
     }
     if (argIndex === 1 && name === "kick") {
       const id = S.console.userIds[tokens[1].toLowerCase()];
@@ -581,6 +603,8 @@
           const x = d.user;
           print("ok", `${x.displayName}${x.handle ? ` (@${x.handle})` : ""} · ${x.email}`);
           print("info", `Konto-ID: ${x.id}`); print("info", `Staff-Rolle: ${roleLabel(x.staffRole)}`);
+          if (x.aiCreditCents !== undefined) print("info", `KI-Guthaben: ${euro(x.aiCreditCents)}`);
+          print("info", `Tarif: ${x.plan}${x.subscribed ? ` (Abo${x.planRenewsAt ? `, verlängert sich ${fmt(x.planRenewsAt)}` : ""})` : x.planRenewsAt ? ` bis ${fmt(x.planRenewsAt)}` : ""}`);
           print("info", `Status: ${x.banned ? (x.bannedUntil ? `gesperrt bis ${fmt(x.bannedUntil)}` : "dauerhaft gesperrt") : "aktiv"}${x.mutedUntil !== null && x.mutedUntil !== undefined ? ` · stumm${x.mutedUntil ? ` bis ${fmt(x.mutedUntil)}` : ""}` : ""}${x.verified ? " · verifiziert" : ""}`);
           print("info", `Dabei seit ${day(x.createdAt)} · 2FA ${x.twoFactor ? "an" : "aus"} · ${d.sessions.length} aktive Sitzung(en)`);
           print("info", `Verwarnungen: ${d.warnings.length} · offene Meldungen gegen das Konto: ${d.openReports.length}${Array.isArray(d.notes) ? ` · Staff-Notizen: ${d.notes.length}` : ""}`);
@@ -622,6 +646,30 @@
             catch (err) { if (err.status === 409 && err.details && err.details.candidates) { print("error", "Mehrere Arbeitsbereiche passen – nutze die ID:"); for (const c of err.details.candidates) print("info", `  ${c.name} · ${c.id}`); } else throw err; }
           };
           renderConsole(); return;
+        }
+        case "plan": {
+          if (!need(3)) return;
+          const days = parseDays(args[1]);
+          if (days === undefined) { print("error", `Tage sind eine ganze Zahl von Tagen: 30, 30d oder 4w. Aufruf: ${cmd[2]}`); return; }
+          // Optionaler Tarif vor dem Grund: plan @bob 30 Forge Danke ("Works Custom" sind zwei Wörter)
+          const rest = args.slice(2);
+          const planWords = [2, 1].find((n) => PLAN_IDS.some((p) => p.toLowerCase() === rest.slice(0, n).join(" ").toLowerCase())) || 0;
+          const plan = planWords ? PLAN_IDS.find((p) => p.toLowerCase() === rest.splice(0, planWords).join(" ").toLowerCase()) : undefined;
+          const why = rest.join(" ").trim();
+          if (!why) { print("error", "Gib einen Grund an – er landet im Audit-Log."); return; }
+          const u = await resolveUser(args[0]); if (!u) return;
+          const r = await api("POST", `/admin/users/${encodeURIComponent(u.id)}/plan/extend`, { days, plan, reason: why });
+          print("ok", `${u.displayName} ist bis ${fmt(r.renewsAt)} auf ${r.plan} (${r.days} Tage gutgeschrieben).`);
+          return;
+        }
+        case "credit": {
+          if (!need(3)) return;
+          const cents = parseEuroCents(args[1]);
+          if (cents === undefined) { print("error", `Der Betrag ist in Euro, höchstens zwei Nachkommastellen und höchstens 500: 5, 2,50, -1. Aufruf: ${cmd[2]}`); return; }
+          const u = await resolveUser(args[0]); if (!u) return;
+          const r = await api("POST", `/admin/users/${encodeURIComponent(u.id)}/ai-credit`, { cents, reason: args.slice(2).join(" ") });
+          print("ok", `${u.displayName} hat jetzt ${euro(r.creditCents)} KI-Guthaben.`);
+          return;
         }
         case "alts": { if (!need(1)) return; const u = await resolveUser(args[0]); if (!u) return;
           const r = await api("GET", `/admin/users/${encodeURIComponent(u.id)}/linked`);
@@ -1003,14 +1051,16 @@
   // ---------- KI ----------
   loaders.ai = async () => {
     const p = panel("ai");
-    p.innerHTML = head("KI", "KI", "Nutzung des KI-Proxys auf der ganzen Plattform. Token-Zahlen meldet das Modell bei jeder Antwort; Kosten werden nicht angezeigt.", `<button data-act="refresh">Aktualisieren</button>`) + loading();
+    p.innerHTML = head("KI", "KI", "Nutzung des KI-Proxys auf der ganzen Plattform. Token-Zahlen meldet das Modell bei jeder Antwort; Kosten sind, was jeder Aufruf zum Guthabenpreis gekostet hat.", `<button data-act="refresh">Aktualisieren</button>`) + loading();
+    // Einzelne Aufrufe kosten Bruchteile eines Cents: kleine Beträge mit vier Nachkommastellen statt 0,00 €.
+    const eur = (cents) => (cents === null || cents === undefined ? "–" : (cents / 100).toLocaleString("de-DE", { minimumFractionDigits: cents !== 0 && Math.abs(cents) < 1 ? 4 : 2, maximumFractionDigits: cents !== 0 && Math.abs(cents) < 1 ? 4 : 2 }) + " €");
     p.querySelector('[data-act="refresh"]').addEventListener("click", loaders.ai);
     try {
       const r = await api("GET", "/admin/ai");
       p.querySelector(".xa-loading").outerHTML = `${r.configured ? "" : '<div class="notice">Auf dem Server ist kein API-Schlüssel für den KI-Proxy hinterlegt – „KI fragen“ ist nicht verfügbar, es entsteht keine Nutzung.</div>'}
-        <div class="xa-stats">${stat("Anfragen", num(r.totals.requests))}${stat("Eingabe-Tokens", num(r.totals.inputTokens))}${stat("Ausgabe-Tokens", num(r.totals.outputTokens))}${stat("Ablehnungen", num(r.totals.refusals), "", r.totals.refusals ? "warn" : "")}</div>
+        <div class="xa-stats">${stat("Anfragen", num(r.totals.requests))}${stat("Eingabe-Tokens", num(r.totals.inputTokens))}${stat("Ausgabe-Tokens", num(r.totals.outputTokens))}${stat("Ablehnungen", num(r.totals.refusals), "", r.totals.refusals ? "warn" : "")}${stat("Berechnet diesen Monat", eur(r.totals.monthCents ?? 0))}${stat("Berechnet gesamt", eur(r.totals.costCents ?? 0))}${stat("Modellkosten (geschätzt)", eur(r.totals.modelCostCents ?? 0))}</div>
         <h3 class="xa-h3">Nutzung je Konto</h3>
-        ${r.perUser.length ? table(["Konto", "Anfragen", "Tokens", "Ablehnungen"], r.perUser.map((u) => `<tr><td>${esc(u.displayName || "Gelöschtes Konto")}<br><small>${esc(u.email || "")}</small></td><td>${num(u.requests)}</td><td>${num(u.tokens)}</td><td>${num(u.refusals)}</td></tr>`).join("")) : empty(r.configured ? "Noch keine KI-Nutzung." : "Keine Nutzung – der KI-Proxy ist nicht eingerichtet.")}
+        ${r.perUser.length ? table(["Konto", "Anfragen", "Tokens", "Diesen Monat", "Kosten", "Guthaben übrig", "Ablehnungen"], r.perUser.map((u) => `<tr><td>${esc(u.displayName || "Gelöschtes Konto")}<br><small>${esc(u.email || "")}</small></td><td>${num(u.requests)}</td><td>${num(u.tokens)}</td><td>${eur(u.monthCents ?? 0)}</td><td title="davon aus Guthaben: ${eur(u.creditPaidCents ?? 0)}"><b>${eur(u.costCents ?? 0)}</b></td><td>${eur(u.creditCents)}</td><td>${num(u.refusals)}</td></tr>`).join("")) : empty(r.configured ? "Noch keine KI-Nutzung." : "Keine Nutzung – der KI-Proxy ist nicht eingerichtet.")}
         <h3 class="xa-h3">Letzte Ablehnungen</h3>
         ${r.recentRefusals.length ? table(["Konto", "Zeit"], r.recentRefusals.map((u) => `<tr><td>${esc(u.displayName || "")}<br><small>${esc(u.email || "")}</small></td><td><small>${esc(fmt(u.createdAt))}</small></td></tr>`).join("")) : empty("Keine Ablehnungen.")}`;
     } catch (err) { p.querySelector(".xa-loading").outerHTML = empty(reason(err)); }

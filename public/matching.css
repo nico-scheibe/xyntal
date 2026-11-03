@@ -207,3 +207,30 @@
   .xm-table tbody th { font-size: 12.5px; hyphens: auto; -webkit-hyphens: auto; }
   .xm-table td { white-space: nowrap; }
 }
+
+/* Tarif & KI-Guthaben (/tarif) */
+.xm-billing-grid { display: grid; gap: 14px; align-items: start; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); }
+.xm-billing .xm-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.xm-billing { align-content: start; gap: 14px; }
+.xm-billing-head { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+.xm-billing-head h2, .xm-billing-head h3 { margin: 0; font-size: 20px; }
+.xm-billing-head h3 { font-size: 18px; }
+.xm-billing-text { margin: 0; color: var(--xm-text-2); font-size: 14px; }
+.xm-billing-hint { margin: 0; color: var(--xm-text-2); font-size: 12.5px; opacity: .85; }
+.xm-billing-figures { display: grid; gap: 14px; margin: 0; }
+.xm-billing-figures > div { display: grid; gap: 4px; }
+.xm-billing-figures dt { color: var(--xm-text-2); font-size: 12.5px; text-transform: uppercase; letter-spacing: .06em; }
+.xm-billing-figures dd { margin: 0; font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.xm-billing-figures small { color: var(--xm-text-2); font-size: 12.5px; }
+.xm-billing-bar { height: 6px; border-radius: 2px; background: var(--xm-line-2); overflow: hidden; }
+.xm-billing-bar i { display: block; height: 100%; background: var(--xm-accent); }
+.xm-billing-bar.xm-nearly i { background: var(--xm-low); }
+.xm-billing-plans { display: grid; gap: 14px; margin-top: 18px; }
+.xm-plan { gap: 10px; }
+.xm-plan-price { margin: 0; font-size: 15px; color: var(--xm-text-2); }
+.xm-plan-price b { font-size: 24px; color: var(--text); font-variant-numeric: tabular-nums; }
+.xm-plan-price s { margin-right: 4px; }
+.xm-plan-features { margin: 0; padding-left: 18px; display: grid; gap: 4px; color: var(--xm-text-2); font-size: 13.5px; }
+.xm-warn-text, .xm-bad { color: var(--xm-low); }
+.xm-good { color: var(--xm-high); }
+.xm-pill.xm-warn { color: var(--xm-low); border-color: var(--xm-low); }
