@@ -1251,6 +1251,12 @@ window.XYNTAL_EN = {
   "Du siehst hier die öffentlichen Profile. Freigeschaltete Mitglieder sehen alle.": "You're seeing public profiles. Activated members see everyone.",
   "Die ersten Profile entstehen gerade.": "The first profiles are being created.",
   "Sei eines der ersten Mitglieder.": "Be one of the first members.",
+  "Noch keine Karten.": "No cards yet.",
+  "Dein Konto ist gesperrt. Solange die Sperre läuft, kannst du deine Karte nicht ändern, und sie wird nicht angezeigt.": "Your account is suspended. While the suspension lasts you can't change your card, and it isn't shown.",
+  "Solange die Sperre läuft, kannst du Profil und Karte nicht ändern, und andere sehen sie nicht. Bei Fragen melde dich per E-Mail.": "While the suspension lasts you can't change your profile or card, and others don't see them. Email me if you have questions.",
+  "Richte deine Karte ein": "Set up your card",
+  ", dann erscheinst du hier.": ", and you'll appear here.",
+  "Deine Karte fehlt noch.": "Your card is still missing.",
   "Arbeitet an": "Working on",
 
   /* ---------- Nachrichten ---------- */
