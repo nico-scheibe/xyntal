@@ -32,7 +32,10 @@ async function load() {
   try {
     const [members, verifiedProfiles, signups, newsletter] = await Promise.all([
       sb.rpc("admin_members").then(unwrap),
-      sb.from("profiles").select("id,is_verified,is_beta_tester,banned,banned_until").then(unwrap),
+      // Sperrstatus nur, wenn die Migration 20261103180000_website_ban.sql schon in Supabase läuft;
+      // sonst ohne die Spalten laden, damit Bewerbungen, Karten und Mitglieder trotzdem erscheinen.
+      sb.from("profiles").select("id,is_verified,is_beta_tester,banned,banned_until").then(unwrap)
+        .catch(() => sb.from("profiles").select("id,is_verified,is_beta_tester").then(unwrap)),
       sb.from("event_signups").select("*").order("created_at", { ascending: false }).then(unwrap),
       sb.from("newsletter").select("*").order("created_at", { ascending: false }).then(unwrap),
     ]);
