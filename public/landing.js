@@ -672,11 +672,10 @@
       if (!res.ok) return;                  // z. B. solange die Projekte-Tabellen noch fehlen
       const roles = await res.json();
       if (!Array.isArray(roles) || !roles.length) return;
-      $("[data-live-list]", box).innerHTML = roles.map((r) => `<li><a class="live-role" href="projekte#p-${Number(r.project.id)}">
+      $("[data-live-list]", box).innerHTML = roles.map((r) => `<li><a class="live-role" href="/projekte?projekt=${Number(r.project.id)}">
         <span class="live-role-name">${esc(r.name)}</span>
-        ${r.need ? `<span class="live-role-need">${esc(r.need)}</span>` : ""}
-        ${r.hours ? `<span class="live-role-hours">≈ ${Number(r.hours)} Std./Woche</span>` : ""}
-        <span class="live-role-project">für <b>${esc(r.project.title)}</b></span>
+        <span class="live-role-need">${r.need ? esc(r.need) : ""}</span>
+        <span class="live-role-meta"><span class="live-role-project" data-no-i18n>${esc(r.project.title)}</span>${r.hours ? `<span class="live-role-hours">${Number(r.hours)} Std./Woche</span>` : ""}</span>
       </a></li>`).join("");
       box.hidden = false;
     } catch { /* ohne Verbindung bleibt der Bereich einfach weg */ }

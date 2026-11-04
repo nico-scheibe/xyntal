@@ -2274,6 +2274,9 @@ window.XYNTAL_EN = {
   "Eine Anfrage ist ein durchschnittlicher KI-Aufruf der letzten 30 Tage – eine Frage an den Assistenten, ein Agenten-Lauf oder eine Zusammenfassung. Aufgaben mit vielen Schritten zählen mehr, kurze Fragen weniger. Guthaben verfällt nie und wird nie automatisch abgebucht.": "A request is an average AI call of the last 30 days – a question to the assistant, an agent run or a summary. Tasks with many steps count more, short questions less. Credit never expires and is never charged automatically.",
   "Eine Anfrage ist ein geschätzter durchschnittlicher KI-Aufruf – eine Frage an den Assistenten, ein Agenten-Lauf oder eine Zusammenfassung. Aufgaben mit vielen Schritten zählen mehr, kurze Fragen weniger. Guthaben verfällt nie und wird nie automatisch abgebucht.": "A request is an estimated average AI call – a question to the assistant, an agent run or a summary. Tasks with many steps count more, short questions less. Credit never expires and is never charged automatically.",
   "etwa {n} KI-Anfragen pro Monat inklusive": "about {n} AI requests a month included",
+  "Gerade gesucht": "Wanted right now",
+  "Offene Rollen aus echten Projekten auf Xyntal. Direkt aus der Datenbank, keine Beispiele.": "Open roles from real projects on Xyntal. Straight from the database, no examples.",
+  "Alle Projekte ansehen": "See all projects",
 };
 
 // Texte mit eingesetzten Werten (Zahlen, Namen). Gruppen werden selbst wieder übersetzt.
