@@ -71,6 +71,39 @@ button, input { font: inherit; color: inherit; }
 .button-quiet { background: transparent; color: var(--text); }
 .button-quiet:hover, .button-quiet:focus-visible { background: var(--text); color: var(--bg); }
 
+/* ---------- Gerade gesucht (echte offene Rollen, landing.js) ---------- */
+.live { display: grid; gap: 28px; padding: clamp(40px, 6vw, 72px) 0; border-top: 1px solid var(--line); }
+.live-head { display: grid; gap: 10px; }
+.live-head h2 { font: 400 clamp(1.8rem, 3.6vw, 2.8rem)/1.1 var(--f-serif); font-optical-sizing: auto; letter-spacing: -0.01em; }
+.live-head p { color: var(--text-2); font-size: 15px; max-width: 46ch; }
+.live-list { list-style: none; margin: 0; padding: 0; display: grid; border-top: 1px solid var(--line); counter-reset: role; }
+.live-list li { border-bottom: 1px solid var(--line); counter-increment: role; }
+.live-role {
+  position: relative; display: grid; gap: 6px; padding: 20px 40px 20px 0;
+  text-decoration: none; color: var(--text);
+  transition: background-color 160ms ease, padding-left 160ms ease;
+}
+.live-role::after { content: "→"; position: absolute; right: 8px; top: 20px; color: var(--text-3); transition: color 160ms ease, transform 160ms ease; }
+.live-role-name { font: 500 1.2rem/1.3 var(--f-sans); letter-spacing: -0.01em; }
+.live-role-need { color: var(--text-2); font-size: 15px; }
+.live-role-need:empty { display: none; }
+.live-role-meta { display: flex; flex-wrap: wrap; gap: 6px 16px; font: 500 12.5px/1.5 var(--f-mono); color: var(--text-3); }
+.live-role-project { color: var(--key); }
+@media (hover: hover) {
+  .live-role:hover { background: var(--bg-2); padding-left: 16px; }
+  .live-role:hover::after { color: var(--key); transform: translateX(3px); }
+}
+.live-role:focus-visible { outline-offset: -2px; }
+.live-foot { font-size: 15px; color: var(--text-2); }
+@media (min-width: 900px) {
+  .live { grid-template-columns: 4fr 8fr; gap: 40px; align-items: start; }
+  .live-head { position: sticky; top: 96px; }
+  .live-list, .live-foot { grid-column: 2; }
+  .live-role { grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); column-gap: 32px; align-items: baseline; }
+  .live-role-meta { grid-column: 1 / -1; }
+}
+@media (prefers-reduced-motion: reduce) { .live-role, .live-role::after { transition: none; } }
+
 /* ---------- Zitat ---------- */
 .voice { padding: clamp(40px, 6vw, 72px) 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .voice p { font: italic 400 clamp(1.5rem, 3vw, 2.3rem)/1.3 var(--f-serif); font-optical-sizing: auto; max-width: 30ch; letter-spacing: -0.005em; }
