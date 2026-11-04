@@ -226,6 +226,11 @@
 .xm-billing-bar i { display: block; height: 100%; background: var(--xm-accent); }
 .xm-billing-bar.xm-nearly i { background: var(--xm-low); }
 .xm-billing-plans { display: grid; gap: 14px; margin-top: 18px; }
+.xm-billing-limits-wrap { margin-top: 14px; }
+.xm-billing-limits { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 10px 24px; margin: 0; }
+.xm-billing-limits > div { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--xm-line-2); font-size: 14px; }
+.xm-billing-limits dt { color: var(--xm-text-2); }
+.xm-billing-limits dd { margin: 0; font-weight: 600; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .xm-plan { gap: 10px; }
 .xm-plan-price { margin: 0; font-size: 15px; color: var(--xm-text-2); }
 .xm-plan-price b { font-size: 24px; color: var(--text); font-variant-numeric: tabular-nums; }

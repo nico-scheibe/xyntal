@@ -46,7 +46,7 @@
     const status = d.locked
       ? t("Die letzte Zahlung ist nicht durchgegangen. Begleiche die Rechnung im Abo-Portal, dann ist Xyntal wieder frei.")
       : free
-        ? t("Free ist kostenlos, so lange du willst. Bezahlte Tarife bringen mehr Arbeitsbereiche, Mitglieder, Speicher und ein KI-Budget pro Monat.")
+        ? t("Free ist kostenlos, so lange du willst. Bezahlte Tarife bringen mehr Arbeitsbereiche, Mitglieder, Speicher, Automationen und ein KI-Budget pro Monat.")
         : d.renewsAt
           ? t("Aktiv bis {date} – dann verlängert er sich, oder er endet, wenn er für eine feste Zeit gutgeschrieben wurde.").replace("{date}", day(d.renewsAt))
           : t("Aktiv ohne Enddatum.");
@@ -118,6 +118,41 @@
       </section>`;
   }
 
+  // Die Grenzen des Tarifs und was davon belegt ist – dieselben Zahlen, an denen der
+  // App-Server prüft (entitlements + usage aus GET /billing). Ein älterer Server schickt
+  // die Felder nicht; dann entfällt der Bereich.
+  function limitsPanel(d) {
+    const e = d.entitlements || {};
+    if (e.activeAutomations === undefined) return "";
+    const a = (d.usage && d.usage.automations) || { active: 0, runsThisMonth: 0 };
+    const none = (n) => n === null || n === undefined;
+    const limit = (n) => (none(n) ? t("Unbegrenzt") : count(n));
+    const ofLimit = (used, n) => (none(n)
+      ? t("{used} · ohne Grenze").replace("{used}", count(used))
+      : t("{used} von {total}").replace("{used}", count(used)).replace("{total}", count(n)));
+    const days = (n) => (none(n) ? t("Unbegrenzt") : n === 1 ? t("1 Tag") : t("{n} Tage").replace("{n}", count(n)));
+    const feature = (on, from) => (on ? t("Inklusive") : t(from));
+    const rows = [
+      [t("Aktive Automationen"), ofLimit(a.active, e.activeAutomations), a.active >= e.activeAutomations],
+      [t("Automations-Läufe diesen Monat"), ofLimit(a.runsThisMonth, e.automationRunsPerMonth), !none(e.automationRunsPerMonth) && a.runsThisMonth >= e.automationRunsPerMonth],
+      [t("Automationen mit Zeitplan"), feature(e.scheduledAutomations, "Ab Plus")],
+      [t("Freigaben und Rückgängig für Automationen"), feature(e.criticalAutomationActions, "Ab Pro")],
+      [t("KI-Agenten"), limit(e.agents) + (e.hourlyAgents || e.agents === 0 ? "" : " " + t("· höchstens täglich"))],
+      [t("Eigene Rollen und Ausnahmen"), feature(e.customRoles, "Ab Pro")],
+      [t("Versionen je Datei"), limit(e.versionsPerFile)],
+      [t("Lauf-Verlauf und Audit-Log"), days(e.historyDays)],
+      [t("Aus dem Papierkorb wiederherstellen"), days(e.trashRestoreDays)],
+      [t("Gemerkte Personen"), limit(e.savedMatches)],
+    ];
+    return `
+      <section class="xm-detail xm-billing xm-billing-limits-wrap">
+        <div class="xm-billing-head"><h2>${esc(t("Grenzen deines Tarifs"))}</h2></div>
+        <p class="xm-billing-text">${esc(t("Grenzen halten nur Neues auf. Gelöscht wird nichts: Überzählige Automationen pausieren, ältere Versionen und Verlauf bleiben erhalten, und ein größerer Tarif bringt alles zurück."))}</p>
+        <dl class="xm-billing-limits">${rows.map(([label, value, full]) =>
+          `<div><dt>${esc(label)}</dt><dd class="${full ? "xm-warn-text" : ""}">${esc(value)}</dd></div>`).join("")}</dl>
+      </section>`;
+  }
+
   // Die Feature-Zeilen eines Tarifs, die KI-Budget-Zeile als Anfragen statt in Euro.
   function planFeatures(p, d) {
     const call = Number((d.ai || {}).callCents || 0);
@@ -161,7 +196,7 @@
 
   function render() {
     if (!data) return;
-    box.innerHTML = `<div class="xm-billing-grid">${planPanel(data)}${aiPanel(data)}</div>${plansPanel(data)}`;
+    box.innerHTML = `<div class="xm-billing-grid">${planPanel(data)}${aiPanel(data)}</div>${limitsPanel(data)}${plansPanel(data)}`;
   }
 
   // ---------- Laden ----------
