@@ -33,20 +33,20 @@
     return Math.floor(n / step) * step;
   };
   const count = (n) => Number(n).toLocaleString(locale());
-  // Tarifnamen sind Markennamen und bleiben unübersetzt – bis auf den kostenlosen:
-  // „Start“ liest sich auf Englisch wie ein Knopf, dort heißt er „Starter“.
-  const planName = (id) => ((id === "Start" || id === "Free") && lang() === "en" ? "Starter" : id);
+  // Tarifnamen sind Markennamen und bleiben unübersetzt. „Start“ ist die alte Id des
+  // kostenlosen Tarifs (vor 2026-11) und wird wie „Free“ angezeigt.
+  const planName = (id) => (id === "Start" ? "Free" : id);
   const say = (text, kind = "") => { notice.innerHTML = text ? `<p class="xm-status ${kind}" role="status">${esc(text)}</p>` : ""; };
   const fail = (err) => (err && err.message) || t("Das hat nicht geklappt. Versuch es gleich noch einmal.");
 
   // ---------- Bereiche ----------
   function planPanel(d) {
     const ai = d.ai || {};
-    const free = d.plan === "Start" || d.plan === "Free";
+    const free = d.plan === "Free" || d.plan === "Start";
     const status = d.locked
       ? t("Die letzte Zahlung ist nicht durchgegangen. Begleiche die Rechnung im Abo-Portal, dann ist Xyntal wieder frei.")
       : free
-        ? t("Start ist kostenlos, so lange du willst. Bezahlte Tarife bringen mehr Arbeitsbereiche, Mitglieder, Speicher und ein KI-Budget pro Monat.")
+        ? t("Free ist kostenlos, so lange du willst. Bezahlte Tarife bringen mehr Arbeitsbereiche, Mitglieder, Speicher und ein KI-Budget pro Monat.")
         : d.renewsAt
           ? t("Aktiv bis {date} – dann verlängert er sich, oder er endet, wenn er für eine feste Zeit gutgeschrieben wurde.").replace("{date}", day(d.renewsAt))
           : t("Aktiv ohne Enddatum.");
@@ -126,11 +126,11 @@
     return (p.features || []).map((f) => (f === p.aiBudgetLine ? line : f));
   }
 
-  // Upgrade-Karten nur für Start: bezahlte Tarife wechseln im Abo-Portal (der Server lehnt
+  // Upgrade-Karten nur für Free: bezahlte Tarife wechseln im Abo-Portal (der Server lehnt
   // einen zweiten Checkout ab). Beschreibung und Feature-Zeilen kommen vom Server schon
   // in der Seitensprache, daher data-no-i18n.
   function plansPanel(d) {
-    const free = d.plan === "Start" || d.plan === "Free";
+    const free = d.plan === "Free" || d.plan === "Start";
     const plans = (d.plans || []).filter((p) => p.priceCents > 0 && p.contactSales !== true);
     if (!free || !plans.length) return "";
     const cards = plans.map((p) => {
