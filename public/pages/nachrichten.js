@@ -150,6 +150,126 @@
     return p;
   }
 
+  // ---------- Link-Vorschauen (wie LinkPreviewCard.qml in der App) ----------
+  // Der App-Server liest die verlinkte Seite und liefert ihr Bild selbst aus
+  // (GET /links/preview, /links/thumb/…) – beim Scrollen erfährt die verlinkte
+  // Seite nichts. Den Player von YouTube, TikTok, Instagram oder Vimeo lädt erst
+  // der Klick auf „Abspielen“, an Ort und Stelle statt der Karte.
+  const PLAYER_ORIGINS = { youtube: "https://www.youtube-nocookie.com", tiktok: "https://www.tiktok.com", instagram: "https://www.instagram.com", vimeo: "https://player.vimeo.com" };
+  const LINK_RE = /\bhttps?:\/\/[^\s<]+[^\s<.,;:!?)"'\]]/;
+  const previews = new Map(); // URL → Vorschau | null (nichts zu zeigen) | Promise
+  const thumbs = new Map();   // "/links/thumb/<id>" → blob:-URL | Promise
+  let playing = null;         // { msg, url } – das laufende Video
+  function firstLink(m) {
+    if (!m.body || m.isCode || m.kind === "gif" || m.kind === "voice") return "";
+    const hit = LINK_RE.exec(m.body);
+    return hit ? hit[0] : "";
+  }
+  // Nur die Player, die der Server baut: genau diese Herkunft, sonst kein iframe
+  function embedOf(p) {
+    if (!p || p.kind !== "video" || !p.embed || !PLAYER_ORIGINS[p.provider]) return null;
+    try { return new URL(p.embed.url).origin === PLAYER_ORIGINS[p.provider] ? p.embed : null; } catch { return null; }
+  }
+  function loadPreview(url) {
+    if (previews.has(url)) return Promise.resolve(previews.get(url));
+    const p = X.api("GET", `/links/preview?url=${encodeURIComponent(url)}`)
+      .then((r) => { const v = r && r.enabled !== false && r.preview && r.preview.ok ? r.preview : null; previews.set(url, v); return v; })
+      // „Später“ (429) oder kein Netz: beim nächsten Zeichnen erneut fragen; alles andere ist endgültig
+      .catch((err) => { if (!err || err.status === 429 || !err.status) previews.delete(url); else previews.set(url, null); return null; });
+    previews.set(url, p);
+    return p;
+  }
+  function thumbUrl(path) {
+    if (thumbs.has(path)) return Promise.resolve(thumbs.get(path));
+    const p = (async () => {
+      const s = await X.session();
+      const res = await fetch(X.API + path, { headers: { authorization: `Bearer ${s.token}` } });
+      const blob = res.ok ? await res.blob() : null;
+      if (!blob || !/^image\/(jpeg|png|webp|gif)$/.test(blob.type)) throw new Error(String(res.status));
+      const u = URL.createObjectURL(blob);
+      thumbs.set(path, u);
+      return u;
+    })();
+    thumbs.set(path, p);
+    p.catch(() => thumbs.delete(path));
+    return p;
+  }
+  function thumbHtml(p) {
+    if (!p.thumbnail || !/^\/links\/thumb\/[0-9a-f]{32}$/.test(p.thumbnail)) return `<span class="xc-lp-ph" aria-hidden="true"></span>`;
+    const ready = thumbs.get(p.thumbnail);
+    return typeof ready === "string"
+      ? `<img src="${ready}" alt="" loading="lazy">`
+      : `<span class="xc-lp-ph" aria-hidden="true"></span><img data-link-thumb="${esc(p.thumbnail)}" alt="" hidden>`;
+  }
+  const siteLine = (p) => [p.siteName, p.author].filter(Boolean).join(" · ");
+  function linkCardHtml(url, msgId) {
+    if (!url) return "";
+    const p = previews.get(url);
+    if (p === undefined || p instanceof Promise) return `<div class="xc-lp-slot" data-link-preview="${esc(url)}"></div>`;
+    if (!p) return "";
+    const embed = embedOf(p);
+    const tall = embed && embed.aspect === "9:16" ? " is-tall" : "";
+    const title = p.title ? `<b data-no-i18n>${esc(p.title)}</b>` : "";
+    const meta = siteLine(p) ? `<small data-no-i18n>${esc(siteLine(p))}</small>` : "";
+    if (embed && playing && playing.msg === msgId && playing.url === url) {
+      return `<div class="xc-lp xc-lp-player${tall}" data-link-live data-url="${esc(url)}">
+        <iframe src="${esc(embed.url)}" title="${esc(p.title || p.siteName || t("Video"))}" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" sandbox="allow-scripts allow-same-origin allow-presentation allow-popups allow-popups-to-escape-sandbox"></iframe>
+        <div class="xc-lp-bar"><span>${meta}</span><a href="${esc(url)}" target="_blank" rel="noopener noreferrer nofollow">${esc(t("Original öffnen"))}</a><button type="button" class="xc-x" data-link-close aria-label="${esc(t("Player schließen"))}">×</button></div>
+      </div>`;
+    }
+    if (embed) {
+      return `<div class="xc-lp xc-lp-video${tall}" data-url="${esc(url)}">
+        <button type="button" class="xc-lp-media" data-link-play aria-label="${esc(t("Video abspielen"))}: ${esc(p.title || p.siteName)}">${thumbHtml(p)}<span class="xc-lp-badge" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z"/></svg></span></button>
+        <span class="xc-lp-text">${meta}${title}</span>
+      </div>`;
+    }
+    const desc = p.description ? `<span data-no-i18n>${esc(p.description)}</span>` : "";
+    const pic = p.thumbnail ? `<span class="xc-lp-thumb">${thumbHtml(p)}</span>` : "";
+    return `<a class="xc-lp xc-lp-page" href="${esc(url)}" target="_blank" rel="noopener noreferrer nofollow"><span class="xc-lp-text">${meta}${title}${desc}</span>${pic}</a>`;
+  }
+  // Erst wenn eine Karte in Sichtweite kommt, wird gefragt – ein langer Verlauf löst nicht für jeden Link eine Anfrage aus
+  const previewObserver = "IntersectionObserver" in window
+    ? new IntersectionObserver((entries) => entries.forEach((e) => { if (e.isIntersecting) { previewObserver.unobserve(e.target); fillPreview(e.target); } }), { rootMargin: "240px 0px" })
+    : null;
+  async function fillPreview(slot) {
+    const url = slot.dataset.linkPreview;
+    await loadPreview(url);
+    if (!slot.isConnected) return; // inzwischen neu gezeichnet – die neue Fassung zeigt sie aus dem Zwischenspeicher
+    const scroller = threadEl.querySelector("[data-messages]");
+    const atBottom = scroller && scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 80;
+    const msgEl = slot.closest("[data-msg]");
+    slot.outerHTML = linkCardHtml(url, msgEl ? msgEl.dataset.msg : "");
+    if (msgEl) hydrateLinks(msgEl);
+    if (atBottom) scroller.scrollTop = scroller.scrollHeight;
+  }
+  function hydrateLinks(scope) {
+    scope.querySelectorAll("[data-link-preview]").forEach((slot) => (previewObserver ? previewObserver.observe(slot) : fillPreview(slot)));
+    scope.querySelectorAll("[data-link-thumb]").forEach(async (img) => {
+      try {
+        img.src = await thumbUrl(img.dataset.linkThumb);
+        img.hidden = false;
+        img.previousElementSibling?.remove();
+      } catch { /* bleibt ohne Bild */ }
+    });
+  }
+  function startPlayer(card) {
+    const msgEl = card.closest("[data-msg]");
+    const url = card.dataset.url;
+    if (!msgEl || !embedOf(previews.get(url))) { window.open(url, "_blank", "noopener"); return; }
+    stopPlayer();
+    playing = { msg: msgEl.dataset.msg, url };
+    const box = msgEl.querySelector(`.xc-lp[data-url="${CSS.escape(url)}"]`);
+    if (box) box.outerHTML = linkCardHtml(url, playing.msg);
+    msgEl.querySelector("[data-link-live] iframe")?.focus();
+  }
+  // Das iframe verschwindet ganz – damit endet die Wiedergabe, und der Anbieter hört nichts mehr
+  function stopPlayer() {
+    const live = threadEl.querySelector("[data-link-live]");
+    const was = playing;
+    playing = null;
+    if (live && was) { const msgEl = live.closest("[data-msg]"); live.outerHTML = linkCardHtml(was.url, was.msg); if (msgEl) hydrateLinks(msgEl); }
+  }
+
   // ---------- Gesprächsliste ----------
   function passes(c) {
     if (S.query) return (c.title || "").toLowerCase().includes(S.query.toLowerCase());
@@ -429,6 +549,7 @@
         <div class="xc-bubble">
           ${reply}${project ? `<div class="xc-tagrow">${project}</div>` : ""}
           ${editing ? `<form class="xc-edit" data-edit-form><textarea data-edit-input rows="2" maxlength="8000">${esc(m.body)}</textarea><div><button class="btn btn-small" type="submit">${esc(t("Speichern"))}</button><button class="btn btn-small btn-ghost" type="button" data-edit-cancel>${esc(t("Abbrechen"))}</button></div></form>` : body}
+          ${editing ? "" : linkCardHtml(firstLink(m), m.id)}
           ${gif}${(m.attachments || []).map((a) => attachmentHtml(a, m)).join("")}
           <span class="xc-meta"><time datetime="${esc(m.ts)}">${esc(timeOf(m.ts))}</time>${m.edited ? ` · ${esc(t("bearbeitet"))}` : ""}${m.threadReplyCount ? ` · ${m.threadReplyCount === 1 ? esc(t("1 Antwort im Thread")) : `${m.threadReplyCount} ${esc(t("Antworten im Thread"))}`}` : ""}</span>
         </div>
@@ -447,6 +568,9 @@
     const scroller = threadEl.querySelector("[data-messages]");
     const c = conv(S.active);
     if (!scroller || !c) return;
+    // Läuft ein Video in diesem Verlauf? Nur dann bleibt es beim Neuzeichnen stehen
+    const liveMsg = playing ? scroller.querySelector("[data-link-live]")?.closest("[data-msg]") : null;
+    if (!liveMsg) playing = null;
     let html = S.hasMore ? `<button type="button" class="xc-older" data-older>${esc(t("Ältere Nachrichten laden"))}</button>` : "";
     let day = "";
     S.messages.forEach((m, i) => {
@@ -463,7 +587,24 @@
         html = html.replace(`data-msg="${esc(lastMine.id)}">`, `data-msg="${esc(lastMine.id)}" data-seen="${esc(label)}">`);
       }
     }
-    scroller.innerHTML = html || `<p class="xc-empty">${esc(t(S.tagFilter ? "Dazu gibt es noch keine Nachrichten." : "Noch keine Nachrichten – sag hallo."))}</p>`;
+    if (previewObserver) previewObserver.disconnect();
+    const tpl = document.createElement("template");
+    tpl.innerHTML = html;
+    const fresh = liveMsg ? [...tpl.content.children].find((el) => el.dataset.msg === liveMsg.dataset.msg) : null;
+    if (fresh) {
+      // Ein iframe, das aus dem Dokument genommen wird, lädt neu (das Video finge von vorn an):
+      // alles um die laufende Nachricht herum wird ersetzt, sie selbst bleibt stehen.
+      const nodes = [...tpl.content.childNodes];
+      const at = nodes.indexOf(fresh);
+      while (liveMsg.previousSibling) liveMsg.previousSibling.remove();
+      while (liveMsg.nextSibling) liveMsg.nextSibling.remove();
+      liveMsg.before(...nodes.slice(0, at));
+      liveMsg.after(...nodes.slice(at + 1));
+      if (fresh.dataset.seen) liveMsg.dataset.seen = fresh.dataset.seen; else delete liveMsg.dataset.seen;
+    } else {
+      playing = null;
+      scroller.innerHTML = html || `<p class="xc-empty">${esc(t(S.tagFilter ? "Dazu gibt es noch keine Nachrichten." : "Noch keine Nachrichten – sag hallo."))}</p>`;
+    }
     hydrate(scroller);
     if (stick) scroller.scrollTop = scroller.scrollHeight;
     const bar = threadEl.querySelector("[data-filterbar]");
@@ -476,6 +617,7 @@
     renderComposerTop();
   }
   function hydrate(scope) {
+    hydrateLinks(scope);
     scope.querySelectorAll("[data-file-id]").forEach(async (el) => {
       try {
         const url = await fileUrl(el.dataset.fileId);
@@ -925,6 +1067,9 @@
     }
     const img = target.closest("[data-kind=image]");
     if (img && img.querySelector("img")) { lightbox(img.querySelector("img").src, img.dataset.name); return; }
+    const play = target.closest("[data-link-play]");
+    if (play) { startPlayer(play.closest(".xc-lp")); return; }
+    if (target.closest("[data-link-close]")) { stopPlayer(); return; }
 
     const msgEl = target.closest("[data-msg]");
     if (!msgEl) {
@@ -956,6 +1101,7 @@
   });
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
+    if (playing && !threadEl.querySelector(".xc-pop:not([hidden]), .xc-menu:not([hidden])")) stopPlayer();
     threadEl.querySelectorAll(".xc-pop, .xc-menu").forEach((el) => { el.hidden = true; });
     if (rec) stopRecording(true);
   });

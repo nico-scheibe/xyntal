@@ -178,6 +178,45 @@ body.messages-page .site-footer { display: none; }
 .xc-image { display: block; padding: 0; border: 0; border-radius: 10px; overflow: hidden; background: rgba(0, 0, 0, .2); cursor: zoom-in; }
 .xc-image img { display: block; max-width: 280px; max-height: 320px; width: auto; height: auto; }
 .xc-image-ph { display: grid; place-items: center; width: 220px; height: 140px; color: var(--xc-text-3); font-size: 12px; }
+/* Link-Vorschau unter der Nachricht (Bild vom App-Server) und Player von YouTube, TikTok, Instagram, Vimeo an Ort und Stelle */
+/* Breiten am Verlauf gemessen (cqw), nicht in Prozent der Blase: die Blase richtet sich nach ihrem
+   Inhalt, die Karte darf sie aber nie über ihr Maximum drücken (72 % bzw. 84 %, minus Rand und Innenabstand) */
+.xc-messages { container-type: inline-size; }
+.xc-lp { display: grid; width: min(340px, calc(72cqw - 28px)); max-width: 100%; overflow: hidden; border: 1px solid var(--xc-line-2); border-radius: 12px; background: var(--xc-panel-2); color: var(--xc-text); text-decoration: none; transition: border-color var(--xc-ease), background var(--xc-ease); }
+.xc-lp-slot:empty { display: none; }
+.xc-lp-text { display: grid; align-content: start; gap: 2px; min-width: 0; padding: 9px 12px 10px; }
+.xc-lp-text small { color: var(--xc-text-3); font-size: 11.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.xc-lp-text b { font-size: 13.5px; font-weight: 650; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.xc-lp-text span { color: var(--xc-text-2); font-size: 12.5px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.xc-lp-ph { display: block; width: 100%; height: 100%; background: var(--xc-wash-2); }
+.xc-lp img { display: block; width: 100%; height: 100%; object-fit: cover; }
+/* Seite: Text links, kleines Bild rechts, Akzentkante */
+.xc-lp-page { grid-template-columns: minmax(0, 1fr) auto; box-shadow: inset 3px 0 0 var(--xc-accent); }
+.xc-lp-page:hover { border-color: var(--xc-line-3); background: var(--xc-panel-3); }
+.xc-lp-page:focus-visible { outline: none; box-shadow: inset 3px 0 0 var(--xc-accent), var(--xc-ring); }
+.xc-lp-page .xc-lp-text b { color: var(--xc-accent); }
+.xc-lp-thumb { width: 72px; height: 72px; margin: 9px 9px 9px 0; border-radius: 8px; overflow: hidden; align-self: start; }
+/* Video: Bild mit Abspiel-Taste; hochkant (TikTok, Reels, Shorts) mit dem Bild links */
+.xc-lp-media { position: relative; display: block; width: 100%; aspect-ratio: 16 / 9; padding: 0; border: 0; background: #000; cursor: pointer; }
+.xc-lp-media:focus-visible { outline: none; box-shadow: var(--xc-ring); }
+.xc-lp-badge { position: absolute; inset: 50% auto auto 50%; display: grid; place-items: center; width: 50px; height: 50px; margin: -25px 0 0 -25px; border: 1px solid rgba(255, 255, 255, .5); border-radius: 50%; background: rgba(5, 4, 10, .62); transition: background var(--xc-ease), transform var(--xc-ease); }
+.xc-lp-badge svg { width: 20px; height: 20px; margin-left: 2px; fill: #fff; stroke: none; }
+.xc-lp-media:hover .xc-lp-badge, .xc-lp-media:focus-visible .xc-lp-badge { background: var(--xc-blue); transform: scale(1.06); }
+.xc-lp-video.is-tall { grid-template-columns: 104px minmax(0, 1fr); }
+.xc-lp-video.is-tall .xc-lp-media { aspect-ratio: 9 / 16; }
+.xc-lp-video.is-tall .xc-lp-badge { width: 40px; height: 40px; margin: -20px 0 0 -20px; }
+.xc-lp-video.is-tall .xc-lp-text b { -webkit-line-clamp: 4; }
+/* Der Player selbst: 16:9 so breit wie die Karte, hochkant so hoch wie es der Bildschirm erlaubt */
+.xc-lp-player { width: min(420px, calc(72cqw - 28px)); background: #000; }
+.xc-lp-player iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: 0; }
+.xc-lp-player.is-tall { width: min(calc(min(72dvh, 600px) * 9 / 16 + 2px), calc(72cqw - 28px)); }
+.xc-lp-player.is-tall iframe { aspect-ratio: 9 / 16; }
+.xc-lp-bar { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 4px 4px 4px 12px; background: var(--xc-panel-2); }
+.xc-lp-bar span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--xc-text-3); font-size: 11.5px; font-weight: 600; }
+.xc-lp-bar a { color: var(--xc-text-2); font-size: 12px; white-space: nowrap; }
+.xc-lp-bar a:hover { color: var(--xc-text); }
+.xc-lp-bar .xc-x { width: 30px; height: 30px; }
+.xc-msg.is-mine .xc-lp { color: var(--xc-text); }
 .xc-file { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid rgba(255, 255, 255, .16); border-radius: 10px; background: rgba(0, 0, 0, .18); color: inherit; text-align: left; cursor: pointer; font-size: 13px; transition: background var(--xc-ease); }
 .xc-file:hover { background: rgba(0, 0, 0, .3); }
 .xc-file small { opacity: .7; margin-left: auto; font-variant-numeric: tabular-nums; }
@@ -336,4 +375,7 @@ body.messages-page .site-footer { display: none; }
   .xc-tools { top: -34px; }
   .xc-msg:not(.is-mine) .xc-tools { left: 0; }
   .xc-gifs { left: 10px; width: calc(100% - 20px); }
+  .xc-lp { width: min(340px, calc(84cqw - 28px)); }
+  .xc-lp-player { width: min(420px, calc(84cqw - 28px)); }
+  .xc-lp-player.is-tall { width: min(calc(min(66dvh, 560px) * 9 / 16 + 2px), calc(84cqw - 28px)); }
 }
