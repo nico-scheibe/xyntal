@@ -32,6 +32,9 @@
     const step = n < 100 ? 5 : n < 1000 ? 10 : 50;
     return Math.floor(n / step) * step;
   };
+  // What is left is counted exactly: two requests out of ~775 must show, and the
+  // rounded steps above would keep "770 von 770" until the sixth.
+  const exactRequests = (cents, callCents) => (callCents > 0 ? Math.max(0, Math.floor(Number(cents || 0) / callCents)) : 0);
   const count = (n) => Number(n).toLocaleString(locale());
   // Tarifnamen sind Markennamen und bleiben unübersetzt. „Start“ ist die alte Id des
   // kostenlosen Tarifs (vor 2026-11) und wird wie „Free“ angezeigt.
@@ -75,7 +78,8 @@
     // instead of reading "0 Anfragen".
     const asRequests = call > 0;
     const includedN = requests(included, call);
-    const leftN = requests(included - usedCents, call);
+    const leftN = exactRequests(included - usedCents, call);
+    const totalN = exactRequests(included, call);
     const creditN = requests(Math.max(0, credit), call);
     const intro = !asRequests
       ? (included > 0
@@ -96,7 +100,7 @@
           ${included > 0 ? `
           <div><dt>${esc(t("Diesen Monat inklusive"))}</dt>
             <dd class="${nearly ? "xm-warn-text" : ""}">${esc(asRequests
-              ? t("noch etwa {left} von {total}").replace("{left}", count(leftN)).replace("{total}", count(includedN))
+              ? t("noch etwa {left} von {total}").replace("{left}", count(leftN)).replace("{total}", count(totalN))
               : t("{used} von {total} verbraucht").replace("{used}", euro(usedCents)).replace("{total}", euro(included)))}</dd>
             <div class="xm-billing-bar${nearly ? " xm-nearly" : ""}" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${share}" aria-label="${esc(t("Inklusive Anfragen verbraucht"))}"><i style="width:${share}%"></i></div>
             <small>${esc(t("Setzt sich am {date} zurück.").replace("{date}", day(ai.resetsAt)))}</small>
