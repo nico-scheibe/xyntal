@@ -4,6 +4,9 @@
   position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 60;
   font: 400 15px/1.5 "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: var(--sc-text); }
 .sc *, .sc *::before, .sc *::after { box-sizing: border-box; }
+/* Seiten-Styles (style.css: section, form, textarea, label, p, h2 …) dürfen nicht ins Fenster durchschlagen */
+:where(.sc) :where(section, header, form, ol, li, p, h2, label) { margin: 0; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
+:where(.sc) textarea { width: auto; box-shadow: none; transition: border-color 0.15s; }
 .sc button { font: inherit; color: inherit; cursor: pointer; }
 .sc a { color: var(--sc-key); }
 .sc-sr { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -15,7 +18,7 @@
 .sc-dot { width: 7px; height: 7px; background: var(--sc-key); }
 .sc.is-open .sc-open { display: none; }
 
-.sc-panel { display: flex; flex-direction: column; width: min(400px, calc(100vw - 32px)); height: min(600px, calc(100dvh - 32px)); border: 1px solid var(--sc-line-2); border-radius: 2px; background: var(--sc-bg); box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6); }
+.sc-panel { display: flex; padding: 0; flex-direction: column; width: min(400px, calc(100vw - 32px)); height: min(600px, calc(100dvh - 32px)); border: 1px solid var(--sc-line-2); border-radius: 2px; background: var(--sc-bg); box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6); }
 .sc-panel[hidden] { display: none; }
 .sc-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 16px 16px 14px; border-bottom: 1px solid var(--sc-line); }
 .sc-head h2 { margin: 6px 0 0; font: 600 22px/1.1 "Source Serif 4", Georgia, serif; letter-spacing: -0.01em; }
@@ -45,9 +48,9 @@
 .sc-typing span:nth-child(3) { animation-delay: 0.4s; }
 @keyframes sc-blink { 0%, 80%, 100% { opacity: 0.3; } 40% { opacity: 1; } }
 
-.sc-form { display: flex; align-items: flex-end; gap: 8px; padding: 12px 16px 8px; border-top: 1px solid var(--sc-line); }
+.sc-form { display: flex; border-radius: 0; background: none; align-items: flex-end; gap: 8px; padding: 12px 16px 8px; border-top: 1px solid var(--sc-line); }
 .sc-form textarea { flex: 1; min-width: 0; min-height: 40px; max-height: 120px; padding: 9px 12px; border: 1px solid var(--sc-line-2); border-radius: 2px; background: var(--sc-bg-2); color: var(--sc-text); font: inherit; resize: none; outline: none; }
-.sc-form textarea:focus { border-color: var(--sc-text); }
+.sc-form textarea:focus { border-color: var(--sc-text); box-shadow: none; }
 .sc-send { height: 40px; padding: 0 14px; border: 1px solid var(--sc-text); border-radius: 2px; background: var(--sc-text); color: var(--sc-bg) !important; font-size: 14px !important; font-weight: 600 !important; }
 .sc-send:hover { background: transparent; color: var(--sc-text) !important; }
 .sc-note { margin: 0; padding: 0 16px 12px; color: var(--sc-text-3); font-size: 11.5px; line-height: 1.45; }
