@@ -1056,7 +1056,7 @@
       notif() { s.notifOpen = !s.notifOpen; s.acctOpen = false; render(); },
       acct() { s.acctOpen = !s.acctOpen; s.notifOpen = false; render(); },
       status(el) { s.status = el.dataset.id; s.acctOpen = false; render({ focus: "[data-k=tb-acct]" }); toast(T(`Status: ${L(STATUS.find((x) => x[0] === s.status)[1])}`, `Status: ${L(STATUS.find((x) => x[0] === s.status)[1])}`)); },
-      upgrade() { s.acctOpen = false; render(); toast(T("Pläne: Start (kostenlos), Forge, Crew, Foundry und Works – Upgrade in der App.", "Plans: Start (free), Forge, Crew, Foundry and Works – upgrade in the app.")); },
+      upgrade() { s.acctOpen = false; render(); toast(T("Tarife: Free (kostenlos), Plus 12 €, Pro 29 €, Ultra 79 € im Monat, dazu Enterprise – Upgrade unter Mein Profil → Tarif & Rechnungen.", "Plans: Free, Plus €12, Pro €29, Ultra €79 a month, plus Enterprise – upgrade under My profile → Plan & invoices.")); },
       "app-only"(el) {
         s.acctOpen = false; render();
         const what = { profile: T("Profil", "Profile"), settings: T("Einstellungen", "Settings"), support: T("Hilfe & Support", "Help & support"), logout: T("Abmelden", "Sign out"), customize: T("Startseite anpassen", "Customise home"), project: T("Neues Projekt", "New project"), workspace: T("Neuer Arbeitsbereich", "New workspace"), community: T("Community erstellen", "Create community"), call: T("Anrufe", "Calls"), contact: T("Inhaber kontaktieren", "Contacting the owner"), tab: T("Dieser Bereich", "This section") }[el.dataset.v] || "";
