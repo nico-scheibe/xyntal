@@ -1,0 +1,41 @@
+/* Preisseite (/preise, pages/preise.js) – im Look der Website: dunkles Grau, eckig, Serif-Titel. */
+.pr { max-width: 1240px; }
+.pr-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; margin: 8px 0 24px; }
+.pr-toggle { display: inline-flex; border: 1px solid var(--border-2); border-radius: 2px; }
+.pr-toggle button { height: 40px; padding: 0 16px; border: 0; background: transparent; color: var(--text-2); font: 600 14px/1 var(--f-text); cursor: pointer; }
+.pr-toggle button span { margin-left: 6px; color: var(--text-3); font: 500 11px/1 var(--mono); text-transform: uppercase; letter-spacing: 0.06em; }
+.pr-toggle button[aria-pressed="true"] { background: var(--text); color: var(--bg); }
+.pr-toggle button[aria-pressed="true"] span { color: var(--bg); opacity: 0.7; }
+.pr-hint { margin: 0; color: var(--text-3); font-size: 14px; }
+.pr-hint a, .pr-faq a { color: var(--text); }
+
+.pr-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+.pr-loading { grid-column: 1 / -1; padding: 40px 0; color: var(--text-2); text-align: center; }
+.pr-card { display: flex; flex-direction: column; gap: 16px; padding: 22px 20px; border: 1px solid var(--border); border-radius: 2px; background: var(--panel); }
+.pr-card.is-company { background: transparent; border-style: dashed; border-color: var(--border-2); }
+.pr-card header h2 { margin: 0; font: 600 26px/1.1 var(--f); letter-spacing: -0.01em; }
+.pr-card header p { margin: 8px 0 0; color: var(--text-2); font-size: 14px; line-height: 1.45; min-height: 2.9em; }
+.pr-price { display: grid; gap: 2px; padding: 14px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.pr-price b { font: 600 32px/1 var(--f); }
+.pr-price small { color: var(--text-3); font-size: 13px; }
+.pr-card .btn { justify-content: center; width: 100%; }
+.pr-card ul { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.pr-card li { position: relative; padding-left: 18px; color: var(--text-2); font-size: 14px; line-height: 1.4; }
+.pr-card li::before { content: ""; position: absolute; left: 0; top: 0.55em; width: 7px; height: 7px; border: 1px solid var(--text-2); }
+
+.pr-compare, .pr-faq, .pr-cta { margin-top: 64px; }
+.pr-compare h2, .pr-faq h2, .pr-cta h2 { margin: 0 0 20px; font: 600 clamp(1.6rem, 3vw, 2.2rem)/1.1 var(--f); }
+.pr-table-wrap { overflow-x: auto; border: 1px solid var(--border); }
+.pr-table { width: 100%; min-width: 720px; border-collapse: collapse; font-size: 14px; }
+.pr-table th, .pr-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
+.pr-table thead th { font: 500 12px/1 var(--mono); text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-3); }
+.pr-table tbody th { font-weight: 500; color: var(--text-2); }
+.pr-table tbody tr:last-child th, .pr-table tbody tr:last-child td { border-bottom: 0; }
+.pr-faq dl { margin: 0; border-top: 1px solid var(--border); }
+.pr-faq dl > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 8px 32px; padding: 20px 0; border-bottom: 1px solid var(--border); }
+.pr-faq dt { font-weight: 600; }
+.pr-faq dd { margin: 0; color: var(--text-2); line-height: 1.55; }
+.pr-cta { padding: 32px; border: 1px solid var(--border); }
+.pr-cta p { margin: 0 0 20px; color: var(--text-2); max-width: 40rem; }
+.pr-cta-act { display: flex; flex-wrap: wrap; gap: 12px; }
+@media (max-width: 720px) { .pr-faq dl > div { grid-template-columns: minmax(0, 1fr); } .pr-cta { padding: 24px 20px; } }

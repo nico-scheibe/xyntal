@@ -35,7 +35,7 @@
     .replace(/\n/g, "<br>");
 
   const PLAN_LINE = { Free: ["Kostenlos, für den Einstieg", "Free, to get started"], Plus: ["Für alle, die jede Woche liefern", "For builders shipping every week"], Pro: ["Für kleine Teams mit KI und Agenten", "For small teams with AI and agents"], Ultra: ["Für Teams, die viel automatisieren", "For teams that automate a lot"], Enterprise: ["Für Firmen, auf Anfrage", "For companies, on request"], "Enterprise+": ["Für große Firmen, auf Anfrage", "For large companies, on request"] };
-  const planCard = (id) => `<div class="sc-plan"><span class="sc-mono">${T("Empfehlung", "Recommendation")}</span><b>${esc(id)}</b><small>${esc((PLAN_LINE[id] || ["", ""])[en() ? 1 : 0])}</small><a href="${id.startsWith("Enterprise") ? "mailto:admin@xyntal.com" : "/tarif"}">${id.startsWith("Enterprise") ? T("Kontakt aufnehmen", "Get in touch") : T("Tarife ansehen", "See plans")} →</a></div>`;
+  const planCard = (id) => `<div class="sc-plan"><span class="sc-mono">${T("Empfehlung", "Recommendation")}</span><b>${esc(id)}</b><small>${esc((PLAN_LINE[id] || ["", ""])[en() ? 1 : 0])}</small><a href="${id.startsWith("Enterprise") ? "mailto:admin@xyntal.com" : "/preise"}">${id.startsWith("Enterprise") ? T("Kontakt aufnehmen", "Get in touch") : T("Tarife ansehen", "See plans")} →</a></div>`;
   const SUGGEST = () => [
     T("Welcher Tarif passt zu mir?", "Which plan fits me?"),
     T("Wie komme ich in die Beta?", "How do I get into the beta?"),

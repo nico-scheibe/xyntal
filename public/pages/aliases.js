@@ -6,7 +6,7 @@
     "datenschutz": "/impressum#datenschutz", "rechte": "/impressum#deine-rechte", "deine-rechte": "/impressum#deine-rechte",
     "kontakt": "/impressum#impressum", "warteliste": "/#warteliste", "newsletter": "/#warteliste",
     "registrieren": "/beta#bewerben", "register": "/beta#bewerben", "signup": "/beta#bewerben",
-    "karte": "/meine-karte", "team": "/mitglieder", "hilfe": "/beta", "help": "/beta", "support": "/beta"
+    "karte": "/meine-karte", "pricing": "/preise", "tarife": "/preise", "kosten": "/preise", "team": "/mitglieder", "hilfe": "/beta", "help": "/beta", "support": "/beta"
   }[location.pathname.replace(/^\/+|\/+$/g, "").toLowerCase()];
   if (to) location.replace(to);
 })();
