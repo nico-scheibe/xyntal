@@ -246,6 +246,25 @@
     else if (outcome === "cancelled") say(t("Bezahlung abgebrochen – es wurde nichts berechnet."));
   }
 
+  // Verbrauch aktuell halten: KI-Anfragen in der App ziehen vom Budget ab. Neu geladen
+  // wird, wenn man zur Seite zurückkehrt, und jede Minute, solange sie sichtbar ist –
+  // still (ein kurzer Ausfall lässt den letzten Stand stehen) und nie mitten in einem
+  // Checkout. Gerendert wird nur, wenn sich etwas geändert hat.
+  async function refresh() {
+    if (busy || !data || document.hidden) return;
+    try {
+      const next = await X.api("GET", "/billing", undefined, { silent: true });
+      if (busy || JSON.stringify(next) === JSON.stringify(data)) return;
+      data = next;
+      render();
+    } catch {
+      // Der letzte Stand bleibt stehen; der nächste Durchgang versucht es wieder.
+    }
+  }
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) refresh(); });
+  window.addEventListener("focus", refresh);
+  setInterval(refresh, 60_000);
+
   // Beschreibung und Feature-Zeilen kommen vom Server in der Seitensprache: neu holen.
   document.addEventListener("xyntal:lang", load);
   // Erst nach den verzögert geladenen Skripten rendern: sonst steht der Text vor
