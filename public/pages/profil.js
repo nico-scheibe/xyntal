@@ -54,7 +54,7 @@ async function showDownloadVersions(betaCard) {
   if (parts.length) line.innerHTML = `Aktuelle Version: ${parts.join(" · ")}`;
 }
 
-// ---------- Registerkarten: Profil · Matching · Xyntal-Karte · Sicherheit ----------
+// ---------- Registerkarten: Profil · Matching · Xyntal-Karte · Tarif & Rechnungen · Sicherheit ----------
 const tabs = [...document.querySelectorAll("[data-tab]")];
 const TABS = tabs.map((b) => b.dataset.tab);
 function selectTab(name, { focus = false, push = true } = {}) {
@@ -70,6 +70,7 @@ function selectTab(name, { focus = false, push = true } = {}) {
   if (name === "karte") openCardEditor();
   if (name === "matching" && window.openMatchingTab) window.openMatchingTab();
   if (name === "sicherheit") renderSecurity();
+  if (name === "rechnungen" && window.openBillingTab) window.openBillingTab();
 }
 // weiter unten gewechselt: zum Anfang der neuen Registerkarte springen
 function toTabsTop() {

@@ -1,6 +1,17 @@
 // Xyntal – englische Texte. Schlüssel = deutscher Originaltext (Leerzeichen zusammengefasst).
 // Neue deutsche Texte auf der Website hier ergänzen, sonst bleiben sie auf Englisch deutsch.
 window.XYNTAL_EN = {
+  "Tarif & Rechnungen": "Plan & invoices",
+  "Deine Rechnungen": "Your invoices",
+  "Alle Rechnungen zu deinem Xyntal-Konto – Abos und KI-Guthaben. Sie gehören zu genau diesem Konto und sind nur für dich sichtbar.": "All invoices for your Xyntal account – plans and AI credit. They belong to this account only and are visible only to you.",
+  "Du nutzt Free. Tarife und KI-Guthaben findest du unter Tarif & KI-Guthaben.": "You're on Free. Plans and AI credit are under Plan & AI credit.",
+  "Noch keine Rechnungen. Sobald du einen Tarif buchst oder KI-Guthaben kaufst, erscheint die Rechnung hier.": "No invoices yet. As soon as you book a plan or buy AI credit, the invoice appears here.",
+  "Rechnung": "Invoice",
+  "Bezahlt": "Paid",
+  "Storniert": "Void",
+  "Uneinbringlich": "Uncollectible",
+  "Ansehen": "View",
+  "Logg dich ein, um deinen Tarif und deine Rechnungen zu sehen.": "Log in to see your plan and invoices.",
 
   "Projekte und Anzeigen": "Projects and listings",
   "Link kopieren": "Copy link",

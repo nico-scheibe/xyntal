@@ -17,13 +17,13 @@
   <link rel="stylesheet" href="fonts/fonts.css?v=32">
   <link rel="stylesheet" href="style.css?v=36">
   <link rel="stylesheet" href="cosmos.css?v=43">
-  <script src="i18n-en.js?v=81" defer></script>
+  <script src="i18n-en.js?v=82" defer></script>
   <script src="i18n.js?v=31" defer></script>
   <script src="cosmos.js?v=40" defer></script>
   <link rel="stylesheet" href="/backdrop.css?v=7">
   <link rel="stylesheet" href="/site-footer.css?v=4">
   <link rel="stylesheet" href="/site-header.css?v=6">
-<link rel="stylesheet" href="/profile-layout.css?v=99">
+<link rel="stylesheet" href="/profile-layout.css?v=100">
 <link rel="stylesheet" href="/matching.css?v=102">
 </head>
 <body>
@@ -62,6 +62,7 @@
           <button type="button" role="tab" id="tab-profil" aria-controls="panel-profil" aria-selected="true" data-tab="profil"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>Profil</button>
           <button type="button" role="tab" id="tab-matching" aria-controls="panel-matching" aria-selected="false" tabindex="-1" data-tab="matching"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8.5" cy="12" r="5.5"/><circle cx="15.5" cy="12" r="5.5"/></svg>Matching</button>
           <button type="button" role="tab" id="tab-karte" aria-controls="panel-karte" aria-selected="false" tabindex="-1" data-tab="karte"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="11" r="2"/><path d="M14 10h4M14 14h4M6 16h6"/></svg>Xyntal-Karte</button>
+          <button type="button" role="tab" id="tab-rechnungen" aria-controls="panel-rechnungen" aria-selected="false" tabindex="-1" data-tab="rechnungen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l3 3v15l-2-1.5L14 21l-2-1.5L10 21l-2-1.5L6 21z"/><path d="M9 9h6M9 13h6M9 17h3"/></svg>Tarif &amp; Rechnungen</button>
           <button type="button" role="tab" id="tab-sicherheit" aria-controls="panel-sicherheit" aria-selected="false" tabindex="-1" data-tab="sicherheit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg>Sicherheit</button>
         </div>
         <div class="side-actions">
@@ -242,6 +243,17 @@
           <iframe class="xcard-frame" data-xcard-frame title="Xyntal-Karte bearbeiten"></iframe>
         </section>
 
+        <section class="ptab-panel xm" role="tabpanel" id="panel-rechnungen" aria-labelledby="tab-rechnungen" data-panel="rechnungen" hidden>
+          <section class="card-form sec-box" aria-labelledby="plan-head">
+            <h2 id="plan-head">Dein Tarif</h2>
+            <div id="pb-plan"><p class="hint">Wird geladen …</p></div>
+          </section>
+          <section class="card-form sec-box" aria-labelledby="invoices-head">
+            <h2 id="invoices-head">Deine Rechnungen</h2>
+            <p class="hint">Alle Rechnungen zu deinem Xyntal-Konto – Abos und KI-Guthaben. Sie gehören zu genau diesem Konto und sind nur für dich sichtbar.</p>
+            <div id="pb-invoices"><p class="hint">Wird geladen …</p></div>
+          </section>
+        </section>
         <section class="ptab-panel" role="tabpanel" id="panel-sicherheit" aria-labelledby="tab-sicherheit" data-panel="sicherheit" hidden>
           <form id="sec-email" class="card-form sec-box" novalidate>
             <h2>E-Mail-Adresse</h2>
@@ -393,7 +405,8 @@
 <script src="notifications.js?v=34"></script>
 <script src="effects.js?v=37"></script>
 <script src="/app-api.js?v=5"></script>
-<script src="/pages/profil.js?v=6"></script>
+<script src="/pages/profil-billing.js?v=1"></script>
+<script src="/pages/profil.js?v=7"></script>
 <script src="/pages/profil-matching.js?v=1"></script>
 <script src="/account-menu.js?v=15" defer></script>
 </body>

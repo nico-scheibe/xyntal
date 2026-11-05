@@ -36,3 +36,13 @@
 }
 
 .join-body:has(.profile-layout) { padding-top: 32px; }
+
+/* Profil → Tarif & Rechnungen (pages/profil-billing.js) */
+.pb-plan-line { margin: 0; display: flex; gap: 8px; flex-wrap: wrap; }
+.pb-invoices { list-style: none; margin: 0; padding: 0; display: grid; }
+.pb-invoice { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; padding: 12px 0; border-top: 1px solid var(--border); }
+.pb-invoice:first-child { border-top: 0; }
+.pb-invoice-main { display: grid; gap: 2px; min-width: 0; }
+.pb-invoice-main small { color: var(--text-2); font-size: 12.5px; }
+.pb-invoice-side { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.pb-amount { font-weight: 600; font-variant-numeric: tabular-nums; }
