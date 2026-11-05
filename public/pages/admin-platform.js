@@ -333,6 +333,13 @@
         ${stat("Arbeitsbereiche (Inhaber)", num(d.counts.workspacesOwned))}${stat("Mitgliedschaften", num(d.counts.memberships))}${stat("Tickets", num(d.counts.tickets))}
         ${stat("Follower", num(d.counts.followers))}${stat("Folgt", num(d.counts.following))}${stat("Meldungen gegen", num(d.counts.reportsAgainst), "", d.counts.reportsAgainst ? "warn" : "")}
       </div>
+      ${u.aiCredit ? `<h4>KI-Guthaben</h4>
+      <div class="xa-stats xa-stats-sm">
+        ${stat("Guthaben übrig", euro(u.aiCredit.balanceCents), "", u.aiCredit.balanceCents < 0 ? "warn" : "")}${stat("Bezahlt (gekauft)", euro(u.aiCredit.purchasedCents))}${stat("Von Hand gutgeschrieben", euro(u.aiCredit.grantedCents))}
+        ${stat("Verbraucht aus Guthaben", euro(u.aiCredit.spentCents))}${stat("Abo-Budget diesen Monat", u.aiCredit.includedCentsPerMonth ? `${euro(u.aiCredit.includedUsedCents)} / ${euro(u.aiCredit.includedCentsPerMonth)}` : "keins")}${stat("Entfernbar (Gutschriften)", euro(u.aiCredit.removableCents))}
+      </div>
+      ${can("billing.manage") ? `<div class="row-actions xa-actions"><button data-act="credit">Guthaben gutschreiben</button>${u.aiCredit.removableCents > 0 ? `<button class="admin-danger" data-act="uncredit">Gutschrift entfernen</button>` : ""}</div>
+      <p class="hint">Entfernen nimmt nur von Hand gutgeschriebenes, noch nicht verbrauchtes Guthaben zurück – Bezahltes bleibt immer.</p>` : ""}` : ""}
       <h4>Aktionen</h4>
       <div class="row-actions xa-actions">
         ${can("users.verify") ? `<button data-act="verify" data-on="${u.verified}">${u.verified ? "Verifizierung entfernen" : "Verifizieren"}</button>` : ""}
@@ -395,6 +402,15 @@
         try { await api("POST", `/admin/users/${id}/delete`, { reason: a.reason, password: a.password }); say("users", `Konto von ${name} gelöscht.`); $("[data-user-detail]", panel("users")).hidden = true; S.users.detail = null; await loadUsers(); loadCounts(); }
         catch (err) { say("users", reason(err), false); }
         return; }
+      case "credit": { const a = await ask({ title: `KI-Guthaben für ${name}`, text: "Wird zusätzlich zum bezahlten Guthaben gutgeschrieben und lässt sich später wieder entfernen.", confirm: "Gutschreiben", fields: [{ name: "euros", label: "Betrag in Euro (z. B. 5 oder 2,50)", required: true }, { name: "reason", label: "Grund", type: "textarea", required: true }] }); if (!a) return;
+        const cents = parseEuroCents(String(a.euros).trim());
+        if (cents === undefined || cents < 0) { say("users", "Der Betrag ist in Euro, höchstens zwei Nachkommastellen und höchstens 500: 5, 2,50.", false); return; }
+        return userAction(`${euro(cents)} KI-Guthaben für ${name} gutgeschrieben.`, () => api("POST", `/admin/users/${id}/ai-credit`, { cents, reason: a.reason })); }
+      case "uncredit": { const max = u.aiCredit.removableCents;
+        const a = await ask({ title: `Gutschrift von ${name} entfernen`, text: `Von Hand gutgeschrieben und noch übrig: ${euro(max)}. Bezahltes Guthaben bleibt unberührt. Ohne Betrag wird alles davon entfernt.`, danger: true, confirm: "Entfernen", fields: [{ name: "euros", label: "Betrag in Euro (leer = alles)" }, { name: "reason", label: "Grund", type: "textarea", required: true }] }); if (!a) return;
+        const raw = String(a.euros || "").trim(), cents = raw ? parseEuroCents(raw) : undefined;
+        if (raw && (cents === undefined || cents < 0)) { say("users", "Der Betrag ist in Euro, höchstens zwei Nachkommastellen: 5, 2,50.", false); return; }
+        return userAction(`Gutschrift von ${name} entfernt.`, () => api("POST", `/admin/users/${id}/ai-credit/remove`, { cents, reason: a.reason })); }
       case "note-delete": return userAction("Notiz gelöscht.", () => api("DELETE", `/admin/users/${id}/notes/${encodeURIComponent(b.dataset.note)}`));
       default: return;
     }
@@ -422,6 +438,7 @@
     ["kick", "content.moderate", "kick <Konto> <Arbeitsbereich> [Grund]", "Konto aus einem seiner Arbeitsbereiche entfernen. Fragt vorher nach."],
     ["plan", "billing.manage", "plan <Konto> <Tage> [Tarif] <Grund>", "Mitgliedschaftstage gutschreiben (30, 30d, 4w). Sie zählen ab dem Ende der laufenden Mitgliedschaft. Ein kostenloses Konto braucht den Tarif (Plus, Pro, Ultra); ein bezahltes behält seinen, außer du nennst einen anderen. Die Tage laufen von selbst ab."],
     ["credit", "billing.manage", "credit <Konto> <Euro> <Grund>", "KI-Guthaben gutschreiben (5, 2,50; negativ korrigiert). Das Konto bezahlt seine KI-Aufrufe daraus, sobald das Inklusivbudget des Tarifs aufgebraucht ist."],
+    ["uncredit", "billing.manage", "uncredit <Konto> [Euro] <Grund>", "Von Hand gutgeschriebenes KI-Guthaben zurücknehmen: den Betrag, ohne Betrag alles, was davon übrig ist. Bezahltes Guthaben wird nie entfernt."],
     ["alts", "users.ban", "alts <Konto>", "Andere Konten, die dasselbe Gerät oder Netzwerk genutzt haben."],
     ["reports", "reports.handle", "reports", "Offene Meldungen auflisten."],
     ["note", "users.notes", "note <Konto> [Text]", "Staff-Notiz zu einem Konto; ohne Text werden die Notizen gelistet."],
@@ -466,7 +483,7 @@
     input.focus();
   };
   // ---------- Vorschläge beim Tippen (wie die Konsole in der App) ----------
-  const USER_COMMANDS = ["user", "ban", "unban", "warn", "mute", "unmute", "kick", "plan", "credit", "audit", "alts", "note"];
+  const USER_COMMANDS = ["user", "ban", "unban", "warn", "mute", "unmute", "kick", "plan", "credit", "uncredit", "audit", "alts", "note"];
   const euro = (cents) => (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
   // Euro für credit: "5", "5.50", "5,50", "-2" → Cent; nie null, höchstens 500 € wie auf dem Server.
   function parseEuroCents(token) {
@@ -603,7 +620,12 @@
           const x = d.user;
           print("ok", `${x.displayName}${x.handle ? ` (@${x.handle})` : ""} · ${x.email}`);
           print("info", `Konto-ID: ${x.id}`); print("info", `Staff-Rolle: ${roleLabel(x.staffRole)}`);
-          if (x.aiCreditCents !== undefined) print("info", `KI-Guthaben: ${euro(x.aiCreditCents)}`);
+          if (x.aiCredit) {
+            const c = x.aiCredit;
+            print("info", `KI-Guthaben: ${euro(c.balanceCents)} (bezahlt ${euro(c.purchasedCents)} · von Hand gutgeschrieben ${euro(c.grantedCents)} · verbraucht ${euro(c.spentCents)})`);
+            if (c.removableCents > 0) print("info", `Davon entfernbar (Gutschriften, uncredit): ${euro(c.removableCents)}`);
+            if (c.includedCentsPerMonth) print("info", `Abo-KI-Budget diesen Monat: ${euro(c.includedUsedCents)} von ${euro(c.includedCentsPerMonth)} verbraucht`);
+          } else if (x.aiCreditCents !== undefined) print("info", `KI-Guthaben: ${euro(x.aiCreditCents)}`);
           print("info", `Tarif: ${x.plan}${x.subscribed ? ` (Abo${x.planRenewsAt ? `, verlängert sich ${fmt(x.planRenewsAt)}` : ""})` : x.planRenewsAt ? ` bis ${fmt(x.planRenewsAt)}` : ""}`);
           print("info", `Status: ${x.banned ? (x.bannedUntil ? `gesperrt bis ${fmt(x.bannedUntil)}` : "dauerhaft gesperrt") : "aktiv"}${x.mutedUntil !== null && x.mutedUntil !== undefined ? ` · stumm${x.mutedUntil ? ` bis ${fmt(x.mutedUntil)}` : ""}` : ""}${x.verified ? " · verifiziert" : ""}`);
           print("info", `Dabei seit ${day(x.createdAt)} · 2FA ${x.twoFactor ? "an" : "aus"} · ${d.sessions.length} aktive Sitzung(en)`);
@@ -654,7 +676,8 @@
           // Optionaler Tarif vor dem Grund: plan @bob 30 Plus Danke
           const rest = args.slice(2);
           const planWords = [2, 1].find((n) => PLAN_IDS.some((p) => p.toLowerCase() === rest.slice(0, n).join(" ").toLowerCase())) || 0;
-          const plan = planWords ? PLAN_IDS.find((p) => p.toLowerCase() === rest.splice(0, planWords).join(" ").toLowerCase()) : undefined;
+          const planText = rest.splice(0, planWords).join(" ").toLowerCase();
+          const plan = planWords ? PLAN_IDS.find((p) => p.toLowerCase() === planText) : undefined;
           const why = rest.join(" ").trim();
           if (!why) { print("error", "Gib einen Grund an – er landet im Audit-Log."); return; }
           const u = await resolveUser(args[0]); if (!u) return;
@@ -669,6 +692,16 @@
           const u = await resolveUser(args[0]); if (!u) return;
           const r = await api("POST", `/admin/users/${encodeURIComponent(u.id)}/ai-credit`, { cents, reason: args.slice(2).join(" ") });
           print("ok", `${u.displayName} hat jetzt ${euro(r.creditCents)} KI-Guthaben.`);
+          return;
+        }
+        case "uncredit": {
+          if (!need(2)) return;
+          const amount = args.length > 2 ? parseEuroCents(args[1]) : undefined;
+          if (amount !== undefined && amount < 0) { print("error", "Der Betrag zum Zurücknehmen ist positiv: 5, 2,50."); return; }
+          const why = args.slice(amount !== undefined ? 2 : 1).join(" ");
+          const u = await resolveUser(args[0]); if (!u) return;
+          const r = await api("POST", `/admin/users/${encodeURIComponent(u.id)}/ai-credit/remove`, { cents: amount, reason: why });
+          print("ok", `${euro(r.removedCents)} entfernt – ${u.displayName} hat jetzt ${euro(r.creditCents)} KI-Guthaben.`);
           return;
         }
         case "alts": { if (!need(1)) return; const u = await resolveUser(args[0]); if (!u) return;
