@@ -63,6 +63,7 @@
         <p class="xm-billing-text ${d.locked ? "xm-bad" : ""}">${esc(status)}</p>
         ${free ? "" : `<div class="xm-actions"><button class="btn btn-small btn-ghost" type="button" data-portal>${esc(t("Abo verwalten"))}</button></div>`}
         ${free || !ai ? "" : `<p class="xm-billing-hint">${esc(t("Tarif wechseln, Zahlungsmethode, Rechnungen und Kündigung findest du im Abo-Portal von Stripe."))}</p>`}
+        ${free ? "" : `<p class="xm-billing-hint"><a class="text-link" href="/kuendigen">${esc(t("Verträge hier kündigen"))}</a></p>`}
       </section>`;
   }
 

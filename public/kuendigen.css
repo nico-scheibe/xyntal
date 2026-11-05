@@ -1,0 +1,37 @@
+/* „Verträge hier kündigen“ (/kuendigen, pages/kuendigen.js) – im Look der Website. */
+.kd { max-width: 720px; }
+.kd-form { display: grid; gap: 28px; }
+.kd-form fieldset { display: grid; gap: 10px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.kd-form legend { margin-bottom: 10px; padding: 0; font: 600 20px/1.2 var(--f); }
+.kd-choice { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border: 1px solid var(--border); border-radius: 2px; cursor: pointer; }
+.kd-choice:has(input:checked) { border-color: var(--text); }
+.kd-choice input { margin-top: 3px; accent-color: var(--text); }
+.kd-choice b { display: block; font-weight: 600; }
+.kd-choice small { display: block; margin-top: 2px; color: var(--text-2); font-size: 14px; }
+.kd-field { display: grid; gap: 6px; }
+.kd-field > span { color: var(--text-2); font-size: 14px; }
+.kd-field input, .kd-field textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--border-2); border-radius: 2px; background: var(--panel); color: var(--text); font: inherit; }
+.kd-field input:focus, .kd-field textarea:focus { outline: 2px solid var(--text); outline-offset: 1px; }
+.kd-status { min-height: 1.4em; margin: 0; color: #FF9B7A; }
+.kd-status a, .kd-note a { color: var(--text); }
+.kd-submit { justify-self: start; min-width: 200px; justify-content: center; }
+.kd-note { margin: 0; color: var(--text-3); font-size: 14px; line-height: 1.5; }
+.kd-done { padding: 28px; border: 1px solid var(--text); border-radius: 2px; }
+.kd-done:focus { outline: none; }
+.kd-done h2 { margin: 6px 0 20px; font: 600 clamp(1.6rem, 3vw, 2.2rem)/1.1 var(--f); }
+.kd-done dl { margin: 0 0 20px; border-top: 1px solid var(--border); }
+.kd-done dl > div { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.kd-done dt { color: var(--text-3); font: 500 12px/1.6 var(--mono); text-transform: uppercase; letter-spacing: 0.06em; }
+.kd-done dd { margin: 0; overflow-wrap: anywhere; }
+.kd-done > p { color: var(--text-2); }
+.kd-done-act { display: flex; flex-wrap: wrap; gap: 12px; }
+@media (max-width: 560px) { .kd-done { padding: 20px; } .kd-done dl > div { grid-template-columns: minmax(0, 1fr); gap: 2px; } }
+@media print {
+  .nav, .site-footer, .sc, .page-head, .kd-done-act, .xy-bg { display: none !important; }
+  .kd-done { border: 0; padding: 0; color: #000; }
+  .kd-done dd, .kd-done dt, .kd-done > p { color: #000; }
+}
+/* Die allgemeinen Formular-Styles (style.css) machen Eingaben 100 % breit – Auswahlknöpfe hier nicht. */
+.kd-choice input[type="radio"] { flex: none; width: 18px !important; height: 18px; min-height: 0 !important; margin: 2px 0 0 !important; padding: 0 !important; box-shadow: none !important; }
+.kd-choice > span { flex: 1; min-width: 0; text-align: left; }
+.kd-form { text-align: left; }
