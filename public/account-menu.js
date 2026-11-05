@@ -19,7 +19,6 @@
     "Konto": "Account", "Einloggen": "Log in", "Konto anlegen": "Create account",
     "Noch kein Konto?": "No account yet?", "Mein Profil": "My profile", "Meine Karte": "My card", "Für dich": "For you",
     "Nachrichten": "Messages", "Projekte": "Projects", "Abmelden": "Log out", "Kontomenü": "Account menu",
-    "Tarif & KI-Guthaben": "Plan & AI credit",
     "Angemeldet als": "Signed in as", "Admin-Bereich": "Admin area", "Menü": "Menu", "Schließen": "Close",
   };
   const t = (de) => (document.documentElement.lang === "en" && EN[de]) || de;
@@ -100,7 +99,6 @@
     admin: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l7 3v5c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9v-5z"/></svg>',
     login: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 4.5H18a1.5 1.5 0 0 1 1.5 1.5v12a1.5 1.5 0 0 1-1.5 1.5h-4.5M4.5 12h10M11 8.5 14.5 12 11 15.5"/></svg>',
     neu: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="8.2" r="3.6"/><path d="M3.5 20c.9-3.6 3.5-5.6 6.5-5.6 1.4 0 2.7.4 3.8 1.2M18 14v6M15 17h6"/></svg>',
-    tarif: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="6" width="17" height="12" rx="2.5"/><path d="M3.5 10h17M7 14.5h4"/></svg>',
     logout: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 4.5H6A1.5 1.5 0 0 0 4.5 6v12A1.5 1.5 0 0 0 6 19.5h4.5M19.5 12h-10M16 8.5l3.5 3.5-3.5 3.5"/></svg>',
   };
 
@@ -187,7 +185,6 @@
           <a href="/meine-karte" role="menuitem">${ICONS.karte}${t("Meine Karte")}</a>
           <a href="/nachrichten" role="menuitem">${ICONS.nachrichten}${t("Nachrichten")}</a>
           <a href="/projekte" role="menuitem">${ICONS.projekte}${t("Projekte")}</a>
-          <a href="/tarif" role="menuitem">${ICONS.tarif}${t("Tarif & KI-Guthaben")}</a>
           ${state.admin ? `<a href="/admin" role="menuitem">${ICONS.admin}${t("Admin-Bereich")}</a>` : ""}
           <div class="acct-sep"></div>
           <button class="acct-item acct-out" type="button" role="menuitem" data-acct-logout>${ICONS.logout}${t("Abmelden")}</button>`;
