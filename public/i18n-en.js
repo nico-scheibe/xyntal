@@ -1173,6 +1173,28 @@ window.XYNTAL_EN = {
   "Gespeichert! Du wirst zu deinem Profil weitergeleitet …": "Saved! Redirecting you to your profile …",
 
   /* ---------- Community ---------- */
+  "Neuigkeiten vom Xyntal-Team, live aus der App – und darunter Fragen, Fortschritte und Erfolge von Mitgliedern.": "News from the Xyntal team, live from the app – and below, questions, progress and wins from members.",
+  "Die Xyntal-Community: Neuigkeiten vom Xyntal-Team live aus der App, dazu Fragen, Fortschritte und Erfolge von Gründern und Selbstständigen.": "The Xyntal community: news from the Xyntal team live from the app, plus questions, progress and wins from founders and freelancers.",
+  "Aus der App": "From the app",
+  "Verbinde …": "Connecting …",
+  "Live": "Live",
+  "Verbindung unterbrochen": "Connection lost",
+  "Nicht erreichbar": "Unavailable",
+  "Xyntal-Community": "Xyntal community",
+  "Das Xyntal-Team schreibt hier, was neu ist, was geplant ist und wo du mitentscheiden kannst. Jedes App-Update erscheint automatisch in #updates.": "The Xyntal team posts here what's new, what's planned and where you get a say. Every app update appears automatically in #updates.",
+  "Kanäle filtern": "Filter channels",
+  "Lade Neuigkeiten …": "Loading news …",
+  "Weitere Beiträge anzeigen": "Show more posts",
+  "Mitreden in der App →": "Join the conversation in the app →",
+  "Beiträge von Mitgliedern": "Posts from members",
+  "Xyntal-Team": "Xyntal team",
+  "Abstimmung beendet": "Poll closed",
+  "Abstimmen in der App": "Vote in the app",
+  "1 Stimme": "1 vote",
+  "1 Anhang in der App": "1 attachment in the app",
+  "In diesem Kanal gibt es noch keine Beiträge.": "No posts in this channel yet.",
+  "Noch keine Neuigkeiten aus der App.": "No news from the app yet.",
+  "Die Neuigkeiten aus der App lassen sich gerade nicht laden.": "The news from the app can't be loaded right now.",
   "Community – Xyntal": "Community – Xyntal",
   "/ community": "/ community",
   "Was die Community": "What the community",
@@ -2411,6 +2433,9 @@ window.XYNTAL_EN = {
   };
   const plural = (n, one, many) => `${n} ${Number(n) === 1 ? one : many}`;
   window.XYNTAL_EN_PATTERNS = [
+    [/^(\d+) Stimmen$/, (_, a) => `${a} votes`],
+    [/^(\d+) Anhänge in der App$/, (_, a) => `${a} attachments in the app`],
+    [/^Zuletzt aktualisiert: (.+)$/, (_, a) => `Last updated: ${a}`],
     [/^Woche (\d+)$/, (_, a) => `Week ${a}`],
     [/^(\d+) von (\d+)$/, (_, a, b) => `${a} of ${b}`],
     [/^(\d+) von (\d+) erledigt$/, (_, a, b) => `${a} of ${b} done`],
