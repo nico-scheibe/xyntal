@@ -23,7 +23,7 @@ function render(m) {
     const until = m.banned_until ? new Date(m.banned_until).toLocaleString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
     notice = `<div class="notice"><strong>Dein Konto ist gesperrt${until ? ` bis ${until}` : ""}.</strong> Solange die Sperre läuft, kannst du Profil und Karte nicht ändern, und andere sehen sie nicht. Bei Fragen melde dich per E-Mail.</div>`;
   } else if (m.status === "pending") {
-    notice = `<div class="notice" data-review-notice>${fresh ? "<strong>Willkommen bei Xyntal!</strong> " : ""}Du kannst schon <a class="text-link" href="projekte?neu=1">Projekte anlegen</a> und <a class="text-link" href="mitglieder">andere Mitglieder anschreiben</a>. Dein Profil schaue ich mir zusätzlich persönlich an und schalte es frei – dann erscheint es auch öffentlich.</div>`;
+    notice = `<div class="notice" data-review-notice>${fresh ? "<strong>Willkommen bei Xyntal!</strong> " : ""}Du kannst schon <a class="text-link" href="mitglieder">andere Mitglieder anschreiben</a>; Projekte legst du in der Xyntal-App an. Dein Profil schaue ich mir zusätzlich persönlich an und schalte es frei – dann erscheint es auch öffentlich.</div>`;
   } else if (m.status === "rejected") {
     notice = `<div class="notice">Dein Profil wurde nicht freigeschaltet. Bei Fragen melde dich gern per E-Mail.</div>`;
   }
@@ -55,7 +55,7 @@ async function explainReview(fresh) {
     if (!r.automatic) return;
     box.innerHTML = REVIEW_HINTS[r.problem]
       ? `${welcome}${REVIEW_HINTS[r.problem]}`
-      : `${welcome}Du kannst schon <a class="text-link" href="projekte?neu=1">Projekte anlegen</a> und <a class="text-link" href="mitglieder">andere Mitglieder anschreiben</a>. Sobald dein Profil vollständig ist, wird es automatisch freigeschaltet – dann erscheint es auch öffentlich.`;
+      : `${welcome}Du kannst schon <a class="text-link" href="mitglieder">andere Mitglieder anschreiben</a>; Projekte legst du in der Xyntal-App an. Sobald dein Profil vollständig ist, wird es automatisch freigeschaltet – dann erscheint es auch öffentlich.`;
   } catch {
     // ohne die Migration oder offline bleibt der allgemeine Hinweis stehen
   }

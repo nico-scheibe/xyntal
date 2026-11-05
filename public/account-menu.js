@@ -95,7 +95,6 @@
     profil: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.2" r="3.6"/><path d="M5 20c.9-3.6 3.7-5.6 7-5.6s6.1 2 7 5.6"/></svg>',
     karte: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="2.5"/><circle cx="9" cy="11" r="2"/><path d="M6.5 15.5c.5-1.3 1.4-2 2.5-2s2 .7 2.5 2M14 10h4M14 13.5h3"/></svg>',
     nachrichten: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 6.5h15v9.5h-9l-4 3.5V16h-2z"/></svg>',
-    projekte: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5h16v11H4zM9 7.5V5.5h6v2"/></svg>',
     admin: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l7 3v5c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9v-5z"/></svg>',
     login: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 4.5H18a1.5 1.5 0 0 1 1.5 1.5v12a1.5 1.5 0 0 1-1.5 1.5h-4.5M4.5 12h10M11 8.5 14.5 12 11 15.5"/></svg>',
     neu: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="8.2" r="3.6"/><path d="M3.5 20c.9-3.6 3.5-5.6 6.5-5.6 1.4 0 2.7.4 3.8 1.2M18 14v6M15 17h6"/></svg>',
@@ -184,7 +183,6 @@
           <a href="/fuer-dich" role="menuitem">${ICONS.match}${t("Für dich")}</a>
           <a href="/meine-karte" role="menuitem">${ICONS.karte}${t("Meine Karte")}</a>
           <a href="/nachrichten" role="menuitem">${ICONS.nachrichten}${t("Nachrichten")}</a>
-          <a href="/projekte" role="menuitem">${ICONS.projekte}${t("Projekte")}</a>
           ${state.admin ? `<a href="/admin" role="menuitem">${ICONS.admin}${t("Admin-Bereich")}</a>` : ""}
           <div class="acct-sep"></div>
           <button class="acct-item acct-out" type="button" role="menuitem" data-acct-logout>${ICONS.logout}${t("Abmelden")}</button>`;
@@ -297,13 +295,13 @@
       } catch { /* kein Staff oder nicht erreichbar */ }
     }
 
-    // Eingeloggt: In der Kopfzeile „Projekt anlegen“ statt „Für die Beta bewerben“
+    // Eingeloggt: In der Kopfzeile „Für dich“ statt „Für die Beta bewerben“
     function swapCta() {
       if (!state.session) return;
       const header = host.closest("header") || host;
       header.querySelectorAll('a.btn[href$="#warteliste"], a.nav-cta[href="/beta"]').forEach((a) => {
-        a.href = "/projekte?neu=1";
-        a.textContent = "Projekt anlegen";
+        a.href = "/fuer-dich";
+        a.textContent = "Für dich";
       });
     }
 

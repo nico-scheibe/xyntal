@@ -11,13 +11,13 @@
   css.rel = "stylesheet"; css.href = "home-app.css?v=5";
   document.head.append(css);
   // Inhalte der Startseite für Mitglieder: statt Warteliste direkt loslegen
-  // Startseite (start.css): Mitglieder sehen statt der Beta-Bewerbung den Weg in die Projekte
+  // Startseite (start.css): Mitglieder sehen statt der Beta-Bewerbung ihre Vorschläge und die Mitglieder
   const actions = document.querySelector(".hero-actions");
   if (actions) {
-    actions.innerHTML = '<a class="button" href="/projekte?neu=1">Projekt anlegen</a><a class="textlink" href="/projekte">Projekte ansehen <span aria-hidden="true">→</span></a>';
+    actions.innerHTML = '<a class="button" href="/fuer-dich">Passende Leute ansehen</a><a class="textlink" href="/mitglieder">Mitglieder entdecken <span aria-hidden="true">→</span></a>';
   }
   const betaCta = document.querySelector(".beta-cta .button");
-  if (betaCta) { betaCta.href = "/projekte"; betaCta.textContent = "Zu den Projekten"; }
+  if (betaCta) { betaCta.href = "/fuer-dich"; betaCta.textContent = "Zu deinen Vorschlägen"; }
   // Ältere Startseite (home.css)
   const hero = document.querySelector(".hero-inner");
   if (hero) {
@@ -30,17 +30,17 @@
       form.hidden = true;
       const actions = document.createElement("div");
       actions.className = "hero-member-actions";
-      actions.innerHTML = '<a class="btn btn-primary" href="/projekte?neu=1">Projekt anlegen</a><a class="btn btn-glass" href="/projekte">Projekte entdecken</a>';
+      actions.innerHTML = '<a class="btn btn-primary" href="/fuer-dich">Passende Leute ansehen</a><a class="btn btn-glass" href="/mitglieder">Mitglieder entdecken</a>';
       form.after(actions);
     }
   }
   const bridge = document.querySelector("[data-bridge]");
-  if (bridge) { bridge.href = "/projekte?neu=1"; bridge.textContent = "Projekt mit diesem Team anlegen"; }
+  if (bridge) { bridge.href = "/fuer-dich"; bridge.textContent = "Dein Team finden"; }
   const join = document.querySelector("[data-card-join]");
   if (join) { join.href = "/meine-karte"; join.textContent = "Meine Karte bearbeiten"; }
   const launch = document.getElementById("warteliste");
   if (launch) launch.hidden = true;
-  document.querySelectorAll('a[href="#warteliste"]').forEach((a) => { if (!a.closest("header")) a.href = "/projekte?neu=1"; });
+  document.querySelectorAll('a[href="#warteliste"]').forEach((a) => { if (!a.closest("header")) a.href = "/fuer-dich"; });
 
   const load = (src) => new Promise((res, rej) => {
     const s = document.createElement("script"); s.src = src; s.onload = res; s.onerror = rej; document.body.append(s);

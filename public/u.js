@@ -33,7 +33,7 @@
   } catch { /* privat */ }
   const UUID = /^[0-9a-f-]{36}$/;
   const ctas = (primary) => `<div class="profile-actions">${primary}${member
-    ? `<a class="btn btn-glass" href="/projekte">${esc(t("Projekte entdecken"))}</a>`
+    ? `<a class="btn btn-glass" href="/mitglieder">${esc(t("Mitglieder entdecken"))}</a>`
     : `<a class="btn btn-glass" href="/beta">${esc(t("Für die Beta bewerben"))}</a>`}</div>`;
   const freeLink = (h) => `/?handle=${encodeURIComponent(h)}#karte`;
 
@@ -61,7 +61,6 @@
         <div class="pf-main">
           ${profileHtml(c)}
           ${me && UUID.test(c.user_id || "") && !own && window.XyntalApp ? `<section class="xm xm-public" aria-label="${esc(t("Eure Passung"))}" data-match hidden></section>` : ""}
-          <section class="public-activity" aria-label="${esc(t("Projekte und Anzeigen"))}" data-public-activity><p class="pf-muted" role="status">${esc(t("Projekte und Anzeigen werden geladen …"))}</p></section>
           ${member ? "" : `<div class="pf-join"><p>${esc(t("Auf Xyntal finden Entwickler, Designer und Gründer die richtigen Leute für ihre Idee."))}</p><a class="btn btn-glass btn-sm" href="/beta">${esc(t("Für die Beta bewerben"))}</a></div>`}
         </div>
       </div>`);
@@ -84,33 +83,6 @@
     const headline = p.headline || c.pitch || "";
     return `<header class="pf-head"><p class="pf-address" data-no-i18n>xyntal.de/${esc(c.handle)}</p>${headline ? `<p class="pf-headline" data-no-i18n>${esc(headline)}</p>` : ""}</header>
       ${rows ? `<section class="pf-about">${rows}</section>` : `<p class="pf-muted">${esc(t("Lerne die Person hinter der Idee kennen."))}</p>`}`;
-  }
-  async function loadActivity() {
-    const target = root.querySelector("[data-public-activity]");
-    if (!target) return;
-    try {
-      const res = await fetch(`${SUPA}/rest/v1/rpc/get_public_profile_activity`, {
-        method: "POST", headers: { apikey: KEY, Authorization: `Bearer ${KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ p_handle: handle }),
-      });
-      if (!res.ok) throw new Error("activity");
-      const data = await res.json();
-      if (!target.isConnected) return;
-      const item = (x, kind) => {
-        const id = String(x.id);
-        if (!/^\d+$/.test(id)) return "";
-        const isProject = kind === "project";
-        const projectUrl = /^[a-z0-9][a-z0-9_-]{0,19}-[a-z0-9][a-z0-9_-]{0,118}$/.test(x.share_slug || '') ? '/' + x.share_slug : '/projekte?projekt=' + id;
-        const url = isProject ? projectUrl : '/boerse#anzeige-' + id;
-        return `<a class="public-item" href="${url}"><span class="public-item-body"><span class="public-item-meta">${esc(t(isProject ? "Projekt" : (x.type === "biete" ? "Angebot" : "Gesuch")))}${x.closed ? ` · ${esc(t("Geschlossen"))}` : ""}</span><h3 data-no-i18n>${esc(x.title)}</h3><p data-no-i18n>${esc(isProject ? x.pitch : x.excerpt)}</p></span><span class="public-item-arrow" aria-hidden="true">↗</span></a>`;
-      };
-      // Leere Bereiche weglassen, statt „Noch keine …“ anzuzeigen
-      const section = (title, items, kind) => items.length ? `<section class="public-section" id="${kind === "project" ? "profil-projekte" : "profil-anzeigen"}"><h2>${esc(t(title))} <span class="public-count">${items.length}</span></h2><div class="public-items">${items.map(x => item(x, kind)).join("")}</div></section>` : "";
-      target.innerHTML = section("Projekte", data?.projects || [], "project") + section("Anzeigen", data?.listings || [], "listing");
-    } catch {
-      if (target.isConnected) target.innerHTML = `<p role="status">${esc(t("Projekte und Anzeigen konnten nicht geladen werden."))}</p><button class="btn btn-glass" type="button" data-retry-activity>${esc(t("Neu laden"))}</button>`;
-      target.querySelector("[data-retry-activity]")?.addEventListener("click", loadActivity);
-    }
   }
   // Eure Passung – vom Matching des App-Servers (wie „Für dich“), nur für Angemeldete.
   // Ist die Person dort nicht sichtbar (privat, blockiert), bleibt der Bereich einfach weg.
@@ -183,7 +155,7 @@
       });
       if (!res.ok) throw new Error(String(res.status));
       const card = await res.json();
-      if (card && card.name) { renderCard(card); loadActivity(); loadMatch(card.user_id); if (card.profile) loadAvatar(card.profile.avatar_path); return; }
+      if (card && card.name) { renderCard(card); loadMatch(card.user_id); if (card.profile) loadAvatar(card.profile.avatar_path); return; }
       if (card && card.reserved) {
         document.title = `xyntal.de/${handle} – ${t("reserviert")}`;
         return page(`<div class="profile-msg"><h1><b>xyntal.de/${esc(handle)}</b><br>${esc(t("ist reserviert."))}</h1><p>${esc(t("Dieses Profil ist noch nicht öffentlich freigegeben. Es kann schon jetzt im eigenen Konto veröffentlicht werden."))}</p>${ctas(`<a class="btn btn-primary" href="/#karte">${esc(t("Eigenen Link sichern"))}</a>`)}</div>`);

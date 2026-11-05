@@ -11,8 +11,6 @@
      ⌘K – Befehlspalette (wie in der App)
      --------------------------------------------------------------- */
   const ACTIONS = [
-    { label: "Projekt anlegen", href: "projekte?neu=1", glyph: "+", keys: "projekt erstellen neu gründen" },
-    { label: "Gesuch oder Angebot erstellen", href: "boerse?neu=1", glyph: "⇄", keys: "börse suche biete inserat listing" },
     { label: "Nachricht schreiben", href: "nachrichten?neu=1", glyph: "✉", keys: "chat dm neue nachricht senden" },
     { label: "Community-Beitrag erstellen", href: "community?neu=1", glyph: "#", keys: "post update frage erfolg teilen" },
     { label: "Mitglieder suchen", href: "mitglieder", glyph: "@", keys: "menschen profil team finden" },
@@ -21,8 +19,8 @@
   ];
   const NAVIGATION = [
     { label: "Startseite", href: "./", glyph: "⌂", keys: "home start homepage" },
-    { label: "Projekte", href: "projekte", glyph: "▦", keys: "teams rollen entdecken" },
-    { label: "Gesuche & Angebote", href: "boerse", glyph: "⇄", keys: "börse suche biete" },
+    { label: "App-Demo", href: "demo", glyph: "▦", keys: "app desktop projekte aufgaben workspaces ausprobieren" },
+    { label: "Für dich", href: "fuer-dich", glyph: "◎", keys: "matching vorschläge passende leute team" },
     { label: "Community", href: "community", glyph: "#", keys: "feed beiträge fragen erfolge" },
     { label: "Mitglieder", href: "mitglieder", glyph: "@", keys: "profile menschen leute" },
     { label: "Nachrichten", href: "nachrichten", glyph: "✉", keys: "chat dm inbox" },

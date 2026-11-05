@@ -115,13 +115,13 @@
   // Kopfzeile und Handy-Menü: gemeinsame Kopfzeile (site-header.css, account-menu.js)
 
   // Angemeldet? Die Supabase-Sitzung liegt im localStorage – dafür muss die große Bibliothek nicht laden.
-  // Angemeldete landen bei „Projekt starten“ direkt im Projektformular statt in der Anmeldung.
+  // Angemeldete landen bei „Projekt starten“ direkt bei ihren Vorschlägen statt in der Anmeldung.
   try {
     const ref = "rralgrlujoupprwlvoyo";
     if (localStorage.getItem(`sb-${ref}-auth-token`)) {
       const slot = $("[data-account]");
       if (slot) { slot.textContent = "Mein Profil"; slot.href = "profil"; }
-      $$("[data-start]").forEach((a) => { a.href = "projekte?neu=1"; });
+      $$("[data-start]").forEach((a) => { a.href = "fuer-dich"; });
     }
   } catch { /* privat surfen o. Ä. */ }
 
@@ -656,29 +656,6 @@
       requestAnimationFrame(() => requestAnimationFrame(join));
     });
 
-  })();
-
-  /* ---------------------------------------------------------------
-     Echte offene Rollen (öffentliche Projekte) – ohne die große Supabase-Bibliothek
-     --------------------------------------------------------------- */
-  (async () => {
-    const box = $("[data-live-roles]");
-    if (!box) return;
-    const SUPA = "https://rralgrlujoupprwlvoyo.supabase.co";
-    const KEY = "sb_publishable_YxSngs1ePBoxqI6f26GRww_2_kNaLfh";   // öffentlich, Schutz über Row-Level-Security
-    try {
-      const url = `${SUPA}/rest/v1/project_roles?select=id,name,need,hours,project:projects!inner(id,title,closed)&filled=eq.false&project.closed=eq.false&order=created_at.desc&limit=6`;
-      const res = await fetch(url, { headers: { apikey: KEY, Authorization: `Bearer ${KEY}` } });
-      if (!res.ok) return;                  // z. B. solange die Projekte-Tabellen noch fehlen
-      const roles = await res.json();
-      if (!Array.isArray(roles) || !roles.length) return;
-      $("[data-live-list]", box).innerHTML = roles.map((r) => `<li><a class="live-role" href="/projekte?projekt=${Number(r.project.id)}">
-        <span class="live-role-name">${esc(r.name)}</span>
-        <span class="live-role-need">${r.need ? esc(r.need) : ""}</span>
-        <span class="live-role-meta"><span class="live-role-project" data-no-i18n>${esc(r.project.title)}</span>${r.hours ? `<span class="live-role-hours">${Number(r.hours)} Std./Woche</span>` : ""}</span>
-      </a></li>`).join("");
-      box.hidden = false;
-    } catch { /* ohne Verbindung bleibt der Bereich einfach weg */ }
   })();
 
   /* ---------------------------------------------------------------
