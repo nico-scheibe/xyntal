@@ -88,6 +88,8 @@ window.XYNTAL_EN = {
   "Erst mal ausprobieren?": "Want to try it first?",
   "Bewirb dich für die Beta oder klick dich durch die App-Demo – beides kostenlos und ohne Zahlungsdaten.": "Apply for the beta or click through the app demo – both free and without payment details.",
   "Verträge hier kündigen": "Cancel contracts here",
+  "AGB": "Terms",
+  "Widerrufsbelehrung": "Right of withdrawal",
   "Vertrag kündigen – Xyntal": "Cancel contract – Xyntal",
   "Vertrag kündigen": "Cancel your contract",
   "Hier kündigst du dein Xyntal-Abo. Du musst dich dafür nicht anmelden. Nach dem Absenden siehst du sofort eine Bestätigung und bekommst sie zusätzlich per E-Mail.": "Cancel your Xyntal subscription here. You don't need to sign in. After sending, you'll see a confirmation right away and also get it by email.",

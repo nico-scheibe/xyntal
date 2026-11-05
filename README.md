@@ -135,6 +135,7 @@ Alle Links in `public/` sind relativ (`community` statt `/community`), damit die
 
 - Instagram- und LinkedIn-Links im Footer von `public/index.html`
 - Impressum und vollständige Datenschutzerklärung in `public/impressum.html` (Supabase als Dienstleister nennen)
+- AGB (`public/agb.html`, `/agb`) und Widerrufsbelehrung (`public/widerruf.html`, `/widerruf`) sind seit 05.11.2026 online, erzeugt aus `docs/rechtliches/AGB-ENTWURF.md` und `WIDERRUF-ENTWURF.md`; noch anwaltlich prüfen lassen und Änderungen in beiden Fassungen nachziehen
 - Newsletter versenden: Adressen im Admin als CSV exportieren und z. B. in Brevo oder MailerLite importieren
 
 ## Projekte aktivieren
