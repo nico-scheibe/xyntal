@@ -8,6 +8,7 @@
   const T = (de, eng) => (en() ? eng : de);
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   let plans = null;
+  let callCents = 0;
   let cycle = "month";
   let signedIn = false;
   try { signedIn = !!localStorage.getItem("sb-rralgrlujoupprwlvoyo-auth-token"); } catch { /* privat */ }
@@ -15,6 +16,20 @@
   const euro = (cents) => (cents / 100).toLocaleString(en() ? "en-GB" : "de-DE", { minimumFractionDigits: cents % 100 ? 2 : 0, maximumFractionDigits: 2 }) + " €";
   const bytes = (n) => (n >= 1024 ** 3 ? `${Math.round(n / 1024 ** 3)} GB` : `${Math.round(n / 1024 ** 2)} MB`);
   const lim = (v) => (v === null ? T("Unbegrenzt", "Unlimited") : String(v));
+  // Das KI-Budget als Anfragen statt in Euro, gerundet wie unter Profil → Tarif (pages/tarif.js):
+  // abgerundet, damit die Zahl nie mehr verspricht, als das Budget hergibt.
+  const requests = (cents) => {
+    const n = callCents > 0 ? Math.floor(cents / callCents) : 0;
+    if (n < 20) return Math.max(0, n);
+    const step = n < 100 ? 5 : n < 1000 ? 10 : 50;
+    return Math.floor(n / step) * step;
+  };
+  const count = (n) => n.toLocaleString(en() ? "en-GB" : "de-DE");
+  const aiLine = (p) => T(`etwa ${count(requests(p.aiIncludedCents))} KI-Anfragen pro Monat inklusive`, `about ${count(requests(p.aiIncludedCents))} AI requests a month included`);
+  // Ohne Kosten pro Anfrage (älterer Server) bleibt die Budget-Zeile in Euro.
+  const features = (p) => (p.aiBudgetLine && p.aiIncludedCents > 0 && callCents > 0
+    ? p.features.map((f) => (f === p.aiBudgetLine ? aiLine(p) : f))
+    : p.features);
 
   function price(p) {
     if (p.priceCents === 0 && p.yearlyPriceCents === 0) return `<b>0 €</b><small>${T("für immer", "forever")}</small>`;
@@ -36,14 +51,14 @@
       <header><h2 id="pr-${esc(p.id)}">${esc(p.name)}</h2><p>${esc(p.blurb)}</p></header>
       <div class="pr-price">${price(p)}</div>
       ${cta(p)}
-      <ul>${p.features.map((f) => `<li>${esc(f)}</li>`).join("")}</ul>
+      <ul>${features(p).map((f) => `<li>${esc(f)}</li>`).join("")}</ul>
     </article>`).join("");
     const rows = [
       [T("Arbeitsbereiche", "Workspaces"), (l) => lim(l.workspaces)],
       [T("Mitglieder pro Arbeitsbereich", "Members per workspace"), (l) => lim(l.membersPerWorkspace)],
       [T("Speicher", "Storage"), (l) => bytes(l.storageBytes)],
       [T("Größte Datei", "Largest file"), (l) => bytes(l.maxUploadBytes)],
-      [T("KI inklusive", "AI included"), (l) => (l.ai ? T("Ja", "Yes") : T("Mit Guthaben", "With credit"))],
+      [T("KI inklusive", "AI included"), (l, p) => (!l.ai ? T("Mit Guthaben", "With credit") : p.aiIncludedCents > 0 && callCents > 0 ? T(`etwa ${count(requests(p.aiIncludedCents))} Anfragen`, `about ${count(requests(p.aiIncludedCents))} requests`) : T("Ja", "Yes"))],
       [T("Eigene KI-Agenten", "Custom AI agents"), (l) => lim(l.agents)],
       [T("Aktive Automationen", "Active automations"), (l) => String(l.activeAutomations)],
       [T("Automations-Läufe pro Monat", "Automation runs per month"), (l) => (l.automationRunsPerMonth === null ? T("Fair Use", "Fair use") : l.automationRunsPerMonth.toLocaleString(en() ? "en-GB" : "de-DE"))],
@@ -52,7 +67,7 @@
     ];
     const table = document.querySelector("[data-compare-table]");
     table.innerHTML = `<caption class="sr-only">${T("Grenzen der Tarife im Vergleich", "Plan limits compared")}</caption><thead><tr><th scope="col">${T("Tarif", "Plan")}</th>${plans.map((p) => `<th scope="col">${esc(p.name)}</th>`).join("")}</tr></thead>
-      <tbody>${rows.map(([label, fn]) => `<tr><th scope="row">${label}</th>${plans.map((p) => `<td>${esc(p.limits ? fn(p.limits) : "–")}</td>`).join("")}</tr>`).join("")}</tbody>`;
+      <tbody>${rows.map(([label, fn]) => `<tr><th scope="row">${label}</th>${plans.map((p) => `<td>${esc(p.limits ? fn(p.limits, p) : "–")}</td>`).join("")}</tr>`).join("")}</tbody>`;
     document.querySelector("[data-compare]").hidden = false;
   }
 
@@ -62,6 +77,7 @@
       const json = await res.json();
       if (!res.ok || !Array.isArray(json.data?.plans)) throw new Error("plans");
       plans = json.data.plans;
+      callCents = Number(json.data.ai?.callCents) || 0;
       render();
     } catch {
       grid.innerHTML = `<p class="pr-loading">${T("Die Tarife konnten gerade nicht geladen werden.", "The plans couldn't be loaded right now.")} <a href="/preise">${T("Neu laden", "Reload")}</a> · <a href="mailto:admin@xyntal.com">admin@xyntal.com</a></p>`;
