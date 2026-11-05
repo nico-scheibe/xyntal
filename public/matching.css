@@ -211,6 +211,8 @@
 /* Tarif & KI-Guthaben (/tarif) */
 .xm-billing-grid { display: grid; gap: 14px; align-items: start; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); }
 .xm-billing .xm-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+/* Volume bonus on the bigger credit packs, inside the pack button. */
+.xm-pack-bonus { display: inline-block; margin-left: 6px; padding: 0 6px; border: 1px solid currentColor; border-radius: 2px; font-size: 11px; font-weight: 600; line-height: 1.5; opacity: .8; vertical-align: 1px; }
 .xm-billing { align-content: start; gap: 14px; }
 .xm-billing-head { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
 .xm-billing-head h2, .xm-billing-head h3 { margin: 0; font-size: 20px; }
