@@ -62,6 +62,7 @@
     bot: '<rect x="5" y="8" width="14" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01"/>',
     pin: '<path d="M9 4h6l-1 5 3 3H7l3-3zM12 12v8"/>',
     logout: '<path d="M14 4h5v16h-5M10 8l-4 4 4 4M6 12h10"/>',
+    inbox: '<path d="M4 13h4l1.5 2.5h5L16 13h4"/><path d="M5.5 5h13L20 13v6H4v-6z"/>',
     help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.7M12 17h.01"/>',
   };
   const icon = (n, cls = "") => `<svg class="xa-i ${cls}" viewBox="0 0 24 24" aria-hidden="true">${P[n] || ""}</svg>`;
@@ -81,6 +82,7 @@
     NB: { name: "Noah Becker", role: ["iOS-Entwickler", "iOS developer"], hue: "#3FE0F0" },
   };
   const AREAS = [
+    { id: "forme", icon: "inbox", label: ["Für mich", "For me"] },
     { id: "home", icon: "home", label: ["Start", "Home"] },
     { id: "focus", icon: "target", label: ["Fokus", "Focus"] },
     { id: "workspaces", icon: "grid", label: ["Arbeitsbereiche", "Workspaces"] },
@@ -285,70 +287,64 @@
     </li>`;
   };
 
+  // Start im Design 2026-11: eckige Kopfzeile, Begrüßung in 88 px, Kennzahlen-Leiste, Board in zwei Spalten
+  const sqBtn = (label, attrs, cls = "") => `<button type="button" class="xa-sq ${cls}" ${attrs}>${label}</button>`;
+  const homeHead = (title, s, extra = "") => `<div class="xa-topbar"><p class="xa-mono-line"><span>${T("MO · 02.11.2026 · ", "MON · 02.11.2026 · ")}</span>${title}</p><div class="xa-topbar-act">${extra}</div></div>`;
   function viewHome(s) {
     const tasks = allTasks(s);
     const open = tasks.filter((x) => x.t.status !== "done");
-    const done = tasks.length - open.length;
-    const projOpen = new Set(open.map((x) => x.p.id)).size;
-    const u = unread(s);
+    const high = open.filter((x) => x.t.prio === "high");
+    const today = open.filter((x) => ["Heute", "Today"].includes(L(x.t.due || "")));
     const ft = focusTask(s);
-    const mine = tasks.filter((x) => x.t.who === "LV" && (s.taskFilter === "all" || x.t.prio === s.taskFilter));
-    const matches = s.builders.filter((b) => !s.matchHidden[b.id]).slice(0, 3);
-    const recent = [["project", "app", "kanban", L(proj(s, "app").name), T("Board · 2 Aufgaben in Prüfung", "Board · 2 tasks in review")], ["file", "screens", "image", "Onboarding-Screens.fig", T("Aylin · vor 2 Std.", "Aylin · 2 h ago")], ["convo", "team", "message", "Team Loopr", T("Mara: Closed Beta am 7. November?", "Mara: closed beta on 7 November?")]];
-    const week = [3, 5, 2, 6, 4, 1, done];
-    const wmax = Math.max(6, ...week);
-    return `${pageHead(T("Guten Morgen, Lena", "Good morning, Lena"), T(`Montag, 2. November · ${u} ungelesene Nachrichten · ${s.milestones.length} bevorstehende Meilensteine`, `Monday, 2 November · ${u} unread messages · ${s.milestones.length} upcoming milestones`),
-      `<button type="button" class="xa-btn" data-act="app-only" data-v="customize" data-k="h-custom">${icon("settings")}${T("Anpassen", "Customise")}</button><button type="button" class="xa-btn xa-primary" data-act="newtask" data-k="h-new">${icon("plus")}${T("Neuer Task", "New task")}</button>`)}
-    <div class="xa-grid xa-g3">
-      <div class="xa-card"><h4 class="xa-kicker">${T("Tägliches Briefing", "Daily briefing")}</h4>
-        <p class="xa-strong">${T("Schön, dass du da bist, Lena.", "Good to see you, Lena.")}</p>
-        <ul class="xa-bullets">
-          <li style="--h:#007AFF">${T(`${open.length} offene Aufgaben in ${projOpen} Projekten.`, `${open.length} open tasks across ${projOpen} projects.`)}</li>
-          <li style="--h:#D9A54E">${T("Nächster Meilenstein: Closed Beta (Beta-Launch) in 5 Tagen.", "Next milestone: closed beta (beta launch) in 5 days.")}</li>
-          <li style="--h:#45C99B">${u ? T(`${u} ungelesene Nachrichten. Aylin wartet auf eine Antwort.`, `${u} unread messages. Aylin is waiting for a reply.`) : T("Alle Nachrichten gelesen. Stark.", "All messages read. Nice.")}</li>
-        </ul>
-        <button type="button" class="xa-link" data-act="go" data-area="messages" data-k="h-msgs">${T("Zu den Nachrichten", "Go to messages")} ${icon("arrowR")}</button>
+    const focusList = tasks.filter((x) => x.t.who === "LV" && (x.t.status !== "done" || x.t.focusDone)).slice(0, 4);
+    const fDone = focusList.filter((x) => x.t.status === "done").length;
+    const mine = tasks.filter((x) => x.t.who === "LV" && x.t.status !== "done" && (s.taskFilter === "all" || x.t.prio === s.taskFilter));
+    const matches = s.builders.filter((b) => !s.matchHidden[b.id]).slice(0, 2);
+    const doneAll = tasks.filter((x) => x.t.status === "done").length;
+    const pd = (p) => p.tasks.length - openOf(p);
+    const kpi = (n, label, cls = "") => `<div class="xa-kpi ${cls}${n ? "" : " is-zero"}"><b>${String(n).padStart(2, "0")}</b><small>${label}</small></div>`;
+    const pillDot = { high: "var(--xa-warn)", mid: "var(--xa-mid)", low: "var(--xa-faint)" };
+    const card = (title, body, right = "") => `<section class="xa-w"><header class="xa-w-head"><h4 class="xa-mono">${title}</h4>${right}</header>${body}</section>`;
+    const ws = (p) => s.workspaces.find((w) => w.id === p.ws).name;
+    return `${homeHead("START", s, `${sqBtn(T("ANPASSEN", "CUSTOMISE"), 'data-act="app-only" data-v="customize" data-k="h-custom"')}${sqBtn(`${T("MELDUNGEN", "NOTIFICATIONS")}${s.formeSeen ? "" : `<i class="xa-sq-badge">3</i>`}`, 'data-act="go" data-area="forme" data-k="h-notes"')}${sqBtn(`+ ${T("NEUER TASK", "NEW TASK")}`, 'data-act="newtask" data-k="h-new"', "is-primary")}`)}
+    <h3 class="xa-hero" tabindex="-1" data-k="title">${T("GUTEN MORGEN, LENA.", "GOOD MORNING, LENA.")}</h3>
+    <div class="xa-kpis">${kpi(open.length, T("OFFENE TASKS", "OPEN TASKS"))}${kpi(high.length, T("HOHE PRIORITÄT", "HIGH PRIORITY"))}${kpi(today.length, T("HEUTE FÄLLIG", "DUE TODAY"))}${kpi(0, T("ÜBERFÄLLIG", "OVERDUE"), "is-warn")}</div>
+    <div class="xa-board">
+      <div class="xa-board-main">
+        ${card(T("FOKUS HEUTE", "FOCUS TODAY"), `<div class="xa-progress"><i style="width:${focusList.length ? Math.round((fDone / focusList.length) * 100) : 0}%"></i></div>
+          <ul class="xa-frows">${focusList.map((x) => { const d = x.t.status === "done"; return `<li class="xa-frow${d ? " is-done" : ""}"><button type="button" class="xa-circle" role="checkbox" aria-checked="${d}" data-act="focus-check" data-id="${x.t.id}" data-k="fc-${x.t.id}" aria-label="${esc(L(x.t.title))}">${icon("check")}</button><span class="xa-grow"><b>${esc(L(x.t.title))}</b><small>${esc(ws(x.p))} · ${esc(L(x.p.name))}</small></span><span class="xa-spill${x.t.prio === "high" && !d ? " is-warn" : ""}">${d ? T("Erledigt", "Done") : L(PRIO[x.t.prio])}</span></li>`; }).join("")}</ul>
+          ${ft ? `<div class="xa-w-foot"><button type="button" class="xa-pillbtn" data-act="focus-start" data-k="h-focus">${icon("play")}${T("50 Min Fokus starten", "Start 50 min focus")}</button></div>` : ""}`,
+          `<span class="xa-w-meta">${T(`${fDone} von ${focusList.length} erledigt`, `${fDone} of ${focusList.length} done`)}</span>`)}
+        ${card(T("MEINE TASKS", "MY TASKS"), `<ul class="xa-trows">${mine.slice(0, 5).map((x) => `<li class="xa-trow"><span class="xa-pdot" style="background:${pillDot[x.t.prio]}"></span><span class="xa-grow"><b>${esc(L(x.t.title))}</b><small>${esc(ws(x.p))} · ${x.t.status === "doing" ? T("In Arbeit", "In progress") : x.t.status === "review" ? T("In Prüfung", "In review") : T("Offen", "Open")}</small></span><span class="xa-pword">${L(PRIO[x.t.prio])}</span><button type="button" class="xa-tcheck" data-act="task-done" data-id="${x.t.id}" data-k="td-${x.t.id}" aria-label="${T(`${L(x.t.title)} erledigen`, `Complete ${L(x.t.title)}`)}">${icon("check")}</button></li>`).join("") || `<li class="xa-empty">${T("Keine Tasks mit dieser Priorität.", "No tasks with this priority.")}</li>`}</ul>
+          <button type="button" class="xa-acclink" data-act="go" data-area="projects" data-k="h-alltasks">${T(`Alle ${open.length} Tasks ansehen →`, `View all ${open.length} tasks →`)}</button>`,
+          `<div class="xa-pgroup" role="group" aria-label="${T("Nach Priorität filtern", "Filter by priority")}">${[["all", T("Alle", "All")], ["high", T("Hoch", "High")], ["mid", T("Mittel", "Medium")], ["low", T("Niedrig", "Low")]].map(([id, l]) => `<button type="button" data-act="taskfilter" data-v="${id}" data-k="taskfilter-${id}" aria-pressed="${s.taskFilter === id}">${l}</button>`).join("")}</div>`)}
+        ${card(T("WOCHENRÜCKBLICK", "WEEKLY REVIEW"), `<div class="xa-wtiles"><div><b>${doneAll}</b><small>${T("Erledigt", "Done")}</small></div><div><b>0</b><small>${T("Überfällig", "Overdue")}</small></div><div><b>${open.filter((x) => x.t.due).length}</b><small>${T("In 7 Tagen fällig", "Due in 7 days")}</small></div></div>
+          <div class="xa-wsec"><h5 class="xa-mono">${T("ERLEDIGT", "DONE")}</h5><p>${tasks.filter((x) => x.t.status === "done").slice(0, 3).map((x) => esc(L(x.t.title))).join(" · ") || "–"}</p></div>
+          <div class="xa-wsec"><h5 class="xa-mono">${T("HÄNGT", "STUCK")}</h5><p>${esc(L(proj(s, "app").tasks.find((t) => t.id === "t2").title))} – ${T("blockiert den TestFlight-Build", "blocks the TestFlight build")}</p></div>
+          <div class="xa-wsec"><h5 class="xa-mono">${T("ALS NÄCHSTES", "UP NEXT")}</h5><p>${high.slice(0, 2).map((x) => esc(L(x.t.title))).join(" · ") || "–"}</p></div>`)}
       </div>
-      <div class="xa-card"><h4 class="xa-kicker">${T("Fokus heute", "Focus today")}</h4>
-        ${ft ? `<span class="xa-icon-tile">${icon("target")}</span><p class="xa-strong">${esc(L(ft.t.title))}</p><p class="xa-muted">${esc(L(ft.p.name))} · ${L(PRIO[ft.t.prio])}${ft.t.due ? ` · ${T("fällig", "due")} ${esc(L(ft.t.due))}` : ""}</p>
-          <div class="xa-row"><button type="button" class="xa-btn xa-primary" data-act="focus-start" data-k="h-focus">${icon("play")}${T("50 Min Fokus starten", "Start 50 min focus")}</button></div>`
-        : `<span class="xa-icon-tile">${icon("check")}</span><p class="xa-strong">${T("Nichts auf dem Tisch", "Nothing on your plate")}</p><p class="xa-muted">${T("Alle Aufgaben erledigt. Zeit für eine Pause.", "All tasks done. Time for a break.")}</p>`}
-      </div>
-      <div class="xa-card"><h4 class="xa-kicker">${T("Statistik & Fortschritt", "Stats & progress")}</h4>
-        <div class="xa-stats2"><div><b>${done}</b><small>${T("Aufgaben erledigt", "Tasks done")}</small></div><div><b>${Math.round((done / tasks.length) * 100)}%</b><small>${T("Gesamtfortschritt", "Overall progress")}</small></div></div>
-        <div class="xa-bars" role="img" aria-label="${T("Erledigte Aufgaben der letzten 7 Tage", "Tasks done, last 7 days")}">${week.map((v, i) => `<span class="${i === 6 ? "is-today" : ""}"><i style="height:${Math.max(4, (v / wmax) * 100)}%"></i><small>${L([["Di", "Tue"], ["Mi", "Wed"], ["Do", "Thu"], ["Fr", "Fri"], ["Sa", "Sat"], ["So", "Sun"], ["Mo", "Mon"]][i])}</small></span>`).join("")}</div>
-      </div>
-      <div class="xa-card"><h4 class="xa-kicker">${T("Projektgesundheit", "Project health")}</h4>
-        <ul class="xa-rows">${s.projects.map((p) => `<li><button type="button" class="xa-rowbtn" data-act="project" data-id="${p.id}" data-k="h-p-${p.id}">${ring(pct(p))}<span class="xa-grow"><b>${esc(L(p.name))}</b><small>${T(`${openOf(p)} offen · ${p.tasks.length - openOf(p)}/${p.tasks.length} erledigt`, `${openOf(p)} open · ${p.tasks.length - openOf(p)}/${p.tasks.length} done`)}</small></span><span class="xa-big" style="color:${pct(p) === 100 ? "var(--xa-ok)" : "var(--xa-text)"}">${pct(p)}%</span></button></li>`).join("")}</ul>
-      </div>
-      <div class="xa-card"><h4 class="xa-kicker">${T("Bevorstehende Meilensteine", "Upcoming milestones")}</h4>
-        <ul class="xa-rows">${s.milestones.map((m) => { const p = proj(s, m.project); return `<li><div class="xa-rowbtn xa-static">${ring(pct(p))}<span class="xa-grow"><b>${esc(L(m.name))}</b><small>${esc(L(p.name))}</small></span><span class="xa-pill ${m.soon ? "xa-warn" : ""}">${esc(L(m.when))}</span></div></li>`; }).join("")}</ul>
-      </div>
-      <div class="xa-card"><h4 class="xa-kicker">${T("Neue Matches", "New matches")}</h4>
-        ${matches.length ? `<ul class="xa-rows">${matches.map((b) => `<li class="xa-match-row"><button type="button" class="xa-rowbtn" data-act="builder-open" data-id="${b.id}" data-k="hm-${b.id}"><span class="xa-av" style="--h:${KIND_HUE[b.kind]}" aria-hidden="true">${esc(initials(b.name))}</span><span class="xa-grow"><b>${esc(b.name)}</b><small>${esc(L(b.role))} · ${esc(b.city)}</small></span><span class="xa-score-pill">${b.score}%</span></button>
-          <span class="xa-match-act"><button type="button" class="xa-mini${s.matchSaved[b.id] ? " is-on" : ""}" data-act="match-save" data-id="${b.id}" data-k="hms-${b.id}" aria-pressed="${!!s.matchSaved[b.id]}">${s.matchSaved[b.id] ? T("Gespeichert", "Saved") : T("Speichern", "Save")}</button><button type="button" class="xa-mini" data-act="match-hide" data-id="${b.id}" data-k="hmh-${b.id}">${T("Passt nicht", "Not a fit")}</button></span></li>`).join("")}</ul>` : `<p class="xa-empty">${T("Alle Vorschläge angesehen. Morgen kommen neue.", "You've seen all suggestions. New ones tomorrow.")}</p>`}
-      </div>
-    </div>
-    <div class="xa-grid xa-g3">
-      <div class="xa-card xa-span2"><h4 class="xa-kicker">${T("Meine Tasks", "My tasks")}</h4>
-        ${chips("taskfilter", [["all", T("Alle", "All")], ["high", T("Hoch", "High")], ["mid", T("Mittel", "Medium")], ["low", T("Niedrig", "Low")]], s.taskFilter, T("Nach Priorität filtern", "Filter by priority"))}
-        ${mine.length ? `<ul class="xa-tasks">${mine.map((x) => taskRow(x.t, x.p)).join("")}</ul>` : `<p class="xa-empty">${T("Keine Tasks mit dieser Priorität.", "No tasks with this priority.")}</p>`}
-      </div>
-      <div class="xa-col">
-        <div class="xa-card"><h4 class="xa-kicker">${T("Schnellaktionen", "Quick actions")}</h4>
-          <div class="xa-quick">
-            <button type="button" data-act="app-only" data-v="workspace" data-k="q1"><span class="xa-icon-tile">${icon("grid")}</span><span><b>${T("Arbeitsbereich erstellen", "Create workspace")}</b></span></button>
-            <button type="button" data-act="app-only" data-v="project" data-k="q2"><span class="xa-icon-tile xa-t-cyan">${icon("kanban")}</span><span><b>${T("Projekt erstellen", "Create project")}</b></span></button>
-            <button type="button" data-act="go" data-area="focus" data-k="q3"><span class="xa-icon-tile xa-t-ok">${icon("target")}</span><span><b>${T("Fokus heute", "Focus today")}</b></span></button>
-            <button type="button" data-act="go" data-area="calendar" data-k="q4"><span class="xa-icon-tile xa-t-warn">${icon("calendar")}</span><span><b>${T("Kalender öffnen", "Open calendar")}</b></span></button>
-          </div>
-        </div>
-        <div class="xa-card"><h4 class="xa-kicker">${T("Weiter bauen", "Continue building")}</h4>
-          <ul class="xa-rows">${recent.map(([act, id, ic, title, sub]) => `<li><button type="button" class="xa-rowbtn" data-act="${act}" data-id="${id}" data-k="hc-${id}"><span class="xa-icon-tile xa-sm">${icon(ic)}</span><span class="xa-grow"><b>${esc(title)}</b><small>${esc(sub)}</small></span>${icon("chevR")}</button></li>`).join("")}</ul>
-          <div class="xa-beta-cta"><b>${T("Gefällt dir das?", "Like what you see?")}</b><span>${T("Die echte App gibt es gerade für Beta-Tester.", "The real app is available to beta testers right now.")}</span>${ctaLinks("xa-btn xa-primary", "xa-link")}</div>
-        </div>
+      <div class="xa-board-side">
+        ${card(T("MEILENSTEINE", "MILESTONES"), `<ul class="xa-srows">${s.milestones.map((m) => `<li><span class="xa-grow"><b>${esc(L(m.name))}</b><small>${esc(L(proj(s, m.project).name))}</small></span><span class="xa-spill${m.soon ? " is-warn" : ""}">${esc(L(m.when))}</span></li>`).join("")}</ul>`)}
+        ${card(T("PROJEKTE", "PROJECTS"), `<ul class="xa-prows">${s.projects.map((p) => `<li><button type="button" class="xa-plain" data-act="project" data-id="${p.id}" data-k="h-p-${p.id}"><span class="xa-prow-top"><b>${esc(L(p.name))}</b><span class="xa-mono">${pd(p)} / ${p.tasks.length}</span></span><span class="xa-progress"><i style="width:${pct(p)}%"></i></span></button></li>`).join("")}</ul>`,
+          `<span class="xa-w-meta">${T(`${s.projects.reduce((n, p) => n + pd(p), 0)} von ${tasks.length} erledigt`, `${s.projects.reduce((n, p) => n + pd(p), 0)} of ${tasks.length} done`)}</span>`)}
+        ${card(T("SCHNELLAKTIONEN", "QUICK ACTIONS"), `<ul class="xa-qrows">${[["plus", T("Arbeitsbereich erstellen", "Create workspace"), T("Erstellen & öffnen", "Create & open"), 'data-act="app-only" data-v="workspace"'], ["plus", T("Projekt erstellen", "Create project"), T("Zu einem Arbeitsbereich hinzufügen", "Add to a workspace"), 'data-act="app-only" data-v="project"'], ["target", T("Fokus heute", "Focus today"), T("Deine wichtigste Arbeit", "Your most important work"), 'data-act="go" data-area="focus"'], ["calendar", T("Kalender öffnen", "Open calendar"), T("Plane deine Woche", "Plan your week"), 'data-act="go" data-area="calendar"']].map(([ic, t, m, a], i) => `<li><button type="button" class="xa-plain" ${a} data-k="q${i}"><span class="xa-qic">${icon(ic)}</span><span class="xa-grow"><b>${t}</b><small>${m}</small></span></button></li>`).join("")}</ul>`)}
+        ${card(T("NEUE MATCHES", "NEW MATCHES"), matches.length ? `<ul class="xa-mrows">${matches.map((b) => `<li><button type="button" class="xa-plain" data-act="builder-open" data-id="${b.id}" data-k="hm-${b.id}">${ring(b.score, 40, 3)}<span class="xa-grow"><b>${esc(b.name)}</b><small>${esc(L(b.role))}</small></span></button><span class="xa-mlinks"><button type="button" data-act="match-save" data-id="${b.id}" data-k="hms-${b.id}" aria-pressed="${!!s.matchSaved[b.id]}">${s.matchSaved[b.id] ? T("Gespeichert", "Saved") : T("Speichern", "Save")}</button><button type="button" data-act="match-hide" data-id="${b.id}" data-k="hmh-${b.id}">${T("Verwerfen", "Dismiss")}</button></span></li>`).join("")}</ul><button type="button" class="xa-pillbtn" data-act="go" data-area="discover" data-k="h-disc">${T("Entdecken öffnen", "Open Discover")}</button>`
+          : `<p class="xa-strong">${T("Gerade keine neuen Matches", "No new matches right now")}</p><p class="xa-muted">${T("Neue Vorschläge kommen, sobald jemand zu dir passt.", "New suggestions arrive as soon as someone fits.")}</p><button type="button" class="xa-pillbtn" data-act="go" data-area="discover" data-k="h-disc">${T("Entdecken öffnen", "Open Discover")}</button>`)}
+        <div class="xa-beta-cta"><b>${T("Gefällt dir das?", "Like what you see?")}</b><span>${T("Die echte App gibt es gerade für Beta-Tester.", "The real app is available to beta testers right now.")}</span>${ctaLinks("xa-pillbtn", "xa-acclink")}</div>
       </div>
     </div>`;
+  }
+
+  function viewForMe(s) {
+    s.formeSeen = true;
+    const n = NOTIFS();
+    const reqs = s.convos.filter((c) => c.request);
+    return `${homeHead(T("FÜR MICH", "FOR ME"), s)}
+    <h3 class="xa-hero xa-hero-sm" tabindex="-1" data-k="title">${T("FÜR MICH", "FOR ME")}</h3>
+    <div class="xa-board xa-board-1"><div class="xa-board-main">
+      <section class="xa-w"><header class="xa-w-head"><h4 class="xa-mono">${T("MELDUNGEN", "NOTIFICATIONS")}</h4></header><ul class="xa-srows">${n.map((x) => `<li><button type="button" class="xa-plain" data-act="${x.act}" data-id="${x.id || ""}" data-area="${x.area || ""}" data-k="fm-${x.id || x.area}"><span class="xa-qic">${icon(x.icon)}</span><span class="xa-grow"><b>${x.text}</b><small>${x.at}</small></span></button></li>`).join("")}</ul></section>
+      <section class="xa-w"><header class="xa-w-head"><h4 class="xa-mono">${T("KONTAKTANFRAGEN", "CONTACT REQUESTS")}</h4></header>${reqs.length ? `<ul class="xa-srows">${reqs.map((c) => `<li><button type="button" class="xa-plain" data-act="convo-req" data-id="${c.id}" data-k="fr-${c.id}">${avatar(c.with)}<span class="xa-grow"><b>${esc(c.name)}</b><small>${esc(L(c.msgs[0].text)).slice(0, 80)} …</small></span></button></li>`).join("")}</ul>` : `<p class="xa-muted">${T("Keine offenen Anfragen.", "No open requests.")}</p>`}</section>
+    </div></div>`;
   }
 
   function viewFocus(s) {
@@ -845,10 +841,16 @@
     </div>`;
   }
 
-  const VIEWS = { home: viewHome, focus: viewFocus, workspaces: viewWorkspaces, projects: viewProjects, messages: viewMessages, discover: viewDiscover, communities: viewCommunities, files: viewFiles, "ai-center": viewAi, automation: viewAutomations, calendar: viewCalendar };
+  const VIEWS = { forme: viewForMe, home: viewHome, focus: viewFocus, workspaces: viewWorkspaces, projects: viewProjects, messages: viewMessages, discover: viewDiscover, communities: viewCommunities, files: viewFiles, "ai-center": viewAi, automation: viewAutomations, calendar: viewCalendar };
   const ctaLinks = (primary, secondary) => signedIn
     ? `<a class="${primary}" href="/profil">${icon("download")}${T("App herunterladen", "Download the app")}</a><a class="${secondary}" href="/beta">${T("Zum Beta-Programm", "Beta programme")}</a>`
     : `<a class="${primary}" href="/beta">${T("Für die Beta bewerben", "Apply for the beta")}</a><a class="${secondary}" href="/profil">${icon("download")}${T("Beta-Tester: App laden", "Beta testers: get the app")}</a>`;
+
+  const NOTIFS = () => [
+    { act: "convo", id: "aylin", icon: "message", text: T("Aylin fragt nach dem Design-Review", "Aylin is asking about the design review"), at: "10:02" },
+    { act: "builder-open", id: "noah", icon: "compass", text: T("Neuer Vorschlag: Noah Becker (94 %)", "New suggestion: Noah Becker (94%)"), at: "09:40" },
+    { act: "go", area: "calendar", icon: "flag", text: T("Closed Beta in 5 Tagen", "Closed beta in 5 days"), at: T("Heute", "Today") },
+  ];
 
   /* ---------- Rahmen: Titelleiste und Seitenleiste ---------- */
   function crumbs(s) {
@@ -860,13 +862,8 @@
   }
   function frame(s) {
     const u = unread(s);
-    const notifs = [
-      { act: "convo", id: "aylin", icon: "message", text: T("Aylin fragt nach dem Design-Review", "Aylin is asking about the design review"), at: "10:02" },
-      { act: "builder-open", id: "noah", icon: "compass", text: T("Neuer Vorschlag: Noah Becker (94 %)", "New suggestion: Noah Becker (94%)"), at: "09:40" },
-      { act: "go", area: "calendar", icon: "flag", text: T("Closed Beta in 5 Tagen", "Closed beta in 5 days"), at: T("Heute", "Today") },
-    ];
+    const notifs = NOTIFS();
     return `<div class="xa-titlebar">
-        <span class="xa-brand">${LOGO()}<b>Xyntal</b></span>
         <button type="button" class="xa-iconbtn xa-nav-h" data-act="back" data-k="tb-back" aria-label="${T("Zurück", "Back")}"${s.back.length ? "" : " disabled"}>${icon("chevL")}</button>
         <button type="button" class="xa-iconbtn xa-nav-h" data-act="fwd" data-k="tb-fwd" aria-label="${T("Vorwärts", "Forward")}"${s.fwd.length ? "" : " disabled"}>${icon("chevR")}</button>
         <span class="xa-crumb">${crumbs(s)}</span>
@@ -886,11 +883,12 @@
       </div>
       <div class="xa-body${s.collapsed ? " is-collapsed" : ""}">
         <nav class="xa-side" aria-label="${T("Bereiche der App", "App areas")}">
-          <ul>${AREAS.map((a) => `<li><button type="button" class="xa-nav" data-act="go" data-area="${a.id}" data-k="nav-${a.id}"${s.route.area === a.id ? ' aria-current="page"' : ""}>${icon(a.icon)}<span>${L(a.label)}</span>${a.id === "messages" && u ? `<span class="xa-badge" aria-label="${T(`${u} ungelesen`, `${u} unread`)}">${u}</span>` : ""}</button></li>`).join("")}</ul>
+          <div class="xa-side-top"><span class="xa-brand">${LOGO()}<b>Xyntal</b></span>
+          <ul>${AREAS.map((a) => `<li><button type="button" class="xa-nav" data-act="go" data-area="${a.id}" data-k="nav-${a.id}"${s.route.area === a.id ? ' aria-current="page"' : ""}>${icon(a.icon)}<span>${L(a.label)}</span>${a.id === "forme" && !s.formeSeen ? `<span class="xa-badge" aria-label="${T("3 neu", "3 new")}">3</span>` : ""}${a.id === "messages" && u ? `<span class="xa-badge" aria-label="${T(`${u} ungelesen`, `${u} unread`)}">${u}</span>` : ""}</button></li>`).join("")}</ul></div>
           <div class="xa-side-foot"><button type="button" class="xa-nav xa-upgrade" data-act="upgrade" data-k="nav-upgrade">${icon("upgrade")}<span>${T("Upgrade", "Upgrade")}</span></button><button type="button" class="xa-nav" data-act="app-only" data-v="profile" data-k="nav-profile">${icon("user")}<span>${T("Profil", "Profile")}</span></button><button type="button" class="xa-nav" data-act="app-only" data-v="settings" data-k="nav-settings">${icon("settings")}<span>${T("Einstellungen", "Settings")}</span></button>
             <button type="button" class="xa-nav xa-collapse" data-act="collapse" data-k="collapse" aria-expanded="${!s.collapsed}">${icon(s.collapsed ? "chevR" : "chevL")}<span>${s.collapsed ? T("Seitenleiste ausklappen", "Expand sidebar") : T("Seitenleiste einklappen", "Collapse sidebar")}</span></button></div>
         </nav>
-        <div class="xa-content" data-scroll="content" data-area="${s.route.area}">${area(s)}</div>
+        <div class="xa-content" data-scroll="content" data-sub="${s.route.id ? "detail" : ""}" data-area="${s.route.area}">${area(s)}</div>
       </div>`;
   }
   const area = (s) => {
@@ -1105,6 +1103,9 @@
         if (s.route.area !== "files") { s.fileSel = el.dataset.id; s.fileType = "all"; s.fileView = "all"; s.fileStatus = "all"; s.fileQuery = ""; go({ area: "files" }); return; }
         s.fileSel = s.fileSel === el.dataset.id ? null : el.dataset.id; render();
       },
+      "focus-check"(el) { const x = findTask(el.dataset.id); if (!x) return; const d = x.t.status !== "done"; x.t.status = d ? "done" : "todo"; x.t.focusDone = d; render({ focus: `[data-k="fc-${x.t.id}"]` }); if (d) toast(T(`Erledigt: ${L(x.t.title)}`, `Done: ${L(x.t.title)}`)); },
+      "task-done"(el) { const x = findTask(el.dataset.id); if (!x) return; x.t.status = "done"; x.t.focusDone = true; render(); toast(T(`Erledigt: ${L(x.t.title)}`, `Done: ${L(x.t.title)}`)); },
+      "convo-req"(el) { s.convo = el.dataset.id; s.chatFilter = "requests"; const c = s.convos.find((x) => x.id === s.convo); if (c) c.unread = 0; go({ area: "messages" }); },
       "match-save"(el) { s.matchSaved[el.dataset.id] = !s.matchSaved[el.dataset.id]; render(); },
       "match-hide"(el) { s.matchHidden[el.dataset.id] = true; render(); toast(T("Danke – solche Vorschläge zeigen wir seltener.", "Thanks – we'll show fewer suggestions like this.")); },
       filestar(el) { s.fileStars[el.dataset.id] = !s.fileStars[el.dataset.id]; render(); },
