@@ -35,3 +35,4 @@
 .kd-choice input[type="radio"] { flex: none; width: 18px !important; height: 18px; min-height: 0 !important; margin: 2px 0 0 !important; padding: 0 !important; box-shadow: none !important; }
 .kd-choice > span { flex: 1; min-width: 0; text-align: left; }
 .kd-form { text-align: left; }
+.kd-info { margin: 0; padding: 12px 14px; border-left: 2px solid var(--text-2); color: var(--text-2); font-size: 14px; line-height: 1.5; }

@@ -22,6 +22,7 @@
 
   const toggle = () => {
     form.querySelector("[data-reason]").hidden = form.kind.value !== "extraordinary";
+    form.querySelector("[data-reason-info]").hidden = form.kind.value !== "extraordinary";
     form.querySelector("[data-date]").hidden = form.when.value !== "date";
   };
   form.addEventListener("change", toggle);
