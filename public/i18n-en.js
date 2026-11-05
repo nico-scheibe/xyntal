@@ -1,6 +1,13 @@
 // Xyntal – englische Texte. Schlüssel = deutscher Originaltext (Leerzeichen zusammengefasst).
 // Neue deutsche Texte auf der Website hier ergänzen, sonst bleiben sie auf Englisch deutsch.
 window.XYNTAL_EN = {
+  "Sobald dein Profil vollständig ist, wird es automatisch freigeschaltet – dann erscheint es auch öffentlich.": "As soon as your profile is complete, it's approved automatically – then it also appears publicly.",
+  "Schreib unten in einem Satz, woran du arbeitest – dann kann dein Profil freigeschaltet werden.": "Write one sentence below about what you're working on – then your profile can be approved.",
+  "Trag deinen Namen ein (mindestens 2 Zeichen) – dann wird dein Profil automatisch freigeschaltet.": "Enter your name (at least 2 characters) – then your profile is approved automatically.",
+  "Bestätige noch deine E-Mail-Adresse über den Link in der Mail, die wir dir geschickt haben – danach wird dein Profil automatisch freigeschaltet.": "Please confirm your email address with the link in the email we sent you – then your profile is approved automatically.",
+  "Pass ihn an, dann wird dein Profil automatisch freigeschaltet.": "Adjust it, then your profile is approved automatically.",
+  "Ein Text in deinem Profil passt nicht zu den": "Some text in your profile doesn't fit the",
+  "Dein Profil schaue ich mir persönlich an und schalte es frei – dann erscheint es auch öffentlich.": "I'll look at your profile personally and approve it – then it also appears publicly.",
   "Die Zahlung hat nicht funktioniert – die Buchung ist noch offen. Bezahle die Rechnung über „Ansehen“ oder ändere deine Zahlungsmethode unter „Abo verwalten“.": "The payment didn't go through – the booking is still open. Pay the invoice via “View” or change your payment method under “Manage subscription”.",
   "Die Zahlung ist endgültig fehlgeschlagen – die Buchung ist nicht zustande gekommen. Schreib uns, wenn du Hilfe brauchst.": "The payment failed for good – the booking didn't go through. Write to us if you need help.",
   "Tarif & Rechnungen": "Plan & invoices",
