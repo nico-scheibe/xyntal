@@ -46,3 +46,6 @@
 .pb-invoice-main small { color: var(--text-2); font-size: 12.5px; }
 .pb-invoice-side { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .pb-amount { font-weight: 600; font-variant-numeric: tabular-nums; }
+.pb-invoices .xm-pill.pb-paid { color: var(--xm-high); border-color: var(--xm-high); background: color-mix(in srgb, var(--xm-high) 12%, transparent); }
+.pb-invoices .xm-pill.pb-open { color: #F2555A; border-color: #F2555A; background: color-mix(in srgb, #F2555A 12%, transparent); }
+.pb-invoice-warn { flex-basis: 100%; margin: 0; padding: 8px 12px; border-left: 2px solid #F2555A; background: color-mix(in srgb, #F2555A 8%, transparent); color: #F7A1A4; font-size: 13px; }
