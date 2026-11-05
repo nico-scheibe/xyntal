@@ -69,10 +69,19 @@
   }
 
   async function load() {
+    // Tarif und Rechnungen getrennt: Kann Stripe die Rechnungen gerade nicht
+    // liefern, bleibt die Tarif-Karte trotzdem sichtbar.
+    const invoices = X.api("GET", "/billing/invoices").then((inv) => ({ inv }), (err) => ({ err }));
     try {
-      const [bill, inv] = await Promise.all([X.api("GET", "/billing"), X.api("GET", "/billing/invoices")]);
-      renderPlan(bill);
-      renderInvoices((inv && inv.invoices) || []);
+      renderPlan(await X.api("GET", "/billing"));
+      const r = await invoices;
+      if (r.err) {
+        // Was Stripe gemeldet hat (ohne Schlüssel), für die Fehlersuche in der Konsole.
+        if (r.err.details && r.err.details.provider) console.warn("Rechnungen:", r.err.details.provider);
+        listBox.innerHTML = `<p class="hint">${esc(fail(r.err))}</p><div class="btn-row sec-row"><button class="btn btn-small btn-ghost" type="button" data-pb-retry>${esc(t("Noch einmal versuchen"))}</button></div>`;
+        return;
+      }
+      renderInvoices((r.inv && r.inv.invoices) || []);
       loaded = true;
     } catch (err) {
       const msg = signedOut(err) ? t("Logg dich ein, um deinen Tarif und deine Rechnungen zu sehen.") : fail(err);
