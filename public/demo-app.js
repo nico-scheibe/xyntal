@@ -621,22 +621,56 @@
     </div>`;
   }
 
+  // Communities im Design 2026-11: Übersicht mit 72-px-Titel, Detailseite redaktionell ohne Karten
+  const CHANNELS = { indie: [["allgemein", ""], ["show-and-tell", ""], ["ankündigungen", ["Nur Moderatoren", "Moderators only"]]], design: [["allgemein", ""], ["reviews", ""], ["jobs", ["Nur lesen", "Read only"]]] };
+  const POSTS = { "indie/allgemein": [{ at: "09:12", by: "Jonas Weber", text: ["Wir haben gestern 120 € MRR geknackt. Kleiner Schritt, aber der erste zahlende Kunde kam über die Warteliste.", "We passed €120 MRR yesterday. Small step, but the first paying customer came through the waitlist."] }, { at: "Gestern", by: "Xyntal-Team", team: true, text: ["Freitag 18 Uhr: Show & Tell. Fünf Minuten pro Projekt, danach Feedback.", "Friday 6 pm: show & tell. Five minutes per project, then feedback."] }], "design/allgemein": [{ at: "10:40", by: "Aylin Kaya", text: ["Kennt jemand gute Beispiele für Onboarding mit Mikrofon-Zugriff?", "Anyone know good examples of onboarding with microphone access?"] }] };
   function viewCommunities(s) {
-    const list = s.communities.filter((c) => s.commFilter === "all" || (s.commFilter === "joined" && c.joined) || (s.commFilter === "rec" && c.rec) || (s.commFilter === "new" && c.fresh) || (s.commFilter === "private" && c.priv));
-    const mine = s.communities.filter((c) => c.joined);
+    if (s.route.id) return viewCommunity(s, s.route.id);
+    const q = (s.commQuery || "").trim().toLowerCase();
+    const match = (c) => !q || L(c.name).toLowerCase().includes(q) || c.tags.some((t) => L(t).toLowerCase().includes(q));
+    const by = { all: () => true, joined: (c) => c.joined, rec: (c) => c.rec, new: (c) => c.fresh, private: (c) => c.priv };
+    const list = s.communities.filter((c) => by[s.commFilter](c) && match(c));
+    const pinned = s.communities.find((c) => c.id === "indie");
+    const filters = [["all", T("Alle", "All")], ["joined", T("Beigetreten", "Joined")], ["rec", T("Empfohlen", "Recommended")], ["new", T("Neu", "New")], ["private", T("Privat", "Private")]];
+    const ccard = (c) => `<li class="xa-ccard"><button type="button" class="xa-plain" data-act="comm" data-id="${c.id}" data-k="co-${c.id}"><span class="xa-ccard-top"><span class="xa-letter">${c.letter}</span><span class="xa-score">${ring(COMM_SCORE[c.id], 36, 3)}</span></span><b>${esc(L(c.name))}</b><small>${T(`${(c.members + (c.joined ? 1 : 0)).toLocaleString("de-DE")} Mitglieder`, `${(c.members + (c.joined ? 1 : 0)).toLocaleString("en-GB")} members`)}${c.priv ? ` · ${T("Privat", "Private")}` : ""}</small><span class="xa-cdesc">${esc(L(c.desc))}</span></button>
+      <button type="button" class="xa-btn xa-full ${c.joined ? "is-sent" : "xa-primary"}" data-act="join" data-id="${c.id}" data-k="cj-${c.id}" aria-pressed="${c.joined}">${c.joined ? icon("check") + T("Beigetreten", "Joined") : c.priv ? T("Beitritt anfragen", "Request to join") : T("Beitreten", "Join")}</button></li>`;
     return `<div class="xa-split">
       <div class="xa-split-main">
-        ${pageHead(T("Baue mit den richtigen Communities.", "Build with the right communities."), T("Entdecke Räume zu deinen Interessen und wachse mit anderen Buildern.", "Discover spaces for your interests and grow with other builders."), `<button type="button" class="xa-btn xa-primary" data-act="app-only" data-v="community" data-k="c-new">${icon("plus")}${T("Community erstellen", "Create community")}</button>`)}
-        ${chips("commfilter", [["all", T("Alle", "All")], ["joined", T("Beigetreten", "Joined")], ["rec", T("Empfohlen", "Recommended")], ["new", T("Neu", "New")], ["private", T("Privat", "Private")]], s.commFilter, T("Communities filtern", "Filter communities"))}
-        <ul class="xa-cgrid">${list.map((c) => `<li class="xa-card xa-comm"><div class="xa-b-top"><span class="xa-letter" style="--h:${c.hue}" aria-hidden="true">${c.letter}</span><div class="xa-grow"><h4>${esc(L(c.name))}${c.priv ? ` <span class="xa-tag">${T("Privat", "Private")}</span>` : ""}</h4><small class="xa-muted">${T(`${(c.members + (c.joined ? 1 : 0)).toLocaleString("de-DE")} Mitglieder`, `${(c.members + (c.joined ? 1 : 0)).toLocaleString("en-GB")} members`)}</small></div><span class="xa-score">${ring(COMM_SCORE[c.id], 40, 4)}</span></div>
-          <p class="xa-muted">${esc(L(c.desc))}</p><p class="xa-ws-tags">${c.tags.map((t) => `<span class="xa-tag">${esc(L(t))}</span>`).join("")}</p>
-          <button type="button" class="xa-btn xa-full ${c.joined ? "is-sent" : "xa-primary"}" data-act="join" data-id="${c.id}" data-k="cj-${c.id}" aria-pressed="${c.joined}">${c.joined ? icon("check") + T("Beigetreten", "Joined") : c.priv ? T("Beitritt anfragen", "Request to join") : T("Beitreten", "Join")}</button></li>`).join("") || `<li class="xa-empty">${T("Keine Communities in diesem Filter.", "No communities in this filter.")}</li>`}</ul>
+        <header class="xa-cbrowse-head"><div><h3 class="xa-hero72" tabindex="-1" data-k="title">${T("Baue mit den richtigen Communities.", "Build with the right communities.")}</h3><p class="xa-muted">${T("Entdecke Räume zu deinen Interessen und wachse mit anderen Buildern.", "Discover spaces for your interests and grow with other builders.")}</p></div>${sqBtn(`+ ${T("Community erstellen", "Create community")}`, 'data-act="app-only" data-v="community" data-k="c-new"')}</header>
+        <div class="xa-toolbar"><div class="xa-pgroup xa-pgroup-lg" role="group" aria-label="${T("Communities filtern", "Filter communities")}">${filters.map(([id, l]) => `<button type="button" data-act="commfilter" data-v="${id}" data-k="commfilter-${id}" aria-pressed="${s.commFilter === id}">${l} <span class="xa-mono">${s.communities.filter(by[id]).length}</span></button>`).join("")}</div>
+          <label class="xa-sr" for="xa-cq-${uid}">${T("Community oder Thema suchen", "Search community or topic")}</label><input id="xa-cq-${uid}" class="xa-input" type="search" data-input="commquery" data-k="cq" value="${esc(s.commQuery || "")}" placeholder="${T("Community oder Thema suchen", "Search community or topic")}" autocomplete="off"></div>
+        <p class="xa-pinned-l"><i></i>${T("OFFIZIELL · ANGEPINNT", "OFFICIAL · PINNED")}</p>
+        <ul class="xa-cgrid xa-cgrid-1">${ccard(pinned)}</ul>
+        <ul class="xa-cgrid">${list.filter((c) => c !== pinned).map(ccard).join("")}<li class="xa-ccard xa-cnew"><button type="button" class="xa-plain" data-act="app-only" data-v="community" data-k="c-new2">${icon("plus")}<b>${T("Eigene Community gründen", "Start your own community")}</b></button></li></ul>
       </div>
       <aside class="xa-col xa-aside">
-        <div class="xa-card"><h4>${T("Trend-Themen", "Trending topics")}</h4><p class="xa-ws-tags">${["#closedbeta", "#audioml", "#pitchdeck", "#nocode", "#figma"].map((t) => `<span class="xa-tag">${t}</span>`).join("")}</p></div>
-        <div class="xa-card"><h4>${T("Kommende Events", "Upcoming events")}</h4><ul class="xa-events">${s.events.map((e) => `<li><span class="xa-grow"><b>${esc(L(e.title))}</b><small>${esc(L(e.when))}</small></span><button type="button" class="xa-mini ${e.going ? "is-on" : ""}" data-act="rsvp" data-id="${e.id}" data-k="rsvp-${e.id}" aria-pressed="${e.going}">${e.going ? T("Zugesagt", "Going") : T("Zusagen", "Attend")}</button></li>`).join("")}</ul></div>
-        <div class="xa-card"><h4>${T("Deine Communities", "Your communities")}</h4><ul class="xa-people">${mine.map((c) => `<li><span class="xa-letter xa-sm" style="--h:${c.hue}" aria-hidden="true">${c.letter}</span><span class="xa-grow">${esc(L(c.name))}</span></li>`).join("") || `<li class="xa-muted">${T("Noch keine.", "None yet.")}</li>`}</ul></div>
+        <div class="xa-w"><h4 class="xa-mono">${T("TREND-THEMEN", "TRENDING TOPICS")}</h4><p class="xa-ws-tags">${["#closedbeta", "#audioml", "#pitchdeck", "#nocode", "#figma"].map((t) => `<span class="xa-tag">${t}</span>`).join("")}</p></div>
+        <div class="xa-w"><h4 class="xa-mono">${T("KOMMENDE EVENTS", "UPCOMING EVENTS")}</h4><ul class="xa-events">${s.events.map((e) => `<li><span class="xa-grow"><b>${esc(L(e.title))}</b><small>${esc(L(e.when))}</small></span><button type="button" class="xa-mini ${e.going ? "is-on" : ""}" data-act="rsvp" data-id="${e.id}" data-k="rsvp-${e.id}" aria-pressed="${e.going}">${e.going ? T("Zugesagt", "Going") : T("Zusagen", "Attend")}</button></li>`).join("")}</ul></div>
       </aside>
+    </div>`;
+  }
+  function viewCommunity(s, id) {
+    const c = s.communities.find((x) => x.id === id) || s.communities[0];
+    const chans = CHANNELS[c.id] || [["allgemein", ""]];
+    const ch = chans.find((x) => x[0] === s.commChannel) ? s.commChannel : chans[0][0];
+    const ci = chans.findIndex((x) => x[0] === ch);
+    const posts = [...(POSTS[`${c.id}/${ch}`] || []), ...((s.commPosts || {})[`${c.id}/${ch}`] || [])];
+    const members = c.id === "design" ? ["AK", "LV", "TB", "SR"] : ["JW", "LV", "MS", "TB", "SR"];
+    const two = (n) => String(n).padStart(2, "0");
+    return `<div class="xa-ed">
+      <header class="xa-ed-bar"><button type="button" class="xa-plain xa-mono" data-act="go" data-area="communities" data-k="cd-back">← ${T("ALLE COMMUNITIES", "ALL COMMUNITIES")}</button><span class="xa-mono xa-faint">COMMUNITIES / ${esc(L(c.name)).toUpperCase()}</span><span class="xa-mono"><i class="xa-live"></i>LIVE</span></header>
+      <section class="xa-ed-mast"><div><p class="xa-mono xa-acc-t">${c.id === "indie" ? T("OFFIZIELL · ", "OFFICIAL · ") : ""}${esc(L(c.tags[0])).toUpperCase()} · ${c.joined ? T("MITGLIED", "MEMBER") : T("GAST", "GUEST")}</p><h3 class="xa-ed-name" tabindex="-1" data-k="title">${esc(L(c.name))}</h3><p class="xa-ed-desc">${esc(L(c.desc))}</p></div>
+        <div class="xa-ed-info"><dl><div><dt class="xa-mono">${T("ROLLE", "ROLE")}</dt><dd>${c.joined ? T("Mitglied", "Member") : T("Gast", "Guest")}</dd></div><div><dt class="xa-mono">${T("KATEGORIE", "CATEGORY")}</dt><dd>${esc(L(c.tags[0]))}</dd></div><div><dt class="xa-mono">${T("MITGLIEDER", "MEMBERS")}</dt><dd>${two(members.length)}</dd></div><div><dt class="xa-mono">${T("BEITRÄGE", "POSTS")}</dt><dd>${two(posts.length)}</dd></div></dl>
+          ${c.joined ? `<button type="button" class="xa-framed" data-act="app-only" data-v="community" data-k="cd-edit">${T("COMMUNITY BEARBEITEN", "EDIT COMMUNITY")}</button>` : `<button type="button" class="xa-framed is-primary" data-act="join" data-id="${c.id}" data-k="cd-join">${T("BEITRETEN", "JOIN")}</button>`}</div></section>
+      <div class="xa-ed-cols">
+        <nav class="xa-ed-index" aria-label="${T("Kanäle", "Channels")}"><p class="xa-mono xa-faint">INDEX</p>${chans.map(([name, sub], i) => `<button type="button" class="xa-ed-ch" data-act="channel" data-v="${name}" data-k="ch-${name}" aria-current="${name === ch}"><span class="xa-mono">${two(i + 1)}</span><b>${name}</b>${sub ? `<small>${L(sub)}</small>` : ""}${name === ch ? `<small>${T(`${posts.length} Beiträge`, `${posts.length} posts`)}</small>` : ""}</button>`).join("")}<button type="button" class="xa-ed-ch xa-ed-add" data-act="app-only" data-v="community" data-k="ch-add"><span class="xa-mono">+ ${T("KANAL ANLEGEN", "ADD CHANNEL")}</span></button></nav>
+        <div class="xa-ed-feed"><header><p class="xa-mono xa-acc-t">${two(ci + 1)} / ${two(chans.length)}</p><h4>#${ch}</h4></header>
+          ${posts.length ? `<ol data-scroll="feed">${posts.map((p) => `<li class="xa-ed-post"><div class="xa-ed-meta"><span class="xa-mono">${esc(L(p.at))}</span><b>${esc(p.by)}</b>${p.team ? `<span class="xa-mono xa-acc-t">XYNTAL-TEAM</span>` : ""}</div><p>${esc(L(p.text))}</p></li>`).join("")}</ol>`
+            : `<div class="xa-ed-empty"><p class="xa-ed-still">${T("NOCH STILL HIER.", "STILL QUIET HERE.")}</p><p>${T("Noch keine Beiträge. Sei der Erste, der etwas sagt.", "No posts yet. Be the first to say something.")}</p></div>`}
+          ${c.joined ? `<form class="xa-ed-composer" data-form="post"><span class="xa-mono xa-acc-t" aria-hidden="true">&gt;</span><label class="xa-sr" for="xa-post-${uid}">${T(`Beitrag in #${ch}`, `Post in #${ch}`)}</label><input id="xa-post-${uid}" name="text" maxlength="400" autocomplete="off" placeholder="${T(`Beitrag schreiben in #${ch}…`, `Write a post in #${ch}…`)}" data-k="post-input"><button type="submit" class="xa-sq is-primary">${T("POSTEN ↵", "POST ↵")}</button></form>` : `<p class="xa-ed-join xa-muted">${T("Tritt bei, um mitzuschreiben.", "Join to post.")}</p>`}
+        </div>
+        <aside class="xa-ed-members"><p class="xa-mono xa-faint">${T("MITGLIEDER", "MEMBERS")} ${two(members.length)}</p><ul>${members.map((m) => `<li><span class="xa-sqav${m === "LV" ? " is-me" : ""}">${PEOPLE[m].name[0]}${["LV", "JW", "AK"].includes(m) ? `<i></i>` : ""}</span><span class="xa-grow"><b>${esc(PEOPLE[m].name)}${m === "LV" ? T(" (du)", " (you)") : ""}</b><small class="xa-mono ${m === members[0] ? "xa-acc-t" : "xa-faint"}">${m === members[0] ? T("INHABER", "OWNER") : T("MITGLIED", "MEMBER")}</small></span></li>`).join("")}</ul><p class="xa-muted xa-small">${T(`… und ${c.members - members.length} weitere`, `… and ${c.members - members.length} more`)}</p></aside>
+      </div>
     </div>`;
   }
 
@@ -857,6 +891,7 @@
     const a = AREAS.find((x) => x.id === s.route.area);
     let c = esc(L(a.label));
     if (s.route.area === "workspaces" && s.route.id) c += ` <span>/</span> ${esc(s.workspaces.find((w) => w.id === s.route.id)?.name || "")}`;
+    if (s.route.area === "communities" && s.route.id) c += ` <span>/</span> ${esc(L(s.communities.find((x) => x.id === s.route.id)?.name || ""))}`;
     if (s.route.area === "projects" && s.route.id) c += ` <span>/</span> ${esc(L(proj(s, s.route.id)?.name || ""))}`;
     return c;
   }
@@ -1091,6 +1126,8 @@
         toast(s.connected[id] ? T(`Anfrage an ${b.name} gesendet (Demo).`, `Request sent to ${b.name} (demo).`) : T("Anfrage zurückgezogen.", "Request withdrawn."));
       },
       commfilter(el) { s.commFilter = el.dataset.v; render(); },
+      comm(el) { s.commChannel = null; go({ area: "communities", id: el.dataset.id }); },
+      channel(el) { s.commChannel = el.dataset.v; render({ focus: `[data-k="ch-${el.dataset.v}"]` }); },
       join(el) {
         const c = s.communities.find((x) => x.id === el.dataset.id); c.joined = !c.joined; render();
         toast(c.joined ? T(`Willkommen in „${L(c.name)}“!`, `Welcome to “${L(c.name)}”!`) : T(`„${L(c.name)}“ verlassen.`, `Left “${L(c.name)}”.`));
@@ -1210,7 +1247,7 @@
     app.addEventListener("input", (e) => {
       const el = e.target;
       if (el.dataset.input === "search") showResults(el);
-      const key = { filequery: "fileQuery", wsquery: "wsQuery", projquery: "projQuery", aiquery: "aiQuery" }[el.dataset.input];
+      const key = { commquery: "commQuery", filequery: "fileQuery", wsquery: "wsQuery", projquery: "projQuery", aiquery: "aiQuery" }[el.dataset.input];
       if (key) {
         s[key] = el.value;
         const pos = el.selectionStart;
@@ -1287,6 +1324,10 @@
           if (s.route.area === "messages" && s.convo === c.id) render({ toBottom: true }); else { c.unread += 1; render(); }
           announce(`${PEOPLE[reply.from].name}: ${L(reply.text)}`);
         }, 1900);
+      } else if (form.dataset.form === "post") {
+        const c = s.route.id; const chans = CHANNELS[c] || [["allgemein", ""]]; const ch = chans.find((x) => x[0] === s.commChannel) ? s.commChannel : chans[0][0];
+        s.commPosts = s.commPosts || {}; (s.commPosts[`${c}/${ch}`] = s.commPosts[`${c}/${ch}`] || []).push({ at: nowTime(), by: "Lena Vogt", text: [text, text] });
+        render({ focus: "[data-k=post-input]" }); toast(T("Beitrag veröffentlicht.", "Post published."));
       } else if (form.dataset.form === "ai") {
         askAi("free", text);
       }
