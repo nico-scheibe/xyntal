@@ -991,3 +991,17 @@ p.xa-ai-pane { flex: none; padding-top: 0; }
 @container xa (max-width: 1180px) { .xa-ed-name { font-size: 88px !important; } .xa-hero72 { font-size: 52px !important; } }
 @container xa (max-width: 960px) { .xa-ed-mast, .xa-ed-cols { grid-template-columns: minmax(0, 1fr); } .xa-ed-index, .xa-ed-feed { border-right: 0; border-bottom: 1px solid var(--line); } .xa-ed-bar > span:nth-child(2) { display: none; } }
 @container xa (max-width: 640px) { .xa-ed-name { font-size: 56px !important; } .xa-ed-bar, .xa-ed-mast { padding-left: 16px; padding-right: 16px; } .xa-ed-post { grid-template-columns: minmax(0, 1fr); gap: 8px; } .xa-cbrowse-head { flex-direction: column; align-items: flex-start; } .xa-ed-still { font-size: 56px; } }
+
+/* Seitenleiste ohne Scrollen: Bei wenig Höhe werden die Menüpunkte flacher (38 px bis
+   26 px), damit alle – auch Upgrade, Profil und Einstellungen – sichtbar bleiben. Nur in
+   der breiten Ansicht; die schmale (≤ 640 px) zeigt das Menü als waagrechte Leiste. */
+@container xa (min-width: 641px) {
+  .xa-side { padding-block: 8px; }
+  .xa-side-top { display: flex; flex-direction: column; gap: 8px; flex: 1 1 auto; min-height: 0; }
+  .xa-side-top ul { display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; min-height: 0; }
+  .xa-side-top li { display: flex; flex: 0 1 38px; min-height: 26px; }
+  .xa-side-top .xa-nav { height: auto; }
+  .xa-side-foot { gap: 2px; padding-top: 6px; margin-top: 6px; }
+  .xa-side-foot .xa-nav { height: 32px; }
+  .xa-nav[aria-current="page"]::before { top: 50%; height: min(20px, 70%); transform: translateY(-50%); }
+}
