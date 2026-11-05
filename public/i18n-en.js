@@ -1,6 +1,21 @@
 // Xyntal – englische Texte. Schlüssel = deutscher Originaltext (Leerzeichen zusammengefasst).
 // Neue deutsche Texte auf der Website hier ergänzen, sonst bleiben sie auf Englisch deutsch.
 window.XYNTAL_EN = {
+  "Herkunft und Feedback: Nach der Anmeldung fragen wir einmal freiwillig, wie du auf Xyntal aufmerksam geworden bist (etwa TikTok, Instagram, Google oder eine Empfehlung, optional mit einem kurzen Freitext). Später bitten wir in App und Website gelegentlich um eine Bewertung von 1 bis 5 mit optionalem Kommentar – frühestens eine Woche nach der Anmeldung und höchstens alle 30 Tage; „Nicht mehr fragen“ beendet das. Gespeichert werden deine Antwort, der Zeitpunkt und ob sie aus der App oder von der Website kam, zusammen mit deinem Konto auf dem App-Server. Wir werten die Antworten aus, um Xyntal zu verbessern und zu verstehen, wie Mitglieder zu uns finden (Art. 6 Abs. 1 lit. f DSGVO). Die Antworten werden mit deinem Konto gelöscht.": "Origin and feedback: after you sign up we ask once, voluntarily, how you heard about Xyntal (for example TikTok, Instagram, Google or a recommendation, optionally with a short note). Later we occasionally ask for a rating from 1 to 5 with an optional comment in the app and on the website – at the earliest one week after you sign up and at most every 30 days; “Don't ask again” ends it. We store your answer, the time and whether it came from the app or the website, together with your account on the app server. We use the answers to improve Xyntal and to understand how members find us (Art. 6(1)(f) GDPR). The answers are deleted with your account.",
+  "Wie bist du auf Xyntal aufmerksam geworden?": "How did you hear about Xyntal?",
+  "Ein Klick hilft uns, mehr Leute wie dich zu finden. Freiwillig – überspring es gern.": "One click helps us find more people like you. Optional – feel free to skip it.",
+  "Google-Suche": "Google search",
+  "Freunde oder Empfehlung": "Friends or a recommendation",
+  "Community oder Event": "Community or event",
+  "Wo genau? (optional)": "Where exactly? (optional)",
+  "Überspringen": "Skip",
+  "Wie hilfreich ist Xyntal für dich?": "How helpful is Xyntal for you?",
+  "Deine ehrliche Antwort zeigt uns, was wir als Nächstes verbessern. Dauert zehn Sekunden.": "Your honest answer shows us what to improve next. Takes ten seconds.",
+  "{n} von 5": "{n} of 5",
+  "Was gefällt dir am meisten? (optional)": "What do you like most? (optional)",
+  "Was sollen wir besser machen? (optional)": "What should we do better? (optional)",
+  "Nicht mehr fragen": "Don't ask again",
+  "Danke für dein Feedback!": "Thank you for your feedback!",
   "Sobald dein Profil vollständig ist, wird es automatisch freigeschaltet – dann erscheint es auch öffentlich.": "As soon as your profile is complete, it's approved automatically – then it also appears publicly.",
   "Schreib unten in einem Satz, woran du arbeitest – dann kann dein Profil freigeschaltet werden.": "Write one sentence below about what you're working on – then your profile can be approved.",
   "Trag deinen Namen ein (mindestens 2 Zeichen) – dann wird dein Profil automatisch freigeschaltet.": "Enter your name (at least 2 characters) – then your profile is approved automatically.",

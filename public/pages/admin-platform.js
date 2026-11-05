@@ -1106,6 +1106,42 @@
     } catch (err) { p.querySelector(".xa-loading").outerHTML = empty(reason(err)); }
   };
 
+  // ---------- Feedback & Herkunft ----------
+  // „Wie bist du auf uns aufmerksam geworden?“ und die Antworten auf „Wie hilfreich ist
+  // Xyntal für dich?“ aus App und Website (GET /admin/feedback, users/feedback.ts im App-Server).
+  const SOURCE_LABEL = {
+    tiktok: "TikTok", instagram: "Instagram", linkedin: "LinkedIn", youtube: "YouTube", google: "Google-Suche",
+    friend: "Freunde / Empfehlung", community: "Community / Event", other: "Sonstiges", skip: "Übersprungen", unanswered: "Noch nicht gefragt",
+  };
+  const FACE = ["", "😞", "🙁", "😐", "🙂", "😍"];
+  loaders.feedback = async () => {
+    const p = panel("feedback");
+    p.innerHTML = `${head("COMMUNITY", "Feedback & Herkunft", "Woher neue Mitglieder kommen und wie hilfreich sie Xyntal finden – aus der App und von xyntal.de. Gefragt wird einmal nach der Herkunft, nach Feedback frühestens nach 7 Tagen und höchstens alle 30 Tage.")}<div data-list>${loading()}</div>`;
+    const box = $("[data-list]", p);
+    try {
+      const d = await api("GET", "/admin/feedback");
+      const total = d.referral.sources.reduce((n, s) => n + s.count, 0) || 1;
+      const answered = d.referral.sources.filter((s) => s.source !== "unanswered" && s.source !== "skip");
+      const c = document.getElementById("c-feedback"); if (c) c.textContent = d.feedback.count ? `(${d.feedback.count})` : "";
+      box.innerHTML = `
+        <div class="xa-cols">
+          <section class="xa-card"><h3>Feedback</h3><ul class="xa-kv">
+            <li><span>Antworten gesamt</span><b>${esc(num(d.feedback.count))}</b></li>
+            <li><span>Durchschnitt</span><b>${d.feedback.average === null ? "–" : `${esc(String(d.feedback.average).replace(".", ","))} / 5`}</b></li>
+            <li><span>Letzte 30 Tage</span><b>${esc(num(d.feedback.last30Days.count))}${d.feedback.last30Days.average === null ? "" : ` · Ø ${esc(String(d.feedback.last30Days.average).replace(".", ","))}`}</b></li>
+          </ul></section>
+          <section class="xa-card"><h3>Herkunft</h3>${answered.length || d.referral.sources.length ? `<ul class="xa-kv">${d.referral.sources.map((s) =>
+            `<li><span>${esc(SOURCE_LABEL[s.source] || s.source)}</span><b>${esc(num(s.count))} <small>(${Math.round((s.count / total) * 100)} %)</small></b></li>`).join("")}</ul>` : empty("Noch keine Antworten.")}</section>
+        </div>
+        ${d.referral.others.length ? `<section class="xa-card"><h3>„Sonstiges“ im Wortlaut</h3><ul class="xa-list xa-list-plain">${d.referral.others.map((o) =>
+          `<li><div><b>${esc(o.note)}</b><small>${esc(fmt(o.at))}</small></div></li>`).join("")}</ul></section>` : ""}
+        <section class="xa-card"><h3>Letzte Antworten</h3>${d.feedback.recent.length ? `<ul class="xa-list xa-list-plain">${d.feedback.recent.map((f) =>
+          `<li><div><b>${esc(FACE[f.rating] || "")} ${esc(String(f.rating))} / 5${f.comment ? ` – ${esc(f.comment)}` : ""}</b><small>${esc(f.displayName || f.email || "Mitglied")} · ${esc(f.surface === "app" ? "App" : "Website")} · ${esc(f.moment === "first_week" ? "nach der ersten Woche" : "monatlich")} · ${esc(fmt(f.createdAt))}</small></div></li>`).join("")}</ul>` : empty("Noch kein Feedback.")}</section>`;
+    } catch (err) {
+      box.innerHTML = empty(reason(err));
+    }
+  };
+
   // ---------- Ankündigungen ----------
   const A_KIND = { info: ["Hinweis", "accent"], warning: ["Warnung", "warn"], maintenance: ["Wartung", "danger"] };
   loaders.announcements = async () => {
