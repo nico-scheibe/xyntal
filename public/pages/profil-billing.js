@@ -34,14 +34,17 @@
       : free
         ? t("Du nutzt Free. Tarife und KI-Guthaben findest du unter Tarif & KI-Guthaben.")
         : d.renewsAt
-          ? t("Aktiv bis {date} – dann verlängert er sich, oder er endet, wenn er für eine feste Zeit gutgeschrieben wurde.").replace("{date}", day(d.renewsAt))
+          // subscribed fehlt bei einem älteren App-Server: dann der allgemeine Satz.
+          ? (d.subscribed === false
+            ? t("Gutgeschrieben bis {date}. Der Tarif endet dann und verlängert sich nicht.")
+            : t("Aktiv bis {date} – dann verlängert er sich, oder er endet, wenn er für eine feste Zeit gutgeschrieben wurde.")).replace("{date}", day(d.renewsAt))
           : t("Aktiv ohne Enddatum.");
     planBox.innerHTML = `
       <p class="pb-plan-line"><span class="xm-pill xm-on" data-no-i18n>${esc(planName(d.plan))}</span>${d.locked ? ` <span class="xm-pill xm-warn">${esc(t("Zahlung überfällig"))}</span>` : ""}</p>
       <p class="hint ${d.locked ? "xm-bad" : ""}">${esc(text)}</p>
       <div class="btn-row sec-row">
         <a class="btn btn-small" href="/tarif">${esc(t(free ? "Tarif upgraden" : "Tarif & KI-Guthaben"))}</a>
-        ${free ? "" : `<button class="btn btn-small btn-ghost" type="button" data-pb-portal>${esc(t("Abo verwalten"))}</button>`}
+        ${free || d.subscribed === false ? "" : `<button class="btn btn-small btn-ghost" type="button" data-pb-portal>${esc(t("Abo verwalten"))}</button>`}
       </div>`;
   }
 

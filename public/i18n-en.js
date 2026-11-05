@@ -2336,6 +2336,7 @@ window.XYNTAL_EN = {
   "Aus dem Papierkorb wiederherstellen": "Restore from trash",
   "Gemerkte Personen": "Saved people",
   "Aktiv bis {date} – dann verlängert er sich, oder er endet, wenn er für eine feste Zeit gutgeschrieben wurde.": "Active until {date} – then it renews, or it ends if it was granted for a fixed time.",
+  "Gutgeschrieben bis {date}. Der Tarif endet dann und verlängert sich nicht.": "Granted until {date}. The plan ends then and does not renew.",
   "Aktiv ohne Enddatum.": "Active with no end date.",
   "Dein Tarif": "Your plan",
   "Zahlung überfällig": "Payment overdue",
