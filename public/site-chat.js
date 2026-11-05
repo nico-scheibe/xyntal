@@ -19,7 +19,7 @@
   let busy = false;
 
   const css = document.createElement("link");
-  css.rel = "stylesheet"; css.href = "/site-chat.css?v=1";
+  css.rel = "stylesheet"; css.href = "/site-chat.css?v=2";
   document.head.append(css);
 
   const root = document.createElement("div");
