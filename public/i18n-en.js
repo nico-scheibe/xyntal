@@ -2,7 +2,7 @@
 // Neue deutsche Texte auf der Website hier ergänzen, sonst bleiben sie auf Englisch deutsch.
 window.XYNTAL_EN = {
   "Sobald dein Profil vollständig ist, wird es automatisch freigeschaltet – dann erscheint es auch öffentlich.": "As soon as your profile is complete, it's approved automatically – then it also appears publicly.",
-  "Schreib unten in einem Satz, woran du arbeitest – dann wird dein Profil automatisch freigeschaltet.": "Write one sentence below about what you're working on – then your profile is approved automatically.",
+  "Schreib unten in einem Satz, woran du arbeitest – dann kann dein Profil freigeschaltet werden.": "Write one sentence below about what you're working on – then your profile can be approved.",
   "Trag deinen Namen ein (mindestens 2 Zeichen) – dann wird dein Profil automatisch freigeschaltet.": "Enter your name (at least 2 characters) – then your profile is approved automatically.",
   "Bestätige noch deine E-Mail-Adresse über den Link in der Mail, die wir dir geschickt haben – danach wird dein Profil automatisch freigeschaltet.": "Please confirm your email address with the link in the email we sent you – then your profile is approved automatically.",
   "Pass ihn an, dann wird dein Profil automatisch freigeschaltet.": "Adjust it, then your profile is approved automatically.",
