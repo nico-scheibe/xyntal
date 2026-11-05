@@ -13,7 +13,30 @@
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const calm = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
   let signedIn = false;
-  try { signedIn = !!localStorage.getItem("sb-rralgrlujoupprwlvoyo-auth-token"); } catch { /* privat */ }
+  let session = null;
+  try {
+    session = JSON.parse(localStorage.getItem("sb-rralgrlujoupprwlvoyo-auth-token") || "null");
+    signedIn = !!session;
+  } catch { /* privat */ }
+  // Den Download sehen nur Beta-Tester (profiles.is_beta_tester – dieselbe Regel wie die
+  // Download-Karte im Profil). Bis die Antwort da ist, wird kein Download gezeigt.
+  let betaTester = false;
+  const loadBetaAccess = async () => {
+    const cfg = window.XYNTAL_CONFIG || {};
+    const uid = session && session.user && session.user.id;
+    const token = session && session.access_token;
+    if (!uid || !token || !cfg.supabaseUrl || !cfg.supabaseKey) return false;
+    if (session.expires_at && session.expires_at * 1000 < Date.now()) return false;
+    try {
+      const r = await fetch(`${cfg.supabaseUrl}/rest/v1/profiles?id=eq.${encodeURIComponent(uid)}&select=is_beta_tester`, {
+        headers: { apikey: cfg.supabaseKey, authorization: `Bearer ${token}` },
+      });
+      const rows = r.ok ? await r.json() : [];
+      return Array.isArray(rows) && rows[0] && rows[0].is_beta_tester === true;
+    } catch {
+      return false;
+    }
+  };
 
   const P = {
     home: '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-6h4v6"/>',
@@ -876,9 +899,12 @@
   }
 
   const VIEWS = { forme: viewForMe, home: viewHome, focus: viewFocus, workspaces: viewWorkspaces, projects: viewProjects, messages: viewMessages, discover: viewDiscover, communities: viewCommunities, files: viewFiles, "ai-center": viewAi, automation: viewAutomations, calendar: viewCalendar };
-  const ctaLinks = (primary, secondary) => signedIn
+  // Download nur für angemeldete Beta-Tester; alle anderen sehen den Weg ins Beta-Programm.
+  const ctaLinks = (primary, secondary) => betaTester
     ? `<a class="${primary}" href="/profil">${icon("download")}${T("App herunterladen", "Download the app")}</a><a class="${secondary}" href="/beta">${T("Zum Beta-Programm", "Beta programme")}</a>`
-    : `<a class="${primary}" href="/beta">${T("Für die Beta bewerben", "Apply for the beta")}</a><a class="${secondary}" href="/profil">${icon("download")}${T("Beta-Tester: App laden", "Beta testers: get the app")}</a>`;
+    : signedIn
+      ? `<a class="${primary}" href="/beta">${T("Zum Beta-Programm", "Beta programme")}</a>`
+      : `<a class="${primary}" href="/beta">${T("Für die Beta bewerben", "Apply for the beta")}</a>`;
 
   const NOTIFS = () => [
     { act: "convo", id: "aylin", icon: "message", text: T("Aylin fragt nach dem Design-Review", "Aylin is asking about the design review"), at: "10:02" },
@@ -1336,5 +1362,6 @@
     document.addEventListener("xyntal:lang", () => { renderStrip(); render(); });
     renderStrip();
     render();
+    if (signedIn) loadBetaAccess().then((yes) => { if (yes) { betaTester = true; renderStrip(); render(); } });
   });
 })();
