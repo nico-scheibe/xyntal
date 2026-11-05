@@ -98,4 +98,10 @@
 
   // Geladen wird erst, wenn die Registerkarte aufgeht (profil.js ruft das auf).
   window.openBillingTab = () => { if (!loaded) load(); };
+  // Zurück auf der offenen Registerkarte (etwa nach einem Kauf in einem anderen Tab):
+  // Tarif und Rechnungen neu holen.
+  const panel = document.getElementById("panel-rechnungen");
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && loaded && !busy && panel && !panel.hidden) load();
+  });
 })();
