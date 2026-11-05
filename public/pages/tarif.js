@@ -89,10 +89,20 @@
       : included > 0
         ? t("In deinem Tarif sind etwa {n} KI-Anfragen pro Monat enthalten. Brauchst du mehr, zahlt dein Guthaben.").replace("{n}", count(includedN))
         : t("Xyntal AI zahlst du nach Verbrauch: jede KI-Anfrage geht von deinem Guthaben ab.");
-    const packs = (ai.packs || []).map((c) =>
-      `<button class="btn btn-small" type="button" data-pack="${esc(c)}" ${d.configured ? "" : "disabled"}>${esc(asRequests
-        ? t("{n} Anfragen für {amount}").replace("{n}", count(requests(c, call))).replace("{amount}", price(c))
-        : t("{amount} aufladen").replace("{amount}", price(c)))}</button>`).join("");
+    // packCredits says what each pack credits, bonus included; an older server
+    // sends only the prices, and then a pack credits exactly what it costs.
+    const packCredits = Array.isArray(ai.packCredits) ? ai.packCredits : [];
+    const packs = (ai.packs || []).map((c, i) => {
+      const credit = Number(packCredits[i]) > 0 ? Number(packCredits[i]) : Number(c);
+      const bonus = credit > c ? Math.round(((credit - c) / c) * 100) : 0;
+      const label = asRequests
+        ? t("{n} Anfragen für {amount}").replace("{n}", count(requests(credit, call))).replace("{amount}", price(c))
+        : bonus > 0
+          ? t("{amount} aufladen, {credit} Guthaben").replace("{amount}", price(c)).replace("{credit}", price(credit))
+          : t("{amount} aufladen").replace("{amount}", price(c));
+      const tag = bonus > 0 ? ` <span class="xm-pack-bonus">${esc(t("+{p} % Bonus").replace("{p}", count(bonus)))}</span>` : "";
+      return `<button class="btn btn-small" type="button" data-pack="${esc(c)}" ${d.configured ? "" : "disabled"}>${esc(label)}${tag}</button>`;
+    }).join("");
     return `
       <section class="xm-detail xm-billing">
         <div class="xm-billing-head"><h2>${esc(t(asRequests ? "KI-Anfragen" : "KI-Guthaben"))}</h2></div>

@@ -2378,6 +2378,8 @@ window.XYNTAL_EN = {
   "In deinem Tarif sind etwa {n} KI-Anfragen pro Monat enthalten. Brauchst du mehr, zahlt dein Guthaben.": "Your plan includes about {n} AI requests a month. If you need more, your credit pays.",
   "Xyntal AI zahlst du nach Verbrauch: jede KI-Anfrage geht von deinem Guthaben ab.": "Xyntal AI is pay as you go: every AI request is paid from your credit.",
   "{n} Anfragen für {amount}": "{n} requests for {amount}",
+  "{amount} aufladen, {credit} Guthaben": "Add {amount}, get {credit} credit",
+  "+{p} % Bonus": "+{p} % bonus",
   "KI-Anfragen": "AI requests",
   "Diesen Monat inklusive": "Included this month",
   "noch etwa {left} von {total}": "about {left} of {total} left",
