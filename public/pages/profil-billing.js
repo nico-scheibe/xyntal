@@ -58,10 +58,13 @@
         </div>
         <div class="pb-invoice-side">
           <span class="pb-amount">${esc(money(i.totalCents, i.currency))}</span>
-          <span class="xm-pill ${i.status === "paid" ? "xm-on" : i.status === "open" ? "xm-warn" : ""}">${esc(t(STATUS[i.status] || i.status))}</span>
+          <span class="xm-pill ${i.status === "paid" ? "pb-paid" : i.status === "open" || i.status === "uncollectible" ? "pb-open" : ""}">${esc(t(STATUS[i.status] || i.status))}</span>
           ${i.pdf ? `<a class="btn btn-small btn-ghost" href="${esc(i.pdf)}" target="_blank" rel="noopener">PDF</a>` : ""}
           ${i.url ? `<a class="btn btn-small btn-ghost" href="${esc(i.url)}" target="_blank" rel="noopener">${esc(t("Ansehen"))}</a>` : ""}
         </div>
+        ${i.status === "open" || i.status === "uncollectible" ? `<p class="pb-invoice-warn">${esc(t(i.status === "open"
+          ? "Die Zahlung hat nicht funktioniert – die Buchung ist noch offen. Bezahle die Rechnung über „Ansehen“ oder ändere deine Zahlungsmethode unter „Abo verwalten“."
+          : "Die Zahlung ist endgültig fehlgeschlagen – die Buchung ist nicht zustande gekommen. Schreib uns, wenn du Hilfe brauchst."))}</p>` : ""}
       </li>`).join("")}</ul>`;
   }
 

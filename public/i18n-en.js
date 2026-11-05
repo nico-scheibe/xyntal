@@ -1,6 +1,8 @@
 // Xyntal – englische Texte. Schlüssel = deutscher Originaltext (Leerzeichen zusammengefasst).
 // Neue deutsche Texte auf der Website hier ergänzen, sonst bleiben sie auf Englisch deutsch.
 window.XYNTAL_EN = {
+  "Die Zahlung hat nicht funktioniert – die Buchung ist noch offen. Bezahle die Rechnung über „Ansehen“ oder ändere deine Zahlungsmethode unter „Abo verwalten“.": "The payment didn't go through – the booking is still open. Pay the invoice via “View” or change your payment method under “Manage subscription”.",
+  "Die Zahlung ist endgültig fehlgeschlagen – die Buchung ist nicht zustande gekommen. Schreib uns, wenn du Hilfe brauchst.": "The payment failed for good – the booking didn't go through. Write to us if you need help.",
   "Tarif & Rechnungen": "Plan & invoices",
   "Deine Rechnungen": "Your invoices",
   "Alle Rechnungen zu deinem Xyntal-Konto – Abos und KI-Guthaben. Sie gehören zu genau diesem Konto und sind nur für dich sichtbar.": "All invoices for your Xyntal account – plans and AI credit. They belong to this account only and are visible only to you.",
