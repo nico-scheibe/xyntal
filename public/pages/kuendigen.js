@@ -84,4 +84,41 @@
     }
   });
   document.querySelector("[data-cancel-print]")?.addEventListener("click", () => window.print());
+
+  // Rücknahme über den Link aus der Mail an die Kontoadresse (?zuruecknehmen=<id>.<token>).
+  // Erst der Knopf schickt sie ab – Link-Scanner in Postfächern lösen so nichts aus.
+  const param = new URLSearchParams(location.search).get("zuruecknehmen") || "";
+  const m = /^([0-9a-f-]{36})\.([A-Za-z0-9_-]{16,128})$/.exec(param);
+  const revoke = document.querySelector("[data-revoke]");
+  if (m && revoke) {
+    form.hidden = true;
+    revoke.hidden = false;
+    const btn = revoke.querySelector("[data-revoke-btn]");
+    const st = revoke.querySelector("[data-revoke-status]");
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      st.textContent = "";
+      try {
+        const res = await fetch(`${api()}/billing/cancellation/revoke`, { method: "POST", headers: { "content-type": "application/json", "accept-language": en() ? "en" : "de" }, body: JSON.stringify({ id: m[1], token: m[2] }) });
+        const json = await res.json().catch(() => ({}));
+        if (res.ok && json.data?.revoked) {
+          revoke.querySelector("h2").textContent = T("Die Kündigung ist zurückgenommen.", "The cancellation has been withdrawn.");
+          revoke.querySelector("[data-revoke-text]").textContent = json.data.already
+            ? T("Das war schon erledigt. Dein Abo läuft weiter.", "That was already done. Your subscription continues.")
+            : T("Dein Abo läuft ganz normal weiter. Eine Bestätigung ist per E-Mail unterwegs.", "Your subscription continues as normal. A confirmation is on its way by email.");
+          btn.remove();
+          history.replaceState(null, "", "/kuendigen");
+        } else if (res.status === 404) {
+          st.textContent = T("Dieser Link ist nicht gültig. Schreib uns an admin@xyntal.com.", "This link isn't valid. Write to admin@xyntal.com.");
+        } else if (res.status === 409) {
+          st.textContent = T("Der Vertrag ist schon beendet und lässt sich nicht mehr zurückholen. Du kannst jederzeit einen neuen Tarif wählen.", "The contract has already ended. You can choose a new plan at any time.");
+        } else {
+          throw new Error(String(res.status));
+        }
+      } catch {
+        st.textContent = T("Das hat gerade nicht geklappt. Versuch es gleich noch einmal oder schreib an admin@xyntal.com.", "That didn't work right now. Try again shortly or write to admin@xyntal.com.");
+        btn.disabled = false;
+      }
+    });
+  }
 })();
