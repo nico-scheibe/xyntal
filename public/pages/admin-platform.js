@@ -346,6 +346,7 @@
         ${can("users.ban") && !me ? `<button data-act="warn">Verwarnen</button>` : ""}
         ${can("users.ban") && !me ? (u.banned ? `<button data-act="unban">Sperre aufheben</button>` : `<button class="admin-danger" data-act="ban">Sperren</button>`) : ""}
         ${can("users.ban") && !me ? (u.mutedUntil !== null && u.mutedUntil !== undefined ? `<button data-act="unmute">Stummschaltung aufheben</button>` : `<button data-act="mute">Stummschalten</button>`) : ""}
+        ${can("billing.manage") && u.plan && u.plan !== "Free" && u.plan !== "Start" && !u.subscribed ? `<button class="admin-danger" data-act="unplan">Tarif ${esc(u.plan)} entfernen</button>` : ""}
         ${can("users.reset2fa") ? `<button data-act="reset2fa">2FA zurücksetzen</button>` : ""}
         ${can("users.ban") ? `<button data-act="kill">Alle Sitzungen beenden</button>` : ""}
         ${can("users.ban") ? `<button data-act="alts">Verknüpfte Konten</button>` : ""}
@@ -355,7 +356,7 @@
       <div class="xa-cols">
         <section><h4>Sitzungen (${d.sessions.length})</h4>${d.sessions.length ? `<ul class="xa-list xa-list-plain">${d.sessions.map((s) => `<li><div><b>${esc(s.deviceName || "Gerät")}</b><small>${esc(s.ip || "")} · zuletzt ${esc(ago(s.lastSeenAt || s.createdAt))}</small></div></li>`).join("")}</ul>` : empty("Keine aktiven Sitzungen.")}</section>
         <section><h4>Letzte Anmeldungen</h4>${d.authEvents.length ? `<ul class="xa-list xa-list-plain">${d.authEvents.map((e) => `<li><div><b>${esc(e.type)}</b><small>${esc([e.ip, e.device].filter(Boolean).join(" · "))} · ${esc(fmt(e.createdAt))}</small></div></li>`).join("")}</ul>` : empty("Keine Ereignisse.")}</section>
-        <section><h4>Verwarnungen (${d.warnings.length})</h4>${d.warnings.length ? `<ul class="xa-list xa-list-plain">${d.warnings.map((w) => `<li><div><b>${esc(w.reason)}</b><small>${esc(w.actor || "Staff")} · ${esc(fmt(w.createdAt))}</small></div></li>`).join("")}</ul>` : empty("Keine Verwarnungen.")}</section>
+        <section><h4>Verwarnungen (${d.warnings.length})</h4>${d.warnings.length ? `<ul class="xa-list xa-list-plain">${d.warnings.map((w) => `<li><div><b>${esc(w.reason)}</b><small>${esc(w.actor || "Staff")} · ${esc(fmt(w.createdAt))}</small></div>${can("users.ban") && w.id ? `<button data-act="unwarn" data-warning="${esc(w.id)}">Zurücknehmen</button>` : ""}</li>`).join("")}</ul>` : empty("Keine Verwarnungen.")}</section>
         <section><h4>Offene Meldungen (${d.openReports.length})</h4>${d.openReports.length ? `<ul class="xa-list xa-list-plain">${d.openReports.map((r) => `<li><div><b>${esc(r.reason)}</b><small>von ${esc(r.reporter || "?")} · ${esc(fmt(r.createdAt))}</small></div></li>`).join("")}</ul>` : empty("Keine offenen Meldungen.")}</section>
         <section><h4>Arbeitsbereiche (${d.memberships.length})</h4>${d.memberships.length ? `<ul class="xa-list xa-list-plain">${d.memberships.map((m) => `<li><div><b>${esc(m.name)}</b><small>${esc(m.role)}${m.slug ? ` · ${esc(m.slug)}` : ""}</small></div></li>`).join("")}</ul>` : empty("In keinem Arbeitsbereich.")}</section>
         ${Array.isArray(d.notes) ? `<section><h4>Staff-Notizen (${d.notes.length})</h4><p class="hint">Nur Staff sieht diese Notizen.</p>
@@ -411,6 +412,12 @@
         const raw = String(a.euros || "").trim(), cents = raw ? parseEuroCents(raw) : undefined;
         if (raw && (cents === undefined || cents < 0)) { say("users", "Der Betrag ist in Euro, höchstens zwei Nachkommastellen: 5, 2,50.", false); return; }
         return userAction(`Gutschrift von ${name} entfernt.`, () => api("POST", `/admin/users/${id}/ai-credit/remove`, { cents, reason: a.reason })); }
+      case "unwarn": { const w = d.warnings.find((x) => x.id === b.dataset.warning);
+        const a = await ask({ title: `Verwarnung von ${name} zurücknehmen`, text: `„${w ? w.reason : ""}“ zählt danach nicht mehr, die Benachrichtigung verschwindet. Das Audit-Log behält beides.`, confirm: "Zurücknehmen", fields: [{ name: "reason", label: "Grund (optional)", type: "textarea" }] }); if (!a) return;
+        return userAction(`Verwarnung von ${name} zurückgenommen.`, () => api("POST", `/admin/users/${id}/unwarn`, { warningId: b.dataset.warning, reason: a.reason })); }
+      case "unplan": { if (u.subscribed) { say("users", "Ein bezahltes Abo lässt sich hier nicht entfernen.", false); return; }
+        const a = await ask({ title: `Tarif von ${name} entfernen`, text: `${u.plan}${u.planRenewsAt ? ` (bis ${day(u.planRenewsAt)})` : ""} wurde von Hand vergeben. Das Konto ist danach sofort wieder im kostenlosen Tarif. Bezahlte Abos lassen sich hier nicht entfernen.`, danger: true, confirm: "Tarif entfernen", fields: [{ name: "reason", label: "Grund", type: "textarea", required: true }] }); if (!a) return;
+        return userAction(`Tarif ${u.plan} von ${name} entfernt.`, () => api("POST", `/admin/users/${id}/plan/remove`, { reason: a.reason })); }
       case "note-delete": return userAction("Notiz gelöscht.", () => api("DELETE", `/admin/users/${id}/notes/${encodeURIComponent(b.dataset.note)}`));
       default: return;
     }
@@ -433,10 +440,12 @@
     ["ban", "users.ban", "ban <Konto> [Dauer] <Grund> [--device] [--ip]", "Konto sperren, dauerhaft oder befristet (30m, 12h, 7d, 2w). --device und --ip blockieren auch Anmeldung und Registrierung von den Geräten und Netzwerken des Kontos. Fragt vorher nach."],
     ["unban", "users.ban", "unban <Konto>", "Sperre aufheben."],
     ["warn", "users.ban", "warn <Konto> <Grund>", "Konto verwarnen. Die Person sieht die Verwarnung in der App."],
+    ["unwarn", "users.ban", "unwarn <Konto> [Grund]", "Die letzte Verwarnung des Kontos zurücknehmen. Ihre Benachrichtigung verschwindet; das Audit-Log behält beides."],
     ["mute", "users.ban", "mute <Konto> [Dauer] [Grund]", "Konto stummschalten: lesen ja, Nachrichten, Reaktionen und Beiträge nein."],
     ["unmute", "users.ban", "unmute <Konto>", "Stummschaltung aufheben."],
     ["kick", "content.moderate", "kick <Konto> <Arbeitsbereich> [Grund]", "Konto aus einem seiner Arbeitsbereiche entfernen. Fragt vorher nach."],
     ["plan", "billing.manage", "plan <Konto> <Tage> [Tarif] <Grund>", "Mitgliedschaftstage gutschreiben (30, 30d, 4w). Sie zählen ab dem Ende der laufenden Mitgliedschaft. Ein kostenloses Konto braucht den Tarif (Plus, Pro, Ultra); ein bezahltes behält seinen, außer du nennst einen anderen. Die Tage laufen von selbst ab."],
+    ["unplan", "billing.manage", "unplan <Konto> <Grund>", "Einen von Hand vergebenen Tarif zurücknehmen: Das Konto ist sofort wieder im kostenlosen Tarif. Per Abo bezahlte Tarife werden nie entfernt. Fragt vorher nach."],
     ["credit", "billing.manage", "credit <Konto> <Euro> <Grund>", "KI-Guthaben gutschreiben (5, 2,50; negativ korrigiert). Das Konto bezahlt seine KI-Aufrufe daraus, sobald das Inklusivbudget des Tarifs aufgebraucht ist."],
     ["uncredit", "billing.manage", "uncredit <Konto> [Euro] <Grund>", "Von Hand gutgeschriebenes KI-Guthaben zurücknehmen: den Betrag, ohne Betrag alles, was davon übrig ist. Bezahltes Guthaben wird nie entfernt."],
     ["alts", "users.ban", "alts <Konto>", "Andere Konten, die dasselbe Gerät oder Netzwerk genutzt haben."],
@@ -483,7 +492,7 @@
     input.focus();
   };
   // ---------- Vorschläge beim Tippen (wie die Konsole in der App) ----------
-  const USER_COMMANDS = ["user", "ban", "unban", "warn", "mute", "unmute", "kick", "plan", "credit", "uncredit", "audit", "alts", "note"];
+  const USER_COMMANDS = ["user", "ban", "unban", "warn", "unwarn", "mute", "unmute", "kick", "plan", "unplan", "credit", "uncredit", "audit", "alts", "note"];
   const euro = (cents) => (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
   // Euro für credit: "5", "5.50", "5,50", "-2" → Cent; nie null, höchstens 500 € wie auf dem Server.
   function parseEuroCents(token) {
@@ -654,6 +663,8 @@
           const r = await api("POST", `/admin/users/${encodeURIComponent(u.id)}/ban`, { banned: false }); print("ok", r.changed ? `${u.displayName} ist nicht mehr gesperrt.` : `${u.displayName} war nicht gesperrt.`); return; }
         case "warn": { if (!need(2)) return; const u = await resolveUser(args[0]); if (!u) return;
           const r = await api("POST", `/admin/users/${encodeURIComponent(u.id)}/warn`, { reason: args.slice(1).join(" ") }); print("ok", `${u.displayName} wurde verwarnt und benachrichtigt. Verwarnungen bisher: ${r.warnings}.`); return; }
+        case "unwarn": { if (!need(1)) return; const u = await resolveUser(args[0]); if (!u) return;
+          const r = await api("POST", `/admin/users/${encodeURIComponent(u.id)}/unwarn`, { reason: args.slice(1).join(" ") }); print("ok", `Verwarnung „${r.warning}“ von ${u.displayName} zurückgenommen. Verwarnungen jetzt: ${r.warnings}.`); return; }
         case "mute": { if (!need(1)) return; const u = await resolveUser(args[0]); if (!u) return;
           const rest = args.slice(1); let minutes = parseDur(rest[0]); if (minutes !== undefined) rest.shift();
           const r = await api("POST", `/admin/users/${encodeURIComponent(u.id)}/mute`, { durationMinutes: minutes || undefined, reason: rest.join(" ") });
@@ -684,6 +695,16 @@
           const r = await api("POST", `/admin/users/${encodeURIComponent(u.id)}/plan/extend`, { days, plan, reason: why });
           print("ok", `${u.displayName} ist bis ${fmt(r.renewsAt)} auf ${r.plan} (${r.days} Tage gutgeschrieben).`);
           return;
+        }
+        case "unplan": {
+          if (!need(2)) return; const u = await resolveUser(args[0]); if (!u) return;
+          const why = args.slice(1).join(" ").trim();
+          S.console.pendingText = `Den von Hand vergebenen Tarif von ${u.displayName} entfernen? Grund: ${why}`;
+          S.console.pending = async () => {
+            const r = await api("POST", `/admin/users/${encodeURIComponent(u.id)}/plan/remove`, { reason: why });
+            print("ok", `${u.displayName} ist wieder auf ${r.plan} (${r.removed} entfernt).`);
+          };
+          renderConsole(); return;
         }
         case "credit": {
           if (!need(3)) return;
