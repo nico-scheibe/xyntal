@@ -93,7 +93,9 @@
     const rows = row("Über mich", p.about) + row("Ich biete", p.offer) + row("Ich suche", p.seek)
       + (links.length ? `<div class="pf-row"><h2>${esc(t("Links"))}</h2><p class="pf-links">${links.map(([l, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener noreferrer nofollow">${esc(l)} ↗</a>`).join("")}</p></div>` : "");
     const headline = p.headline || c.pitch || "";
-    return `<header class="pf-head"><p class="pf-address" data-no-i18n>xyntal.de/${esc(c.handle)}</p>${headline ? `<p class="pf-headline" data-no-i18n>${esc(headline)}</p>` : ""}</header>
+    // Beim ersten User spricht das Ei (Sprechblase) – Adresse und Überschrift entfallen dort
+    const egg = !!(window.XyntalCardHtml.isFirstUser && window.XyntalCardHtml.isFirstUser(c));
+    return `${egg ? "" : `<header class="pf-head"><p class="pf-address" data-no-i18n>xyntal.de/${esc(c.handle)}</p>${headline ? `<p class="pf-headline" data-no-i18n>${esc(headline)}</p>` : ""}</header>`}
       ${rows ? `<section class="pf-about">${rows}</section>` : `<p class="pf-muted">${esc(t("Lerne die Person hinter der Idee kennen."))}</p>`}`;
   }
   // Eure Passung – vom Matching des App-Servers (wie „Für dich“), nur für Angemeldete.
