@@ -126,7 +126,9 @@ async function handleBetaFeedback(req, res) {
     for (const [id, item] of feedbackLimits) if (item.until <= now) feedbackLimits.delete(id);
     const remote = req.socket.remoteAddress || 'unknown';
     const local = ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(remote);
-    const ip = local && req.headers['cf-connecting-ip'] ? req.headers['cf-connecting-ip'] : remote;
+    // Hetzner: Caddy sits in front (TRUST_PROXY=1) and overwrites X-Forwarded-For with the real client.
+    const forwarded = process.env.TRUST_PROXY === '1' ? String(req.headers['x-forwarded-for'] || '').split(',').pop().trim() : '';
+    const ip = forwarded || (local && req.headers['cf-connecting-ip'] ? req.headers['cf-connecting-ip'] : remote);
     const limits = [['all', 40], ['ip:' + ip, 10], ['email:' + email.toLowerCase(), 3]];
     if (limits.some(([id, max]) => (feedbackLimits.get(id)?.count || 0) >= max)) return feedbackJson(res, 429, { error: 'Du hast gerade mehrere Nachrichten gesendet. Bitte versuche es später erneut.' });
     for (const [id] of limits) {

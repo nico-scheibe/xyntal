@@ -1,0 +1,76 @@
+# Xyntal auf einem eigenen Server (Hetzner): Website, App-Backend, HTTPS, Backups.
+# Ordner auf dem Server (siehe README.md):
+#   /opt/xyntal/site      dieses Repo (nico-scheibe/xyntal)
+#   /opt/xyntal/app       nico-scheibe/xyntal-app-windows (privat)
+#   /opt/xyntal/secrets   api.env, website.env, github-token (nie committen)
+#   /opt/xyntal/data/api  Datenbank und Uploads des App-Backends
+#   /opt/xyntal/backups   tägliche Wiederherstellungs-Bündel
+name: xyntal
+
+services:
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports: ['80:80', '443:443', '443:443/udp']
+    environment:
+      ACME_EMAIL: ${ACME_EMAIL:-admin@xyntal.com}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [website, api]
+    logging: &logs
+      driver: json-file
+      options: { max-size: 10m, max-file: '3' }
+
+  website:
+    build:
+      context: ../..
+      dockerfile: hosting/hetzner/website.Dockerfile
+    restart: unless-stopped
+    init: true
+    env_file: /opt/xyntal/secrets/website.env
+    volumes:
+      - website_state:/srv/site/.deploy
+    logging: *logs
+
+  api:
+    build: /opt/xyntal/app/server
+    restart: unless-stopped
+    init: true
+    env_file: /opt/xyntal/secrets/api.env
+    environment:
+      HOST: 0.0.0.0
+      PORT: '8787'
+      DB_PATH: /app/data/xyntalnet.db
+      XYNTAL_SKIP_DOTENV: '1'
+      TRUST_PROXY: '1'
+    volumes:
+      - /opt/xyntal/data/api:/app/data
+    # Beim Stoppen bekommen offene Long-Polls noch eine saubere Antwort.
+    stop_grace_period: 20s
+    logging: *logs
+
+  backup:
+    build: /opt/xyntal/app/server
+    restart: unless-stopped
+    init: true
+    user: '0:0'
+    command: ['node', 'scripts/backup-loop.ts', '/backups']
+    healthcheck: { disable: true }
+    environment:
+      XYNTAL_SKIP_DOTENV: '1'
+      DB_PATH: /app/data/xyntalnet.db
+      BACKUP_INTERVAL_HOURS: '24'
+      BACKUP_KEEP: '14'
+    volumes:
+      - /opt/xyntal/data/api:/app/data:ro
+      - /opt/xyntal/backups:/backups
+    depends_on:
+      api: { condition: service_healthy }
+    logging: *logs
+
+volumes:
+  caddy_data:
+  caddy_config:
+  website_state:
