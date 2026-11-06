@@ -18,7 +18,10 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
-    depends_on: [website, api]
+    # Bewusst kein depends_on: sonst startet Compose Caddy bei jedem neuen
+    # Backend-Image mit, und Caddy wartet beim Stoppen auf offene Long-Polls
+    # (~10 s, in denen auch die Website weg ist). Caddy findet "api" und
+    # "website" bei jeder Anfrage neu.
     logging: &logs
       driver: json-file
       options: { max-size: 10m, max-file: '3' }

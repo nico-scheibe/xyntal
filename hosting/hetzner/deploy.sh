@@ -22,7 +22,7 @@ fi
 echo "App-Backend: $(git -C "$ROOT/app" log -1 --format='%h %s')"
 
 cd "$ROOT/site/hosting/hetzner"
-docker compose build --pull
+docker compose build --pull --quiet
 docker compose up -d --remove-orphans
 docker image prune -f >/dev/null
 docker compose ps
