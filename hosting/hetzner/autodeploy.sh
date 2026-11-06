@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Holt neue Commits von GitHub und rollt sie selbst aus (läuft alle 5 Minuten
+# Holt neue Commits von GitHub und rollt sie selbst aus (läuft alle 30 Sekunden
 # über xyntal-autodeploy.timer). Zwei Schutzregeln, damit Nutzer nichts merken:
 #   1. Neu gestartet wird nur ein Dienst, dessen Image sich wirklich ändert.
 #      Ein Commit, der nur die Desktop-App betrifft, startet das Backend nicht neu.

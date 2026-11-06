@@ -12,7 +12,7 @@ und den Cloudflare-Tunnel. Darauf laufen mit Docker Compose:
 
 ## Automatische Updates
 
-`autodeploy.sh` sieht alle 5 Minuten nach neuen Commits auf `main` (dieses Repo) und
+`autodeploy.sh` sieht alle 30 Sekunden nach neuen Commits auf `main` (dieses Repo) und
 `master` (`xyntal-app-windows`) und rollt sie selbst aus (systemd-Timer
 `xyntal-autodeploy.timer`). Anders als auf Daki merken Nutzer davon fast nichts:
 

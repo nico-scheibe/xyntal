@@ -1,9 +1,10 @@
 [Unit]
-Description=Xyntal: alle 5 Minuten nach neuen Commits sehen
+Description=Xyntal: alle 30 Sekunden nach neuen Commits sehen
 
 [Timer]
-OnBootSec=2min
-OnUnitActiveSec=5min
+OnBootSec=1min
+OnUnitActiveSec=30s
+AccuracySec=1s
 Persistent=true
 
 [Install]

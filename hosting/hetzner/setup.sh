@@ -24,7 +24,7 @@ fi
 
 [ -d "$ROOT/site/.git" ] || git clone https://github.com/nico-scheibe/xyntal.git "$ROOT/site"
 
-# Automatische Updates von GitHub (alle 5 Minuten, siehe autodeploy.sh).
+# Automatische Updates von GitHub (alle 30 Sekunden, siehe autodeploy.sh).
 install -m 644 "$ROOT/site/hosting/hetzner/xyntal-autodeploy.service" "$ROOT/site/hosting/hetzner/xyntal-autodeploy.timer" /etc/systemd/system/
 systemctl daemon-reload
 systemctl enable --now xyntal-autodeploy.timer
