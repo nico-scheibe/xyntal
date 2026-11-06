@@ -45,6 +45,10 @@
 .mc-badge-admin { display: inline-flex; align-items: center; border: 1px solid rgba(112,190,255,.62); background: #2F7BFF; box-shadow: none; letter-spacing: .035em; }
 .mc-badge-first-user { display: inline-flex; align-items: center; gap: 5px; border: 1px solid rgba(255,255,255,.52); background: #3FE0F0; color: #06181B; box-shadow: none; letter-spacing: .015em; }
 .mc-badge-first-user::before { content: "01"; font: 700 9px/1 var(--f-text); letter-spacing: -.04em; }
+.mc-badges { display: inline-flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 6px; }
+.mc-badges .mc-badge-beta-tester { margin-left: 0; }
+.mc-badge-egg { display: inline-flex; align-items: center; gap: 6px; padding: 3px 11px 3px 3px; border: 1px solid rgba(255, 236, 200, .55); background: linear-gradient(120deg, #F3DEC0, #D9B98F); color: #3A2410; box-shadow: none; letter-spacing: .015em; }
+.mc-badge-egg img { width: 18px; height: 18px; border-radius: 50%; object-fit: cover; display: block; }
 .mc-head { display: flex; margin-top: -54px; }
 .mc-blocks { display: grid; gap: 14px; }
 .mc-blocks > [hidden] { display: none; }
