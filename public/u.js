@@ -59,6 +59,7 @@
           </div>
         </aside>
         <div class="pf-main">
+          ${eggHtml(c)}
           ${profileHtml(c)}
           ${me && UUID.test(c.user_id || "") && !own && window.XyntalApp ? `<section class="xm xm-public" aria-label="${esc(t("Eure Passung"))}" data-match hidden></section>` : ""}
           ${member ? "" : `<div class="pf-join"><p>${esc(t("Auf Xyntal finden Entwickler, Designer und Gründer die richtigen Leute für ihre Idee."))}</p><a class="btn btn-glass btn-sm" href="/beta">${esc(t("Für die Beta bewerben"))}</a></div>`}
@@ -71,6 +72,17 @@
     try { await navigator.clipboard.writeText(location.origin + location.pathname); status.textContent = t("Link kopiert."); }
     catch { status.textContent = location.host + location.pathname; }
   });
+
+  // Nur beim ersten User: das Ei (Last Egg Standing) mit seiner Bio in einer Sprechblase
+  function eggHtml(c) {
+    if (!window.XyntalCardHtml.isFirstUser || !window.XyntalCardHtml.isFirstUser(c)) return "";
+    const p = c.profile || {};
+    const bio = String(p.about || p.headline || c.pitch || "").trim();
+    return `<figure class="pf-egg">
+        <a class="pf-egg-figure" href="/egg" aria-label="Last Egg Standing"><img src="/badges/egg-stand.png" alt="" width="115" height="180" decoding="async"></a>
+        <figcaption class="pf-egg-bubble">${bio ? `<span data-no-i18n>${esc(bio)}</span>` : `<span>…</span>`}</figcaption>
+      </figure>`;
+  }
 
   // Profilinfos aus dem Konto (nur wenn die Person ihr Profil öffentlich gemacht hat)
   const safeUrl = (u) => (/^https?:\/\/[^\s]+$/i.test(u || "") ? u : "");

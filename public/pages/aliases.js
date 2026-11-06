@@ -6,7 +6,9 @@
     "datenschutz": "/impressum#datenschutz", "rechte": "/impressum#deine-rechte", "deine-rechte": "/impressum#deine-rechte",
     "kontakt": "/impressum#impressum", "warteliste": "/#warteliste", "newsletter": "/#warteliste",
     "registrieren": "/beta#bewerben", "register": "/beta#bewerben", "signup": "/beta#bewerben",
-    "karte": "/meine-karte", "pricing": "/preise", "kuendigung": "/kuendigen", "kündigen": "/kuendigen", "cancel": "/kuendigen", "terms": "/agb", "nutzungsbedingungen": "/agb", "widerrufsrecht": "/widerruf", "widerrufsbelehrung": "/widerruf", "withdrawal": "/widerruf", "tarife": "/preise", "kosten": "/preise", "team": "/mitglieder", "hilfe": "/beta", "help": "/beta", "support": "/beta"
+    "karte": "/meine-karte", "pricing": "/preise", "kuendigung": "/kuendigen", "kündigen": "/kuendigen", "cancel": "/kuendigen", "terms": "/agb", "nutzungsbedingungen": "/agb", "widerrufsrecht": "/widerruf", "widerrufsbelehrung": "/widerruf", "withdrawal": "/widerruf", "tarife": "/preise", "kosten": "/preise", "team": "/mitglieder", "hilfe": "/beta", "help": "/beta", "support": "/beta", "eier": "/egg", "ei": "/egg"
   }[location.pathname.replace(/^\/+|\/+$/g, "").toLowerCase()];
+  // /Egg und andere Schreibweisen: der Server findet nur egg.html in Kleinbuchstaben.
+  if (!to && location.pathname.replace(/^\/+|\/+$/g, "").toLowerCase() === "egg") to = "/egg";
   if (to) location.replace(to);
 })();
