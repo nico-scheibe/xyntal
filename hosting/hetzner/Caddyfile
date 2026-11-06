@@ -1,0 +1,24 @@
+# HTTPS-Zertifikate holt Caddy automatisch (Let's Encrypt).
+# Voraussetzung: die DNS-Einträge zeigen direkt auf diesen Server
+# (in Cloudflare „DNS only“, graue Wolke).
+{
+	email {$ACME_EMAIL}
+}
+
+xyntal.de, www.xyntal.de {
+	encode zstd gzip
+	reverse_proxy website:4129
+}
+
+api.xyntal.de {
+	encode zstd gzip
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy no-referrer
+		Strict-Transport-Security "max-age=31536000"
+	}
+	# Long-Polling und Uploads sofort durchreichen, nichts puffern.
+	reverse_proxy api:8787 {
+		flush_interval -1
+	}
+}

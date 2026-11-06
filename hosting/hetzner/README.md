@@ -1,0 +1,62 @@
+# Hetzner-Server (xyntal.de und api.xyntal.de)
+
+Ein eigener Server (Hetzner Cloud CAX11, Nürnberg, IPv4 `91.98.171.233`) ersetzt Daki
+und den Cloudflare-Tunnel. Darauf laufen mit Docker Compose:
+
+| Dienst | Aufgabe |
+|---|---|
+| `caddy` | HTTPS (Let's Encrypt) für `xyntal.de`, `www.xyntal.de`, `api.xyntal.de` |
+| `website` | `hosting/daki/server.cjs`; holt `public/` weiterhin alle 30 s von `main`, ohne Neustart |
+| `api` | App-Backend aus `nico-scheibe/xyntal-app-windows` (`server/`), Daten in `/opt/xyntal/data/api` |
+| `backup` | Tägliches, geprüftes Wiederherstellungs-Bündel nach `/opt/xyntal/backups`, 14 bleiben |
+
+Anders als auf Daki startet das App-Backend **nicht bei jedem Commit neu**, sondern nur,
+wenn `deploy.sh` läuft. Laufende Anrufe und Live-Verbindungen bleiben so erhalten.
+
+## Einrichtung (einmalig)
+
+1. Als root auf dem Server:
+   ```sh
+   curl -fsSL https://raw.githubusercontent.com/nico-scheibe/xyntal/main/hosting/hetzner/setup.sh | bash
+   ```
+2. GitHub-Token (fine-grained, nur `xyntal-app-windows`, „Contents: Read“; derselbe wie
+   `.app-github-token` auf Daki) nach `/opt/xyntal/secrets/github-token`, `chmod 600`.
+3. `/opt/xyntal/secrets/api.env`: Inhalt von `.app-backend.env` auf Daki (ohne `HOST`, `PORT`, `DB_PATH`).
+4. `/opt/xyntal/secrets/website.env`: die Website-Geheimnisse von Daki als `KEY=VALUE`:
+   `BREVO_API_KEY` (= `.brevo-key`), `BREVO_LIST_ID` (= `.brevo-list`),
+   `BREVO_SENDER_EMAIL` (= `.brevo-sender`) und die Zeilen aus `.smtp.env`.
+5. Daten umziehen (unten), dann `/opt/xyntal/site/hosting/hetzner/deploy.sh`.
+
+## Daten von Daki umziehen
+
+Auf Daki das App-Backend stoppen (Server in Daki stoppen), dann aus
+`/home/container/xyntal/.app-data/` herunterladen (Daki → Files oder SFTP):
+`xyntalnet.db`, falls vorhanden `xyntalnet.db-wal`, den Ordner `uploads/` und `integrations.key`.
+Diese nach `/opt/xyntal/data/api/` auf den neuen Server kopieren, z. B. aus Windows-PowerShell
+(eine `xyntalnet.db-wal` genauso mitkopieren):
+
+```sh
+scp -i $env:USERPROFILE\.ssh\xyntal.ssh -r xyntalnet.db uploads integrations.key root@91.98.171.233:/opt/xyntal/data/api/
+```
+
+Danach auf dem Server `chown -R 1000:1000 /opt/xyntal/data/api`.
+
+## DNS umstellen (Cloudflare)
+
+`xyntal.de`, `www` und `api` als **A-Record** auf `91.98.171.233` (AAAA auf die IPv6),
+**„DNS only“ (graue Wolke)**, damit Caddy die Zertifikate bekommt und kein Umweg entsteht.
+MX-, SPF-, DKIM- und DMARC-Einträge für IONOS-Mail bleiben unverändert.
+Den Tunnel `xyntal-daki` erst löschen, wenn alles auf dem neuen Server läuft.
+
+## Alltag
+
+| Was | Befehl |
+|---|---|
+| Neue App-Version ausrollen | `/opt/xyntal/site/hosting/hetzner/deploy.sh` |
+| Bestimmten Tag ausrollen | `APP_REF=v1.4.0 /opt/xyntal/site/hosting/hetzner/deploy.sh` |
+| Status | `cd /opt/xyntal/site/hosting/hetzner && docker compose ps` |
+| Logs | `docker compose logs -f api` (oder `website`, `caddy`, `backup`) |
+| Backup prüfen | `docker compose exec backup npm run backup:verify -- /backups/<Bündel>` |
+
+Website-Änderungen (`public/`) brauchen kein Deploy, sie sind nach spätestens 30 s online.
+Backups zusätzlich regelmäßig auf einen zweiten Ort kopieren (z. B. Hetzner Storage Box).
