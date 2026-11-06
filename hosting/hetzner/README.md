@@ -10,8 +10,22 @@ und den Cloudflare-Tunnel. Darauf laufen mit Docker Compose:
 | `api` | App-Backend aus `nico-scheibe/xyntal-app-windows` (`server/`), Daten in `/opt/xyntal/data/api` |
 | `backup` | Tägliches, geprüftes Wiederherstellungs-Bündel nach `/opt/xyntal/backups`, 14 bleiben |
 
-Anders als auf Daki startet das App-Backend **nicht bei jedem Commit neu**, sondern nur,
-wenn `deploy.sh` läuft. Laufende Anrufe und Live-Verbindungen bleiben so erhalten.
+## Automatische Updates
+
+`autodeploy.sh` sieht alle 5 Minuten nach neuen Commits auf `main` (dieses Repo) und
+`master` (`xyntal-app-windows`) und rollt sie selbst aus (systemd-Timer
+`xyntal-autodeploy.timer`). Anders als auf Daki merken Nutzer davon fast nichts:
+
+- Neu gestartet wird nur ein Dienst, dessen Image sich ändert. Commits, die nur die
+  Desktop-App oder `public/` betreffen, starten das Backend nicht neu.
+- Läuft gerade ein Anruf, wartet das Update, bis er vorbei ist (höchstens 2 Stunden).
+- Schlägt ein Build fehl, läuft die alte Version weiter; beim nächsten Durchlauf wird es erneut versucht.
+
+| Was | Befehl |
+|---|---|
+| Was hat der Timer gemacht? | `journalctl -u xyntal-autodeploy -n 50` |
+| Automatik aus / an | `systemctl disable --now xyntal-autodeploy.timer` / `enable --now` |
+| Sofort prüfen statt warten | `systemctl start xyntal-autodeploy` |
 
 ## Einrichtung (einmalig)
 
