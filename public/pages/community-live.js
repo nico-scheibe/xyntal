@@ -146,7 +146,9 @@
     loading = true;
     try {
       // no-cache: der Browser fragt mit dem ETag nach, ein 304 liefert den gespeicherten Stand.
-      const res = await fetch(`${API}/public/community?limit=30`, { cache: "no-cache", headers: { accept: "application/json" } });
+      // lang: Update-Übersichten in #updates kommen in der Sprache der Seite.
+      const lang = document.documentElement.lang === "en" ? "en" : "de";
+      const res = await fetch(`${API}/public/community?limit=30&lang=${lang}`, { cache: "no-cache", headers: { accept: "application/json" } });
       const json = await res.json().catch(() => null);
       if (!res.ok || !json || !json.data) throw new Error(`HTTP ${res.status}`);
       lastLoad = Date.now();
@@ -187,6 +189,8 @@
     if (document.visibilityState !== "visible") { clearTimeout(timer); return; }
     if (Date.now() - lastLoad >= REFRESH_MS) load(); else schedule(REFRESH_MS - (Date.now() - lastLoad));
   });
+  // Sprachwechsel: sofort in der neuen Sprache nachladen.
+  document.addEventListener("xyntal:lang", () => { clearTimeout(timer); load(); });
   // Zeitangaben („vor 3 Min.“) und neue Beiträge auch ohne Änderung frisch halten.
   setInterval(() => { if (data && document.visibilityState === "visible") render(); }, 60 * 1000);
 
