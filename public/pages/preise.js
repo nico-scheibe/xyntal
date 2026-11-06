@@ -58,7 +58,7 @@
       [T("Mitglieder pro Arbeitsbereich", "Members per workspace"), (l) => lim(l.membersPerWorkspace)],
       [T("Speicher", "Storage"), (l) => bytes(l.storageBytes)],
       [T("Größte Datei", "Largest file"), (l) => bytes(l.maxUploadBytes)],
-      [T("KI inklusive", "AI included"), (l, p) => (!l.ai ? T("Mit Guthaben", "With credit") : p.aiIncludedCents > 0 && callCents > 0 ? T(`etwa ${count(requests(p.aiIncludedCents))} Anfragen`, `about ${count(requests(p.aiIncludedCents))} requests`) : T("Ja", "Yes"))],
+      [T("KI inklusive", "AI included"), (l, p) => (!l.ai ? T("Nur Profil, 1×", "Profile only, once") : p.aiIncludedCents > 0 && callCents > 0 ? T(`etwa ${count(requests(p.aiIncludedCents))} Anfragen`, `about ${count(requests(p.aiIncludedCents))} requests`) : T("Ja", "Yes"))],
       [T("Eigene KI-Agenten", "Custom AI agents"), (l) => lim(l.agents)],
       [T("Aktive Automationen", "Active automations"), (l) => String(l.activeAutomations)],
       [T("Automations-Läufe pro Monat", "Automation runs per month"), (l) => (l.automationRunsPerMonth === null ? T("Fair Use", "Fair use") : l.automationRunsPerMonth.toLocaleString(en() ? "en-GB" : "de-DE"))],

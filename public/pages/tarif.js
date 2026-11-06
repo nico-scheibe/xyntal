@@ -68,6 +68,15 @@
   }
 
   function aiPanel(d) {
+    // Free hat keine Xyntal AI (bis auf den einen Profil-Assistenten) und kann
+    // deshalb auch kein Guthaben kaufen – statt Paketen nur der Hinweis.
+    if (d.entitlements && d.entitlements.ai === false) {
+      return `
+      <section class="xm-detail xm-billing">
+        <div class="xm-billing-head"><h2>${esc(t("Xyntal AI"))}</h2></div>
+        <p class="xm-billing-text">${esc(t("Xyntal AI ist Teil der bezahlten Tarife. In Free kannst du dein Profil einmal per KI ausfüllen lassen; ab Plus ist Claude eingebaut, ab Pro mit den stärkeren Claude-Modellen."))}</p>
+      </section>`;
+    }
     const ai = d.ai || {};
     const call = Number(ai.callCents || 0);
     const included = Number(ai.includedCents || 0);

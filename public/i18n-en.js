@@ -2365,6 +2365,7 @@ window.XYNTAL_EN = {
   "Abo verwalten": "Manage subscription",
   "Tarif wechseln, Zahlungsmethode, Rechnungen und Kündigung findest du im Abo-Portal von Stripe.": "Changing plans, payment method, invoices and cancellation are in Stripe's subscription portal.",
   "Xyntal AI zahlst du nach Verbrauch: {amount} pro Monat sind in deinem Tarif enthalten, darüber hinaus zahlt dein Guthaben.": "Xyntal AI is pay as you go: {amount} per month is included in your plan, beyond that your credit pays.",
+  "Xyntal AI ist Teil der bezahlten Tarife. In Free kannst du dein Profil einmal per KI ausfüllen lassen; ab Plus ist Claude eingebaut, ab Pro mit den stärkeren Claude-Modellen.": "Xyntal AI is part of the paid plans. On Free, AI can fill in your profile once; from Plus, Claude is built in, and from Pro with the stronger Claude models.",
   "Xyntal AI zahlst du nach Verbrauch: jeder Aufruf geht von deinem Guthaben ab.": "Xyntal AI is pay as you go: every call is paid from your credit.",
   "{amount} aufladen": "Add {amount}",
   "KI-Guthaben": "AI credit",
