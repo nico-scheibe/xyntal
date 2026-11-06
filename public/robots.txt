@@ -4,5 +4,6 @@ Disallow: /admin
 Disallow: /profil
 Disallow: /nachrichten
 Disallow: /passwort-neu
+Disallow: /egg
 
 Sitemap: https://xyntal.de/sitemap.xml

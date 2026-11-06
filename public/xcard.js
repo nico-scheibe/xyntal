@@ -61,5 +61,7 @@
         </article>`;
   }
 
+  // Auch für u.js (das Ei mit Sprechblase auf der Profilseite des ersten Users)
+  html.isFirstUser = (c) => !!c && (c.user_id === FIRST_USER_ID || String(c.handle || "").toLowerCase() === FIRST_USER_HANDLE);
   window.XyntalCardHtml = html;
 })();
