@@ -1,0 +1,11 @@
+[Unit]
+Description=Xyntal: alle 30 Sekunden nach neuen Commits sehen
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=30s
+AccuracySec=1s
+Persistent=true
+
+[Install]
+WantedBy=timers.target
