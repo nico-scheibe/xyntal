@@ -9,6 +9,8 @@
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   let plans = null;
   let callCents = 0;
+  let packs = [];
+  let packCredits = [];
   let cycle = "month";
   let signedIn = false;
   try { signedIn = !!localStorage.getItem("sb-rralgrlujoupprwlvoyo-auth-token"); } catch { /* privat */ }
@@ -58,7 +60,7 @@
       [T("Mitglieder pro Arbeitsbereich", "Members per workspace"), (l) => lim(l.membersPerWorkspace)],
       [T("Speicher", "Storage"), (l) => bytes(l.storageBytes)],
       [T("Größte Datei", "Largest file"), (l) => bytes(l.maxUploadBytes)],
-      [T("KI inklusive", "AI included"), (l, p) => (!l.ai ? T("Mit Guthaben", "With credit") : p.aiIncludedCents > 0 && callCents > 0 ? T(`etwa ${count(requests(p.aiIncludedCents))} Anfragen`, `about ${count(requests(p.aiIncludedCents))} requests`) : T("Ja", "Yes"))],
+      [T("KI inklusive", "AI included"), (l, p) => (!l.ai ? T("Nur Profil, 1×", "Profile only, once") : p.aiIncludedCents > 0 && callCents > 0 ? T(`etwa ${count(requests(p.aiIncludedCents))} Anfragen`, `about ${count(requests(p.aiIncludedCents))} requests`) : T("Ja", "Yes"))],
       [T("Eigene KI-Agenten", "Custom AI agents"), (l) => lim(l.agents)],
       [T("Aktive Automationen", "Active automations"), (l) => String(l.activeAutomations)],
       [T("Automations-Läufe pro Monat", "Automation runs per month"), (l) => (l.automationRunsPerMonth === null ? T("Fair Use", "Fair use") : l.automationRunsPerMonth.toLocaleString(en() ? "en-GB" : "de-DE"))],
@@ -69,6 +71,26 @@
     table.innerHTML = `<caption class="sr-only">${T("Grenzen der Tarife im Vergleich", "Plan limits compared")}</caption><thead><tr><th scope="col">${T("Tarif", "Plan")}</th>${plans.map((p) => `<th scope="col">${esc(p.name)}</th>`).join("")}</tr></thead>
       <tbody>${rows.map(([label, fn]) => `<tr><th scope="row">${label}</th>${plans.map((p) => `<td>${esc(p.limits ? fn(p.limits, p) : "–")}</td>`).join("")}</tr>`).join("")}</tbody>`;
     document.querySelector("[data-compare]").hidden = false;
+    renderCredit();
+  }
+
+  // Guthaben-Pakete aus demselben Katalog: Preis, was es gutschreibt, und
+  // grob wie viele Anfragen das sind. Kaufen geht unter Profil → Tarif (ab Plus).
+  function renderCredit() {
+    const box = document.querySelector("[data-credit]");
+    if (!box || packs.length === 0) return;
+    box.querySelector("[data-packs]").innerHTML = packs.map((c, i) => {
+      const credit = Number(packCredits[i]) > 0 ? Number(packCredits[i]) : c;
+      const bonus = credit > c ? Math.round(((credit - c) / c) * 100) : 0;
+      const n = callCents > 0 ? requests(credit) : 0;
+      return `<div class="pr-pack"><b>${esc(euro(c))}</b>
+        <span>${esc(n > 0 ? T(`etwa ${count(n)} KI-Anfragen`, `about ${count(n)} AI requests`) : T(`${euro(credit)} Guthaben`, `${euro(credit)} credit`))}</span>
+        ${bonus > 0 ? `<small>${esc(T(`+${bonus} % Bonus`, `+${bonus}% bonus`))}</small>` : ""}</div>`;
+    }).join("");
+    box.querySelector("[data-credit-cta]").innerHTML = signedIn
+      ? `<a class="btn btn-ghost" href="/tarif">${T("Verbrauch ansehen und aufladen", "See usage and top up")}</a>`
+      : `<a class="btn btn-ghost" href="/beta">${T("Erst für die Beta bewerben", "Apply for the beta first")}</a>`;
+    box.hidden = false;
   }
 
   async function load() {
@@ -78,6 +100,8 @@
       if (!res.ok || !Array.isArray(json.data?.plans)) throw new Error("plans");
       plans = json.data.plans;
       callCents = Number(json.data.ai?.callCents) || 0;
+      packs = Array.isArray(json.data.ai?.packs) ? json.data.ai.packs.map(Number) : [];
+      packCredits = Array.isArray(json.data.ai?.packCredits) ? json.data.ai.packCredits : [];
       render();
     } catch {
       grid.innerHTML = `<p class="pr-loading">${T("Die Tarife konnten gerade nicht geladen werden.", "The plans couldn't be loaded right now.")} <a href="/preise">${T("Neu laden", "Reload")}</a> · <a href="mailto:admin@xyntal.com">admin@xyntal.com</a></p>`;
