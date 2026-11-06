@@ -83,7 +83,7 @@
         <figcaption class="pf-egg-bubble">${bio ? `<span data-no-i18n>${esc(bio)}</span>` : `<span>…</span>`}</figcaption>
       </figure>
       <section class="pf-award" aria-label="Auszeichnung" data-no-i18n>
-        <img src="/badges/golden-egg-award.webp" alt="Goldenes Ei als Pokal: Golden Goose Egg Award" width="150" height="284" loading="lazy" decoding="async">
+        <span class="pf-award-trophy"><span class="pf-award-float"><img src="/badges/golden-egg-award.webp" alt="Goldenes Ei als Pokal: Golden Goose Egg Award" width="85" height="180" decoding="async"><i class="pf-award-shine" aria-hidden="true"></i></span></span>
         <div>
           <p class="pf-award-kicker">Auszeichnung</p>
           <h2>Golden Goose Egg Award</h2>
