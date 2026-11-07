@@ -3,7 +3,8 @@
    Dunkles, warmes Grau. Serifen-Überschriften (Source Serif 4), Fließtext
    in IBM Plex Sans, Mono für Kapitelnummern und Labels. Keine Verläufe,
    kein Glas: Struktur kommt aus Linien, Nummern und einer Beispiel-Karte.
-   Die einzige Signalfarbe neben dem Logo ist das Blau (--key).
+   Die einzige Signalfarbe neben dem Logo ist das Blau (--key); nur die
+   Beispiel-Karten im Einstieg tragen die Farben, die Mitglieder selbst wählen.
    ===================================================================== */
 :root {
   --bg: #1C1C1C;
@@ -106,45 +107,29 @@ html.js .reveal.is-visible { opacity: 1; transform: none; animation: none; }
   .opener-card { grid-area: card; justify-self: end; }
 }
 
-/* ---------- Beispiel-Karte: ein Vorschlag mit Begründung ---------- */
-.opener-card { width: min(100%, 440px); display: grid; gap: 14px; }
-.match-wrap { position: relative; padding-top: 14px; }
-.match-stack { position: absolute; inset: 14px 0 0; pointer-events: none; }
-.match-stack span { position: absolute; inset: 0; border: 1px solid var(--line); border-radius: 3px; background: var(--bg); }
-.match-stack span:nth-child(1) { transform: translate(7px, -7px); opacity: 0.8; }
-.match-stack span:nth-child(2) { transform: translate(14px, -14px); opacity: 0.45; }
-.match {
-  position: relative; display: grid; gap: 18px; padding: 20px 22px 18px;
-  border: 1px solid var(--line-2); border-radius: 3px; background: var(--bg-2);
-  box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.7);
+/* ---------- Beispiel-Karten: echte Xyntal-Karten (xcard.css, banners.css), gefächert ---------- */
+.opener-card { width: min(100%, 440px); display: grid; gap: 16px; justify-items: center; }
+.card-fan {
+  position: relative; display: grid; width: min(100%, 384px); margin-top: 36px;
+  isolation: isolate; cursor: pointer; -webkit-tap-highlight-color: transparent;
 }
-.match-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-.match-tag { padding: 4px 7px; border: 1px solid var(--line-2); border-radius: 2px; color: var(--text-2); }
-.match-who { display: grid; grid-template-columns: 44px 1fr; gap: 14px; align-items: center; }
-.match-avatar {
-  display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%;
-  background: var(--bg-3); border: 1px solid var(--line-2);
-  font: 600 14px/1 var(--f-sans); letter-spacing: 0.02em; color: var(--text);
+.card-fan:focus-visible { outline: 2px solid var(--key); outline-offset: 10px; border-radius: 30px; }
+.card-fan > .xcard-host {
+  grid-area: 1 / 1; display: grid; transform-origin: 50% 85%;
+  transition: transform 700ms var(--ease), opacity 700ms ease, filter 700ms ease;
 }
-.match-who b { display: block; font: 600 17px/1.25 var(--f-sans); letter-spacing: -0.01em; }
-.match-who span { display: block; margin-top: 3px; font-size: 13.5px; color: var(--text-2); }
-.match-want { font: italic 400 1.1rem/1.4 var(--f-serif); font-optical-sizing: auto; color: var(--text); }
-.match-why { display: grid; gap: 12px; padding-top: 16px; border-top: 1px solid var(--line); }
-.match-why > div { display: grid; grid-template-columns: 96px 1fr; gap: 12px; align-items: start; }
-.match-why dt { font: 500 11px/1.9 var(--f-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); }
-.match-why dd { display: grid; gap: 7px; font-size: 13.5px; line-height: 1.45; color: var(--text-2); }
-.bar { display: block; height: 3px; border-radius: 2px; background: var(--line); overflow: hidden; }
-.bar i { display: block; height: 100%; width: var(--w, 100%); background: var(--key); transform: scaleX(0); transform-origin: left; animation: grow 900ms var(--ease) forwards; }
-.match-why > div:nth-child(1) .bar i { animation-delay: 900ms; }
-.match-why > div:nth-child(2) .bar i { animation-delay: 1050ms; }
-.match-why > div:nth-child(3) .bar i { animation-delay: 1200ms; }
-.is-part .bar i { --w: 52%; opacity: 0.55; }
-@keyframes grow { to { transform: scaleX(1); } }
-.match-foot { display: flex; align-items: baseline; gap: 10px; padding-top: 14px; border-top: 1px solid var(--line); }
-.match-foot b { font: 500 1.35rem/1 var(--f-serif); color: var(--key); text-shadow: 0 0 16px var(--key-glow); }
-.match-foot-note { margin-left: auto; font-size: 12.5px; color: var(--text-3); text-align: right; }
-.opener-card figcaption { font-size: 13px; line-height: 1.5; color: var(--text-3); }
-@media (max-width: 420px) { .match-why > div { grid-template-columns: 1fr; gap: 6px; } .match-foot-note { display: none; } }
+.card-fan .my-card { width: 100%; transform: none; animation: none; }
+.card-fan > [data-pos="0"] { z-index: 3; transform: rotate(-1.5deg); }
+.card-fan > [data-pos="1"] { z-index: 2; transform: translate(28px, -24px) rotate(5deg) scale(0.95); opacity: 0.9; filter: brightness(0.75); }
+.card-fan > [data-pos="2"] { z-index: 1; transform: translate(-28px, -40px) rotate(-6.5deg) scale(0.9); opacity: 0.8; filter: brightness(0.55); }
+.card-fan .mc-avatar img { position: relative; width: calc(100% - 6px); height: calc(100% - 6px); border-radius: 50%; object-fit: cover; }
+.card-fan .mc-avatar.has-img > span { display: none; }
+.card-fan .mc-site { pointer-events: none; }
+.opener-card figcaption { font-size: 13px; line-height: 1.5; color: var(--text-3); text-align: center; max-width: 36ch; }
+@media (max-width: 480px) {
+  .card-fan > [data-pos="1"] { transform: translate(16px, -18px) rotate(4deg) scale(0.95); }
+  .card-fan > [data-pos="2"] { transform: translate(-16px, -30px) rotate(-5deg) scale(0.9); }
+}
 
 /* ---------- Wen du hier findest ---------- */
 .kinds { display: grid; gap: 36px; padding: clamp(40px, 6vw, 72px) 0; border-top: 1px solid var(--line); }
@@ -261,11 +246,11 @@ body.front .site-footer a { text-decoration: none; }
 @media (prefers-reduced-motion: reduce) {
   .button, .arrowlink span { transition: none; }
   .opener > *, .status-dot::after { animation: none; }
-  .bar i { animation: none; transform: none; }
+  .card-fan > .xcard-host { transition: none; }
   html.js .reveal { opacity: 1; transform: none; transition: none; animation: none; }
 }
 @media (forced-colors: active) {
   .button { border: 1px solid ButtonText; }
-  mark.key, .match-foot b { color: Highlight; text-shadow: none; }
-  .bar i, .status-dot, .closer-facts li::before { background: Highlight; }
+  mark.key { color: Highlight; text-shadow: none; }
+  .status-dot, .closer-facts li::before { background: Highlight; }
 }
