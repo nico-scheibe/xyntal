@@ -87,8 +87,18 @@ set test.uid = '00000000-0000-0000-0000-000000000102'; select pg_temp.expect('Be
 set test.uid = '00000000-0000-0000-0000-000000000103'; select pg_temp.expect('Ben 4', public.claim_referral('ben'), 'ok');
 set test.uid = '00000000-0000-0000-0000-000000000104'; select pg_temp.expect('Ben 5 = Grenze', public.claim_referral('ben'), 'limit');
 reset role;
+set role authenticated; set test.uid = '00000000-0000-0000-0000-00000000000b';
+select pg_temp.expect('Ben: 4 in Liste', jsonb_array_length(public.get_my_invites() -> 'list')::text, '4');
+select pg_temp.expect('Ben: Grenze erreicht, nächster Termin gesetzt', ((public.get_my_invites() ->> 'next_free') is not null)::text, 'true');
+select pg_temp.expect('Ben: noch keine Tage', public.get_my_invites() ->> 'days', '0');
+reset role;
 -- Service Role schreibt die Gutschrift
 set role service_role;
 update public.member_referrals set referrer_credited_at = now() where referred_id = '00000000-0000-0000-0000-00000000000b';
+reset role;
+update public.member_referrals set referrer_credited_at = now() where referrer_id = '00000000-0000-0000-0000-00000000000b';
+update public.member_referrals set referred_credited_at = now() where referred_id = '00000000-0000-0000-0000-00000000000b';
+set role authenticated; set test.uid = '00000000-0000-0000-0000-00000000000b';
+select pg_temp.expect('Ben: 4 + 1 Wochen', public.get_my_invites() ->> 'days', '35');
 reset role;
 \echo OK: member_invites

@@ -74,6 +74,12 @@ begin
     'recent',     (select count(*) from public.member_referrals where referrer_id = v_uid and created_at > now() - interval '3 months'),
     'max',        4,
     'credited',   (select count(*) from public.member_referrals where referrer_id = v_uid and referrer_credited_at is not null),
+    'days',       7 * ((select count(*) from public.member_referrals where referrer_id = v_uid and referrer_credited_at is not null)
+                     + (select count(*) from public.member_referrals where referred_id = v_uid and referred_credited_at is not null)),
+    'next_free',  (select case when count(*) >= 4 then min(created_at) + interval '3 months' end
+                     from public.member_referrals where referrer_id = v_uid and created_at > now() - interval '3 months'),
+    'list',       coalesce((select jsonb_agg(jsonb_build_object('at', r.created_at, 'credited', r.referrer_credited_at is not null) order by r.created_at desc)
+                     from (select created_at, referrer_credited_at from public.member_referrals where referrer_id = v_uid order by created_at desc limit 20) r), '[]'::jsonb),
     'invited_by', (select handle from public.member_referrals where referred_id = v_uid),
     'welcome_credited', (select referred_credited_at is not null from public.member_referrals where referred_id = v_uid)
   );

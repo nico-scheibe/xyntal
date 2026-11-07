@@ -211,6 +211,7 @@ mark.key { background: none; color: var(--key); text-shadow: 0 0 12px var(--key-
 .invite-row input { min-width: 0; height: 40px; padding: 0 12px; border: 0; background: transparent; color: var(--text); font: 500 13px/1 var(--f-mono); }
 .invite-row .btn { min-height: 40px; padding: 0 14px; border: 0; border-left: 1px solid var(--line-2); background: var(--text); color: var(--bg); font: 500 14px/1 var(--f-sans); cursor: pointer; }
 .invite-count { font-size: 13px; color: var(--text-3); }
+.invite-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 13px; color: var(--text-3); }
 body.is-member .news { display: none; }
 
 /* ---------- Knöpfe ---------- */
