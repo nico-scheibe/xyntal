@@ -75,6 +75,22 @@
     // Admins bekommen eine eigene, exklusive Profilseite (Aussehen: u.html, Abschnitt „Admin-Profil“)
     document.body.classList.toggle("admin-profile", admin);
     if (admin) adminTilt();
+    else linkGlow();
+  }
+  // Normale Profile: Links leuchten beim Überfahren in der Kartenfarbe der Person, das Licht folgt dem Mauszeiger
+  function linkGlow() {
+    const side = root.querySelector(".pf-side"), card = side && side.querySelector(".my-card");
+    if (!side || !card) return;
+    const accent = card.style.getPropertyValue("--t1").trim();
+    if (accent) side.style.setProperty("--lp-accent", accent);
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    side.addEventListener("pointermove", (e) => {
+      const a = e.target.closest && e.target.closest(".lp-link");
+      if (!a) return;
+      const r = a.getBoundingClientRect();
+      a.style.setProperty("--mx", `${Math.round(e.clientX - r.left)}px`);
+      a.style.setProperty("--my", `${Math.round(e.clientY - r.top)}px`);
+    });
   }
   root.addEventListener("click", async (e) => {
     if (!e.target.closest("[data-copy-link]")) return;
