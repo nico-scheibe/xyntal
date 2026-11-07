@@ -6,6 +6,12 @@
 .pf-side .lp-list { width: 100%; max-width: 380px; margin-top: 6px; }
 /* Mit Links wird die Spalte lang: dann nicht mehr kleben, sonst wären untere Links nicht erreichbar */
 @media (min-width: 900px) { .pf-side:has(.lp-list) { position: static; } }
+/* Breite Bildschirme: eigene Spalte links neben der Karte, im freien Rand der Seite */
+@media (min-width: 1720px) {
+  .pf-side:has(.lp-list) { position: sticky; top: 96px; }
+  .pf-side .lp-list { position: absolute; top: 0; right: calc(100% + 32px); width: 300px; max-height: calc(100vh - 120px); margin: 0;
+    overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; padding: 4px; }
+}
 
 .lp-list { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
 .lp-link { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 14px; min-height: 64px; padding: 10px 18px 10px 12px;
