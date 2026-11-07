@@ -156,13 +156,15 @@
   // Profilinfos aus dem Konto (nur wenn die Person ihr Profil öffentlich gemacht hat)
   const safeUrl = (u) => (/^https?:\/\/[^\s]+$/i.test(u || "") ? u : "");
   // Link-Seite: frei gewählte Links der Person; ohne eigene Links die festen Angaben aus Karte und Profil
+  // Gleiche Adresse trotz www, Schrägstrich am Ende oder Groß-/Kleinschreibung
+  const sameUrl = (a, b) => { const k = (u) => { try { const x = new URL(u); return `${x.hostname.replace(/^www\./, "")}${x.pathname.replace(/\/+$/, "")}${x.search}`.toLowerCase(); } catch { return u; } }; return k(a) === k(b); };
   function linkItems(c) {
     const own = Array.isArray(c.links) ? c.links.filter((l) => l && safeUrl(l.url) && String(l.title || "").trim()) : [];
     if (own.length) return own;
     const p = c.profile || {};
     return [["LinkedIn", p.linkedin, "linkedin"], ["Instagram", p.instagram, "instagram"], ["Website", p.website, "globe"], ["Website", c.link, "globe"]]
       .map(([title, url, icon]) => ({ title, url: safeUrl(url), icon }))
-      .filter((l, i, a) => l.url && a.findIndex((x) => x.url === l.url) === i);
+      .filter((l, i, a) => l.url && a.findIndex((x) => sameUrl(x.url, l.url)) === i);
   }
   function linksHtml(c) {
     const items = linkItems(c), I = window.XyntalLinkIcons;
