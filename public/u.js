@@ -18,7 +18,7 @@
   try { handle = decodeURIComponent(handle).toLowerCase(); } catch { handle = ""; }
   if (HANDLE.test(handle) && location.pathname !== `/${handle}`) history.replaceState(null, "", `/${handle}`);
 
-  const page = (html) => { root.innerHTML = html; };
+  const page = (html) => { document.body.classList.remove("admin-profile"); root.innerHTML = html; };
   root.addEventListener("click", (e) => { if (e.target.closest("[data-reload]")) location.reload(); });
   // Angemeldete sind schon dabei: statt Warteliste zu den Projekten
   let member = false, me = null;
@@ -40,6 +40,7 @@
   function renderCard(c) {
     const name = c.name || "?";
     const own = !!(me && c.user_id && c.user_id === me.id);
+    const admin = c.is_admin === true;
     document.title = `${name} · xyntal.de/${c.handle}`;
     const primary = !member
       ? `<a class="btn btn-primary" href="/#karte">${esc(t("Bau deine eigene Karte"))}</a>`
@@ -51,7 +52,7 @@
     page(`
       <div class="pf">
         <aside class="pf-side">
-          <div class="bp-stage">${window.XyntalCardHtml(c, { t, heading: "h1", avatarAttrs: "data-pub-avatar" })}</div>
+          <div class="bp-stage${admin ? " pf-admin-stage" : ""}">${window.XyntalCardHtml(c, { t, heading: "h1", avatarAttrs: "data-pub-avatar" })}</div>
           <div class="pf-actions">
             ${primary}
             <button class="btn btn-glass" type="button" data-copy-link>${esc(t("Link kopieren"))}</button>
@@ -61,10 +62,13 @@
         <div class="pf-main">
           ${eggHtml(c)}
           ${profileHtml(c)}
+          ${admin ? adminHtml(c) : ""}
           ${me && UUID.test(c.user_id || "") && !own && window.XyntalApp ? `<section class="xm xm-public" aria-label="${esc(t("Eure Passung"))}" data-match hidden></section>` : ""}
           ${member ? "" : `<div class="pf-join"><p>${esc(t("Auf Xyntal finden Entwickler, Designer und Gründer die richtigen Leute für ihre Idee."))}</p><a class="btn btn-glass btn-sm" href="/beta">${esc(t("Für die Beta bewerben"))}</a></div>`}
         </div>
       </div>`);
+    // Admins bekommen eine eigene, exklusive Profilseite (Aussehen: u.html, Abschnitt „Admin-Profil“)
+    document.body.classList.toggle("admin-profile", admin);
   }
   root.addEventListener("click", async (e) => {
     if (!e.target.closest("[data-copy-link]")) return;
@@ -92,6 +96,27 @@
       </section>`;
   }
 
+  // Admin-Profil: Siegel mit Hinweis, dass hier das Team hinter Xyntal schreibt
+  const ADMIN_ICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8 4.5 5.6v5.6c0 4.7 3.2 8.6 7.5 9.9 4.3-1.3 7.5-5.2 7.5-9.9V5.6z"/><path d="m8.6 11.9 2.4 2.4 4.6-4.8"/></svg>`;
+  function adminHtml(c) {
+    const first = String(c.name || "").trim().split(/\s+/)[0] || "";
+    return `<section class="pf-admin" aria-label="${esc(t("Team Xyntal"))}">
+        <span class="pf-admin-seal" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><defs><linearGradient id="pfa-a" x1="3" y1="21" x2="21" y2="3" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#B36BFF"/><stop offset="1" stop-color="#3A8AFF"/></linearGradient><linearGradient id="pfa-b" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#3A8AFF"/><stop offset="1" stop-color="#3FE0F0"/></linearGradient><mask id="pfa-g" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><path d="M3 21Q8.59 8.59 21 3" fill="none" stroke="#000" stroke-width="7.4" stroke-linecap="round"/></mask></defs><path d="M3 3Q15.41 8.59 21 21" fill="none" stroke="url(#pfa-b)" stroke-width="4.6" stroke-linecap="round" mask="url(#pfa-g)"/><path d="M3 21Q8.59 8.59 21 3" fill="none" stroke="url(#pfa-a)" stroke-width="4.6" stroke-linecap="round"/></svg>
+        </span>
+        <div class="pf-admin-body">
+          <p class="pf-admin-kicker">${esc(t("Team Xyntal"))}</p>
+          <h2><span>${esc(t("Admin von Xyntal"))}</span></h2>
+          <p><span data-no-i18n>${esc(first)}</span> ${esc(t("gehört zum Team hinter Xyntal und kümmert sich um Community, Mitglieder und Sicherheit. Nachrichten von diesem Konto sind offiziell."))}</p>
+          <ul class="pf-admin-facts">
+            <li>${ADMIN_ICON}${esc(t("Offizielles Konto"))}</li>
+            <li>${esc(t("Moderation"))}</li>
+            <li>${esc(t("Direkter Draht zum Team"))}</li>
+          </ul>
+        </div>
+      </section>`;
+  }
+
   // Profilinfos aus dem Konto (nur wenn die Person ihr Profil öffentlich gemacht hat)
   const safeUrl = (u) => (/^https?:\/\/[^\s]+$/i.test(u || "") ? u : "");
   function profileHtml(c) {
@@ -103,7 +128,7 @@
     const headline = p.headline || c.pitch || "";
     // Beim ersten User spricht das Ei (Sprechblase) – Adresse und Überschrift entfallen dort
     const egg = !!(window.XyntalCardHtml.isFirstUser && window.XyntalCardHtml.isFirstUser(c));
-    return `${egg ? "" : `<header class="pf-head"><p class="pf-address" data-no-i18n>xyntal.de/${esc(c.handle)}</p>${headline ? `<p class="pf-headline" data-no-i18n>${esc(headline)}</p>` : ""}</header>`}
+    return `${egg ? "" : `<header class="pf-head"><p class="pf-address"><span data-no-i18n>xyntal.de/${esc(c.handle)}</span>${c.is_admin === true ? `<span class="pf-admin-chip">${ADMIN_ICON}${esc(t("Offizielles Konto"))}</span>` : ""}</p>${headline ? `<p class="pf-headline" data-no-i18n>${esc(headline)}</p>` : ""}</header>`}
       ${rows ? `<section class="pf-about">${rows}</section>` : `<p class="pf-muted">${esc(t("Lerne die Person hinter der Idee kennen."))}</p>`}`;
   }
   // Eure Passung – vom Matching des App-Servers (wie „Für dich“), nur für Angemeldete.
