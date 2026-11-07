@@ -1,0 +1,59 @@
+# Xyntals Anpassungen am offiziellen Supabase-Docker-Setup (wird von install.sh nach
+# /opt/xyntal/supabase kopiert und in COMPOSE_FILE eingetragen).
+#
+# • Nichts davon ist direkt aus dem Internet erreichbar: API-Gateway und Datenbank-
+#   Pooler hören nur auf 127.0.0.1. Nach außen geht alles über Caddy (db.xyntal.de).
+# • Dateien liegen im Hetzner-Bucket (MEDIA_S3_* aus /opt/xyntal/secrets/api.env),
+#   nicht auf der Server-Platte.
+# • Login-Mails verschickt die Edge Function send-auth-email über Brevo (Auth-Hook),
+#   wie im bisherigen Supabase-Projekt.
+services:
+  api-gw:
+    ports: !override
+      - "127.0.0.1:8000:8000/tcp"
+
+  supavisor:
+    ports: !override
+      - "127.0.0.1:5432:5432"
+      - "127.0.0.1:6543:6543"
+
+  storage:
+    environment:
+      STORAGE_BACKEND: s3
+      GLOBAL_S3_BUCKET: ${MEDIA_S3_BUCKET}
+      GLOBAL_S3_ENDPOINT: ${MEDIA_S3_ENDPOINT}
+      GLOBAL_S3_PROTOCOL: https
+      GLOBAL_S3_FORCE_PATH_STYLE: "false"
+      AWS_ACCESS_KEY_ID: ${MEDIA_S3_ACCESS_KEY}
+      AWS_SECRET_ACCESS_KEY: ${MEDIA_S3_SECRET_KEY}
+      REGION: ${MEDIA_S3_REGION}
+      # Größte Datei: die Tarif-Grenzen prüfen Website und Datenbank (bis 150 MB,
+      # Admins ohne Grenze); 2 GB ist nur die äußere Schranke.
+      FILE_SIZE_LIMIT: "2147483648"
+
+  auth:
+    environment:
+      GOTRUE_MFA_TOTP_ENROLL_ENABLED: "true"
+      GOTRUE_MFA_TOTP_VERIFY_ENABLED: "true"
+      GOTRUE_HOOK_SEND_EMAIL_ENABLED: "true"
+      GOTRUE_HOOK_SEND_EMAIL_URI: "http://functions:9000/send-auth-email"
+      GOTRUE_HOOK_SEND_EMAIL_SECRETS: ${SEND_EMAIL_HOOK_SECRET}
+      # Login-Anbieter: in .env eintragen (GOOGLE_*, LINKEDIN_*, APPLE_*), siehe README.
+      GOTRUE_EXTERNAL_GOOGLE_ENABLED: ${GOOGLE_ENABLED:-false}
+      GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOTRUE_EXTERNAL_GOOGLE_SECRET: ${GOOGLE_SECRET:-}
+      GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI: ${API_EXTERNAL_URL}/callback
+      GOTRUE_EXTERNAL_LINKEDIN_OIDC_ENABLED: ${LINKEDIN_ENABLED:-false}
+      GOTRUE_EXTERNAL_LINKEDIN_OIDC_CLIENT_ID: ${LINKEDIN_CLIENT_ID:-}
+      GOTRUE_EXTERNAL_LINKEDIN_OIDC_SECRET: ${LINKEDIN_SECRET:-}
+      GOTRUE_EXTERNAL_LINKEDIN_OIDC_REDIRECT_URI: ${API_EXTERNAL_URL}/callback
+      GOTRUE_EXTERNAL_APPLE_ENABLED: ${APPLE_ENABLED:-false}
+      GOTRUE_EXTERNAL_APPLE_CLIENT_ID: ${APPLE_CLIENT_ID:-}
+      GOTRUE_EXTERNAL_APPLE_SECRET: ${APPLE_SECRET:-}
+      GOTRUE_EXTERNAL_APPLE_REDIRECT_URI: ${API_EXTERNAL_URL}/callback
+
+  functions:
+    environment:
+      BREVO_API_KEY: ${BREVO_API_KEY}
+      BREVO_SIGNUP_TEMPLATE_ID: ${BREVO_SIGNUP_TEMPLATE_ID:-5}
+      SEND_EMAIL_HOOK_SECRET: ${SEND_EMAIL_HOOK_SECRET}
