@@ -79,7 +79,7 @@
     const p = c.profile || {};
     const bio = String(p.about || p.headline || c.pitch || "").trim();
     return `<figure class="pf-egg">
-        <a class="pf-egg-figure" href="/egg" aria-label="Last Egg Standing"><img src="/badges/egg-stand.png" alt="" width="115" height="180" decoding="async"></a>
+        <span class="pf-egg-figure"><img src="/badges/egg-stand.png" alt="" width="115" height="180" decoding="async"></span>
         <figcaption class="pf-egg-bubble">${bio ? `<span data-no-i18n>${esc(bio)}</span>` : `<span>…</span>`}</figcaption>
       </figure>
       <section class="pf-award" aria-label="Auszeichnung" data-no-i18n>
@@ -87,7 +87,7 @@
         <div>
           <p class="pf-award-kicker">Auszeichnung</p>
           <h2>Golden Goose Egg Award</h2>
-          <p>Verliehen an Maxim, den ersten User von Xyntal und einzigen Träger von <a href="/egg">Last Egg Standing</a>.</p>
+          <p>Verliehen an Maxim, den ersten User von Xyntal und einzigen Träger von Last Egg Standing.</p>
         </div>
       </section>`;
   }
