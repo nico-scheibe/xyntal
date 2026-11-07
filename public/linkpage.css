@@ -26,6 +26,22 @@
 .lp-txt small { color: var(--text-3); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lp-arrow { color: var(--text-3); font-style: normal; transition: color .18s, transform .18s; }
 .lp-link:hover .lp-arrow { color: var(--text); transform: translate(2px, -2px); }
+/* Normale Profile: Licht in der Kartenfarbe (--lp-accent, setzt u.js) folgt dem Mauszeiger, Symbol und Rahmen nehmen die Farbe an.
+   Die Admin-Seite hat einen eigenen Effekt (u.html, body.admin-profile). */
+body:not(.admin-profile) .pf-side { --lp-accent: #B95CFF; }
+body:not(.admin-profile) .pf-side .lp-link { --mx: 50%; --my: 50%; position: relative; isolation: isolate; overflow: hidden;
+  transition: transform .2s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease; }
+body:not(.admin-profile) .pf-side .lp-link::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0; transition: opacity .25s ease;
+  background: radial-gradient(220px circle at var(--mx) var(--my), color-mix(in srgb, var(--lp-accent) 26%, transparent), transparent 70%); }
+body:not(.admin-profile) .pf-side .lp-link .lp-ico { transition: background .2s ease, color .2s ease, transform .3s cubic-bezier(.3, 1.6, .5, 1); }
+body:not(.admin-profile) .pf-side .lp-link:hover, body:not(.admin-profile) .pf-side .lp-link:focus-visible {
+  border-color: color-mix(in srgb, var(--lp-accent) 55%, transparent); background: rgba(255, 255, 255, .04);
+  box-shadow: 0 12px 30px -20px var(--lp-accent); }
+body:not(.admin-profile) .pf-side .lp-link:hover::before, body:not(.admin-profile) .pf-side .lp-link:focus-visible::before { opacity: 1; }
+body:not(.admin-profile) .pf-side .lp-link:hover .lp-ico, body:not(.admin-profile) .pf-side .lp-link:focus-visible .lp-ico {
+  background: color-mix(in srgb, var(--lp-accent) 22%, transparent); color: var(--lp-accent); transform: scale(1.1); }
+body:not(.admin-profile) .pf-side .lp-link:hover .lp-arrow { color: var(--lp-accent); transform: translate(3px, -3px); }
+@media (prefers-reduced-motion: reduce) { body:not(.admin-profile) .pf-side .lp-link, body:not(.admin-profile) .pf-side .lp-link .lp-ico { transition: none; } body:not(.admin-profile) .pf-side .lp-link:hover .lp-ico { transform: none; } }
 @media (prefers-reduced-motion: reduce) { .lp-link, .lp-arrow { transition: none; } .lp-link:hover { transform: none; } }
 
 /* Editor im Profil (/profil#links): jede Zeile eine kleine Karte – Symbol, Titel und Adresse, Werkzeuge rechts */
