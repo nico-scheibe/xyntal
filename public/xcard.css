@@ -126,12 +126,14 @@
 .member-xcard-cover { position: absolute; inset: 0; z-index: 1; border-radius: 26px; }
 .member-xcard-link .mc-link-button { position: relative; z-index: 2; }
 
-/* Mitglieder: alle Karten gleich groß – gleiche Breite und Höhe, Fußzeile immer unten */
+/* Mitglieder: alle Karten gleich groß – jede so hoch wie die vollste Karte im Raster
+   (grid-auto-rows: 1fr), nichts wird abgeschnitten; die Fußzeile sitzt immer unten. */
+.members-grid.xcard-grid { grid-auto-rows: 1fr; }
 .member-xcard { align-self: stretch; grid-template-rows: 1fr auto; justify-items: stretch; }
 .member-xcard-link { justify-self: center; height: 100%; }
 .member-xcard .my-card {
-  width: 100%; max-width: 380px; height: 660px; min-height: 660px; max-height: 660px; box-sizing: border-box;
-  grid-template-rows: auto auto auto minmax(0, 1fr) auto; align-content: stretch; overflow: hidden;
+  width: 100%; max-width: 380px; height: 100%; box-sizing: border-box;
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto; align-content: stretch;
 }
-.member-xcard .mc-blocks { min-height: 0; align-content: start; overflow: hidden; }
+.member-xcard .mc-blocks { align-content: start; }
 .member-xcard-link{cursor:pointer}

@@ -3,7 +3,9 @@
   const $ = (sel, root = document) => root.querySelector(sel);
   const t = (de) => (window.XyntalI18n ? window.XyntalI18n.t(de) : de);
   const gate = $("[data-mk-gate]"), app = $("[data-mk-app]");
-  const pub = $("[data-mk-public]"), pubHint = $("[data-mk-public-hint]"), urlLabel = $("[data-mk-url]");
+  // Mitgliederkarten sind immer öffentlich (Migration 20261107200000_cards_always_public.sql),
+  // daher braucht jede Karte einen Wunsch-Link.
+  const pubHint = $("[data-mk-public-hint]"), urlLabel = $("[data-mk-url]");
   const saveBtn = $("[data-mk-save]"), view = $("[data-mk-view]"), out = $("[data-mk-status]");
   const B = window.XyntalBuilder;
   let dirty = false, savedHandle = "", importedWaitlistCard = false;
@@ -16,8 +18,6 @@
     const d = B.get(), ok = B.validHandle(d.handle);
     urlLabel.textContent = `xyntal.de/${ok ? d.handle : "deinname"}`;
     pubHint.hidden = ok;
-    if (!ok) pub.checked = false;
-    pub.disabled = !ok;
     view.hidden = !savedHandle;
     if (savedHandle) view.href = `/${savedHandle}`;
   }
@@ -62,7 +62,9 @@
     const video = limit.bytes === null ? t("oder MP4/WebM-Video ohne Größenlimit (Admin)")
       : limit.bytes > 0 ? t("oder MP4/WebM-Video · bis {mb} MB und {s} Sekunden").replace("{mb}", mb(limit.bytes)).replace("{s}", String(limit.seconds))
       : "";
-    return [t("JPG, PNG, WebP oder GIF · bis 4 MB"), video, t("läuft stumm in Schleife · am besten 1200 × 300 Pixel")].filter(Boolean).join(" · ");
+    const gif = limit.animated === null ? t("GIF ohne Größenlimit (Admin)")
+      : limit.animated > 0 ? t("GIF bis {mb} MB").replace("{mb}", mb(limit.animated)) : "";
+    return [t("JPG, PNG oder WebP · bis 4 MB"), gif, video, t("läuft stumm in Schleife · am besten 1200 × 300 Pixel")].filter(Boolean).join(" · ");
   }
   const bannerSay = (text, kind = "") => { if (bannerStatus) { bannerStatus.textContent = text; bannerStatus.classList.toggle("is-error", kind === "error"); } };
   // Signierte URL statt Download: ein Video streamt in die Vorschau, statt erst
@@ -99,8 +101,12 @@
       return { blob: file, ext: VIDEO_TYPES[file.type], type: file.type, video: true };
     }
     if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type)) throw new Error(t("Bitte wähle ein JPG-, PNG-, WebP- oder GIF-Bild oder ein MP4-/WebM-Video."));
+    if (file.type === "image/gif") {
+      const limit = videoLimit();
+      if (!file.size || (limit.animated !== null && file.size > limit.animated)) throw new Error(t("Ein GIF darf in deinem Tarif höchstens {mb} MB groß sein.").replace("{mb}", mb(limit.animated)));
+      return { blob: file, ext: "gif", type: "image/gif" };
+    }
     if (!file.size || file.size > BANNER_MAX) throw new Error(t("Das Banner darf höchstens 4 MB groß sein."));
-    if (file.type === "image/gif") return { blob: file, ext: "gif", type: "image/gif" };
     let bitmap;
     try { bitmap = await createImageBitmap(file); } catch { throw new Error(t("Das Bild konnte nicht gelesen werden. Bitte wähle eine andere Datei.")); }
     try {
@@ -179,8 +185,7 @@
     }
     if (card) {
       B.set(fromServer(card));
-      pub.checked = !!card.is_public;
-      savedHandle = card.is_public ? card.handle || "" : card.handle || "";
+      savedHandle = card.handle || "";
       try {
         const saved = JSON.parse(localStorage.getItem("xyntal-waitlist-card") || "null");
         if (saved?.email === session.user.email.trim().toLowerCase()) localStorage.removeItem("xyntal-waitlist-card");
@@ -188,17 +193,14 @@
       say(t("Deine Karte ist geladen."), "ok");
     } else {
       let waitlistDraft = null;
-      let waitlistPublic = false;
       try {
         const saved = JSON.parse(localStorage.getItem("xyntal-waitlist-card") || "null");
         if (saved?.email === session.user.email.trim().toLowerCase() && saved.card?.touched) {
           waitlistDraft = saved.card;
-          waitlistPublic = !!saved.is_public;
         }
       } catch { /* kein lokaler Entwurf */ }
       if (waitlistDraft) {
         B.set(fromServer(waitlistDraft));
-        pub.checked = waitlistPublic;
         importedWaitlistCard = true;
         say(t("Deine Wartelisten-Karte wird in dein Konto übernommen …"));
       } else {
@@ -217,24 +219,24 @@
   }
 
   B?.onChange(markDirty);
-  pub.addEventListener("change", markDirty);
   window.addEventListener("beforeunload", (e) => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
 
   saveBtn.addEventListener("click", async () => {
     const d = B.get();
     if (!d.name.trim()) { say(t("Bitte gib deinen Vornamen ein."), "error"); $("#bf-name")?.focus(); return; }
-    if (d.handle && !B.validHandle(d.handle)) { say(t("Der Wunsch-Link braucht 3–20 Zeichen: Kleinbuchstaben, Zahlen, - und _."), "error"); $("#bf-handle")?.focus(); return; }
+    if (!d.handle) { say(t("Bitte wähle einen Wunsch-Link – darunter ist deine Karte öffentlich zu sehen."), "error"); $("#bf-handle")?.focus(); return; }
+    if (!B.validHandle(d.handle)) { say(t("Der Wunsch-Link braucht 3–20 Zeichen: Kleinbuchstaben, Zahlen, - und _."), "error"); $("#bf-handle")?.focus(); return; }
     saveBtn.disabled = true; say(t("Wird gespeichert …"));
     try {
       const res = unwrap(await sb.rpc("save_my_card", {
         p_name: d.name.trim().slice(0, 24), p_role: d.role, p_skills: d.skills.slice(0, 4), p_hours: d.hours, p_looking: d.looking,
         p_pitch: d.pitch.trim().slice(0, 120), p_lang: document.documentElement.lang === "en" ? "en" : "de",
         p_city: d.city.trim().slice(0, 40), p_mode: d.mode, p_level: d.level, p_link: B.linkUrl(d.link), p_handle: d.handle,
-        p_public: pub.checked,
+        p_public: true,
         p_design: { theme: d.theme, c1: d.c1, c2: d.c2, surface: d.surface, shape: d.shape, layout: d.layout, banner: d.banner, order: d.order, off: d.off },
       }));
       const fresh = unwrap(await sb.rpc("get_my_card"));
-      if (fresh) { B.set({ handle: fresh.handle || "" }); pub.checked = !!fresh.is_public; savedHandle = fresh.handle || ""; }
+      if (fresh) { B.set({ handle: fresh.handle || "" }); savedHandle = fresh.handle || ""; }
       if (importedWaitlistCard && fresh) {
         try { localStorage.removeItem("xyntal-waitlist-card"); } catch { /* Karte ist bereits sicher auf dem Server. */ }
         importedWaitlistCard = false;

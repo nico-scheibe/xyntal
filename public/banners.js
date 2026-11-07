@@ -76,19 +76,19 @@
     validPath: (path) => PATH.test(path || ""),
     isVideo: (path) => VIDEO.test(path || ""),
     showFile,
-    // Was ein Banner-Video bei diesem Mitglied groß und lang sein darf: {bytes, seconds},
-    // beides null für Admins (keine Grenze), bytes 0 ohne Paid-Tarif. Dieselbe Tabelle
-    // prüft der Bucket (banner_video_limit_bytes in der Datenbank).
+    // Was ein Banner bei diesem Mitglied groß und lang sein darf: {bytes, seconds} fürs
+    // Video, animated für ein GIF/WebP; null für Admins (keine Grenze), 0 ohne Paid-Tarif.
+    // Dieselbe Tabelle wie beim Profilbild (avatarLimits in avatars.js); der Bucket prüft
+    // die Größe noch einmal (banner_video_limit_bytes / avatar_animated_limit_bytes).
     videoLimit(me) {
-      if (!me) return { bytes: 0, seconds: 0 };
-      if (me.is_admin === true) return { bytes: null, seconds: null };
+      if (!me || me.is_premium !== true) return { bytes: 0, seconds: 0, animated: 0 };
+      if (me.is_admin === true) return { bytes: null, seconds: null, animated: null };
       const MB = 1024 * 1024;
       switch (String(me.plan || "")) {
-        case "Plus": case "Forge": case "Pulse": return { bytes: 25 * MB, seconds: 30 };
-        case "Pro": case "Crew": case "Nexus": return { bytes: 60 * MB, seconds: 60 };
-        case "Ultra": case "Foundry": case "Ascend": return { bytes: 150 * MB, seconds: 120 };
-        case "Enterprise": case "Enterprise+": case "Works": case "Works Custom": return { bytes: 500 * MB, seconds: 300 };
-        default: return me.is_premium === true ? { bytes: 25 * MB, seconds: 30 } : { bytes: 0, seconds: 0 };
+        case "Pro": case "Crew": case "Nexus": return { bytes: 25 * MB, seconds: 30, animated: 8 * MB };
+        case "Ultra": case "Foundry": case "Ascend": return { bytes: 60 * MB, seconds: 60, animated: 16 * MB };
+        case "Enterprise": case "Enterprise+": case "Works": case "Works Custom": return { bytes: 150 * MB, seconds: 120, animated: 32 * MB };
+        default: return { bytes: 10 * MB, seconds: 15, animated: 4 * MB };
       }
     },
     // Was die Karte zeigt: Paid-Banner nur mit Paid-Tarif, das eigene Bild nur mit Datei.
