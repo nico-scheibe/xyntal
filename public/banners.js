@@ -43,13 +43,54 @@
       else card.style.removeProperty("--banner-img");
     }
   }
+  // Eine kurzlebige, signierte URL auf die eigene Datei im privaten Bucket „banners“:
+  // Bild und Video laden damit direkt vom Speicher (ein Video streamt, statt erst
+  // komplett als Blob zu kommen). Lesbar ist nur, was ein Profil zeigt; mit der
+  // Sitzung (sb) auch das eigene noch nicht gezeigte Banner. "" wenn nichts geht.
+  async function fileUrl(path, sb, cfg, ttl = 3600) {
+    if (!PATH.test(path || "")) return "";
+    try {
+      if (sb && sb.storage) {
+        const { data, error } = await sb.storage.from("banners").createSignedUrl(path, ttl);
+        if (!error && data && data.signedUrl) return data.signedUrl;
+      }
+    } catch { /* unten ohne Sitzung versuchen */ }
+    try {
+      const c = cfg || window.XYNTAL_CONFIG;
+      if (!c || !c.supabaseUrl || !c.supabaseKey) return "";
+      const res = await fetch(`${c.supabaseUrl}/storage/v1/object/sign/banners/${path}`, {
+        method: "POST",
+        headers: { apikey: c.supabaseKey, Authorization: `Bearer ${c.supabaseKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ expiresIn: ttl }),
+      });
+      if (!res.ok) return "";
+      const body = await res.json();
+      return body && typeof body.signedURL === "string" ? `${c.supabaseUrl}/storage/v1${body.signedURL}` : "";
+    } catch { return ""; }
+  }
   window.XyntalBanners = {
     LIST,
+    fileUrl,
     valid: (id) => BY_ID.has(id),
     isPremium: (id) => !!BY_ID.get(id)?.premium,
     validPath: (path) => PATH.test(path || ""),
     isVideo: (path) => VIDEO.test(path || ""),
     showFile,
+    // Was ein Banner bei diesem Mitglied groß und lang sein darf: {bytes, seconds} fürs
+    // Video, animated für ein GIF/WebP; null für Admins (keine Grenze), 0 ohne Paid-Tarif.
+    // Dieselbe Tabelle wie beim Profilbild (avatarLimits in avatars.js); der Bucket prüft
+    // die Größe noch einmal (banner_video_limit_bytes / avatar_animated_limit_bytes).
+    videoLimit(me) {
+      if (!me || me.is_premium !== true) return { bytes: 0, seconds: 0, animated: 0 };
+      if (me.is_admin === true) return { bytes: null, seconds: null, animated: null };
+      const MB = 1024 * 1024;
+      switch (String(me.plan || "")) {
+        case "Pro": case "Crew": case "Nexus": return { bytes: 25 * MB, seconds: 30, animated: 8 * MB };
+        case "Ultra": case "Foundry": case "Ascend": return { bytes: 60 * MB, seconds: 60, animated: 16 * MB };
+        case "Enterprise": case "Enterprise+": case "Works": case "Works Custom": return { bytes: 150 * MB, seconds: 120, animated: 32 * MB };
+        default: return { bytes: 10 * MB, seconds: 15, animated: 4 * MB };
+      }
+    },
     // Was die Karte zeigt: Paid-Banner nur mit Paid-Tarif, das eigene Bild nur mit Datei.
     effective(id, premium, hasImage = true) {
       const b = BY_ID.get(id);

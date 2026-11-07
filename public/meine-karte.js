@@ -3,7 +3,7 @@
   const $ = (sel, root = document) => root.querySelector(sel);
   const t = (de) => (window.XyntalI18n ? window.XyntalI18n.t(de) : de);
   const gate = $("[data-mk-gate]"), app = $("[data-mk-app]");
-  // Mitgliederkarten sind immer öffentlich (Migration 20261107180000_cards_always_public.sql),
+  // Mitgliederkarten sind immer öffentlich (Migration 20261107200000_cards_always_public.sql),
   // daher braucht jede Karte einen Wunsch-Link.
   const pubHint = $("[data-mk-public-hint]"), urlLabel = $("[data-mk-url]");
   const saveBtn = $("[data-mk-save]"), view = $("[data-mk-view]"), out = $("[data-mk-status]");
@@ -33,31 +33,48 @@
     };
   };
 
+  // Ein Video als Profilbild kommt über eine signierte URL (streamt), ein Bild als Blob.
   async function loadAvatar(path) {
-    if (!/^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|gif|webp)$/.test(path || "")) return;
+    if (!/^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|gif|webp|mp4|webm)$/.test(path || "")) return;
     try {
+      if (/\.(mp4|webm)$/.test(path)) {
+        const { data, error } = await sb.storage.from("avatars").createSignedUrl(path, 3600);
+        if (!error && data && data.signedUrl) B.set({ photo: data.signedUrl, photoIsVideo: true });
+        return;
+      }
       const { data, error } = await sb.storage.from("avatars").download(path);
-      if (!error && data) B.set({ photo: URL.createObjectURL(data) });
+      if (!error && data) B.set({ photo: URL.createObjectURL(data), photoIsVideo: false });
     } catch { /* ohne Bild geht es auch */ }
   }
 
   // ---- Eigenes Banner (Paid): Bild oder Video im Bucket „banners“, Verweis in profiles.banner_path ----
   let member = null, bannerBusy = false;
   const bannerFile = $("#bf-banner-file"), bannerStatus = $("[data-bf-banner-status]");
-  // JPG/PNG/WebP werden auf 1200 × 300 verkleinert (Quelle bis 4 MB); GIF und Video bleiben,
-  // wie sie sind, und dürfen je Tarif unterschiedlich groß und lang sein (mediaLimits in app.js).
   const BANNER_MAX = 4 * 1024 * 1024;
-  const limitText = (lim) => lim.tier === "admin"
-    ? t("JPG, PNG oder WebP · bis 4 MB · GIF und MP4/WebM-Video ohne Grenze, läuft stumm in Schleife · am besten 1200 × 300 Pixel")
-    : t(`JPG, PNG oder WebP · bis 4 MB · GIF bis ${formatMb(lim.animatedBytes)} · MP4/WebM-Video bis ${formatMb(lim.videoBytes)} und ${lim.videoSeconds} Sekunden, läuft stumm in Schleife · am besten 1200 × 300 Pixel`);
+  // Ein Video wird nicht umgerechnet; wie groß und lang es sein darf, hängt vom Tarif ab
+  // (banners.js videoLimit, Admins ohne Grenze). Der Bucket prüft die Größe noch einmal.
   const VIDEO_TYPES = { "video/mp4": "mp4", "video/webm": "webm" };
+  const mb = (bytes) => String(Math.round(bytes / (1024 * 1024)));
+  const videoLimit = () => window.XyntalBanners.videoLimit(member);
+  // Der Hinweis unter den Knöpfen nennt die Grenze dieses Mitglieds.
+  function bannerHint() {
+    const limit = videoLimit();
+    const video = limit.bytes === null ? t("oder MP4/WebM-Video ohne Größenlimit (Admin)")
+      : limit.bytes > 0 ? t("oder MP4/WebM-Video · bis {mb} MB und {s} Sekunden").replace("{mb}", mb(limit.bytes)).replace("{s}", String(limit.seconds))
+      : "";
+    const gif = limit.animated === null ? t("GIF ohne Größenlimit (Admin)")
+      : limit.animated > 0 ? t("GIF bis {mb} MB").replace("{mb}", mb(limit.animated)) : "";
+    return [t("JPG, PNG oder WebP · bis 4 MB"), gif, video, t("läuft stumm in Schleife · am besten 1200 × 300 Pixel")].filter(Boolean).join(" · ");
+  }
   const bannerSay = (text, kind = "") => { if (bannerStatus) { bannerStatus.textContent = text; bannerStatus.classList.toggle("is-error", kind === "error"); } };
+  // Signierte URL statt Download: ein Video streamt in die Vorschau, statt erst
+  // komplett zu laden (ein Banner darf je Tarif hunderte MB haben).
   async function loadBanner(path) {
     if (!window.XyntalBanners?.validPath(path)) return;
     try {
-      const { data, error } = await sb.storage.from("banners").download(path);
-      if (!error && data) B.set({ bannerUrl: URL.createObjectURL(data), bannerIsVideo: window.XyntalBanners.isVideo(path) });
-    } catch { /* ohne Bild zeigt die Karte den Farbverlauf */ }
+      const url = await window.XyntalBanners.fileUrl(path, sb, window.XYNTAL_CONFIG);
+      if (url) B.set({ bannerUrl: url, bannerIsVideo: window.XyntalBanners.isVideo(path) });
+    } catch { /* ohne Datei zeigt die Karte den Farbverlauf */ }
   }
   // Ein Video wird so hochgeladen, wie es ist, nachdem der Browser es lesen konnte
   // (Dauer und Maße): kaputte Dateien und Stundenfilme kommen nicht in den Bucket.
@@ -73,17 +90,20 @@
   }
   // GIFs und Videos bleiben unverändert (Animation), alles andere wird auf 1200 × 300 zugeschnitten.
   async function prepareBanner(file) {
-    const lim = mediaLimits(member);
     if (VIDEO_TYPES[file.type]) {
-      if (!file.size || (lim.videoBytes !== null && file.size > lim.videoBytes)) throw new Error(t(`Mit deinem Tarif (${lim.label}) darf ein Video höchstens ${formatMb(lim.videoBytes)} groß sein.`));
+      const limit = videoLimit();
+      if (limit.bytes === 0) throw new Error(t("Ein Banner-Video gibt es ab Plus."));
+      if (!file.size) throw new Error(t("Das Video konnte nicht gelesen werden. Bitte wähle eine MP4- oder WebM-Datei."));
+      if (limit.bytes !== null && file.size > limit.bytes) throw new Error(t("Das Video darf in deinem Tarif höchstens {mb} MB groß sein.").replace("{mb}", mb(limit.bytes)));
       const info = await probeVideo(file);
       if (!info.width || !info.height) throw new Error(t("Das Video konnte nicht gelesen werden. Bitte wähle eine MP4- oder WebM-Datei."));
-      if (lim.videoSeconds !== null && Number.isFinite(info.duration) && info.duration > lim.videoSeconds + 0.5) throw new Error(t(`Mit deinem Tarif (${lim.label}) darf ein Video höchstens ${lim.videoSeconds} Sekunden lang sein.`));
+      if (limit.seconds !== null && Number.isFinite(info.duration) && info.duration > limit.seconds) throw new Error(t("Das Video darf in deinem Tarif höchstens {s} Sekunden lang sein.").replace("{s}", String(limit.seconds)));
       return { blob: file, ext: VIDEO_TYPES[file.type], type: file.type, video: true };
     }
     if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type)) throw new Error(t("Bitte wähle ein JPG-, PNG-, WebP- oder GIF-Bild oder ein MP4-/WebM-Video."));
     if (file.type === "image/gif") {
-      if (!file.size || (lim.animatedBytes !== null && file.size > lim.animatedBytes)) throw new Error(t(`Mit deinem Tarif (${lim.label}) darf eine GIF- oder WebP-Datei höchstens ${formatMb(lim.animatedBytes)} groß sein.`));
+      const limit = videoLimit();
+      if (!file.size || (limit.animated !== null && file.size > limit.animated)) throw new Error(t("Ein GIF darf in deinem Tarif höchstens {mb} MB groß sein.").replace("{mb}", mb(limit.animated)));
       return { blob: file, ext: "gif", type: "image/gif" };
     }
     if (!file.size || file.size > BANNER_MAX) throw new Error(t("Das Banner darf höchstens 4 MB groß sein."));
@@ -121,6 +141,7 @@
       B.set({ bannerUrl: URL.createObjectURL(blob), bannerIsVideo: video === true, banner: "image" });
       markDirty();
       bannerSay(t("Banner gespeichert. Klick auf „Karte speichern“, damit deine Karte es zeigt."), "ok");
+      setTimeout(() => { if (!bannerBusy && bannerStatus && !bannerStatus.classList.contains("is-error")) bannerSay(bannerHint()); }, 6000);
     } catch (err) {
       if (path && member && member.banner_path !== path) await sb.storage.from("banners").remove([path]).catch(() => {});
       bannerSay(friendlyError(err), "error");
@@ -191,7 +212,7 @@
     member = me || null;
     // Paid-Tarif schaltet animierte Banner und das eigene Banner-Bild frei (profiles.is_premium)
     B.set({ premium: !!me && me.is_premium === true });
-    if (me && me.is_premium === true) bannerSay(limitText(mediaLimits(me)));
+    bannerSay(bannerHint());
     if (me && me.is_premium === true && me.banner_path) loadBanner(me.banner_path);
     dirty = false;
     updateLink();

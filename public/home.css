@@ -847,7 +847,7 @@ a.bf-photo-pick { text-decoration: none; }
 .launch-card b { color: var(--text); font-weight: 600; }
 .launch-card .mc-avatar { width: 34px; height: 34px; padding: 0; background: var(--grad); font: 700 15px/1 var(--f); color: #fff; overflow: hidden; }
 .launch-card .mc-avatar::before { display: none; }
-.launch-card .mc-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.launch-card .mc-avatar img, .launch-card .mc-avatar video { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
 .lc-ok { padding: 4px 10px; border-radius: 999px; background: rgba(52, 211, 153, 0.15); color: var(--ok); font-size: 12.5px; font-weight: 600; }
 
 /* Handy & Tablet: Stapel direkt unter die Überschrift */

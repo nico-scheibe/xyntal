@@ -1,4 +1,4 @@
--- Mitgliederkarten sind immer öffentlich. Nach 20261107170000_media_tiers.sql ausführen.
+-- Mitgliederkarten sind immer öffentlich. Nach 20261107190000_banner_limits_table.sql ausführen.
 --
 -- • Ein Trigger setzt is_public bei jeder Karte mit Konto (user_id) auf "hat einen
 --   Wunsch-Link": save_my_card, der App-Server (Service Role) und alles andere schreiben

@@ -18,7 +18,7 @@
   try { handle = decodeURIComponent(handle).toLowerCase(); } catch { handle = ""; }
   if (HANDLE.test(handle) && location.pathname !== `/${handle}`) history.replaceState(null, "", `/${handle}`);
 
-  const page = (html) => { root.innerHTML = html; };
+  const page = (html) => { document.body.classList.remove("admin-profile"); root.innerHTML = html; };
   root.addEventListener("click", (e) => { if (e.target.closest("[data-reload]")) location.reload(); });
   // Angemeldete sind schon dabei: statt Warteliste zu den Projekten
   let member = false, me = null;
@@ -40,6 +40,7 @@
   function renderCard(c) {
     const name = c.name || "?";
     const own = !!(me && c.user_id && c.user_id === me.id);
+    const admin = c.is_admin === true;
     document.title = `${name} · xyntal.de/${c.handle}`;
     const primary = !member
       ? `<a class="btn btn-primary" href="/#karte">${esc(t("Bau deine eigene Karte"))}</a>`
@@ -51,7 +52,7 @@
     page(`
       <div class="pf">
         <aside class="pf-side">
-          <div class="bp-stage">${window.XyntalCardHtml(c, { t, heading: "h1", avatarAttrs: "data-pub-avatar" })}</div>
+          <div class="bp-stage${admin ? " pf-admin-stage" : ""}">${window.XyntalCardHtml(c, { t, heading: "h1", avatarAttrs: "data-pub-avatar" })}</div>
           <div class="pf-actions">
             ${primary}
             <button class="btn btn-glass" type="button" data-copy-link>${esc(t("Link kopieren"))}</button>
@@ -65,6 +66,9 @@
           ${member ? "" : `<div class="pf-join"><p>${esc(t("Auf Xyntal finden Entwickler, Designer und Gründer die richtigen Leute für ihre Idee."))}</p><a class="btn btn-glass btn-sm" href="/beta">${esc(t("Für die Beta bewerben"))}</a></div>`}
         </div>
       </div>`);
+    // Admins bekommen eine eigene, exklusive Profilseite (Aussehen: u.html, Abschnitt „Admin-Profil“)
+    document.body.classList.toggle("admin-profile", admin);
+    if (admin) adminTilt();
   }
   root.addEventListener("click", async (e) => {
     if (!e.target.closest("[data-copy-link]")) return;
@@ -92,6 +96,52 @@
       </section>`;
   }
 
+  // Admin-Profil: Siegel (Xyntal-Zeichen mit langsam drehendem Schriftring) und Kennzeichen des Teams
+  const ADMIN_LOGO = `<svg class="pf-admin-logo" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="pfa-a" x1="3" y1="21" x2="21" y2="3" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#B36BFF"/><stop offset="1" stop-color="#3A8AFF"/></linearGradient><linearGradient id="pfa-b" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#3A8AFF"/><stop offset="1" stop-color="#3FE0F0"/></linearGradient><mask id="pfa-g" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><path d="M3 21Q8.59 8.59 21 3" fill="none" stroke="#000" stroke-width="7.4" stroke-linecap="round"/></mask></defs><path d="M3 3Q15.41 8.59 21 21" fill="none" stroke="url(#pfa-b)" stroke-width="4.6" stroke-linecap="round" mask="url(#pfa-g)"/><path d="M3 21Q8.59 8.59 21 3" fill="none" stroke="url(#pfa-a)" stroke-width="4.6" stroke-linecap="round"/></svg>`;
+  function adminHtml(c) {
+    const first = String(c.name || "").trim().split(/\s+/)[0] || "";
+    const ring = `${t("Team Xyntal")} · ${t("Offizielles Konto")} · ${t("Verifiziert")} · `.toUpperCase();
+    const spec = (k, v) => `<div><dt>${esc(t(k))}</dt><dd>${esc(t(v))}</dd></div>`;
+    return `<section class="pf-admin" aria-label="${esc(t("Team Xyntal"))}">
+        <div class="pf-admin-top">
+          <span class="pf-admin-seal" aria-hidden="true">
+            <svg class="pf-admin-ring" viewBox="0 0 120 120"><defs><path id="pfa-circle" d="M60 60m-47 0a47 47 0 1 1 94 0a47 47 0 1 1 -94 0"/></defs><text><textPath href="#pfa-circle" textLength="292" lengthAdjust="spacing">${esc(ring)}</textPath></text></svg>
+            ${ADMIN_LOGO}
+          </span>
+          <div class="pf-admin-body">
+            <p class="pf-admin-kicker"><i aria-hidden="true"></i>${esc(t("Team Xyntal"))}</p>
+            <h2>${esc(t("Admin von Xyntal"))}</h2>
+            <p><span data-no-i18n>${esc(first)}</span> ${esc(t("gehört zum Team hinter Xyntal und kümmert sich um Community, Mitglieder und Sicherheit. Nachrichten von diesem Konto sind offiziell."))}</p>
+          </div>
+        </div>
+        <dl class="pf-admin-specs">
+          ${spec("Rolle", "Admin")}
+          ${spec("Status", "Verifiziert")}
+          ${spec("Zuständig", "Community & Sicherheit")}
+        </dl>
+      </section>`;
+  }
+  // Admin-Karte neigt sich zum Mauszeiger, ein Lichtreflex folgt ihm (nicht bei Touch oder reduzierter Bewegung)
+  function adminTilt() {
+    const stage = root.querySelector(".pf-admin-stage");
+    const card = stage && stage.querySelector(".my-card");
+    if (!card || !matchMedia("(hover: hover) and (pointer: fine)").matches || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let frame = 0;
+    stage.addEventListener("pointermove", (e) => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const r = card.getBoundingClientRect();
+        const x = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)), y = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
+        card.style.setProperty("--pfa-rx", `${((0.5 - y) * 10).toFixed(2)}deg`);
+        card.style.setProperty("--pfa-ry", `${((x - 0.5) * 12).toFixed(2)}deg`);
+        card.style.setProperty("--pfa-mx", `${(x * 100).toFixed(1)}%`);
+        card.style.setProperty("--pfa-my", `${(y * 100).toFixed(1)}%`);
+        card.classList.add("is-tilting");
+      });
+    });
+    stage.addEventListener("pointerleave", () => { cancelAnimationFrame(frame); card.classList.remove("is-tilting"); ["--pfa-rx", "--pfa-ry"].forEach((v) => card.style.removeProperty(v)); });
+  }
+
   // Profilinfos aus dem Konto (nur wenn die Person ihr Profil öffentlich gemacht hat)
   const safeUrl = (u) => (/^https?:\/\/[^\s]+$/i.test(u || "") ? u : "");
   function profileHtml(c) {
@@ -103,7 +153,8 @@
     const headline = p.headline || c.pitch || "";
     // Beim ersten User spricht das Ei (Sprechblase) – Adresse und Überschrift entfallen dort
     const egg = !!(window.XyntalCardHtml.isFirstUser && window.XyntalCardHtml.isFirstUser(c));
-    return `${egg ? "" : `<header class="pf-head"><p class="pf-address" data-no-i18n>xyntal.de/${esc(c.handle)}</p>${headline ? `<p class="pf-headline" data-no-i18n>${esc(headline)}</p>` : ""}</header>`}
+    return `${egg ? "" : `<header class="pf-head"><p class="pf-address"><span data-no-i18n>xyntal.de/${esc(c.handle)}</span>${c.is_admin === true ? `<span class="pf-admin-chip"><i aria-hidden="true"></i>${esc(t("Offizielles Konto"))}</span>` : ""}</p>${headline ? `<p class="pf-headline" data-no-i18n>${esc(headline)}</p>` : ""}</header>`}
+      ${c.is_admin === true ? adminHtml(c) : ""}
       ${rows ? `<section class="pf-about">${rows}</section>` : `<p class="pf-muted">${esc(t("Lerne die Person hinter der Idee kennen."))}</p>`}`;
   }
   // Eure Passung – vom Matching des App-Servers (wie „Für dich“), nur für Angemeldete.
@@ -153,14 +204,27 @@
       });
     } catch { /* ohne App-Sitzung oder nicht sichtbar: keine Passung */ }
   }
+  // Ein Video als Profilbild kommt über eine signierte URL und streamt stumm in Schleife.
   async function loadAvatar(path) {
-    if (!/^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|gif|webp)$/.test(path || "")) return;
+    if (!/^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|gif|webp|mp4|webm)$/.test(path || "")) return;
     try {
+      const slot = document.querySelector("[data-pub-avatar]");
+      if (!slot) return;
+      if (/\.(mp4|webm)$/.test(path)) {
+        const res = await fetch(`${SUPA}/storage/v1/object/sign/avatars/${path}`, {
+          method: "POST", headers: { apikey: KEY, Authorization: `Bearer ${KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ expiresIn: 3600 }),
+        });
+        if (!res.ok) return;
+        const body = await res.json();
+        if (!body || typeof body.signedURL !== "string") return;
+        slot.innerHTML = `<video src="${esc(`${SUPA}/storage/v1${body.signedURL}`)}" muted loop autoplay playsinline aria-hidden="true"></video>`;
+        slot.querySelector("video")?.play().catch(() => {});
+        return;
+      }
       const res = await fetch(`${SUPA}/storage/v1/object/authenticated/avatars/${path}`, { headers: { apikey: KEY, Authorization: `Bearer ${KEY}` } });
       if (!res.ok) return;
       const url = URL.createObjectURL(await res.blob());
-      const slot = document.querySelector("[data-pub-avatar]");
-      if (slot) slot.innerHTML = `<img src="${url}" alt="">`;
+      slot.innerHTML = `<img src="${url}" alt="">`;
     } catch { /* Initiale bleibt */ }
   }
 

@@ -1,11 +1,34 @@
-// Private Dateien über RLS laden; keine öffentlichen oder teilbaren Signed URLs.
+// Private Dateien über RLS laden: Bilder als Blob, ein Video über eine kurzlebige
+// signierte URL (es streamt, statt erst ganz zu kommen); keine teilbaren Links.
 const avatarFiles = new Map();
 function resetAvatarFiles() {
-  for (const item of avatarFiles.values()) if (item.url) URL.revokeObjectURL(item.url);
+  for (const item of avatarFiles.values()) if (item.url && item.url.startsWith('blob:')) URL.revokeObjectURL(item.url);
   avatarFiles.clear();
-  document.querySelectorAll('[data-avatar-path] img').forEach(img => img.remove());
+  document.querySelectorAll('[data-avatar-path] img, [data-avatar-path] video').forEach(node => node.remove());
 }
-function validAvatarPath(path) { return /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|gif|webp)$/.test(path || ''); }
+function validAvatarPath(path) { return /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|gif|webp|mp4|webm)$/.test(path || ''); }
+function isVideoAvatar(path) { return /\.(mp4|webm)$/.test(path || ''); }
+// Grenzen für animierte Profilbilder je Tarif (Bytes; Video dazu Sekunden), null = keine
+// Grenze (Admins). Dieselbe Tabelle prüft der Bucket (avatar_*_limit_bytes in der Datenbank).
+const MB = 1024 * 1024;
+function avatarLimits(me) {
+  if (!me || me.is_premium !== true) return { video: 0, seconds: 0, animated: 0 };
+  if (me.is_admin === true) return { video: null, seconds: null, animated: null };
+  switch (String(me.plan || '')) {
+    case 'Pro': case 'Crew': case 'Nexus': return { video: 25 * MB, seconds: 30, animated: 8 * MB };
+    case 'Ultra': case 'Foundry': case 'Ascend': return { video: 60 * MB, seconds: 60, animated: 16 * MB };
+    case 'Enterprise': case 'Enterprise+': case 'Works': case 'Works Custom': return { video: 150 * MB, seconds: 120, animated: 32 * MB };
+    default: return { video: 10 * MB, seconds: 15, animated: 4 * MB };
+  }
+}
+// Ein stummes Video in Schleife an der Stelle des Bilds.
+function avatarVideo(url) {
+  const video = document.createElement('video');
+  video.muted = true; video.loop = true; video.autoplay = true; video.playsInline = true;
+  video.setAttribute('aria-hidden', 'true');
+  video.src = url;
+  return video;
+}
 async function hydrateAvatar(el) {
   const path = el.dataset.avatarPath;
   if (!validAvatarPath(path) || el.dataset.avatarLoading) return;
@@ -14,15 +37,29 @@ async function hydrateAvatar(el) {
     let entry = avatarFiles.get(path);
     if (!entry) {
       entry = {};
-      entry.promise = sb.storage.from('avatars').download(path).then(({ data, error }) => {
-        if (error) throw error;
-        entry.url = URL.createObjectURL(data);
-        return entry.url;
-      });
+      entry.promise = isVideoAvatar(path)
+        ? sb.storage.from('avatars').createSignedUrl(path, 3600).then(({ data, error }) => {
+            if (error || !data || !data.signedUrl) throw error || new Error('no url');
+            entry.url = data.signedUrl;
+            return entry.url;
+          })
+        : sb.storage.from('avatars').download(path).then(({ data, error }) => {
+            if (error) throw error;
+            entry.url = URL.createObjectURL(data);
+            return entry.url;
+          });
       avatarFiles.set(path, entry);
     }
     const url = await entry.promise;
     if (!el.isConnected || avatarFiles.get(path) !== entry) return;
+    if (isVideoAvatar(path)) {
+      const video = avatarVideo(url);
+      video.onloadeddata = () => el.classList.add('avatar-loaded');
+      video.onerror = () => { video.remove(); el.classList.remove('avatar-loaded'); };
+      el.append(video);
+      video.play().catch(() => {});
+      return;
+    }
     const img = new Image();
     img.alt = '';
     img.onload = () => el.classList.add('avatar-loaded');
@@ -68,16 +105,37 @@ async function deleteMemberFiles(bucket, memberId) {
   }
 }
 
-// Mit Paid-Tarif (profiles.is_premium) bleiben GIF und WebP unverändert – so bleibt die Animation erhalten.
-// Wie groß sie sein dürfen, hängt vom Tarif ab (mediaLimits in app.js).
-async function prepareAvatar(file, member = null) {
-  const lim = mediaLimits(member);
-  const premium = lim.tier !== '';
+// Ein Video so lesen, wie der Browser es sieht (Dauer und Maße): kaputte Dateien und
+// Stundenfilme kommen nicht in den Bucket.
+function probeVideo(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file), video = document.createElement('video');
+    video.preload = 'metadata'; video.muted = true;
+    const done = fn => { URL.revokeObjectURL(url); video.removeAttribute('src'); fn(); };
+    video.onloadedmetadata = () => done(() => resolve({ duration: video.duration, width: video.videoWidth, height: video.videoHeight }));
+    video.onerror = () => done(() => reject(new Error('Das Video konnte nicht gelesen werden. Bitte wähle eine MP4- oder WebM-Datei.')));
+    video.src = url;
+  });
+}
+const mbOf = bytes => String(Math.round(bytes / MB));
+// Mit Paid-Tarif (profiles.is_premium) bleiben GIF, WebP und Video unverändert – so bleibt
+// die Animation erhalten; wie groß sie sein dürfen, sagt der Tarif (avatarLimits).
+async function prepareAvatar(file, me = null) {
+  const premium = !!me && me.is_premium === true;
+  const limits = avatarLimits(me);
+  if (['video/mp4', 'video/webm'].includes(file.type)) {
+    if (!premium) throw new Error('Ein Video als Profilbild gibt es ab Plus. Wähle ein JPG-, PNG- oder WebP-Bild.');
+    if (!file.size) throw new Error('Das Video konnte nicht gelesen werden. Bitte wähle eine MP4- oder WebM-Datei.');
+    if (limits.video !== null && file.size > limits.video) throw new Error(`Das Video darf in deinem Tarif höchstens ${mbOf(limits.video)} MB groß sein.`);
+    const info = await probeVideo(file);
+    if (!info.width || !info.height) throw new Error('Das Video konnte nicht gelesen werden. Bitte wähle eine MP4- oder WebM-Datei.');
+    if (limits.seconds !== null && Number.isFinite(info.duration) && info.duration > limits.seconds) throw new Error(`Das Video darf in deinem Tarif höchstens ${limits.seconds} Sekunden lang sein.`);
+    return file;
+  }
   if (file.type === 'image/gif' && !premium) throw new Error('Animierte Profilbilder (GIF) gibt es ab Plus. Wähle ein JPG-, PNG- oder WebP-Bild.');
   if (premium && ['image/gif', 'image/webp'].includes(file.type)) {
-    if (!file.size || (lim.animatedBytes !== null && file.size > lim.animatedBytes)) {
-      throw new Error(`Mit deinem Tarif (${lim.label}) darf eine GIF- oder WebP-Datei höchstens ${formatMb(lim.animatedBytes)} groß sein.`);
-    }
+    if (!file.size) throw new Error('Das Bild konnte nicht gelesen werden. Bitte wähle eine andere Datei.');
+    if (limits.animated !== null && file.size > limits.animated) throw new Error(`Animierte Profilbilder dürfen in deinem Tarif höchstens ${mbOf(limits.animated)} MB groß sein.`);
     return file;
   }
   if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) throw new Error('Bitte wähle ein JPG-, PNG-, WebP- oder GIF-Bild.');
@@ -117,7 +175,9 @@ function setupAvatarEditor(member, onChange) {
     preview.innerHTML = avatar(current.name, 'avatar-lg', current.avatar_path);
     if (selected) {
       previewUrl = URL.createObjectURL(selected);
-      preview.innerHTML = `<div class="avatar avatar-lg"><img src="${esc(previewUrl)}" alt="Vorschau deines neuen Profilbilds"></div>`;
+      preview.innerHTML = selected.type.startsWith('video/')
+        ? `<div class="avatar avatar-lg"><video src="${esc(previewUrl)}" muted loop autoplay playsinline aria-label="Vorschau deines neuen Profilbilds"></video></div>`
+        : `<div class="avatar avatar-lg"><img src="${esc(previewUrl)}" alt="Vorschau deines neuen Profilbilds"></div>`;
     }
     save.disabled = !selected || busy;
     input.disabled = busy;
@@ -184,8 +244,9 @@ function setupAvatarEditor(member, onChange) {
   async function savePicture() {
     if (!selected || busy) return;
     busy = true; renderPreview(); setStatus(status, 'Bild wird gespeichert …');
-    const type = ['image/gif', 'image/webp'].includes(selected.type) ? selected.type : 'image/jpeg';
-    const path = `${current.id}/${crypto.randomUUID()}.${type === 'image/gif' ? 'gif' : type === 'image/webp' ? 'webp' : 'jpg'}`;
+    const EXT = { 'image/gif': 'gif', 'image/webp': 'webp', 'video/mp4': 'mp4', 'video/webm': 'webm' };
+    const type = EXT[selected.type] ? selected.type : 'image/jpeg';
+    const path = `${current.id}/${crypto.randomUUID()}.${EXT[type] || 'jpg'}`;
     let uploaded = false;
     try {
       unwrap(await sb.storage.from('avatars').upload(path, selected, { contentType: type, cacheControl: '0', upsert: false }));
