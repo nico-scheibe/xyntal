@@ -99,7 +99,7 @@
 }
 .launch-card .mc-avatar { width: 34px; height: 34px; padding: 0; background: var(--grad); font: 700 15px/1 var(--f); color: #fff; overflow: hidden; }
 .launch-card .mc-avatar::before { display: none; }
-.launch-card .mc-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.launch-card .mc-avatar img, .launch-card .mc-avatar video { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
 .mc-link-button { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 8px 16px; border: 1px solid var(--mc-text2); border-radius: 999px; color: var(--mc-text); text-decoration: none; font-weight: 600; flex-shrink: 0; }
 .mc-link-button:hover { background: rgba(128,128,128,.12); }
 .mc-message { order: 2; min-height: 34px; padding: 6px 10px; font: 600 10px/1 var(--f-text); white-space: nowrap; }
@@ -109,7 +109,7 @@
 /* Mitglieder-Seite: Karte im Raster, Foto aus dem Profil, Aktionen darunter */
 .member-xcard { display: grid; gap: 12px; align-content: start; justify-items: center; }
 .member-xcard .my-card { width: 100%; max-width: 380px; }
-.member-xcard .mc-avatar img { position: relative; width: calc(100% - 6px); height: calc(100% - 6px); border-radius: inherit; object-fit: cover; }
+.member-xcard .mc-avatar img, .member-xcard .mc-avatar video { position: relative; width: calc(100% - 6px); height: calc(100% - 6px); border-radius: inherit; object-fit: cover; }
 .member-xcard .mc-avatar.avatar-loaded > span { display: none; }
 .member-xcard-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
 .xcard-host .mc-skills { list-style: none; padding-left: 0; margin-left: 0; }
