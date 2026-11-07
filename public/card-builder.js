@@ -77,7 +77,8 @@
       if (!Array.isArray(data.order)) data.order = [];
       data.order = data.order.filter((b) => BLOCKS[b]).concat(DEFAULT_ORDER).filter((b, i, a) => a.indexOf(b) === i);
       data.off = Array.isArray(data.off) ? data.off.filter((b) => BLOCKS[b]) : [];
-      if (typeof data.photo !== "string" || !/^(data:image\/|blob:)/.test(data.photo)) data.photo = "";
+      if (typeof data.photo !== "string" || !/^(data:image\/|blob:|https:\/\/)/.test(data.photo)) data.photo = "";
+      data.photoIsVideo = data.photoIsVideo === true && data.photo !== "";
       for (const k of ["name", "city", "pitch", "link", "handle"]) if (typeof data[k] !== "string") data[k] = "";
       data.handle = cleanHandle(data.handle);
       if (!Array.isArray(data.skills)) data.skills = [];
@@ -130,7 +131,7 @@
       if (!el.photoPreview) return;
       const has = !!data.photo;
       el.photoPreview.innerHTML = has
-        ? `<img src="${data.photo}" alt="">`
+        ? (data.photoIsVideo ? `<video src="${data.photo}" muted loop autoplay playsinline aria-hidden="true"></video>` : `<img src="${data.photo}" alt="">`)
         : '<svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>';
       if (el.photoLabel) el.photoLabel.textContent = t(has ? "Foto ändern" : "Foto hinzufügen");
       if (el.photoRemove) el.photoRemove.hidden = !has;
@@ -245,7 +246,9 @@
       el.customSwatch.style.setProperty("--tg", `linear-gradient(120deg, ${data.c1}, ${data.c2})`);
       el.custom.hidden = data.theme !== "custom";
       el.mcName.textContent = name;
-      el.mcAvatar.innerHTML = data.photo ? `<img src="${data.photo}" alt="">` : `<span>${esc(name[0].toUpperCase())}</span>`;
+      el.mcAvatar.innerHTML = data.photo
+        ? (data.photoIsVideo ? `<video src="${data.photo}" muted loop autoplay playsinline aria-hidden="true"></video>` : `<img src="${data.photo}" alt="">`)
+        : `<span>${esc(name[0].toUpperCase())}</span>`;
       el.mcRole.textContent = t(data.role);
       el.mcLevel.textContent = el.mcLevel2.textContent = t(data.level);
       el.mcDots.forEach((d, k) => d.classList.toggle("on", k <= LEVELS.indexOf(data.level)));

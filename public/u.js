@@ -153,14 +153,27 @@
       });
     } catch { /* ohne App-Sitzung oder nicht sichtbar: keine Passung */ }
   }
+  // Ein Video als Profilbild kommt über eine signierte URL und streamt stumm in Schleife.
   async function loadAvatar(path) {
-    if (!/^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|gif|webp)$/.test(path || "")) return;
+    if (!/^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|gif|webp|mp4|webm)$/.test(path || "")) return;
     try {
+      const slot = document.querySelector("[data-pub-avatar]");
+      if (!slot) return;
+      if (/\.(mp4|webm)$/.test(path)) {
+        const res = await fetch(`${SUPA}/storage/v1/object/sign/avatars/${path}`, {
+          method: "POST", headers: { apikey: KEY, Authorization: `Bearer ${KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ expiresIn: 3600 }),
+        });
+        if (!res.ok) return;
+        const body = await res.json();
+        if (!body || typeof body.signedURL !== "string") return;
+        slot.innerHTML = `<video src="${esc(`${SUPA}/storage/v1${body.signedURL}`)}" muted loop autoplay playsinline aria-hidden="true"></video>`;
+        slot.querySelector("video")?.play().catch(() => {});
+        return;
+      }
       const res = await fetch(`${SUPA}/storage/v1/object/authenticated/avatars/${path}`, { headers: { apikey: KEY, Authorization: `Bearer ${KEY}` } });
       if (!res.ok) return;
       const url = URL.createObjectURL(await res.blob());
-      const slot = document.querySelector("[data-pub-avatar]");
-      if (slot) slot.innerHTML = `<img src="${url}" alt="">`;
+      slot.innerHTML = `<img src="${url}" alt="">`;
     } catch { /* Initiale bleibt */ }
   }
 

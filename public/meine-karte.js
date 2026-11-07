@@ -33,11 +33,17 @@
     };
   };
 
+  // Ein Video als Profilbild kommt über eine signierte URL (streamt), ein Bild als Blob.
   async function loadAvatar(path) {
-    if (!/^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|gif|webp)$/.test(path || "")) return;
+    if (!/^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|gif|webp|mp4|webm)$/.test(path || "")) return;
     try {
+      if (/\.(mp4|webm)$/.test(path)) {
+        const { data, error } = await sb.storage.from("avatars").createSignedUrl(path, 3600);
+        if (!error && data && data.signedUrl) B.set({ photo: data.signedUrl, photoIsVideo: true });
+        return;
+      }
       const { data, error } = await sb.storage.from("avatars").download(path);
-      if (!error && data) B.set({ photo: URL.createObjectURL(data) });
+      if (!error && data) B.set({ photo: URL.createObjectURL(data), photoIsVideo: false });
     } catch { /* ohne Bild geht es auch */ }
   }
 
