@@ -25,6 +25,7 @@
   <link rel="stylesheet" href="/site-header.css?v=7">
 <link rel="stylesheet" href="/profile-layout.css?v=101">
 <link rel="stylesheet" href="/matching.css?v=102">
+<link rel="stylesheet" href="/invite.css?v=2">
 </head>
 <body>
 <div class="xy-bg" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i><span class="xy-grid"></span><span class="xy-stars"></span><span class="xy-stars"></span></div>
@@ -253,6 +254,10 @@
             <p class="hint">Alle Rechnungen zu deinem Xyntal-Konto – Abos und KI-Guthaben. Sie gehören zu genau diesem Konto und sind nur für dich sichtbar.</p>
             <div id="pb-invoices"><p class="hint">Wird geladen …</p></div>
           </section>
+          <section class="card-form sec-box" aria-labelledby="invite-head">
+            <h2 id="invite-head">Freunde einladen</h2>
+            <div class="invite" data-invite="always" hidden></div>
+          </section>
         </section>
         <section class="ptab-panel" role="tabpanel" id="panel-sicherheit" aria-labelledby="tab-sicherheit" data-panel="sicherheit" hidden>
           <form id="sec-email" class="card-form sec-box" novalidate>
@@ -409,6 +414,7 @@
 <script src="/app-api.js?v=5"></script>
 <script src="/prompts.js?v=1" defer></script>
 <script src="/pages/profil-billing.js?v=5"></script>
+<script src="/invite.js?v=2" defer></script>
 <script src="/pages/profil.js?v=10"></script>
 <script src="/pages/profil-matching.js?v=1"></script>
 <script src="/account-menu.js?v=19" defer></script>
