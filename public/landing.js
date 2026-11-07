@@ -913,4 +913,49 @@
     document.addEventListener("visibilitychange", () => (document.hidden ? stop() : start()));
   })();
 
+  /* ---------------------------------------------------------------
+     Startseite: drei erfundene Mitglieder als echte Xyntal-Karten (xcard.js).
+     Klick, Enter oder Leertaste holt die nächste Karte nach vorn; sonst wechselt
+     der Fächer alle sechs Sekunden von selbst (nicht bei „Bewegung reduzieren“).
+     --------------------------------------------------------------- */
+  (() => {
+    const host = $("[data-sample-cards]");
+    if (!host || !window.XyntalCardHtml) return;
+    const SAMPLES = [
+      { name: "Sophie Roth", handle: "sophie", role: "Design", level: "Fortgeschritten", city: "Regensburg", mode: "Hybrid", hours: 8,
+        pitch: "Ich gestalte Apps, die sich wie ein Spiel anfühlen.", skills: ["Figma", "Nutzertests", "Motion"], looking: "ein Projekt zum Mitbauen",
+        photo: "samples/sophie.jpg", design: { theme: "aurora", banner: "dots" } },
+      { name: "Felix Raab", handle: "felix", role: "Daten & KI", level: "Profi", city: "München", mode: "Remote", hours: 10, is_beta_tester: true,
+        pitch: "Melodien aus Summen erkennen: das war meine Masterarbeit.", skills: ["Python", "PyTorch", "Audio-KI"], looking: "Mitgründer:in",
+        photo: "samples/felix.jpg", design: { theme: "ocean", banner: "grid" } },
+      { name: "Amira Haddad", handle: "amira", role: "Gründung", level: "Fortgeschritten", city: "Berlin", mode: "Vor Ort", hours: 20,
+        pitch: "Ich baue eine App für Hofläden und suche jemanden für Mobile.", skills: ["Vertrieb", "Produkt", "Pitch"], looking: "ein Team für meine Idee",
+        photo: "samples/amira.jpg", design: { theme: "sunset", banner: "waves" } },
+    ];
+    host.innerHTML = SAMPLES.map((c, i) => `<div class="xcard-host" data-pos="${i}">${window.XyntalCardHtml(c)}</div>`).join("");
+    const items = $$(".xcard-host", host);
+    items.forEach((el, i) => {
+      const avatar = $(".mc-avatar", el);
+      if (!avatar) return;
+      const img = document.createElement("img");
+      img.src = SAMPLES[i].photo; img.alt = ""; img.width = 82; img.height = 82; img.decoding = "async";
+      if (i) img.loading = "lazy";
+      avatar.classList.add("has-img");
+      avatar.append(img);
+    });
+    let front = 0, timer = 0;
+    const place = () => items.forEach((el, i) => { el.dataset.pos = String((i - front + items.length) % items.length); });
+    const next = () => { front = (front + 1) % items.length; place(); };
+    const stop = () => { clearInterval(timer); timer = 0; };
+    const start = () => { stop(); if (!still && !document.hidden) timer = setInterval(next, 6000); };
+    host.addEventListener("click", (e) => { if (!e.target.closest("a")) { next(); start(); } });
+    host.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); next(); start(); } });
+    host.addEventListener("mouseenter", stop);
+    host.addEventListener("mouseleave", start);
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver(([en]) => (en.isIntersecting ? start() : stop()), { threshold: 0.3 }).observe(host);
+    } else start();
+    document.addEventListener("visibilitychange", () => (document.hidden ? stop() : start()));
+  })();
+
 })();
