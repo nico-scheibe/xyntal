@@ -606,7 +606,27 @@ html { scrollbar-color: #2A2A33 transparent; }
    ===================================================================== */
 .builder { padding: clamp(40px, 7vw, 100px) 0 clamp(20px, 4vw, 40px); }
 .builder-grid { display: grid; gap: 28px; align-items: start; }
-@media (min-width: 960px) { .builder-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr); gap: 44px; } }
+/* Wie in der App: Karte links, Formular mit Reitern rechts */
+.builder-preview { order: -1; }
+@media (min-width: 960px) { .builder-grid { grid-template-columns: minmax(320px, 400px) minmax(0, 1fr); gap: 32px; } }
+.bf-tabs {
+  display: inline-flex; justify-self: start; gap: 4px; padding: 4px; margin-bottom: 6px;
+  border: 1px solid var(--line-2); border-radius: 999px; background: rgba(255, 255, 255, 0.03);
+  max-width: 100%; overflow-x: auto; scrollbar-width: none;
+}
+.bf-tabs::-webkit-scrollbar { display: none; }
+.bf-tabs button {
+  flex: none; height: 38px; padding: 0 16px; border: 0; border-radius: 999px; background: transparent;
+  color: var(--text-2); font: 600 14px/1 var(--f-text); white-space: nowrap; cursor: pointer;
+  transition: background-color 140ms ease, color 140ms ease;
+}
+.bf-tabs button:hover { color: var(--text); }
+.bf-tabs button[aria-selected="true"] { background: var(--surface-2); color: var(--text); box-shadow: inset 0 0 0 1px var(--line-2); }
+.bf-tabs button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.bf-panel { display: grid; }
+.bf-panel[hidden] { display: none; }
+.bf-panel > .bf-group:last-child { border-bottom: 0; padding-bottom: 4px; }
+.bf-panel > .bf-group:first-child { padding-top: 10px; }
 .builder-form { display: grid; gap: 8px; padding: clamp(18px, 3vw, 30px); border-radius: 28px; }
 .bf-group { display: grid; gap: 18px; padding: 18px 0 22px; border-bottom: 1px solid var(--line); }
 .bf-group:first-child { padding-top: 4px; }
@@ -884,7 +904,7 @@ html.mk-embed, html.mk-embed body { background: transparent !important; min-heig
 .mk-embed .topbar, .mk-embed .footer, .mk-embed .aurora, .mk-embed .builder .section-head { display: none !important; }
 .mk-embed .builder { padding: 0 0 8px; }
 .mk-embed .builder > .shell { padding-left: 0; padding-right: 0; max-width: none; }
-@media (min-width: 960px) { .mk-embed .builder-grid { grid-template-columns: minmax(0, .9fr) minmax(320px, 1.1fr); gap: clamp(16px, 2vw, 28px); } }
+@media (min-width: 960px) { .mk-embed .builder-grid { grid-template-columns: minmax(300px, 380px) minmax(0, 1fr); gap: clamp(16px, 2vw, 28px); } }
 
 /* Mobile-first landing signup */
 .hero .ht-intro { color: var(--text); }
