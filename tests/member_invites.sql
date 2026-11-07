@@ -77,6 +77,16 @@ insert into auth.users (id, email, email_confirmed_at) values ('00000000-0000-00
 set role authenticated; set test.uid = '00000000-0000-0000-0000-00000000000f';
 select pg_temp.expect('gesperrt', public.claim_referral('anna'), 'unknown');
 reset role;
+-- Grenze: 4 Einladungen in 3 Monaten
+insert into auth.users (id, email, email_confirmed_at) select ('00000000-0000-0000-0000-0000000001' || lpad(g::text, 2, '0'))::uuid, 'n' || g || '@x.de', now() from generate_series(1, 4) g;
+insert into public.profiles (id) select ('00000000-0000-0000-0000-0000000001' || lpad(g::text, 2, '0'))::uuid from generate_series(1, 4) g;
+update public.profiles set banned = false;
+set role authenticated;
+set test.uid = '00000000-0000-0000-0000-000000000101'; select pg_temp.expect('Ben 2', public.claim_referral('ben'), 'ok');
+set test.uid = '00000000-0000-0000-0000-000000000102'; select pg_temp.expect('Ben 3', public.claim_referral('ben'), 'ok');
+set test.uid = '00000000-0000-0000-0000-000000000103'; select pg_temp.expect('Ben 4', public.claim_referral('ben'), 'ok');
+set test.uid = '00000000-0000-0000-0000-000000000104'; select pg_temp.expect('Ben 5 = Grenze', public.claim_referral('ben'), 'limit');
+reset role;
 -- Service Role schreibt die Gutschrift
 set role service_role;
 update public.member_referrals set referrer_credited_at = now() where referred_id = '00000000-0000-0000-0000-00000000000b';

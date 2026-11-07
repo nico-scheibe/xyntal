@@ -24,7 +24,7 @@
   }
 
   const head = () => `<div class="invite-head">${ICON}<b>${esc(t("Lade Freunde ein"))}</b></div>`;
-  const REWARD = "Für jede Person, die sich über deinen Link ein Konto anlegt und die E-Mail bestätigt, bekommt ihr beide 7 Tage Plus gratis.";
+  const REWARD = "Für jede Person, die sich über deinen Link ein Konto anlegt und die E-Mail bestätigt, bekommt ihr beide 7 Tage Plus gratis (höchstens 4 Einladungen in 3 Monaten).";
 
   function teaser(box) {
     box.innerHTML = `${head()}
@@ -39,10 +39,13 @@
     const stand = n === 0
       ? t("Noch niemand eingeladen.")
       : `${n} ${t(n === 1 ? "Person eingeladen" : "Personen eingeladen")} · ${Number(d.credited) || 0} ${t("gutgeschrieben")}`;
+    const max = Number(d.max) || 4, recent = Number(d.recent) || 0;
+    const grenze = `${t("Höchstens")} ${max} ${t("Einladungen in 3 Monaten – schon genutzt:")} ${recent}`;
     box.innerHTML = `${head()}
       <p>${esc(t(REWARD))}</p>
       <div class="invite-row"><input type="text" readonly value="${esc(url)}" aria-label="${esc(t("Dein Einladungslink"))}" data-no-i18n><button type="button" class="btn btn-primary" data-invite-share>${esc(t("Link teilen"))}</button></div>
-      <p class="invite-count" data-invite-status role="status" aria-live="polite">${esc(stand)}</p>`;
+      <p class="invite-count" data-invite-status role="status" aria-live="polite">${esc(stand)}</p>
+      <p class="invite-count">${esc(grenze)}</p>`;
     box.hidden = false;
     const input = box.querySelector("input"), out = box.querySelector("[data-invite-status]");
     input.addEventListener("focus", () => input.select());
