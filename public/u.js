@@ -63,9 +63,9 @@
             <button class="btn btn-glass" type="button" data-copy-link>${esc(t(navigator.share ? "Profil teilen" : "Link kopieren"))}</button>
             <p class="pf-copied" role="status" data-copy-status></p>
           </div>
+          ${linksHtml(c)}
         </aside>
         <div class="pf-main">
-          ${linksHtml(c)}
           ${eggHtml(c)}
           ${profileHtml(c)}
           ${me && UUID.test(c.user_id || "") && !own && window.XyntalApp ? `<section class="xm xm-public" aria-label="${esc(t("Eure Passung"))}" data-match hidden></section>` : ""}

@@ -16,7 +16,7 @@
   <link rel="stylesheet" href="/fonts/fonts.css?v=32">
   <link rel="stylesheet" href="/home.css?v=37">
   <link rel="stylesheet" href="/banners.css?v=2">
-  <link rel="stylesheet" href="/linkpage.css?v=5">
+  <link rel="stylesheet" href="/linkpage.css?v=6">
   <script src="/i18n-en.js?v=102" defer></script>
   <script src="/i18n.js?v=31" defer></script>
   <style>
@@ -207,6 +207,26 @@ body.admin-profile .pf-section > h2, body.admin-profile .pf-tile h2, body.admin-
 .pf-admin-specs div + div { border-left: 1px solid var(--pfa-hair); }
 .pf-admin-specs dt { color: #7C84A3; font: 500 10.5px/1.2 var(--pfa-mono); letter-spacing: .16em; text-transform: uppercase; }
 .pf-admin-specs dd { margin: 0; color: var(--text); font: 600 14px/1.35 var(--f-text); overflow-wrap: anywhere; }
+/* Links auf der Admin-Seite: Verlaufsrahmen in den Farben des Zeichens, Glanz läuft durch, Symbol leuchtet */
+body.admin-profile .lp-link { position: relative; isolation: isolate; overflow: hidden; border-color: var(--pfa-hair); background: rgba(14, 16, 28, .55);
+  transition: transform .25s cubic-bezier(.2, .7, .2, 1), box-shadow .25s ease, background .25s ease; }
+body.admin-profile .lp-link::before { content: ""; position: absolute; inset: 0; z-index: -1; padding: 1px; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(120deg, var(--pfa-v), var(--pfa-b) 50%, var(--pfa-c));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+  opacity: 0; transition: opacity .25s ease; }
+body.admin-profile .lp-link::after { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: linear-gradient(105deg, transparent 35%, rgba(190, 210, 255, .14) 50%, transparent 65%); transform: translateX(-120%); transition: transform .7s ease; }
+body.admin-profile .lp-ico { transition: background .25s ease, color .25s ease, transform .25s cubic-bezier(.2, .7, .2, 1), box-shadow .25s ease; }
+body.admin-profile .lp-link:hover, body.admin-profile .lp-link:focus-visible {
+  transform: translateY(-3px); background: rgba(20, 22, 40, .8);
+  box-shadow: 0 18px 40px -22px rgba(58, 138, 255, .75), 0 0 0 1px transparent; }
+body.admin-profile .lp-link:hover::before, body.admin-profile .lp-link:focus-visible::before { opacity: 1; }
+body.admin-profile .lp-link:hover::after, body.admin-profile .lp-link:focus-visible::after { transform: translateX(120%); }
+body.admin-profile .lp-link:hover .lp-ico, body.admin-profile .lp-link:focus-visible .lp-ico {
+  background: linear-gradient(135deg, var(--pfa-v), var(--pfa-b) 55%, var(--pfa-c)); color: #fff; transform: rotate(-6deg) scale(1.06);
+  box-shadow: 0 6px 18px -6px rgba(124, 120, 255, .8); }
+body.admin-profile .lp-link:hover .lp-arrow { color: var(--pfa-c); }
+
 @media (max-width: 600px) {
   .pf-admin-top { flex-direction: column; align-items: flex-start; gap: 18px; padding: 22px 20px; }
   .pf-admin-seal { width: 88px; height: 88px; } .pf-admin-logo { width: 32px; height: 32px; }
@@ -217,6 +237,8 @@ body.admin-profile .pf-section > h2, body.admin-profile .pf-tile h2, body.admin-
 @media (prefers-reduced-motion: reduce) {
   .pf-admin-stage::after, .pf-admin-stage .my-card, .pf-admin-stage .mc-badge-admin::after, .pf-admin-seal::before, .pf-admin-ring, .pf-admin::after, .pf-admin-chip i, .pf-admin-kicker i { animation: none; }
   .pf-admin-stage .my-card { transition: none; }
+  body.admin-profile .lp-link, body.admin-profile .lp-link::after, body.admin-profile .lp-ico { transition: none; }
+  body.admin-profile .lp-link:hover, body.admin-profile .lp-link:hover .lp-ico { transform: none; }
 }
 </style>
   <link rel="stylesheet" href="/backdrop.css?v=7">
@@ -311,7 +333,7 @@ body.admin-profile .pf-section > h2, body.admin-profile .pf-tile h2, body.admin-
 <script src="/config.js?v=31" defer></script>
 <script src="/app-api.js?v=5" defer></script>
 <script src="/link-icons.js?v=1" defer></script>
-<script src="/u.js?v=30" defer></script>
+<script src="/u.js?v=31" defer></script>
 <script src="/effects.js?v=39" defer></script>
 <script src="/account-menu.js?v=19" defer></script>
 <script src="/site-chat.js?v=4" defer></script>
