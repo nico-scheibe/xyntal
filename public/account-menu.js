@@ -145,6 +145,25 @@
     return ((parts[0]?.[0] || "") + (parts[1]?.[0] || "")).toUpperCase() || "?";
   }
 
+  // Einladungsprogramm: Link xyntal.de/name besucht (u.js merkt sich den Namen 30 Tage) und jetzt mit Konto da →
+  // Einladung einlösen. 7 Tage Plus für beide bucht danach der App-Server. Bei „unconfirmed“ (E-Mail noch nicht
+  // bestätigt) bleibt der Name gemerkt und wird beim nächsten Seitenaufruf erneut versucht.
+  const REF_KEY = "xyntal-ref-handle";
+  async function claimInvite() {
+    let ref = null;
+    try { ref = JSON.parse(localStorage.getItem(REF_KEY) || "null"); } catch { /* egal */ }
+    if (!ref || !/^[a-z0-9][a-z0-9_-]{2,19}$/.test(ref.handle || "")) return;
+    if (!ref.at || Date.now() - ref.at > 30 * 864e5) { try { localStorage.removeItem(REF_KEY); } catch { /* egal */ } return; }
+    if (!readSession()) return;
+    try {
+      const c = await getClient();
+      const { data, error } = await c.rpc("claim_referral", { p_handle: ref.handle });
+      if (error || data === "unconfirmed") return;
+      localStorage.removeItem(REF_KEY);
+      if (data === "ok") localStorage.setItem("xyntal-ref-welcome", ref.handle);
+    } catch { /* nächster Seitenaufruf */ }
+  }
+
   function init() {
     const host = mountPoint();
     if (!host || host.querySelector(".acct")) return;
@@ -308,6 +327,7 @@
     render();
     swapCta();
     loadProfile();
+    claimInvite();
     // Ankündigungen aus der App (Banner unter der Kopfzeile) – nur für angemeldete Mitglieder
     if (state.session && !document.querySelector('script[src^="/announcements.js"]')) {
       const sc = document.createElement("script"); sc.src = "/announcements.js?v=100"; sc.defer = true; document.head.append(sc);
