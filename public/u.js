@@ -176,7 +176,8 @@
   const sameUrl = (a, b) => { const k = (u) => { try { const x = new URL(u); return `${x.hostname.replace(/^www\./, "")}${x.pathname.replace(/\/+$/, "")}${x.search}`.toLowerCase(); } catch { return u; } }; return k(a) === k(b); };
   const isOwnSite = (u) => { try { return /^(www\.)?xyntal\.(de|com)$/i.test(new URL(u).hostname); } catch { return false; } };
   function linkItems(c) {
-    const own = Array.isArray(c.links) ? c.links.filter((l) => l && safeUrl(l.url) && String(l.title || "").trim()) : [];
+    // Eigene Einträge: Links (http/https) und reiner Text, z. B. „Username: nico“
+    const own = Array.isArray(c.links) ? c.links.filter((l) => l && String(l.url || "").trim() && String(l.title || "").trim()) : [];
     if (own.length) return own;
     const p = c.profile || {};
     return [["LinkedIn", p.linkedin, "linkedin"], ["Instagram", p.instagram, "instagram"], ["Website", p.website, "globe"], ["Website", c.link, "globe"]]
@@ -188,9 +189,25 @@
   function linksHtml(c) {
     const items = linkItems(c), I = window.XyntalLinkIcons;
     if (!items.length || !I) return "";
-    return `<ul class="lp-list" aria-label="${esc(t("Links"))}">${items.map((l) => `<li><a class="lp-link" href="${esc(l.url)}"${l.id && UUID.test(l.id) ? ` data-link-id="${esc(l.id)}"` : ""} target="_blank" rel="noopener noreferrer nofollow">
-        <span class="lp-ico">${I.svg(l.icon)}</span><span class="lp-txt"><b data-no-i18n>${esc(l.title)}</b><small data-no-i18n>${esc(I.hostOf(l.url))}</small></span><i class="lp-arrow" aria-hidden="true">↗</i></a></li>`).join("")}</ul>`;
+    const idAttr = (l) => (l.id && UUID.test(l.id) ? ` data-link-id="${esc(l.id)}"` : "");
+    const COPY = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>';
+    return `<ul class="lp-list" aria-label="${esc(t("Links"))}">${items.map((l) => safeUrl(l.url)
+      ? `<li><a class="lp-link" href="${esc(l.url)}"${idAttr(l)} target="_blank" rel="noopener noreferrer nofollow">
+        <span class="lp-ico">${I.svg(l.icon)}</span><span class="lp-txt"><b data-no-i18n>${esc(l.title)}</b><small data-no-i18n>${esc(I.hostOf(l.url))}</small></span><i class="lp-arrow" aria-hidden="true">↗</i></a></li>`
+      : `<li><button type="button" class="lp-link lp-text"${idAttr(l)} data-copy-text="${esc(l.url)}" aria-label="${esc(l.title)}: ${esc(l.url)} – ${esc(t("kopieren"))}">
+        <span class="lp-ico">${I.svg(l.icon)}</span><span class="lp-txt"><b data-no-i18n>${esc(l.title)}</b><small data-no-i18n>${esc(l.url)}</small></span><i class="lp-arrow lp-copy" aria-hidden="true">${COPY}</i><span class="lp-copied" aria-live="polite"></span></button></li>`).join("")}</ul>`;
   }
+  // Text-Einträge: Klick kopiert den Text und zeigt kurz „Kopiert“
+  root.addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-copy-text]");
+    if (!b) return;
+    const note = b.querySelector(".lp-copied");
+    try { await navigator.clipboard.writeText(b.dataset.copyText); note.textContent = t("Kopiert"); }
+    catch { note.textContent = t("Zum Kopieren markieren"); }
+    b.classList.add("is-copied");
+    clearTimeout(b._copyTimer);
+    b._copyTimer = setTimeout(() => { b.classList.remove("is-copied"); note.textContent = ""; }, 1600);
+  });
   // Klick zählen (Paid-Mitglieder sehen die Zahl im Editor); darf die Navigation nie aufhalten
   root.addEventListener("click", (e) => {
     const a = e.target.closest("[data-link-id]");

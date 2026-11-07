@@ -21,6 +21,8 @@
   const nextTier = () => (admin ? null : TIERS[TIERS.indexOf(tier) + 1] || null);
   const say = (text, kind = "") => { out.textContent = text; out.className = "mk-status" + (kind ? ` is-${kind}` : ""); };
   const validUrl = (u) => /^https?:\/\/[^\s]{3,}$/i.test(u) && u.length <= 500;
+  // Statt einer Adresse darf auch Text stehen (z. B. „Username: nico“): der erscheint auf der Seite zum Kopieren
+  const validEntry = (u) => { const v = String(u || "").trim(); return v.length > 0 && v.length <= 500; };
   // Eingabe ohne Schema („github.com/x“) wird zu https://
   const normalize = (u) => { const v = String(u || "").trim(); return v && !/^[a-z][a-z0-9+.-]*:/i.test(v) && /^[^\s/]+\.[^\s/]+/.test(v) ? `https://${v}` : v; };
 
@@ -44,7 +46,8 @@
         </label>
         <div class="le-fields">
           <input type="text" class="le-title" data-f="title" maxlength="60" value="${esc(r.title)}" placeholder="${esc(t("Titel, z. B. Mein Portfolio"))}" aria-label="${esc(t("Titel"))}">
-          <input type="url" class="le-url" data-f="url" maxlength="500" inputmode="url" value="${esc(r.url)}" placeholder="https://…" aria-label="${esc(t("Adresse"))}">
+          <input type="text" class="le-url" data-f="url" maxlength="500" autocapitalize="off" spellcheck="false" value="${esc(r.url)}" placeholder="${esc(t("https://… oder Text, z. B. Username: nico"))}" aria-label="${esc(t("Adresse oder Text"))}">
+          ${r.url && !validUrl(normalize(r.url)) ? `<span class="le-kind">${esc(t("Text zum Kopieren"))}</span>` : ""}
         </div>
         <div class="le-tools">
           <button type="button" class="le-btn" data-act="up" title="${esc(t("Nach oben"))}" aria-label="${esc(t("Nach oben"))}"${i === 0 ? " disabled" : ""}>${tool("up")}</button>
@@ -80,7 +83,9 @@
     const r = rows[Number(row.dataset.i)];
     r.url = normalize(e.target.value);
     e.target.value = r.url;
-    if (r.icon === "link" || r.iconAuto) { r.icon = I.guess(r.url); r.iconAuto = true; render(); }
+    // Symbol nur aus echten Adressen raten; Text behält sein Symbol
+    if (validUrl(r.url) && (r.icon === "link" || r.iconAuto)) { r.icon = I.guess(r.url); r.iconAuto = true; }
+    render();
   });
   list.addEventListener("click", (e) => {
     const b = e.target.closest("[data-act]"), row = e.target.closest("[data-i]");
@@ -104,8 +109,8 @@
   saveBtn.addEventListener("click", async () => {
     if (busy) return;
     const clean = rows.map((r) => ({ id: r.id, title: String(r.title).trim(), url: normalize(r.url), icon: r.icon, active: r.active !== false }));
-    const bad = clean.findIndex((r) => !r.title || !validUrl(r.url));
-    if (bad >= 0) { say(t(`Link ${bad + 1}: bitte Titel und eine Adresse mit https:// angeben.`), "error"); list.querySelector(`[data-i="${bad}"] [data-f="${clean[bad].title ? "url" : "title"}"]`)?.focus(); return; }
+    const bad = clean.findIndex((r) => !r.title || !validEntry(r.url));
+    if (bad >= 0) { say(t("Eintrag {n}: bitte Titel und eine Adresse oder einen Text angeben.").replace("{n}", bad + 1), "error"); list.querySelector(`[data-i="${bad}"] [data-f="${clean[bad].title ? "url" : "title"}"]`)?.focus(); return; }
     busy = true; saveBtn.disabled = true; say(t("Links werden gespeichert …"));
     try {
       const { data, error } = await sb.rpc("save_my_links", { p_links: clean });
