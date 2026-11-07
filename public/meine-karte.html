@@ -10,6 +10,7 @@
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="stylesheet" href="fonts/fonts.css?v=32">
   <link rel="stylesheet" href="home.css?v=32">
+  <link rel="stylesheet" href="banners.css?v=1">
   <link rel="stylesheet" href="home-app.css?v=5">
   <script src="/pages/meine-karte.js?v=6"></script>
   <script src="i18n-en.js?v=94" defer></script>
@@ -161,6 +162,18 @@
                 <label><input type="color" name="c2" value="#3FD8FF"><span>Farbe 2</span></label>
               </div>
             </fieldset>
+            <fieldset class="bf-field">
+              <legend>Banner <span class="bf-opt" data-bf-banner-note>animiert und eigenes Bild mit Paid-Tarif</span></legend>
+              <div class="bf-banners" data-bf-banner></div>
+              <div class="bf-banner-upload" data-bf-banner-upload hidden>
+                <input type="file" id="bf-banner-file" accept="image/jpeg,image/png,image/webp,image/gif" hidden aria-label="Banner-Bild auswählen">
+                <div class="bf-banner-actions">
+                  <button type="button" class="btn btn-glass btn-sm" data-bf-banner-pick>Bild hochladen</button>
+                  <button type="button" class="btn btn-glass btn-sm" data-bf-banner-remove hidden>Bild entfernen</button>
+                </div>
+                <p class="bf-hint" data-bf-banner-status role="status">JPG, PNG, WebP oder GIF (auch animiert) · bis 4 MB · am besten 1200 × 300 Pixel</p>
+              </div>
+            </fieldset>
             <div class="bf-two">
               <fieldset class="bf-field">
                 <legend>Hintergrund</legend>
@@ -308,11 +321,12 @@
 
 <script src="vendor/supabase.js?v=31"></script>
 <script src="config.js?v=31"></script>
-<script src="app.js?v=38"></script>
-<script src="card-builder.js?v=7"></script>
-<script src="meine-karte.js?v=6"></script>
+<script src="app.js?v=39"></script>
+<script src="banners.js?v=1"></script>
+<script src="card-builder.js?v=8"></script>
+<script src="meine-karte.js?v=7"></script>
 <script src="effects.js?v=38"></script>
-<script src="/account-menu.js?v=17" defer></script>
+<script src="/account-menu.js?v=18" defer></script>
 <script src="/site-chat.js?v=3" defer></script>
 </body>
 </html>

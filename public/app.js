@@ -345,7 +345,7 @@ function avatarTone(name) {
 }
 
 function avatar(name, cls = "", path = "") {
-  const safePath = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.jpg$/.test(path || "") ? path : "";
+  const safePath = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|gif|webp)$/.test(path || "") ? path : "";
   return `<div class="avatar ${avatarTone(name)} ${esc(cls)}" ${safePath ? `data-avatar-path="${esc(safePath)}"` : ""} aria-hidden="true"><span>${esc(initials(name))}</span></div>`;
 }
 

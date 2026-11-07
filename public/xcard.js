@@ -26,6 +26,10 @@
     const order = (Array.isArray(d.order) ? d.order.filter((b) => BLOCKS.includes(b)) : []).concat(BLOCKS).filter((b, i, a) => a.indexOf(b) === i);
     const off = Array.isArray(d.off) ? d.off.filter((b) => BLOCKS.includes(b)) : [];
     const name = c.name || "?";
+    // Banner: Vorlagen aus banners.js; animierte und das eigene Bild nur mit Paid-Tarif
+    const B = window.XyntalBanners;
+    const bannerPath = B && B.validPath(c.banner_path) ? c.banner_path : "";
+    const banner = B ? B.effective(d.banner, c.is_premium === true, !!bannerPath) : "theme";
     const firstUser = opts.firstUser === true || c.user_id === FIRST_USER_ID
       || String(c.handle || "").toLowerCase() === FIRST_USER_HANDLE;
     const level = LEVELS.includes(c.level) ? c.level : "";
@@ -42,8 +46,8 @@
       stats: `<div class="mc-stats"><div><span>${esc(t("Zeit"))}</span><b>${esc(t(`${Number(c.hours) || 0} Std./Woche`))}</b><i class="mc-bar"><i style="width:${Math.min(100, ((Number(c.hours) || 0) / 20) * 100)}%"></i></i></div>${level ? `<div><span>${esc(t("Erfahrung"))}</span><b>${esc(t(level))}</b><i class="mc-dots">${[0, 1, 2].map((k) => `<i class="${k <= lv ? "on" : ""}"></i>`).join("")}</i></div>` : ""}</div>`,
     };
     const message = typeof opts.messageUrl === "string" && opts.messageUrl ? `<a class="mc-message mc-link-button" href="${esc(opts.messageUrl)}">Nachricht schreiben</a>` : "";
-    return `<article class="my-card${firstUser ? " is-first-user" : ""}" data-first-user="${firstUser ? "true" : "false"}" data-theme="${theme}" data-surface="${surface}" data-shape="${shape}" data-layout="${layout}" style="--tg:${grad};--t1:${cols[0]}">
-          <div class="mc-cover" aria-hidden="true">
+    return `<article class="my-card${firstUser ? " is-first-user" : ""}" data-first-user="${firstUser ? "true" : "false"}" data-theme="${theme}" data-surface="${surface}" data-shape="${shape}" data-layout="${layout}" data-banner="${banner}" style="--tg:${grad};--t1:${cols[0]}">
+          <div class="mc-cover" aria-hidden="true"${banner === "image" ? ` data-banner-path="${esc(bannerPath)}"` : ""}>
             <span class="mc-mark"><svg viewBox="0 0 24 24"><defs><linearGradient id="xm-ac" x1="3" y1="21" x2="21" y2="3" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#B36BFF"/><stop offset="1" stop-color="#3A8AFF"/></linearGradient><linearGradient id="xm-bc" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#3A8AFF"/><stop offset="1" stop-color="#3FE0F0"/></linearGradient><mask id="xm-gc" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><path d="M3 21Q8.59 8.59 21 3" fill="none" stroke="#000" stroke-width="7.4" stroke-linecap="round"/></mask></defs><path d="M3 3Q15.41 8.59 21 21" fill="none" stroke="url(#xm-bc)" stroke-width="4.6" stroke-linecap="round" mask="url(#xm-gc)"/><path d="M3 21Q8.59 8.59 21 3" fill="none" stroke="url(#xm-ac)" stroke-width="4.6" stroke-linecap="round"/></svg>xyntal</span>
             <span class="mc-badges">
             ${firstUser ? `<span class="mc-badge mc-badge-egg" title="Last Egg Standing"><img src="/badges/egg-full.png" alt="" width="19" height="30" loading="lazy" decoding="async">Last Egg Standing</span>` : ""}
@@ -63,5 +67,24 @@
 
   // Auch für u.js (das Ei mit Sprechblase auf der Profilseite des ersten Users)
   html.isFirstUser = (c) => !!c && (c.user_id === FIRST_USER_ID || String(c.handle || "").toLowerCase() === FIRST_USER_HANDLE);
+  // Eigene Banner-Bilder liegen privat im Bucket „banners“; lesbar ist nur, was ein Profil zeigt.
+  const bannerFiles = new Map();
+  html.hydrate = (root = document) => {
+    const cfg = window.XYNTAL_CONFIG;
+    if (!cfg || !cfg.supabaseUrl || !cfg.supabaseKey) return;
+    root.querySelectorAll("[data-banner-path]").forEach((cover) => {
+      const path = cover.dataset.bannerPath;
+      if (cover.dataset.bannerLoaded || !window.XyntalBanners?.validPath(path)) return;
+      cover.dataset.bannerLoaded = "1";
+      if (!bannerFiles.has(path)) {
+        bannerFiles.set(path, fetch(`${cfg.supabaseUrl}/storage/v1/object/authenticated/banners/${path}`, {
+          headers: { apikey: cfg.supabaseKey, Authorization: `Bearer ${cfg.supabaseKey}` },
+        }).then((res) => (res.ok ? res.blob() : null)).then((blob) => (blob ? URL.createObjectURL(blob) : "")).catch(() => ""));
+      }
+      bannerFiles.get(path).then((url) => {
+        if (url) cover.closest(".my-card")?.style.setProperty("--banner-img", `url("${url}")`);
+      });
+    });
+  };
   window.XyntalCardHtml = html;
 })();

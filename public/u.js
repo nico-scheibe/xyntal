@@ -154,7 +154,7 @@
     } catch { /* ohne App-Sitzung oder nicht sichtbar: keine Passung */ }
   }
   async function loadAvatar(path) {
-    if (!/^[0-9a-f-]{36}\/[0-9a-f-]{36}\.jpg$/.test(path || "")) return;
+    if (!/^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|gif|webp)$/.test(path || "")) return;
     try {
       const res = await fetch(`${SUPA}/storage/v1/object/authenticated/avatars/${path}`, { headers: { apikey: KEY, Authorization: `Bearer ${KEY}` } });
       if (!res.ok) return;
@@ -177,7 +177,7 @@
       });
       if (!res.ok) throw new Error(String(res.status));
       const card = await res.json();
-      if (card && card.name) { renderCard(card); loadMatch(card.user_id); if (card.profile) loadAvatar(card.profile.avatar_path); return; }
+      if (card && card.name) { renderCard(card); window.XyntalCardHtml.hydrate?.(root); loadMatch(card.user_id); if (card.profile) loadAvatar(card.profile.avatar_path); return; }
       if (card && card.reserved) {
         document.title = `xyntal.de/${handle} – ${t("reserviert")}`;
         return page(`<div class="profile-msg"><h1><b>xyntal.de/${esc(handle)}</b><br>${esc(t("ist reserviert."))}</h1><p>${esc(t("Dieses Profil ist noch nicht öffentlich freigegeben. Es kann schon jetzt im eigenen Konto veröffentlicht werden."))}</p>${ctas(`<a class="btn btn-primary" href="/#karte">${esc(t("Eigenen Link sichern"))}</a>`)}</div>`);

@@ -5,7 +5,7 @@ function resetAvatarFiles() {
   avatarFiles.clear();
   document.querySelectorAll('[data-avatar-path] img').forEach(img => img.remove());
 }
-function validAvatarPath(path) { return /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.jpg$/.test(path || ''); }
+function validAvatarPath(path) { return /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|gif|webp)$/.test(path || ''); }
 async function hydrateAvatar(el) {
   const path = el.dataset.avatarPath;
   if (!validAvatarPath(path) || el.dataset.avatarLoading) return;
@@ -51,21 +51,32 @@ window.addEventListener('pageshow', event => { if (event.persisted) {
 // Vor Kontolöschung alle eigenen Uploads über die Storage-API entfernen.
 // SQL-DELETE auf storage.objects würde die eigentlichen Dateien nicht löschen.
 async function deleteMemberAvatars(memberId) {
+  await deleteMemberFiles('avatars', memberId);
+  await deleteMemberFiles('banners', memberId); // eigene Kartenbanner (Paid)
+}
+async function deleteMemberFiles(bucket, memberId) {
   for (;;) {
-    const { data, error } = await sb.storage.from('avatars').list(memberId, { limit: 100 });
+    const { data, error } = await sb.storage.from(bucket).list(memberId, { limit: 100 });
     if (error) {
       if (/bucket not found/i.test(error.message)) return; // Vor Migration weiterhin nutzbar.
       throw error;
     }
     const paths = data.filter(file => file.id).map(file => `${memberId}/${file.name}`);
     if (!paths.length) return;
-    const removed = unwrap(await sb.storage.from('avatars').remove(paths));
+    const removed = unwrap(await sb.storage.from(bucket).remove(paths));
     if (!removed?.length) throw new Error('Die Profilbilder konnten nicht entfernt werden. Bitte versuch es erneut.');
   }
 }
 
-async function prepareAvatar(file) {
-  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) throw new Error('Bitte wähle ein JPG-, PNG- oder WebP-Bild.');
+// Mit Paid-Tarif (profiles.is_premium) bleiben GIF und WebP unverändert – so bleibt die Animation erhalten.
+const ANIMATED_AVATAR_MAX = 4 * 1024 * 1024;
+async function prepareAvatar(file, premium = false) {
+  if (file.type === 'image/gif' && !premium) throw new Error('Animierte Profilbilder (GIF) gibt es mit einem Paid-Tarif. Wähle ein JPG-, PNG- oder WebP-Bild.');
+  if (premium && ['image/gif', 'image/webp'].includes(file.type)) {
+    if (!file.size || file.size > ANIMATED_AVATAR_MAX) throw new Error('Animierte Profilbilder dürfen höchstens 4 MB groß sein.');
+    return file;
+  }
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) throw new Error('Bitte wähle ein JPG-, PNG-, WebP- oder GIF-Bild.');
   if (!file.size || file.size > 8 * 1024 * 1024) throw new Error('Dein Bild darf höchstens 8 MB groß sein.');
   let bitmap;
   try { bitmap = await createImageBitmap(file); } catch { throw new Error('Das Bild konnte nicht gelesen werden. Bitte wähle eine andere Datei.'); }
@@ -115,7 +126,7 @@ function setupAvatarEditor(member, onChange) {
     busy = true; selected = null; renderPreview();
     setStatus(status, 'Bild wird vorbereitet …');
     try {
-      selected = await prepareAvatar(file);
+      selected = await prepareAvatar(file, current.is_premium === true);
       busy = false;
       await savePicture();
     } catch (err) { selected = null; setStatus(status, friendlyError(err), 'error'); }
@@ -169,10 +180,11 @@ function setupAvatarEditor(member, onChange) {
   async function savePicture() {
     if (!selected || busy) return;
     busy = true; renderPreview(); setStatus(status, 'Bild wird gespeichert …');
-    const path = `${current.id}/${crypto.randomUUID()}.jpg`;
+    const type = ['image/gif', 'image/webp'].includes(selected.type) ? selected.type : 'image/jpeg';
+    const path = `${current.id}/${crypto.randomUUID()}.${type === 'image/gif' ? 'gif' : type === 'image/webp' ? 'webp' : 'jpg'}`;
     let uploaded = false;
     try {
-      unwrap(await sb.storage.from('avatars').upload(path, selected, { contentType: 'image/jpeg', cacheControl: '0', upsert: false }));
+      unwrap(await sb.storage.from('avatars').upload(path, selected, { contentType: type, cacheControl: '0', upsert: false }));
       uploaded = true;
       await changePicture(path, 'Dein Profilbild ist gespeichert.');
     } catch (err) {

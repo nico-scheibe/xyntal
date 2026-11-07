@@ -1,0 +1,124 @@
+/* Banner der Xyntal-Karte (.mc-cover), gewählt über data-banner an .my-card – Liste in banners.js.
+   Alle Vorlagen nehmen die Kartenfarben (--tg Verlauf, --t1 Hauptfarbe). Animiert nur mit Paid-Tarif;
+   bei „Bewegung reduzieren“ stehen sie still. */
+.my-card[data-banner] .mc-cover { position: relative; isolation: isolate; }
+.my-card[data-banner] .mc-cover::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+
+.my-card[data-banner="mesh"] .mc-cover {
+  background:
+    radial-gradient(circle at 12% 15%, rgba(255, 255, 255, .32), transparent 42%),
+    radial-gradient(circle at 88% 85%, rgba(10, 10, 16, .55), transparent 55%),
+    linear-gradient(180deg, rgba(10, 10, 16, .05), rgba(26, 26, 35, .45)), var(--tg);
+}
+.my-card[data-banner="grid"] .mc-cover {
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, .16) 0 1px, transparent 1px 16px),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, .16) 0 1px, transparent 1px 16px),
+    linear-gradient(180deg, rgba(10, 10, 16, .1), rgba(26, 26, 35, .6)), var(--tg);
+}
+.my-card[data-banner="dots"] .mc-cover {
+  background:
+    radial-gradient(rgba(255, 255, 255, .34) 1.3px, transparent 1.8px) 0 0 / 12px 12px,
+    linear-gradient(180deg, rgba(10, 10, 16, .05), rgba(26, 26, 35, .55)), var(--tg);
+}
+.my-card[data-banner="waves"] .mc-cover {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='96' viewBox='0 0 160 96'%3E%3Cpath d='M0 62c20-10 40-10 60 0s40 10 60 0 40-10 60 0V96H0z' fill='%23fff' fill-opacity='.14'/%3E%3Cpath d='M0 76c20-8 40-8 60 0s40 8 60 0 40-8 60 0V96H0z' fill='%23000' fill-opacity='.18'/%3E%3C/svg%3E") 0 100% / 160px 96px repeat-x,
+    linear-gradient(180deg, rgba(10, 10, 16, .02), rgba(26, 26, 35, .35)), var(--tg);
+}
+.my-card[data-banner="stripes"] .mc-cover {
+  background:
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, .13) 0 10px, transparent 10px 22px),
+    linear-gradient(180deg, rgba(10, 10, 16, .05), rgba(26, 26, 35, .55)), var(--tg);
+}
+.my-card[data-banner="glow"] .mc-cover {
+  background:
+    radial-gradient(90% 140% at 50% 130%, var(--t1), transparent 62%),
+    linear-gradient(180deg, #0B0B12, #15151E);
+}
+.my-card[data-banner="glow"] .mc-cover::before { top: auto; height: 2px; background: var(--tg); opacity: .9; }
+.my-card[data-banner="solid"] .mc-cover { background: linear-gradient(180deg, rgba(0, 0, 0, .12), rgba(0, 0, 0, .38)), var(--t1); }
+
+/* ---- Animiert (Paid) ---------------------------------------------------- */
+.my-card[data-banner="flow"] .mc-cover {
+  background: linear-gradient(180deg, rgba(10, 10, 16, .02), rgba(26, 26, 35, .5)), var(--tg);
+  background-size: 100% 100%, 300% 100%;
+  animation: xb-flow 9s ease-in-out infinite alternate;
+}
+@keyframes xb-flow { from { background-position: 0 0, 0% 0; } to { background-position: 0 0, 100% 0; } }
+
+.my-card[data-banner="stars"] .mc-cover {
+  background:
+    radial-gradient(80% 120% at 50% 140%, var(--t1), transparent 65%),
+    linear-gradient(180deg, #07070D, #12121C);
+}
+.my-card[data-banner="stars"] .mc-cover::before {
+  background:
+    radial-gradient(1.4px 1.4px at 12% 28%, #fff, transparent), radial-gradient(1px 1px at 26% 62%, #fff, transparent),
+    radial-gradient(1.6px 1.6px at 41% 18%, #fff, transparent), radial-gradient(1px 1px at 55% 48%, #fff, transparent),
+    radial-gradient(1.4px 1.4px at 68% 22%, #fff, transparent), radial-gradient(1px 1px at 79% 58%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 90% 30%, #fff, transparent), radial-gradient(1px 1px at 7% 75%, #fff, transparent),
+    radial-gradient(1px 1px at 34% 82%, #fff, transparent), radial-gradient(1.2px 1.2px at 62% 76%, #fff, transparent);
+  animation: xb-twinkle 3.2s ease-in-out infinite alternate;
+}
+.my-card[data-banner="stars"] .mc-cover::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(1px 1px at 18% 45%, #fff, transparent), radial-gradient(1.3px 1.3px at 47% 66%, #fff, transparent),
+    radial-gradient(1px 1px at 73% 40%, #fff, transparent), radial-gradient(1.4px 1.4px at 85% 78%, #fff, transparent),
+    radial-gradient(1px 1px at 29% 12%, #fff, transparent);
+  animation: xb-twinkle 2.4s ease-in-out .8s infinite alternate-reverse;
+}
+@keyframes xb-twinkle { from { opacity: .25; } to { opacity: 1; } }
+
+.my-card[data-banner="pulse"] .mc-cover { background: linear-gradient(180deg, #0D0D15, #171722); overflow: hidden; }
+.my-card[data-banner="pulse"] .mc-cover::before {
+  inset: -40%;
+  background:
+    radial-gradient(circle at 30% 50%, var(--t1), transparent 38%),
+    radial-gradient(circle at 72% 45%, rgba(255, 255, 255, .5), transparent 30%),
+    var(--tg);
+  opacity: .85; filter: blur(14px);
+  animation: xb-pulse 6s ease-in-out infinite;
+}
+@keyframes xb-pulse { 0%, 100% { transform: scale(1) rotate(0deg); } 50% { transform: scale(1.18) rotate(8deg); } }
+
+.my-card[data-banner="scan"] .mc-cover {
+  background:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, .12) 0 1px, transparent 1px 14px),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, .12) 0 1px, transparent 1px 14px),
+    linear-gradient(180deg, rgba(10, 10, 16, .2), rgba(26, 26, 35, .7)), var(--tg);
+  overflow: hidden;
+}
+.my-card[data-banner="scan"] .mc-cover::before {
+  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, .55) 48%, transparent 64%) no-repeat;
+  background-size: 60% 100%;
+  animation: xb-scan 3.6s cubic-bezier(.45, 0, .2, 1) infinite;
+}
+@keyframes xb-scan { from { background-position: -80% 0; } to { background-position: 180% 0; } }
+
+/* ---- Eigenes Bild (Paid): --banner-img setzt xcard.js / der Editor ------- */
+.my-card[data-banner="image"] .mc-cover {
+  background: linear-gradient(180deg, rgba(10, 10, 16, .08), rgba(10, 10, 16, .45)), var(--banner-img, var(--tg)) center / cover no-repeat;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .my-card[data-banner] .mc-cover, .my-card[data-banner] .mc-cover::before, .my-card[data-banner] .mc-cover::after { animation: none !important; }
+}
+
+/* ---- Auswahl im Karten-Editor (/meine-karte) ----------------------------- */
+.bf-banners { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
+.bf-banners label { position: relative; display: grid; gap: 5px; cursor: pointer; font-size: 12px; color: var(--text-2, #A1A1AA); }
+.bf-banners input { position: absolute; opacity: 0; pointer-events: none; }
+.bf-banners .my-card.bf-bsw {
+  display: block; width: 100%; height: 40px; padding: 0; gap: 0; border: 0; border-radius: 10px; transform: none; box-shadow: none;
+  outline: 2px solid transparent; outline-offset: 2px; transition: outline-color .15s;
+}
+.bf-banners .bf-bsw .mc-cover { height: 100%; margin: 0; padding: 0; }
+.bf-banners input:checked + .bf-bsw { outline-color: var(--grad, #3FE0F0); }
+.bf-banners input:focus-visible + .bf-bsw { outline-color: #fff; }
+.bf-banners .is-locked { cursor: not-allowed; }
+.bf-banners .is-locked .bf-bsw { opacity: .55; }
+.bf-banners .bf-btag { position: absolute; top: 5px; right: 5px; padding: 2px 6px; border-radius: 999px; background: rgba(0, 0, 0, .6); color: #fff; font: 700 9.5px/1.2 var(--f-text, sans-serif); letter-spacing: .04em; }
+.bf-banner-upload { margin-top: 10px; display: grid; gap: 8px; }
+.bf-banner-actions { display: flex; gap: 8px; flex-wrap: wrap; }
