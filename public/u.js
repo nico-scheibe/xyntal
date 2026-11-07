@@ -8,7 +8,7 @@
   const BLOCKED = new Set(["admin", "api", "app", "about", "beta", "bestaetigt", "blog", "datenschutz", "demo", "help", "hilfe", "impressum",
     "karte", "login", "logout", "mail", "meine-karte", "mitglieder", "mitglied-werden", "nachrichten", "news", "passwort-neu",
     "preise", "pricing", "profil", "projekte", "register", "settings", "signup", "support", "team", "warteliste", "www",
-    "xyntal", "boerse", "community", "events"]);
+    "xyntal", "invite", "boerse", "community", "events"]);
   const SUPA = "https://rralgrlujoupprwlvoyo.supabase.co";
   const KEY = "sb_publishable_YxSngs1ePBoxqI6f26GRww_2_kNaLfh";
 
