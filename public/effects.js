@@ -38,7 +38,7 @@
         ]
       : [
           { label: "Login", href: "login", glyph: "→", keys: "anmelden einloggen" },
-          { label: "Konto anlegen", href: "beta#bewerben", glyph: "+", keys: "registrieren mitglied werden beta bewerben" },
+          { label: "Konto anlegen", href: "login#registrieren", glyph: "+", keys: "registrieren mitglied werden konto signup" },
           { label: "Impressum & Datenschutz", href: "impressum", glyph: "§", keys: "rechtliches datenschutz" },
         ];
   };
