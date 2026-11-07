@@ -43,8 +43,34 @@
       else card.style.removeProperty("--banner-img");
     }
   }
+  // Eine kurzlebige, signierte URL auf die eigene Datei im privaten Bucket „banners“:
+  // Bild und Video laden damit direkt vom Speicher (ein Video streamt, statt erst
+  // komplett als Blob zu kommen). Lesbar ist nur, was ein Profil zeigt; mit der
+  // Sitzung (sb) auch das eigene noch nicht gezeigte Banner. "" wenn nichts geht.
+  async function fileUrl(path, sb, cfg, ttl = 3600) {
+    if (!PATH.test(path || "")) return "";
+    try {
+      if (sb && sb.storage) {
+        const { data, error } = await sb.storage.from("banners").createSignedUrl(path, ttl);
+        if (!error && data && data.signedUrl) return data.signedUrl;
+      }
+    } catch { /* unten ohne Sitzung versuchen */ }
+    try {
+      const c = cfg || window.XYNTAL_CONFIG;
+      if (!c || !c.supabaseUrl || !c.supabaseKey) return "";
+      const res = await fetch(`${c.supabaseUrl}/storage/v1/object/sign/banners/${path}`, {
+        method: "POST",
+        headers: { apikey: c.supabaseKey, Authorization: `Bearer ${c.supabaseKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ expiresIn: ttl }),
+      });
+      if (!res.ok) return "";
+      const body = await res.json();
+      return body && typeof body.signedURL === "string" ? `${c.supabaseUrl}/storage/v1${body.signedURL}` : "";
+    } catch { return ""; }
+  }
   window.XyntalBanners = {
     LIST,
+    fileUrl,
     valid: (id) => BY_ID.has(id),
     isPremium: (id) => !!BY_ID.get(id)?.premium,
     validPath: (path) => PATH.test(path || ""),
