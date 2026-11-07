@@ -212,8 +212,8 @@
       if (!el.banners || !BANNERS) return;
       el.banners.innerHTML = BANNERS.LIST.map((b) => {
         const locked = b.premium && !data.premium;
-        const tag = b.premium ? `<span class="bf-btag">${esc(locked || !b.animated ? "Paid" : t("Animiert"))}</span>` : "";
-        return `<label class="${locked ? "is-locked" : ""}" title="${esc(locked ? t("Mit Paid-Tarif") : t(b.label))}">
+        const tag = b.premium ? `<span class="bf-btag">${esc(locked || !b.animated ? "Plus" : t("Animiert"))}</span>` : "";
+        return `<label class="${locked ? "is-locked" : ""}" title="${esc(locked ? t("Ab Plus") : t(b.label))}">
           <input type="radio" name="banner" value="${b.id}"${b.id === data.banner ? " checked" : ""}${locked ? " disabled" : ""}>
           <span class="my-card bf-bsw" data-banner="${b.id}" aria-hidden="true"><span class="mc-cover"></span></span>${tag}
           <span>${esc(t(b.label))}</span></label>`;
