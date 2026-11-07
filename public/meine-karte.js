@@ -45,11 +45,19 @@
   let member = null, bannerBusy = false;
   const bannerFile = $("#bf-banner-file"), bannerStatus = $("[data-bf-banner-status]");
   const BANNER_MAX = 4 * 1024 * 1024;
-  // Ein Video wird nicht umgerechnet, darf aber nicht beliebig groß sein: 12 MB und
-  // 30 Sekunden reichen für eine Schleife in 1200 × 300.
-  const BANNER_VIDEO_MAX = 12 * 1024 * 1024;
-  const BANNER_VIDEO_SECONDS = 30;
+  // Ein Video wird nicht umgerechnet; wie groß und lang es sein darf, hängt vom Tarif ab
+  // (banners.js videoLimit, Admins ohne Grenze). Der Bucket prüft die Größe noch einmal.
   const VIDEO_TYPES = { "video/mp4": "mp4", "video/webm": "webm" };
+  const mb = (bytes) => String(Math.round(bytes / (1024 * 1024)));
+  const videoLimit = () => window.XyntalBanners.videoLimit(member);
+  // Der Hinweis unter den Knöpfen nennt die Grenze dieses Mitglieds.
+  function bannerHint() {
+    const limit = videoLimit();
+    const video = limit.bytes === null ? t("oder MP4/WebM-Video ohne Größenlimit (Admin)")
+      : limit.bytes > 0 ? t("oder MP4/WebM-Video · bis {mb} MB und {s} Sekunden").replace("{mb}", mb(limit.bytes)).replace("{s}", String(limit.seconds))
+      : "";
+    return [t("JPG, PNG, WebP oder GIF · bis 4 MB"), video, t("läuft stumm in Schleife · am besten 1200 × 300 Pixel")].filter(Boolean).join(" · ");
+  }
   const bannerSay = (text, kind = "") => { if (bannerStatus) { bannerStatus.textContent = text; bannerStatus.classList.toggle("is-error", kind === "error"); } };
   async function loadBanner(path) {
     if (!window.XyntalBanners?.validPath(path)) return;
@@ -73,10 +81,13 @@
   // GIFs und Videos bleiben unverändert (Animation), alles andere wird auf 1200 × 300 zugeschnitten.
   async function prepareBanner(file) {
     if (VIDEO_TYPES[file.type]) {
-      if (!file.size || file.size > BANNER_VIDEO_MAX) throw new Error(t("Das Video darf höchstens 12 MB groß sein."));
+      const limit = videoLimit();
+      if (limit.bytes === 0) throw new Error(t("Ein Banner-Video gibt es ab Plus."));
+      if (!file.size) throw new Error(t("Das Video konnte nicht gelesen werden. Bitte wähle eine MP4- oder WebM-Datei."));
+      if (limit.bytes !== null && file.size > limit.bytes) throw new Error(t("Das Video darf in deinem Tarif höchstens {mb} MB groß sein.").replace("{mb}", mb(limit.bytes)));
       const info = await probeVideo(file);
       if (!info.width || !info.height) throw new Error(t("Das Video konnte nicht gelesen werden. Bitte wähle eine MP4- oder WebM-Datei."));
-      if (Number.isFinite(info.duration) && info.duration > BANNER_VIDEO_SECONDS) throw new Error(t("Das Video darf höchstens 30 Sekunden lang sein."));
+      if (limit.seconds !== null && Number.isFinite(info.duration) && info.duration > limit.seconds) throw new Error(t("Das Video darf in deinem Tarif höchstens {s} Sekunden lang sein.").replace("{s}", String(limit.seconds)));
       return { blob: file, ext: VIDEO_TYPES[file.type], type: file.type, video: true };
     }
     if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type)) throw new Error(t("Bitte wähle ein JPG-, PNG-, WebP- oder GIF-Bild oder ein MP4-/WebM-Video."));
@@ -116,6 +127,7 @@
       B.set({ bannerUrl: URL.createObjectURL(blob), bannerIsVideo: video === true, banner: "image" });
       markDirty();
       bannerSay(t("Banner gespeichert. Klick auf „Karte speichern“, damit deine Karte es zeigt."), "ok");
+      setTimeout(() => { if (!bannerBusy && bannerStatus && !bannerStatus.classList.contains("is-error")) bannerSay(bannerHint()); }, 6000);
     } catch (err) {
       if (path && member && member.banner_path !== path) await sb.storage.from("banners").remove([path]).catch(() => {});
       bannerSay(friendlyError(err), "error");
@@ -190,6 +202,7 @@
     member = me || null;
     // Paid-Tarif schaltet animierte Banner und das eigene Banner-Bild frei (profiles.is_premium)
     B.set({ premium: !!me && me.is_premium === true });
+    bannerSay(bannerHint());
     if (me && me.is_premium === true && me.banner_path) loadBanner(me.banner_path);
     dirty = false;
     updateLink();
