@@ -18,8 +18,18 @@
 .lp-link:hover .lp-arrow { color: var(--text); transform: translate(2px, -2px); }
 @media (prefers-reduced-motion: reduce) { .lp-link, .lp-arrow { transition: none; } .lp-link:hover { transform: none; } }
 
-/* Editor in /meine-karte: jede Zeile eine kleine Karte – Symbol, Titel und Adresse, Werkzeuge rechts */
-.le { display: grid; gap: 14px; }
+/* Editor im Profil (/profil#links): jede Zeile eine kleine Karte – Symbol, Titel und Adresse, Werkzeuge rechts */
+.le { --line: var(--border, #333333); --line-2: var(--border-2, #4A4A4A); display: grid; gap: 14px; }
+.le h2 { margin: 0; }
+.le .hint { margin: 0; color: var(--text-2); }
+.le .hint b { color: var(--text); }
+.le .mk-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.le .mk-actions .btn[hidden] { display: none; }
+.le .mk-status { min-height: 1.3em; margin: 0; font-size: 14px; color: var(--text-2); }
+.le .mk-status:empty { display: none; }
+.le .mk-status.is-ok { color: var(--green, #3CCF8E); }
+.le .mk-status.is-error { color: #F28B82; }
+.le-add[hidden] { display: none; }
 .le-list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
 .le-row {
   position: relative; display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 4px 12px; align-items: center;
@@ -71,6 +81,19 @@
 .le-tag { position: absolute; top: 12px; right: 12px; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--text-2); font: 500 11px/1.2 var(--f-text); }
 .le-clicks { position: absolute; right: 54px; bottom: 19px; color: var(--text-3); font-size: 12.5px; }
 
+/* style.css setzt für jedes label ein Raster mit Abstand: das Symbol bleibt mittig */
+.le .le-ico { gap: 0; align-content: center; justify-content: center; font-size: 0; }
+/* Viel Platz (Profil): Werkzeuge rechts neben Titel und Adresse statt darunter */
+.le-list { container-type: inline-size; }
+@container (min-width: 560px) {
+  .le-row { grid-template-columns: 48px minmax(0, 1fr) auto; padding: 12px 14px; }
+  .le-ico { grid-row: auto; align-self: center; }
+  .le-tools { grid-column: 3; grid-row: 1; margin-top: 0; }
+  .le-btn-del { margin-left: 6px; }
+  .le-tag { position: static; grid-column: 2; justify-self: start; margin-top: 4px; }
+  .le-clicks { position: static; grid-column: 3; justify-self: end; margin-top: -2px; }
+}
+
 /* Hinzufügen: gestrichelte Fläche über die ganze Breite */
 .le-add {
   display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 52px; margin: 0;
@@ -81,11 +104,14 @@
 .le-add:hover:not(:disabled) { color: var(--text); border-color: var(--text-3); background: rgba(255, 255, 255, .03); }
 .le-add:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 .le-add:disabled { opacity: .4; cursor: default; }
-.le .mk-actions .btn { width: 100%; justify-content: center; }
+.le .mk-actions .btn:not(.btn-ghost) { flex: 1 1 200px; justify-content: center; }
 
 .le-count { display: grid; gap: 6px; margin: 0; color: var(--text-3); font-size: 12.5px; }
 .le-meter { display: block; height: 3px; border-radius: 3px; background: var(--line); overflow: hidden; }
 .le-meter i { display: block; height: 100%; border-radius: 3px; background: var(--text-2); transition: width .2s ease; }
+.le-meter.is-full i { background: #D9B25F; }
+.le-full { color: #D9B25F; font-weight: 600; }
+.le-count a { color: var(--text-2); }
 .le-empty { margin: 0; padding: 18px; border: 1px solid var(--line); border-radius: 16px; color: var(--text-3); font-size: 14px; text-align: center; }
 .le-empty[hidden] { display: none; }
 

@@ -81,7 +81,7 @@ async function showDownloadVersions(betaCard) {
   if (parts.length) line.innerHTML = `Aktuelle Version: ${parts.join(" · ")}`;
 }
 
-// ---------- Registerkarten: Profil · Matching · Xyntal-Karte · Tarif & Rechnungen · Sicherheit ----------
+// ---------- Registerkarten: Profil · Matching · Xyntal-Karte · Links · Tarif & Rechnungen · Sicherheit ----------
 const tabs = [...document.querySelectorAll("[data-tab]")];
 const TABS = tabs.map((b) => b.dataset.tab);
 function selectTab(name, { focus = false, push = true } = {}) {

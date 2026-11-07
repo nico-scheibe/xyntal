@@ -1,4 +1,4 @@
-// Link-Editor in /meine-karte: eigene Links anlegen, ordnen, ausblenden, speichern (RPC get_my_links / save_my_links)
+// Link-Editor im Profil (/profil#links): eigene Links anlegen, ordnen, ausblenden, speichern (RPC get_my_links / save_my_links)
 (() => {
   const box = document.querySelector("[data-le]");
   const I = window.XyntalLinkIcons;
@@ -8,9 +8,17 @@
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const list = $("[data-le-list]"), empty = $("[data-le-empty]"), count = $("[data-le-count]"), out = $("[data-le-status]");
   const addBtn = $("[data-le-add]"), saveBtn = $("[data-le-save]");
-  const LIMIT = 15, LIMIT_PAID = 100;
-  let rows = [], paid = false, busy = false, dirty = false;
-  const limit = () => (paid ? LIMIT_PAID : LIMIT);
+  // Wie viele Links je Tarif – dieselbe Tabelle prüft die Datenbank (link_limit, Migration 20261108090000)
+  const TIERS = [
+    { name: "Free", max: 5, plans: ["Free", ""] },
+    { name: "Plus", max: 25, plans: ["Plus", "Forge", "Pulse"] },
+    { name: "Pro", max: 50, plans: ["Pro", "Crew", "Nexus"] },
+    { name: "Ultra", max: 100, plans: ["Ultra", "Foundry", "Ascend"] },
+    { name: "Enterprise", max: 250, plans: ["Enterprise", "Enterprise+", "Works", "Works Custom"] },
+  ];
+  let rows = [], paid = false, busy = false, dirty = false, tier = TIERS[0], admin = false, grandfathered = 0;
+  const limit = () => Math.max(admin ? 1000 : tier.max, grandfathered);
+  const nextTier = () => (admin ? null : TIERS[TIERS.indexOf(tier) + 1] || null);
   const say = (text, kind = "") => { out.textContent = text; out.className = "mk-status" + (kind ? ` is-${kind}` : ""); };
   const validUrl = (u) => /^https?:\/\/[^\s]{3,}$/i.test(u) && u.length <= 500;
   // Eingabe ohne Schema („github.com/x“) wird zu https://
@@ -49,7 +57,12 @@
       </li>`).join("");
     empty.hidden = rows.length > 0;
     addBtn.disabled = busy || rows.length >= limit();
-    count.innerHTML = `<span class="le-meter" aria-hidden="true"><i style="width:${Math.min(100, (rows.length / limit()) * 100)}%"></i></span><span>${rows.length} / ${limit()} ${esc(t("Links"))}${paid ? "" : ` · ${esc(t("Klickstatistik und bis zu 100 Links mit Plus"))}`}</span>`;
+    const up = nextTier();
+    const plan = admin ? t("Admin") : tier.name;
+    const more = up ? ` · <a class="text-link" href="/preise">${esc(t("Bis zu {n} Links mit {plan}").replace("{n}", up.max).replace("{plan}", up.name))}</a>` : "";
+    const stats = paid ? "" : ` · ${esc(t("Klickstatistik ab Plus"))}`;
+    const full = rows.length >= limit() ? ` <b class="le-full">${esc(t("Limit erreicht"))}</b>` : "";
+    count.innerHTML = `<span class="le-meter${rows.length >= limit() ? " is-full" : ""}" aria-hidden="true"><i style="width:${Math.min(100, (rows.length / limit()) * 100)}%"></i></span><span>${rows.length} / ${limit()} ${esc(t("Links"))} (${esc(plan)})${full}${stats}${more}</span>`;
   }
 
   list.addEventListener("input", (e) => {
@@ -100,25 +113,38 @@
       rows = Array.isArray(data) ? data : rows; dirty = false;
       say(t("Links gespeichert."), "ok");
     } catch (err) {
-      say(err && err.code === "54000" ? t("Du hast die Höchstzahl an Links erreicht.") : t("Die Links konnten nicht gespeichert werden. Bitte versuche es erneut."), "error");
+      say(err && err.code === "54000" ? t("Du hast die Höchstzahl an Links für deinen Tarif erreicht.") : t("Die Links konnten nicht gespeichert werden. Bitte versuche es erneut."), "error");
     } finally { busy = false; saveBtn.disabled = false; render(); }
   });
   window.addEventListener("beforeunload", (e) => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
 
-  // Starten, sobald das Konto geladen ist (meine-karte.js blendet die App erst dann ein)
+  // Starten, sobald eine Sitzung da ist; der Wunsch-Link kommt aus der eigenen Karte
+  const loading = $("[data-le-loading]"), view = $("[data-le-view]"), leUrl = $("[data-le-url]");
+  const showUi = (on) => { addBtn.hidden = !on; saveBtn.hidden = !on; if (loading) loading.hidden = true; };
   async function start() {
     const { data: { session } } = await sb.auth.getSession();
-    if (!session) return;
+    if (!session) { if (loading) loading.textContent = t("Melde dich an, um deine Links zu bearbeiten."); return; }
     try {
-      const [{ data: links, error }, { data: prof }] = await Promise.all([sb.rpc("get_my_links"), sb.from("profiles").select("is_premium,is_admin").eq("id", session.user.id).maybeSingle()]);
+      const [{ data: links, error }, { data: prof }, card] = await Promise.all([
+        sb.rpc("get_my_links"),
+        sb.from("profiles").select("*").eq("id", session.user.id).maybeSingle(),
+        sb.rpc("get_my_card").then((r) => r.data).catch(() => null),
+      ]);
       if (error) throw error;
       rows = Array.isArray(links) ? links : [];
+      admin = !!(prof && prof.is_admin);
       paid = !!(prof && (prof.is_premium || prof.is_admin));
-      box.hidden = false; render();
-    } catch { /* Ältere Datenbank ohne Migration: Editor bleibt verborgen */ }
+      const planName = String((prof && prof.plan) || "");
+      tier = TIERS.find((x) => x.plans.includes(planName)) || (paid ? TIERS[1] : TIERS[0]);
+      // Wer schon mehr Links hat, als sein Tarif erlaubt, behält sie und kann sie bearbeiten
+      grandfathered = rows.length;
+      const handle = card && card.handle;
+      if (handle && leUrl) leUrl.textContent = `xyntal.de/${handle}`;
+      if (handle && view) { view.href = `/${handle}`; view.hidden = false; }
+      box.hidden = false; showUi(true); render();
+    } catch {
+      if (loading) loading.textContent = t("Deine Links lassen sich gerade nicht laden. Bitte versuch es später noch einmal.");
+    }
   }
-  const app = document.querySelector("[data-mk-app]");
-  const urlLabel = document.querySelector("[data-mk-url]"), leUrl = $("[data-le-url]");
-  new MutationObserver(() => { if (urlLabel && leUrl) leUrl.textContent = urlLabel.textContent; }).observe(urlLabel || box, { childList: true, characterData: true, subtree: true });
-  if (app && !app.hidden) start(); else new MutationObserver((_, o) => { if (!app.hidden) { o.disconnect(); start(); } }).observe(app, { attributes: true, attributeFilter: ["hidden"] });
+  start();
 })();
