@@ -730,49 +730,7 @@
     } catch { return false; }
   }
 
-  // Einladungen: ?ref=code aus dem Link merken, nach dem Eintragen gutschreiben
-  const REF_KEY = "xyntal-ref", INVITE_KEY = "xyntal-einladung";
-  try {
-    const params = new URLSearchParams(location.search);
-    const ref = (params.get("ref") || "").toLowerCase();
-    if (/^[a-z0-9]{8}$/.test(ref)) localStorage.setItem(REF_KEY, ref);
-    if (params.has("ref")) { params.delete("ref"); history.replaceState(null, "", location.pathname + (params.toString() ? `?${params}` : "") + location.hash); }
-  } catch { /* geht auch ohne */ }
-  const inviteBox = $("[data-invite]");
-  function showInvite(code) {
-    if (!inviteBox || !/^[a-z0-9]{8}$/.test(code || "")) return;
-    const url = `https://xyntal.de/?ref=${code}`;
-    inviteBox.innerHTML = `
-      <div class="invite-head"><span class="lp-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 12v8H4v-8M2 7h20v5H2zM12 22V7M12 7H8a2.5 2.5 0 1 1 0-5c3 0 4 5 4 5zM12 7h4a2.5 2.5 0 1 0 0-5c-3 0-4 5-4 5z"/></svg></span><b>Lade Freunde ein</b></div>
-      <p>Für jede Person, die sich über deinen Link einträgt und bestätigt, bekommst du 1 Woche gratis, sobald es Abos gibt.</p>
-      <div class="invite-row"><input type="text" readonly value="${url}" aria-label="Dein Einladungslink" data-no-i18n><button type="button" class="btn btn-primary" data-invite-share>Link teilen</button></div>
-      <p class="invite-count" data-invite-status role="status" aria-live="polite"></p>
-      <p class="invite-count">Deine Karte später ändern? Leg mit derselben E-Mail ein Konto an: <a class="text-link" href="meine-karte">Meine Karte bearbeiten</a></p>`;
-    inviteBox.hidden = false;
-    const input = $("input", inviteBox), out = $("[data-invite-status]", inviteBox);
-    input.addEventListener("focus", () => input.select());
-    $("[data-invite-share]", inviteBox).addEventListener("click", async () => {
-      const text = "Ich bin auf der Warteliste von Xyntal – der Plattform, auf der aus Ideen Teams werden. Trag dich auch ein:";
-      try {
-        if (navigator.share && matchMedia("(pointer: coarse)").matches) { await navigator.share({ title: "Xyntal", text, url }); return; }
-      } catch (err) { if (err && err.name === "AbortError") return; }
-      try { await navigator.clipboard.writeText(url); out.textContent = "Link kopiert."; }
-      catch { input.focus(); input.select(); out.textContent = "Markiert – jetzt kopieren."; }
-    });
-  }
-  try { showInvite(localStorage.getItem(INVITE_KEY)); } catch { /* egal */ }
-  async function afterSignup(email) {
-    let ref = ""; try { ref = localStorage.getItem(REF_KEY) || ""; } catch { /* egal */ }
-    if (ref) rpc("track_referral", { p_email: email, p_code: ref }).catch(() => {});
-    try {
-      const res = await rpc("get_referral_code", { p_email: email });
-      const code = res.ok ? await res.json() : "";
-      if (typeof code === "string" && /^[a-z0-9]{8}$/.test(code)) {
-        try { localStorage.setItem(INVITE_KEY, code); } catch { /* egal */ }
-        showInvite(code);
-      }
-    } catch { /* ohne Einladungslink geht es auch */ }
-  }
+  // Einladungen laufen nur noch über Konten: persönlicher Link xyntal.de/deinname (invite.js, Einlösen in account-menu.js).
 
   const SENT = "Fast geschafft – bestätige jetzt deine E-Mail.";
   $$("[data-waitlist]").forEach((form) => {
@@ -826,7 +784,7 @@
           else parts.push("Die Karte konnte gerade nicht gespeichert werden. Bitte bleib auf diesem Gerät und versuch es nach der Registrierung erneut.");
         }
         setStatus(parts, "ok");
-        afterSignup(email);
+        window.XyntalInvite?.teaser();
         form.reset();
         status.setAttribute("tabindex", "-1");
         status.focus({ preventScroll: true });

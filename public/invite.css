@@ -1,0 +1,10 @@
+/* Einladungsbox auf /meine-karte (die Startseite bringt dieselben Regeln in front.css mit) */
+.invite { display: grid; gap: 10px; font-size: 14px; }
+.invite .lp-icon { display: none; }
+.invite-head { font-weight: 600; color: var(--text, #F5F5F7); }
+.invite-row { display: grid; grid-template-columns: 1fr auto; border: 1px solid var(--line-2, rgba(255, 255, 255, .2)); }
+.invite-row input { min-width: 0; height: 40px; padding: 0 12px; border: 0; background: transparent; color: var(--text, #F5F5F7); font: 500 13px/1 var(--f-mono, ui-monospace, monospace); }
+.invite-row .btn { min-height: 40px; padding: 0 14px; border-radius: 0; }
+.invite-count { font-size: 13px; color: var(--text-3, #A1A1AA); }
+.invite-note { margin: 0; padding: 10px 12px; border: 1px solid var(--line-2, rgba(255, 255, 255, .2)); color: var(--text, #F5F5F7); }
+.invite-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 13px; color: var(--text-3, #A1A1AA); }
