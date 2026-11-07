@@ -50,6 +50,21 @@
     validPath: (path) => PATH.test(path || ""),
     isVideo: (path) => VIDEO.test(path || ""),
     showFile,
+    // Was ein Banner-Video bei diesem Mitglied groß und lang sein darf: {bytes, seconds},
+    // beides null für Admins (keine Grenze), bytes 0 ohne Paid-Tarif. Dieselbe Tabelle
+    // prüft der Bucket (banner_video_limit_bytes in der Datenbank).
+    videoLimit(me) {
+      if (!me) return { bytes: 0, seconds: 0 };
+      if (me.is_admin === true) return { bytes: null, seconds: null };
+      const MB = 1024 * 1024;
+      switch (String(me.plan || "")) {
+        case "Plus": case "Forge": case "Pulse": return { bytes: 25 * MB, seconds: 30 };
+        case "Pro": case "Crew": case "Nexus": return { bytes: 60 * MB, seconds: 60 };
+        case "Ultra": case "Foundry": case "Ascend": return { bytes: 150 * MB, seconds: 120 };
+        case "Enterprise": case "Enterprise+": case "Works": case "Works Custom": return { bytes: 500 * MB, seconds: 300 };
+        default: return me.is_premium === true ? { bytes: 25 * MB, seconds: 30 } : { bytes: 0, seconds: 0 };
+      }
+    },
     // Was die Karte zeigt: Paid-Banner nur mit Paid-Tarif, das eigene Bild nur mit Datei.
     effective(id, premium, hasImage = true) {
       const b = BY_ID.get(id);
