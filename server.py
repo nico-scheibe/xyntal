@@ -46,6 +46,8 @@ class Handler(SimpleHTTPRequestHandler):
                 return candidate
             if re.fullmatch(r"/[a-z0-9][a-z0-9_-]{0,19}-[a-z0-9][a-z0-9_-]{0,118}/?", parsed):
                 return os.path.join(PUBLIC, "projekte.html")
+            if re.fullmatch(r"/[a-zA-Z0-9][a-zA-Z0-9_-]{2,19}/invite/?", parsed):
+                return os.path.join(PUBLIC, "invite.html")
             if re.fullmatch(r"/[a-zA-Z0-9][a-zA-Z0-9_-]{2,19}/?", parsed) and not os.environ.get("XYNTAL_NO_HANDLE_ROUTE"):
                 return os.path.join(PUBLIC, "u.html")
         return super().translate_path(path)

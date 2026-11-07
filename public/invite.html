@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="referrer" content="origin">
+  <meta property="og:title" content="Einladung – Xyntal">
+  <title>Einladung – Xyntal</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/fonts/fonts.css?v=32">
+  <link rel="stylesheet" href="/landing.css?v=10">
+  <link rel="stylesheet" href="/cosmos.css?v=43">
+  <script src="/i18n-en.js?v=102" defer></script>
+  <script src="/i18n.js?v=31" defer></script>
+  <script src="/cosmos.js?v=40" defer></script>
+  <style>
+    .inv { min-height: calc(100vh - 68px - 160px); display: grid; align-content: center; justify-items: start; padding-top: 64px; padding-bottom: 96px; }
+    .inv-eyebrow { font-family: var(--f-mono, ui-monospace, monospace); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--ice, #3FE0F0); }
+    .inv h1 { margin-top: 14px; font-family: var(--f-display); font-weight: 700; font-size: clamp(2rem, 5vw, 3.4rem); letter-spacing: -0.035em; line-height: 1.05; max-width: 20ch; }
+    .inv p { margin-top: 16px; color: var(--text-2); max-width: 34rem; }
+    .inv-code { margin-top: 24px; display: grid; gap: 6px; padding: 14px 18px; border: 1px solid var(--line-2, rgba(255,255,255,.2)); }
+    .inv-code span { font-size: 12.5px; color: var(--text-3, #A1A1AA); }
+    .inv-code b { font: 600 22px/1 var(--f-mono, ui-monospace, monospace); letter-spacing: .04em; color: var(--text); }
+    .inv-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 28px; }
+    .inv-fine { font-size: 13px; color: var(--text-3, #A1A1AA); }
+  </style>
+  <link rel="stylesheet" href="/backdrop.css?v=7">
+  <link rel="stylesheet" href="/site-footer.css?v=4">
+  <link rel="stylesheet" href="/site-header.css?v=7">
+</head>
+<body class="page-invite">
+<div class="xy-bg" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i><span class="xy-grid"></span><span class="xy-stars"></span><span class="xy-stars"></span></div>
+<header class="nav">
+  <div class="wrap">
+    <a class="logo" href="/" aria-label="Xyntal – Startseite"><svg class="logo-mark" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="xm-a1" x1="3" y1="21" x2="21" y2="3" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#B36BFF"/><stop offset="1" stop-color="#3A8AFF"/></linearGradient><linearGradient id="xm-b1" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#3A8AFF"/><stop offset="1" stop-color="#3FE0F0"/></linearGradient><mask id="xm-g1" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><path d="M3 21Q8.59 8.59 21 3" fill="none" stroke="#000" stroke-width="7.4" stroke-linecap="round"/></mask></defs><path d="M3 3Q15.41 8.59 21 21" fill="none" stroke="url(#xm-b1)" stroke-width="4.6" stroke-linecap="round" mask="url(#xm-g1)"/><path d="M3 21Q8.59 8.59 21 3" fill="none" stroke="url(#xm-a1)" stroke-width="4.6" stroke-linecap="round"/></svg>xyntal</a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="main-nav">Menü</button>
+    <nav class="nav-links" id="main-nav" aria-label="Hauptnavigation">
+      <a class="nav-main" href="/demo">App-Demo</a>
+      <a class="nav-main" href="/community">Community</a>
+      <a class="nav-main" href="/mitglieder">Mitglieder</a>
+      <a class="nav-main" href="/preise">Preise</a>
+      <a class="hide-sm" href="/nachrichten" data-messages hidden>Nachrichten</a>
+      <a class="hide-sm" href="/login" data-account>Login</a>
+      <a class="btn btn-small nav-cta" href="/beta">Für die Beta bewerben</a>
+    </nav>
+  </div>
+</header>
+<main class="shell inv">
+  <p class="inv-eyebrow" data-inv-eyebrow>Einladung</p>
+  <h1 data-inv-title>Du wurdest zu Xyntal eingeladen.</h1>
+  <p data-inv-text>Mit einem Konto bekommst du 7 Tage Plus gratis – und die Person, die dich eingeladen hat, auch.</p>
+  <div class="inv-code" data-inv-code hidden><span>Promo-Code</span><b data-no-i18n data-inv-code-value></b></div>
+  <div class="inv-actions">
+    <a class="btn btn-primary" data-inv-signup href="/login#registrieren">Konto anlegen</a>
+    <a class="btn btn-quiet" href="/login">Schon ein Konto? Einloggen</a>
+  </div>
+  <p class="inv-fine">Die Gratiswoche gilt für neue Konten mit bestätigter E-Mail-Adresse und läuft als Plus-Tarif für 7 Tage. Du brauchst dafür keine Zahlungsdaten.</p>
+</main>
+<footer class="site-footer" aria-label="Fußzeile">
+  <div class="sf-inner">
+    <div class="sf-cta">
+      <div>
+        <h2>Bereit, dein Team zu finden?</h2>
+        <p>Lerne Leute kennen, die genauso viel vorhaben wie du – Projekte, Rollen und Teams organisierst du in der Xyntal-App.</p>
+      </div>
+      <div class="sf-cta-actions">
+        <a class="sf-btn sf-btn-primary" href="/beta">Für die Beta bewerben</a>
+        <a class="sf-btn" href="/demo">App-Demo ansehen</a>
+      </div>
+    </div>
+    <div class="sf-main">
+      <div class="sf-brand">
+        <a class="sf-logo" href="/" aria-label="Xyntal – Startseite"><svg viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="xm-a2" x1="3" y1="21" x2="21" y2="3" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#B36BFF"/><stop offset="1" stop-color="#3A8AFF"/></linearGradient><linearGradient id="xm-b2" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#3A8AFF"/><stop offset="1" stop-color="#3FE0F0"/></linearGradient><mask id="xm-g2" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><path d="M3 21Q8.59 8.59 21 3" fill="none" stroke="#000" stroke-width="7.4" stroke-linecap="round"/></mask></defs><path d="M3 3Q15.41 8.59 21 21" fill="none" stroke="url(#xm-b2)" stroke-width="4.6" stroke-linecap="round" mask="url(#xm-g2)"/><path d="M3 21Q8.59 8.59 21 3" fill="none" stroke="url(#xm-a2)" stroke-width="4.6" stroke-linecap="round"/></svg>xyntal</a>
+        <p>Finde die Menschen, mit denen du etwas aufbaust – egal, wo du bist.</p>
+        <div class="sf-contact">
+          <a href="mailto:admin@xyntal.com"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg><span data-no-i18n>admin@xyntal.com</span></a>
+          <a href="https://www.linkedin.com/in/nico-scheibe-781a20445" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 10v7M8 7v.01M12 17v-4a2 2 0 0 1 4 0v4M12 10v7"/></svg>LinkedIn<span class="sr-only"> (öffnet in neuem Tab)</span></a>
+        </div>
+      </div>
+      <nav class="sf-cols" aria-label="Fußzeile">
+        <div class="sf-col">
+          <h3>Entdecken</h3>
+          <ul>
+            <li><a href="/demo">Demo</a></li>
+            <li><a href="/community">Community</a></li>
+            <li><a href="/mitglieder">Mitglieder</a></li>
+            <li><a href="/preise">Preise</a></li>
+          </ul>
+        </div>
+        <div class="sf-col">
+          <h3>Mitmachen</h3>
+          <ul>
+            <li><a href="/login#registrieren">Konto anlegen</a></li>
+            <li><a href="/beta">Beta-Programm</a></li>
+            <li><a href="/meine-karte">Meine Karte</a></li>
+            <li><a href="/#warteliste">Newsletter</a></li>
+            <li><a href="/login">Login</a></li>
+          </ul>
+        </div>
+        <div class="sf-col">
+          <h3>Rechtliches</h3>
+          <ul>
+            <li><a href="/impressum">Impressum</a></li>
+            <li><a href="/impressum#datenschutz">Datenschutz</a></li>
+            <li><a href="/impressum#deine-rechte">Deine Rechte</a></li>
+            <li><a href="/community-richtlinien">Community-Richtlinien</a></li>
+            <li><a href="mailto:admin@xyntal.com">Kontakt</a></li>
+            <li><a href="/agb">AGB</a></li>
+            <li><a href="/widerruf">Widerrufsbelehrung</a></li>
+            <li><a href="/kuendigen">Verträge hier kündigen</a></li>
+          </ul>
+        </div>
+      </nav>
+    </div>
+    <div class="sf-bottom">
+      <span data-no-i18n>© 2026 Xyntal</span>
+      <a class="sf-top" href="#">Nach oben ↑</a>
+    </div>
+  </div>
+</footer>
+<script src="/invite-page.js?v=2" defer></script>
+<script src="/effects.js?v=39" defer></script>
+<script src="/account-menu.js?v=19" defer></script>
+<script src="/site-chat.js?v=3" defer></script>
+</body>
+</html>

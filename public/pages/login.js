@@ -134,6 +134,18 @@ pw.addEventListener("input", () => {
   meter.querySelector(".pw-label").textContent = window.XyntalI18n ? window.XyntalI18n.t(label) : label;
 });
 
+// Einladungscode (= Link-Name der einladenden Person): aus ?code= oder vom gemerkten Einladungslink vorbelegen
+(() => {
+  const field = signupForm.elements.code;
+  if (!field) return;
+  const ok = (v) => /^[a-z0-9][a-z0-9_-]{2,19}$/.test(v);
+  let code = (new URLSearchParams(location.search).get("code") || "").trim().toLowerCase();
+  if (!ok(code)) {
+    try { const r = JSON.parse(localStorage.getItem("xyntal-ref-handle") || "null"); code = r && ok(r.handle || "") ? r.handle : ""; } catch { code = ""; }
+  }
+  if (ok(code)) field.value = code;
+})();
+
 signupForm.addEventListener("submit", (e) => {
   e.preventDefault();
   submitWith(signupForm, signupStatus, async (d) => {
@@ -149,6 +161,11 @@ signupForm.addEventListener("submit", (e) => {
     // Supabase meldet bei schon vorhandener E-Mail keinen Fehler, sondern ein Konto ohne Identitäten
     if (result.user && result.user.identities && result.user.identities.length === 0) {
       throw new Error("Mit dieser E-Mail gibt es schon ein Konto. Logg dich ein oder setz dein Passwort zurück.");
+    }
+    // Einladungscode merken: eingelöst wird er, sobald die E-Mail bestätigt ist (account-menu.js)
+    const code = String(d.code || "").trim().toLowerCase();
+    if (/^[a-z0-9][a-z0-9_-]{2,19}$/.test(code)) {
+      try { localStorage.setItem("xyntal-ref-handle", JSON.stringify({ handle: code, at: Date.now() })); } catch { /* geht auch ohne */ }
     }
     if (result.session) { location.href = NEXT; return; }
     signupForm.hidden = true;
