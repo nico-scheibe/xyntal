@@ -4,7 +4,7 @@ Die Website ist fertig vorbereitet: Sobald ein Anbieter in Supabase eingeschalte
 sein Button automatisch auf **/login** und **/beta**. Du musst nur die Zugangsdaten beim
 jeweiligen Anbieter anlegen und in Supabase eintragen.
 
-**Diese Adresse brauchst du bei Google, Apple und LinkedIn als „Redirect URL“ / „Callback URL“:**
+**Diese Adresse brauchst du bei Google, Apple, Discord und LinkedIn als „Redirect URL“ / „Callback URL“:**
 
 ```
 https://rralgrlujoupprwlvoyo.supabase.co/auth/v1/callback
@@ -100,6 +100,17 @@ Quellen: [Supabase Custom SMTP](https://supabase.com/docs/guides/auth/auth-smtp)
 4. **Client-ID** und **Clientschlüssel** kopieren → in Supabase bei **Google** eintragen.
 5. Zum Schluss im Zustimmungsbildschirm die App **veröffentlichen** („In Produktion“), sonst können sich nur Testnutzer anmelden.
 
+## Discord (kostenlos, ca. 5 Minuten)
+
+1. https://discord.com/developers/applications → **New Application**, Name `Xyntal`.
+2. Links **OAuth2** → unter **Redirects** die Callback-Adresse von oben eintragen → **Save Changes**.
+3. Auf derselben Seite **Client ID** kopieren und unter **Client Secret** → **Reset Secret** ein Secret erzeugen und kopieren.
+4. In Supabase bei **Discord** einschalten, Client ID und Client Secret eintragen → **Save**.
+
+Der Button „Mit Discord fortfahren“ erscheint danach von selbst auf **/login** und **/beta**
+(die Website fragt bei Supabase ab, welche Anbieter eingeschaltet sind). Discord liefert
+Kennung, Nutzername, E-Mail-Adresse und Avatar; die E-Mail muss bei Discord bestätigt sein.
+
 ## LinkedIn (kostenlos, ca. 10 Minuten) – passt gut zu einem Gründer-Club
 
 1. https://www.linkedin.com/developers/apps → **Create app**. LinkedIn verlangt dafür eine Unternehmensseite (z. B. eine Seite „Xyntal“).
@@ -137,11 +148,11 @@ Supabase verschickt keine SMS selbst, du brauchst einen SMS-Dienst. Am einfachst
 - Client-Secrets, Auth Tokens und `.p8`-Dateien gehören **nur** in Supabase – nie in die Website-Dateien.
 - Wenn die Seite online ist: die echte Domain in Supabase unter **Authentication → URL Configuration**
   als Site URL und als Redirect URL (`https://deine-domain.de/**`) eintragen.
-- Bei Google/Apple/LinkedIn ändert sich die Callback-URL dadurch nicht.
+- Bei Google/Apple/Discord/LinkedIn ändert sich die Callback-URL dadurch nicht.
 
 ## Was nach der Anmeldung passiert
 
 - Neue Mitglieder landen auf **/profil** mit dem Hinweis, ihr Profil zu vervollständigen.
-- Den Namen übernimmt das Profil automatisch von Google/Apple/LinkedIn (falls vorhanden).
+- Den Namen übernimmt das Profil automatisch von Google/Apple/Discord/LinkedIn (falls vorhanden).
 - Im Admin-Bereich siehst du bei jedem Mitglied E-Mail bzw. Handynummer und den Anmeldeweg.
 - Wie bisher: Erst nach deiner Freischaltung sehen neue Mitglieder alle Profile.

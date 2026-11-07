@@ -1,0 +1,121 @@
+/* =====================================================================
+   Xyntal – Login als Panel in der Mitte (lädt nach style.css, cosmos.css,
+   site-header.css). Dieselben Farben wie die Startseite: dunkles Grau,
+   Off-White, Blau als Signalfarbe. Google weiß, Discord in seinem Blau.
+   ===================================================================== */
+.auth-main {
+  display: grid; place-items: start center;
+  min-height: calc(100vh - 64px);
+  padding: clamp(32px, 7vh, 72px) 16px clamp(48px, 8vh, 96px);
+}
+.auth-panel {
+  width: min(100%, 460px);
+  display: grid; gap: 22px;
+  padding: 36px 34px 30px;
+  border: 1px solid #333333; border-radius: 24px;
+  background: #222222;
+  box-shadow: 0 50px 90px -50px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.auth-head { display: grid; gap: 8px; text-align: center; }
+.auth-head h1 { margin: 0; font-size: clamp(1.9rem, 5vw, 2.4rem) !important; letter-spacing: -0.02em !important; }
+.auth-head h1 em { font-style: italic; color: #A09E98; }
+.auth-head p { margin: 0; color: #A09E98; font-size: 15px; }
+
+/* Einloggen | Konto anlegen */
+.auth-switch {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px;
+  border: 1px solid #333333; border-radius: 999px; background: #1C1C1C;
+}
+.auth-switch a {
+  display: grid; place-items: center; min-height: 40px; padding: 0 14px;
+  border-radius: 999px; color: #A09E98; text-decoration: none;
+  font-size: 14.5px; font-weight: 600; transition: color 0.15s, background 0.15s;
+}
+.auth-switch a:hover { color: #ECEAE4; }
+.auth-switch a[aria-current="page"] { background: #ECEAE4; color: #1C1C1C; }
+
+/* Anbieter */
+.auth-panel .auth-options { gap: 10px; }
+.auth-panel .oauth-btn {
+  min-height: 48px; padding: 0 16px; border-radius: 12px;
+  font-size: 14.5px; font-weight: 600;
+  background: #2A2A2A; border-color: #4A4A4A; color: #ECEAE4;
+  transition: background 0.15s, border-color 0.15s, filter 0.15s;
+}
+.auth-panel .oauth-btn:hover { background: #303030; border-color: #73716B; }
+.auth-panel .oauth-btn[data-provider="google"] { background: #FFFFFF; border-color: #FFFFFF; color: #1C1C1C; }
+.auth-panel .oauth-btn[data-provider="google"]:hover { background: #F2F2F0; border-color: #F2F2F0; }
+.auth-panel .oauth-btn[data-provider="discord"] { background: #5865F2; border-color: #5865F2; color: #FFFFFF; }
+.auth-panel .oauth-btn[data-provider="discord"]:hover { background: #4E5AE8; border-color: #4E5AE8; }
+.auth-panel .oauth-btn[data-provider="apple"] { background: #ECEAE4; border-color: #ECEAE4; color: #1C1C1C; }
+.auth-panel .oauth-btn[data-provider="apple"]:hover { background: #E0DED8; border-color: #E0DED8; }
+.auth-panel .oauth-btn:focus-visible { outline: 2px solid #8FB8FF; outline-offset: 3px; }
+.auth-panel .phone-login { border-radius: 16px; }
+
+/* oder */
+.auth-panel .auth-divider { margin: 4px 0; gap: 12px; }
+.auth-panel .auth-divider span {
+  padding: 5px 12px; border: 1px solid #333333; border-radius: 999px;
+  font: 500 11px/1 "JetBrains Mono", ui-monospace, Menlo, monospace; letter-spacing: 0.08em; text-transform: uppercase; color: #73716B;
+}
+
+/* Formulare */
+.auth-panel .card-form {
+  display: grid; gap: 16px; padding: 0 !important; border: 0 !important; border-radius: 0; background: transparent !important; box-shadow: none;
+}
+.auth-panel .form-title { font-size: 17px; }
+.auth-panel .side-text { margin: 0; color: #A09E98; font-size: 14px; }
+.field { display: grid; gap: 7px; font-size: 13px; font-weight: 600; color: #ECEAE4; }
+.field-box {
+  display: grid; grid-template-columns: 44px 1fr auto; align-items: center;
+  min-height: 50px; border: 1px solid #4A4A4A; border-radius: 12px; background: #1C1C1C;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.field-box:focus-within { border-color: #ECEAE4; box-shadow: 0 0 0 3px rgba(236, 234, 228, 0.08); }
+.field-box > svg { width: 18px; height: 18px; justify-self: center; fill: none; stroke: #73716B; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.field-box:focus-within > svg { stroke: #A09E98; }
+.field-box input {
+  min-width: 0; width: 100%; height: 48px; margin: 0; padding: 0 12px 0 0;
+  border: 0 !important; border-radius: 0; background: transparent !important; box-shadow: none !important;
+  color: #ECEAE4; font-size: 16px; font-weight: 400;
+}
+.field-box input:focus { outline: none; box-shadow: none !important; }
+.field-box input::placeholder { color: #73716B; }
+.field-eye {
+  display: grid; place-items: center; width: 44px; height: 48px; margin: 0; padding: 0;
+  border: 0; background: transparent; color: #73716B; cursor: pointer; border-radius: 0 12px 12px 0;
+}
+.field-eye:hover { color: #ECEAE4; }
+.field-eye:focus-visible { outline: 2px solid #8FB8FF; outline-offset: -4px; }
+.field-eye svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.field-eye[aria-pressed="true"] { color: #ECEAE4; }
+.field-eye .eye-off { display: none; }
+.field-eye[aria-pressed="true"] .eye-on { display: none; }
+.field-eye[aria-pressed="true"] .eye-off { display: block; }
+
+.auth-panel .btn.auth-submit {
+  width: 100%; min-height: 50px; margin-top: 4px;
+  border-radius: 12px !important; font-size: 16px !important;
+  font-family: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+}
+.auth-panel .form-status { text-align: center; }
+.auth-panel .form-status:empty { display: none; }
+.auth-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 0; font-size: 13.5px; }
+.auth-row .text-link { color: #A09E98; }
+.auth-row .text-link:hover { color: #ECEAE4; }
+.auth-panel .auth-note { margin: 0; text-align: center; font-size: 12.5px; line-height: 1.5; }
+.auth-legal { margin: 2px 0 0; padding-top: 18px; border-top: 1px solid #333333; text-align: center; font-size: 12.5px; line-height: 1.6; color: #73716B; }
+.auth-legal a { color: #ECEAE4; text-decoration: none; font-weight: 600; }
+.auth-legal a:hover { text-decoration: underline; }
+
+@media (max-width: 480px) {
+  .auth-panel { padding: 28px 18px 24px; border-radius: 20px; }
+  .field-box { grid-template-columns: 40px 1fr auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auth-switch a, .auth-panel .oauth-btn, .field-box { transition: none; }
+}
+@media (forced-colors: active) {
+  .auth-switch a[aria-current="page"] { outline: 2px solid Highlight; }
+  .field-box { border-color: CanvasText; }
+}
