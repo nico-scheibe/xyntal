@@ -72,7 +72,7 @@
       if (!["left", "center"].includes(data.layout)) data.layout = "left";
       if (!BANNERS || !BANNERS.valid(data.banner)) data.banner = "theme";
       data.premium = data.premium === true;
-      if (typeof data.bannerUrl !== "string" || !/^blob:/.test(data.bannerUrl)) data.bannerUrl = "";
+      if (typeof data.bannerUrl !== "string" || !/^(blob:|https:\/\/)/.test(data.bannerUrl)) data.bannerUrl = "";
       data.bannerIsVideo = data.bannerIsVideo === true && data.bannerUrl !== "";
       if (!Array.isArray(data.order)) data.order = [];
       data.order = data.order.filter((b) => BLOCKS[b]).concat(DEFAULT_ORDER).filter((b, i, a) => a.indexOf(b) === i);

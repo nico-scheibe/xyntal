@@ -67,7 +67,9 @@
 
   // Auch für u.js (das Ei mit Sprechblase auf der Profilseite des ersten Users)
   html.isFirstUser = (c) => !!c && (c.user_id === FIRST_USER_ID || String(c.handle || "").toLowerCase() === FIRST_USER_HANDLE);
-  // Eigene Banner-Bilder liegen privat im Bucket „banners“; lesbar ist nur, was ein Profil zeigt.
+  // Eigene Banner liegen privat im Bucket „banners“; lesbar ist nur, was ein Profil zeigt.
+  // Jede Datei bekommt eine signierte URL (banners.js fileUrl): Bilder wie Videos laden
+  // direkt vom Speicher, ein Video streamt, statt erst ganz heruntergeladen zu werden.
   const bannerFiles = new Map();
   html.hydrate = (root = document) => {
     const cfg = window.XYNTAL_CONFIG;
@@ -77,9 +79,8 @@
       if (cover.dataset.bannerLoaded || !window.XyntalBanners?.validPath(path)) return;
       cover.dataset.bannerLoaded = "1";
       if (!bannerFiles.has(path)) {
-        bannerFiles.set(path, fetch(`${cfg.supabaseUrl}/storage/v1/object/authenticated/banners/${path}`, {
-          headers: { apikey: cfg.supabaseKey, Authorization: `Bearer ${cfg.supabaseKey}` },
-        }).then((res) => (res.ok ? res.blob() : null)).then((blob) => (blob ? URL.createObjectURL(blob) : "")).catch(() => ""));
+        const client = typeof sb !== "undefined" && sb && sb.storage ? sb : null;
+        bannerFiles.set(path, window.XyntalBanners.fileUrl(path, client, cfg));
       }
       bannerFiles.get(path).then((url) => {
         if (url) window.XyntalBanners.showFile(cover, url, window.XyntalBanners.isVideo(path));

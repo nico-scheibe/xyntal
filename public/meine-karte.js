@@ -59,12 +59,14 @@
     return [t("JPG, PNG, WebP oder GIF · bis 4 MB"), video, t("läuft stumm in Schleife · am besten 1200 × 300 Pixel")].filter(Boolean).join(" · ");
   }
   const bannerSay = (text, kind = "") => { if (bannerStatus) { bannerStatus.textContent = text; bannerStatus.classList.toggle("is-error", kind === "error"); } };
+  // Signierte URL statt Download: ein Video streamt in die Vorschau, statt erst
+  // komplett zu laden (ein Banner darf je Tarif hunderte MB haben).
   async function loadBanner(path) {
     if (!window.XyntalBanners?.validPath(path)) return;
     try {
-      const { data, error } = await sb.storage.from("banners").download(path);
-      if (!error && data) B.set({ bannerUrl: URL.createObjectURL(data), bannerIsVideo: window.XyntalBanners.isVideo(path) });
-    } catch { /* ohne Bild zeigt die Karte den Farbverlauf */ }
+      const url = await window.XyntalBanners.fileUrl(path, sb, window.XYNTAL_CONFIG);
+      if (url) B.set({ bannerUrl: url, bannerIsVideo: window.XyntalBanners.isVideo(path) });
+    } catch { /* ohne Datei zeigt die Karte den Farbverlauf */ }
   }
   // Ein Video wird so hochgeladen, wie es ist, nachdem der Browser es lesen konnte
   // (Dauer und Maße): kaputte Dateien und Stundenfilme kommen nicht in den Bucket.
