@@ -22,11 +22,11 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="stylesheet" href="fonts/fonts.css?v=33">
-  <script src="i18n-en.js?v=99" defer></script>
+  <script src="i18n-en.js?v=100" defer></script>
   <script src="i18n.js?v=31" defer></script>
   <link rel="stylesheet" href="/site-footer.css?v=4">
   <link rel="stylesheet" href="/site-header.css?v=7">
-  <link rel="stylesheet" href="front.css?v=3">
+  <link rel="stylesheet" href="front.css?v=4">
 </head>
 <body class="home front">
 <a class="skip" href="#inhalt">Zum Inhalt springen</a>
@@ -50,20 +50,50 @@
 <main id="inhalt" class="front-main">
 
   <section class="opener" aria-labelledby="opener-title">
-    <h1 id="opener-title" class="opener-title">Du hast eine Idee.<br>Dir fehlt jemand, der sie mit dir baut.</h1>
+    <p class="status"><span class="status-dot" aria-hidden="true"></span><span>Beta läuft</span><span class="status-sep" aria-hidden="true">·</span><span>Zugang per Bewerbung</span><span class="status-sep status-more" aria-hidden="true">·</span><span class="status-more">App für Mac und Windows</span></p>
+    <h1 id="opener-title" class="opener-title">Du hast eine Idee.<br><em>Dir fehlt jemand, der sie mit dir baut.</em></h1>
     <div class="opener-side">
       <p>Xyntal hilft dir, gezielt Leute zu finden, mit denen du etwas aufbauen kannst: Mitgründer, Projektpartner und Leute, die schon ein Stück weiter sind. Du beschreibst, was du vorhast. Xyntal zeigt dir, wer dazu passt und warum.</p>
-      <p class="opener-actions"><a class="button" href="/beta">Für die Beta bewerben</a> <a class="plainlink" href="/brief">Oder erst den Brief lesen, warum es Xyntal gibt</a></p>
+      <p class="opener-actions"><a class="button" href="/beta">Für die Beta bewerben</a> <a class="arrowlink" href="/brief">Oder erst den Brief lesen, warum es Xyntal gibt<span aria-hidden="true">→</span></a></p>
     </div>
+    <figure class="opener-card" aria-label="Beispiel: So sieht ein Vorschlag in Xyntal aus">
+      <div class="match-wrap">
+      <div class="match-stack" aria-hidden="true"><span></span><span></span></div>
+      <div class="match">
+        <div class="match-top"><span class="mono">Vorschlag für dein Projekt</span><span class="mono match-tag">Beispiel</span></div>
+        <div class="match-who">
+          <span class="match-avatar" aria-hidden="true" data-no-i18n>MS</span>
+          <div><b data-no-i18n>Mira Schreiner</b><span>UX/UI-Designerin · Regensburg</span></div>
+        </div>
+        <p class="match-want">Will ein Produkt mitbauen. 8 Stunden pro Woche, gegen Anteile.</p>
+        <dl class="match-why">
+          <div class="is-full"><dt>Fähigkeiten</dt><dd><span class="bar" aria-hidden="true"><i></i></span><span>UI und Nutzertests. Genau das, was dir fehlt.</span></dd></div>
+          <div class="is-full"><dt>Zeit</dt><dd><span class="bar" aria-hidden="true"><i></i></span><span>8 von 8 Stunden pro Woche.</span></dd></div>
+          <div class="is-part"><dt>Arbeitsweise</dt><dd><span class="bar" aria-hidden="true"><i></i></span><span>Vor Ort, abends. Du arbeitest eher remote.</span></dd></div>
+        </dl>
+        <div class="match-foot"><span class="mono">Passung</span><b>hoch</b><span class="match-foot-note">2 von 3 Bereichen passen ganz</span></div>
+      </div>
+      </div>
+      <figcaption>Erfundenes Beispiel. Jeder echte Vorschlag sagt dir genauso, warum.</figcaption>
+    </figure>
   </section>
 
-  <blockquote class="voice">
+  <section class="kinds reveal" aria-labelledby="kinds-title">
+    <h2 id="kinds-title" class="chapter"><span class="chapter-no" aria-hidden="true" data-no-i18n>01</span>Wen du hier findest</h2>
+    <ul class="kinds-list">
+      <li><h3>Mitgründer:innen</h3><p>Die mit dir eine Firma aufbauen und das Risiko teilen.</p></li>
+      <li><h3>Projektpartner</h3><p>Die ein bestimmtes Stück mit dir bauen: die App, das Design, den ersten Vertrieb. Zeitlich begrenzt, bezahlt oder gegen Anteile.</p></li>
+      <li><h3>Leute, die schon weiter sind</h3><p>Und dir in einem Gespräch ersparen, was sie vor einem Jahr selbst erst lernen mussten.</p></li>
+    </ul>
+  </section>
+
+  <blockquote class="voice reveal">
     <p>„Die richtigen Leute findet man nicht durch Zufall. Also baue ich das Werkzeug, das mir gefehlt hat.“</p>
     <footer><span data-no-i18n>Nico</span> · <a href="/brief">Der ganze Brief</a></footer>
   </blockquote>
 
-  <section class="qa" aria-labelledby="qa-title">
-    <h2 id="qa-title" class="sr-only">Fragen und Antworten</h2>
+  <section class="qa reveal" aria-labelledby="qa-title">
+    <h2 id="qa-title" class="chapter"><span class="chapter-no" aria-hidden="true" data-no-i18n>02</span>Fragen und Antworten</h2>
     <dl>
       <div>
         <dt>Für wen ist das?</dt>
@@ -88,9 +118,19 @@
     </dl>
   </section>
 
-  <section class="closer beta-cta" aria-labelledby="closer-title">
-    <h2 id="closer-title">Die Beta läuft. Zugang per Bewerbung.</h2>
-    <p><a class="button" href="/beta">Für die Beta bewerben</a></p>
+  <section class="closer beta-cta reveal" aria-labelledby="closer-title">
+    <h2 id="closer-title" class="chapter"><span class="chapter-no" aria-hidden="true" data-no-i18n>03</span>Zugang</h2>
+    <div class="closer-body">
+      <p class="closer-title">Die Beta läuft. <em>Zugang per Bewerbung.</em></p>
+      <div class="closer-side">
+        <ul class="closer-facts">
+          <li>Drei Fragen, etwa drei Minuten</li>
+          <li>Antwort per E-Mail, von Nico persönlich</li>
+          <li>In der Beta kostenlos</li>
+        </ul>
+        <p><a class="button" href="/beta">Für die Beta bewerben</a></p>
+      </div>
+    </div>
   </section>
 
   <section class="news" id="warteliste" aria-labelledby="news-title">
