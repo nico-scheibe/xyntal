@@ -69,11 +69,15 @@ async function deleteMemberFiles(bucket, memberId) {
 }
 
 // Mit Paid-Tarif (profiles.is_premium) bleiben GIF und WebP unverändert – so bleibt die Animation erhalten.
-const ANIMATED_AVATAR_MAX = 4 * 1024 * 1024;
-async function prepareAvatar(file, premium = false) {
+// Wie groß sie sein dürfen, hängt vom Tarif ab (mediaLimits in app.js).
+async function prepareAvatar(file, member = null) {
+  const lim = mediaLimits(member);
+  const premium = lim.tier !== '';
   if (file.type === 'image/gif' && !premium) throw new Error('Animierte Profilbilder (GIF) gibt es ab Plus. Wähle ein JPG-, PNG- oder WebP-Bild.');
   if (premium && ['image/gif', 'image/webp'].includes(file.type)) {
-    if (!file.size || file.size > ANIMATED_AVATAR_MAX) throw new Error('Animierte Profilbilder dürfen höchstens 4 MB groß sein.');
+    if (!file.size || (lim.animatedBytes !== null && file.size > lim.animatedBytes)) {
+      throw new Error(`Mit deinem Tarif (${lim.label}) darf eine GIF- oder WebP-Datei höchstens ${formatMb(lim.animatedBytes)} groß sein.`);
+    }
     return file;
   }
   if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) throw new Error('Bitte wähle ein JPG-, PNG-, WebP- oder GIF-Bild.');
@@ -126,7 +130,7 @@ function setupAvatarEditor(member, onChange) {
     busy = true; selected = null; renderPreview();
     setStatus(status, 'Bild wird vorbereitet …');
     try {
-      selected = await prepareAvatar(file, current.is_premium === true);
+      selected = await prepareAvatar(file, current);
       busy = false;
       await savePicture();
     } catch (err) { selected = null; setStatus(status, friendlyError(err), 'error'); }

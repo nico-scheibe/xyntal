@@ -1500,8 +1500,6 @@ window.XYNTAL_EN = {
   "Bitte wähle ein JPG-, PNG- oder WebP-Bild.": "Please choose a JPG, PNG or WebP image.",
   "Bitte wähle ein JPG-, PNG-, WebP- oder GIF-Bild oder ein MP4-/WebM-Video.": "Please choose a JPG, PNG, WebP or GIF image, or an MP4/WebM video.",
   "Das Banner darf höchstens 4 MB groß sein.": "The banner must be 4 MB or smaller.",
-  "Das Video darf höchstens 12 MB groß sein.": "The video must be 12 MB or smaller.",
-  "Das Video darf höchstens 30 Sekunden lang sein.": "The video must be 30 seconds or shorter.",
   "Das Video konnte nicht gelesen werden. Bitte wähle eine MP4- oder WebM-Datei.": "The video couldn't be read. Please choose an MP4 or WebM file.",
   "Das Bild konnte nicht verkleinert werden. Bitte wähle ein anderes.": "The image couldn't be resized. Please choose another one.",
   "Banner wird hochgeladen …": "Uploading banner …",
@@ -1511,7 +1509,8 @@ window.XYNTAL_EN = {
   "Bild oder Video hochladen": "Upload image or video",
   "Banner entfernen": "Remove banner",
   "Banner-Bild oder -Video auswählen": "Choose a banner image or video",
-  "JPG, PNG, WebP oder GIF · bis 4 MB · oder MP4/WebM-Video · bis 12 MB und 30 Sekunden, läuft stumm in Schleife · am besten 1200 × 300 Pixel": "JPG, PNG, WebP or GIF · up to 4 MB · or an MP4/WebM video · up to 12 MB and 30 seconds, plays muted on loop · ideally 1200 × 300 pixels",
+  "JPG, PNG, WebP oder GIF · oder MP4/WebM-Video, läuft stumm in Schleife · Größe und Länge je nach Tarif · am besten 1200 × 300 Pixel": "JPG, PNG, WebP or GIF · or an MP4/WebM video, plays muted on loop · size and length depend on your plan · ideally 1200 × 300 pixels",
+  "JPG, PNG oder WebP · bis 4 MB · GIF und MP4/WebM-Video ohne Grenze, läuft stumm in Schleife · am besten 1200 × 300 Pixel": "JPG, PNG or WebP · up to 4 MB · GIF and MP4/WebM video without a limit, plays muted on loop · ideally 1200 × 300 pixels",
   "Dein Bild darf höchstens 8 MB groß sein.": "Your image can be at most 8 MB.",
   "Das Bild konnte nicht gelesen werden. Bitte wähle eine andere Datei.": "The image couldn't be read. Please choose another file.",
   "Das Bild ist zu groß. Bitte verkleinere es vor dem Hochladen.": "The image is too large. Please shrink it before uploading.",
@@ -2449,6 +2448,11 @@ window.XYNTAL_EN = {
   };
   const plural = (n, one, many) => `${n} ${Number(n) === 1 ? one : many}`;
   window.XYNTAL_EN_PATTERNS = [
+    [/^JPG, PNG oder WebP · bis 4 MB · GIF bis (\d+) MB · MP4\/WebM-Video bis (\d+) MB und (\d+) Sekunden, läuft stumm in Schleife · am besten 1200 × 300 Pixel$/, (_, a, b, c) => `JPG, PNG or WebP · up to 4 MB · GIF up to ${a} MB · MP4/WebM video up to ${b} MB and ${c} seconds, plays muted on loop · ideally 1200 × 300 pixels`],
+    [/^Mit deinem Tarif \((.+)\) darf ein Video höchstens (\d+) MB groß sein\.$/, (_, a, b) => `On your plan (${a}) a video can be at most ${b} MB.`],
+    [/^Mit deinem Tarif \((.+)\) darf ein Video höchstens (\d+) Sekunden lang sein\.$/, (_, a, b) => `On your plan (${a}) a video can be at most ${b} seconds long.`],
+    [/^Mit deinem Tarif \((.+)\) darf eine GIF- oder WebP-Datei höchstens (\d+) MB groß sein\.$/, (_, a, b) => `On your plan (${a}) a GIF or WebP file can be at most ${b} MB.`],
+    [/^Die Datei ist für deinen Tarif zu groß \(höchstens (\d+) MB\)\.$/, (_, a) => `This file is too large for your plan (at most ${a} MB).`],
     [/^(\d+) Stimmen$/, (_, a) => `${a} votes`],
     [/^(\d+) Anhänge in der App$/, (_, a) => `${a} attachments in the app`],
     [/^Zuletzt aktualisiert: (.+)$/, (_, a) => `Last updated: ${a}`],

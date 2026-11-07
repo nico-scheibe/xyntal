@@ -148,6 +148,22 @@ function betaRedirect() {
   return new Promise(() => {});
 }
 
+// Grenzen für eigene Banner und animierte Profilbilder je Tarif (wie public.media_limits,
+// Migration 20261107170000_media_tiers.sql). null = keine Grenze, 0 = nicht freigeschaltet.
+const MEDIA_TIERS = {
+  plus: { label: "Plus", videoBytes: 10 * 1048576, videoSeconds: 15, animatedBytes: 4 * 1048576 },
+  pro: { label: "Pro", videoBytes: 25 * 1048576, videoSeconds: 30, animatedBytes: 8 * 1048576 },
+  ultra: { label: "Ultra", videoBytes: 60 * 1048576, videoSeconds: 60, animatedBytes: 16 * 1048576 },
+  enterprise: { label: "Enterprise", videoBytes: 150 * 1048576, videoSeconds: 120, animatedBytes: 32 * 1048576 },
+};
+function mediaLimits(me) {
+  if (!me || me.is_premium !== true) return { tier: "", label: "", videoBytes: 0, videoSeconds: 0, animatedBytes: 0 };
+  if (me.is_admin === true) return { tier: "admin", label: "Admin", videoBytes: null, videoSeconds: null, animatedBytes: null };
+  const tier = MEDIA_TIERS[me.premium_tier] ? me.premium_tier : "plus";
+  return { tier, ...MEDIA_TIERS[tier] };
+}
+const formatMb = (bytes) => `${Math.round(bytes / 1048576)} MB`;
+
 // Eingeloggter Nutzer + Profil (oder null)
 async function currentMember() {
   const { data: { session } } = await sb.auth.getSession();
