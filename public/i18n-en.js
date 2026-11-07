@@ -39,6 +39,7 @@ window.XYNTAL_EN = {
 
   "Projekte und Anzeigen": "Projects and listings",
   "Link kopieren": "Copy link",
+  "Profil teilen": "Share profile",
   "Link kopiert.": "Link copied.",
   "Links": "Links",
   "nicht verfügbar": "not available",

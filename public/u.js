@@ -55,7 +55,7 @@
           <div class="bp-stage${admin ? " pf-admin-stage" : ""}">${window.XyntalCardHtml(c, { t, heading: "h1", avatarAttrs: "data-pub-avatar" })}</div>
           <div class="pf-actions">
             ${primary}
-            <button class="btn btn-glass" type="button" data-copy-link>${esc(t("Link kopieren"))}</button>
+            <button class="btn btn-glass" type="button" data-copy-link>${esc(t(navigator.share ? "Profil teilen" : "Link kopieren"))}</button>
             <p class="pf-copied" role="status" data-copy-status></p>
           </div>
         </aside>
@@ -73,7 +73,12 @@
   root.addEventListener("click", async (e) => {
     if (!e.target.closest("[data-copy-link]")) return;
     const status = root.querySelector("[data-copy-status]");
-    try { await navigator.clipboard.writeText(location.origin + location.pathname); status.textContent = t("Link kopiert."); }
+    const url = location.origin + location.pathname;
+    if (navigator.share) {
+      try { await navigator.share({ title: document.title, url }); return; }
+      catch (err) { if (err && err.name === "AbortError") return; }
+    }
+    try { await navigator.clipboard.writeText(url); status.textContent = t("Link kopiert."); }
     catch { status.textContent = location.host + location.pathname; }
   });
 
@@ -144,19 +149,41 @@
 
   // Profilinfos aus dem Konto (nur wenn die Person ihr Profil öffentlich gemacht hat)
   const safeUrl = (u) => (/^https?:\/\/[^\s]+$/i.test(u || "") ? u : "");
+  // Steckbrief: die wichtigsten Angaben der Karte auf einen Blick (nur was ausgefüllt ist)
+  function factsHtml(c) {
+    const hours = Number(c.hours) || 0;
+    const facts = [
+      ["Rolle", c.role ? t(c.role) : "", true],
+      ["Sucht", c.looking ? t(c.looking) : "", true],
+      ["Zeit", hours > 0 ? t(`${hours} Std./Woche`) : "", false],
+      ["Ort", [c.city, c.mode ? t(c.mode) : ""].filter(Boolean).join(" · "), false],
+    ].filter(([, v]) => v);
+    if (!facts.length) return "";
+    return `<dl class="pf-facts">${facts.map(([k, v, tr]) => `<div><dt>${esc(t(k))}</dt><dd${tr ? "" : " data-no-i18n"}>${esc(v)}</dd></div>`).join("")}</dl>`;
+  }
   function profileHtml(c) {
     const p = c.profile || {};
-    const row = (title, text) => (text && text.trim() ? `<div class="pf-row"><h2>${esc(t(title))}</h2><p data-no-i18n>${esc(text)}</p></div>` : "");
-    const links = [["LinkedIn", p.linkedin], ["Instagram", p.instagram], ["Website", p.website]].map(([l, u]) => [l, safeUrl(u)]).filter(([, u]) => u);
-    const rows = row("Über mich", p.about) + row("Ich biete", p.offer) + row("Ich suche", p.seek)
-      + (links.length ? `<div class="pf-row"><h2>${esc(t("Links"))}</h2><p class="pf-links">${links.map(([l, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener noreferrer nofollow">${esc(l)} ↗</a>`).join("")}</p></div>` : "");
+    const text = (s) => (s && String(s).trim() ? String(s).trim() : "");
+    const about = text(p.about), offer = text(p.offer), seek = text(p.seek);
+    const links = [["LinkedIn", p.linkedin], ["Instagram", p.instagram], ["Website", p.website], ["Website", c.link]]
+      .map(([l, u]) => [l, safeUrl(u)]).filter(([, u], i, a) => u && a.findIndex(([, x]) => x === u) === i);
+    const skills = Array.isArray(c.skills) ? c.skills.filter((s) => text(s)) : [];
     const headline = p.headline || c.pitch || "";
-    // Beim ersten User spricht das Ei (Sprechblase) – Adresse und Überschrift entfallen dort
+    // Beim ersten User spricht das Ei (Sprechblase) – Adresse, Überschrift und „Über mich“ entfallen dort
     const egg = !!(window.XyntalCardHtml.isFirstUser && window.XyntalCardHtml.isFirstUser(c));
-    return `${egg ? "" : `<header class="pf-head"><p class="pf-address"><span data-no-i18n>xyntal.de/${esc(c.handle)}</span>${c.is_admin === true ? `<span class="pf-admin-chip"><i aria-hidden="true"></i>${esc(t("Offizielles Konto"))}</span>` : ""}</p>${headline ? `<p class="pf-headline" data-no-i18n>${esc(headline)}</p>` : ""}</header>`}
+    const tile = (cls, title, body) => `<section class="pf-tile ${cls}"><h2>${esc(t(title))}</h2><p data-no-i18n>${esc(body)}</p></section>`;
+    const sections = [
+      about && !egg ? `<section class="pf-section"><h2>${esc(t("Über mich"))}</h2><p class="pf-prose" data-no-i18n>${esc(about)}</p></section>` : "",
+      offer || seek ? `<div class="pf-duo">${offer ? tile("pf-tile-offer", "Ich biete", offer) : ""}${seek ? tile("pf-tile-seek", "Ich suche", seek) : ""}</div>` : "",
+      skills.length ? `<section class="pf-section"><h2>${esc(t("Skills"))}</h2><ul class="pf-chips" data-no-i18n>${skills.map((s) => `<li>${esc(s)}</li>`).join("")}</ul></section>` : "",
+      links.length ? `<section class="pf-section"><h2>${esc(t("Links"))}</h2><div class="pf-links">${links.map(([l, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener noreferrer nofollow"><span>${esc(t(l))}</span><small data-no-i18n>${esc(hostOf(u))}</small><i aria-hidden="true">↗</i></a>`).join("")}</div></section>` : "",
+    ].join("");
+    return `<header class="pf-head">${egg ? "" : `<p class="pf-address"><span data-no-i18n>xyntal.de/${esc(c.handle)}</span>${c.is_admin === true ? `<span class="pf-admin-chip"><i aria-hidden="true"></i>${esc(t("Offizielles Konto"))}</span>` : ""}</p>${headline ? `<p class="pf-headline" data-no-i18n>${esc(headline)}</p>` : ""}`}
+        ${factsHtml(c)}</header>
       ${c.is_admin === true ? adminHtml(c) : ""}
-      ${rows ? `<section class="pf-about">${rows}</section>` : `<p class="pf-muted">${esc(t("Lerne die Person hinter der Idee kennen."))}</p>`}`;
+      ${sections || `<p class="pf-muted">${esc(t("Lerne die Person hinter der Idee kennen."))}</p>`}`;
   }
+  function hostOf(u) { try { return new URL(u).hostname.replace(/^www\./, ""); } catch { return ""; } }
   // Eure Passung – vom Matching des App-Servers (wie „Für dich“), nur für Angemeldete.
   // Ist die Person dort nicht sichtbar (privat, blockiert), bleibt der Bereich einfach weg.
   async function loadMatch(websiteId) {
