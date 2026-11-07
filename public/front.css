@@ -76,12 +76,9 @@ html.js .reveal.is-visible { opacity: 1; transform: none; animation: none; }
 .opener > :nth-child(4) { animation-delay: 420ms; }
 @keyframes rise { from { opacity: 0; transform: translateY(14px); } }
 
-.status { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font: 500 12px/1.4 var(--f-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-2); }
+.status { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; font: 400 15px/1.5 var(--f-sans); color: var(--text-2); }
 .status-sep { color: var(--text-3); }
 @media (max-width: 480px) { .status-more { display: none; } }
-.status-dot { position: relative; flex: none; margin-right: 4px; width: 7px; height: 7px; border-radius: 50%; background: var(--key); box-shadow: 0 0 10px var(--key-glow); }
-.status-dot::after { content: ""; position: absolute; inset: -5px; border-radius: 50%; border: 1px solid var(--key); opacity: 0; animation: ping 2600ms ease-out infinite; }
-@keyframes ping { 0% { transform: scale(0.4); opacity: 0.8; } 70%, 100% { transform: scale(1.4); opacity: 0; } }
 
 .opener-title {
   font: 400 clamp(2.5rem, 6.4vw, 5.5rem)/1.02 var(--f-serif);
@@ -246,12 +243,11 @@ body.front .site-footer a { text-decoration: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .button, .arrowlink span { transition: none; }
-  .opener > *, .status-dot::after { animation: none; }
-  .card-fan > .xcard-host { transition: none; }
+  .opener > *,   .card-fan > .xcard-host { transition: none; }
   html.js .reveal { opacity: 1; transform: none; transition: none; animation: none; }
 }
 @media (forced-colors: active) {
   .button { border: 1px solid ButtonText; }
   mark.key { color: Highlight; text-shadow: none; }
-  .status-dot, .closer-facts li::before { background: Highlight; }
+  .closer-facts li::before { background: Highlight; }
 }
