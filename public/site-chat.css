@@ -15,7 +15,25 @@
 .sc-open { display: inline-flex; align-items: center; gap: 10px; height: 44px; padding: 0 16px; border: 1px solid var(--sc-line-2); border-radius: 2px; background: var(--sc-bg); font-size: 14px; font-weight: 600; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45); transition: border-color 0.15s, background 0.15s; }
 .sc-open:hover { border-color: var(--sc-text); }
 .sc-open:focus-visible, .sc button:focus-visible, .sc textarea:focus-visible, .sc a:focus-visible { outline: 2px solid var(--sc-text); outline-offset: 2px; }
-.sc-dot { width: 7px; height: 7px; background: var(--sc-key); }
+.sc-id { display: flex; align-items: center; gap: 12px; }
+.sc-id h2 { margin-top: 6px; }
+/* Xyntal-Marke: Sechseck mit Auge. Ruhig: atmet und blinzelt. Antwortet der Assistent (.is-busy): Bogen läuft um das Sechseck. */
+.sc-orb { position: relative; display: inline-grid; place-items: center; flex: none; width: 22px; height: 22px; color: var(--sc-key); }
+.sc-id .sc-orb { width: 36px; height: 36px; }
+.sc-orb svg { width: 100%; height: 100%; overflow: visible; }
+.sc-orb-hex { fill: rgba(143, 184, 255, 0.1); stroke: currentColor; stroke-opacity: 0.6; stroke-width: 2.4; stroke-linejoin: round; }
+.sc-orb-sweep { fill: none; stroke: #C8DAFF; stroke-width: 3.4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 22 78; opacity: 0; }
+.sc-orb-eye { fill: currentColor; transform-box: fill-box; transform-origin: center; }
+.sc.is-busy .sc-orb-sweep { opacity: 1; }
+@media (prefers-reduced-motion: no-preference) {
+  .sc-orb-eye { animation: sc-breathe 3.6s ease-in-out infinite, sc-blink 5s infinite; }
+  .sc.is-busy .sc-orb-eye { animation-duration: 1.2s, 5s; }
+  .sc.is-busy .sc-orb-sweep { animation: sc-sweep 1.6s linear infinite; }
+  .sc-open:hover .sc-orb-sweep { opacity: 1; animation: sc-sweep 1.6s linear infinite; }
+}
+@keyframes sc-breathe { 0%, 100% { scale: 1; opacity: 0.85; } 50% { scale: 1.14; opacity: 1; } }
+@keyframes sc-blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
+@keyframes sc-sweep { to { stroke-dashoffset: -100; } }
 .sc.is-open .sc-open { display: none; }
 
 .sc-panel { display: flex; padding: 0; flex-direction: column; width: min(400px, calc(100vw - 32px)); height: min(600px, calc(100dvh - 32px)); border: 1px solid var(--sc-line-2); border-radius: 2px; background: var(--sc-bg); box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6); }
