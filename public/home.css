@@ -721,7 +721,7 @@ html { scrollbar-color: #2A2A33 transparent; }
   border-radius: 30px; border: 1.5px solid transparent; overflow: hidden; color: var(--mc-text);
   background: linear-gradient(180deg, var(--mc-bg1), var(--mc-bg2)) padding-box, var(--tg) border-box;
   box-shadow: 0 40px 80px -40px rgba(0, 0, 0, 0.9), 0 0 70px -24px var(--t1);
-  transform: rotate(-1.5deg);
+  transform: none;
 }
 .my-card[data-theme="sunset"] { --tg: linear-gradient(120deg, #FFB547, #FF6A5C 35%, #FF3D8B 65%, #B95CFF); --t1: #FF6A5C; }
 .my-card[data-theme="ocean"] { --tg: linear-gradient(120deg, #34D399, #3FD8FF 35%, #5B8CFF 65%, #6D5BFF); --t1: #3FD8FF; }
@@ -732,7 +732,7 @@ html { scrollbar-color: #2A2A33 transparent; }
 }
 .my-card[data-surface="light"] .mc-cover { background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.35)), var(--tg); }
 @media (prefers-reduced-motion: no-preference) { .my-card.pulse { animation: cardPulse 300ms var(--ease); } }
-@keyframes cardPulse { 50% { transform: rotate(-1.5deg) scale(1.012); } }
+@keyframes cardPulse { 50% { transform: scale(1.012); } }
 .mc-cover {
   display: flex; justify-content: space-between; align-items: flex-start;
   height: 96px; margin: 0 -24px; padding: 16px 18px;
