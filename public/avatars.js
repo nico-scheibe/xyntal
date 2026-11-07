@@ -71,7 +71,7 @@ async function deleteMemberFiles(bucket, memberId) {
 // Mit Paid-Tarif (profiles.is_premium) bleiben GIF und WebP unverändert – so bleibt die Animation erhalten.
 const ANIMATED_AVATAR_MAX = 4 * 1024 * 1024;
 async function prepareAvatar(file, premium = false) {
-  if (file.type === 'image/gif' && !premium) throw new Error('Animierte Profilbilder (GIF) gibt es mit einem Paid-Tarif. Wähle ein JPG-, PNG- oder WebP-Bild.');
+  if (file.type === 'image/gif' && !premium) throw new Error('Animierte Profilbilder (GIF) gibt es ab Plus. Wähle ein JPG-, PNG- oder WebP-Bild.');
   if (premium && ['image/gif', 'image/webp'].includes(file.type)) {
     if (!file.size || file.size > ANIMATED_AVATAR_MAX) throw new Error('Animierte Profilbilder dürfen höchstens 4 MB groß sein.');
     return file;
