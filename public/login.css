@@ -26,13 +26,15 @@
   display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px;
   border: 1px solid #333333; border-radius: 999px; background: #1C1C1C;
 }
-.auth-switch a {
-  display: grid; place-items: center; min-height: 40px; padding: 0 14px;
-  border-radius: 999px; color: #A09E98; text-decoration: none;
-  font-size: 14.5px; font-weight: 600; transition: color 0.15s, background 0.15s;
+.auth-switch button {
+  display: grid; place-items: center; min-height: 40px; margin: 0; padding: 0 14px;
+  border: 0; border-radius: 999px; background: transparent; color: #A09E98; cursor: pointer;
+  font: 600 14.5px/1 "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  transition: color 0.15s, background 0.15s;
 }
-.auth-switch a:hover { color: #ECEAE4; }
-.auth-switch a[aria-current="page"] { background: #ECEAE4; color: #1C1C1C; }
+.auth-switch button:hover { color: #ECEAE4; }
+.auth-switch button[aria-selected="true"] { background: #ECEAE4; color: #1C1C1C; }
+.auth-switch button:focus-visible { outline: 2px solid #8FB8FF; outline-offset: 2px; }
 
 /* Anbieter */
 .auth-panel .auth-options { gap: 10px; }
@@ -102,6 +104,29 @@
 .field-eye[aria-pressed="true"] .eye-on { display: none; }
 .field-eye[aria-pressed="true"] .eye-off { display: block; }
 
+/* Passwortstärke */
+.pw-meter { display: grid; gap: 8px; margin-top: -6px; }
+.pw-bars { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.pw-bars i { height: 4px; border-radius: 4px; background: #333333; transition: background 0.2s; }
+.pw-label { font-size: 12.5px; color: #73716B; }
+.pw-meter[data-level="1"] .pw-bars i:nth-child(-n+1) { background: #E0705F; }
+.pw-meter[data-level="2"] .pw-bars i:nth-child(-n+2) { background: #D9B25F; }
+.pw-meter[data-level="3"] .pw-bars i:nth-child(-n+3) { background: #8FB8FF; }
+.pw-meter[data-level="4"] .pw-bars i { background: #3CCF8E; }
+.pw-meter[data-level="1"] .pw-label { color: #E0705F; }
+.pw-meter[data-level="2"] .pw-label { color: #D9B25F; }
+.pw-meter[data-level="3"] .pw-label { color: #8FB8FF; }
+.pw-meter[data-level="4"] .pw-label { color: #3CCF8E; }
+.waitlist-hp { position: absolute; left: -9999px; }
+
+/* Nach dem Anlegen: E-Mail bestätigen */
+.auth-confirm { display: grid; gap: 10px; justify-items: center; padding: 8px 0; text-align: center; outline: none; }
+.auth-confirm > svg { width: 40px; height: 40px; fill: none; stroke: #8FB8FF; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.auth-confirm h2 { margin: 0; font-size: 22px; }
+.auth-confirm p { margin: 0; color: #A09E98; font-size: 14.5px; }
+.auth-confirm b { color: #ECEAE4; font-weight: 600; word-break: break-all; }
+.auth-confirm .auth-row { justify-content: center; margin-top: 6px; }
+
 .auth-panel .btn.auth-submit {
   width: 100%; min-height: 50px; margin-top: 4px;
   border-radius: 12px !important; font-size: 16px !important;
@@ -122,9 +147,9 @@
   .field-box { grid-template-columns: 40px 1fr auto; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .auth-switch a, .auth-panel .oauth-btn, .field-box { transition: none; }
+  .auth-switch button, .auth-panel .oauth-btn, .field-box, .pw-bars i { transition: none; }
 }
 @media (forced-colors: active) {
-  .auth-switch a[aria-current="page"] { outline: 2px solid Highlight; }
+  .auth-switch button[aria-selected="true"] { outline: 2px solid Highlight; }
   .field-box { border-color: CanvasText; }
 }
