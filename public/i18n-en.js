@@ -230,6 +230,12 @@ window.XYNTAL_EN = {
   "Motivation max. 400 Zeichen. Sichtbar für dich und den Projektbesitzer.": "Motivation up to 400 characters. Visible to you and the project owner.",
 
   "Menschen hinter den Ideen": "People behind the ideas",
+  "Offizielles Konto": "Official account",
+  "Team Xyntal": "Team Xyntal",
+  "Admin von Xyntal": "Xyntal admin",
+  "gehört zum Team hinter Xyntal und kümmert sich um Community, Mitglieder und Sicherheit. Nachrichten von diesem Konto sind offiziell.": "is part of the team behind Xyntal and looks after the community, members and safety. Messages from this account are official.",
+  "Moderation": "Moderation",
+  "Direkter Draht zum Team": "Direct line to the team",
   "Lerne die Person hinter der Idee kennen.": "Meet the person behind the idea.",
   "Projekte und Anzeigen werden geladen …": "Loading projects and listings…",
   "Anzeigen": "Listings",
