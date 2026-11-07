@@ -63,9 +63,9 @@
             <button class="btn btn-glass" type="button" data-copy-link>${esc(t(navigator.share ? "Profil teilen" : "Link kopieren"))}</button>
             <p class="pf-copied" role="status" data-copy-status></p>
           </div>
+          ${linksHtml(c)}
         </aside>
         <div class="pf-main">
-          ${linksHtml(c)}
           ${eggHtml(c)}
           ${profileHtml(c)}
           ${me && UUID.test(c.user_id || "") && !own && window.XyntalApp ? `<section class="xm xm-public" aria-label="${esc(t("Eure Passung"))}" data-match hidden></section>` : ""}
@@ -158,12 +158,15 @@
   // Link-Seite: frei gewählte Links der Person; ohne eigene Links die festen Angaben aus Karte und Profil
   // Gleiche Adresse trotz www, Schrägstrich am Ende oder Groß-/Kleinschreibung
   const sameUrl = (a, b) => { const k = (u) => { try { const x = new URL(u); return `${x.hostname.replace(/^www\./, "")}${x.pathname.replace(/\/+$/, "")}${x.search}`.toLowerCase(); } catch { return u; } }; return k(a) === k(b); };
+  const isOwnSite = (u) => { try { return /^(www\.)?xyntal\.(de|com)$/i.test(new URL(u).hostname); } catch { return false; } };
   function linkItems(c) {
     const own = Array.isArray(c.links) ? c.links.filter((l) => l && safeUrl(l.url) && String(l.title || "").trim()) : [];
     if (own.length) return own;
     const p = c.profile || {};
     return [["LinkedIn", p.linkedin, "linkedin"], ["Instagram", p.instagram, "instagram"], ["Website", p.website, "globe"], ["Website", c.link, "globe"]]
       .map(([title, url, icon]) => ({ title, url: safeUrl(url), icon }))
+      // Ein automatischer Link auf xyntal.de selbst führt nur hierher zurück: weglassen
+      .filter((l) => !isOwnSite(l.url))
       .filter((l, i, a) => l.url && a.findIndex((x) => sameUrl(x.url, l.url)) === i);
   }
   function linksHtml(c) {
