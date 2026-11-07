@@ -82,7 +82,7 @@
         }).then((res) => (res.ok ? res.blob() : null)).then((blob) => (blob ? URL.createObjectURL(blob) : "")).catch(() => ""));
       }
       bannerFiles.get(path).then((url) => {
-        if (url) cover.closest(".my-card")?.style.setProperty("--banner-img", `url("${url}")`);
+        if (url) window.XyntalBanners.showFile(cover, url, window.XyntalBanners.isVideo(path));
       });
     });
   };

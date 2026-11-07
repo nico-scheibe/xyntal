@@ -41,21 +41,45 @@
     } catch { /* ohne Bild geht es auch */ }
   }
 
-  // ---- Eigenes Banner-Bild (Paid): Bucket „banners“, Verweis in profiles.banner_path ----
+  // ---- Eigenes Banner (Paid): Bild oder Video im Bucket „banners“, Verweis in profiles.banner_path ----
   let member = null, bannerBusy = false;
   const bannerFile = $("#bf-banner-file"), bannerStatus = $("[data-bf-banner-status]");
   const BANNER_MAX = 4 * 1024 * 1024;
+  // Ein Video wird nicht umgerechnet, darf aber nicht beliebig groß sein: 12 MB und
+  // 30 Sekunden reichen für eine Schleife in 1200 × 300.
+  const BANNER_VIDEO_MAX = 12 * 1024 * 1024;
+  const BANNER_VIDEO_SECONDS = 30;
+  const VIDEO_TYPES = { "video/mp4": "mp4", "video/webm": "webm" };
   const bannerSay = (text, kind = "") => { if (bannerStatus) { bannerStatus.textContent = text; bannerStatus.classList.toggle("is-error", kind === "error"); } };
   async function loadBanner(path) {
     if (!window.XyntalBanners?.validPath(path)) return;
     try {
       const { data, error } = await sb.storage.from("banners").download(path);
-      if (!error && data) B.set({ bannerUrl: URL.createObjectURL(data) });
+      if (!error && data) B.set({ bannerUrl: URL.createObjectURL(data), bannerIsVideo: window.XyntalBanners.isVideo(path) });
     } catch { /* ohne Bild zeigt die Karte den Farbverlauf */ }
   }
-  // GIFs bleiben unverändert (Animation), alles andere wird auf 1200 × 300 zugeschnitten.
+  // Ein Video wird so hochgeladen, wie es ist, nachdem der Browser es lesen konnte
+  // (Dauer und Maße): kaputte Dateien und Stundenfilme kommen nicht in den Bucket.
+  function probeVideo(file) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file), video = document.createElement("video");
+      video.preload = "metadata"; video.muted = true;
+      const done = (fn) => { URL.revokeObjectURL(url); video.removeAttribute("src"); fn(); };
+      video.onloadedmetadata = () => done(() => resolve({ duration: video.duration, width: video.videoWidth, height: video.videoHeight }));
+      video.onerror = () => done(() => reject(new Error(t("Das Video konnte nicht gelesen werden. Bitte wähle eine MP4- oder WebM-Datei."))));
+      video.src = url;
+    });
+  }
+  // GIFs und Videos bleiben unverändert (Animation), alles andere wird auf 1200 × 300 zugeschnitten.
   async function prepareBanner(file) {
-    if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type)) throw new Error(t("Bitte wähle ein JPG-, PNG-, WebP- oder GIF-Bild."));
+    if (VIDEO_TYPES[file.type]) {
+      if (!file.size || file.size > BANNER_VIDEO_MAX) throw new Error(t("Das Video darf höchstens 12 MB groß sein."));
+      const info = await probeVideo(file);
+      if (!info.width || !info.height) throw new Error(t("Das Video konnte nicht gelesen werden. Bitte wähle eine MP4- oder WebM-Datei."));
+      if (Number.isFinite(info.duration) && info.duration > BANNER_VIDEO_SECONDS) throw new Error(t("Das Video darf höchstens 30 Sekunden lang sein."));
+      return { blob: file, ext: VIDEO_TYPES[file.type], type: file.type, video: true };
+    }
+    if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type)) throw new Error(t("Bitte wähle ein JPG-, PNG-, WebP- oder GIF-Bild oder ein MP4-/WebM-Video."));
     if (!file.size || file.size > BANNER_MAX) throw new Error(t("Das Banner darf höchstens 4 MB groß sein."));
     if (file.type === "image/gif") return { blob: file, ext: "gif", type: "image/gif" };
     let bitmap;
@@ -85,11 +109,11 @@
     bannerBusy = true; bannerSay(t("Banner wird hochgeladen …"));
     let path = "";
     try {
-      const { blob, ext, type } = await prepareBanner(file);
+      const { blob, ext, type, video } = await prepareBanner(file);
       path = `${member.id}/${crypto.randomUUID()}.${ext}`;
       unwrap(await sb.storage.from("banners").upload(path, blob, { contentType: type, cacheControl: "3600", upsert: false }));
       await setBannerPath(path);
-      B.set({ bannerUrl: URL.createObjectURL(blob), banner: "image" });
+      B.set({ bannerUrl: URL.createObjectURL(blob), bannerIsVideo: video === true, banner: "image" });
       markDirty();
       bannerSay(t("Banner gespeichert. Klick auf „Karte speichern“, damit deine Karte es zeigt."), "ok");
     } catch (err) {
@@ -102,7 +126,7 @@
     bannerBusy = true; bannerSay(t("Banner wird entfernt …"));
     try {
       await setBannerPath("");
-      B.set({ bannerUrl: "", banner: "theme" });
+      B.set({ bannerUrl: "", bannerIsVideo: false, banner: "theme" });
       markDirty();
       bannerSay(t("Banner entfernt."), "ok");
     } catch (err) { bannerSay(friendlyError(err), "error"); }
