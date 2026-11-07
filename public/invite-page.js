@@ -23,11 +23,13 @@
   async function load() {
     if (!handle) return invalid();
     try {
-      const res = await fetch(`${SUPA}/rest/v1/rpc/get_public_card`, {
+      // Nur der Name, und nur wenn der Link einem Konto gehört (get_public_card verbirgt user_id vor Gästen)
+      const res = await fetch(`${SUPA}/rest/v1/rpc/get_invite_name`, {
         method: "POST", headers: { apikey: KEY, Authorization: `Bearer ${KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ p_handle: handle }),
       });
-      const card = res.ok ? await res.json() : null;
-      if (!card || !card.name || !card.user_id) return invalid();
+      const name = res.ok ? await res.json() : null;
+      if (typeof name !== "string" || !name) return invalid();
+      const card = { name };
       document.title = `${card.name} ${t("lädt dich zu Xyntal ein")} – Xyntal`;
       if (member) {
         set(title, "Du hast schon ein Konto.");

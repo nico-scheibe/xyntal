@@ -15,7 +15,7 @@ grant usage on schema auth to anon, authenticated;
 grant execute on function auth.uid() to anon, authenticated;
 grant usage on schema public to anon, authenticated, service_role;
 create table public.profiles (id uuid primary key, is_admin boolean not null default false, banned boolean not null default false, banned_until timestamptz);
-create table public.waitlist_cards (id bigint generated always as identity primary key, handle text, user_id uuid);
+create table public.waitlist_cards (id bigint generated always as identity primary key, handle text, user_id uuid, name text default 'Test');
 create function public.is_admin() returns boolean language sql stable security definer set search_path = '' as $$
   select coalesce((select is_admin from public.profiles where id = auth.uid()), false); $$;
 create function public.mfa_ok() returns boolean language sql stable as $$ select true $$;
@@ -36,6 +36,7 @@ insert into public.profiles (id) values
 insert into public.waitlist_cards (handle, user_id) values ('anna', '00000000-0000-0000-0000-00000000000a'), ('ben', '00000000-0000-0000-0000-00000000000b'), ('waitlist', null);
 
 \i supabase/migrations/20261107220000_member_invites.sql
+\i supabase/migrations/20261107240000_invite_name.sql
 
 create function pg_temp.expect(p_label text, p_got text, p_want text) returns void language plpgsql as $$
 begin if p_got is distinct from p_want then raise exception '% : erwartet %, bekommen %', p_label, p_want, p_got; end if; end $$;
@@ -67,6 +68,10 @@ select pg_temp.expect('Anna hat 1 eingeladen', (public.get_my_invites() ->> 'inv
 select pg_temp.expect('Annas Link', (public.get_my_invites() ->> 'handle'), 'anna');
 set test.uid = '00000000-0000-0000-0000-00000000000b';
 select pg_temp.expect('Ben wurde von anna eingeladen', (public.get_my_invites() ->> 'invited_by'), 'anna');
+reset role; set role anon;
+select pg_temp.expect('Gast sieht Namen', (public.get_invite_name('anna') is not null)::text, 'true');
+select pg_temp.expect('Wartelisten-Name ohne Konto', (public.get_invite_name('waitlist') is null)::text, 'true');
+reset role; set role authenticated;
 -- Mitglieder lesen die Tabelle nicht direkt
 do $$ begin perform count(*) from public.member_referrals; raise exception 'Mitglied darf member_referrals lesen';
 exception when others then if sqlstate <> '42501' and sqlstate <> '0A000' then null; end if; end $$;
