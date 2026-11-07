@@ -612,7 +612,7 @@ html { scrollbar-color: #2A2A33 transparent; }
 .bf-group:first-child { padding-top: 4px; }
 .bf-group:last-child { border-bottom: 0; padding-bottom: 4px; }
 .bf-step { display: flex; align-items: center; gap: 10px; font: 600 12.5px/1 var(--f-text); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-2); }
-.bf-step span { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--grad-btn); color: #fff; font-size: 12px; letter-spacing: 0; }
+.bf-step span { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--grad-btn); color: var(--on-accent, #1C1C1C); font-size: 12px; font-weight: 700; letter-spacing: 0; }
 .bf-two { display: grid; gap: 14px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (max-width: 420px) { .bf-two { grid-template-columns: minmax(0, 1fr); } }
 .bf-field { display: grid; gap: 10px; margin: 0; padding: 0; border: 0; min-width: 0; }

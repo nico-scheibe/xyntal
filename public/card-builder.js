@@ -55,7 +55,7 @@
       looking: "Mitgründer:in", pitch: "", link: "", handle: "", photo: "", touched: false,
       theme: "aurora", c1: "#FF5FD2", c2: "#3FD8FF", surface: "dark", shape: "circle", layout: "left", banner: "theme", order: DEFAULT_ORDER.slice(), off: [],
       // Nur mit Konto (/meine-karte): Paid-Tarif und Vorschau des eigenen Banner-Bilds, nie gespeichert
-      premium: false, bannerUrl: "" };
+      premium: false, bannerUrl: "", bannerIsVideo: false };
     if (!ACCOUNT) try { const saved = JSON.parse(localStorage.getItem(STORE) || "null"); if (saved && typeof saved === "object") data = { ...data, ...saved }; } catch { /* egal */ }
     // Wunsch-Link: nur a–z, 0–9, - und _, 3–20 Zeichen, beginnt mit Buchstabe oder Zahl
     const cleanHandle = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9_-]/g, "").replace(/^[-_]+/, "").slice(0, 20);
@@ -73,6 +73,7 @@
       if (!BANNERS || !BANNERS.valid(data.banner)) data.banner = "theme";
       data.premium = data.premium === true;
       if (typeof data.bannerUrl !== "string" || !/^blob:/.test(data.bannerUrl)) data.bannerUrl = "";
+      data.bannerIsVideo = data.bannerIsVideo === true && data.bannerUrl !== "";
       if (!Array.isArray(data.order)) data.order = [];
       data.order = data.order.filter((b) => BLOCKS[b]).concat(DEFAULT_ORDER).filter((b, i, a) => a.indexOf(b) === i);
       data.off = Array.isArray(data.off) ? data.off.filter((b) => BLOCKS[b]) : [];
@@ -223,11 +224,12 @@
       const c = el.card;
       const shown = BANNERS ? BANNERS.effective(data.banner, data.premium, !!data.bannerUrl) : "theme";
       c.dataset.banner = shown;
-      if (data.bannerUrl) c.style.setProperty("--banner-img", `url("${data.bannerUrl}")`); else c.style.removeProperty("--banner-img");
+      if (BANNERS) BANNERS.showFile(c.querySelector(".mc-cover"), data.bannerUrl, data.bannerIsVideo);
       if (el.banners) {
         for (const sw of el.banners.querySelectorAll(".bf-bsw")) {
           sw.style.setProperty("--tg", cssGrad()); sw.style.setProperty("--t1", colors()[0]);
-          if (sw.dataset.banner === "image" && data.bannerUrl) sw.style.setProperty("--banner-img", `url("${data.bannerUrl}")`);
+          if (sw.dataset.banner === "image" && data.bannerUrl && BANNERS)
+            BANNERS.showFile(sw.querySelector(".mc-cover"), data.bannerUrl, data.bannerIsVideo);
         }
       }
       if (el.bannerUpload) el.bannerUpload.hidden = !(data.premium && data.banner === "image");
