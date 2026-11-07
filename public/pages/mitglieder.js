@@ -20,7 +20,9 @@
     members = members.filter((m) => cards.has(m.id));
     const tile = (m) => {
       const c = cards.get(m.id);
-      const photo = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.jpg$/.test(m.avatar_path || "") ? `data-avatar-path="${esc(m.avatar_path)}"` : "";
+      // Animierte Profilbilder (GIF/WebP) nur, solange das Mitglied einen Paid-Tarif hat
+      const okPhoto = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|gif|webp)$/.test(m.avatar_path || "") && (/\.jpg$/.test(m.avatar_path) || c.is_premium === true);
+      const photo = okPhoto ? `data-avatar-path="${esc(m.avatar_path)}"` : "";
       const canMessage = viewerIsMember && m.id !== me.id;
       return `<div class="member-xcard xcard-host"><div class="member-xcard-link" data-profile-url="/${esc(c.handle)}" role="group" tabindex="0" aria-label="${esc(c.name || m.name)} – Profil öffnen">${window.XyntalCardHtml({ ...c, is_verified: m.is_verified === true, is_admin: m.is_admin === true }, { avatarAttrs: photo, messageUrl: canMessage ? `/nachrichten?an=${encodeURIComponent(m.id)}` : "" })}</div></div>`;
     };
@@ -30,6 +32,7 @@
     grid.innerHTML = members.length && window.XyntalCardHtml
       ? members.map(tile).join("")
       : `<p class="empty" style="grid-column: 1 / -1">Noch keine Karten.${ownCardHint || ' <a class="text-link" href="beta#bewerben">Sei eines der ersten Mitglieder.</a>'}</p>`;
+    window.XyntalCardHtml?.hydrate?.(grid);
     if (members.length && ownCardHint) {
       document.getElementById("notice").insertAdjacentHTML("beforeend", `<div class="notice">Deine Karte fehlt noch.${ownCardHint}</div>`);
     }

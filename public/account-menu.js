@@ -172,7 +172,7 @@
       btn.setAttribute("aria-label", t("Kontomenü"));
       if (s) {
         const label = state.name || s.user.user_metadata?.full_name || s.user.user_metadata?.name || s.user.email || "";
-        const safeAvatar = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.jpg$/.test(state.avatar) ? state.avatar : "";
+        const safeAvatar = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|gif|webp)$/.test(state.avatar) ? state.avatar : "";
         const hadImg = btn.querySelector(".acct-face img");
         btn.innerHTML = `<span class="acct-face avatar" ${safeAvatar ? `data-avatar-path="${esc(safeAvatar)}"` : ""}>${esc(initials(label))}</span><span class="acct-dot" aria-hidden="true"></span>`;
         if (hadImg && safeAvatar) btn.querySelector(".acct-face").append(hadImg);
