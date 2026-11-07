@@ -8,12 +8,22 @@
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const ICON = '<span class="lp-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 12v8H4v-8M2 7h20v5H2zM12 22V7M12 7H8a2.5 2.5 0 1 1 0-5c3 0 4 5 4 5zM12 7h4a2.5 2.5 0 1 0 0-5c-3 0-4 5-4 5z"/></svg></span>';
 
-  function token() {
+  function session() {
     try {
       const s = JSON.parse(localStorage.getItem("sb-rralgrlujoupprwlvoyo-auth-token") || "null");
-      if (s?.access_token && (!s.expires_at || s.expires_at * 1000 > Date.now() + 30000)) return s.access_token;
+      if (s?.access_token && (!s.expires_at || s.expires_at * 1000 > Date.now() + 30000)) return { jwt: s.access_token, uid: s.user?.id || "" };
     } catch { /* privat */ }
-    return "";
+    return null;
+  }
+  const token = () => (session() || {}).jwt || "";
+  // Admins haben Plus ohnehin: die Gutschrift bucht dort nichts (App-Server überspringt sie)
+  async function isAdmin(s) {
+    if (!/^[0-9a-f-]{36}$/i.test(s.uid || "")) return false;
+    try {
+      const res = await fetch(`${SUPA}/rest/v1/profiles?id=eq.${s.uid}&select=is_admin`, { headers: { apikey: KEY, Authorization: `Bearer ${s.jwt}` } });
+      const rows = res.ok ? await res.json() : [];
+      return rows[0]?.is_admin === true;
+    } catch { return false; }
   }
   async function myInvites(jwt) {
     const res = await fetch(`${SUPA}/rest/v1/rpc/get_my_invites`, {
@@ -42,7 +52,9 @@
     const date = (iso) => new Date(iso).toLocaleDateString(document.documentElement.lang === "en" ? "en-GB" : "de-DE", { day: "numeric", month: "short", year: "numeric" });
     const days = Number(d.days) || 0;
     const list = Array.isArray(d.list) ? d.list : [];
-    const erhalten = `${t("Erhalten:")} ${days} ${t("Tage Plus gratis")}`;
+    const erhalten = d.admin
+      ? `${t("Gutgeschrieben:")} ${days} ${t("Tage Plus – als Admin hast du Plus ohnehin.")}`
+      : `${t("Erhalten:")} ${days} ${t("Tage Plus gratis")}`;
     const next = d.next_free ? `${t("Nächste Einladung möglich ab")} ${date(d.next_free)}` : "";
     const rows = list.map((r) => `<li><span data-no-i18n>${esc(date(r.at))}</span> · ${esc(t(r.credited ? "7 Tage Plus gutgeschrieben" : "wird gutgeschrieben"))}</li>`).join("");
     const max = Number(d.max) || 4, recent = Number(d.recent) || 0;
@@ -51,7 +63,7 @@
       <p>${esc(t(REWARD))}</p>
       <div class="invite-row"><input type="text" readonly value="${esc(url)}" aria-label="${esc(t("Dein Einladungslink"))}" data-no-i18n><button type="button" class="btn btn-primary" data-invite-share>${esc(t("Link teilen"))}</button></div>
       <p class="invite-count" data-invite-status role="status" aria-live="polite">${esc(stand)}</p>
-      <p class="invite-count"><b>${esc(erhalten)}</b></p>
+      ${days > 0 ? `<p class="invite-count"><b>${esc(erhalten)}</b></p>` : ""}
       <p class="invite-count">${esc(grenze)}${next ? ` · ${esc(next)}` : ""}</p>
       ${rows ? `<ul class="invite-list">${rows}</ul>` : ""}`;
     box.hidden = false;
@@ -75,15 +87,17 @@
   }
 
   async function render(box) {
-    const jwt = token();
-    if (!jwt) { if (box.dataset.invite === "always") teaser(box); return; }
+    const ses = session();
+    if (!ses) { if (box.dataset.invite === "always") teaser(box); return; }
     try {
-      const d = await myInvites(jwt);
-      if (d && d.handle) link(box, d); else noHandle(box);
-      let welcome = ""; try { welcome = localStorage.getItem("xyntal-ref-welcome") || ""; } catch { /* egal */ }
-      if (welcome && d && d.invited_by) {
-        box.insertAdjacentHTML("afterbegin", `<p class="invite-note">${esc(t("Einladung angenommen: 7 Tage Plus sind für dich und die Person, die dich eingeladen hat, unterwegs. Sie erscheinen in der App, sobald du dich dort mit dieser E-Mail anmeldest."))}</p>`);
-        try { localStorage.removeItem("xyntal-ref-welcome"); } catch { /* egal */ }
+      const d = await myInvites(ses.jwt);
+      if (d && d.handle) { d.admin = Number(d.days) > 0 && await isAdmin(ses); link(box, d); } else noHandle(box);
+      // Wer selbst eingeladen wurde: Stand der eigenen Gutschrift
+      if (d && d.invited_by) {
+        const note = d.welcome_credited
+          ? "Deine Einladung wurde gutgeschrieben: 7 Tage Plus sind aktiv."
+          : "Einladung angenommen: 7 Tage Plus sind für dich und die Person, die dich eingeladen hat, unterwegs. Sie erscheinen in der App, sobald du dich dort mit dieser E-Mail anmeldest.";
+        box.insertAdjacentHTML("afterbegin", `<p class="invite-note">${esc(t(note))}</p>`);
       }
     } catch { /* ohne Einladungsbox geht es auch */ }
   }
