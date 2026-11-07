@@ -16,7 +16,7 @@
   <link rel="stylesheet" href="/fonts/fonts.css?v=32">
   <link rel="stylesheet" href="/home.css?v=34">
   <link rel="stylesheet" href="/banners.css?v=2">
-  <script src="/i18n-en.js?v=97" defer></script>
+  <script src="/i18n-en.js?v=98" defer></script>
   <script src="/i18n.js?v=31" defer></script>
   <style>
     .profile { min-height: calc(100vh - 200px); display: grid; align-content: center; justify-items: center; gap: 22px; padding: 48px 0 72px; text-align: center; }
@@ -117,45 +117,82 @@
 }
 @media (prefers-reduced-motion: reduce) { .public-item, .public-item-arrow { transition: none; } }
 
-/* Admin-Profil: exklusive Seite für Konten mit is_admin – in den Farben des Xyntal-Zeichens (Violett, Blau, Cyan) */
+/* Admin-Profil: exklusive Seite für Konten mit is_admin – ruhig, dunkel, in den Farben des Xyntal-Zeichens (Violett, Blau, Cyan) */
 @property --pfa-angle { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
-body.admin-profile::before { content: ""; position: fixed; inset: 0 0 auto; height: 70vh; z-index: -1; pointer-events: none;
-  background: radial-gradient(40% 60% at 22% 0%, rgba(179, 107, 255, .16), transparent 70%), radial-gradient(38% 55% at 78% 0%, rgba(58, 138, 255, .13), transparent 70%), radial-gradient(30% 40% at 50% 10%, rgba(63, 224, 240, .07), transparent 70%); }
-.pf-admin-stage { isolation: isolate; }
+body.admin-profile { --pfa-v: #B36BFF; --pfa-b: #3A8AFF; --pfa-c: #3FE0F0; --pfa-hair: rgba(150, 170, 255, .16); --pfa-mono: "JetBrains Mono", var(--f-mono, ui-monospace, monospace); }
+/* Bühne: Lichtkegel von oben und ein feines Raster, das nach unten ausläuft */
+body.admin-profile::before { content: ""; position: fixed; inset: 0 0 auto; height: 90vh; z-index: -1; pointer-events: none;
+  background: radial-gradient(42% 55% at 24% -6%, rgba(179, 107, 255, .2), transparent 70%), radial-gradient(40% 50% at 76% -8%, rgba(58, 138, 255, .16), transparent 70%),
+    linear-gradient(rgba(255, 255, 255, .035) 1px, transparent 1px) 0 0 / 56px 56px, linear-gradient(90deg, rgba(255, 255, 255, .035) 1px, transparent 1px) 0 0 / 56px 56px;
+  -webkit-mask: linear-gradient(#000, transparent 85%); mask: linear-gradient(#000, transparent 85%); }
+
+/* Karte: Lichtring, Metallrahmen, Neigung zum Mauszeiger mit Glanz */
+.pf-admin-stage { isolation: isolate; perspective: 1100px; }
 .pf-admin-stage::before { opacity: 0 !important; }
-.pf-admin-stage::after { content: ""; position: absolute; inset: 6% -4%; z-index: -1; border-radius: 40px; pointer-events: none;
-  background: conic-gradient(from var(--pfa-angle), #B36BFF, #3A8AFF, #3FE0F0, #3A8AFF, #B36BFF); filter: blur(34px); opacity: .42; animation: pfa-spin 9s linear infinite; }
-.pf-admin-stage .my-card { background: linear-gradient(180deg, var(--mc-bg1), var(--mc-bg2)) padding-box, conic-gradient(from var(--pfa-angle), #B36BFF, #3A8AFF, #3FE0F0, #FF5FD2, #B36BFF) border-box; border-width: 2px; animation: pfa-spin 9s linear infinite; }
+.pf-admin-stage::after { content: ""; position: absolute; inset: 8% -2%; z-index: -1; border-radius: 40px; pointer-events: none;
+  background: conic-gradient(from var(--pfa-angle), var(--pfa-v), var(--pfa-b), var(--pfa-c), var(--pfa-b), var(--pfa-v)); filter: blur(40px); opacity: .38; animation: pfa-spin 12s linear infinite; }
+.pf-admin-stage .my-card { --pfa-rx: 0deg; --pfa-ry: 0deg; --pfa-mx: 50%; --pfa-my: 0%;
+  background: linear-gradient(180deg, var(--mc-bg1), var(--mc-bg2)) padding-box, conic-gradient(from var(--pfa-angle), #E9E4FF, var(--pfa-v), var(--pfa-b), var(--pfa-c), #E9E4FF) border-box;
+  border-width: 1.5px; transform: rotateX(var(--pfa-rx)) rotateY(var(--pfa-ry)); transition: transform .5s cubic-bezier(.2, .8, .2, 1);
+  box-shadow: 0 50px 90px -40px rgba(0, 0, 0, .95), 0 0 0 1px rgba(255, 255, 255, .04), 0 0 80px -30px var(--pfa-b); animation: pfa-spin 12s linear infinite; }
+.pf-admin-stage .my-card.is-tilting { transition: transform .08s linear; }
+.pf-admin-stage .my-card::after { content: ""; position: absolute; inset: 0; z-index: 3; border-radius: inherit; pointer-events: none; mix-blend-mode: soft-light; opacity: 0; transition: opacity .4s;
+  background: radial-gradient(60% 45% at var(--pfa-mx) var(--pfa-my), rgba(255, 255, 255, .55), transparent 70%); }
+.pf-admin-stage .my-card.is-tilting::after { opacity: 1; }
 .pf-admin-stage .mc-badge-admin { position: relative; overflow: hidden; }
-.pf-admin-stage .mc-badge-admin::after { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, .55) 50%, transparent 70%) no-repeat; background-size: 250% 100%; animation: pfa-shine 4s ease-in-out infinite; }
+.pf-admin-stage .mc-badge-admin::after { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, .55) 50%, transparent 70%) no-repeat; background-size: 250% 100%; animation: pfa-shine 5s ease-in-out infinite; }
 @keyframes pfa-spin { to { --pfa-angle: 360deg; } }
-@keyframes pfa-shine { 0%, 40% { background-position: 130% 0; } 80%, 100% { background-position: -30% 0; } }
+@keyframes pfa-shine { 0%, 45% { background-position: 130% 0; } 80%, 100% { background-position: -30% 0; } }
+@keyframes pfa-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(63, 224, 240, .55); } 70% { box-shadow: 0 0 0 6px rgba(63, 224, 240, 0); } }
 
-.pf-address { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
-.pf-admin-chip, .pf-admin-facts li { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 999px; border: 1px solid rgba(112, 190, 255, .45); background: linear-gradient(115deg, rgba(45, 131, 255, .2), rgba(116, 81, 255, .2)); color: #DCE8FF; font: 600 11.5px/1 var(--f-text); letter-spacing: .03em; }
-.pf-admin-chip svg, .pf-admin-facts svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-body.admin-profile .pf-head { border-bottom: 0; background: linear-gradient(90deg, #B36BFF, #3A8AFF 45%, #3FE0F0 70%, transparent) bottom / 100% 1px no-repeat; }
-body.admin-profile .pf-about { border-color: rgba(112, 150, 255, .22); background: linear-gradient(160deg, rgba(58, 138, 255, .05), rgba(0, 0, 0, .02) 50%); }
-body.admin-profile .pf-row + .pf-row { border-top-color: rgba(112, 150, 255, .14); }
-body.admin-profile .pf-row h2 { color: #9DB8FF; }
+/* Kopf: Adresse mit Kennzeichen, Überschrift, Linie im Verlauf */
+.pf-address { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+body.admin-profile .pf-address > span:first-child { font-family: var(--pfa-mono); font-size: 12px; letter-spacing: .02em; }
+.pf-admin-chip { display: inline-flex; align-items: center; gap: 8px; height: 24px; padding: 0 11px 0 9px; border-radius: 999px; border: 1px solid var(--pfa-hair); background: rgba(255, 255, 255, .03);
+  color: #CFE0FF; font: 500 10.5px/1 var(--pfa-mono); letter-spacing: .12em; text-transform: uppercase; }
+.pf-admin-chip i, .pf-admin-kicker i { width: 6px; height: 6px; border-radius: 50%; background: var(--pfa-c); animation: pfa-pulse 2.4s ease-out infinite; }
+body.admin-profile .pf-head { border-bottom: 0; padding-bottom: 28px; background: linear-gradient(90deg, var(--pfa-v), var(--pfa-b) 40%, var(--pfa-c) 65%, transparent) bottom / 100% 1px no-repeat; }
+body.admin-profile .pf-headline { font-size: clamp(26px, 3.4vw, 38px); line-height: 1.15; letter-spacing: -.03em; }
+body.admin-profile .pf-about { border-color: var(--pfa-hair); background: rgba(255, 255, 255, .015); }
+body.admin-profile .pf-row + .pf-row { border-top-color: var(--pfa-hair); }
+body.admin-profile .pf-row h2 { color: #8E9BC4; font-family: var(--pfa-mono); font-size: 11px; font-weight: 500; letter-spacing: .14em; }
 
-.pf-admin { position: relative; display: flex; align-items: center; gap: 24px; padding: 22px 24px; border-radius: 22px; overflow: hidden;
-  border: 1px solid transparent; background: linear-gradient(120deg, #1E1A2B, #161B2A 55%, #13202A) padding-box, linear-gradient(120deg, rgba(179, 107, 255, .7), rgba(58, 138, 255, .55), rgba(63, 224, 240, .5)) border-box;
-  box-shadow: 0 24px 60px -30px rgba(58, 138, 255, .55); }
-.pf-admin::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(60% 120% at 0% 50%, rgba(179, 107, 255, .16), transparent 70%); }
-.pf-admin-seal { position: relative; flex: none; display: grid; place-items: center; width: 78px; height: 78px; border-radius: 50%;
-  background: radial-gradient(circle at 50% 40%, #232036, #12121A); box-shadow: 0 0 0 1px rgba(179, 107, 255, .35), 0 0 34px rgba(91, 140, 255, .4); }
-.pf-admin-seal::before { content: ""; position: absolute; inset: -5px; border-radius: 50%; padding: 2px; background: conic-gradient(from var(--pfa-angle), #B36BFF, #3A8AFF, #3FE0F0, transparent 75%, #B36BFF);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); animation: pfa-spin 5s linear infinite; }
-.pf-admin-seal svg { width: 40px; height: 40px; filter: drop-shadow(0 0 10px rgba(91, 140, 255, .55)); }
+/* Ausweis „Team Xyntal“: Siegel, Titel, Kennzahlen unten in einer Leiste */
+.pf-admin { position: relative; display: grid; border-radius: 20px; overflow: hidden;
+  border: 1px solid transparent; background: linear-gradient(180deg, #17161F, #111117) padding-box, linear-gradient(135deg, rgba(233, 228, 255, .55), rgba(179, 107, 255, .35) 30%, rgba(58, 138, 255, .18) 60%, rgba(63, 224, 240, .4)) border-box;
+  box-shadow: 0 30px 70px -40px rgba(58, 138, 255, .6), inset 0 1px rgba(255, 255, 255, .05); }
+.pf-admin::before { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(50% 90% at 0% 0%, rgba(179, 107, 255, .16), transparent 70%), radial-gradient(40% 80% at 100% 100%, rgba(63, 224, 240, .07), transparent 70%); }
+.pf-admin::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, .06) 50%, transparent 60%) no-repeat; background-size: 250% 100%; animation: pfa-shine 7s ease-in-out infinite; }
+.pf-admin-top { position: relative; display: flex; align-items: center; gap: 26px; padding: 26px 28px; }
+.pf-admin-seal { position: relative; flex: none; display: grid; place-items: center; width: 108px; height: 108px; border-radius: 50%;
+  background: radial-gradient(circle at 50% 35%, #24223A, #0E0E14 70%); box-shadow: inset 0 0 0 1px rgba(233, 228, 255, .14), 0 0 40px -6px rgba(91, 140, 255, .45); }
+.pf-admin-seal::before { content: ""; position: absolute; inset: -1px; border-radius: 50%; padding: 1px; background: conic-gradient(from var(--pfa-angle), var(--pfa-v), var(--pfa-b), var(--pfa-c), transparent 70%, var(--pfa-v));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); animation: pfa-spin 6s linear infinite; }
+.pf-admin-ring { position: absolute; inset: 0; width: 100%; height: 100%; animation: pfa-rotate 40s linear infinite; }
+.pf-admin-ring text { fill: #A9B4DA; font: 500 8.4px var(--pfa-mono); letter-spacing: .1em; }
+.pf-admin-logo { position: relative; width: 40px; height: 40px; filter: drop-shadow(0 0 12px rgba(91, 140, 255, .6)); }
+@keyframes pfa-rotate { to { transform: rotate(360deg); } }
 .pf-admin-body { position: relative; display: grid; gap: 8px; min-width: 0; }
-.pf-admin-kicker { color: #8FD8FF; font: 600 12px/1.2 var(--f-text); letter-spacing: .14em; text-transform: uppercase; }
-.pf-admin h2 { font: 700 clamp(22px, 3vw, 28px)/1.15 var(--f); letter-spacing: -.03em; }
-.pf-admin h2 span { background: linear-gradient(100deg, #F1E9FF, #B9C8FF 50%, #9BEAF5); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.pf-admin-kicker { display: inline-flex; align-items: center; gap: 9px; color: #9FDDF0; font: 500 11px/1.2 var(--pfa-mono); letter-spacing: .18em; text-transform: uppercase; }
+.pf-admin h2 { font: 650 clamp(24px, 3vw, 32px)/1.1 var(--f); letter-spacing: -.03em; background: linear-gradient(100deg, #FFFFFF, #DCD5FF 45%, #A8C6FF 75%, #9BEAF5); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .pf-admin-body > p:not(.pf-admin-kicker) { color: var(--text-2); font-size: 15px; line-height: 1.6; overflow-wrap: anywhere; }
-.pf-admin-facts { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 0; padding: 0; list-style: none; }
-@media (max-width: 520px) { .pf-admin { flex-direction: column; align-items: flex-start; gap: 16px; padding: 18px; } .pf-admin-seal { width: 60px; height: 60px; } .pf-admin-seal svg { width: 30px; height: 30px; } }
-@media (prefers-reduced-motion: reduce) { .pf-admin-stage::after, .pf-admin-stage .my-card, .pf-admin-stage .mc-badge-admin::after, .pf-admin-seal::before { animation: none; } }
+.pf-admin-specs { position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0; border-top: 1px solid var(--pfa-hair); background: rgba(0, 0, 0, .18); }
+.pf-admin-specs div { display: grid; gap: 6px; padding: 14px 28px 16px; min-width: 0; }
+.pf-admin-specs div + div { border-left: 1px solid var(--pfa-hair); }
+.pf-admin-specs dt { color: #7C84A3; font: 500 10.5px/1.2 var(--pfa-mono); letter-spacing: .16em; text-transform: uppercase; }
+.pf-admin-specs dd { margin: 0; color: var(--text); font: 600 14px/1.35 var(--f-text); overflow-wrap: anywhere; }
+@media (max-width: 600px) {
+  .pf-admin-top { flex-direction: column; align-items: flex-start; gap: 18px; padding: 22px 20px; }
+  .pf-admin-seal { width: 88px; height: 88px; } .pf-admin-logo { width: 32px; height: 32px; }
+  .pf-admin-specs { grid-template-columns: 1fr; }
+  .pf-admin-specs div { grid-template-columns: 110px minmax(0, 1fr); align-items: baseline; padding: 12px 20px; }
+  .pf-admin-specs div + div { border-left: 0; border-top: 1px solid var(--pfa-hair); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pf-admin-stage::after, .pf-admin-stage .my-card, .pf-admin-stage .mc-badge-admin::after, .pf-admin-seal::before, .pf-admin-ring, .pf-admin::after, .pf-admin-chip i, .pf-admin-kicker i { animation: none; }
+  .pf-admin-stage .my-card { transition: none; }
+}
 </style>
   <link rel="stylesheet" href="/backdrop.css?v=7">
   <link rel="stylesheet" href="/site-footer.css?v=4">
@@ -248,7 +285,7 @@ body.admin-profile .pf-row h2 { color: #9DB8FF; }
 <script src="/xcard.js?v=14" defer></script>
 <script src="/config.js?v=31" defer></script>
 <script src="/app-api.js?v=5" defer></script>
-<script src="/u.js?v=23" defer></script>
+<script src="/u.js?v=24" defer></script>
 <script src="/effects.js?v=38" defer></script>
 <script src="/account-menu.js?v=18" defer></script>
 <script src="/site-chat.js?v=3" defer></script>
