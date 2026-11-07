@@ -14,10 +14,11 @@
   <meta property="og:image:alt" content="Xyntal: Große Ideen beginnen mit den richtigen Menschen.">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/invite.css?v=2">
   <link rel="stylesheet" href="fonts/fonts.css?v=32">
   <link rel="stylesheet" href="style.css?v=38">
   <link rel="stylesheet" href="cosmos.css?v=43">
-  <script src="i18n-en.js?v=100" defer></script>
+  <script src="i18n-en.js?v=101" defer></script>
   <script src="i18n.js?v=31" defer></script>
   <script src="cosmos.js?v=40" defer></script>
   <link rel="stylesheet" href="/backdrop.css?v=7">
@@ -57,6 +58,10 @@
     <div class="wrap xm xm-page">
       <div id="notice"></div>
       <div id="billing" aria-live="polite"><p class="xm-status" role="status">Wird geladen …</p></div>
+      <section class="xm-detail xm-billing" aria-labelledby="invite-head">
+        <h2 id="invite-head">Freunde einladen</h2>
+        <div class="invite" data-invite="always" hidden></div>
+      </section>
     </div>
   </section>
 </main>
@@ -133,7 +138,8 @@
 <script src="/app-api.js?v=5"></script>
 <script src="/prompts.js?v=1" defer></script>
 <script src="/pages/tarif.js?v=8"></script>
-<script src="/account-menu.js?v=18" defer></script>
+<script src="/invite.js?v=3" defer></script>
+<script src="/account-menu.js?v=19" defer></script>
 <script src="/site-chat.js?v=3" defer></script>
 </body>
 </html>

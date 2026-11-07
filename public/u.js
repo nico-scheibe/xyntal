@@ -8,7 +8,7 @@
   const BLOCKED = new Set(["admin", "api", "app", "about", "beta", "bestaetigt", "blog", "datenschutz", "demo", "help", "hilfe", "impressum",
     "karte", "login", "logout", "mail", "meine-karte", "mitglieder", "mitglied-werden", "nachrichten", "news", "passwort-neu",
     "preise", "pricing", "profil", "projekte", "register", "settings", "signup", "support", "team", "warteliste", "www",
-    "xyntal", "boerse", "community", "events"]);
+    "xyntal", "invite", "boerse", "community", "events"]);
   const SUPA = "https://rralgrlujoupprwlvoyo.supabase.co";
   const KEY = "sb_publishable_YxSngs1ePBoxqI6f26GRww_2_kNaLfh";
 
@@ -42,6 +42,10 @@
     const own = !!(me && c.user_id && c.user_id === me.id);
     const admin = c.is_admin === true;
     document.title = `${name} · xyntal.de/${c.handle}`;
+    // Einladungsprogramm: Wer über diesen Link kommt und ein Konto anlegt, löst die Einladung ein (account-menu.js)
+    if (!own && HANDLE.test(c.handle || "")) {
+      try { localStorage.setItem("xyntal-ref-handle", JSON.stringify({ handle: c.handle, at: Date.now() })); } catch { /* geht auch ohne */ }
+    }
     const primary = !member
       ? `<a class="btn btn-primary" href="/#karte">${esc(t("Bau deine eigene Karte"))}</a>`
       : own
@@ -55,6 +59,7 @@
           <div class="bp-stage${admin ? " pf-admin-stage" : ""}">${window.XyntalCardHtml(c, { t, heading: "h1", avatarAttrs: "data-pub-avatar" })}</div>
           <div class="pf-actions">
             ${primary}
+            ${!member && !own ? `<p class="pf-invited">${esc(t("Du wurdest eingeladen: Mit einem Konto bekommst du 7 Tage Plus gratis – und die Person, die dich eingeladen hat, auch."))} <a class="text-link" href="/login#registrieren">${esc(t("Konto anlegen"))}</a></p>` : ""}
             <button class="btn btn-glass" type="button" data-copy-link>${esc(t(navigator.share ? "Profil teilen" : "Link kopieren"))}</button>
             <p class="pf-copied" role="status" data-copy-status></p>
           </div>

@@ -12,8 +12,8 @@ create table public.profiles(id uuid primary key, is_premium boolean default fal
 create table public.waitlist_cards(id uuid primary key default gen_random_uuid(), user_id uuid, handle text, name text, role text, level text, skills text[] default '{}',
   hours int, mode text, city text, looking text, pitch text, link text, lang text, design jsonb, is_public boolean default true);
 create function public.ban_active(b boolean, u timestamptz) returns boolean language sql immutable as $$ select coalesce(b,false) and (u is null or u > now()) $$;
-\i supabase/migrations/20261107220000_link_page.sql
-\i supabase/migrations/20261107220000_link_page.sql
+\i supabase/migrations/20261107250000_link_page.sql
+\i supabase/migrations/20261107250000_link_page.sql
 
 insert into auth.users values ('00000000-0000-0000-0000-000000000001'),('00000000-0000-0000-0000-000000000002');
 insert into public.profiles(id, is_premium) values ('00000000-0000-0000-0000-000000000001', false), ('00000000-0000-0000-0000-000000000002', true);

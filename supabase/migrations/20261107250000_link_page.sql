@@ -4,7 +4,7 @@
 -- • get_public_card liefert 'links' (nur aktive, in Reihenfolge) – ohne Klickzahlen.
 -- • get_my_links liefert alle eigenen Links; Klickzahlen nur mit Paid/Admin.
 -- • track_link_click zählt einen Klick (öffentlich aufrufbar, je Link höchstens 1 Zählung pro Sekunde).
--- Nach 20261107210000_account_without_beta_application.sql ausführen. Darf mehrfach laufen.
+-- Nach 20261107240000_invite_name.sql ausführen. Darf mehrfach laufen.
 begin;
 
 create table if not exists public.profile_links (
