@@ -149,7 +149,8 @@ async function renderXcard() {
       cardLink = `https://xyntal.de/${card.handle}`;
       view.href = `/${card.handle}`; view.hidden = copy.hidden = false;
     } else if (card.handle) {
-      text.innerHTML = `Dein Link <b data-no-i18n>xyntal.de/${esc(card.handle)}</b> führt zu deinem Profil, sobald du es freigibst. Aktiviere unten unter „Sichtbarkeit &amp; Link“ dein öffentliches Profil und speichere deine Karte.`;
+      // Seit Karten immer öffentlich sind: nur noch, bis die Karte einmal neu gespeichert ist (oder ein Admin sie ausgeblendet hat).
+      text.innerHTML = `Dein Link <b data-no-i18n>xyntal.de/${esc(card.handle)}</b> führt zu deinem Profil, sobald du deine Karte unten einmal speicherst.`;
     } else {
       text.textContent = "Deine Karte ist gespeichert. Sichere dir unten noch deinen Link xyntal.de/deinname.";
     }

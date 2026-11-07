@@ -3,7 +3,9 @@
   const $ = (sel, root = document) => root.querySelector(sel);
   const t = (de) => (window.XyntalI18n ? window.XyntalI18n.t(de) : de);
   const gate = $("[data-mk-gate]"), app = $("[data-mk-app]");
-  const pub = $("[data-mk-public]"), pubHint = $("[data-mk-public-hint]"), urlLabel = $("[data-mk-url]");
+  // Mitgliederkarten sind immer öffentlich (Migration 20261107180000_cards_always_public.sql),
+  // daher braucht jede Karte einen Wunsch-Link.
+  const pubHint = $("[data-mk-public-hint]"), urlLabel = $("[data-mk-url]");
   const saveBtn = $("[data-mk-save]"), view = $("[data-mk-view]"), out = $("[data-mk-status]");
   const B = window.XyntalBuilder;
   let dirty = false, savedHandle = "", importedWaitlistCard = false;
@@ -16,8 +18,6 @@
     const d = B.get(), ok = B.validHandle(d.handle);
     urlLabel.textContent = `xyntal.de/${ok ? d.handle : "deinname"}`;
     pubHint.hidden = ok;
-    if (!ok) pub.checked = false;
-    pub.disabled = !ok;
     view.hidden = !savedHandle;
     if (savedHandle) view.href = `/${savedHandle}`;
   }
@@ -164,8 +164,7 @@
     }
     if (card) {
       B.set(fromServer(card));
-      pub.checked = !!card.is_public;
-      savedHandle = card.is_public ? card.handle || "" : card.handle || "";
+      savedHandle = card.handle || "";
       try {
         const saved = JSON.parse(localStorage.getItem("xyntal-waitlist-card") || "null");
         if (saved?.email === session.user.email.trim().toLowerCase()) localStorage.removeItem("xyntal-waitlist-card");
@@ -173,17 +172,14 @@
       say(t("Deine Karte ist geladen."), "ok");
     } else {
       let waitlistDraft = null;
-      let waitlistPublic = false;
       try {
         const saved = JSON.parse(localStorage.getItem("xyntal-waitlist-card") || "null");
         if (saved?.email === session.user.email.trim().toLowerCase() && saved.card?.touched) {
           waitlistDraft = saved.card;
-          waitlistPublic = !!saved.is_public;
         }
       } catch { /* kein lokaler Entwurf */ }
       if (waitlistDraft) {
         B.set(fromServer(waitlistDraft));
-        pub.checked = waitlistPublic;
         importedWaitlistCard = true;
         say(t("Deine Wartelisten-Karte wird in dein Konto übernommen …"));
       } else {
@@ -202,24 +198,24 @@
   }
 
   B?.onChange(markDirty);
-  pub.addEventListener("change", markDirty);
   window.addEventListener("beforeunload", (e) => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
 
   saveBtn.addEventListener("click", async () => {
     const d = B.get();
     if (!d.name.trim()) { say(t("Bitte gib deinen Vornamen ein."), "error"); $("#bf-name")?.focus(); return; }
-    if (d.handle && !B.validHandle(d.handle)) { say(t("Der Wunsch-Link braucht 3–20 Zeichen: Kleinbuchstaben, Zahlen, - und _."), "error"); $("#bf-handle")?.focus(); return; }
+    if (!d.handle) { say(t("Bitte wähle einen Wunsch-Link – darunter ist deine Karte öffentlich zu sehen."), "error"); $("#bf-handle")?.focus(); return; }
+    if (!B.validHandle(d.handle)) { say(t("Der Wunsch-Link braucht 3–20 Zeichen: Kleinbuchstaben, Zahlen, - und _."), "error"); $("#bf-handle")?.focus(); return; }
     saveBtn.disabled = true; say(t("Wird gespeichert …"));
     try {
       const res = unwrap(await sb.rpc("save_my_card", {
         p_name: d.name.trim().slice(0, 24), p_role: d.role, p_skills: d.skills.slice(0, 4), p_hours: d.hours, p_looking: d.looking,
         p_pitch: d.pitch.trim().slice(0, 120), p_lang: document.documentElement.lang === "en" ? "en" : "de",
         p_city: d.city.trim().slice(0, 40), p_mode: d.mode, p_level: d.level, p_link: B.linkUrl(d.link), p_handle: d.handle,
-        p_public: pub.checked,
+        p_public: true,
         p_design: { theme: d.theme, c1: d.c1, c2: d.c2, surface: d.surface, shape: d.shape, layout: d.layout, banner: d.banner, order: d.order, off: d.off },
       }));
       const fresh = unwrap(await sb.rpc("get_my_card"));
-      if (fresh) { B.set({ handle: fresh.handle || "" }); pub.checked = !!fresh.is_public; savedHandle = fresh.handle || ""; }
+      if (fresh) { B.set({ handle: fresh.handle || "" }); savedHandle = fresh.handle || ""; }
       if (importedWaitlistCard && fresh) {
         try { localStorage.removeItem("xyntal-waitlist-card"); } catch { /* Karte ist bereits sicher auf dem Server. */ }
         importedWaitlistCard = false;
