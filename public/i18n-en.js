@@ -1119,6 +1119,7 @@ window.XYNTAL_EN = {
   "Willkommen bei": "Welcome to",
   "Einloggen oder Konto anlegen": "Sign in or create an account",
   "Passwort anzeigen": "Show password",
+  "Ausgeblendet": "Hidden",
   "Karte bearbeiten": "Edit card",
   "Bilder & Banner": "Images & banner",
   "Farbe und Form": "Colour and shape",

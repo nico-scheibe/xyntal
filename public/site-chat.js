@@ -3,7 +3,10 @@
 // des App-Servers (POST /site/chat, ohne Konto, mit Tageslimit). Der Verlauf bleibt nur in
 // diesem Tab (sessionStorage) und geht mit jeder Frage an den Server.
 (() => {
-  if (window.__xyntalSiteChat || document.body.classList.contains("page-admin")) return;
+  // In eingebetteten Seiten (z. B. Karten-Editor im Profil) zeigt schon die äußere Seite den Assistenten
+  let framed = false;
+  try { framed = window.self !== window.top; } catch { framed = true; }
+  if (framed || window.__xyntalSiteChat || document.body.classList.contains("page-admin")) return;
   window.__xyntalSiteChat = true;
 
   const api = () => (window.XYNTAL_CONFIG && window.XYNTAL_CONFIG.appApiUrl) || "https://api.xyntal.de";

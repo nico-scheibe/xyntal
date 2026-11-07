@@ -18,18 +18,75 @@
 .lp-link:hover .lp-arrow { color: var(--text); transform: translate(2px, -2px); }
 @media (prefers-reduced-motion: reduce) { .lp-link, .lp-arrow { transition: none; } .lp-link:hover { transform: none; } }
 
-/* Editor in /meine-karte */
-.le { display: grid; gap: 12px; }
+/* Editor in /meine-karte: jede Zeile eine kleine Karte – Symbol, Titel und Adresse, Werkzeuge rechts */
+.le { display: grid; gap: 14px; }
 .le-list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
-.le-row { display: grid; gap: 8px; padding: 12px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255, 255, 255, .02); }
-.le-row.is-off { opacity: .6; }
-.le-fields { display: grid; gap: 8px; grid-template-columns: 52px minmax(0, 1fr); align-items: center; }
-.le-fields input[type="text"], .le-fields input[type="url"], .le-fields select { width: 100%; min-width: 0; }
-.le-ico { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; background: rgba(255, 255, 255, .06); }
-.le-ico svg { width: 22px; height: 22px; }
-.le-url { grid-column: 1 / -1; }
-.le-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
-.le-tools .btn { padding-inline: 10px; }
-.le-clicks { margin-left: auto; color: var(--text-3); font-size: 13px; }
-.le-count { color: var(--text-3); font-size: 13px; }
-.le-empty { color: var(--text-3); font-size: 14px; }
+.le-row {
+  position: relative; display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 4px 12px; align-items: center;
+  padding: 12px; border: 1px solid var(--line); border-radius: 16px; background: rgba(255, 255, 255, .03);
+  transition: border-color .15s ease, background .15s ease, opacity .15s ease;
+}
+.le-row:hover { border-color: var(--line-2); }
+.le-row:focus-within { border-color: var(--line-2); background: rgba(255, 255, 255, .05); }
+.le-row.is-off { opacity: .55; }
+
+/* Symbol: Fläche mit kleinem Pfeil, die Auswahl liegt unsichtbar darüber */
+.le-ico {
+  position: relative; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 13px;
+  background: rgba(255, 255, 255, .07); color: var(--text); cursor: pointer; grid-row: span 2; align-self: start;
+}
+.le-ico [data-ico] { display: grid; place-items: center; }
+.le-ico [data-ico] svg { width: 22px; height: 22px; }
+.le-ico-chev { position: absolute; right: -3px; bottom: -3px; display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--line-2); color: var(--text); }
+.le-ico-chev svg { width: 12px; height: 12px; }
+.le-ico select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 16px; }
+.le-ico:focus-within { outline: 2px solid var(--text); outline-offset: 2px; }
+.le-ico:hover { background: rgba(255, 255, 255, .11); }
+
+/* Titel groß, Adresse klein darunter – ohne Kästen, nur eine Linie beim Fokus */
+.le-fields { display: grid; gap: 2px; min-width: 0; padding-right: 4px; }
+.le-fields input {
+  width: 100%; min-width: 0; margin: 0; padding: 4px 0; border: 0 !important; border-bottom: 1px solid transparent !important;
+  border-radius: 0; background: transparent !important; box-shadow: none !important; color: var(--text); outline: none;
+}
+.le-fields input:focus { border-bottom-color: var(--line-2) !important; }
+.le-fields input::placeholder { color: var(--text-3); }
+.le-title { font: 600 16px/1.3 var(--f-text); }
+.le-url { font: 400 14px/1.3 var(--f-text); color: var(--text-2) !important; }
+
+/* Werkzeuge: kleine runde Knöpfe in einer Reihe unter dem Text */
+.le-tools { grid-column: 2; display: flex; align-items: center; gap: 4px; margin-top: 6px; }
+.le-btn {
+  display: grid; place-items: center; width: 34px; height: 34px; margin: 0; padding: 0;
+  border: 1px solid transparent; border-radius: 10px; background: transparent; color: var(--text-3); cursor: pointer;
+  transition: color .15s ease, background .15s ease, border-color .15s ease;
+}
+.le-btn svg { width: 17px; height: 17px; }
+.le-btn:hover:not(:disabled) { color: var(--text); background: rgba(255, 255, 255, .07); }
+.le-btn:focus-visible { outline: 2px solid var(--text); outline-offset: 1px; }
+.le-btn:disabled { opacity: .3; cursor: default; }
+.le-btn[aria-pressed="true"] { color: var(--text); border-color: var(--line-2); }
+.le-btn-del { margin-left: auto; }
+.le-btn-del:hover:not(:disabled) { color: #F28B82; background: rgba(242, 139, 130, .1); }
+.le-tag { position: absolute; top: 12px; right: 12px; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--text-2); font: 500 11px/1.2 var(--f-text); }
+.le-clicks { position: absolute; right: 54px; bottom: 19px; color: var(--text-3); font-size: 12.5px; }
+
+/* Hinzufügen: gestrichelte Fläche über die ganze Breite */
+.le-add {
+  display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 52px; margin: 0;
+  border: 1px dashed var(--line-2); border-radius: 16px; background: transparent; color: var(--text-2);
+  font: 600 15px/1 var(--f-text); cursor: pointer; transition: color .15s ease, border-color .15s ease, background .15s ease;
+}
+.le-add span { font-size: 20px; font-weight: 400; line-height: 1; }
+.le-add:hover:not(:disabled) { color: var(--text); border-color: var(--text-3); background: rgba(255, 255, 255, .03); }
+.le-add:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.le-add:disabled { opacity: .4; cursor: default; }
+.le .mk-actions .btn { width: 100%; justify-content: center; }
+
+.le-count { display: grid; gap: 6px; margin: 0; color: var(--text-3); font-size: 12.5px; }
+.le-meter { display: block; height: 3px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.le-meter i { display: block; height: 100%; border-radius: 3px; background: var(--text-2); transition: width .2s ease; }
+.le-empty { margin: 0; padding: 18px; border: 1px solid var(--line); border-radius: 16px; color: var(--text-3); font-size: 14px; text-align: center; }
+.le-empty[hidden] { display: none; }
+
+@media (prefers-reduced-motion: reduce) { .le-row, .le-btn, .le-add, .le-meter i { transition: none; } }

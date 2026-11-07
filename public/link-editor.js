@@ -16,25 +16,40 @@
   // Eingabe ohne Schema („github.com/x“) wird zu https://
   const normalize = (u) => { const v = String(u || "").trim(); return v && !/^[a-z][a-z0-9+.-]*:/i.test(v) && /^[^\s/]+\.[^\s/]+/.test(v) ? `https://${v}` : v; };
 
+  // Kleine Symbole für die Werkzeuge einer Zeile
+  const TOOL = {
+    up: '<path d="M12 19V5M6 11l6-6 6 6"/>',
+    down: '<path d="M12 5v14M6 13l6 6 6-6"/>',
+    on: '<path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6z"/><circle cx="12" cy="12" r="2.6"/>',
+    off: '<path d="M2.5 12s3.5-6 9.5-6c1.6 0 3 .4 4.3 1M21.5 12s-3.5 6-9.5 6c-1.6 0-3-.4-4.3-1M4 4l16 16"/>',
+    del: '<path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13"/>',
+    chev: '<path d="m7 10 5 5 5-5"/>',
+  };
+  const tool = (k) => `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${TOOL[k]}</svg>`;
+
   function render() {
     list.innerHTML = rows.map((r, i) => `<li class="le-row${r.active ? "" : " is-off"}" data-i="${i}">
-        <div class="le-fields">
-          <span class="le-ico" data-ico>${I.svg(r.icon)}</span>
-          <input type="text" data-f="title" maxlength="60" value="${esc(r.title)}" placeholder="${esc(t("Titel, z. B. Mein Portfolio"))}" aria-label="${esc(t("Titel"))}">
+        <label class="le-ico" title="${esc(t("Symbol"))}">
+          <span data-ico>${I.svg(r.icon)}</span>
+          <span class="le-ico-chev">${tool("chev")}</span>
           <select data-f="icon" aria-label="${esc(t("Symbol"))}">${I.keys.map((k) => `<option value="${k}"${k === r.icon ? " selected" : ""}>${esc(t(I.labels[k]))}</option>`).join("")}</select>
+        </label>
+        <div class="le-fields">
+          <input type="text" class="le-title" data-f="title" maxlength="60" value="${esc(r.title)}" placeholder="${esc(t("Titel, z. B. Mein Portfolio"))}" aria-label="${esc(t("Titel"))}">
           <input type="url" class="le-url" data-f="url" maxlength="500" inputmode="url" value="${esc(r.url)}" placeholder="https://…" aria-label="${esc(t("Adresse"))}">
         </div>
         <div class="le-tools">
-          <button type="button" class="btn btn-glass btn-sm" data-act="up" aria-label="${esc(t("Nach oben"))}"${i === 0 ? " disabled" : ""}>↑</button>
-          <button type="button" class="btn btn-glass btn-sm" data-act="down" aria-label="${esc(t("Nach unten"))}"${i === rows.length - 1 ? " disabled" : ""}>↓</button>
-          <button type="button" class="btn btn-glass btn-sm" data-act="toggle" aria-pressed="${r.active ? "false" : "true"}">${esc(t(r.active ? "Ausblenden" : "Einblenden"))}</button>
-          <button type="button" class="btn btn-glass btn-sm" data-act="del">${esc(t("Löschen"))}</button>
-          ${paid && r.clicks != null ? `<span class="le-clicks" data-no-i18n>${Number(r.clicks)} ${esc(t("Klicks"))}</span>` : ""}
+          <button type="button" class="le-btn" data-act="up" title="${esc(t("Nach oben"))}" aria-label="${esc(t("Nach oben"))}"${i === 0 ? " disabled" : ""}>${tool("up")}</button>
+          <button type="button" class="le-btn" data-act="down" title="${esc(t("Nach unten"))}" aria-label="${esc(t("Nach unten"))}"${i === rows.length - 1 ? " disabled" : ""}>${tool("down")}</button>
+          <button type="button" class="le-btn" data-act="toggle" aria-pressed="${r.active ? "false" : "true"}" title="${esc(t(r.active ? "Ausblenden" : "Einblenden"))}" aria-label="${esc(t(r.active ? "Ausblenden" : "Einblenden"))}">${tool(r.active ? "on" : "off")}</button>
+          <button type="button" class="le-btn le-btn-del" data-act="del" title="${esc(t("Löschen"))}" aria-label="${esc(t("Löschen"))}">${tool("del")}</button>
         </div>
+        ${r.active ? "" : `<span class="le-tag">${esc(t("Ausgeblendet"))}</span>`}
+        ${paid && r.clicks != null ? `<span class="le-clicks" data-no-i18n>${Number(r.clicks)} ${esc(t("Klicks"))}</span>` : ""}
       </li>`).join("");
     empty.hidden = rows.length > 0;
     addBtn.disabled = busy || rows.length >= limit();
-    count.textContent = `${rows.length} / ${limit()} ${t("Links")}${paid ? "" : ` · ${t("Klickstatistik und bis zu 100 Links mit Plus")}`}`;
+    count.innerHTML = `<span class="le-meter" aria-hidden="true"><i style="width:${Math.min(100, (rows.length / limit()) * 100)}%"></i></span><span>${rows.length} / ${limit()} ${esc(t("Links"))}${paid ? "" : ` · ${esc(t("Klickstatistik und bis zu 100 Links mit Plus"))}`}</span>`;
   }
 
   list.addEventListener("input", (e) => {
