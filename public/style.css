@@ -796,6 +796,8 @@ td small { color: var(--text-3); }
 }
 .oauth-btn:hover { background: var(--panel-3); }
 .oauth-btn svg { width: 18px; height: 18px; flex: none; }
+.oauth-btn[data-provider="discord"] { background: #5865F2; border-color: #5865F2; color: #fff; }
+.oauth-btn[data-provider="discord"]:hover { background: #4E5AE8; border-color: #4E5AE8; }
 .phone-login { background: var(--panel); border: 1px solid var(--border); border-radius: var(--r-card); padding: 20px; }
 .phone-step { display: grid; gap: 12px; }
 @media (min-width: 560px) { .phone-step { grid-template-columns: 1fr auto; align-items: end; } }

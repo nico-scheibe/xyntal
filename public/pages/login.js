@@ -66,3 +66,16 @@ document.getElementById("forgot").addEventListener("click", async (e) => {
   if (error) setStatus(status, friendlyError(error), "error");
   else setStatus(status, "Falls es ein Konto mit dieser E-Mail gibt, ist ein Link zum Zurücksetzen unterwegs.", "ok");
 });
+
+// Passwort anzeigen oder verbergen (Auge im Feld)
+document.querySelectorAll("[data-eye]").forEach((eye) => {
+  const input = eye.parentElement.querySelector("input");
+  eye.addEventListener("click", () => {
+    const show = input.type === "password";
+    input.type = show ? "text" : "password";
+    eye.setAttribute("aria-pressed", String(show));
+    const label = show ? "Passwort verbergen" : "Passwort anzeigen";
+    eye.setAttribute("aria-label", window.XyntalI18n ? window.XyntalI18n.t(label) : label);
+    input.focus({ preventScroll: true });
+  });
+});

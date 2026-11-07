@@ -55,7 +55,7 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 | `supabase/migrations/20261107190000_banner_limits_table.sql` | Banner mit denselben Grenzen je Tarif wie das Profilbild: Video Plus 10 MB · 15 s, Pro 25 MB · 30 s, Ultra 60 MB · 60 s, Enterprise 150 MB · 2 min; GIF/WebP 4 / 8 / 16 / 32 MB; Admins ohne Grenze (`banner_video_limit_bytes` neu, Upload-Regel prüft auch GIF/WebP). `get_member_cards` liefert `avatar_path` mit (Profilbild auf den Karten in der App). Nach `20261107170000_avatar_video.sql`; **noch auszuführen** |
 | `supabase/migrations/20261107200000_cards_always_public.sql` | Mitgliederkarten sind immer öffentlich: Ein Trigger setzt `waitlist_cards.is_public` bei Karten mit Konto auf „hat einen Wunsch-Link“ (für `save_my_card` wie für den App-Server); meine-karte und die App verlangen deshalb einen Wunsch-Link. Ein Admin kann eine Karte weiter ausblenden, bis das Mitglied sie neu speichert. Bestehende Mitgliederkarten mit Link werden einmal öffentlich. Wartelisten-Karten ohne Konto bleiben unverändert. Nach `20261107190000_banner_limits_table.sql`; **noch auszuführen** |
 | `hosting/hetzner/` | Eigener Server (Hetzner): Website, App-Backend, HTTPS und Backups mit Docker Compose; Einrichtung und Umzug in `hosting/hetzner/README.md` |
-| `ANMELDUNG-EINRICHTEN.md` | Anleitung: Brevo-SMTP einrichten; Google, Apple, LinkedIn und SMS einschalten |
+| `ANMELDUNG-EINRICHTEN.md` | Anleitung: Brevo-SMTP einrichten; Google, Apple, Discord, LinkedIn und SMS einschalten |
 
 ## Seiten
 
@@ -65,7 +65,7 @@ Dann http://localhost:4173 öffnen. Der Server liefert nur die Dateien aus `publ
 | `/brief` | Der Brief von Nico: warum es Xyntal gibt, Stand der Beta, Bewerbung |
 | `/mitglied-werden` | Nur noch Weiterleitung auf `/beta#bewerben`: ein Konto gibt es ausschließlich mit der Beta-Bewerbung (alte Links, Aliase `/register`, `/signup`, `/registrieren` und die Desktop-App landen dort) |
 | `/beta` | Beta-Programm: was Tester bekommen, Bewerbung nur mit Konto. Gäste legen im selben Formular ein Konto an (E-Mail/Passwort oder Google/Apple); die Bewerbung wird bis zur E-Mail-Bestätigung im Browser zwischengespeichert und danach automatisch abgeschickt. Mitglieder sehen nur die Bewerbung oder den Stand ihrer Bewerbung; Bewerbungen erscheinen im Admin-Bereich |
-| `/login` | Einloggen per E-Mail, Google, Apple, LinkedIn oder Handynummer, „Passwort vergessen?“ |
+| `/login` | Login als Panel in der Mitte (`public/login.css`): „Willkommen bei Xyntal“, Umschalter Einloggen / Konto anlegen (führt zur Beta-Bewerbung), Google, Apple, Discord, LinkedIn oder Handynummer (je nachdem, was in Supabase eingeschaltet ist, siehe `ANMELDUNG-EINRICHTEN.md`), E-Mail und Passwort mit Anzeigen-Auge, „Passwort vergessen?“, 2FA-Code |
 | `/passwort-neu` | Neues Passwort setzen (Link aus der E-Mail) |
 | `/profil` | Profil bearbeiten, Passwort ändern, Konto löschen |
 | `/community` | Feed: Updates, Fragen, Erfolge mit Kommentaren und Likes (Gäste sehen nur öffentliche Beiträge) |
