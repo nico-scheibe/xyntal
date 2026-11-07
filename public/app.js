@@ -158,7 +158,7 @@ const MEDIA_TIERS = {
 };
 function mediaLimits(me) {
   if (!me || me.is_premium !== true) return { tier: "", label: "", videoBytes: 0, videoSeconds: 0, animatedBytes: 0 };
-  if (me.is_admin === true) return { tier: "admin", label: "Admin", videoBytes: null, videoSeconds: null, animatedBytes: null };
+  if (me.is_admin === true || me.premium_tier === "admin") return { tier: "admin", label: "Admin", videoBytes: null, videoSeconds: null, animatedBytes: null };
   const tier = MEDIA_TIERS[me.premium_tier] ? me.premium_tier : "plus";
   return { tier, ...MEDIA_TIERS[tier] };
 }

@@ -6,7 +6,7 @@
 --   pro          25 MB · 30 s       8 MB
 --   ultra        60 MB · 60 s       16 MB
 --   enterprise   150 MB · 2 min     32 MB
---   Admin        keine Grenze       keine Grenze
+--   admin        keine Grenze       keine Grenze   (Website-Admins und Admins der App)
 --
 -- • profiles.premium_tier: der bezahlte Tarif ('' = keiner). Setzt der App-Server beim
 --   Tarif-Abgleich (supabase/premiumSync.ts im App-Repo) oder ein Admin; Mitglieder nicht.
@@ -23,15 +23,15 @@ begin;
 alter table public.profiles add column if not exists premium_tier text not null default '';
 alter table public.profiles drop constraint if exists profiles_premium_tier_check;
 alter table public.profiles add constraint profiles_premium_tier_check
-  check (premium_tier in ('', 'plus', 'pro', 'ultra', 'enterprise'));
+  check (premium_tier in ('', 'plus', 'pro', 'ultra', 'enterprise', 'admin'));
 
--- Grenzen eines Profils. Admins (Website-Admin) haben keine.
+-- Grenzen eines Profils. Admins (Website-Admin, oder Stufe 'admin' für Admins der App) haben keine.
 create or replace function public.media_limits(p_id uuid)
 returns jsonb language sql stable security definer set search_path = '' as $$
   select case
     when p.id is null or not p.is_premium then
       jsonb_build_object('tier', '', 'video_bytes', 0, 'video_seconds', 0, 'animated_bytes', 0)
-    when p.is_admin then
+    when p.is_admin or p.premium_tier = 'admin' then
       jsonb_build_object('tier', 'admin', 'video_bytes', null, 'video_seconds', null, 'animated_bytes', null)
     else case coalesce(nullif(p.premium_tier, ''), 'plus')
       when 'pro' then jsonb_build_object('tier', 'pro', 'video_bytes', 26214400, 'video_seconds', 30, 'animated_bytes', 8388608)
