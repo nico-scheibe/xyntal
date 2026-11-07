@@ -50,7 +50,7 @@
           ? `<a class="btn btn-primary" href="/nachrichten?an=${encodeURIComponent(c.user_id)}">${esc(t("Nachricht schreiben"))}</a>`
           : "";
     page(`
-      <div class="pf">
+      <div class="pf pf--links">
         <aside class="pf-side">
           <div class="bp-stage${admin ? " pf-admin-stage" : ""}">${window.XyntalCardHtml(c, { t, heading: "h1", avatarAttrs: "data-pub-avatar" })}</div>
           <div class="pf-actions">
@@ -60,6 +60,7 @@
           </div>
         </aside>
         <div class="pf-main">
+          ${linksHtml(c)}
           ${eggHtml(c)}
           ${profileHtml(c)}
           ${me && UUID.test(c.user_id || "") && !own && window.XyntalApp ? `<section class="xm xm-public" aria-label="${esc(t("Eure Passung"))}" data-match hidden></section>` : ""}
@@ -149,6 +150,30 @@
 
   // Profilinfos aus dem Konto (nur wenn die Person ihr Profil öffentlich gemacht hat)
   const safeUrl = (u) => (/^https?:\/\/[^\s]+$/i.test(u || "") ? u : "");
+  // Link-Seite: frei gewählte Links der Person; ohne eigene Links die festen Angaben aus Karte und Profil
+  function linkItems(c) {
+    const own = Array.isArray(c.links) ? c.links.filter((l) => l && safeUrl(l.url) && String(l.title || "").trim()) : [];
+    if (own.length) return own;
+    const p = c.profile || {};
+    return [["LinkedIn", p.linkedin, "linkedin"], ["Instagram", p.instagram, "instagram"], ["Website", p.website, "globe"], ["Website", c.link, "globe"]]
+      .map(([title, url, icon]) => ({ title, url: safeUrl(url), icon }))
+      .filter((l, i, a) => l.url && a.findIndex((x) => x.url === l.url) === i);
+  }
+  function linksHtml(c) {
+    const items = linkItems(c), I = window.XyntalLinkIcons;
+    if (!items.length || !I) return "";
+    return `<ul class="lp-list" aria-label="${esc(t("Links"))}">${items.map((l) => `<li><a class="lp-link" href="${esc(l.url)}"${l.id && UUID.test(l.id) ? ` data-link-id="${esc(l.id)}"` : ""} target="_blank" rel="noopener noreferrer nofollow">
+        <span class="lp-ico">${I.svg(l.icon)}</span><span class="lp-txt"><b data-no-i18n>${esc(l.title)}</b><small data-no-i18n>${esc(I.hostOf(l.url))}</small></span><i class="lp-arrow" aria-hidden="true">↗</i></a></li>`).join("")}</ul>`;
+  }
+  // Klick zählen (Paid-Mitglieder sehen die Zahl im Editor); darf die Navigation nie aufhalten
+  root.addEventListener("click", (e) => {
+    const a = e.target.closest("[data-link-id]");
+    if (!a) return;
+    try {
+      fetch(`${SUPA}/rest/v1/rpc/track_link_click`, { method: "POST", keepalive: true,
+        headers: { apikey: KEY, Authorization: `Bearer ${KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ p_id: a.dataset.linkId }) }).catch(() => {});
+    } catch { /* Zählen ist optional */ }
+  });
   // Steckbrief: die wichtigsten Angaben der Karte auf einen Blick (nur was ausgefüllt ist)
   function factsHtml(c) {
     const hours = Number(c.hours) || 0;
@@ -165,8 +190,6 @@
     const p = c.profile || {};
     const text = (s) => (s && String(s).trim() ? String(s).trim() : "");
     const about = text(p.about), offer = text(p.offer), seek = text(p.seek);
-    const links = [["LinkedIn", p.linkedin], ["Instagram", p.instagram], ["Website", p.website], ["Website", c.link]]
-      .map(([l, u]) => [l, safeUrl(u)]).filter(([, u], i, a) => u && a.findIndex(([, x]) => x === u) === i);
     const skills = Array.isArray(c.skills) ? c.skills.filter((s) => text(s)) : [];
     const headline = p.headline || c.pitch || "";
     // Beim ersten User spricht das Ei (Sprechblase) – Adresse, Überschrift und „Über mich“ entfallen dort
@@ -176,7 +199,6 @@
       about && !egg ? `<section class="pf-section"><h2>${esc(t("Über mich"))}</h2><p class="pf-prose" data-no-i18n>${esc(about)}</p></section>` : "",
       offer || seek ? `<div class="pf-duo">${offer ? tile("pf-tile-offer", "Ich biete", offer) : ""}${seek ? tile("pf-tile-seek", "Ich suche", seek) : ""}</div>` : "",
       skills.length ? `<section class="pf-section"><h2>${esc(t("Skills"))}</h2><ul class="pf-chips" data-no-i18n>${skills.map((s) => `<li>${esc(s)}</li>`).join("")}</ul></section>` : "",
-      links.length ? `<section class="pf-section"><h2>${esc(t("Links"))}</h2><div class="pf-links">${links.map(([l, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener noreferrer nofollow"><span>${esc(t(l))}</span><small data-no-i18n>${esc(hostOf(u))}</small><i aria-hidden="true">↗</i></a>`).join("")}</div></section>` : "",
     ].join("");
     return `<header class="pf-head">${egg ? "" : `<p class="pf-address"><span data-no-i18n>xyntal.de/${esc(c.handle)}</span>${c.is_admin === true ? `<span class="pf-admin-chip"><i aria-hidden="true"></i>${esc(t("Offizielles Konto"))}</span>` : ""}</p>${headline ? `<p class="pf-headline" data-no-i18n>${esc(headline)}</p>` : ""}`}
         ${factsHtml(c)}</header>
