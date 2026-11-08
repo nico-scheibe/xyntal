@@ -1,0 +1,73 @@
+/* =====================================================================
+   Startseite, Kapitel 01 – „Heute / Mit Xyntal“: das Problem und wie Xyntal es löst.
+   Beim Scrollen wechselt die Grafik (story.js). Gleiche Farben wie front.css:
+   Grau für alles, --key-Blau nur für die Leute, die passen.
+   ===================================================================== */
+.story { padding: clamp(40px, 6vw, 80px) 0 clamp(24px, 4vw, 48px); border-top: 1px solid var(--line); }
+.story-title { margin-top: 28px; font: 400 clamp(1.8rem, 3.6vw, 2.8rem)/1.1 var(--f-serif); font-optical-sizing: auto; letter-spacing: -0.01em; max-width: 22ch; }
+.story-lead { margin-top: 14px; color: var(--text-2); font-size: 15px; max-width: 46ch; }
+
+.story-grid { display: grid; margin-top: clamp(24px, 4vw, 48px); }
+
+/* ---------- Bühne ---------- */
+.story-stage {
+  position: sticky; top: 64px; z-index: 2;
+  height: min(46vh, 420px); margin: 0 calc(-1 * var(--gutter));
+  background: var(--bg); border-bottom: 1px solid var(--line);
+  overflow: hidden;
+}
+.story-stage svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.story-phase {
+  position: absolute; left: var(--gutter); top: 14px; z-index: 1;
+  font: 500 12px/1 var(--f-mono); letter-spacing: 0.04em; color: var(--text-3);
+  transition: color 300ms ease;
+}
+.story-phase[data-phase="xyntal"] { color: var(--key); }
+.story-dots { position: absolute; right: var(--gutter); top: 14px; z-index: 1; display: flex; gap: 6px; }
+.story-dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--line-2); transition: background-color 300ms ease, transform 300ms ease; }
+.story-dots span.is-on { background: var(--text); transform: scale(1.25); }
+
+.story-tags { position: absolute; inset: 0; pointer-events: none; }
+.story-tag {
+  position: absolute; left: 0; top: 0;
+  padding: 5px 9px; border: 1px solid var(--line-2); border-radius: 2px;
+  background: var(--bg-2); color: var(--text-2);
+  font: 500 12px/1.3 var(--f-mono); white-space: nowrap;
+  opacity: 0; transform: translate(-50%, -50%) translateY(6px);
+  transition: opacity 400ms ease, transform 400ms ease, color 300ms ease, border-color 300ms ease;
+}
+.story-tag.is-on { opacity: 1; transform: translate(-50%, -50%); }
+.story-tag.is-off { color: var(--text-3); text-decoration: line-through; text-decoration-color: var(--text-3); }
+.story-tag.is-key { color: var(--key); border-color: rgba(143, 184, 255, 0.4); }
+.story-tag.is-me { color: var(--text); border-color: var(--text-3); }
+.story-tag.is-msg { color: var(--text); white-space: normal; width: 15em; font-family: var(--f-sans); font-size: 13px; line-height: 1.4; }
+
+/* ---------- Schritte ---------- */
+.story-steps { list-style: none; margin: 0; padding: 0; }
+.story-step { display: grid; align-content: start; gap: 12px; min-height: 60vh; padding: 32px 0 40px; opacity: 0.35; transition: opacity 400ms ease; }
+.story-step.is-active { opacity: 1; }
+.story-step:last-child { min-height: 52vh; }
+.story-kicker { font: 500 12px/1 var(--f-mono); letter-spacing: 0.04em; color: var(--text-3); }
+.story-step[data-phase="xyntal"] .story-kicker { color: var(--key); }
+.story-step h3 { margin: 0; font: 400 clamp(1.45rem, 2.6vw, 2.05rem)/1.2 var(--f-serif); font-optical-sizing: auto; letter-spacing: -0.01em; max-width: 24ch; }
+.story-step p:not(.story-kicker) { margin: 0; color: var(--text-2); max-width: 44ch; }
+.story-note { font-size: 15px; }
+
+@media (min-width: 900px) {
+  .story-grid { grid-template-columns: 5fr 7fr; gap: 56px; align-items: start; }
+  .story-steps { grid-column: 1; grid-row: 1; }
+  .story-stage {
+    grid-column: 2; grid-row: 1;
+    top: 96px; height: min(calc(100vh - 140px), 600px); margin: 0;
+    border: 1px solid var(--line); background: var(--bg);
+  }
+  .story-phase { left: 20px; top: 18px; }
+  .story-dots { right: 20px; top: 18px; }
+  .story-step { min-height: 78vh; align-content: center; padding: 40px 0; }
+  .story-step:first-child { min-height: 60vh; align-content: start; padding-top: 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .story-tag, .story-step, .story-dots span, .story-phase { transition: none; }
+}
+@media (forced-colors: active) { .story-stage { border: 1px solid CanvasText; } }
