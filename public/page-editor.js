@@ -18,7 +18,7 @@
       <button type="button" class="pe-btn" data-add="text">+ ${esc(t("Text"))}</button>
       <button type="button" class="pe-btn" data-add="link">+ ${esc(t("Link"))}</button>
       <label class="pe-btn" tabindex="0" data-upload-label>+ ${esc(t("Bild"))}<input type="file" accept="image/jpeg,image/png,image/webp,image/gif" data-upload hidden></label>
-      <button type="button" class="pe-btn" data-add="block">${esc(t("Bausteine"))}</button>
+      <button type="button" class="pe-btn" data-add="block">+ ${esc(t("Mehr"))}</button>
       <button type="button" class="pe-btn" data-add="bg">${esc(t("Hintergrund"))}</button>
       <i class="pe-sep" aria-hidden="true"></i>
       <button type="button" class="pe-btn" data-undo title="${esc(t("Rückgängig (Strg+Z)"))}" aria-label="${esc(t("Rückgängig"))}" disabled>↶</button>
@@ -110,6 +110,20 @@
       <label class="pe-field"><span>${esc(t("Höhe"))}</span><input type="range" min="240" max="2400" step="10" data-height value="${page.h}"></label>
       <p class="pe-count">${page.items.length} / ${limit()} ${esc(t("Elemente"))}</p>
       <button type="button" class="pe-btn pe-danger" data-reset>${esc(t("Auf Standardseite zurücksetzen"))}</button>`;
+    // Vorlagen im Menü „+ Mehr“: Typ und Startwerte
+    const MAKE = [
+      { key: "heading", group: "text", icon: "H", label: "Überschrift", type: "text", v: { text: "Große Überschrift", w: 520, h: 76, size: 56, weight: 700, font: "serif" } },
+      { key: "quote", group: "text", icon: "❝", label: "Zitat", type: "text", v: { text: "„Ein gutes Zitat über dich oder deine Idee.“", w: 420, h: 110, size: 26, weight: 400, font: "serif", align: "center", color: "#ece6d4" } },
+      { key: "sticker", group: "text", icon: "🚀", label: "Sticker", type: "text", v: { text: "🚀", w: 120, h: 120, size: 88, align: "center" } },
+      { key: "badge", group: "text", icon: "●", label: "Badge", type: "text", v: { text: "Offen für Projekte", w: 220, h: 44, size: 15, weight: 700, align: "center", bg: "#2f6b4f", color: "#d9ffe9", radius: 999 } },
+      { key: "card", group: "text", icon: "▭", label: "Info-Fenster", type: "text", v: { text: "Titel\nEin paar Sätze über ein Projekt, ein Angebot oder eine Neuigkeit.", w: 320, h: 150, size: 17, weight: 400, bg: "#262633", radius: 20, bw: 1, bc: "#3d3d52", sh: true } },
+      { key: "rect", group: "shape", icon: "■", label: "Rechteck", type: "shape", v: { kind: "rect", w: 260, h: 160, radius: 24, bg: "#5b8cff" } },
+      { key: "circle", group: "shape", icon: "●", label: "Kreis", type: "shape", v: { kind: "circle", w: 180, h: 180, bg: "#b95cff", bg2: "#3fd8ff" } },
+      { key: "line", group: "shape", icon: "―", label: "Linie", type: "shape", v: { kind: "line", w: 360, h: 4, bg: "#eceae4" } },
+      { key: "glow", group: "shape", icon: "◐", label: "Verlauf", type: "shape", v: { kind: "rect", w: 420, h: 260, radius: 32, bg: "#ff5fd2", bg2: "#5b8cff", o: 0.35 } },
+      { key: "button", group: "act", icon: "⬭", label: "Knopf", type: "button", v: {} },
+      { key: "icons", group: "act", icon: "◎", label: "Link-Symbole", type: "icons", v: {} },
+    ];
     let popName = "";
     function showPop(name) {
       popName = popName === name ? "" : name;
@@ -121,9 +135,21 @@
           : `<p>${esc(t("Du hast noch keine Links."))} <a class="text-link" href="/profil#links">${esc(t("Links anlegen"))}</a></p>`;
       } else if (name === "block") {
         const free = Object.keys(C.BLOCKS).filter((k) => blocks[k] && !page.items.some((i) => i.type === "block" && i.kind === k));
-        pop.innerHTML = `<h2>${esc(t("Bausteine deines Profils"))}</h2>` + (free.length
-          ? free.map((k) => `<button type="button" class="pe-item" data-block="${k}">${esc(t(C.BLOCKS[k][0]))}</button>`).join("")
-          : `<p>${esc(t("Alle Bausteine liegen schon auf der Seite."))}</p>`);
+        const tile = (attr, icon, label) => `<button type="button" class="pe-tile" ${attr}><span aria-hidden="true">${icon}</span>${esc(t(label))}</button>`;
+        pop.innerHTML = `
+          <h2>${esc(t("Vorlagen"))}</h2>
+          <div class="pe-tiles">${MAKE.filter((m) => m.group === "text").map((m) => tile(`data-make="${m.key}"`, m.icon, m.label)).join("")}</div>
+          <h2>${esc(t("Formen"))}</h2>
+          <div class="pe-tiles">${MAKE.filter((m) => m.group === "shape").map((m) => tile(`data-make="${m.key}"`, m.icon, m.label)).join("")}</div>
+          <h2>${esc(t("Interaktiv"))}</h2>
+          <div class="pe-tiles">${MAKE.filter((m) => m.group === "act").map((m) => tile(`data-make="${m.key}"`, m.icon, m.label)).join("")}
+            ${tile("data-embed-open", "▶", "Video / Musik")}</div>
+          <div class="pe-embed" data-embed-box hidden>
+            <input type="url" data-embed-url placeholder="${esc(t("Adresse von YouTube, Vimeo oder Spotify"))}">
+            <button type="button" class="pe-btn pe-primary" data-embed-go>${esc(t("Einbetten"))}</button>
+          </div>
+          <h2>${esc(t("Bausteine deines Profils"))}</h2>
+          ${free.length ? `<div class="pe-tiles">${free.map((k) => tile(`data-block="${k}"`, "▣", C.BLOCKS[k][0])).join("")}</div>` : `<p>${esc(t("Alle Bausteine liegen schon auf der Seite."))}</p>`}`;
       } else pop.innerHTML = bgPanel();
     }
     function drawSide() { if (popName === "bg") pop.innerHTML = bgPanel(); }
@@ -156,15 +182,42 @@
           ${color$("color", "Textfarbe", it.color)}
           ${color$("bg", "Hintergrundfarbe", it.bg || "#2a2a2a")}
           <label class="pe-field"><span>${esc(t("Symbol zeigen"))}</span><input type="checkbox" data-p="icon" ${it.icon ? "checked" : ""}></label>`;
+      } else if (it.type === "shape") {
+        body = `${seg$("kind", [["rect", "Rechteck"], ["circle", "Kreis"], ["line", "Linie"]], it.kind)}
+          ${color$("bg", "Farbe", it.bg)}
+          <label class="pe-field"><span>${esc(t("Verlauf"))}</span><input type="checkbox" data-bg2on ${it.bg2 ? "checked" : ""}></label>
+          ${it.bg2 ? color$("bg2", "Zweite Farbe", it.bg2) : ""}`;
+      } else if (it.type === "button") {
+        body = `<label class="pe-field"><span>${esc(t("Beschriftung"))}</span></label>
+          <input type="text" data-p="text" maxlength="80" value="${esc(it.text)}">
+          <label class="pe-field"><span>${esc(t("Adresse"))}</span></label>
+          <input type="text" data-p="url" maxlength="500" value="${esc(it.url)}" placeholder="https://…" autocapitalize="off" spellcheck="false">
+          ${it.url ? "" : `<p class="pe-hint">${esc(t("Ohne gültige https://-Adresse ist der Knopf auf der Seite nicht klickbar."))}</p>`}
+          ${range$("size", "Schriftgröße", it.size, 8, 60)}
+          ${color$("color", "Textfarbe", it.color)}
+          ${color$("bg", "Hintergrundfarbe", it.bg || "#eceae4")}`;
+      } else if (it.type === "icons") {
+        body = `<p class="pe-hint">${esc(t("Zeigt alle deine Links als Symbole. Links verwaltest du im Profil unter Links."))}</p>
+          ${range$("size", "Größe", it.size, 12, 60)}
+          ${seg$("align", [["left", "Links"], ["center", "Mitte"], ["right", "Rechts"]], it.align)}
+          ${color$("color", "Symbolfarbe", it.color)}
+          ${color$("bg", "Hintergrund", it.bg || "#2a2a2a")}`;
+      } else if (it.type === "embed") {
+        body = `<p class="pe-hint">${esc(t({ youtube: "YouTube-Video", vimeo: "Vimeo-Video", spotify: "Spotify" }[it.provider]))}</p>
+          <input type="url" data-embed-change placeholder="${esc(t("Neue Adresse einfügen"))}">`;
       } else {
         body = `${seg$("fit", [["cover", "Füllen"], ["contain", "Einpassen"]], it.fit)}
           <label class="pe-field"><span>${esc(t("Beschreibung"))}</span></label>
           <input type="text" data-p="alt" maxlength="120" value="${esc(it.alt)}" placeholder="${esc(t("Alternativtext für Screenreader"))}">`;
       }
       const block = it.type === "block";
-      insp.innerHTML = `<div class="pe-insp-head" data-insp-drag title="${esc(t("Ziehen zum Verschieben"))}"><h2>${esc(t(block ? C.BLOCKS[it.kind][0] : it.type === "text" ? "Text" : it.type === "link" ? "Link" : "Bild"))}</h2><button type="button" class="pe-x" data-insp-close aria-label="${esc(t("Schließen"))}">×</button></div>
+      const TITLES = { text: "Text", link: "Link", image: "Bild", shape: "Form", button: "Knopf", icons: "Link-Symbole", embed: "Video / Musik" };
+      const frame = block ? "" : `${range$("bw", "Rahmen", it.bw, 0, 16)}${it.bw ? color$("bc", "Rahmenfarbe", it.bc) : ""}
+        <label class="pe-field"><span>${esc(t("Schatten"))}</span><input type="checkbox" data-p="sh" ${it.sh ? "checked" : ""}></label>`;
+      insp.innerHTML = `<div class="pe-insp-head" data-insp-drag title="${esc(t("Ziehen zum Verschieben"))}"><h2>${esc(t(block ? C.BLOCKS[it.kind][0] : TITLES[it.type]))}</h2><button type="button" class="pe-x" data-insp-close aria-label="${esc(t("Schließen"))}">×</button></div>
         ${body}
-        ${block ? "" : range$("radius", "Rundung", it.radius, 0, 120)}
+        ${block || (it.type === "shape" && it.kind !== "rect") ? "" : range$("radius", "Rundung", Math.min(it.radius, 200), 0, 200)}
+        ${frame}
         ${range$("o", "Deckkraft", it.o, 0.1, 1, 0.05)}
         ${range$("rot", "Drehung", it.rot, -180, 180)}
         ${it.rot ? `<button type="button" class="pe-btn" data-set="rot" data-val="0">${esc(t("Gerade stellen"))}</button>` : ""}
@@ -216,19 +269,20 @@
     // Wächst ein Element über die Fläche hinaus, wächst die Fläche mit
     function fit(it) { const need = Math.ceil(it.y + it.h + 24); if (need > page.h) page.h = Math.min(C.MAX_H, need); }
     function setProp(it, k, v) {
-      if (k === "text") it.text = String(v).slice(0, 1000);
-      else if (k === "icon") it.icon = !!v;
-      else if (["color", "bg"].includes(k)) it[k] = C.hex(v, it[k]);
-      else if (["align", "font", "fit", "ref", "alt"].includes(k)) it[k] = v;
+      if (k === "text") it.text = String(v).slice(0, it.type === "button" ? 80 : 1000);
+      else if (k === "url") it.url = C.safeUrl(String(v).trim().slice(0, 500));
+      else if (k === "icon" || k === "sh") it[k] = !!v;
+      else if (["color", "bg", "bg2", "bc"].includes(k)) it[k] = C.hex(v, it[k]);
+      else if (["align", "font", "fit", "ref", "alt", "kind"].includes(k)) it[k] = v;
       else if (k === "weight") it.weight = Number(v) === 400 ? 400 : 700;
       else {
-        const R = { x: [-C.FULL, C.FULL * 2], y: [-4000, 4000], w: [16, C.FULL * 2], h: [16, 4000], size: [8, 160], radius: [0, 200], o: [0.1, 1], rot: [-360, 360] }[k];
+        const R = { x: [-C.FULL, C.FULL * 2], y: [-4000, 4000], w: [16, C.FULL * 2], h: [16, 4000], size: [8, 160], radius: [0, 999], o: [0.1, 1], rot: [-360, 360], bw: [0, 16] }[k];
         if (R) it[k] = round(num(v, R[0], R[1], it[k]));
       }
     }
     insp.addEventListener("input", (e) => {
       const it = current(), k = e.target.dataset.p;
-      if (!it || !k) return;
+      if (!it || !k || k === "url") return;
       touch(`${it.id}:${k}`);
       setProp(it, k, e.target.type === "checkbox" ? e.target.checked : e.target.value);
       if (["y", "h"].includes(k)) fit(it);
@@ -254,7 +308,15 @@
     });
     insp.addEventListener("change", (e) => {
       const it = current();
-      if (it && e.target.dataset.bgon !== undefined) { touch(); it.bg = e.target.checked ? "#2a2a2a" : ""; drawAll(); }
+      if (!it) return;
+      if (e.target.dataset.bgon !== undefined) { touch(); it.bg = e.target.checked ? "#2a2a2a" : ""; drawAll(); }
+      else if (e.target.dataset.bg2on !== undefined) { touch(); it.bg2 = e.target.checked ? "#3fd8ff" : ""; drawAll(); }
+      else if (e.target.dataset.p === "url") { touch(); setProp(it, "url", e.target.value); if (!it.url && e.target.value.trim()) say(t("Bitte eine Adresse mit https:// angeben."), "error"); drawAll(); }
+      else if (e.target.dataset.embedChange !== undefined) {
+        const got = C.parseEmbed(e.target.value);
+        if (!got) { say(t("Diese Adresse lässt sich nicht einbetten. Möglich sind YouTube, Vimeo und Spotify."), "error"); return; }
+        touch(); it.provider = got.provider; it.eid = got.id; drawAll();
+      }
     });
 
     // ---- Seite: Hintergrund, Höhe ----
@@ -400,6 +462,21 @@
         if (kind === "text") { popName = ""; pop.hidden = true; add("text"); insp.querySelector("textarea")?.select(); return; }
         if (kind === "window") { popName = ""; pop.hidden = true; add("text", { text: "Neues Fenster", w: 260, h: 120, size: 18, weight: 400, bg: "#2a2a2a", radius: 20 }); insp.querySelector("textarea")?.select(); return; }
         showPop(kind);
+        return;
+      }
+      const make = e.target.closest("[data-make]");
+      if (make) {
+        const m = MAKE.find((x) => x.key === make.dataset.make);
+        if (m) { popName = ""; pop.hidden = true; add(m.type, { ...C.DEFAULTS[m.type], ...m.v }); if (m.type === "text") insp.querySelector("textarea")?.select(); }
+        return;
+      }
+      if (e.target.closest("[data-embed-open]")) { const box = pop.querySelector("[data-embed-box]"); box.hidden = false; box.querySelector("input").focus(); return; }
+      if (e.target.closest("[data-embed-go]")) {
+        const got = C.parseEmbed(pop.querySelector("[data-embed-url]").value);
+        if (!got) { say(t("Diese Adresse lässt sich nicht einbetten. Möglich sind YouTube, Vimeo und Spotify."), "error"); return; }
+        const r = C.EMBEDS[got.provider].ratio, w = got.provider === "spotify" ? 420 : 520;
+        popName = ""; pop.hidden = true;
+        add("embed", { provider: got.provider, eid: got.id, w, h: got.provider === "spotify" ? 152 : Math.round(w * r[1] / r[0]) });
         return;
       }
       const pick = e.target.closest("[data-pick]"), blk = e.target.closest("[data-block]");

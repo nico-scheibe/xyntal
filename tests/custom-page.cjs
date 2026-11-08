@@ -12,7 +12,7 @@ let saved = null;
 
 const stub = `window.supabase = { createClient: () => ({
   auth: { getSession: async () => ({ data: { session: { user: { id: '${UID}' } } } }) },
-  from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { is_premium: false } }) }) }) }),
+  from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { is_premium: true } }) }) }) }),
   rpc: async (name, args) => {
     const r = await fetch('/__rpc/' + name, { method: 'POST', body: JSON.stringify(args || {}) });
     return { data: await r.json(), error: null };
@@ -93,12 +93,32 @@ const stub = `window.supabase = { createClient: () => ({
   assert.ok(Math.abs(rot - 90) < 3, 'Griff nach rechts = 90°, war ' + rot);
   // 3. Rückgängig
   await pg.keyboard.press('Escape');
+  // 3b. Menü „+ Mehr“: Vorlagen, Formen, Knopf, Link-Symbole, Video
+  const before = await pg.locator('.pc-item').count();
+  for (const key of ['heading', 'quote', 'sticker', 'badge', 'card', 'rect', 'circle', 'line', 'glow', 'button', 'icons']) {
+    await pg.click('[data-add="block"]'); await pg.click(`[data-make="${key}"]`); await pg.keyboard.press('Escape');
+  }
+  assert.equal(await pg.locator('.pc-item').count(), before + 11, 'alle Vorlagen eingefügt');
+  assert.equal(await pg.locator('.pc-icons .pc-ib').count(), 3, 'Link-Symbole zeigen alle Links');
+  await pg.click('.pc-item.pc-button');
+  await pg.fill('input[data-p="url"]', 'https://cal.com/nico'); await pg.press('input[data-p="url"]', 'Enter');
+  await pg.locator('input[data-p="url"]').evaluate((el) => el.dispatchEvent(new Event('change', { bubbles: true })));
+  await pg.check('input[data-p="sh"]');
+  await pg.keyboard.press('Escape');
+  await pg.click('[data-add="block"]'); await pg.click('[data-embed-open]');
+  await pg.fill('[data-embed-url]', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=10'); await pg.click('[data-embed-go]');
+  assert.equal(await pg.locator('.pc-embed iframe[src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"]').count(), 1, 'YouTube eingebettet');
+  await pg.keyboard.press('Escape');
+  await pg.click('[data-add="block"]'); await pg.click('[data-embed-open]');
+  await pg.fill('[data-embed-url]', 'javascript:alert(1)'); await pg.click('[data-embed-go]');
+  assert.match(await pg.locator('[data-status]').textContent(), /nicht einbetten/);
+  await pg.keyboard.press('Escape'); await pg.click('[data-add="block"]');
   // 4. Speichern
   await pg.click('[data-save]');
   await pg.waitForFunction(() => document.querySelector('[data-status]').textContent.includes('Gespeichert'));
   assert.ok(saved && saved.items.length >= 3);
   assert.equal(await pg.evaluate(() => location.pathname), '/nico', 'Editor läuft auf der eigenen Adresse');
-  assert.ok(saved.items.every((i) => ['text', 'link', 'image', 'block'].includes(i.type)));
+  assert.ok(saved.items.every((i) => ['text', 'link', 'image', 'block', 'shape', 'button', 'embed', 'icons'].includes(i.type)));
   await pg.screenshot({ path: process.env.SHOT_EDITOR || '/tmp/editor.png' });
 
   // 5. Öffentliche Seite zeigt das gespeicherte Layout, Text wird nicht als HTML gedeutet
@@ -110,6 +130,9 @@ const stub = `window.supabase = { createClient: () => ({
   await pub.waitForSelector('.pc .pc-item', { timeout: 8000 });
   assert.equal(await pub.locator('.pc-item[style*="rotate("]').count(), 1, 'Drehung öffentlich sichtbar');
   assert.ok(await pub.locator('a.pc-l[href="https://example.com"]').count() === 1, 'Link ist klickbar');
+  assert.equal(await pub.locator('a.pc-btn[href="https://cal.com/nico"]').count(), 1, 'Knopf mit Adresse');
+  assert.equal(await pub.locator('.pc-embed iframe').count(), 1, 'Video öffentlich');
+  assert.equal(await pub.locator('.pc-icons a.pc-ib').count(), 2, 'Symbole (2 Links, 1 Text zum Kopieren)');
   assert.equal(await pub.evaluate(() => window.__xss), undefined, 'kein Skript aus Text');
   assert.equal(await pub.locator('.pc img[src=x]').count(), 0);
   await pub.setViewportSize({ width: 390, height: 800 });

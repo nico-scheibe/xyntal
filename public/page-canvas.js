@@ -16,7 +16,24 @@
   const FONTS = { sans: "var(--f-text, system-ui, sans-serif)", serif: "'Source Serif 4', Georgia, serif", mono: "ui-monospace, 'IBM Plex Mono', monospace" };
   const SRC = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp|gif)$/;
   const UUID = /^[0-9a-f-]{36}$/;
-  const TYPES = ["text", "link", "image", "block"];
+  const TYPES = ["text", "link", "image", "block", "shape", "button", "embed", "icons"];
+  // Einbettungen: nur diese Anbieter, nur geprüfte Ids (Adressen baut page-canvas.js selbst); CSP frame-src in hosting/daki/server.cjs
+  const EMBEDS = {
+    youtube: { re: /^[A-Za-z0-9_-]{11}$/, src: (id) => `https://www.youtube-nocookie.com/embed/${id}`, ratio: [16, 9] },
+    vimeo: { re: /^[0-9]{6,12}$/, src: (id) => `https://player.vimeo.com/video/${id}`, ratio: [16, 9] },
+    spotify: { re: /^(track|album|playlist|episode|show|artist)\/[A-Za-z0-9]{22}$/, src: (id) => `https://open.spotify.com/embed/${id}`, ratio: [5, 2] },
+  };
+  // Adresse aus YouTube, Vimeo oder Spotify → { provider, id } oder null
+  function parseEmbed(url) {
+    let u; try { u = new URL(String(url || "").trim()); } catch { return null; }
+    const h = u.hostname.replace(/^(www\.|m\.)/, ""), parts = u.pathname.split("/").filter(Boolean);
+    let provider = "", id = "";
+    if (h === "youtu.be") { provider = "youtube"; id = parts[0]; }
+    else if (h === "youtube.com" || h === "youtube-nocookie.com") { provider = "youtube"; id = u.searchParams.get("v") || (["shorts", "embed", "live"].includes(parts[0]) ? parts[1] : ""); }
+    else if (h === "vimeo.com" || h === "player.vimeo.com") { provider = "vimeo"; id = parts.find((x) => /^[0-9]{6,12}$/.test(x)) || ""; }
+    else if (h === "open.spotify.com") { provider = "spotify"; const q = parts.filter((x) => !/^intl-/.test(x) && x !== "embed"); id = q.length >= 2 ? `${q[0]}/${q[1]}` : ""; }
+    return EMBEDS[provider] && EMBEDS[provider].re.test(id || "") ? { provider, id } : null;
+  }
   // Bausteine der Profilseite: Inhalt liefert u.js aus dem Profil; hier Anzeigename und natürliche Breite in px (schmale / breite Seite)
   const BLOCKS = { card: ["Karte", 360, 340], head: ["Steckbrief", 440, 620], about: ["Über mich", 440, 620], offer: ["Ich biete", 340, 300], seek: ["Ich suche", 340, 300], skills: ["Skills", 440, 620] };
   const natOf = (kind, pw) => BLOCKS[kind][pw === NARROW ? 1 : 2];
@@ -26,6 +43,10 @@
     text: { w: 240, h: 56, text: "Dein Text", size: 24, weight: 700, align: "left", font: "sans", color: "#eceae4", bg: "", radius: 0 },
     link: { w: 280, h: 56, size: 16, color: "#eceae4", bg: "#2a2a2a", radius: 14, icon: true },
     image: { w: 180, h: 180, radius: 16, fit: "cover" },
+    shape: { w: 200, h: 200, radius: 24, bg: "#5b8cff" },
+    button: { w: 240, h: 56, size: 17, color: "#1c1c1c", bg: "#eceae4", radius: 999, text: "Schreib mir" },
+    embed: { w: 480, h: 270, radius: 16 },
+    icons: { w: 320, h: 56, size: 22, color: "#eceae4", bg: "#2a2a2a", radius: 999, align: "center" },
     block: { w: 300, h: 200, radius: 0 },
   };
 
@@ -39,9 +60,11 @@
       w: round(num(raw.w, 16, FULL * 2, d.w)), h: round(num(raw.h, 16, MAX_H, d.h)),
       o: round(num(raw.o, 0.1, 1, 1)),
       rot: round(num(raw.rot, -360, 360, 0)),
-      radius: round(num(raw.radius, 0, 200, d.radius)),
+      radius: round(num(raw.radius, 0, 999, d.radius)),
+      // Rahmen und Schatten (alle außer Profil-Bausteinen)
+      bw: round(num(raw.bw, 0, 16, 0)), bc: hex(raw.bc, "#eceae4"), sh: raw.sh === true,
     };
-    if (type !== "image" && type !== "block") {
+    if (type === "text" || type === "link" || type === "button" || type === "icons") {
       it.size = round(num(raw.size, 8, 160, d.size));
       it.color = hex(raw.color, d.color);
       it.bg = raw.bg === "" ? "" : hex(raw.bg, d.bg);
@@ -58,6 +81,19 @@
     } else if (type === "block") {
       if (!BLOCKS[raw.kind]) return null;
       it.kind = raw.kind;
+    } else if (type === "shape") {
+      it.kind = ["rect", "circle", "line"].includes(raw.kind) ? raw.kind : "rect";
+      it.bg = hex(raw.bg, d.bg); it.bg2 = hex(raw.bg2, "");
+    } else if (type === "button") {
+      it.text = String(raw.text ?? d.text).slice(0, 80);
+      it.url = safeUrl(String(raw.url || "").slice(0, 500));
+      it.align = "center";
+    } else if (type === "icons") {
+      it.align = ["left", "center", "right"].includes(raw.align) ? raw.align : d.align;
+    } else if (type === "embed") {
+      const e = EMBEDS[raw.provider];
+      if (!e || !e.re.test(String(raw.eid || ""))) return null;
+      it.provider = raw.provider; it.eid = raw.eid;
     } else {
       if (!SRC.test(raw.src || "")) return null;
       it.src = raw.src;
@@ -95,10 +131,39 @@
       if (!inner) return o.edit ? `<div class="pc-item pc-block is-empty" data-id="${esc(it.id)}" style="${pos.replace(/height:[^;]+;/, "")}"><div class="pc-blk-empty">${esc(BLOCKS[it.kind][0])}</div></div>` : "";
       return `<div class="pc-item pc-block" data-id="${esc(it.id)}" data-kind="${it.kind}" style="${pos.replace(/height:[^;]+;/, "")}"><div class="pc-blk" style="width:${natOf(it.kind, pw)}px;zoom:${zoomOf(it, pw)}">${inner}</div></div>`;
     }
-    if (it.type === "image") {
-      return `<div ${attrs}><img src="${esc(`${o.base}/storage/v1/object/public/page-media/${it.src}`)}" alt="${esc(it.alt)}" draggable="false" loading="lazy" decoding="async" style="object-fit:${it.fit};border-radius:${uu(it.radius)}"></div>`;
+    // Rahmen/Schatten für Kästen
+    const deco = `${it.bw ? `border:${uu(it.bw)} solid ${it.bc};` : ""}${it.sh ? "box-shadow:0 18px 40px -16px rgba(0,0,0,.75);" : ""}`;
+    if (it.type === "shape") {
+      const fill = it.bg2 ? `linear-gradient(135deg, ${it.bg}, ${it.bg2})` : it.bg;
+      const r = it.kind === "circle" ? "50%" : it.kind === "line" ? "999px" : uu(it.radius);
+      return `<div ${attrs.replace('class="pc-item', `class="pc-item is-${it.kind}`)}><div class="pc-shape" style="background:${fill};border-radius:${r};${deco}"></div></div>`;
     }
-    const box = `--fs:${it.size};font-size:${uu(it.size)};color:${it.color};${it.bg ? `background:${it.bg};` : ""}border-radius:${uu(it.radius)}`;
+    if (it.type === "embed") {
+      const e = EMBEDS[it.provider], title = { youtube: "YouTube", vimeo: "Vimeo", spotify: "Spotify" }[it.provider];
+      return `<div ${attrs.replace('class="pc-item', `class="pc-item is-${it.provider}`)}><iframe class="pc-frame" src="${esc(e.src(it.eid))}" title="${title}" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" style="border-radius:${uu(it.radius)};${deco}"></iframe></div>`;
+    }
+    if (it.type === "icons") {
+      const I = window.XyntalLinkIcons, list = (links || []).filter((l) => l && l.active !== false);
+      const btn = `--fs:${it.size};width:${uu(it.size * 2.2)};height:${uu(it.size * 2.2)};color:${it.color};background:${it.bg || "transparent"};border-radius:${it.radius >= 999 ? "50%" : uu(it.radius)};${deco}`;
+      const one = (l) => {
+        const ico = I ? I.svg(l.icon) : "";
+        if (o.edit) return `<span class="pc-ib" style="${btn}">${ico}</span>`;
+        return safeUrl(l.url)
+          ? `<a class="pc-ib" style="${btn}" href="${esc(l.url)}" data-link-id="${esc(l.id)}" target="_blank" rel="noopener noreferrer nofollow" aria-label="${esc(l.title)}">${ico}</a>`
+          : `<button type="button" class="pc-ib pc-copy" style="${btn}" data-link-id="${esc(l.id)}" data-copy-text="${esc(l.url)}" aria-label="${esc(l.title)}: ${esc(l.url)}">${ico}<span class="pc-copied" aria-live="polite"></span></button>`;
+      };
+      if (!list.length && !o.edit) return "";
+      return `<div ${attrs}><div class="pc-icons" style="justify-content:${{ left: "flex-start", center: "center", right: "flex-end" }[it.align]};gap:${uu(it.size * 0.6)}">${list.length ? list.map(one).join("") : `<span class="pc-blk-empty">${esc(o.t ? o.t("Noch keine Links") : "Noch keine Links")}</span>`}</div></div>`;
+    }
+    if (it.type === "button") {
+      const box = `--fs:${it.size};font-size:${uu(it.size)};color:${it.color};background:${it.bg || "transparent"};border-radius:${uu(it.radius)};${deco}`;
+      if (o.edit || !it.url) return `<div ${attrs}><div class="pc-l pc-btn" style="${box}"><b data-no-i18n>${esc(it.text)}</b></div></div>`;
+      return `<div ${attrs}><a class="pc-l pc-btn" style="${box}" href="${esc(it.url)}" target="_blank" rel="noopener noreferrer nofollow"><b data-no-i18n>${esc(it.text)}</b></a></div>`;
+    }
+    if (it.type === "image") {
+      return `<div ${attrs}><img src="${esc(`${o.base}/storage/v1/object/public/page-media/${it.src}`)}" alt="${esc(it.alt)}" draggable="false" loading="lazy" decoding="async" style="object-fit:${it.fit};border-radius:${uu(it.radius)};${deco}"></div>`;
+    }
+    const box = `--fs:${it.size};font-size:${uu(it.size)};color:${it.color};${it.bg ? `background:${it.bg};` : ""}border-radius:${uu(it.radius)};${deco}`;
     if (it.type === "text") {
       return `<div ${attrs}><div class="pc-t${it.bg ? " has-bg" : ""}" data-no-i18n style="${box};text-align:${it.align};font-weight:${it.weight};font-family:${FONTS[it.font]}">${esc(it.text)}</div></div>`;
     }
@@ -132,5 +197,5 @@
   }
   function zoomOf(it, pw) { return `calc(var(--k, 1) * ${it.w} / ${natOf(it.kind, pw)})`; }
 
-  window.XyntalPageCanvas = { BLOCKS, NARROW, WIDE, FULL, WIDTHS, natOf, mount, zoomOf, W, MIN_H, MAX_H, DEFAULTS, normalize, html, itemHtml, background, hex, num, round, esc, safeUrl };
+  window.XyntalPageCanvas = { EMBEDS, parseEmbed, BLOCKS, NARROW, WIDE, FULL, WIDTHS, natOf, mount, zoomOf, W, MIN_H, MAX_H, DEFAULTS, normalize, html, itemHtml, background, hex, num, round, esc, safeUrl };
 })();

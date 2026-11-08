@@ -355,8 +355,9 @@ const SECURITY_HEADERS = {
   'Permissions-Policy': 'camera=(), microphone=(self), geolocation=(), payment=()',
   // frame-src: die eigene Seite (Profil bettet die Karte ein) und genau die Player, die
   // /nachrichten nach einem Klick auf „Abspielen“ lädt (YouTube ohne Cookies, TikTok,
-  // Instagram, Vimeo). Vorschaubilder kommen als blob: vom App-Server (img-src blob:).
-  'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://rralgrlujoupprwlvoyo.supabase.co https://media.giphy.com https://media0.giphy.com https://media1.giphy.com https://media2.giphy.com https://media3.giphy.com https://media4.giphy.com https://i.giphy.com; media-src 'self' blob:; font-src 'self'; connect-src 'self' https://api.xyntal.de https://rralgrlujoupprwlvoyo.supabase.co wss://rralgrlujoupprwlvoyo.supabase.co https://*.sibforms.com; frame-src 'self' https://www.youtube-nocookie.com https://www.tiktok.com https://www.instagram.com https://player.vimeo.com; form-action 'self' https://*.sibforms.com; frame-ancestors 'self'; base-uri 'self'; object-src 'none'",
+  // Instagram, Vimeo) sowie die Einbettungen der freien Seite xyntal.de/name (YouTube, Vimeo, Spotify; page-canvas.js).
+  // Vorschaubilder kommen als blob: vom App-Server (img-src blob:).
+  'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://rralgrlujoupprwlvoyo.supabase.co https://media.giphy.com https://media0.giphy.com https://media1.giphy.com https://media2.giphy.com https://media3.giphy.com https://media4.giphy.com https://i.giphy.com; media-src 'self' blob:; font-src 'self'; connect-src 'self' https://api.xyntal.de https://rralgrlujoupprwlvoyo.supabase.co wss://rralgrlujoupprwlvoyo.supabase.co https://*.sibforms.com; frame-src 'self' https://www.youtube-nocookie.com https://www.tiktok.com https://www.instagram.com https://player.vimeo.com https://open.spotify.com; form-action 'self' https://*.sibforms.com; frame-ancestors 'self'; base-uri 'self'; object-src 'none'",
 };
 http.createServer((req,res) => {
   for (const [name, value] of Object.entries(SECURITY_HEADERS)) res.setHeader(name, value);
