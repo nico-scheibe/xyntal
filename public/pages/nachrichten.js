@@ -340,7 +340,8 @@
     if (f) { S.filter = f.dataset.filter; renderList(); return; }
     const o = e.target.closest("[data-open]");
     if (o) open(o.dataset.open);
-    if (e.target.closest("[data-new]")) newConversation();
+    if (e.target.closest("[data-new-group]")) newConversation({ asGroup: true });
+    else if (e.target.closest("[data-new]")) newConversation();
   });
 
   // ---------- Gespräch öffnen ----------
@@ -1117,29 +1118,36 @@
   }
 
   // ---------- Neues Gespräch ----------
-  function newConversation() {
+  // Wie in der App: „Neue Gruppe“ macht auch mit einer Person eine Gruppe; Name und Bild
+  // erscheinen nur im Gruppenmodus (von Anfang an oder ab der zweiten gewählten Person).
+  const GROUP_EMOJI = ["", "🚀", "💡", "🎯", "🛠️", "🎨", "📈", "🤝", "🔥", "🌱", "📚", "🎉"];
+  function newConversation({ asGroup = false } = {}) {
     const dlg = document.createElement("dialog");
     dlg.className = "xm-dialog xc-new";
     const chosen = new Map();
     dlg.innerHTML = `<form method="dialog" class="xm-dialog-body">
-      <h2>${esc(t("Neues Gespräch"))}</h2>
+      <h2>${esc(t(asGroup ? "Neue Gruppe" : "Neues Gespräch"))}</h2>
       <label>${esc(t("Personen suchen"))}<input type="search" data-q placeholder="${esc(t("Name eingeben …"))}" autocomplete="off"></label>
       <div class="xc-chosen" data-chosen></div>
       <ul class="xc-results" data-results></ul>
       <label data-group-name hidden>${esc(t("Gruppenname (optional)"))}<input name="title" maxlength="120" placeholder="${esc(t("z. B. Launch-Team"))}"></label>
+      <div class="xc-emoji-row" data-group-emoji hidden role="radiogroup" aria-label="${esc(t("Gruppenbild"))}">${GROUP_EMOJI.map((x, i) => `<button type="button" role="radio" aria-checked="${i === 0}" data-emoji="${x}" aria-label="${esc(x || t("Initialen"))}">${x || "Aa"}</button>`).join("")}</div>
       <p class="xm-error" data-err></p>
       <div class="xm-row"><button class="btn btn-small" value="ok" data-start disabled>${esc(t("Gespräch starten"))}</button><button class="btn btn-small btn-ghost" value="cancel" formnovalidate>${esc(t("Abbrechen"))}</button></div>
     </form>`;
     document.body.append(dlg);
     const q = dlg.querySelector("[data-q]"), results = dlg.querySelector("[data-results]");
-    let timer = 0, found = [];
+    let timer = 0, found = [], emoji = "";
     const sync = () => {
+      const groupMode = asGroup || chosen.size > 1;
       dlg.querySelector("[data-chosen]").innerHTML = [...chosen.values()].map((u) => `<button type="button" class="xm-chip" aria-pressed="true" data-unpick="${esc(u.id)}"><span data-no-i18n>${esc(u.displayName)}</span> ×</button>`).join("");
-      dlg.querySelector("[data-group-name]").hidden = chosen.size < 2;
+      dlg.querySelector("[data-group-name]").hidden = !groupMode;
+      dlg.querySelector("[data-group-emoji]").hidden = !groupMode;
       const start = dlg.querySelector("[data-start]");
       start.disabled = chosen.size === 0;
-      start.textContent = t(chosen.size > 1 ? "Gruppe erstellen" : "Gespräch starten");
+      start.textContent = t(groupMode ? "Gruppe erstellen" : "Gespräch starten");
     };
+    sync();
     q.addEventListener("input", () => {
       clearTimeout(timer);
       timer = setTimeout(async () => {
@@ -1153,6 +1161,8 @@
     dlg.addEventListener("click", (e) => {
       const p = e.target.closest("[data-pick-user]");
       if (p) { const u = found.find((x) => x.id === p.dataset.pickUser); if (chosen.has(u.id)) chosen.delete(u.id); else chosen.set(u.id, u); p.setAttribute("aria-pressed", String(chosen.has(u.id))); sync(); }
+      const em = e.target.closest("[data-emoji]");
+      if (em) { emoji = em.dataset.emoji; dlg.querySelectorAll("[data-emoji]").forEach((b) => b.setAttribute("aria-checked", String(b === em))); }
       const un = e.target.closest("[data-unpick]");
       if (un) { chosen.delete(un.dataset.unpick); sync(); }
     });
@@ -1163,7 +1173,7 @@
       if (!go) return;
       try {
         const ids = [...chosen.keys()];
-        const { conversation } = await X.api("POST", "/conversations", ids.length === 1 ? { kind: "dm", memberIds: ids } : { kind: "group", memberIds: ids, title });
+        const { conversation } = await X.api("POST", "/conversations", ids.length === 1 && !asGroup ? { kind: "dm", memberIds: ids } : { kind: "group", memberIds: ids, title, emoji });
         await loadConversations();
         open(conversation.id);
       } catch (err) { say(fail(err), "error"); notice.innerHTML = `<div class="notice">${esc(fail(err))}</div>`; }
