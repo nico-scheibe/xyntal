@@ -1,5 +1,6 @@
 -- Freie Seite: Hover-Effekte für Knöpfe, Links, Link-Symbole, Fenster/Texte, Bilder und Formen (hover: Name aus fester
--- Liste; Darstellung in public/page-canvas.css). Ersetzt save_my_page aus 20261108150000_page_embed_own.sql.
+-- Liste; Darstellung in public/page-canvas.css). Außerdem darf der Animations-Code jetzt normales CSS enthalten
+-- (Klammern, @keyframes): erlaubt sind zusätzlich ( ) @ _ – weiterhin keine Anführungszeichen, <, >, /, \. Ersetzt save_my_page aus 20261108150000_page_embed_own.sql.
 -- Danach ausführen. Darf mehrfach laufen.
 begin;
 
@@ -58,7 +59,7 @@ begin
       if jsonb_typeof(v_item->'anim') <> 'object'
          or coalesce(v_item->'anim'->>'p', '') not in ('fade', 'up', 'left', 'zoom', 'float', 'pulse', 'bounce', 'wobble', 'shake', 'spin', 'glow', 'rainbow', 'custom')
          or char_length(coalesce(v_item->'anim'->>'code', '')) > 1500
-         or coalesce(v_item->'anim'->>'code', '') !~ '^[A-Za-z0-9äöüÄÖÜß%#{}:;.,[:space:]-]*$' then
+         or coalesce(v_item->'anim'->>'code', '') !~ '^[A-Za-z0-9äöüÄÖÜß%#{}():;.,@_[:space:]-]*$' then
         raise exception 'invalid animation' using errcode = '22023';
       end if;
     end if;

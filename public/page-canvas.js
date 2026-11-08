@@ -56,8 +56,9 @@
   // Leuchtfarbe: die hellere der beiden Farben des Elements, damit Leuchten/Ring auf dunklem Grund sichtbar sind
   const lum = (h) => { const n = parseInt(String(h || "").slice(1), 16); return Number.isFinite(n) ? ((n >> 16) * 299 + ((n >> 8) & 255) * 587 + (n & 255) * 114) / 1000 : 0; };
   const glowOf = (it) => { const a = it.bg || "", b = it.color || ""; return (lum(a) >= lum(b) ? a : b) || "#eceae4"; };
-  // Eigene Animation: nur diese Zeichen (keine Klammern, Anführungszeichen, <, /, @) – dieselbe Regel prüft save_my_page
-  const CODE_CHARS = /[^A-Za-z0-9äöüÄÖÜß%#{}:;.,\s-]/g;
+  // Eigene Animation: nur diese Zeichen (keine Anführungszeichen, <, >, /, \) – dieselbe Regel prüft save_my_page.
+  // Klammern und @ sind erlaubt, damit normales CSS (@keyframes, translateY(-20px)) geht; das CSS wird ohnehin neu gebaut.
+  const CODE_CHARS = /[^A-Za-z0-9äöüÄÖÜß%#{}():;.,@_\s-]/g;
   function cleanAnim(a) {
     if (!a || typeof a !== "object" || !(ANIMS[a.p] || a.p === "custom")) return null;
     const loopDefault = a.p === "custom" ? true : ANIMS[a.p][1];
@@ -79,39 +80,88 @@
     helligkeit: "bright", brightness: "bright", "schräg": "skew", schraeg: "skew", skew: "skew", farbe: "color", color: "color",
     hintergrund: "bg", background: "bg",
   };
+  // Versteht die Mini-Sprache UND normales CSS (@keyframes, transform: translateY(-20px) rotate(10deg), opacity,
+  // filter: blur() hue-rotate(), color, background). Alles wird geprüft und neu geschrieben – nichts geht ungeprüft durch.
   function compileAnim(code, name) {
-    const src = String(code || "");
+    let src = String(code || "");
     if (!src.trim()) return { error: "Noch kein Code." };
-    if (CODE_CHARS.test(src)) { CODE_CHARS.lastIndex = 0; return { error: "Erlaubt sind nur Buchstaben, Zahlen, % # { } : ; . , und -." }; }
+    if (CODE_CHARS.test(src)) { CODE_CHARS.lastIndex = 0; return { error: "Nicht erlaubt: Anführungszeichen, <, >, / und \\. Farben bitte als #rrggbb." }; }
     CODE_CHARS.lastIndex = 0;
+    // @keyframes name { … } und Selektoren davor (.box { animation … }) entfernen: nur die Schritte zählen
+    const kf = src.match(/@keyframes\s+[\w-]+\s*\{([\s\S]*)\}\s*$/i);
+    if (kf) src = kf[1];
     const frames = [];
-    const rest = src.replace(/(\d{1,3}(?:\.\d+)?%|von|bis|from|to)\s*\{([^{}]*)\}/gi, (m, at, body) => {
-      const pct = /^(von|from)$/i.test(at) ? 0 : /^(bis|to)$/i.test(at) ? 100 : Number(at.slice(0, -1));
-      frames.push({ pct, body });
+    const rest = src.replace(/((?:\s*(?:\d{1,3}(?:\.\d+)?%|von|bis|from|to)\s*,?)+)\{([^{}]*)\}/gi, (m, stops, body) => {
+      stops.split(",").map((x) => x.trim()).filter(Boolean).forEach((at) => {
+        const pct = /^(von|from)$/i.test(at) ? 0 : /^(bis|to)$/i.test(at) ? 100 : Number(at.slice(0, -1));
+        frames.push({ pct, body });
+      });
       return "";
     });
-    if (rest.trim()) return { error: `Nicht verstanden: „${rest.trim().slice(0, 30)}“. Aufbau: 0% { drehen: 10 }` };
+    if (rest.trim()) return { error: `Nicht verstanden: „${rest.trim().slice(0, 30)}“. Aufbau: 0% { drehen: 10 } oder 0% { transform: rotate(10deg) }` };
     if (frames.length < 2) return { error: "Mindestens zwei Schritte, z. B. 0% { … } und 100% { … }." };
-    const n = (v, lo, hi) => { const x = Number(v); if (!Number.isFinite(x) || x < lo || x > hi) throw new Error(`Zahl außerhalb ${lo} bis ${hi}: ${v}`); return x; };
+    // Zahl mit optionaler Einheit (px, deg, turn, %) in Grenzen
+    const n = (v, lo, hi, unit) => {
+      const m = String(v ?? "").trim().match(/^(-?\d*\.?\d+)(px|deg|turn|%)?$/i);
+      if (!m) throw new Error(`Zahl erwartet: „${v ?? ""}“`);
+      let x = Number(m[1]);
+      if (m[2] && m[2].toLowerCase() === "turn") x *= 360;
+      if (m[2] === "%" && unit === "f") x /= 100;
+      if (!Number.isFinite(x) || x < lo || x > hi) throw new Error(`Zahl außerhalb ${lo} bis ${hi}: ${v}`);
+      return x;
+    };
+    const px = (v) => `calc(${n(v, -3000, 3000)}px * var(--k, 1))`;
     const out = [];
     try {
       frames.forEach(({ pct, body }) => {
         if (!(pct >= 0 && pct <= 100)) throw new Error(`Prozent muss zwischen 0 und 100 liegen: ${pct}%`);
         const tf = [], fl = [], css = [];
+        // CSS-Funktionen wie translateY(-20px) rotate(10deg) scale(1.1) blur(4px)
+        const fns = (val, allowed) => {
+          const list = [...val.matchAll(/([a-z-]+)\(([^()]*)\)/gi)];
+          if (!list.length || val.replace(/([a-z-]+)\(([^()]*)\)/gi, "").trim()) throw new Error(`Nicht verstanden: „${val.slice(0, 40)}“`);
+          list.forEach(([, fn, args]) => {
+            const a = args.split(/[\s,]+/).filter(Boolean), f = fn.toLowerCase();
+            if (!allowed.includes(f)) throw new Error(`Nicht unterstützt: ${fn}()`);
+            if (f === "translate") tf.push(`translate(${px(a[0])}, ${px(a[1] ?? 0)})`);
+            else if (f === "translatex") tf.push(`translateX(${px(a[0])})`);
+            else if (f === "translatey") tf.push(`translateY(${px(a[0])})`);
+            else if (f === "rotate" || f === "rotatez") tf.push(`rotate(${n(a[0], -3600, 3600)}deg)`);
+            else if (f === "scale") tf.push(`scale(${n(a[0], 0, 10, "f")}, ${n(a[1] ?? a[0], 0, 10, "f")})`);
+            else if (f === "scalex") tf.push(`scaleX(${n(a[0], 0, 10, "f")})`);
+            else if (f === "scaley") tf.push(`scaleY(${n(a[0], 0, 10, "f")})`);
+            else if (f === "skew") tf.push(`skew(${n(a[0], -80, 80)}deg, ${n(a[1] ?? 0, -80, 80)}deg)`);
+            else if (f === "skewx") tf.push(`skewX(${n(a[0], -80, 80)}deg)`);
+            else if (f === "skewy") tf.push(`skewY(${n(a[0], -80, 80)}deg)`);
+            else if (f === "blur") fl.push(`blur(calc(${n(a[0], 0, 60)}px * var(--k, 1)))`);
+            else if (f === "hue-rotate") fl.push(`hue-rotate(${n(a[0], -3600, 3600)}deg)`);
+            else if (f === "brightness") fl.push(`brightness(${n(a[0], 0, 5, "f")})`);
+            else if (f === "saturate") fl.push(`saturate(${n(a[0], 0, 10, "f")})`);
+            else if (f === "contrast") fl.push(`contrast(${n(a[0], 0, 5, "f")})`);
+            else if (f === "grayscale") fl.push(`grayscale(${n(a[0], 0, 1, "f")})`);
+          });
+        };
+        const color = (v) => { const h = hex(String(v || "").trim(), ""); if (!h) throw new Error(`Farbe als #rrggbb angeben: ${v || ""}`); return h; };
         body.split(";").map((x) => x.trim()).filter(Boolean).forEach((decl) => {
           const i = decl.indexOf(":");
           if (i < 1) throw new Error(`„${decl.slice(0, 30)}“ braucht die Form name: wert`);
-          const key = PROPS[decl.slice(0, i).trim().toLowerCase()], vals = decl.slice(i + 1).trim().split(/[\s,]+/).filter(Boolean);
+          const rawKey = decl.slice(0, i).trim().toLowerCase(), val = decl.slice(i + 1).trim();
+          // normales CSS
+          if (rawKey === "transform") return fns(val, ["translate", "translatex", "translatey", "rotate", "rotatez", "scale", "scalex", "scaley", "skew", "skewx", "skewy"]);
+          if (rawKey === "filter") return fns(val, ["blur", "hue-rotate", "brightness", "saturate", "contrast", "grayscale"]);
+          if (rawKey === "background-color") return void css.push(`background-color:${color(val)}`);
+          // Mini-Sprache (und opacity, color, background)
+          const key = PROPS[rawKey], vals = val.split(/[\s,]+/).filter(Boolean);
           if (!key) throw new Error(`Unbekannt: „${decl.slice(0, i).trim()}“`);
-          if (key === "move") { const x = n(vals[0], -3000, 3000), y = n(vals[1] ?? 0, -3000, 3000); tf.push(`translate(calc(${x}px * var(--k, 1)), calc(${y}px * var(--k, 1)))`); }
+          if (key === "move") tf.push(`translate(${px(vals[0])}, ${px(vals[1] ?? 0)})`);
           else if (key === "rot") tf.push(`rotate(${n(vals[0], -3600, 3600)}deg)`);
-          else if (key === "scale") tf.push(`scale(${n(vals[0], 0, 10)}, ${n(vals[1] ?? vals[0], 0, 10)})`);
+          else if (key === "scale") tf.push(`scale(${n(vals[0], 0, 10, "f")}, ${n(vals[1] ?? vals[0], 0, 10, "f")})`);
           else if (key === "skew") tf.push(`skew(${n(vals[0], -80, 80)}deg, ${n(vals[1] ?? 0, -80, 80)}deg)`);
-          else if (key === "op") css.push(`opacity:${n(vals[0], 0, 1)}`);
+          else if (key === "op") css.push(`opacity:${n(vals[0], 0, 1, "f")}`);
           else if (key === "blur") fl.push(`blur(calc(${n(vals[0], 0, 60)}px * var(--k, 1)))`);
           else if (key === "hue") fl.push(`hue-rotate(${n(vals[0], -3600, 3600)}deg)`);
-          else if (key === "bright") fl.push(`brightness(${n(vals[0], 0, 5)})`);
-          else { const h = hex(vals[0], ""); if (!h) throw new Error(`Farbe als #rrggbb angeben: ${vals[0] || ""}`); css.push(`${key === "color" ? "color" : "background-color"}:${h}`); }
+          else if (key === "bright") fl.push(`brightness(${n(vals[0], 0, 5, "f")})`);
+          else css.push(`${key === "color" ? "color" : "background-color"}:${color(vals[0])}`);
         });
         if (tf.length) css.push(`transform:${tf.join(" ")}`);
         if (fl.length) css.push(`filter:${fl.join(" ")}`);
