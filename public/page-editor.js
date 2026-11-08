@@ -45,14 +45,14 @@
     const el = stage.querySelector(".pe-sel"), it = current();
     if (!el) return;
     if (!it) { el.remove(); return; }
-    Object.assign(el.style, { left: u(it.x), top: u(it.y), width: u(it.w), height: u(it.h) });
+    Object.assign(el.style, { left: u(it.x), top: u(it.y), width: u(it.w), height: u(it.h), transform: it.rot ? `rotate(${it.rot}deg)` : "" });
   }
   function drawCanvas() {
     stage.innerHTML = C.html(page, { links, base: cfg.supabaseUrl, edit: true, t });
     const cv = stage.querySelector(".pc");
     const it = current();
     if (it) {
-      cv.insertAdjacentHTML("beforeend", `<div class="pe-sel"><i data-h="nw"></i><i data-h="ne"></i><i data-h="sw"></i><i data-h="se"></i></div>`);
+      cv.insertAdjacentHTML("beforeend", `<div class="pe-sel"><i data-h="rot" title="${esc(t("Drehen (Umschalt = 15°-Schritte)"))}"></i><i data-h="nw"></i><i data-h="ne"></i><i data-h="sw"></i><i data-h="se"></i></div>`);
       placeOverlay();
     }
     $("[data-count]").textContent = `${page.items.length} / ${limit()} ${t("Elemente")}`;
@@ -99,6 +99,8 @@
       ${body}
       ${range$("radius", "Rundung", it.radius, 0, 120)}
       ${range$("o", "Deckkraft", it.o, 0.1, 1, 0.05)}
+      ${range$("rot", "Drehung", it.rot, -180, 180)}
+      ${it.rot ? `<button type="button" class="pe-btn" data-set="rot" data-val="0">${esc(t("Gerade stellen"))}</button>` : ""}
       <h2>${esc(t("Position"))}</h2>
       ${num$("x", "Links", it.x, -480, 960)}${num$("y", "Oben", it.y, -4000, 4000)}${num$("w", "Breite", it.w, 16, 960)}${num$("h", "Höhe", it.h, 16, 4000)}
       <div class="pe-row">
@@ -132,7 +134,7 @@
     else if (["align", "font", "fit", "ref", "alt"].includes(k)) it[k] = v;
     else if (k === "weight") it.weight = Number(v) === 400 ? 400 : 700;
     else {
-      const R = { x: [-480, 960], y: [-4000, 4000], w: [16, 960], h: [16, 4000], size: [8, 160], radius: [0, 200], o: [0.1, 1] }[k];
+      const R = { x: [-480, 960], y: [-4000, 4000], w: [16, 960], h: [16, 4000], size: [8, 160], radius: [0, 200], o: [0.1, 1], rot: [-360, 360] }[k];
       if (R) it[k] = round(num(v, R[0], R[1], it[k]));
     }
   }
@@ -178,6 +180,7 @@
   // ---- Ziehen und Skalieren (Maus, Stift, Finger) ----
   let drag = null;
   const scale = () => C.W / stage.querySelector(".pc").getBoundingClientRect().width;
+  const centerOf = (id) => { const el = stage.querySelector(`.pc-item[data-id="${CSS.escape(id)}"]`), r = el && el.getBoundingClientRect(); return r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : { x: 0, y: 0 }; };
   stage.addEventListener("pointerdown", (e) => {
     if (e.button !== 0) return;
     const handleEl = e.target.closest("[data-h]"), itemEl = e.target.closest(".pc-item");
@@ -186,7 +189,7 @@
     if (!it) return;
     e.preventDefault();
     if (sel !== id) { sel = id; drawCanvas(); drawInsp(); }
-    drag = { id, mode: handleEl ? handleEl.dataset.h : "move", x0: e.clientX, y0: e.clientY, start: { x: it.x, y: it.y, w: it.w, h: it.h }, s: scale(), moved: false, pid: e.pointerId };
+    drag = { id, mode: handleEl ? handleEl.dataset.h : "move", x0: e.clientX, y0: e.clientY, start: { x: it.x, y: it.y, w: it.w, h: it.h, rot: it.rot }, s: scale(), moved: false, pid: e.pointerId, c: centerOf(id) };
     stage.setPointerCapture(e.pointerId);
   });
   stage.addEventListener("pointermove", (e) => {
@@ -198,15 +201,24 @@
     }
     if (drag.mode === "move") {
       it.x = round(num(b.x + dx, 16 - b.w, C.W - 16, b.x)); it.y = round(num(b.y + dy, 16 - b.h, page.h - 16, b.y));
+    } else if (drag.mode === "rot") {
+      // Der Griff über dem Element zeigt zum Zeiger
+      let a = Math.atan2(e.clientY - drag.c.y, e.clientX - drag.c.x) * 180 / Math.PI + 90;
+      if (a > 180) a -= 360;
+      it.rot = round(e.shiftKey ? Math.round(a / 15) * 15 : a);
     } else {
-      // Gegenüberliegende Ecke bleibt stehen
-      const west = drag.mode.includes("w"), north = drag.mode.includes("n");
-      const w = round(num(west ? b.w - dx : b.w + dx, 16, 960, b.w)), h = round(num(north ? b.h - dy : b.h + dy, 16, 4000, b.h));
-      it.w = w; it.h = h; if (west) it.x = round(b.x + b.w - w); if (north) it.y = round(b.y + b.h - h);
+      // Gegenüberliegende Ecke bleibt stehen; bei gedrehtem Element wird in dessen Achsen gerechnet
+      const sx = drag.mode.includes("w") ? -1 : 1, sy = drag.mode.includes("n") ? -1 : 1;
+      const th = (b.rot || 0) * Math.PI / 180, cos = Math.cos(th), sin = Math.sin(th);
+      const lx = dx * cos + dy * sin, ly = -dx * sin + dy * cos;
+      const w = round(num(b.w + sx * lx, 16, 960, b.w)), h = round(num(b.h + sy * ly, 16, 4000, b.h));
+      const px = sx * (w - b.w) / 2, py = sy * (h - b.h) / 2;
+      const cx = b.x + b.w / 2 + px * cos - py * sin, cy = b.y + b.h / 2 + px * sin + py * cos;
+      it.w = w; it.h = h; it.x = round(cx - w / 2); it.y = round(cy - h / 2);
     }
     // Direkt am Element, ohne die Fläche neu aufzubauen
     const el = stage.querySelector(`.pc-item[data-id="${CSS.escape(it.id)}"]`);
-    if (el) Object.assign(el.style, { left: u(it.x), top: u(it.y), width: u(it.w), height: u(it.h) });
+    if (el) Object.assign(el.style, { left: u(it.x), top: u(it.y), width: u(it.w), height: u(it.h), transform: it.rot ? `rotate(${it.rot}deg)` : "" });
     placeOverlay();
   });
   const endDrag = (e) => {

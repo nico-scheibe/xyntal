@@ -54,9 +54,16 @@ const stub = `window.supabase = { createClient: () => ({
   assert.ok(b2.width - b1.width > 60, 'Ecke ändert die Breite');
   await pg.fill('textarea[data-p="text"]', 'Hallo <b>Welt</b>');
   await pg.fill('input[data-p="color"]', '#ff0000');
+  // 2b. Drehen: Regler und Griff über dem Element
+  await pg.fill('input[data-p="rot"]', '30');
+  assert.match(await pg.locator('.pc-item').last().getAttribute('style'), /rotate\(30deg\)/);
+  const rh = await pg.locator('.pe-sel i[data-h="rot"]').boundingBox(), box = await pg.locator('.pc-item').last().boundingBox();
+  const cx = box.x + box.width / 2, cy = box.y + box.height / 2;
+  await pg.mouse.move(rh.x + 7, rh.y + 7); await pg.mouse.down(); await pg.mouse.move(cx + 150, cy, { steps: 6 }); await pg.mouse.up();
+  const rot = Number(await pg.locator('input[data-p="rot"]').inputValue());
+  assert.ok(Math.abs(rot - 90) < 3, 'Griff nach rechts = 90°, war ' + rot);
   // 3. Rückgängig
   await pg.keyboard.press('Escape');
-  await pg.click('[data-undo]');
   // 4. Speichern
   await pg.click('[data-save]');
   await pg.waitForFunction(() => document.querySelector('[data-status]').textContent.includes('Gespeichert'));
@@ -71,6 +78,7 @@ const stub = `window.supabase = { createClient: () => ({
   await pub.route('**/rest/v1/rpc/get_public_card', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ ...card, page: saved, design: {} }) }));
   await pub.goto(`${base}/nico`);
   await pub.waitForSelector('.pc .pc-item', { timeout: 8000 });
+  assert.equal(await pub.locator('.pc-item[style*="rotate("]').count(), 1, 'Drehung öffentlich sichtbar');
   assert.ok(await pub.locator('a.pc-l[href="https://example.com"]').count() === 1, 'Link ist klickbar');
   assert.equal(await pub.evaluate(() => window.__xss), undefined, 'kein Skript aus Text');
   assert.equal(await pub.locator('.pc img[src=x]').count(), 0);

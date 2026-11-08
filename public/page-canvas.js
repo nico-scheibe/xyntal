@@ -29,6 +29,7 @@
       x: round(num(raw.x, -W, W * 2, 0)), y: round(num(raw.y, -MAX_H, MAX_H, 0)),
       w: round(num(raw.w, 16, W * 2, d.w)), h: round(num(raw.h, 16, MAX_H, d.h)),
       o: round(num(raw.o, 0.1, 1, 1)),
+      rot: round(num(raw.rot, -360, 360, 0)),
       radius: round(num(raw.radius, 0, 200, d.radius)),
     };
     if (type !== "image") {
@@ -71,7 +72,7 @@
   const background = (bg) => (bg.color2 ? `linear-gradient(160deg, ${bg.color}, ${bg.color2})` : bg.color);
 
   function itemHtml(it, links, o) {
-    const pos = `left:${u(it.x)};top:${u(it.y)};width:${u(it.w)};height:${u(it.h)};opacity:${it.o}`;
+    const pos = `left:${u(it.x)};top:${u(it.y)};width:${u(it.w)};height:${u(it.h)};opacity:${it.o}${it.rot ? `;transform:rotate(${it.rot}deg)` : ""}`;
     const attrs = `class="pc-item pc-${it.type}" data-id="${esc(it.id)}" style="${pos}"`;
     if (it.type === "image") {
       return `<div ${attrs}><img src="${esc(`${o.base}/storage/v1/object/public/page-media/${it.src}`)}" alt="${esc(it.alt)}" draggable="false" loading="lazy" decoding="async" style="object-fit:${it.fit};border-radius:${u(it.radius)}"></div>`;

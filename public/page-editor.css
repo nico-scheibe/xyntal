@@ -52,6 +52,7 @@ body.pe { background: var(--bg); min-height: 100dvh; }
 .pe-stage.is-moving, .pe-stage.is-moving .pc-item { cursor: grabbing; }
 .pe-sel { position: absolute; z-index: 9999; border: 2px solid #5b8cff; border-radius: 4px; pointer-events: none; box-sizing: border-box; }
 .pe-sel i { position: absolute; width: 14px; height: 14px; margin: -8px 0 0 -8px; border: 2px solid #5b8cff; border-radius: 4px; background: #fff; pointer-events: auto; touch-action: none; }
+.pe-sel i[data-h="rot"] { left: 50%; top: -30px; border-radius: 50%; cursor: grab; }
 .pe-sel i[data-h="nw"] { left: 0; top: 0; cursor: nwse-resize; }
 .pe-sel i[data-h="ne"] { left: 100%; top: 0; cursor: nesw-resize; }
 .pe-sel i[data-h="sw"] { left: 0; top: 100%; cursor: nesw-resize; }
