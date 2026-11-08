@@ -170,6 +170,8 @@
         ${it.rot ? `<button type="button" class="pe-btn" data-set="rot" data-val="0">${esc(t("Gerade stellen"))}</button>` : ""}
         <h2>${esc(t("Position"))}</h2>
         ${num$("x", "Links", it.x, -page.w, page.w * 2)}${num$("y", "Oben", it.y, -4000, 4000)}${num$("w", "Breite", it.w, 16, page.w * 2)}${block ? "" : num$("h", "Höhe", it.h, 16, 4000)}
+        ${it.type === "link" ? `<button type="button" class="pe-btn pe-primary" data-act="stack">${esc(t("Alle Links hierunter anheften"))}</button>
+        <p class="pe-hint">${esc(t("Alle anderen Links bekommen Breite, Höhe und Aussehen dieses Links und stehen genau untereinander."))}</p>` : ""}
         <div class="pe-row">
           <button type="button" class="pe-btn" data-act="front">${esc(t("Nach vorn"))}</button>
           <button type="button" class="pe-btn" data-act="back">${esc(t("Nach hinten"))}</button>
@@ -243,6 +245,7 @@
       if (act.dataset.act === "del") { touch(); page.items.splice(i, 1); sel = null; }
       else if (act.dataset.act === "front") { touch(); page.items.push(page.items.splice(i, 1)[0]); }
       else if (act.dataset.act === "back") { touch(); page.items.unshift(page.items.splice(i, 1)[0]); }
+      else if (act.dataset.act === "stack") { stackLinks(it); return; }
       else if (act.dataset.act === "dup") {
         if (page.items.length >= limit()) { say(t("Du hast die Höchstzahl an Elementen erreicht."), "error"); return; }
         touch(); const copy = { ...it, id: uid8(), x: it.x + 16, y: it.y + 16 }; page.items.push(copy); sel = copy.id; fit(copy);
@@ -287,6 +290,8 @@
       }
       if (drag.mode === "move") {
         it.x = round(num(b.x + dx, 16 - b.w, page.w - 16, b.x)); it.y = round(num(b.y + dy, 16 - b.h, page.h - 16, b.y));
+        // Magnet: Kanten und Mitten rasten an anderen Elementen ein, und genau 14 Einheiten unter/über einem Element (Alt = frei)
+        if (!e.altKey) magnet(it, 7 * drag.s); else showGuides([]);
       } else if (drag.mode === "rot") {
         // Der Griff über dem Element zeigt zum Zeiger
         let a = Math.atan2(e.clientY - drag.c.y, e.clientX - drag.c.x) * 180 / Math.PI + 90;
@@ -314,8 +319,48 @@
       }
       placeOverlay();
     });
+    // Hilfslinien: senkrecht (x) und waagerecht (y) über die ganze Fläche
+    function showGuides(lines) {
+      const cv = stage.querySelector(".pc");
+      if (!cv) return;
+      cv.querySelectorAll(".pe-guide").forEach((g) => g.remove());
+      lines.forEach(([axis, v]) => cv.insertAdjacentHTML("beforeend", axis === "x"
+        ? `<i class="pe-guide is-v" style="left:${u(v)}"></i>` : `<i class="pe-guide is-h" style="top:${u(v)}"></i>`));
+    }
+    const GAP = 14;
+    function magnet(it, tol) {
+      const others = page.items.filter((o) => o !== it && !o.rot);
+      let bestX = null, bestY = null;
+      const tryX = (mine, target, line) => { const d = target - mine; if (Math.abs(d) <= tol && (!bestX || Math.abs(d) < Math.abs(bestX.d))) bestX = { d, line }; };
+      const tryY = (mine, target, line) => { const d = target - mine; if (Math.abs(d) <= tol && (!bestY || Math.abs(d) < Math.abs(bestY.d))) bestY = { d, line }; };
+      const mx = [it.x, it.x + it.w / 2, it.x + it.w], my = [it.y, it.y + it.h / 2, it.y + it.h];
+      [0, page.w / 2, page.w].forEach((v) => mx.forEach((m) => tryX(m, v, v)));
+      others.forEach((o) => {
+        [o.x, o.x + o.w / 2, o.x + o.w].forEach((v) => mx.forEach((m) => tryX(m, v, v)));
+        [o.y, o.y + o.h / 2, o.y + o.h].forEach((v) => my.forEach((m) => tryY(m, v, v)));
+        tryY(it.y, o.y + o.h + GAP, o.y + o.h + GAP / 2);   // gleichmäßig darunter
+        tryY(it.y + it.h, o.y - GAP, o.y - GAP / 2);        // gleichmäßig darüber
+      });
+      if (bestX) it.x = round(it.x + bestX.d);
+      if (bestY) it.y = round(it.y + bestY.d);
+      showGuides([bestX && ["x", bestX.line], bestY && ["y", bestY.line]].filter(Boolean));
+    }
+    // Alle Links wie der gewählte: gleiche Breite, Höhe und Abstand, genau untereinander (Reihenfolge wie bisher von oben nach unten)
+    function stackLinks(anchor) {
+      const rest = page.items.filter((o) => o.type === "link" && o !== anchor).sort((a, b) => a.y - b.y || a.x - b.x);
+      if (!rest.length) { say(t("Es gibt nur einen Link auf der Seite."), ""); return; }
+      touch();
+      let y = anchor.y + anchor.h + GAP;
+      rest.forEach((o) => {
+        Object.assign(o, { x: anchor.x, y, w: anchor.w, h: anchor.h, rot: 0, size: anchor.size, color: anchor.color, bg: anchor.bg, radius: anchor.radius, icon: anchor.icon, o: anchor.o });
+        y += anchor.h + GAP;
+        fit(o);
+      });
+      drawAll(); say(t("Links untereinander ausgerichtet."), "ok");
+    }
     const endDrag = (e) => {
       if (!drag || (e && e.pointerId !== drag.pid)) return;
+      showGuides([]);
       const moved = drag.moved, it = byId(drag.id); drag = null;
       stage.classList.remove("is-moving");
       if (moved && it) { fit(it); drawAll(); }

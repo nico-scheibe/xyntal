@@ -70,3 +70,7 @@
 .pe-x { width: 28px; height: 28px; border: 0; border-radius: 8px; background: transparent; color: var(--text-2); font-size: 18px; line-height: 1; cursor: pointer; }
 .pe-x:hover { background: rgba(255, 255, 255, .1); color: var(--text); }
 @media (max-width: 1100px) { .pe-insp-head { cursor: default; } }
+/* Magnet-Hilfslinien beim Ziehen */
+.pe-guide { position: absolute; z-index: 9998; pointer-events: none; background: #ff4fd8; }
+.pe-guide.is-v { top: 0; bottom: 0; width: 1px; }
+.pe-guide.is-h { left: 0; right: 0; height: 1px; }
