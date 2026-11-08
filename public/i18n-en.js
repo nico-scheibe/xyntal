@@ -1,6 +1,11 @@
 // Xyntal – englische Texte. Schlüssel = deutscher Originaltext (Leerzeichen zusammengefasst).
 // Neue deutsche Texte auf der Website hier ergänzen, sonst bleiben sie auf Englisch deutsch.
 window.XYNTAL_EN = {
+  "Neu bei": "New to",
+  "Lege ein Konto an und finde die Menschen, mit denen du etwas aufbaust.": "Create an account and find the people you build something with.",
+  "Willkommen zurück!": "Welcome back!",
+  "Du hast schon ein Konto? Logg dich ein und mach dort weiter, wo du aufgehört hast.": "Already have an account? Sign in and pick up where you left off.",
+  "Zwischen Einloggen und Konto anlegen wechseln": "Switch between signing in and creating an account",
   "Deine Links": "Your links",
   "Titel, z. B. Mein Portfolio": "Title, e.g. My portfolio",
   "Symbol": "Icon",
