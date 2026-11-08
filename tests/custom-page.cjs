@@ -18,7 +18,7 @@ const stub = `window.supabase = { createClient: () => ({
     return { data: await r.json(), error: null };
   },
   storage: { from: () => ({ upload: async () => ({ error: null }),
-    list: async () => ({ data: [{ name: '22222222-2222-2222-2222-222222222222.webp', created_at: '2020-01-01T00:00:00Z' }, { name: '33333333-3333-3333-3333-333333333333.webp', created_at: '2020-01-01T00:00:00Z' }], error: null }),
+    list: async () => ({ data: [{ name: '22222222-2222-2222-2222-222222222222.webp', created_at: '2020-01-01T00:00:00Z' }, { name: '33333333-3333-3333-3333-333333333333.webp', created_at: '2020-01-01T00:00:00Z' }, { name: '44444444-4444-4444-4444-444444444444.webp', created_at: new Date().toISOString() }], error: null }),
     remove: async (paths) => { await fetch('/__rpc/__remove', { method: 'POST', body: JSON.stringify(paths) }); return { error: null }; } }) },
 }) };`;
 
@@ -43,7 +43,6 @@ const stub = `window.supabase = { createClient: () => ({
     else if (name === 'list_page_templates') body = [{ id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', name: 'Neon Grid', handle: 'lena', mine: false,
       page: { w: 1920, h: 800, items: [{ id: 't1', type: 'text', text: 'Von Lena', x: 40, y: 20, w: 300, h: 60 }, { id: 't2', type: 'link', ref: '00000000-0000-0000-0000-000000000000', x: 40, y: 120, w: 320, h: 60 }] } }];
     else if (name === 'share_page_template') { shared = args; body = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'; }
-    else if (name === 'get_my_page_media_refs') body = [UID + '/22222222-2222-2222-2222-222222222222.webp'];
     else if (name === '__remove') { removed = args; body = true; }
     await r.fulfill({ contentType: 'application/json', body: JSON.stringify(body) });
   });
@@ -246,7 +245,8 @@ const stub = `window.supabase = { createClient: () => ({
   await pg.click('[data-save]');
   await pg.waitForFunction(() => document.querySelector('[data-status]').textContent.includes('Veröffentlicht'));
   await pg.waitForTimeout(300);
-  assert.deepEqual(removed, [UID + '/33333333-3333-3333-3333-333333333333.webp'], 'nur unbenutzte alte Uploads gelöscht');
+  // Ersetzte/unbenutzte Dateien gehen sofort weg (auch wenn nur eine alte Version sie nutzte); ein frischer fremder Upload bleibt
+  assert.deepEqual(removed, [UID + '/22222222-2222-2222-2222-222222222222.webp', UID + '/33333333-3333-3333-3333-333333333333.webp'], 'unbenutzte Uploads sofort gelöscht, frische fremde bleiben');
   assert.equal(draft, null, 'Veröffentlichen löscht den Entwurf');
   assert.ok(saved && saved.items.length >= 3);
   assert.equal(await pg.evaluate(() => location.pathname), '/nico', 'Editor läuft auf der eigenen Adresse');
