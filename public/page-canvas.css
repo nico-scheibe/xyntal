@@ -22,7 +22,13 @@ a.pc-l:focus-visible, button.pc-l:focus-visible { outline: 2px solid currentColo
 
 /* Öffentliche Seite mit freiem Layout: Zeichenfläche, darunter die üblichen Knöpfe */
 .pf--custom { display: grid; gap: 22px; width: 100%; max-width: 720px; margin: 0 auto; justify-items: center; }
-.pf--custom .pf-actions { display: grid; gap: 10px; justify-items: center; }
+/* Knöpfe unter der freien Seite: eine kompakte Zeile kleiner Pillen statt großer Balken */
+.pf.pf--custom .pf-actions { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; max-width: none; width: auto; }
+.pf.pf--custom .pf-actions .btn { --h: 34px; width: auto; padding: 0 14px; border-radius: 999px; font-size: 13px; font-weight: 600; gap: 6px; }
+.pf.pf--custom .pf-actions .btn svg { width: 14px; height: 14px; }
+.pf.pf--custom .pf-actions .btn-glass { background: rgba(255, 255, 255, .05); border-color: var(--line, #333); }
+.pf.pf--custom .pf-actions .btn-glass:hover { background: rgba(255, 255, 255, .1); }
+.pf.pf--custom .pf-invited, .pf.pf--custom .pf-copied { flex-basis: 100%; }
 
 /* Bausteine der Profilseite (Karte, Steckbrief, Über mich …): feste Pixelgröße, skaliert per zoom mit der Fläche */
 .pc-block { height: auto; }
@@ -132,3 +138,9 @@ a.pc-ib:hover, button.pc-ib:hover { transform: translateY(-2px); filter: brightn
 .pc-item[data-hover="tilt"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover::after, .pc-item[data-hover="tilt"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img)::after { opacity: 1; }
 @keyframes pc-hpulse { 0% { box-shadow: 0 0 0 0 var(--hc); } 100% { box-shadow: 0 0 0 calc(16px * var(--k, 1)) transparent; } }
 @media (prefers-reduced-motion: reduce) { .pc-item[data-hover] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { transition: none; animation: none !important; transform: none !important; } }
+
+/* Spotlight: ein Lichtkreis in der Leuchtfarbe folgt der Maus (Position --mx/--my aus mount) */
+.pc-item[data-hover="spotlight"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img)::after { content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none; opacity: 0; transition: opacity .3s ease;
+  background: radial-gradient(circle calc(70px * var(--k, 1)) at var(--mx, 50%) var(--my, 50%), color-mix(in srgb, var(--hc) 55%, transparent), transparent 70%); mix-blend-mode: screen; }
+.pc-item[data-hover="spotlight"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover::after, .pc-item[data-hover="spotlight"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img)::after { opacity: 1; }
+.pc-item[data-hover="spotlight"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover, .pc-item[data-hover="spotlight"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { box-shadow: 0 0 0 calc(1px * var(--k, 1)) color-mix(in srgb, var(--hc) 60%, transparent); }

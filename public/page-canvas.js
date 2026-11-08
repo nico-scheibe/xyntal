@@ -51,6 +51,7 @@
   const HOVERS = {
     lift: "Anheben", pop: "Aufploppen", glow: "Leuchten", neon: "Neon", shine: "Glanz", fill: "Füllen",
     ring: "Ring", outline: "Rahmen-Puls", rainbow: "Regenbogen", tilt: "3D-Kippen", shake: "Wackeln", blur: "Fokus",
+    spotlight: "Spotlight",
   };
   const HOVER_TYPES = ["link", "button", "icons", "text", "image", "shape"];
   // Leuchtfarbe: die hellere der beiden Farben des Elements, damit Leuchten/Ring auf dunklem Grund sichtbar sind
@@ -402,11 +403,11 @@
       if (cv._tilt) return;
       cv._tilt = true;
       cv.addEventListener("pointermove", (e) => {
-        const item = e.target.closest && e.target.closest('.pc-item[data-hover="tilt"]');
+        const item = e.target.closest && e.target.closest('.pc-item[data-hover="tilt"], .pc-item[data-hover="spotlight"]');
         if (!item) return;
         const box = item.querySelector(".pc-ib:hover") || item.firstElementChild, r = box.getBoundingClientRect();
         const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
-        box.style.setProperty("--rx", `${((0.5 - y) * 18).toFixed(1)}deg`); box.style.setProperty("--ry", `${((x - 0.5) * 22).toFixed(1)}deg`);
+        if (item.dataset.hover === "tilt") { box.style.setProperty("--rx", `${((0.5 - y) * 18).toFixed(1)}deg`); box.style.setProperty("--ry", `${((x - 0.5) * 22).toFixed(1)}deg`); }
         box.style.setProperty("--mx", `${(x * 100).toFixed(0)}%`); box.style.setProperty("--my", `${(y * 100).toFixed(0)}%`);
       });
       cv.addEventListener("pointerout", (e) => {

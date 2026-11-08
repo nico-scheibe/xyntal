@@ -88,7 +88,7 @@
     if (editing) return;
     editing = true;
     try {
-      const css = loadAsset("link", "href", "/page-canvas.css?v=9"), css2 = loadAsset("link", "href", "/page-editor.css?v=12");
+      const css = loadAsset("link", "href", "/page-canvas.css?v=11"), css2 = loadAsset("link", "href", "/page-editor.css?v=12");
       if (!window.supabase) await loadAsset("script", "src", "/vendor/supabase.js?v=31");
       await Promise.all([css, css2]);
       await loadAsset("script", "src", "/page-editor.js?v=14");
@@ -102,14 +102,16 @@
   function renderCustom(c, primary) {
     const own = !!(me && c.user_id && c.user_id === me.id);
     const blocks = blockMap(c);
+    // In der freien Ansicht kurze Beschriftung („Karte bearbeiten“ statt „Meine Karte bearbeiten“)
+    primary = primary.replace(esc(t("Meine Karte bearbeiten")), esc(t("Karte bearbeiten")));
     page(`
       <div class="pf pf--custom">
         ${window.XyntalPageCanvas.html(c.page, { links: Array.isArray(c.links) ? c.links : [], base: SUPA, t, block: (kind) => blocks[kind] || "" })}
         <div class="pf-actions">
           ${primary}
-          ${own ? `<a class="btn btn-glass" href="#gestalten" data-edit-page>${esc(t("Seite frei gestalten"))}</a>` : ""}
+          ${own ? `<a class="btn btn-glass" href="#gestalten" data-edit-page><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>${esc(t("Gestalten"))}</a>` : ""}
           ${!member && !own ? `<p class="pf-invited">${esc(t("Du wurdest eingeladen: Mit einem Konto bekommst du 7 Tage Plus gratis – und die Person, die dich eingeladen hat, auch."))} <a class="text-link" href="/login#registrieren">${esc(t("Konto anlegen"))}</a></p>` : ""}
-          <button class="btn btn-glass" type="button" data-copy-link>${esc(t(navigator.share ? "Profil teilen" : "Link kopieren"))}</button>
+          <button class="btn btn-glass" type="button" data-copy-link><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>${esc(t(navigator.share ? "Teilen" : "Link kopieren"))}</button>
           <p class="pf-copied" role="status" data-copy-status></p>
         </div>
       </div>`);
