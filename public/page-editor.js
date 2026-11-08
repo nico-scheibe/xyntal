@@ -185,7 +185,7 @@
             <p>${esc(t("Schritte in Prozent (0% … 100%, oder von/bis) mit Eigenschaften:"))}</p>
             <p><code>verschieben: x y</code> · <code>drehen: grad</code> · <code>skalieren: f</code> · <code>schräg: grad</code> · <code>deckkraft: 0–1</code> · <code>unschärfe: px</code> · <code>farbton: grad</code> · <code>helligkeit: f</code> · <code>farbe: #rrggbb</code> · <code>hintergrund: #rrggbb</code></p>
             <p>${esc(t("Englisch geht auch: move, rotate, scale, skew, opacity, blur, hue, brightness, color, background."))}</p>
-            <p>${esc(t("Normales CSS geht auch – @keyframes, transform: translateY(-20px) rotate(10deg) scale(1.1), filter: blur(2px) hue-rotate(90deg), opacity, color und background-color (Farben als #rrggbb)."))}</p>
+            <p>${esc(t("Normales CSS geht auch – kopiertes CSS mit @keyframes einfach einfügen (Regeln wie .btn:hover { … } werden übersprungen, Hover stellst du unter Auslöser „Bei Maus“ ein). Unterstützt: transform (translate, rotate, scale, skew), filter (blur, hue-rotate, brightness, saturate, contrast, grayscale), opacity, color, background-color, border-color, box-shadow und text-shadow. Farben als #rgb, #rrggbb oder rgba(…)."))}</p>
           </details>`;
       }
       html += `<button type="button" class="pe-btn" data-act="preview">▶ ${esc(t("Vorschau"))}</button>`;

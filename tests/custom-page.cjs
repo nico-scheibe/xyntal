@@ -113,6 +113,8 @@ const stub = `window.supabase = { createClient: () => ({
   assert.match(await pg.locator('[data-anim-err]').textContent(), /Farbe als #rrggbb/, 'url() abgelehnt');
   await pg.fill('textarea[data-p="a_code"]', '@keyframes x { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-20px) rotate(10deg); opacity: 0.5 } }');
   assert.match(await pg.locator('[data-anim-err]').textContent(), /gültig/, 'normales CSS wird verstanden');
+  await pg.fill('textarea[data-p="a_code"]', '.btn-neon:hover { animation: neon-pulse 1.5s infinite; }\n@keyframes neon-pulse { 0%, 100% { box-shadow: 0 0 5px #0ff, 0 0 20px #0ff } 50% { box-shadow: 0 0 10px #0ff, 0 0 50px rgba(0, 255, 255, 0.6); text-shadow: 0 0 10px #0ff } }');
+  assert.match(await pg.locator('[data-anim-err]').textContent(), /gültig/, 'Tutorial-CSS mit :hover und Schatten');
   await pg.fill('textarea[data-p="a_code"]', '0% { drehen: 0; farbe: #ff00aa } 50% { verschieben: 0 -20; skalieren: 1.2 } 100% { drehen: 360 }');
   assert.match(await pg.locator('[data-anim-err]').textContent(), /gültig/);
   assert.equal(await pg.locator('.pc style').count(), 1, 'eigene Keyframes erzeugt');

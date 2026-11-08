@@ -88,8 +88,18 @@
     if (CODE_CHARS.test(src)) { CODE_CHARS.lastIndex = 0; return { error: "Nicht erlaubt: Anführungszeichen, <, >, / und \\. Farben bitte als #rrggbb." }; }
     CODE_CHARS.lastIndex = 0;
     // @keyframes name { … } und Selektoren davor (.box { animation … }) entfernen: nur die Schritte zählen
-    const kf = src.match(/@keyframes\s+[\w-]+\s*\{([\s\S]*)\}\s*$/i);
-    if (kf) src = kf[1];
+    // Aus kopiertem CSS nur den ersten @keyframes-Block nehmen; Regeln wie .btn:hover { animation: … } werden
+    // übersprungen – Auslöser, Dauer und Wiederholung stellt man im Editor ein
+    const at = src.search(/@keyframes\s+[\w-]+\s*\{/i);
+    if (at >= 0) {
+      let i = src.indexOf("{", at) + 1, depth = 1;
+      const start = i;
+      for (; i < src.length && depth; i++) { if (src[i] === "{") depth++; else if (src[i] === "}") depth--; }
+      if (depth) return { error: "Bei @keyframes fehlt eine schließende Klammer }." };
+      src = src.slice(start, i - 1);
+    } else if (/[.#\w-]+\s*:(hover|focus|active)\b|^\s*[.#][\w-]/m.test(src)) {
+      return { error: "Hier gehört nur die Animation hin (@keyframes oder 0% { … }). Hover stellst du unter Auslöser „Bei Maus“ ein." };
+    }
     const frames = [];
     const rest = src.replace(/((?:\s*(?:\d{1,3}(?:\.\d+)?%|von|bis|from|to)\s*,?)+)\{([^{}]*)\}/gi, (m, stops, body) => {
       stops.split(",").map((x) => x.trim()).filter(Boolean).forEach((at) => {
@@ -141,7 +151,38 @@
             else if (f === "grayscale") fl.push(`grayscale(${n(a[0], 0, 1, "f")})`);
           });
         };
-        const color = (v) => { const h = hex(String(v || "").trim(), ""); if (!h) throw new Error(`Farbe als #rrggbb angeben: ${v || ""}`); return h; };
+        // Farbe: #rgb, #rrggbb oder rgb()/rgba() mit Zahlen – wird neu geschrieben
+        const color = (v) => {
+          const t = String(v || "").trim();
+          const short = t.match(/^#([0-9a-f])([0-9a-f])([0-9a-f])$/i);
+          if (short) return `#${short[1]}${short[1]}${short[2]}${short[2]}${short[3]}${short[3]}`.toLowerCase();
+          const h = hex(t, ""); if (h) return h;
+          const m = t.match(/^rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*(?:,\s*(\d*\.?\d+%?)\s*)?\)$/i);
+          if (m) {
+            const c = [m[1], m[2], m[3]].map((x) => Math.min(255, Number(x)));
+            const a = m[4] == null ? 1 : Math.min(1, Math.max(0, m[4].endsWith("%") ? parseFloat(m[4]) / 100 : Number(m[4])));
+            return `rgba(${c.join(",")},${a})`;
+          }
+          throw new Error(`Farbe als #rrggbb oder rgba(…) angeben: ${t}`);
+        };
+        // Schatten: bis zu 4, je „[inset] x y [blur] [spread] farbe“ – Längen in px, skaliert mit der Seite
+        const shadow = (val) => {
+          const parts = []; let depth = 0, cur = "";
+          for (const ch of val) { if (ch === "(") depth++; if (ch === ")") depth--; if (ch === "," && !depth) { parts.push(cur); cur = ""; } else cur += ch; }
+          parts.push(cur);
+          if (parts.length > 4) throw new Error("Höchstens 4 Schatten.");
+          return parts.map((p) => {
+            const tokens = p.trim().match(/rgba?\([^)]*\)|\S+/gi) || [];
+            let inset = "", col = "", lens = [];
+            tokens.forEach((tok) => {
+              if (/^inset$/i.test(tok)) inset = "inset ";
+              else if (/^(#|rgb)/i.test(tok)) col = color(tok);
+              else lens.push(`calc(${n(tok, -200, 200)}px * var(--k, 1))`);
+            });
+            if (lens.length < 2 || lens.length > 4) throw new Error(`Schatten braucht 2–4 Längen: „${p.trim().slice(0, 40)}“`);
+            return `${inset}${lens.join(" ")} ${col || "currentColor"}`;
+          }).join(",");
+        };
         body.split(";").map((x) => x.trim()).filter(Boolean).forEach((decl) => {
           const i = decl.indexOf(":");
           if (i < 1) throw new Error(`„${decl.slice(0, 30)}“ braucht die Form name: wert`);
@@ -150,6 +191,9 @@
           if (rawKey === "transform") return fns(val, ["translate", "translatex", "translatey", "rotate", "rotatez", "scale", "scalex", "scaley", "skew", "skewx", "skewy"]);
           if (rawKey === "filter") return fns(val, ["blur", "hue-rotate", "brightness", "saturate", "contrast", "grayscale"]);
           if (rawKey === "background-color") return void css.push(`background-color:${color(val)}`);
+          if (rawKey === "box-shadow" || rawKey === "schatten") return void css.push(val === "none" ? "box-shadow:none" : `box-shadow:${shadow(val)}`);
+          if (rawKey === "text-shadow" || rawKey === "textschatten") return void css.push(val === "none" ? "text-shadow:none" : `text-shadow:${shadow(val)}`);
+          if (rawKey === "border-color" || rawKey === "rahmenfarbe") return void css.push(`border-color:${color(val)}`);
           // Mini-Sprache (und opacity, color, background)
           const key = PROPS[rawKey], vals = val.split(/[\s,]+/).filter(Boolean);
           if (!key) throw new Error(`Unbekannt: „${decl.slice(0, i).trim()}“`);
@@ -161,7 +205,7 @@
           else if (key === "blur") fl.push(`blur(calc(${n(vals[0], 0, 60)}px * var(--k, 1)))`);
           else if (key === "hue") fl.push(`hue-rotate(${n(vals[0], -3600, 3600)}deg)`);
           else if (key === "bright") fl.push(`brightness(${n(vals[0], 0, 5, "f")})`);
-          else css.push(`${key === "color" ? "color" : "background-color"}:${color(vals[0])}`);
+          else css.push(`${key === "color" ? "color" : "background-color"}:${color(val)}`);
         });
         if (tf.length) css.push(`transform:${tf.join(" ")}`);
         if (fl.length) css.push(`filter:${fl.join(" ")}`);
