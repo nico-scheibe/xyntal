@@ -27,7 +27,8 @@ create function public.ban_active(b boolean, u timestamptz) returns boolean lang
 \i supabase/migrations/20261108140000_page_animations.sql
 \i supabase/migrations/20261108150000_page_embed_own.sql
 \i supabase/migrations/20261108160000_page_hover.sql
-\i supabase/migrations/20261108160000_page_hover.sql
+\i supabase/migrations/20261108170000_page_hover_spotlight.sql
+\i supabase/migrations/20261108170000_page_hover_spotlight.sql
 
 create trigger waitlist_cards_reserved_handle before insert or update of handle on public.waitlist_cards for each row execute function public.reject_page_handles();
 
@@ -58,7 +59,7 @@ do $$ begin
   begin perform public.save_my_page('{"items":[{"type":"button","url":"javascript:alert(1)"}]}'); raise exception 'js button accepted'; exception when invalid_parameter_value then null; end;
   begin perform public.save_my_page('{"items":[{"type":"embed","provider":"youtube","eid":"x\"><script>"}]}'); raise exception 'bad embed accepted'; exception when invalid_parameter_value then null; end;
   begin perform public.save_my_page('{"items":[{"type":"embed","provider":"evil","eid":"dQw4w9WgXcQ"}]}'); raise exception 'bad provider accepted'; exception when invalid_parameter_value then null; end;
-  perform public.save_my_page('{"items":[{"type":"embed","provider":"youtube","eid":"dQw4w9WgXcQ","own":true},{"type":"embed","provider":"spotify","eid":"track/4uLU6hMCjMI75M1A2tKUQC","own":true},{"type":"button","url":"https://a.de","text":"Hi","hover":"neon"},{"type":"shape","kind":"circle","anim":{"p":"float","d":2}},{"type":"icons","anim":{"p":"custom","code":"@keyframes a { 0% { transform: rotate(0deg); color: #ff00aa } 100% { transform: rotate(360deg) } }"}}]}');
+  perform public.save_my_page('{"items":[{"type":"embed","provider":"youtube","eid":"dQw4w9WgXcQ","own":true},{"type":"embed","provider":"spotify","eid":"track/4uLU6hMCjMI75M1A2tKUQC","own":true},{"type":"button","url":"https://a.de","text":"Hi","hover":"spotlight"},{"type":"shape","kind":"circle","anim":{"p":"float","d":2}},{"type":"icons","anim":{"p":"custom","code":"@keyframes a { 0% { transform: rotate(0deg); color: #ff00aa } 100% { transform: rotate(360deg) } }"}}]}');
   begin perform public.save_my_page('{"items":[{"type":"block","kind":"evil"}]}'); raise exception 'bad block accepted'; exception when invalid_parameter_value then null; end;
   begin perform public.save_my_page('{"items":[{"type":"link","ref":"x"}]}'); raise exception 'bad ref accepted'; exception when invalid_parameter_value then null; end;
   begin perform public.save_my_page('{"items":[{"type":"image","src":"00000000-0000-0000-0000-000000000002/22222222-2222-2222-2222-222222222222.png"}]}'); raise exception 'foreign image accepted'; exception when invalid_parameter_value then null; end;
