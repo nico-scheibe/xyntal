@@ -108,3 +108,38 @@
 .pe-layer.is-on .pe-item { background: rgba(91, 140, 255, .25); }
 .pe-layer .pe-x:disabled { opacity: .25; cursor: default; }
 .pe-theme span { width: 100%; height: 34px; border-radius: 8px; background: linear-gradient(135deg, var(--t1), var(--t2)); box-shadow: inset 0 -6px 0 var(--ta); }
+/* Handy-Vorschau: die Seite in Handybreite, genau wie Besucher sie dort sehen (gestapelt) */
+.pe-stage.is-phone { display: grid !important; justify-items: center; }
+.pe-phone { width: 390px; max-width: calc(100vw - 24px); padding: 14px 10px; border: 2px solid var(--line-2); border-radius: 36px; background: #000; box-shadow: 0 30px 80px -30px #000; }
+.pe-phone-in { max-height: calc(100dvh - 200px); overflow-y: auto; border-radius: 26px; scrollbar-width: thin; }
+.pe-stage .pe-phone .pc-wrap, .pe-stage .pe-phone .pc-wrap.is-full { position: static; left: auto; width: 100%; max-width: none !important; margin: 0; transform: none; }
+.pe-stage .pe-phone .pc { outline: 0; }
+.pe-stage .pe-phone .pc-item { cursor: pointer; }
+.pe-stage .pe-phone .pc-item.pe-in-group { outline-offset: 2px; }
+/* Statistik */
+.pe-stats { display: grid; gap: 4px; }
+.pe-stats div { display: flex; justify-content: space-between; gap: 10px; padding: 6px 10px; border-radius: 8px; background: rgba(255, 255, 255, .04); font-size: 13px; }
+.pe-stats span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-2); }
+.pe-pop input[type="text"] { width: 100%; min-height: 34px; padding: 6px 10px; border: 1px solid var(--line-2); border-radius: 8px; background: rgba(255, 255, 255, .04); color: var(--text); font: 14px/1.3 var(--f-text); box-sizing: border-box; }
+/* Tastatur: sichtbarer Fokus auf Elementen */
+.pe-stage .pc-item:focus-visible { outline: 2px solid #ffd84d; outline-offset: 3px; }
+.pe-btn:focus-visible, .pe-tile:focus-visible, .pe-item:focus-visible { outline: 2px solid #ffd84d; outline-offset: 2px; }
+/* Bearbeiten am Handy: Leiste in einer Zeile zum Wischen, größere Knöpfe und Griffe */
+@media (max-width: 700px) {
+  .pe-dock { left: 8px; right: 8px; transform: none; width: auto; max-width: none; flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; overscroll-behavior-x: contain;
+    scrollbar-width: none; -webkit-overflow-scrolling: touch; padding: 6px; }
+  .pe-dock::-webkit-scrollbar { display: none; }
+  .pe-dock .pe-btn { flex: none; min-height: 44px; padding: 0 14px; }
+  .pe-status { flex: none; max-width: 70vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pe-pop { bottom: calc(max(14px, env(safe-area-inset-bottom)) + 64px); max-height: 56vh; }
+  .pe-insp { bottom: calc(max(14px, env(safe-area-inset-bottom)) + 66px); max-height: 42vh; }
+  .pe-row .pe-btn, .pe-tile { min-height: 44px; }
+  .pe-field input[type="range"] { width: 150px; height: 28px; }
+  .pe-x { width: 40px; height: 40px; }
+}
+@media (pointer: coarse) { .pe-sel i[data-h="rot"] { top: -40px; } }
+/* Abstand zur Leiste aus ihrer echten Höhe (--pe-dock, gesetzt von page-editor.js) */
+.pe-pop { bottom: calc(max(14px, env(safe-area-inset-bottom)) + var(--pe-dock, 58px) + 12px); }
+@media (max-width: 1100px) { .pe-insp { bottom: calc(max(14px, env(safe-area-inset-bottom)) + var(--pe-dock, 110px) + 12px); } }
+/* Beim Gestalten verdeckt der Chat-Knopf („Fragen zu Xyntal?“) sonst die Werkzeugleiste */
+body.pe-active .sc { display: none !important; }

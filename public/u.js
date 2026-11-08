@@ -66,6 +66,7 @@
             ${own ? `<a class="btn btn-glass" href="#gestalten" data-edit-page>${esc(t("Seite frei gestalten"))}</a>` : ""}
             ${!member && !own ? `<p class="pf-invited">${esc(t("Du wurdest eingeladen: Mit einem Konto bekommst du 7 Tage Plus gratis – und die Person, die dich eingeladen hat, auch."))} <a class="text-link" href="/login#registrieren">${esc(t("Konto anlegen"))}</a></p>` : ""}
             <button class="btn btn-glass" type="button" data-copy-link>${esc(t(navigator.share ? "Profil teilen" : "Link kopieren"))}</button>
+            ${own ? "" : reportLink(c)}
             <p class="pf-copied" role="status" data-copy-status></p>
           </div>
           ${linksHtml(c)}
@@ -89,10 +90,10 @@
     if (editing) return;
     editing = true;
     try {
-      const css = loadAsset("link", "href", "/page-canvas.css?v=20"), css2 = loadAsset("link", "href", "/page-editor.css?v=15");
+      const css = loadAsset("link", "href", "/page-canvas.css?v=21"), css2 = loadAsset("link", "href", "/page-editor.css?v=16");
       if (!window.supabase) await loadAsset("script", "src", "/vendor/supabase.js?v=31");
       await Promise.all([css, css2]);
-      await loadAsset("script", "src", "/page-editor.js?v=20");
+      await loadAsset("script", "src", "/page-editor.js?v=21");
       document.body.classList.remove("admin-profile");
       window.XyntalPageEditor.open(root, { card: shown, blocks: blockMap(shown), after: (host) => afterBlocks(host, shown), cardInfo: shown });
     } catch { editing = false; location.assign(location.pathname); }
@@ -105,13 +106,16 @@
     const blocks = blockMap(c);
     // In der freien Ansicht kurze Beschriftung („Karte bearbeiten“ statt „Meine Karte bearbeiten“)
     primary = primary.replace(esc(t("Meine Karte bearbeiten")), esc(t("Karte bearbeiten")));
+    // Kontakt-Element: angemeldet direkt in die Nachrichten, sonst zur Anmeldung
+    const contact = !me ? "/login" : !own && UUID.test(c.user_id || "") ? `/nachrichten?an=${c.user_id}` : "/nachrichten";
     page(`
       <div class="pf pf--custom">
-        ${window.XyntalPageCanvas.html(c.page, { links: Array.isArray(c.links) ? c.links : [], base: SUPA, t, block: (kind) => blocks[kind] || "" })}
+        ${window.XyntalPageCanvas.html(c.page, { links: Array.isArray(c.links) ? c.links : [], base: SUPA, t, views: c.views, contact, block: (kind) => blocks[kind] || "" })}
         <div class="pf-actions">
           ${primary}
           ${own ? `<a class="btn btn-glass" href="#gestalten" data-edit-page><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>${esc(t("Gestalten"))}</a>` : ""}
           <button class="btn btn-glass" type="button" data-copy-link><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>${esc(t(navigator.share ? "Teilen" : "Link kopieren"))}</button>
+          ${own ? "" : reportLink(c, true)}
           <p class="pf-copied" role="status" data-copy-status></p>
         </div>
         ${!member && !own ? `<p class="pf-invited">${esc(t("Du wurdest eingeladen: Mit einem Konto bekommst du 7 Tage Plus gratis – und die Person, die dich eingeladen hat, auch."))} <a class="text-link" href="/login#registrieren">${esc(t("Konto anlegen"))}</a></p>` : ""}
@@ -119,6 +123,22 @@
     document.body.classList.remove("admin-profile");
     window.XyntalPageCanvas.mount(root);
     afterBlocks(root, c);
+  }
+  // Seite melden (nur fremde Seiten): öffnet das Meldeformular der Community-Richtlinien mit dieser Adresse
+  function reportLink(c, icon) {
+    const href = `/community-richtlinien?melden=${encodeURIComponent(c.handle)}#melden`;
+    if (!icon) return `<a class="pf-report-link" href="${href}" rel="nofollow">${esc(t("Profil melden"))}</a>`;
+    return `<a class="btn btn-glass pf-report" href="${href}" rel="nofollow" title="${esc(t("Seite melden"))}">${icon ? '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22V4"/><path d="M4 4h13l-2 4 2 4H4"/></svg>' : ""}${esc(t("Melden"))}</a>`;
+  }
+  // Aufruf zählen: einmal je Sitzung und Seite, nie die eigene (prüft auch die Datenbank)
+  function countView(c) {
+    try {
+      const key = `xyntal-view-${c.handle}`;
+      if ((me && c.user_id === me.id) || sessionStorage.getItem(key)) return;
+      sessionStorage.setItem(key, "1");
+      fetch(`${SUPA}/rest/v1/rpc/track_page_view`, { method: "POST", keepalive: true,
+        headers: { apikey: KEY, Authorization: `Bearer ${me ? me.token : KEY}`, "Content-Type": "application/json" }, body: JSON.stringify({ p_handle: c.handle }) }).catch(() => {});
+    } catch { /* Zählen ist optional */ }
   }
   // Bausteine der Profilseite als HTML (leer, wenn es nichts anzuzeigen gibt) – im freien Layout einzeln platzierbar
   function blockMap(c) {
@@ -396,7 +416,7 @@
       });
       if (!res.ok) throw new Error(String(res.status));
       const card = await res.json();
-      if (card && card.name && !editing) { renderCard(card); window.XyntalCardHtml.hydrate?.(root); loadMatch(card.user_id); if (card.profile) loadAvatar(card.profile.avatar_path);
+      if (card && card.name && !editing) { renderCard(card); countView(card); window.XyntalCardHtml.hydrate?.(root); loadMatch(card.user_id); if (card.profile) loadAvatar(card.profile.avatar_path);
         if (location.hash === "#gestalten" && me && card.user_id === me.id) startEditor();
         return; }
       if (card && card.name && editing) return;

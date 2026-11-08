@@ -22,10 +22,12 @@
       <button type="button" class="pe-btn" data-add="layout">${esc(t("Layout"))}</button>
       <button type="button" class="pe-btn" data-add="layers">${esc(t("Ebenen"))}</button>
       <button type="button" class="pe-btn" data-add="bg">${esc(t("Hintergrund"))}</button>
+      <button type="button" class="pe-btn" data-add="extras">${esc(t("Extras"))}</button>
+      <button type="button" class="pe-btn" data-phone aria-pressed="false" title="${esc(t("Handy-Vorschau"))}" aria-label="${esc(t("Handy-Vorschau"))}">📱</button>
       <i class="pe-sep" aria-hidden="true"></i>
       <button type="button" class="pe-btn" data-undo title="${esc(t("Rückgängig (Strg+Z)"))}" aria-label="${esc(t("Rückgängig"))}" disabled>↶</button>
       <button type="button" class="pe-btn" data-redo title="${esc(t("Wiederholen (Strg+Umschalt+Z)"))}" aria-label="${esc(t("Wiederholen"))}" disabled>↷</button>
-      <button type="button" class="pe-btn pe-primary" data-save disabled>${esc(t("Speichern"))}</button>
+      <button type="button" class="pe-btn pe-primary" data-save disabled title="${esc(t("Veröffentlichen (Strg+S)"))}">${esc(t("Veröffentlichen"))}</button>
       <p class="pe-status" role="status" aria-live="polite" data-status></p>
     </div>`;
 
@@ -37,14 +39,19 @@
     const loading = $("[data-loading]"), editor = $("[data-editor]"), stage = $("[data-stage]"), insp = $("[data-insp]"), pop = $("[data-pop]");
     const blocks = opts.blocks || {};
     const statusEl = $("[data-status]"), saveBtn = $("[data-save]"), undoBtn = $("[data-undo]"), redoBtn = $("[data-redo]");
+    // Fenster und Eigenschaften liegen immer über der Leiste, auch wenn sie in zwei Zeilen umbricht
+    const dockEl = $(".pe-dock"), dockH = () => document.documentElement.style.setProperty("--pe-dock", `${dockEl.offsetHeight}px`);
+    dockH(); if (typeof ResizeObserver === "function") new ResizeObserver(dockH).observe(dockEl);
     if (!window.supabase || !cfg) { loading.textContent = t("Der Editor konnte nicht geladen werden."); return; }
     const sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey);
 
     let page = C.normalize(null), links = [], sel = null, dirty = false, busy = false, uid = "", handle = "", paid = false, hasSaved = false;
+    // Entwurf: speichert automatisch (save_my_page_draft, Migration 20261108210000), öffentlich wird erst „Veröffentlichen“
+    let canDraft = false, draftSaved = true, draftTimer = 0, views = 0, phone = false;
     const undo = [], redo = [];
     let lastKey = "", lastAt = 0;
     // Gleiche Grenzen prüft die Datenbank (page_item_limit, Migration 20261108110000)
-    const limit = () => (paid ? 100 : 20);
+    const limit = () => (paid ? 100 : 40);
     const say = (text, kind = "") => { statusEl.textContent = text; statusEl.className = "pe-status" + (kind ? ` is-${kind}` : ""); };
     const uid8 = () => Math.random().toString(36).slice(2, 10);
     const byId = (id) => page.items.find((i) => i.id === id);
@@ -59,6 +66,25 @@
       lastKey = key || ""; lastAt = now;
       dirty = true; saveBtn.disabled = false; say("");
       undoBtn.disabled = !undo.length; redoBtn.disabled = !redo.length;
+      queueDraft();
+    }
+    function queueDraft() {
+      draftSaved = false;
+      if (!canDraft) return;
+      clearTimeout(draftTimer); draftTimer = setTimeout(saveDraft, 2500);
+    }
+    async function saveDraft() {
+      clearTimeout(draftTimer); draftTimer = 0;
+      if (!canDraft || draftSaved || !dirty) return;
+      if (busy) { draftTimer = setTimeout(saveDraft, 1500); return; }
+      // Unbestätigtes Video lehnt die Datenbank ab – erst nach der Bestätigung sichern
+      if (page.items.some((i) => i.type === "embed" && !i.own)) return;
+      const snapshot = snap();
+      try {
+        const { error } = await sb.rpc("save_my_page_draft", { p_page: page });
+        if (error) throw error;
+        if (snap() === snapshot) { draftSaved = true; if (!statusEl.classList.contains("is-error")) say(t("Entwurf gespeichert – noch nicht veröffentlicht.")); }
+      } catch (err) { say(saveError(err), "error"); }
     }
     function travel(from, to) {
       if (!from.length) return;
@@ -66,7 +92,7 @@
       if (sel && !byId(sel)) sel = null;
       lastKey = ""; dirty = true; saveBtn.disabled = false;
       undoBtn.disabled = !undo.length; redoBtn.disabled = !redo.length;
-      drawAll();
+      queueDraft(); drawAll();
     }
 
     // ---- Zeichnen ----
@@ -89,11 +115,28 @@
       });
     }
     function drawCanvas() {
-      stage.innerHTML = C.html(page, { links, base: cfg.supabaseUrl, edit: true, t, block: (kind) => blocks[kind] || "" });
+      const focused = stage.contains(document.activeElement) && document.activeElement.classList.contains("pc-item");
+      if (phone) {
+        // Handy-Vorschau: so sehen Besucher die Seite am Handy (ohne Bearbeiten; Antippen wählt ein Element für die Eigenschaften)
+        stage.innerHTML = `<div class="pe-phone"><div class="pe-phone-in">${C.html({ ...page, cursor: "" }, { links, base: cfg.supabaseUrl, t, views, block: (kind) => blocks[kind] || "" })}</div></div>`;
+        C.mount(stage);
+        if (opts.after) opts.after(stage);
+        if (sel) stage.querySelector(`.pc-item[data-id="${CSS.escape(sel)}"]`)?.classList.add("pe-in-group");
+        return;
+      }
+      stage.innerHTML = C.html(page, { links, base: cfg.supabaseUrl, edit: true, t, views, block: (kind) => blocks[kind] || "" });
       C.mount(stage);
       if (opts.after) opts.after(stage);
       measure();
       const cv = stage.querySelector(".pc");
+      // Tastatur und Screenreader: jedes Element ist erreichbar (Tab), Fokus wählt es aus, Pfeile schieben
+      cv.querySelectorAll(".pc-item[data-id]").forEach((el) => {
+        const it = byId(el.dataset.id);
+        if (!it) return;
+        el.tabIndex = 0; el.setAttribute("role", "button"); el.setAttribute("aria-label", t(itemName(it)));
+        if (it.id === sel) el.setAttribute("aria-pressed", "true");
+      });
+      if (focused && sel) cv.querySelector(`.pc-item[data-id="${CSS.escape(sel)}"]`)?.focus({ preventScroll: true });
       cv.style.aspectRatio = `${page.w} / ${page.h}`;
       group.forEach((id) => stage.querySelector(`.pc-item[data-id="${CSS.escape(id)}"]`)?.classList.add("pe-in-group"));
       const it = current();
@@ -136,6 +179,8 @@
       { key: "button", group: "act", icon: "⬭", label: "Knopf", type: "button", v: {} },
       { key: "icons", group: "act", icon: "◎", label: "Link-Symbole", type: "icons", v: {} },
       { key: "countdown", group: "act", icon: "⏱", label: "Countdown", type: "countdown", v: {} },
+      { key: "contact", group: "act", icon: "✉", label: "Kontakt", type: "contact", v: {} },
+      { key: "counter", group: "act", icon: "👁", label: "Aufrufe", type: "counter", v: {} },
       { key: "status", group: "text", icon: "🟢", label: "Status", type: "text", v: { text: "● Open to Work", w: 220, h: 44, size: 15, weight: 700, align: "center", bg: "#123d2a", color: "#7dffb2", radius: 999, anim: { p: "pulse", trig: "load", d: 1.8, loop: true } } },
       { key: "gradtext", group: "text", icon: "🌈", label: "Verlaufstext", type: "text", v: { text: "Bau was Großes", w: 560, h: 80, size: 56, weight: 700, align: "center", color: "#ff5fd2", c2: "#5b8cff", tfx: "gradient" } },
       { key: "glass", group: "text", icon: "◫", label: "Glas-Fenster", type: "text", v: { text: "Glas-Fenster\nLiegt halbdurchsichtig über allem dahinter.", w: 320, h: 140, size: 17, weight: 400, bg: "#ffffff", radius: 22, glass: true } },
@@ -180,6 +225,8 @@
           <div class="pe-tiles">${Object.entries(THEMES).map(([k, v]) => `<button type="button" class="pe-tile pe-theme" data-theme="${k}" style="--t1:${v.bg[0]};--t2:${v.bg[1] || v.bg[0]};--ta:${v.accent}"><span aria-hidden="true"></span><b data-no-i18n>${v.name}</b></button>`).join("")}</div>`;
       } else if (name === "layers") {
         pop.innerHTML = layersPanel();
+      } else if (name === "extras") {
+        pop.innerHTML = extrasPanel(); loadExtras();
       } else pop.innerHTML = bgPanel();
     }
     function drawSide() { if (popName === "bg") pop.innerHTML = bgPanel(); else if (popName === "layers") pop.innerHTML = layersPanel(); }
@@ -245,6 +292,14 @@
           ${range$("size", "Schriftgröße", it.size, 12, 120)}
           ${color$("color", "Textfarbe", it.color)}
           ${color$("bg", "Hintergrundfarbe", it.bg || "#1f1f2b")}`;
+      } else if (it.type === "contact" || it.type === "counter") {
+        body = `<label class="pe-field"><span>${esc(t("Beschriftung"))}</span></label>
+          <input type="text" data-p="text" maxlength="${it.type === "contact" ? 80 : 40}" value="${esc(it.text)}">
+          <p class="pe-hint">${esc(t(it.type === "contact" ? "Besucher kommen damit direkt in deine Nachrichten (ohne Konto erst zur Anmeldung)." : "Zeigt, wie oft deine Seite aufgerufen wurde. Deine eigenen Aufrufe zählen nicht."))}</p>
+          ${range$("size", "Schriftgröße", it.size, 8, 80)}
+          ${color$("color", "Textfarbe", it.color)}
+          ${color$("bg", "Hintergrundfarbe", it.bg || "#eceae4")}
+          ${it.type === "contact" ? glass$(it) : ""}`;
       } else if (it.type === "link") {
         body = `<label class="pe-field"><span>${esc(t("Link"))}</span><select data-p="ref">${links.map((l) => `<option value="${esc(l.id)}"${l.id === it.ref ? " selected" : ""}>${esc(l.title)}</option>`).join("")}</select></label>
           ${range$("size", "Schriftgröße", it.size, 8, 60)}
@@ -284,7 +339,7 @@
           <input type="text" data-p="alt" maxlength="120" value="${esc(it.alt)}" placeholder="${esc(t("Alternativtext für Screenreader"))}">`;
       }
       const block = it.type === "block";
-      const TITLES = { text: "Text", link: "Link", image: "Bild", shape: "Form", button: "Knopf", icons: "Link-Symbole", embed: "Video / Musik", countdown: "Countdown" };
+      const TITLES = { text: "Text", link: "Link", image: "Bild", shape: "Form", button: "Knopf", icons: "Link-Symbole", embed: "Video / Musik", countdown: "Countdown", contact: "Kontakt", counter: "Aufrufe" };
       const frame = block ? "" : `${range$("bw", "Rahmen", it.bw, 0, 16)}${it.bw ? color$("bc", "Rahmenfarbe", it.bc) : ""}
         <label class="pe-field"><span>${esc(t("Schatten"))}</span><input type="checkbox" data-p="sh" ${it.sh ? "checked" : ""}></label>`;
       insp.innerHTML = `<div class="pe-insp-head" data-insp-drag title="${esc(t("Ziehen zum Verschieben"))}"><h2>${esc(t(block ? C.BLOCKS[it.kind][0] : TITLES[it.type]))}</h2><button type="button" class="pe-x" data-insp-close aria-label="${esc(t("Schließen"))}">×</button></div>
@@ -301,6 +356,7 @@
         <h2>${esc(t("Position"))}</h2>
         <label class="pe-field"><span data-no-i18n>Parallax</span><select data-p="px" data-no-i18n><option value="">Off</option><option value="back"${it.px === "back" ? " selected" : ""}>Back (slow)</option><option value="mid"${it.px === "mid" ? " selected" : ""}>Middle</option><option value="front"${it.px === "front" ? " selected" : ""}>Front (fast)</option></select></label>
         ${num$("x", "Links", it.x, -page.w, page.w * 2)}${num$("y", "Oben", it.y, -4000, 4000)}${num$("w", "Breite", it.w, 16, page.w * 2)}${block ? "" : num$("h", "Höhe", it.h, 16, 4000)}
+        ${page.w === C.NARROW ? "" : `${num$("mo", "Platz am Handy", it.mo, 0, 99)}<p class="pe-hint">${esc(t("Am Handy steht alles untereinander. 1 = ganz oben, 0 = automatisch nach Lage. 📱 zeigt die Vorschau."))}</p>`}
         ${it.type === "link" ? `<button type="button" class="pe-btn pe-primary" data-act="stack">${esc(t("Alle Links hierunter anheften"))}</button>
         <p class="pe-hint">${esc(t("Alle anderen Links bekommen Breite, Höhe und Aussehen dieses Links und stehen genau untereinander."))}</p>` : ""}
         <div class="pe-row">
@@ -356,7 +412,8 @@
         it.anim = C.cleanAnim(base);
         return;
       }
-      if (k === "text") it.text = String(v).slice(0, it.type === "button" ? 80 : it.type === "countdown" ? 60 : 1000);
+      if (k === "text") it.text = String(v).slice(0, { button: 80, contact: 80, countdown: 60, counter: 40 }[it.type] || 1000);
+      else if (k === "mo") it.mo = Math.round(num(v, 0, 99, it.mo || 0));
       else if (k === "date") { if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(v)) it.date = v; }
       else if (k === "tfx") it.tfx = C.TEXT_FX[v] ? v : "";
       else if (k === "px") it.px = C.PARALLAX[v] !== undefined ? v : "";
@@ -385,7 +442,7 @@
     });
     // Nach Auswahl-Feldern neu zeichnen (Beschriftungen, abhängige Felder); Textfelder nicht – sonst verschwindet beim
     // Weiterklicken das Feld, in das man gerade klickt
-    insp.addEventListener("change", (e) => { if (e.target.dataset.p && e.target.tagName !== "TEXTAREA" && e.target.type !== "text") drawInsp(); });
+    insp.addEventListener("change", (e) => { if (e.target.dataset.p && e.target.tagName !== "TEXTAREA" && !["text", "number"].includes(e.target.type)) drawInsp(); });
     insp.addEventListener("click", (e) => {
       const it = current();
       const seg = e.target.closest("[data-set]"), act = e.target.closest("[data-act]");
@@ -443,6 +500,13 @@
     const centerOf = (id) => { const el = stage.querySelector(`.pc-item[data-id="${CSS.escape(id)}"]`), r = el && el.getBoundingClientRect(); return r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : { x: 0, y: 0 }; };
     stage.addEventListener("pointerdown", (e) => {
       if (e.button !== 0) return;
+      // Klick auf die Seite beendet die Eingabe im Eigenschaften-Feld (sonst greifen Tastenkürzel wie Strg+C nicht)
+      if (document.activeElement && (insp.contains(document.activeElement) || pop.contains(document.activeElement))) document.activeElement.blur();
+      if (phone) {
+        e.preventDefault();
+        const pe = e.target.closest(".pc-item[data-id]");
+        sel = pe && byId(pe.dataset.id) ? pe.dataset.id : null; group.clear(); drawCanvas(); drawInsp(); return;
+      }
       const handleEl = e.target.closest("[data-h]"), itemEl = e.target.closest(".pc-item");
       if (!handleEl && !itemEl) { if (sel || group.size) { sel = null; group.clear(); drawAll(); } return; }
       // Umschalt+Klick: zur Mehrfachauswahl hinzufügen/entfernen
@@ -572,6 +636,15 @@
       if (moved && wasGroup) { page.items.filter((i) => group.has(i.id)).forEach(fit); drawAll(); }
       else if (moved && it) { fit(it); drawAll(); }
     };
+    stage.addEventListener("focusin", (e) => {
+      const el = e.target.closest && e.target.closest(".pc-item[data-id]");
+      if (!el || phone || drag || el.dataset.id === sel || !byId(el.dataset.id)) return;
+      sel = el.dataset.id; group.clear(); drawCanvas(); drawInsp();
+    });
+    stage.addEventListener("keydown", (e) => {
+      // Enter auf einem Element: in die Eigenschaften springen
+      if (e.key === "Enter" && e.target.closest(".pc-item[data-id]")) { e.preventDefault(); insp.querySelector("textarea, input, select, button:not(.pe-x)")?.focus(); }
+    });
     stage.addEventListener("pointerup", endDrag);
     stage.addEventListener("pointercancel", endDrag);
     stage.addEventListener("dblclick", (e) => { if (e.target.closest(".pc-text")) insp.querySelector("textarea")?.focus(); });
@@ -584,6 +657,8 @@
       if (typing) return;
       if (mod && k === "z") { e.preventDefault(); travel(e.shiftKey ? redo : undo, e.shiftKey ? undo : redo); return; }
       if (mod && k === "y") { e.preventDefault(); travel(redo, undo); return; }
+      if (mod && (k === "c" || k === "x")) { if (copyItems(k === "x")) e.preventDefault(); return; }
+      if (mod && k === "v") { if (pasteItems()) e.preventDefault(); return; }
       // Mehrfachauswahl: Pfeile schieben alle, Entf löscht alle, Esc hebt auf
       if (group.size > 1) {
         if (k === "escape") { group.clear(); drawAll(); }
@@ -608,6 +683,36 @@
         it.x = round(it.x); it.y = round(it.y); fit(it); drawAll();
       }
     });
+    // ---- Kopieren / Einfügen (Strg+C, Strg+X, Strg+V; auch zwischen Tabs über localStorage) ----
+    const CLIP = "xyntal-page-clip";
+    let clip = null;
+    function copyItems(cut) {
+      const list = group.size > 1 ? page.items.filter((i) => group.has(i.id)) : current() ? [current()] : [];
+      if (!list.length || (window.getSelection && String(window.getSelection()))) return false;
+      clip = JSON.parse(JSON.stringify(list));
+      try { localStorage.setItem(CLIP, JSON.stringify({ uid, items: clip })); } catch { /* nur in diesem Tab */ }
+      if (cut) { touch(); page.items = page.items.filter((i) => !list.includes(i)); sel = null; group.clear(); drawAll(); }
+      say(t(cut ? "Ausgeschnitten – mit Strg+V einfügen." : "Kopiert – mit Strg+V einfügen."), "ok");
+      return true;
+    }
+    function pasteItems() {
+      let list = clip;
+      try { const st = JSON.parse(localStorage.getItem(CLIP) || "null"); if (st && st.uid === uid && Array.isArray(st.items)) list = st.items; } catch { /* Speicher gesperrt */ }
+      if (!Array.isArray(list) || !list.length) return false;
+      // Profil-Bausteine gibt es nur einmal; Links und Bilder nur eigene
+      const ok = list.filter((i) => i && !(i.type === "block" && page.items.some((x) => x.type === "block" && x.kind === i.kind))
+        && !(i.type === "link" && !links.some((l) => l.id === i.ref)) && !(i.type === "image" && !String(i.src || "").startsWith(`${uid}/`)));
+      const room = limit() - page.items.length;
+      if (!ok.length) { say(t("Das lässt sich hier nicht einfügen (Baustein schon da oder fremder Link)."), "error"); return true; }
+      if (room <= 0) { say(t("Du hast die Höchstzahl an Elementen erreicht."), "error"); return true; }
+      touch();
+      const fresh = C.normalize({ items: ok.slice(0, room).map((i) => ({ ...i, id: uid8(), x: (i.x || 0) + 24, y: (i.y || 0) + 24 })) }).items;
+      fresh.forEach((i) => { page.items.push(i); fit(i); });
+      group.clear();
+      if (fresh.length > 1) { fresh.forEach((i) => group.add(i.id)); sel = null; } else sel = fresh[0] ? fresh[0].id : null;
+      drawAll(); say(t(ok.length > room ? "Eingefügt – nicht alles passte unter die Höchstzahl." : "Eingefügt."), ok.length > room ? "error" : "ok");
+      return true;
+    }
     undoBtn.addEventListener("click", () => travel(undo, redo));
     redoBtn.addEventListener("click", () => travel(redo, undo));
 
@@ -676,8 +781,16 @@
         } catch { say(t("Das Video konnte nicht hochgeladen werden."), "error"); }
       }
     });
-    $("[data-done]").addEventListener("click", () => {
-      if (dirty && !confirm(t("Ungespeicherte Änderungen verwerfen?"))) return;
+    $("[data-phone]").addEventListener("click", (e) => {
+      phone = !phone; group.clear();
+      e.currentTarget.classList.toggle("is-on", phone); e.currentTarget.setAttribute("aria-pressed", String(phone));
+      stage.classList.toggle("is-phone", phone);
+      drawAll(); say(phone ? t("Handy-Vorschau: so sieht deine Seite am Handy aus. Antippen wählt ein Element.") : "");
+    });
+    // Fertig: offenen Entwurf noch sichern; ohne Entwurfs-Funktion (altes SQL) wie bisher nachfragen
+    $("[data-done]").addEventListener("click", async () => {
+      if (dirty && canDraft && !draftSaved) { say(t("Entwurf wird gespeichert …")); await saveDraft(); }
+      if (dirty && !draftSaved && !confirm(t("Ungespeicherte Änderungen verwerfen?"))) return;
       dirty = false; location.assign(location.pathname);
     });
     $("[data-upload-label]").addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("[data-upload]").click(); } });
@@ -715,10 +828,16 @@
     // Fehler von save_my_page verständlich machen (Meldungstexte aus den Migrationen 20261108110000 ff.)
     function saveError(err) {
       const code = err && err.code, msg = String((err && err.message) || "");
-      if (code === "54000") return t(/too large/.test(msg) ? "Die Seite ist zu groß. Entferne ein paar Elemente oder kürze Texte und Code." : "Zu viele Elemente für deinen Tarif.");
+      if (code === "54000" && !/template/.test(msg)) return t(/too large/.test(msg) ? "Die Seite ist zu groß. Entferne ein paar Elemente oder kürze Texte und Code." : "Zu viele Elemente für deinen Tarif.");
       if (code === "P0002") return t("Lege zuerst deine Karte an.");
       if (code === "42501") return t("Dein Konto ist gesperrt – Änderungen sind gerade nicht möglich.");
       if (code === "28000") return t("Bitte melde dich neu an.");
+      if (/XYNTAL_MODERATION:beleidigung/.test(msg)) return t("Bitte bleib respektvoll: Ein Text enthält eine Beleidigung und wurde nicht gespeichert.");
+      if (/XYNTAL_MODERATION:scam/.test(msg)) return t("Ein Text sieht nach Betrug oder Spam aus und wurde nicht gespeichert.");
+      if (/XYNTAL_MODERATION/.test(msg)) return t("Ein Text oder eine Adresse ist nicht erlaubt (z. B. Kurzlinks oder verschleierte Adressen).");
+      if (/template limit/.test(msg)) return t("Du hast schon 10 Vorlagen geteilt – lösche zuerst eine.");
+      if (/template must not/.test(msg)) return t("Vorlagen dürfen keine Bilder, Videos oder Links enthalten.");
+      if (/invalid template name/.test(msg)) return t("Gib der Vorlage einen Namen (2–40 Zeichen).");
       const known = {
         "invalid animation": "Die Datenbank lehnt eine Animation ab. Wahrscheinlich fehlt das neueste SQL (Klammern im Code erlaubt) – bitte im Supabase SQL Editor ausführen.",
         "invalid hover effect": "Die Datenbank kennt den Hover-Effekt nicht – bitte das neueste SQL im Supabase SQL Editor ausführen.",
@@ -738,11 +857,13 @@
         sel = page.items.find((i) => i.type === "embed" && !i.own).id; drawAll();
         say(t("Bitte bestätige beim Video / bei der Musik, dass es dein eigenes Projekt ist – oder entferne es."), "error"); return;
       }
-      busy = true; saveBtn.disabled = true; say(t("Wird gespeichert …"));
+      busy = true; saveBtn.disabled = true; say(t("Wird veröffentlicht …"));
+      clearTimeout(draftTimer);
       try {
         const { error } = await sb.rpc("save_my_page", { p_page: page });
         if (error) throw error;
-        dirty = false; hasSaved = true; say(t("Gespeichert."), "ok");
+        dirty = false; draftSaved = true; hasSaved = true; say(t("Veröffentlicht – deine Seite ist jetzt so online."), "ok");
+        cleanupMedia();
       } catch (err) {
         saveBtn.disabled = false;
         say(saveError(err), "error");
@@ -756,10 +877,25 @@
         const { error } = await sb.rpc("save_my_page", { p_page: null });
         if (error) throw error;
         page = starter(); drawAll(); relayout(); undo.length = redo.length = 0; sel = null; dirty = true; hasSaved = false; saveBtn.disabled = false;
-        undoBtn.disabled = redoBtn.disabled = true; drawAll(); say(t("Zurückgesetzt. Deine Seite zeigt wieder das Standardlayout."), "ok");
+        undoBtn.disabled = redoBtn.disabled = true; draftSaved = true; drawAll(); say(t("Zurückgesetzt. Deine Seite zeigt wieder das Standardlayout."), "ok");
       } catch { say(t("Zurücksetzen hat nicht geklappt."), "error"); } finally { busy = false; }
     }
-    window.addEventListener("beforeunload", (e) => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
+    window.addEventListener("beforeunload", (e) => { if (dirty && !draftSaved) { e.preventDefault(); e.returnValue = ""; } });
+    // Hochgeladene Dateien, die weder Seite, Entwurf, Versionen noch der Verlauf hier benutzen, nach 1 Stunde löschen
+    async function cleanupMedia() {
+      try {
+        const r = await sb.rpc("get_my_page_media_refs");
+        if (r.error || !uid) return;
+        const keep = new Set(Array.isArray(r.data) ? r.data : []);
+        [snap(), ...undo, ...redo].forEach((js) => { (js.match(/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp|gif|mp4|webm)/g) || []).forEach((m) => keep.add(m)); });
+        const { data, error } = await sb.storage.from("page-media").list(uid, { limit: 1000 });
+        if (error || !Array.isArray(data)) return;
+        const old = Date.now() - 36e5;
+        const gone = data.filter((f) => /^[0-9a-f-]{36}\.(jpg|png|webp|gif|mp4|webm)$/.test(f.name || "") && !keep.has(`${uid}/${f.name}`)
+          && new Date(f.created_at || Date.now()).getTime() < old).map((f) => `${uid}/${f.name}`);
+        if (gone.length) await sb.storage.from("page-media").remove(gone.slice(0, 100));
+      } catch { /* Aufräumen ist optional */ }
+    }
 
     // Startlayout für Neue: wie die normale Profilseite – links Karte und Links, rechts Steckbrief, Über mich,
     // Ich biete / Ich suche nebeneinander und Skills (Höhen misst relayout nach dem ersten Zeichnen)
@@ -800,28 +936,29 @@
       ocean: { name: "Ocean", bg: ["#021a26", "#05445e"], ov: ["network"], flow: true, text: "#d8f7ff", panel: "#06293a", accent: "#7ee7ff", accent2: "#3fa9ff", font: "sans", hover: "glow" },
       space: { name: "Space", bg: ["#05050c", "#140a30"], ov: ["stars", "aurora"], flow: false, text: "#ecebff", panel: "#12122a", accent: "#b95cff", accent2: "#5b8cff", font: "sans", hover: "spotlight" },
     };
-    function applyTheme(key) {
+    function applyTheme(key, quiet) {
       const th = THEMES[key];
       if (!th) return;
-      touch();
+      if (!quiet) touch();
       page.bg = { color: th.bg[0], color2: th.bg[1] }; page.ov = [...th.ov]; page.bga = th.flow && th.bg[1] ? "flow" : "";
       page.items.forEach((it) => {
         if (it.type === "text") { it.color = th.text; it.font = th.font; if (it.bg && !it.glass) it.bg = th.panel; if (it.tfx === "gradient" || it.tfx === "shimmer") { it.color = th.accent; it.c2 = th.accent2; } }
         else if (it.type === "link") { it.bg = th.panel; it.color = th.accent; it.hover = th.hover; }
-        else if (it.type === "button") { it.bg = th.accent; it.color = th.bg[0]; it.hover = th.hover; }
+        else if (it.type === "button" || it.type === "contact") { it.bg = th.accent; it.color = th.bg[0]; it.hover = th.hover; }
+        else if (it.type === "counter") { it.bg = th.panel; it.color = th.accent; }
         else if (it.type === "icons") { it.bg = th.panel; it.color = th.accent; it.hover = th.hover; }
         else if (it.type === "countdown") { it.bg = th.panel; it.color = th.accent; }
         else if (it.type === "shape") { it.bg = th.accent; if (it.bg2) it.bg2 = th.accent2; }
         else if (it.type === "block") { it.color = th.accent; }
       });
-      drawAll(); say(t("Theme angewendet – mit ↶ rückgängig."), "ok");
+      drawAll(); if (!quiet) say(t("Theme angewendet – mit ↶ rückgängig."), "ok");
     }
 
     // ---- Ebenen: alle Elemente als Liste (oben = vorne), auswählen und Reihenfolge ändern ----
     function itemName(it) {
       if (it.type === "block") return C.BLOCKS[it.kind][0];
       if (it.type === "link") { const l = links.find((x) => x.id === it.ref); return `Link · ${l ? l.title : "?"}`; }
-      if (it.type === "text" || it.type === "button" || it.type === "countdown") return `${{ text: "Text", button: "Knopf", countdown: "Countdown" }[it.type]} · ${String(it.text || "").replace(/\s+/g, " ").slice(0, 24)}`;
+      if (["text", "button", "countdown", "contact", "counter"].includes(it.type)) return `${{ text: "Text", button: "Knopf", countdown: "Countdown", contact: "Kontakt", counter: "Aufrufe" }[it.type]} · ${String(it.text || "").replace(/\s+/g, " ").slice(0, 24)}`;
       return { image: "Bild", shape: "Form", icons: "Link-Symbole", embed: "Video / Musik" }[it.type] || it.type;
     }
     function layersPanel() {
@@ -832,6 +969,121 @@
           <button type="button" class="pe-x" data-lmove="${esc(it.id)}" data-dir="1" aria-label="${esc(t("Nach vorn"))}"${n === 0 ? " disabled" : ""}>▲</button>
           <button type="button" class="pe-x" data-lmove="${esc(it.id)}" data-dir="-1" aria-label="${esc(t("Nach hinten"))}"${n === list.length - 1 ? " disabled" : ""}>▼</button></div>`).join("")}</div>`;
     }
+
+    // ---- Extras: Statistik, Versionen, Vorlagen-Galerie, Tastenkürzel ----
+    const fmtDate = (iso) => { try { return new Date(iso).toLocaleString(document.documentElement.lang === "en" ? "en-GB" : "de-DE", { dateStyle: "medium", timeStyle: "short" }); } catch { return ""; } };
+    function extrasPanel() {
+      const clicks = links.filter((l) => typeof l.clicks === "number");
+      return `<h2>${esc(t("Statistik"))}</h2>
+        <p><b data-no-i18n>${esc(Number(views || 0).toLocaleString("de-DE"))}</b> ${esc(t("Aufrufe deiner Seite (deine eigenen zählen nicht)"))}</p>
+        ${clicks.length ? `<div class="pe-stats">${clicks.map((l) => `<div><span data-no-i18n>${esc(l.title)}</span><b data-no-i18n>${esc(l.clicks.toLocaleString("de-DE"))}</b></div>`).join("")}</div>`
+          : links.length ? `<p class="pe-hint">${esc(t("Klicks je Link siehst du mit Plus."))}</p>` : ""}
+        <h2>${esc(t("Vorlagen"))}</h2>
+        <p>${esc(t("Ersetzt Texte, Bilder und Formen durch die Vorlage – Karte, Links und Profil-Bausteine bleiben. Rückgängig geht mit ↶."))}</p>
+        <div class="pe-tiles">${Object.entries(TEMPLATES).map(([k, v]) => `<button type="button" class="pe-tile pe-theme" data-tpl="${k}" style="--t1:${THEMES[v.theme].bg[0]};--t2:${THEMES[v.theme].bg[1] || THEMES[v.theme].bg[0]};--ta:${THEMES[v.theme].accent}"><span aria-hidden="true"></span><b data-no-i18n>${esc(v.name)}</b></button>`).join("")}</div>
+        <h2>${esc(t("Vorlagen der Community"))}</h2>
+        <div data-community><p class="pe-hint">${esc(t("Wird geladen …"))}</p></div>
+        <div class="pe-embed">
+          <input type="text" data-share-name maxlength="40" placeholder="${esc(t("Name deiner Vorlage"))}">
+          <button type="button" class="pe-btn" data-share>${esc(t("Meine Seite als Vorlage teilen"))}</button>
+          <p class="pe-hint">${esc(t("Geteilt werden Aufbau, Farben, Texte und Effekte – keine Bilder, Videos, Links oder Knopf-Adressen."))}</p>
+        </div>
+        <h2>${esc(t("Versionen"))}</h2>
+        <div data-versions><p class="pe-hint">${esc(t("Wird geladen …"))}</p></div>
+        <h2>${esc(t("Tastenkürzel"))}</h2>
+        <p class="pe-help">${esc(t("Strg+Z / Strg+Umschalt+Z rückgängig / wiederholen · Strg+C, Strg+X, Strg+V kopieren, ausschneiden, einfügen · Strg+D duplizieren · Pfeile verschieben (Umschalt = 10) · Tab wählt Elemente der Reihe nach · Entf löscht · Umschalt+Klick wählt mehrere · Alt beim Ziehen = ohne Magnet · Strg+S veröffentlicht"))}</p>`;
+    }
+    let community = [];
+    async function loadExtras() {
+      const vBox = pop.querySelector("[data-versions]"), cBox = pop.querySelector("[data-community]");
+      const [v, c] = await Promise.all([sb.rpc("list_my_page_versions"), sb.rpc("list_page_templates")]).catch(() => [{ error: true }, { error: true }]);
+      if (!pop.contains(vBox)) return;
+      const missing = t("Noch nicht verfügbar – bitte das neueste SQL im Supabase SQL Editor ausführen.");
+      vBox.innerHTML = v.error ? `<p class="pe-hint">${esc(missing)}</p>` : (v.data || []).length
+        ? `<div class="pe-layers">${v.data.map((x, n) => `<div class="pe-layer"><button type="button" class="pe-item" data-version="${esc(x.id)}">${esc(fmtDate(x.created_at))}${n === 0 ? ` · ${esc(t("aktuell online"))}` : ""} <span class="pe-count">(${esc(x.items)})</span></button></div>`).join("")}</div>`
+        : `<p class="pe-hint">${esc(t("Nach dem ersten Veröffentlichen stehen hier deine letzten 10 Fassungen."))}</p>`;
+      community = c.error ? [] : (c.data || []);
+      cBox.innerHTML = c.error ? `<p class="pe-hint">${esc(missing)}</p>` : community.length
+        ? `<div class="pe-layers">${community.map((x) => `<div class="pe-layer"><button type="button" class="pe-item" data-ctpl="${esc(x.id)}"><span data-no-i18n>${esc(x.name)}</span>${x.handle ? ` <span class="pe-count" data-no-i18n>· ${esc(x.handle)}</span>` : ""}</button>${x.mine ? `<button type="button" class="pe-x" data-ctpl-del="${esc(x.id)}" aria-label="${esc(t("Vorlage löschen"))}">×</button>` : ""}</div>`).join("")}</div>`
+        : `<p class="pe-hint">${esc(t("Noch keine geteilten Vorlagen – teile die erste!"))}</p>`;
+    }
+    // Eingebaute Vorlagen: Aufbau + Theme + Kopfbereich (Überschrift, Badge, Kontakt)
+    const TEMPLATES = {
+      creator: { name: "Creator", layout: "hero", theme: "space", head: ["Hi, ich bin {name}", "● Open to Work"] },
+      startup: { name: "Startup", layout: "split", theme: "cyber", head: ["Wir bauen die Zukunft", "Suche Mitgründer:in"] },
+      portfolio: { name: "Portfolio", layout: "grid", theme: "minimal", head: ["{name}", "Projekte · Ideen · Kontakt"] },
+      vintage: { name: "Vintage", layout: "classic", theme: "retro", head: ["Willkommen", "Seit heute auf Xyntal"] },
+      calm: { name: "Calm", layout: "center", theme: "ocean", head: ["{name}", "Lass uns zusammen etwas bauen"] },
+      dream: { name: "Dream", layout: "mirror", theme: "pastel", head: ["Ideen brauchen Menschen", "Schreib mir einfach"] },
+    };
+    function applyTemplate(key) {
+      const tp = TEMPLATES[key];
+      if (!tp || !confirm(t("Vorlage übernehmen? Eigene Texte, Bilder und Formen werden ersetzt (↶ macht es rückgängig)."))) return;
+      touch();
+      const name = String((cardInfo && cardInfo.name) || "").slice(0, 40) || t("Xyntal");
+      page.items = page.items.filter((i) => i.type === "block" || i.type === "link");
+      applyLayout(tp.layout, true);
+      const H = 190, W = page.w;
+      page.items.forEach((i) => { i.y = round(i.y + H); });
+      const mk = (type, v) => C.normalize({ items: [{ id: uid8(), type, ...C.DEFAULTS[type], ...v }] }).items[0];
+      const head = mk("text", { text: tp.head[0].replace("{name}", name), w: Math.min(W - 40, 860), h: 80, size: 56, weight: 700, align: "center", tfx: "gradient", anim: { p: "up", trig: "load" } });
+      head.x = round((W - head.w) / 2); head.y = 32;
+      const badge = mk("text", { text: tp.head[1], w: 300, h: 44, size: 15, weight: 700, align: "center", bg: "#262633", radius: 999 });
+      badge.x = round(W / 2 - 310); badge.y = 128;
+      const contact = mk("contact", { w: 300, h: 44, size: 15, hover: "lift" });
+      contact.x = round(W / 2 + 10); contact.y = 128;
+      page.items.unshift(head, badge, contact);
+      page.h = Math.min(C.MAX_H, page.h + H);
+      applyTheme(tp.theme, true);
+      sel = null; group.clear(); drawAll(); say(t("Vorlage übernommen – mit ↶ rückgängig."), "ok");
+    }
+    // Geteilte Vorlage: Link-Platzhalter bekommen die eigenen Links, übrige eigene Links kommen darunter
+    function applyCommunity(id) {
+      const tp = community.find((x) => x.id === id);
+      if (!tp || !confirm(t("Vorlage übernehmen? Deine Seite wird durch die Vorlage ersetzt (↶ macht es rückgängig)."))) return;
+      touch();
+      const next = C.normalize(tp.page), mine = links.filter((l) => l.active !== false);
+      let n = 0, last = null;
+      next.items = next.items.filter((i) => {
+        if (i.type !== "link") return i.type !== "block" || !!blocks[i.kind];
+        if (n >= mine.length) return false;
+        i.ref = mine[n++].id; last = i; return true;
+      });
+      mine.slice(n).forEach((l) => {
+        const base = last || { x: round((next.w - 340) / 2), y: 40 - 74, w: 340, h: 60, size: 16, radius: 14 };
+        const it = C.normalize({ items: [{ ...base, id: uid8(), type: "link", ref: l.id, y: base.y + base.h + 14 }] }).items[0];
+        next.items.push(it); last = it;
+      });
+      next.items = next.items.slice(0, limit());
+      page = next; page.items.forEach(fit);
+      sel = null; group.clear(); drawAll(); say(t("Vorlage übernommen – mit ↶ rückgängig."), "ok");
+    }
+    async function shareTemplate() {
+      const name = String(pop.querySelector("[data-share-name]")?.value || "").trim();
+      if (name.length < 2) { say(t("Gib der Vorlage einen Namen (2–40 Zeichen)."), "error"); return; }
+      const copy = JSON.parse(snap());
+      copy.items = copy.items.filter((i) => i.type !== "image" && i.type !== "embed").map((i) => (i.type === "link" ? { ...i, ref: C.SLOT } : i.type === "button" ? { ...i, url: "" } : i));
+      copy.bgv = ""; copy.bgvOwn = false;
+      const { error } = await sb.rpc("share_page_template", { p_name: name, p_page: copy });
+      if (error) { say(saveError(error), "error"); return; }
+      say(t("Vorlage geteilt – danke!"), "ok"); loadExtras();
+    }
+    pop.addEventListener("click", async (e) => {
+      const tpl = e.target.closest("[data-tpl]"), ct = e.target.closest("[data-ctpl]"), del = e.target.closest("[data-ctpl-del]"), ver = e.target.closest("[data-version]");
+      if (tpl) applyTemplate(tpl.dataset.tpl);
+      else if (ct) applyCommunity(ct.dataset.ctpl);
+      else if (e.target.closest("[data-share]")) shareTemplate();
+      else if (del) {
+        if (!confirm(t("Diese Vorlage löschen?"))) return;
+        const { error } = await sb.rpc("delete_my_page_template", { p_id: del.dataset.ctplDel });
+        if (error) say(saveError(error), "error"); else loadExtras();
+      } else if (ver) {
+        const { data, error } = await sb.rpc("get_my_page_version", { p_id: Number(ver.dataset.version) });
+        if (error || !data) { say(t("Diese Version lässt sich gerade nicht laden."), "error"); return; }
+        touch(); page = C.normalize(data); sel = null; group.clear(); drawAll();
+        say(t("Version geladen – „Veröffentlichen“ macht sie wieder öffentlich."), "ok");
+      }
+    });
 
     // ---- Mehrfachauswahl: Umschalt+Klick, zusammen verschieben, ausrichten, verteilen ----
     const group = new Set();
@@ -894,9 +1146,10 @@
         if (!page.items.some((i) => i.type === "link" && i.ref === l.id) && page.items.length < limit()) page.items.push(C.normalize({ items: [{ id: uid8(), type: "link", ref: l.id, x: 0, y: 0, w: 340, h: 60 }] }).items[0]);
       });
     }
-    function applyLayout(name) {
+    function applyLayout(name, quiet) {
       if (!LAYOUTS[name]) return;
-      touch(); ensureBasics();
+      if (!quiet) touch();
+      ensureBasics();
       const narrow = page.w === C.NARROW, col = narrow || name === "center";
       const blk = (k) => page.items.find((i) => i.type === "block" && i.kind === k);
       const lnk = page.items.filter((i) => i.type === "link");
@@ -963,7 +1216,7 @@
       }
       page.h = Math.min(C.MAX_H, Math.max(narrow ? 480 : 600, Math.ceil(bottom + 40)));
       sel = null; drawAll();
-      say(t("Vorlage angewendet – mit ↶ rückgängig."), "ok");
+      if (!quiet) say(t("Vorlage angewendet – mit ↶ rückgängig."), "ok");
     }
 
     // Zwischen „Ganze Seite“ und „Eine Spalte“ wechseln: alles maßstabsgetreu umrechnen
@@ -991,15 +1244,21 @@
       if (!session) { loading.innerHTML = `${esc(t("Melde dich an, um deine Seite zu gestalten."))} <a class="text-link" href="/login">${esc(t("Anmelden"))}</a>`; return; }
       uid = session.user.id;
       try {
-        const [l, p, pr] = await Promise.all([sb.rpc("get_my_links"), sb.rpc("get_my_page"), sb.from("profiles").select("is_premium,is_admin").eq("id", uid).maybeSingle()]);
-        if (l.error || p.error) throw l.error || p.error;
+        const [l, st, pr] = await Promise.all([sb.rpc("get_my_links"), sb.rpc("get_my_page_state"), sb.from("profiles").select("is_premium,is_admin").eq("id", uid).maybeSingle()]);
+        if (l.error) throw l.error;
+        // Ohne neuestes SQL (get_my_page_state fehlt): wie bisher ohne Entwurf
+        let p = st, draft = null;
+        if (st.error) { p = await sb.rpc("get_my_page"); if (p.error) throw p.error; }
+        else { canDraft = true; views = Number(st.data && st.data.views) || 0; draft = st.data && st.data.draft; p = { data: st.data && st.data.page }; }
         links = Array.isArray(l.data) ? l.data : [];
         paid = !!(pr.data && (pr.data.is_premium || pr.data.is_admin));
         hasSaved = !!(p.data && Array.isArray(p.data.items) && p.data.items.length);
-        page = hasSaved ? C.normalize(p.data) : starter();
+        const hasDraft = !!(draft && typeof draft === "object" && Array.isArray(draft.items));
+        page = hasDraft ? C.normalize(draft) : hasSaved ? C.normalize(p.data) : starter();
         loading.hidden = true; editor.hidden = false;
         drawAll();
-        if (!hasSaved) { relayout(); drawAll(); dirty = true; saveBtn.disabled = false; }
+        if (hasDraft) { dirty = true; draftSaved = true; saveBtn.disabled = false; say(t("Dein Entwurf ist geladen – noch nicht veröffentlicht.")); }
+        else if (!hasSaved) { relayout(); drawAll(); dirty = true; saveBtn.disabled = false; draftSaved = false; }
       } catch {
         loading.textContent = t("Deine Seite lässt sich gerade nicht laden. Bitte versuch es später noch einmal.");
       }

@@ -31,6 +31,10 @@ create function public.ban_active(b boolean, u timestamptz) returns boolean lang
 \i supabase/migrations/20261108180000_page_hover_names.sql
 \i supabase/migrations/20261108190000_page_extras.sql
 \i supabase/migrations/20261108190000_page_extras.sql
+-- Inhaltsfilter (vereinfacht wie 20261028150000_content_safety.sql)
+create function public.content_problem(p text) returns text language sql stable as $$ select case when lower(coalesce(p,'')) ~ 'arschloch' then 'beleidigung' end $$;
+\i supabase/migrations/20261108210000_page_pro.sql
+\i supabase/migrations/20261108210000_page_pro.sql
 
 create trigger waitlist_cards_reserved_handle before insert or update of handle on public.waitlist_cards for each row execute function public.reject_page_handles();
 
@@ -71,10 +75,40 @@ do $$ begin
   begin perform public.save_my_page('{"items":[{"type":"image","src":"00000000-0000-0000-0000-000000000002/22222222-2222-2222-2222-222222222222.png"}]}'); raise exception 'foreign image accepted'; exception when invalid_parameter_value then null; end;
   begin perform public.save_my_page('{"items":[{"type":"image","src":"https://evil.example/x.png"}]}'); raise exception 'external image accepted'; exception when invalid_parameter_value then null; end;
 end $$;
--- Grenze 20 (Free)
+-- Grenze 40 (Free)
 do $$ declare big jsonb; begin
-  select jsonb_build_object('items', jsonb_agg(jsonb_build_object('type','text','text','t'||g))) into big from generate_series(1,21) g;
+  select jsonb_build_object('items', jsonb_agg(jsonb_build_object('type','text','text','t'||g))) into big from generate_series(1,40) g;
+  perform public.save_my_page(big);
+  select jsonb_build_object('items', jsonb_agg(jsonb_build_object('type','text','text','t'||g))) into big from generate_series(1,41) g;
   begin perform public.save_my_page(big); raise exception 'limit not enforced'; exception when program_limit_exceeded then null; end;
+end $$;
+-- Inhaltsfilter, neue Elemente, Entwurf, Versionen, Dateiliste
+do $$ declare st jsonb; v jsonb; begin
+  begin perform public.save_my_page('{"items":[{"type":"text","text":"Du Arschloch"}]}'); raise exception 'insult accepted'; exception when raise_exception then
+    if sqlerrm not like 'XYNTAL_MODERATION:beleidigung%' then raise; end if; end;
+  begin perform public.save_my_page_draft('{"items":[{"type":"button","text":"arschloch"}]}'); raise exception 'insult draft accepted'; exception when raise_exception then null; end;
+  perform public.save_my_page('{"items":[{"type":"contact","text":"Schreib mir"},{"type":"counter","text":"Aufrufe","mo":2}]}');
+  perform public.save_my_page_draft('{"items":[{"type":"image","src":"00000000-0000-0000-0000-000000000001/33333333-3333-3333-3333-333333333333.webp"}]}');
+  st := public.get_my_page_state();
+  if jsonb_array_length(st->'draft'->'items') <> 1 or jsonb_array_length(st->'page'->'items') <> 2 then raise exception 'draft state wrong: %', st; end if;
+  if not ('00000000-0000-0000-0000-000000000001/33333333-3333-3333-3333-333333333333.webp' = any(public.get_my_page_media_refs())) then raise exception 'draft media ref missing'; end if;
+  for i in 1..12 loop perform public.save_my_page(jsonb_build_object('items', jsonb_build_array(jsonb_build_object('type','text','text','v'||i)))); end loop;
+  st := public.get_my_page_state();
+  if st->'draft' <> 'null'::jsonb or (st->>'versions')::int <> 10 then raise exception 'publish did not clear draft / keep 10: %', st; end if;
+  v := public.list_my_page_versions();
+  if public.get_my_page_version((v->0->>'id')::bigint)->'items'->0->>'text' <> 'v12' then raise exception 'latest version wrong'; end if;
+end $$;
+-- Vorlagen: ohne Medien und Links, nur eigene löschen
+do $$ declare tid uuid; begin
+  begin perform public.share_page_template('Mit Bild', '{"items":[{"type":"image","src":"00000000-0000-0000-0000-000000000001/22222222-2222-2222-2222-222222222222.png"}]}'); raise exception 'template with image accepted'; exception when invalid_parameter_value then null; end;
+  begin perform public.share_page_template('Mit Link', '{"items":[{"type":"link","ref":"11111111-1111-1111-1111-111111111111"}]}'); raise exception 'template with link accepted'; exception when invalid_parameter_value then null; end;
+  begin perform public.share_page_template('Arschloch', '{"items":[]}'); raise exception 'bad template name accepted'; exception when raise_exception then null; end;
+  tid := public.share_page_template('Neon', '{"items":[{"type":"text","text":"Hi"},{"type":"link","ref":"00000000-0000-0000-0000-000000000000"},{"type":"block","kind":"card"}]}');
+  if jsonb_array_length(public.list_page_templates()) <> 1 or not (public.list_page_templates()->0->>'mine')::boolean then raise exception 'template list wrong'; end if;
+  perform set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000002',false);
+  if public.delete_my_page_template(tid) then raise exception 'foreign template deleted'; end if;
+  perform set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001',false);
+  if not public.delete_my_page_template(tid) then raise exception 'own template not deleted'; end if;
 end $$;
 -- Bilder: nur im eigenen Ordner
 insert into storage.objects(bucket_id,name) values ('page-media','00000000-0000-0000-0000-000000000001/22222222-2222-2222-2222-222222222222.png');
@@ -88,15 +122,20 @@ end $$;
 set role anon;
 select set_config('request.jwt.claim.sub','',false);
 do $$ begin
-  if jsonb_array_length(public.get_public_card('nico')->'page'->'items') <> 5 then raise exception 'public page missing'; end if;
+  if jsonb_array_length(public.get_public_card('nico')->'page'->'items') <> 1 then raise exception 'public page missing'; end if;
+  perform public.track_page_view('nico');
+  if (public.get_public_card('nico')->>'views')::int <> 1 then raise exception 'view not counted'; end if;
+  perform public.track_page_view('nico');
+  if (public.get_public_card('nico')->>'views')::int <> 1 then raise exception 'view throttle missing'; end if;
+  begin perform public.save_my_page_draft('{}'); raise exception 'anon draft allowed'; exception when insufficient_privilege then null; end;
   begin perform public.save_my_page('{}'); raise exception 'anon save allowed'; exception when insufficient_privilege then null; end;
 end $$;
 
--- Paid darf mehr als 20
+-- Paid darf mehr als 40
 select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000002',false);
 set role authenticated;
 do $$ declare big jsonb; begin
-  select jsonb_build_object('items', jsonb_agg(jsonb_build_object('type','text','text','t'||g))) into big from generate_series(1,40) g;
+  select jsonb_build_object('items', jsonb_agg(jsonb_build_object('type','text','text','t'||g))) into big from generate_series(1,90) g;
   perform public.save_my_page(big);
 end $$;
 -- Gesperrte Konten speichern nicht

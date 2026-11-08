@@ -16,7 +16,9 @@
   const FONTS = { sans: "var(--f-text, system-ui, sans-serif)", serif: "'Source Serif 4', Georgia, serif", mono: "ui-monospace, 'IBM Plex Mono', monospace" };
   const SRC = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp|gif)$/;
   const UUID = /^[0-9a-f-]{36}$/;
-  const TYPES = ["text", "link", "image", "block", "shape", "button", "embed", "icons", "countdown"];
+  const TYPES = ["text", "link", "image", "block", "shape", "button", "embed", "icons", "countdown", "contact", "counter"];
+  // Platzhalter-Link in geteilten Vorlagen (wird beim Übernehmen durch eigene Links ersetzt)
+  const SLOT = "00000000-0000-0000-0000-000000000000";
   // Text-Effekte (nur Text-Elemente), Parallax-Tiefen, eigener Cursor, Hintergrund-Bewegung
   const TEXT_FX = { gradient: "Gradient", shimmer: "Shimmer", outline: "Outline", letters: "Letters" };
   const PARALLAX = { back: 0.3, mid: 0.15, front: -0.18 };
@@ -64,7 +66,7 @@
     borderflow: ["Border Flow", "Fill & Border"], underline: ["Underline", "Fill & Border"],
     type: ["Type", "Text"], spread: ["Spread", "Text"], glitch: ["Glitch", "Text"],
   };
-  const HOVER_TYPES = ["link", "button", "icons", "text", "image", "shape", "block"];
+  const HOVER_TYPES = ["link", "button", "contact", "icons", "text", "image", "shape", "block"];
   // Welche Effekte wo wirken (geprüft mit tests/hover-audit.cjs): Schrift-Effekte nur bei Elementen mit Schrift,
   // Licht-/Flächen-Effekte (Pseudo-Elemente) nicht bei Bildern und nicht bei der Karte.
   const TEXT_ONLY = ["type", "spread"];
@@ -72,7 +74,7 @@
   const NO_CARD = ["shine", "fill", "reveal", "underline"];
   function hoverFits(key, type, kind) {
     if (!HOVERS[key] || !HOVER_TYPES.includes(type)) return false;
-    if (TEXT_ONLY.includes(key)) return type === "text" || type === "link" || type === "button";
+    if (TEXT_ONLY.includes(key)) return type === "text" || type === "link" || type === "button" || type === "contact";
     if (type === "image" && NO_IMAGE.includes(key)) return false;
     if (type === "block" && kind === "card" && NO_CARD.includes(key)) return false;
     return true;
@@ -253,6 +255,8 @@
     embed: { w: 480, h: 270, radius: 16 },
     icons: { w: 320, h: 56, size: 22, color: "#eceae4", bg: "#2a2a2a", radius: 999, align: "center" },
     countdown: { w: 420, h: 110, size: 34, color: "#eceae4", bg: "#1f1f2b", radius: 20, text: "Launch in" },
+    contact: { w: 260, h: 56, size: 17, color: "#1c1c1c", bg: "#eceae4", radius: 999, text: "Nachricht schreiben" },
+    counter: { w: 240, h: 96, size: 32, color: "#eceae4", bg: "#1f1f2b", radius: 20, text: "Aufrufe" },
     block: { w: 300, h: 200, radius: 0 },
   };
 
@@ -273,9 +277,11 @@
       bw: round(num(raw.bw, 0, 16, 0)), bc: hex(raw.bc, "#eceae4"), sh: raw.sh === true,
       // Parallax-Tiefe beim Scrollen (leer = aus)
       px: PARALLAX[raw.px] !== undefined ? raw.px : "",
+      // Platz in der Reihenfolge am Handy (1 = ganz oben; 0 = automatisch nach Lage auf der Seite)
+      mo: Math.round(num(raw.mo, 0, 99, 0)),
     };
-    if (type === "text" || type === "button" || type === "shape") it.glass = raw.glass === true;
-    if (type === "text" || type === "link" || type === "button" || type === "icons" || type === "countdown") {
+    if (type === "text" || type === "button" || type === "shape" || type === "contact") it.glass = raw.glass === true;
+    if (type === "text" || type === "link" || type === "button" || type === "icons" || type === "countdown" || type === "contact" || type === "counter") {
       it.size = round(num(raw.size, 8, 160, d.size));
       it.color = hex(raw.color, d.color);
       it.bg = raw.bg === "" ? "" : hex(raw.bg, d.bg);
@@ -290,6 +296,9 @@
     } else if (type === "countdown") {
       it.text = String(raw.text ?? d.text).slice(0, 60);
       it.date = DATE.test(raw.date || "") ? raw.date : "";
+    } else if (type === "contact" || type === "counter") {
+      it.text = String(raw.text ?? d.text).slice(0, type === "contact" ? 80 : 40);
+      if (type === "contact") it.align = "center";
     } else if (type === "link") {
       it.ref = UUID.test(raw.ref || "") ? raw.ref : "";
       if (!it.ref) return null;
@@ -347,7 +356,8 @@
   function itemHtml(it, links, o) {
     const pw = o.pw || NARROW, uu = (n) => u(n, pw);
     // --ord: Reihenfolge, wenn eine breite Seite am Handy gestapelt wird (oben vor unten, links vor rechts)
-    const ord = Math.round(Math.max(0, it.y)) * 8000 + Math.round(it.x + FULL);
+    // mo (Handy-Reihenfolge) geht vor: 1, 2, 3 … zuerst, danach alles Übrige nach Lage
+    const ord = it.mo ? it.mo : 100 + Math.round(Math.max(0, it.y)) * 8000 + Math.round(it.x + FULL);
     const pos = `left:${uu(it.x)};top:${uu(it.y)};width:${uu(it.w)};height:${uu(it.h)};opacity:${it.o};--ord:${ord}${it.rot ? `;transform:rotate(${it.rot}deg)` : ""}`;
     const attrs = `class="pc-item pc-${it.type}" data-id="${esc(it.id)}" style="${pos}"`;
     if (it.type === "block") {
@@ -362,6 +372,20 @@
     if (it.type === "countdown") {
       const box = `--fs:${it.size};font-size:${uu(it.size)};color:${it.color};background:${it.bg || "transparent"};border-radius:${uu(it.radius)};${deco}`;
       return `<div ${attrs}><div class="pc-cd" data-cd="${esc(it.date)}" style="${box}"><span class="pc-cd-l" data-no-i18n>${esc(it.text)}</span><span class="pc-cd-n" data-cd-n>${it.date ? "–" : "Datum wählen"}</span></div></div>`;
+    }
+    if (it.type === "counter") {
+      // Aufrufe der Seite (get_public_card 'views'); im Editor die eigene Zahl
+      const box = `--fs:${it.size};font-size:${uu(it.size)};color:${it.color};background:${it.bg || "transparent"};border-radius:${uu(it.radius)};${deco}`;
+      const n = Number(o.views) || 0;
+      return `<div ${attrs}><div class="pc-cd pc-counter" style="${box}"><span class="pc-cd-l" data-no-i18n>${esc(it.text)}</span><span class="pc-cd-n">${esc(n.toLocaleString("de-DE"))}</span></div></div>`;
+    }
+    if (it.type === "contact") {
+      // „Nachricht schreiben“: angemeldet in die Nachrichten (o.contact aus u.js), sonst zur Anmeldung
+      const box = `--fs:${it.size};font-size:${uu(it.size)};color:${it.color};background:${it.bg || "transparent"};border-radius:${uu(it.radius)};${deco}`;
+      const ico = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
+      const href = !o.edit && /^\/(nachrichten(\?an=[0-9a-f-]{36})?|login)$/.test(o.contact || "") ? o.contact : "";
+      if (!href) return `<div ${attrs}><div class="pc-l pc-btn pc-contact${gl}" style="${box}">${ico}<b data-no-i18n>${esc(it.text)}</b></div></div>`;
+      return `<div ${attrs}><a class="pc-l pc-btn pc-contact${gl}" style="${box}" href="${esc(href)}">${ico}<b data-no-i18n>${esc(it.text)}</b></a></div>`;
     }
     if (it.type === "shape") {
       const fill = it.bg2 ? `linear-gradient(135deg, ${it.bg}, ${it.bg2})` : it.bg;
@@ -599,5 +623,5 @@
   }
   function zoomOf(it, pw) { return `calc(var(--k, 1) * ${it.w} / ${natOf(it.kind, pw)})`; }
 
-  window.XyntalPageCanvas = { hoverFits, TEXT_FX, PARALLAX, CURSORS, CURSOR_EMOJI, OVERLAYS, HOVERS, HOVER_TYPES, ANIMS, TRIGGERS, cleanAnim, compileAnim, EMBEDS, parseEmbed, BLOCKS, NARROW, WIDE, FULL, WIDTHS, natOf, mount, zoomOf, W, MIN_H, MAX_H, DEFAULTS, normalize, html, itemHtml, background, hex, num, round, esc, safeUrl };
+  window.XyntalPageCanvas = { SLOT, hoverFits, TEXT_FX, PARALLAX, CURSORS, CURSOR_EMOJI, OVERLAYS, HOVERS, HOVER_TYPES, ANIMS, TRIGGERS, cleanAnim, compileAnim, EMBEDS, parseEmbed, BLOCKS, NARROW, WIDE, FULL, WIDTHS, natOf, mount, zoomOf, W, MIN_H, MAX_H, DEFAULTS, normalize, html, itemHtml, background, hex, num, round, esc, safeUrl };
 })();

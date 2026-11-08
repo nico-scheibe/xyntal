@@ -277,3 +277,13 @@ a.pc-ib:hover, button.pc-ib:hover { transform: translateY(-2px); filter: brightn
 
 /* Ich biete / Ich suche als Baustein: ohne den farbigen Streifen links */
 .pc-block .pf-tile::before { display: none; }
+/* Kontakt („Nachricht schreiben“) und Aufrufe */
+.pc-contact svg { width: 1.1em; height: 1.1em; flex: none; }
+.pc-counter .pc-cd-n { font-variant-numeric: tabular-nums; }
+@container (max-width: 700px) {
+  .pc.is-wide:not(.is-edit) .pc-counter, .pc.is-wide:not(.is-edit) .pc-countdown .pc-cd { min-height: 84px; }
+}
+/* Seite melden (fremde Seiten) */
+.pf.pf--custom .pf-actions .pf-report { color: var(--text-3, #8a8a95); }
+.pf-report-link { justify-self: center; font-size: 13px; color: var(--text-3, #8a8a95); text-decoration: underline; text-underline-offset: 3px; }
+.pf-report-link:hover { color: var(--text-2, #b4b4be); }
