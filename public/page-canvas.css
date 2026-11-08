@@ -119,38 +119,40 @@ a.pc-ib:hover, button.pc-ib:hover { transform: translateY(-2px); filter: brightn
 
 /* Hover-Effekte (data-hover, page-canvas.js). Gelten für den Kasten des Elements; bei Link-Symbolen für jedes Symbol.
    Im Editor zeigt die Vorschau (.is-hover) denselben Zustand. */
-.pc-item[data-hover] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { transition: transform .35s cubic-bezier(.2, .9, .3, 1.3), box-shadow .35s ease, filter .35s ease, color .35s ease, outline-offset .35s ease, outline-color .35s ease; }
+.pc-item[data-hover] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk) { transition: transform .35s cubic-bezier(.2, .9, .3, 1.3), box-shadow .35s ease, filter .35s ease, color .35s ease, outline-offset .35s ease, outline-color .35s ease; }
 .pc-item[data-hover] .pc-l, .pc-item[data-hover] .pc-t, .pc-item[data-hover] .pc-ib { position: relative; overflow: hidden; isolation: isolate; }
+/* Profil-Bausteine: Effekt-Ebenen ja, aber nicht abschneiden (Karten-Leuchten bleibt sichtbar) */
+.pc-item[data-hover] .pc-blk { position: relative; isolation: isolate; border-radius: 18px; }
 .pc-item[data-hover] a.pc-l:hover, .pc-item[data-hover] button.pc-l:hover { filter: none; }
-.pc-item[data-hover="lift"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover, .pc-item[data-hover="lift"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { transform: translateY(calc(-6px * var(--k, 1))); box-shadow: 0 calc(18px * var(--k, 1)) calc(36px * var(--k, 1)) calc(-12px * var(--k, 1)) rgba(0, 0, 0, .8); }
-.pc-item[data-hover="pop"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover, .pc-item[data-hover="pop"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { transform: scale(1.08); }
-.pc-item[data-hover="glow"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover, .pc-item[data-hover="glow"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { box-shadow: 0 0 0 calc(2px * var(--k, 1)) var(--hc), 0 0 calc(28px * var(--k, 1)) var(--hc); }
-.pc-item[data-hover="neon"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover, .pc-item[data-hover="neon"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { box-shadow: 0 0 calc(6px * var(--k, 1)) var(--hc), 0 0 calc(22px * var(--k, 1)) var(--hc), 0 0 calc(48px * var(--k, 1)) var(--hc), inset 0 0 calc(12px * var(--k, 1)) var(--hc); text-shadow: 0 0 calc(10px * var(--k, 1)) var(--hc); }
-.pc-item[data-hover="ring"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover, .pc-item[data-hover="ring"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { outline: calc(2px * var(--k, 1)) solid var(--hc); outline-offset: calc(6px * var(--k, 1)); }
-.pc-item[data-hover="ring"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { outline: calc(2px * var(--k, 1)) solid transparent; outline-offset: 0; }
-.pc-item[data-hover="outline"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover, .pc-item[data-hover="outline"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { animation: pc-hpulse 1s ease-out infinite; }
-.pc-item[data-hover="rainbow"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover, .pc-item[data-hover="rainbow"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { animation: pc-rainbow 1.6s linear infinite; }
-.pc-item[data-hover="shake"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover, .pc-item[data-hover="shake"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { animation: pc-shake .45s ease-in-out; }
-.pc-item[data-hover="blur"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover, .pc-item[data-hover="blur"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { transform: scale(1.04); filter: saturate(1.3) contrast(1.1); }
+.pc-item[data-hover="lift"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk):hover, .pc-item[data-hover="lift"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk) { transform: translateY(calc(-6px * var(--k, 1))); box-shadow: 0 calc(18px * var(--k, 1)) calc(36px * var(--k, 1)) calc(-12px * var(--k, 1)) rgba(0, 0, 0, .8); }
+.pc-item[data-hover="pop"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk):hover, .pc-item[data-hover="pop"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk) { transform: scale(1.08); }
+.pc-item[data-hover="glow"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk):hover, .pc-item[data-hover="glow"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk) { box-shadow: 0 0 0 calc(2px * var(--k, 1)) var(--hc), 0 0 calc(28px * var(--k, 1)) var(--hc); }
+.pc-item[data-hover="neon"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk):hover, .pc-item[data-hover="neon"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk) { box-shadow: 0 0 calc(6px * var(--k, 1)) var(--hc), 0 0 calc(22px * var(--k, 1)) var(--hc), 0 0 calc(48px * var(--k, 1)) var(--hc), inset 0 0 calc(12px * var(--k, 1)) var(--hc); text-shadow: 0 0 calc(10px * var(--k, 1)) var(--hc); }
+.pc-item[data-hover="ring"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk):hover, .pc-item[data-hover="ring"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk) { outline: calc(2px * var(--k, 1)) solid var(--hc); outline-offset: calc(6px * var(--k, 1)); }
+.pc-item[data-hover="ring"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk) { outline: calc(2px * var(--k, 1)) solid transparent; outline-offset: 0; }
+.pc-item[data-hover="outline"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk):hover, .pc-item[data-hover="outline"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk) { animation: pc-hpulse 1s ease-out infinite; }
+.pc-item[data-hover="rainbow"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk):hover, .pc-item[data-hover="rainbow"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk) { animation: pc-rainbow 1.6s linear infinite; }
+.pc-item[data-hover="shake"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk):hover, .pc-item[data-hover="shake"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk) { animation: pc-shake .45s ease-in-out; }
+.pc-item[data-hover="blur"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk):hover, .pc-item[data-hover="blur"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk) { transform: scale(1.04); filter: saturate(1.3) contrast(1.1); }
 /* Fokus: alle anderen Elemente werden unscharf, solange die Maus auf diesem ist */
-.pc:has(.pc-item[data-hover="blur"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover) .pc-item:not(:has(:hover)) { filter: blur(calc(3px * var(--k, 1))) brightness(.7); transition: filter .35s ease; }
-.pc-item[data-hover="shine"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img)::after { content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none; transform: translateX(-120%) skewX(-20deg); background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .55), transparent); }
-.pc-item[data-hover="shine"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover::after, .pc-item[data-hover="shine"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img)::after { transform: translateX(120%) skewX(-20deg); transition: transform .75s ease; }
-.pc-item[data-hover="fill"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img)::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--hf); transform: scaleX(0); transform-origin: left; transition: transform .4s cubic-bezier(.7, 0, .2, 1); }
-.pc-item[data-hover="fill"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover, .pc-item[data-hover="fill"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { color: var(--hb) !important; }
-.pc-item[data-hover="fill"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover::before, .pc-item[data-hover="fill"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img)::before { transform: scaleX(1); }
-.pc-item[data-hover="tilt"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover, .pc-item[data-hover="tilt"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { transform: perspective(calc(700px * var(--k, 1))) rotateX(var(--rx, 6deg)) rotateY(var(--ry, -8deg)) scale(1.05); box-shadow: 0 calc(24px * var(--k, 1)) calc(40px * var(--k, 1)) calc(-16px * var(--k, 1)) rgba(0, 0, 0, .8); }
-.pc-item[data-hover="tilt"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { transition: transform .15s ease-out, box-shadow .3s ease; }
-.pc-item[data-hover="tilt"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img)::after { content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none; opacity: 0; transition: opacity .3s ease; background: radial-gradient(circle at var(--mx, 30%) var(--my, 20%), rgba(255, 255, 255, .45), transparent 55%); }
-.pc-item[data-hover="tilt"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover::after, .pc-item[data-hover="tilt"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img)::after { opacity: 1; }
+.pc:has(.pc-item[data-hover="blur"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk):hover) .pc-item:not(:has(:hover)) { filter: blur(calc(3px * var(--k, 1))) brightness(.7); transition: filter .35s ease; }
+.pc-item[data-hover="shine"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk)::after { content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none; transform: translateX(-120%) skewX(-20deg); background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .55), transparent); }
+.pc-item[data-hover="shine"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk):hover::after, .pc-item[data-hover="shine"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk)::after { transform: translateX(120%) skewX(-20deg); transition: transform .75s ease; }
+.pc-item[data-hover="fill"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk)::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--hf); transform: scaleX(0); transform-origin: left; transition: transform .4s cubic-bezier(.7, 0, .2, 1); }
+.pc-item[data-hover="fill"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk):hover, .pc-item[data-hover="fill"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk) { color: var(--hb) !important; }
+.pc-item[data-hover="fill"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk):hover::before, .pc-item[data-hover="fill"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk)::before { transform: scaleX(1); }
+.pc-item[data-hover="tilt"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk):hover, .pc-item[data-hover="tilt"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk) { transform: perspective(calc(700px * var(--k, 1))) rotateX(var(--rx, 6deg)) rotateY(var(--ry, -8deg)) scale(1.05); box-shadow: 0 calc(24px * var(--k, 1)) calc(40px * var(--k, 1)) calc(-16px * var(--k, 1)) rgba(0, 0, 0, .8); }
+.pc-item[data-hover="tilt"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk) { transition: transform .15s ease-out, box-shadow .3s ease; }
+.pc-item[data-hover="tilt"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk)::after { content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none; opacity: 0; transition: opacity .3s ease; background: radial-gradient(circle at var(--mx, 30%) var(--my, 20%), rgba(255, 255, 255, .45), transparent 55%); }
+.pc-item[data-hover="tilt"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk):hover::after, .pc-item[data-hover="tilt"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk)::after { opacity: 1; }
 @keyframes pc-hpulse { 0% { box-shadow: 0 0 0 0 var(--hc); } 100% { box-shadow: 0 0 0 calc(16px * var(--k, 1)) transparent; } }
-@media (prefers-reduced-motion: reduce) { .pc-item[data-hover] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { transition: none; animation: none !important; transform: none !important; } }
+@media (prefers-reduced-motion: reduce) { .pc-item[data-hover] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk) { transition: none; animation: none !important; transform: none !important; } }
 
 /* Spotlight: ein Lichtkreis in der Leuchtfarbe folgt der Maus (Position --mx/--my aus mount) */
-.pc-item[data-hover="spotlight"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img)::after { content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none; opacity: 0; transition: opacity .3s ease;
+.pc-item[data-hover="spotlight"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk)::after { content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none; opacity: 0; transition: opacity .3s ease;
   background: radial-gradient(circle calc(70px * var(--k, 1)) at var(--mx, 50%) var(--my, 50%), color-mix(in srgb, var(--hc) 55%, transparent), transparent 70%); mix-blend-mode: screen; }
-.pc-item[data-hover="spotlight"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover::after, .pc-item[data-hover="spotlight"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img)::after { opacity: 1; }
-.pc-item[data-hover="spotlight"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover, .pc-item[data-hover="spotlight"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { box-shadow: 0 0 0 calc(1px * var(--k, 1)) color-mix(in srgb, var(--hc) 60%, transparent); }
+.pc-item[data-hover="spotlight"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk):hover::after, .pc-item[data-hover="spotlight"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk)::after { opacity: 1; }
+.pc-item[data-hover="spotlight"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk):hover, .pc-item[data-hover="spotlight"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk) { box-shadow: 0 0 0 calc(1px * var(--k, 1)) color-mix(in srgb, var(--hc) 60%, transparent); }
 
 /* Overlays der ganzen Seite (page-canvas.js OVERLAYS): hinter den Elementen (Aurora, Sterne, Raster, Punkte)
    oder darüber (Körnung, Vignette, Scanlines). Klicks gehen immer durch. */
@@ -179,27 +181,27 @@ a.pc-ib:hover, button.pc-ib:hover { transform: translateY(-2px); filter: brightn
 @media (prefers-reduced-motion: reduce) { .pc-ov-stars::after, .pc-ov-aurora::before, .pc-ov-aurora::after { animation: none; } }
 
 /* Weitere Hover-Effekte (englische Namen in page-canvas.js HOVERS) */
-.pc-item[data-hover="pulse"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover, .pc-item[data-hover="pulse"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { animation: pc-hover-pulse .9s ease-in-out infinite; }
-.pc-item[data-hover="stretch"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover, .pc-item[data-hover="stretch"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { transform: scale(1.14, .9); }
-.pc-item[data-hover="stretch"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { transition: transform .5s cubic-bezier(.3, 1.9, .4, 1); }
-.pc-item[data-hover="jelly"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover, .pc-item[data-hover="jelly"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { animation: pc-jelly .7s ease-out both; }
-.pc-item[data-hover="flip"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover, .pc-item[data-hover="flip"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { transform: perspective(calc(600px * var(--k, 1))) rotateX(360deg); }
-.pc-item[data-hover="flip"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { transition: transform .7s cubic-bezier(.5, 0, .2, 1); }
-.pc-item[data-hover="magnet"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover, .pc-item[data-hover="magnet"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { transform: translate(var(--tx, 0), var(--ty, 0)) scale(1.04); }
-.pc-item[data-hover="magnet"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { transition: transform .2s ease-out; }
-.pc-item[data-hover="reveal"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img)::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--hf); clip-path: circle(0% at var(--mx, 50%) var(--my, 50%)); transition: clip-path .5s cubic-bezier(.6, 0, .2, 1); }
-.pc-item[data-hover="reveal"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover::before, .pc-item[data-hover="reveal"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img)::before { clip-path: circle(150% at var(--mx, 50%) var(--my, 50%)); }
-.pc-item[data-hover="reveal"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover, .pc-item[data-hover="reveal"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { color: var(--hb) !important; }
-.pc-item[data-hover="borderflow"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img)::before { content: ""; position: absolute; inset: 0; z-index: 3; pointer-events: none; padding: calc(2px * var(--k, 1)); border-radius: inherit; opacity: 0; transition: opacity .3s ease;
+.pc-item[data-hover="pulse"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk):hover, .pc-item[data-hover="pulse"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk) { animation: pc-hover-pulse .9s ease-in-out infinite; }
+.pc-item[data-hover="stretch"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk):hover, .pc-item[data-hover="stretch"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk) { transform: scale(1.14, .9); }
+.pc-item[data-hover="stretch"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk) { transition: transform .5s cubic-bezier(.3, 1.9, .4, 1); }
+.pc-item[data-hover="jelly"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk):hover, .pc-item[data-hover="jelly"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk) { animation: pc-jelly .7s ease-out both; }
+.pc-item[data-hover="flip"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk):hover, .pc-item[data-hover="flip"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk) { transform: perspective(calc(600px * var(--k, 1))) rotateX(360deg); }
+.pc-item[data-hover="flip"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk) { transition: transform .7s cubic-bezier(.5, 0, .2, 1); }
+.pc-item[data-hover="magnet"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk):hover, .pc-item[data-hover="magnet"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk) { transform: translate(var(--tx, 0), var(--ty, 0)) scale(1.04); }
+.pc-item[data-hover="magnet"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk) { transition: transform .2s ease-out; }
+.pc-item[data-hover="reveal"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk)::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--hf); clip-path: circle(0% at var(--mx, 50%) var(--my, 50%)); transition: clip-path .5s cubic-bezier(.6, 0, .2, 1); }
+.pc-item[data-hover="reveal"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk):hover::before, .pc-item[data-hover="reveal"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk)::before { clip-path: circle(150% at var(--mx, 50%) var(--my, 50%)); }
+.pc-item[data-hover="reveal"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk):hover, .pc-item[data-hover="reveal"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk) { color: var(--hb) !important; }
+.pc-item[data-hover="borderflow"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk)::before { content: ""; position: absolute; inset: 0; z-index: 3; pointer-events: none; padding: calc(2px * var(--k, 1)); border-radius: inherit; opacity: 0; transition: opacity .3s ease;
   background: linear-gradient(90deg, #ff5fd2, #b95cff, #5b8cff, #3fd8ff, #ff5fd2) 0 0 / 300% 100%;
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
-.pc-item[data-hover="borderflow"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover::before, .pc-item[data-hover="borderflow"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img)::before { opacity: 1; animation: pc-flow 2s linear infinite; }
-.pc-item[data-hover="underline"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img)::after { content: ""; position: absolute; left: 50%; bottom: 14%; height: calc(2px * var(--k, 1)); width: 0; background: var(--hc); transform: translateX(-50%); transition: width .35s cubic-bezier(.2, .8, .2, 1); }
-.pc-item[data-hover="underline"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover::after, .pc-item[data-hover="underline"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img)::after { width: 60%; }
+.pc-item[data-hover="borderflow"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk):hover::before, .pc-item[data-hover="borderflow"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk)::before { opacity: 1; animation: pc-flow 2s linear infinite; }
+.pc-item[data-hover="underline"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk)::after { content: ""; position: absolute; left: 50%; bottom: 14%; height: calc(2px * var(--k, 1)); width: 0; background: var(--hc); transform: translateX(-50%); transition: width .35s cubic-bezier(.2, .8, .2, 1); }
+.pc-item[data-hover="underline"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk):hover::after, .pc-item[data-hover="underline"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk)::after { width: 60%; }
 .pc-item[data-hover="spread"] :is(.pc-t, .pc-l b) { transition: letter-spacing .35s ease; }
 .pc-item[data-hover="spread"] .pc-l:hover b, .pc-item[data-hover="spread"] .pc-t:hover, .pc-item[data-hover="spread"].is-hover :is(.pc-t, .pc-l b) { letter-spacing: .14em; }
 .pc-item[data-hover="type"] :is(.pc-l:hover b, .pc-t:hover), .pc-item[data-hover="type"].is-hover :is(.pc-t, .pc-l b) { animation: pc-type .9s steps(22, end) both; }
-.pc-item[data-hover="glitch"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover, .pc-item[data-hover="glitch"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { animation: pc-glitch .32s steps(2, end) infinite; text-shadow: calc(2px * var(--k, 1)) 0 #ff2bd6, calc(-2px * var(--k, 1)) 0 #2bf3ff; }
+.pc-item[data-hover="glitch"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk):hover, .pc-item[data-hover="glitch"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk) { animation: pc-glitch .32s steps(2, end) infinite; text-shadow: calc(2px * var(--k, 1)) 0 #ff2bd6, calc(-2px * var(--k, 1)) 0 #2bf3ff; }
 @keyframes pc-hover-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.07); } }
 @keyframes pc-jelly { 0% { transform: scale(1, 1); } 25% { transform: scale(1.2, .8); } 40% { transform: scale(.88, 1.12); } 55% { transform: scale(1.08, .94); } 70% { transform: scale(.97, 1.03); } 100% { transform: scale(1.04, 1.04); } }
 @keyframes pc-flow { to { background-position: 300% 0; } }
@@ -209,7 +211,7 @@ a.pc-ib:hover, button.pc-ib:hover { transform: translateY(-2px); filter: brightn
 
 /* Reflection: Neon-Rahmen, leuchtende Schrift, Flackern wie eine Röhre und ein Spiegelschein unter dem Element
    (Schein am Element selbst, weil der Kasten überlaufenden Inhalt abschneidet) */
-.pc-item[data-hover="reflect"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover, .pc-item[data-hover="reflect"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) {
+.pc-item[data-hover="reflect"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk):hover, .pc-item[data-hover="reflect"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk) {
   outline: calc(2px * var(--k, 1)) solid var(--hc); outline-offset: calc(-2px * var(--k, 1));
   box-shadow: inset 0 0 calc(12px * var(--k, 1)) color-mix(in srgb, var(--hc) 70%, transparent), 0 0 calc(10px * var(--k, 1)) var(--hc), 0 0 calc(28px * var(--k, 1)) color-mix(in srgb, var(--hc) 60%, transparent);
   text-shadow: 0 0 calc(4px * var(--k, 1)) var(--hc), 0 0 calc(14px * var(--k, 1)) var(--hc); color: var(--hc) !important; animation: pc-flicker 2.6s linear infinite; }
@@ -218,3 +220,10 @@ a.pc-ib:hover, button.pc-ib:hover { transform: translateY(-2px); filter: brightn
 .pc-item[data-hover="reflect"]:hover::after, .pc-item[data-hover="reflect"].is-hover::after { opacity: 1; animation: pc-flicker 2.6s linear infinite; }
 @keyframes pc-flicker { 0%, 18%, 22%, 25%, 53%, 57%, 100% { opacity: 1; } 20%, 24%, 55% { opacity: .5; } }
 @media (prefers-reduced-motion: reduce) { .pc-item[data-hover="reflect"]::after { animation: none !important; } }
+/* Karte als Baustein: Schatten und Lichtflächen würden als Rechteck hinter der runden Karte erscheinen –
+   stattdessen leuchtet die Karte über drop-shadow in ihrer eigenen Form; Bewegungs-Effekte bleiben */
+.pc-block[data-kind="card"] .pc-blk { box-shadow: none !important; outline: none !important; background: none !important; }
+.pc-block[data-kind="card"] .pc-blk::before, .pc-block[data-kind="card"] .pc-blk::after { display: none !important; }
+.pc-block[data-kind="card"]:is([data-hover="glow"], [data-hover="neon"], [data-hover="reflect"], [data-hover="spotlight"], [data-hover="ring"], [data-hover="outline"], [data-hover="borderflow"]) .pc-blk:is(:hover, .is-hover *),
+.pc-block[data-kind="card"].is-hover:is([data-hover="glow"], [data-hover="neon"], [data-hover="reflect"], [data-hover="spotlight"], [data-hover="ring"], [data-hover="outline"], [data-hover="borderflow"]) .pc-blk {
+  filter: drop-shadow(0 0 calc(10px * var(--k, 1)) var(--hc)) drop-shadow(0 0 calc(26px * var(--k, 1)) color-mix(in srgb, var(--hc) 60%, transparent)); }

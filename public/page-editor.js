@@ -204,7 +204,8 @@
       if (!it) { insp.innerHTML = ""; return; }
       let body = "";
       if (it.type === "block") {
-        body = `<p class="pe-hint">${esc(t("Dieser Baustein zeigt deine Profilangaben. Ändern kannst du sie im Profil."))}</p>`;
+        body = `<p class="pe-hint">${esc(t("Dieser Baustein zeigt deine Profilangaben. Ändern kannst du sie im Profil."))}</p>
+          ${color$("color", "Effektfarbe", it.color || "#b95cff")}`;
       } else if (it.type === "text") {
         body = `<textarea data-p="text" maxlength="1000" aria-label="${esc(t("Text"))}">${esc(it.text)}</textarea>
           ${range$("size", "Schriftgröße", it.size, 8, 120)}
