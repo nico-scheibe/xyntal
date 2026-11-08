@@ -10,8 +10,8 @@
   const API = CFG.appApiUrl || "https://api.xyntal.de";
   const STORE = "xyntal-app-session";
   const SB_TOKEN = (() => {
-    try { return `sb-${new URL(CFG.supabaseUrl || "https://rralgrlujoupprwlvoyo.supabase.co").hostname.split(".")[0]}-auth-token`; }
-    catch { return "sb-rralgrlujoupprwlvoyo-auth-token"; }
+    try { return `sb-${new URL(CFG.supabaseUrl || "https://db.xyntal.de").hostname.split(".")[0]}-auth-token`; }
+    catch { return "sb-db-auth-token"; }
   })();
   const lang = () => (window.XyntalI18n ? window.XyntalI18n.get() : document.documentElement.lang === "en" ? "en" : "de");
   const t = (de) => (window.XyntalI18n ? window.XyntalI18n.t(de) : de);

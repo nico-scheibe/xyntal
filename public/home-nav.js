@@ -3,7 +3,7 @@
 // Besucher ohne Konto bekommen die schlanke Startseite ohne Supabase.
 (() => {
   let logged = false;
-  try { logged = !!localStorage.getItem("sb-rralgrlujoupprwlvoyo-auth-token"); } catch { /* privat */ }
+  try { logged = !!localStorage.getItem("sb-db-auth-token"); } catch { /* privat */ }
   if (!logged) return;
 
   document.body.classList.add("is-member");
