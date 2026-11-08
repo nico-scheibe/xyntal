@@ -1,3 +1,4 @@
+const panel = document.getElementById("auth-panel");
 const form = document.getElementById("login");
 const status = document.getElementById("status");
 // Nach dem Login zurück zur gewünschten Seite – nur bekannte Ziele
@@ -7,6 +8,7 @@ const mfaForm = document.getElementById("mfa"), mfaStatus = document.getElementB
 
 // Zweiter Schritt: Code aus der Authenticator-App
 function showMfa() {
+  panel.dataset.mode = "mfa";
   for (const id of ["login", "signup", "signup-done", "auth-divider", "auth-options", "auth-note"]) document.getElementById(id).hidden = true;
   document.querySelector(".auth-switch").hidden = true;
   mfaForm.hidden = false;
@@ -94,6 +96,9 @@ function showProviders(on) {
 function setMode(next, focus = false) {
   if (!mfaForm.hidden) return;
   mode = next === "signup" ? "signup" : "login";
+  panel.dataset.mode = mode;
+  // Anbieter-Buttons wandern zur sichtbaren Seite des Panels
+  panel.querySelector(`.auth-pane--${mode}`).prepend(document.getElementById("auth-stack"));
   tabs.forEach((t) => {
     const on = t.dataset.mode === mode;
     t.setAttribute("aria-selected", String(on));
@@ -172,6 +177,7 @@ signupForm.addEventListener("submit", (e) => {
     showProviders(false);
     signupDone.querySelector("[data-signup-email]").textContent = d.email.trim();
     signupDone.hidden = false;
+    panel.dataset.mode = "done";
     signupDone.focus();
   });
 });
