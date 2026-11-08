@@ -9,7 +9,7 @@ grant usage on schema auth,storage to anon,authenticated;
 grant usage on schema public to anon,authenticated;
 create function storage.foldername(text) returns text[] language sql immutable as $$ select (string_to_array($1,'/'))[1:array_length(string_to_array($1,'/'),1)-1] $$;
 create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
-create table storage.objects(id bigint generated always as identity, bucket_id text,name text);
+create table storage.objects(id bigint generated always as identity, bucket_id text,name text,metadata jsonb);
 alter table storage.objects enable row level security;
 grant select,insert,update,delete on storage.objects to anon,authenticated;
 grant usage on sequence storage.objects_id_seq to anon,authenticated;
@@ -35,6 +35,7 @@ create function public.ban_active(b boolean, u timestamptz) returns boolean lang
 create function public.content_problem(p text) returns text language sql stable as $$ select case when lower(coalesce(p,'')) ~ 'arschloch' then 'beleidigung' end $$;
 \i supabase/migrations/20261108210000_page_pro.sql
 \i supabase/migrations/20261108210000_page_pro.sql
+\i supabase/migrations/20261108220000_page_media_admin.sql
 
 create trigger waitlist_cards_reserved_handle before insert or update of handle on public.waitlist_cards for each row execute function public.reject_page_handles();
 
@@ -118,6 +119,19 @@ do $$ begin
   begin insert into storage.objects(bucket_id,name) values ('page-media','00000000-0000-0000-0000-000000000001/x.exe'); raise exception 'bad name allowed'; exception when insufficient_privilege then null; end;
 end $$;
 
+-- Upload-Größe: normal Bild 3 MB / Video 15 MB, Admins ohne Grenze
+do $$ begin
+  insert into storage.objects(bucket_id,name,metadata) values ('page-media','00000000-0000-0000-0000-000000000001/44444444-4444-4444-4444-444444444441.mp4','{"size":15000000}');
+  begin insert into storage.objects(bucket_id,name,metadata) values ('page-media','00000000-0000-0000-0000-000000000001/44444444-4444-4444-4444-444444444442.mp4','{"size":20000000}'); raise exception 'big video allowed'; exception when insufficient_privilege then null; end;
+  begin insert into storage.objects(bucket_id,name,metadata) values ('page-media','00000000-0000-0000-0000-000000000001/44444444-4444-4444-4444-444444444443.png','{"size":4000000}'); raise exception 'big image allowed'; exception when insufficient_privilege then null; end;
+end $$;
+reset role;
+update public.profiles set is_admin = true where id = '00000000-0000-0000-0000-000000000001';
+set role authenticated;
+insert into storage.objects(bucket_id,name,metadata) values ('page-media','00000000-0000-0000-0000-000000000001/44444444-4444-4444-4444-444444444444.mp4','{"size":400000000}');
+reset role;
+update public.profiles set is_admin = false where id = '00000000-0000-0000-0000-000000000001';
+set role authenticated;
 -- Öffentlich: Seite wird mit der Karte geliefert
 set role anon;
 select set_config('request.jwt.claim.sub','',false);

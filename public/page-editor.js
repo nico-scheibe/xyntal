@@ -47,7 +47,7 @@
 
     let page = C.normalize(null), links = [], sel = null, dirty = false, busy = false, uid = "", handle = "", paid = false, hasSaved = false;
     // Entwurf: speichert automatisch (save_my_page_draft, Migration 20261108210000), öffentlich wird erst „Veröffentlichen“
-    let canDraft = false, draftSaved = true, draftTimer = 0, views = 0, phone = false;
+    let admin = false, canDraft = false, draftSaved = true, draftTimer = 0, views = 0, phone = false;
     const undo = [], redo = [];
     let lastKey = "", lastAt = 0;
     // Gleiche Grenzen prüft die Datenbank (page_item_limit, Migration 20261108110000)
@@ -162,7 +162,7 @@
       ${page.cursor === "emoji" ? `<div class="pe-row">${C.CURSOR_EMOJI.map((e) => `<button type="button" class="pe-btn${page.cemo === e ? " is-on" : ""}" data-cemo="${e}">${e}</button>`).join("")}</div>` : ""}
       <h2>${esc(t("Hintergrund-Video"))}</h2>
       ${page.bgv ? `<p class="pe-hint">${esc(t("Eigenes Video läuft stumm im Hintergrund."))}</p><button type="button" class="pe-btn pe-danger" data-bgv-del>${esc(t("Video entfernen"))}</button>`
-        : `${ownCheck("data-bgv-own", false)}<label class="pe-btn" data-bgv-label>+ ${esc(t("Video hochladen (MP4/WebM, max. 15 MB)"))}<input type="file" accept="video/mp4,video/webm" data-bgv-file hidden></label>`}
+        : `${ownCheck("data-bgv-own", false)}<label class="pe-btn" data-bgv-label>+ ${esc(t(admin ? "Video hochladen (MP4/WebM, ohne Größenlimit)" : "Video hochladen (MP4/WebM, max. 15 MB)"))}<input type="file" accept="video/mp4,video/webm" data-bgv-file hidden></label>`}
       <p class="pe-count">${page.items.length} / ${limit()} ${esc(t("Elemente"))}</p>
       <button type="button" class="pe-btn pe-danger" data-reset>${esc(t("Auf Standardseite zurücksetzen"))}</button>`;
     // Vorlagen im Menü „+ Mehr“: Typ und Startwerte
@@ -771,7 +771,7 @@
         if (!file) return;
         if (!pop.querySelector("[data-bgv-own]")?.checked) { say(t("Bitte bestätige, dass es dein eigenes Video ist."), "error"); return; }
         if (!/^video\/(mp4|webm)$/.test(file.type)) { say(t("Nur MP4 oder WebM."), "error"); return; }
-        if (file.size > 15 * 1024 * 1024) { say(t("Das Video ist größer als 15 MB."), "error"); return; }
+        if (!admin && file.size > 15 * 1024 * 1024) { say(t("Das Video ist größer als 15 MB."), "error"); return; }
         say(t("Video wird hochgeladen …"));
         try {
           const path = `${uid}/${crypto.randomUUID()}.${file.type === "video/webm" ? "webm" : "mp4"}`;
@@ -795,11 +795,11 @@
     });
     $("[data-upload-label]").addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("[data-upload]").click(); } });
 
-    // Bild: Fotos werden auf höchstens 1600 px verkleinert und als WebP hochgeladen; GIFs bleiben unverändert (Animation)
+    // Bild: Fotos werden auf höchstens 1600 px (Admins 4096 px) verkleinert und als WebP hochgeladen; GIFs bleiben unverändert (Animation)
     async function prepare(file) {
       if (file.type === "image/gif") return { blob: file, ext: "gif" };
       const bmp = await createImageBitmap(file);
-      const s = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+      const s = Math.min(1, (admin ? 4096 : 1600) / Math.max(bmp.width, bmp.height));
       const cv = document.createElement("canvas"); cv.width = Math.round(bmp.width * s); cv.height = Math.round(bmp.height * s);
       cv.getContext("2d").drawImage(bmp, 0, 0, cv.width, cv.height);
       const blob = await new Promise((res) => cv.toBlob(res, "image/webp", 0.86));
@@ -812,7 +812,7 @@
       say(t("Bild wird hochgeladen …"));
       try {
         const { blob, ext, w, h } = await prepare(file);
-        if (blob.size > 3 * 1024 * 1024) throw new Error("size");
+        if (!admin && blob.size > 3 * 1024 * 1024) throw new Error("size");
         const path = `${uid}/${crypto.randomUUID()}.${ext}`;
         const { error } = await sb.storage.from("page-media").upload(path, blob, { contentType: blob.type, upsert: false });
         if (error) throw error;
@@ -1252,6 +1252,7 @@
         else { canDraft = true; views = Number(st.data && st.data.views) || 0; draft = st.data && st.data.draft; p = { data: st.data && st.data.page }; }
         links = Array.isArray(l.data) ? l.data : [];
         paid = !!(pr.data && (pr.data.is_premium || pr.data.is_admin));
+        admin = !!(pr.data && pr.data.is_admin);
         hasSaved = !!(p.data && Array.isArray(p.data.items) && p.data.items.length);
         const hasDraft = !!(draft && typeof draft === "object" && Array.isArray(draft.items));
         page = hasDraft ? C.normalize(draft) : hasSaved ? C.normalize(p.data) : starter();
