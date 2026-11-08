@@ -29,7 +29,7 @@
     return {
       name: c.name || "", role: c.role || "Entwicklung", level: c.level || "Fortgeschritten", skills: c.skills || [], hours: c.hours || 8,
       mode: c.mode || "Hybrid", city: c.city || "", looking: c.looking || "Mitgründer:in", pitch: c.pitch || "", link: c.link || "",
-      handle: c.handle || "", theme: d.theme, c1: d.c1, c2: d.c2, surface: d.surface, shape: d.shape, layout: d.layout, order: d.order, off: d.off,
+      handle: c.handle || "", theme: d.theme, c1: d.c1, c2: d.c2, surface: d.surface, shape: d.shape, layout: d.layout, fx: d.fx, order: d.order, off: d.off,
     };
   };
 
@@ -114,7 +114,7 @@
         p_pitch: d.pitch.trim().slice(0, 120), p_lang: document.documentElement.lang === "en" ? "en" : "de",
         p_city: d.city.trim().slice(0, 40), p_mode: d.mode, p_level: d.level, p_link: B.linkUrl(d.link), p_handle: d.handle,
         p_public: pub.checked,
-        p_design: { theme: d.theme, c1: d.c1, c2: d.c2, surface: d.surface, shape: d.shape, layout: d.layout, order: d.order, off: d.off },
+        p_design: { theme: d.theme, c1: d.c1, c2: d.c2, surface: d.surface, shape: d.shape, layout: d.layout, fx: d.fx, order: d.order, off: d.off },
       }));
       const fresh = unwrap(await sb.rpc("get_my_card"));
       if (fresh) { B.set({ handle: fresh.handle || "" }); pub.checked = !!fresh.is_public; savedHandle = fresh.handle || ""; }

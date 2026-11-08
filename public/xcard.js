@@ -23,6 +23,7 @@
     const cols = theme === "custom" ? [d.c1, d.c2] : THEMES[theme];
     const grad = `linear-gradient(120deg, ${cols.map((col, k, a) => `${col} ${Math.round((k / (a.length - 1)) * 100)}%`).join(", ")})`;
     const surface = d.surface === "light" ? "light" : "dark", shape = d.shape === "rounded" ? "rounded" : "circle", layout = d.layout === "center" ? "center" : "left";
+    const fx = d.fx === "soft" || d.fx === "strong" ? d.fx : "off";
     const order = (Array.isArray(d.order) ? d.order.filter((b) => BLOCKS.includes(b)) : []).concat(BLOCKS).filter((b, i, a) => a.indexOf(b) === i);
     const off = Array.isArray(d.off) ? d.off.filter((b) => BLOCKS.includes(b)) : [];
     const name = c.name || "?";
@@ -42,7 +43,7 @@
       stats: `<div class="mc-stats"><div><span>${esc(t("Zeit"))}</span><b>${esc(t(`${Number(c.hours) || 0} Std./Woche`))}</b><i class="mc-bar"><i style="width:${Math.min(100, ((Number(c.hours) || 0) / 20) * 100)}%"></i></i></div>${level ? `<div><span>${esc(t("Erfahrung"))}</span><b>${esc(t(level))}</b><i class="mc-dots">${[0, 1, 2].map((k) => `<i class="${k <= lv ? "on" : ""}"></i>`).join("")}</i></div>` : ""}</div>`,
     };
     const message = typeof opts.messageUrl === "string" && opts.messageUrl ? `<a class="mc-message mc-link-button" href="${esc(opts.messageUrl)}">Nachricht schreiben</a>` : "";
-    return `<article class="my-card${firstUser ? " is-first-user" : ""}" data-first-user="${firstUser ? "true" : "false"}" data-theme="${theme}" data-surface="${surface}" data-shape="${shape}" data-layout="${layout}" style="--tg:${grad};--t1:${cols[0]}">
+    return `<article class="my-card${firstUser ? " is-first-user" : ""}" data-first-user="${firstUser ? "true" : "false"}" data-theme="${theme}" data-surface="${surface}" data-shape="${shape}" data-layout="${layout}" data-fx="${fx}" style="--tg:${grad};--t1:${cols[0]}">
           <div class="mc-cover" aria-hidden="true">
             <span class="mc-mark"><svg viewBox="0 0 24 24"><defs><linearGradient id="xm-ac" x1="3" y1="21" x2="21" y2="3" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#B36BFF"/><stop offset="1" stop-color="#3A8AFF"/></linearGradient><linearGradient id="xm-bc" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#3A8AFF"/><stop offset="1" stop-color="#3FE0F0"/></linearGradient><mask id="xm-gc" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><path d="M3 21Q8.59 8.59 21 3" fill="none" stroke="#000" stroke-width="7.4" stroke-linecap="round"/></mask></defs><path d="M3 3Q15.41 8.59 21 21" fill="none" stroke="url(#xm-bc)" stroke-width="4.6" stroke-linecap="round" mask="url(#xm-gc)"/><path d="M3 21Q8.59 8.59 21 3" fill="none" stroke="url(#xm-ac)" stroke-width="4.6" stroke-linecap="round"/></svg>xyntal</span>
             <span class="mc-badge${firstUser ? " mc-badge-first-user" : c.is_admin === true ? " mc-badge-admin" : ""}">${esc(t(c.is_admin === true ? "Admin" : firstUser ? "First User" : "Early Access"))}</span>

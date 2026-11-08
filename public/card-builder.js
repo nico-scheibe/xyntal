@@ -50,7 +50,7 @@
     };
     let data = { name: "", city: "", role: "Entwicklung", level: "Fortgeschritten", skills: [], hours: 8, mode: "Hybrid",
       looking: "Mitgründer:in", pitch: "", link: "", handle: "", photo: "", touched: false,
-      theme: "aurora", c1: "#FF5FD2", c2: "#3FD8FF", surface: "dark", shape: "circle", layout: "left", order: DEFAULT_ORDER.slice(), off: [] };
+      theme: "aurora", c1: "#FF5FD2", c2: "#3FD8FF", surface: "dark", shape: "circle", layout: "left", fx: "off", order: DEFAULT_ORDER.slice(), off: [] };
     if (!ACCOUNT) try { const saved = JSON.parse(localStorage.getItem(STORE) || "null"); if (saved && typeof saved === "object") data = { ...data, ...saved }; } catch { /* egal */ }
     // Wunsch-Link: nur a–z, 0–9, - und _, 3–20 Zeichen, beginnt mit Buchstabe oder Zahl
     const cleanHandle = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9_-]/g, "").replace(/^[-_]+/, "").slice(0, 20);
@@ -65,6 +65,7 @@
       if (!["dark", "light"].includes(data.surface)) data.surface = "dark";
       if (!["circle", "rounded"].includes(data.shape)) data.shape = "circle";
       if (!["left", "center"].includes(data.layout)) data.layout = "left";
+      if (!["off", "soft", "strong"].includes(data.fx)) data.fx = "off";
       if (!Array.isArray(data.order)) data.order = [];
       data.order = data.order.filter((b) => BLOCKS[b]).concat(DEFAULT_ORDER).filter((b, i, a) => a.indexOf(b) === i);
       data.off = Array.isArray(data.off) ? data.off.filter((b) => BLOCKS[b]) : [];
@@ -202,7 +203,7 @@
     function render(animatePulse = true) {
       const name = data.name.trim() || "Alex";
       const c = el.card;
-      c.dataset.theme = data.theme; c.dataset.surface = data.surface; c.dataset.shape = data.shape; c.dataset.layout = data.layout;
+      c.dataset.theme = data.theme; c.dataset.surface = data.surface; c.dataset.shape = data.shape; c.dataset.layout = data.layout; c.dataset.fx = data.fx;
       c.style.setProperty("--tg", cssGrad()); c.style.setProperty("--t1", colors()[0]);
       el.customSwatch.style.setProperty("--tg", `linear-gradient(120deg, ${data.c1}, ${data.c2})`);
       el.custom.hidden = data.theme !== "custom";
@@ -247,7 +248,7 @@
       if (el.handle.value !== h) el.handle.value = h;
       data.handle = h;
       data.hours = Number(el.hours.value);
-      for (const key of ["role", "level", "mode", "looking", "theme", "surface", "shape", "layout"]) data[key] = radio(key) || data[key];
+      for (const key of ["role", "level", "mode", "looking", "theme", "surface", "shape", "layout", "fx"]) data[key] = radio(key) || data[key];
       const c1 = form.c1.value, c2 = form.c2.value;
       if (isHex(c1)) data.c1 = c1; if (isHex(c2)) data.c2 = c2;
       data.touched = true;
@@ -395,7 +396,7 @@
       el.name.value = data.name; el.city.value = data.city; el.pitch.value = data.pitch; el.link.value = data.link; el.hours.value = data.hours;
       el.handle.value = data.handle;
       form.c1.value = data.c1; form.c2.value = data.c2;
-      for (const key of ["role", "level", "mode", "looking", "theme", "surface", "shape", "layout"]) $$(`input[name="${key}"]`, form).forEach((r) => { r.checked = r.value === data[key]; });
+      for (const key of ["role", "level", "mode", "looking", "theme", "surface", "shape", "layout", "fx"]) $$(`input[name="${key}"]`, form).forEach((r) => { r.checked = r.value === data[key]; });
     }
     fillForm();
 
@@ -576,7 +577,7 @@
     // Für die Warteliste: nur die Angaben – Foto und Gestaltung bleiben auf dem Gerät
     window.XyntalCard = () => ({ name: data.name, city: data.city, role: data.role, level: data.level, skills: data.skills.slice(), hours: data.hours,
       mode: data.mode, looking: data.looking, pitch: data.pitch, link: linkUrl(data.link), handle: validHandle(data.handle) ? data.handle : "", touched: data.touched,
-      design: { theme: data.theme, c1: data.c1, c2: data.c2, surface: data.surface, shape: data.shape, layout: data.layout, order: data.order.slice(), off: data.off.slice() } });
+      design: { theme: data.theme, c1: data.c1, c2: data.c2, surface: data.surface, shape: data.shape, layout: data.layout, fx: data.fx, order: data.order.slice(), off: data.off.slice() } });
     window.XyntalCardDraw = drawCard;
     // Schnittstelle für /meine-karte: Karte vom Server laden, Änderungen beobachten
     window.XyntalBuilder = {

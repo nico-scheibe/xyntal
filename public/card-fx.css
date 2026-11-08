@@ -1,0 +1,45 @@
+/* Xyntal-Karte: Hover-Effekt, wählbar im Karten-Builder (design.fx = "soft" | "strong").
+   Gesteuert von card-fx.js: Neigung zur Maus, Lichtschein, bei „Stark“ zusätzlich Glanz.
+   Nutzt die einzelnen Eigenschaften rotate/scale, damit transform (leichte Schräglage der Karte) bleibt. */
+:has(> .my-card[data-fx="soft"]), :has(> .my-card[data-fx="strong"]) { perspective: 1100px; }
+
+.my-card[data-fx="soft"], .my-card[data-fx="strong"] {
+  --fx-x: 50%; --fx-y: 30%; --fx-sx: 50%;
+  rotate: var(--fx-rot, none);
+  transition: rotate .7s cubic-bezier(.22, .8, .2, 1), scale .5s cubic-bezier(.22, .8, .2, 1), box-shadow .4s ease;
+}
+.my-card[data-fx].fx-on { transition-duration: .14s, .35s, .4s; }
+
+/* Lichtschein, der der Maus folgt – in der Farbe der Karte */
+.my-card[data-fx="soft"]::after, .my-card[data-fx="strong"]::after {
+  content: ""; position: absolute; inset: 0; z-index: 3; border-radius: inherit; pointer-events: none;
+  opacity: 0; transition: opacity .4s ease; mix-blend-mode: screen;
+  background: radial-gradient(240px circle at var(--fx-x) var(--fx-y), color-mix(in srgb, var(--t1) 32%, transparent), transparent 72%);
+}
+.my-card[data-fx="strong"]::after {
+  background:
+    linear-gradient(115deg, transparent calc(var(--fx-sx) - 24%), rgba(255, 255, 255, .13) var(--fx-sx), transparent calc(var(--fx-sx) + 24%)),
+    radial-gradient(300px circle at var(--fx-x) var(--fx-y), color-mix(in srgb, var(--t1) 46%, transparent), transparent 72%);
+}
+.my-card[data-fx].fx-on::after { opacity: 1; }
+.my-card[data-fx="strong"].fx-on {
+  scale: 1.025;
+  box-shadow: 0 50px 90px -40px rgba(0, 0, 0, .9), 0 0 96px -16px var(--t1);
+}
+
+/* Helle Karte: Licht normal überlagern, sonst verschwindet es im Weiß */
+.my-card[data-surface="light"][data-fx]::after { mix-blend-mode: normal; }
+.my-card[data-surface="light"][data-fx="soft"]::after {
+  background: radial-gradient(240px circle at var(--fx-x) var(--fx-y), color-mix(in srgb, var(--t1) 16%, transparent), transparent 72%);
+}
+.my-card[data-surface="light"][data-fx="strong"]::after {
+  background:
+    linear-gradient(115deg, transparent calc(var(--fx-sx) - 24%), rgba(255, 255, 255, .45) var(--fx-sx), transparent calc(var(--fx-sx) + 24%)),
+    radial-gradient(300px circle at var(--fx-x) var(--fx-y), color-mix(in srgb, var(--t1) 22%, transparent), transparent 72%);
+}
+
+/* Weniger Bewegung: keine Neigung, kein Vergrößern – nur das Licht bleibt */
+@media (prefers-reduced-motion: reduce) {
+  .my-card[data-fx] { rotate: none !important; scale: none !important; transition: none !important; }
+  .my-card[data-fx="strong"]::after { background: radial-gradient(300px circle at var(--fx-x) var(--fx-y), color-mix(in srgb, var(--t1) 40%, transparent), transparent 72%); }
+}
