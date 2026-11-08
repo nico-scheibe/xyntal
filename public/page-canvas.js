@@ -52,7 +52,7 @@
   const HOVERS = {
     lift: ["Lift", "Motion"], pop: ["Pop", "Motion"], pulse: ["Pulse", "Motion"], stretch: ["Stretch", "Motion"], jelly: ["Jelly", "Motion"],
     shake: ["Shake", "Motion"], flip: ["Flip", "Motion"], tilt: ["Tilt 3D", "Motion"], magnet: ["Magnet", "Motion"],
-    glow: ["Glow", "Light"], neon: ["Neon", "Light"], shine: ["Shine", "Light"], spotlight: ["Spotlight", "Light"], rainbow: ["Rainbow", "Light"], blur: ["Focus", "Light"],
+    glow: ["Glow", "Light"], neon: ["Neon", "Light"], reflect: ["Reflection", "Light"], shine: ["Shine", "Light"], spotlight: ["Spotlight", "Light"], rainbow: ["Rainbow", "Light"], blur: ["Focus", "Light"],
     fill: ["Fill", "Fill & Border"], reveal: ["Reveal", "Fill & Border"], ring: ["Ring", "Fill & Border"], outline: ["Pulse Ring", "Fill & Border"],
     borderflow: ["Border Flow", "Fill & Border"], underline: ["Underline", "Fill & Border"],
     type: ["Type", "Text"], spread: ["Spread", "Text"], glitch: ["Glitch", "Text"],

@@ -89,7 +89,7 @@
     if (editing) return;
     editing = true;
     try {
-      const css = loadAsset("link", "href", "/page-canvas.css?v=15"), css2 = loadAsset("link", "href", "/page-editor.css?v=14");
+      const css = loadAsset("link", "href", "/page-canvas.css?v=16"), css2 = loadAsset("link", "href", "/page-editor.css?v=14");
       if (!window.supabase) await loadAsset("script", "src", "/vendor/supabase.js?v=31");
       await Promise.all([css, css2]);
       await loadAsset("script", "src", "/page-editor.js?v=17");
