@@ -37,7 +37,9 @@
     : `<a class="btn btn-glass" href="/beta">${esc(t("Für die Beta bewerben"))}</a>`}</div>`;
   const freeLink = (h) => `/?handle=${encodeURIComponent(h)}#karte`;
 
+  let shown = null;
   function renderCard(c) {
+    shown = c;
     const name = c.name || "?";
     const own = !!(me && c.user_id && c.user_id === me.id);
     const admin = c.is_admin === true;
@@ -86,12 +88,12 @@
     if (editing) return;
     editing = true;
     try {
-      const css = loadAsset("link", "href", "/page-canvas.css?v=2"), css2 = loadAsset("link", "href", "/page-editor.css?v=2");
+      const css = loadAsset("link", "href", "/page-canvas.css?v=4"), css2 = loadAsset("link", "href", "/page-editor.css?v=5");
       if (!window.supabase) await loadAsset("script", "src", "/vendor/supabase.js?v=31");
       await Promise.all([css, css2]);
-      await loadAsset("script", "src", "/page-editor.js?v=2");
+      await loadAsset("script", "src", "/page-editor.js?v=4");
       document.body.classList.remove("admin-profile");
-      window.XyntalPageEditor.open(root);
+      window.XyntalPageEditor.open(root, { card: shown, blocks: blockMap(shown), after: (host) => afterBlocks(host, shown), cardInfo: shown });
     } catch { editing = false; location.assign(location.pathname); }
   }
   root.addEventListener("click", (e) => { if (e.target.closest("[data-edit-page]")) { e.preventDefault(); history.replaceState(null, "", "#gestalten"); startEditor(); } });
@@ -99,9 +101,10 @@
   const customPage = (c) => !!(window.XyntalPageCanvas && c.page && Array.isArray(c.page.items) && window.XyntalPageCanvas.normalize(c.page).items.length);
   function renderCustom(c, primary) {
     const own = !!(me && c.user_id && c.user_id === me.id);
+    const blocks = blockMap(c);
     page(`
       <div class="pf pf--custom">
-        ${window.XyntalPageCanvas.html(c.page, { links: Array.isArray(c.links) ? c.links : [], base: SUPA, t })}
+        ${window.XyntalPageCanvas.html(c.page, { links: Array.isArray(c.links) ? c.links : [], base: SUPA, t, block: (kind) => blocks[kind] || "" })}
         <div class="pf-actions">
           ${primary}
           ${own ? `<a class="btn btn-glass" href="#gestalten" data-edit-page>${esc(t("Seite frei gestalten"))}</a>` : ""}
@@ -111,6 +114,28 @@
         </div>
       </div>`);
     document.body.classList.remove("admin-profile");
+    window.XyntalPageCanvas.mount(root);
+    afterBlocks(root, c);
+  }
+  // Bausteine der Profilseite als HTML (leer, wenn es nichts anzuzeigen gibt) – im freien Layout einzeln platzierbar
+  function blockMap(c) {
+    const p = c.profile || {}, text = (s) => (s && String(s).trim() ? String(s).trim() : "");
+    const about = text(p.about), offer = text(p.offer), seek = text(p.seek), headline = p.headline || c.pitch || "";
+    const skills = Array.isArray(c.skills) ? c.skills.filter((s) => text(s)) : [];
+    const tile = (cls, title, body) => `<section class="pf-tile ${cls}"><h2>${esc(t(title))}</h2><p data-no-i18n>${esc(body)}</p></section>`;
+    return {
+      card: `<div class="bp-stage">${window.XyntalCardHtml(c, { t, heading: "h1", avatarAttrs: "data-pub-avatar" })}</div>`,
+      head: `<header class="pf-head"><p class="pf-address"><span data-no-i18n>xyntal.de/${esc(c.handle)}</span></p>${headline ? `<p class="pf-headline" data-no-i18n>${esc(headline)}</p>` : ""}${factsHtml(c)}</header>`,
+      about: about ? `<section class="pf-section"><h2>${esc(t("Über mich"))}</h2><p class="pf-prose" data-no-i18n>${esc(about)}</p></section>` : "",
+      offer: offer ? tile("pf-tile-offer", "Ich biete", offer) : "",
+      seek: seek ? tile("pf-tile-seek", "Ich suche", seek) : "",
+      skills: skills.length ? `<section class="pf-section"><h2>${esc(t("Skills"))}</h2><ul class="pf-chips" data-no-i18n>${skills.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></section>` : "",
+    };
+  }
+  // Karte und Profilbild brauchen nach dem Einfügen ihre Effekte bzw. das Bild
+  function afterBlocks(host, c) {
+    window.XyntalCardHtml.hydrate?.(host);
+    if (c.profile) loadAvatar(c.profile.avatar_path);
   }
   // Normale Profile: Links leuchten beim Überfahren in der Kartenfarbe der Person, das Licht folgt dem Mauszeiger
   function linkGlow() {

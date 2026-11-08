@@ -22,7 +22,8 @@ create table public.profile_links(id uuid primary key default gen_random_uuid(),
 grant select on public.profiles to authenticated;
 create function public.ban_active(b boolean, u timestamptz) returns boolean language sql immutable as $$ select coalesce(b,false) and (u is null or u > now()) $$;
 \i supabase/migrations/20261108110000_custom_page.sql
-\i supabase/migrations/20261108110000_custom_page.sql
+\i supabase/migrations/20261108120000_page_blocks.sql
+\i supabase/migrations/20261108120000_page_blocks.sql
 
 create trigger waitlist_cards_reserved_handle before insert or update of handle on public.waitlist_cards for each row execute function public.reject_page_handles();
 
@@ -36,15 +37,17 @@ select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001'
 select public.save_my_page('{"v":1,"bg":{"color":"#101010"},"h":600,"items":[
   {"id":"a","type":"text","x":10,"y":10,"w":200,"h":40,"text":"Hallo"},
   {"id":"b","type":"link","ref":"11111111-1111-1111-1111-111111111111","x":10,"y":80,"w":200,"h":50},
+  {"id":"d","type":"block","kind":"card","x":0,"y":0,"w":200},
   {"id":"c","type":"image","src":"00000000-0000-0000-0000-000000000001/22222222-2222-2222-2222-222222222222.png","x":0,"y":0,"w":50,"h":50}]}'::jsonb);
 do $$ declare p jsonb; begin
   p := public.get_my_page();
-  if jsonb_array_length(p->'items') <> 3 then raise exception 'save/get failed: %', p; end if;
+  if jsonb_array_length(p->'items') <> 4 then raise exception 'save/get failed: %', p; end if;
 end $$;
 -- Ablehnungen
 do $$ begin
   begin perform public.save_my_page('[1]'); raise exception 'array accepted'; exception when invalid_parameter_value then null; end;
   begin perform public.save_my_page('{"items":[{"type":"script"}]}'); raise exception 'bad type accepted'; exception when invalid_parameter_value then null; end;
+  begin perform public.save_my_page('{"items":[{"type":"block","kind":"evil"}]}'); raise exception 'bad block accepted'; exception when invalid_parameter_value then null; end;
   begin perform public.save_my_page('{"items":[{"type":"link","ref":"x"}]}'); raise exception 'bad ref accepted'; exception when invalid_parameter_value then null; end;
   begin perform public.save_my_page('{"items":[{"type":"image","src":"00000000-0000-0000-0000-000000000002/22222222-2222-2222-2222-222222222222.png"}]}'); raise exception 'foreign image accepted'; exception when invalid_parameter_value then null; end;
   begin perform public.save_my_page('{"items":[{"type":"image","src":"https://evil.example/x.png"}]}'); raise exception 'external image accepted'; exception when invalid_parameter_value then null; end;
@@ -65,7 +68,7 @@ end $$;
 set role anon;
 select set_config('request.jwt.claim.sub','',false);
 do $$ begin
-  if jsonb_array_length(public.get_public_card('nico')->'page'->'items') <> 3 then raise exception 'public page missing'; end if;
+  if jsonb_array_length(public.get_public_card('nico')->'page'->'items') <> 4 then raise exception 'public page missing'; end if;
   begin perform public.save_my_page('{}'); raise exception 'anon save allowed'; exception when insufficient_privilege then null; end;
 end $$;
 

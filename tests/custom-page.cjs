@@ -5,7 +5,7 @@ const { chromium } = require('playwright');
 const base = `http://localhost:${process.env.PORT || 4173}`;
 const UID = '00000000-0000-0000-0000-000000000001', LID = '11111111-1111-1111-1111-111111111111';
 const links = [{ id: LID, title: 'Portfolio', url: 'https://example.com', icon: 'globe', active: true, clicks: null }];
-const card = { handle: 'nico', name: 'Nico', pitch: 'Ich baue Dinge', user_id: UID, links, profile: {} };
+const card = { handle: 'nico', name: 'Nico', role: 'Entwicklung', level: 'Fortgeschritten', skills: ['Qt', 'QML'], pitch: 'Ich baue Dinge', user_id: UID, links, design: {}, profile: { headline: 'Gründer von Xyntal', about: 'Ich baue Xyntal am Wochenende.', offer: 'Erfahrung', seek: 'Ein Team' } };
 let saved = null;
 
 const stub = `window.supabase = { createClient: () => ({
@@ -40,11 +40,13 @@ const stub = `window.supabase = { createClient: () => ({
   await pg.route('**/rest/v1/rpc/get_public_card', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ ...card, page: saved, design: {} }) }));
   await pg.goto(`${base}/nico#gestalten`);
   await pg.waitForSelector('.pc-item');
-  assert.equal(await pg.locator('.pc-item').count(), 3, 'Name, Kurztext, ein Link');
+  assert.ok(await pg.locator('.pc-item.pc-block').count() >= 5, 'Profil-Bausteine liegen als Elemente auf der Seite');
+  assert.equal(await pg.locator('.pc-item.pc-link').count(), 1, 'ein Link');
+  const n0 = await pg.locator('.pc-item').count();
 
   // 2. Text hinzufügen, ziehen, Größe ändern
   await pg.click('[data-add="window"]');
-  assert.equal(await pg.locator('.pc-item').count(), 4);
+  assert.equal(await pg.locator('.pc-item').count(), n0 + 1);
   const el = pg.locator('.pc-item').last();
   const b0 = await el.boundingBox();
   await pg.mouse.move(b0.x + 20, b0.y + 20); await pg.mouse.down(); await pg.mouse.move(b0.x + 60, b0.y + 140, { steps: 6 }); await pg.mouse.up();
@@ -71,7 +73,7 @@ const stub = `window.supabase = { createClient: () => ({
   await pg.waitForFunction(() => document.querySelector('[data-status]').textContent.includes('Gespeichert'));
   assert.ok(saved && saved.items.length >= 3);
   assert.equal(await pg.evaluate(() => location.pathname), '/nico', 'Editor läuft auf der eigenen Adresse');
-  assert.ok(saved.items.every((i) => ['text', 'link', 'image'].includes(i.type)));
+  assert.ok(saved.items.every((i) => ['text', 'link', 'image', 'block'].includes(i.type)));
   await pg.screenshot({ path: process.env.SHOT_EDITOR || '/tmp/editor.png' });
 
   // 5. Öffentliche Seite zeigt das gespeicherte Layout, Text wird nicht als HTML gedeutet

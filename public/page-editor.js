@@ -5,43 +5,35 @@
   const t = (de) => (window.XyntalI18n ? window.XyntalI18n.t(de) : de);
   const { esc, round, num } = C;
   const markup = () => `
-    <div class="pe-bar">
-      <button type="button" class="pe-btn" data-done>${esc(t("Fertig"))}</button>
-      <h1>${esc(t("Seite gestalten"))}</h1>
-      <p class="pe-status" role="status" aria-live="polite" data-status></p>
-      <div class="pe-bar-actions">
-        <button type="button" class="pe-btn" data-undo title="${esc(t("Rückgängig (Strg+Z)"))}" disabled>${esc(t("Rückgängig"))}</button>
-        <button type="button" class="pe-btn" data-redo title="${esc(t("Wiederholen (Strg+Umschalt+Z)"))}" disabled>${esc(t("Wiederholen"))}</button>
-        <button type="button" class="pe-btn pe-primary" data-save disabled>${esc(t("Speichern"))}</button>
-      </div>
-    </div>
     <p class="pe-msg" data-loading>${esc(t("Wird geladen …"))}</p>
-    <div class="pe-main" data-editor hidden>
-      <aside class="pe-tools" aria-label="${esc(t("Hinzufügen"))}">
-        <h2>${esc(t("Hinzufügen"))}</h2>
-        <button type="button" class="pe-btn" data-add="window">+ ${esc(t("Fenster"))}</button>
-        <button type="button" class="pe-btn" data-add="text">+ ${esc(t("Text"))}</button>
-        <button type="button" class="pe-btn" data-add="link">+ ${esc(t("Link"))}</button>
-        <label class="pe-btn" tabindex="0" data-upload-label>+ ${esc(t("Bild"))}<input type="file" accept="image/jpeg,image/png,image/webp,image/gif" data-upload hidden></label>
-        <div class="pe-pop" data-links-pop hidden></div>
-        <h2>${esc(t("Hintergrund"))}</h2>
-        <label class="pe-field"><span>${esc(t("Farbe"))}</span><input type="color" data-bg="color"></label>
-        <label class="pe-field"><span>${esc(t("Verlauf"))}</span><input type="checkbox" data-bg-gradient></label>
-        <label class="pe-field" data-bg2-row hidden><span>${esc(t("Zweite Farbe"))}</span><input type="color" data-bg="color2"></label>
-        <label class="pe-field"><span>${esc(t("Höhe"))}</span><input type="range" min="240" max="2400" step="10" data-height></label>
-        <p class="pe-count" data-count></p>
-        <button type="button" class="pe-btn pe-danger" data-reset>${esc(t("Auf Standardseite zurücksetzen"))}</button>
-      </aside>
+    <div class="pe-edit" data-editor hidden>
       <section class="pe-stage" data-stage aria-label="${esc(t("Deine Seite – Elemente mit der Maus ziehen"))}"></section>
-      <aside class="pe-insp" data-insp aria-label="${esc(t("Eigenschaften"))}"></aside>
+    </div>
+    <aside class="pe-insp" data-insp aria-label="${esc(t("Eigenschaften"))}" hidden></aside>
+    <div class="pe-pop" data-pop hidden></div>
+    <div class="pe-dock" role="toolbar" aria-label="${esc(t("Seite gestalten"))}">
+      <button type="button" class="pe-btn" data-done>${esc(t("Fertig"))}</button>
+      <i class="pe-sep" aria-hidden="true"></i>
+      <button type="button" class="pe-btn" data-add="window">+ ${esc(t("Fenster"))}</button>
+      <button type="button" class="pe-btn" data-add="text">+ ${esc(t("Text"))}</button>
+      <button type="button" class="pe-btn" data-add="link">+ ${esc(t("Link"))}</button>
+      <label class="pe-btn" tabindex="0" data-upload-label>+ ${esc(t("Bild"))}<input type="file" accept="image/jpeg,image/png,image/webp,image/gif" data-upload hidden></label>
+      <button type="button" class="pe-btn" data-add="block">${esc(t("Bausteine"))}</button>
+      <button type="button" class="pe-btn" data-add="bg">${esc(t("Hintergrund"))}</button>
+      <i class="pe-sep" aria-hidden="true"></i>
+      <button type="button" class="pe-btn" data-undo title="${esc(t("Rückgängig (Strg+Z)"))}" aria-label="${esc(t("Rückgängig"))}" disabled>↶</button>
+      <button type="button" class="pe-btn" data-redo title="${esc(t("Wiederholen (Strg+Umschalt+Z)"))}" aria-label="${esc(t("Wiederholen"))}" disabled>↷</button>
+      <button type="button" class="pe-btn pe-primary" data-save disabled>${esc(t("Speichern"))}</button>
+      <p class="pe-status" role="status" aria-live="polite" data-status></p>
     </div>`;
 
   // Öffnet den Editor in root (auf xyntal.de/name selbst) und ersetzt dort die Seite
-  function open(root) {
+  function open(root, opts = {}) {
     const $ = (s) => root.querySelector(s);
     root.innerHTML = markup();
     document.body.classList.add("pe-active");
-    const loading = $("[data-loading]"), editor = $("[data-editor]"), stage = $("[data-stage]"), insp = $("[data-insp]");
+    const loading = $("[data-loading]"), editor = $("[data-editor]"), stage = $("[data-stage]"), insp = $("[data-insp]"), pop = $("[data-pop]");
+    const blocks = opts.blocks || {};
     const statusEl = $("[data-status]"), saveBtn = $("[data-save]"), undoBtn = $("[data-undo]"), redoBtn = $("[data-redo]");
     if (!window.supabase || !cfg) { loading.textContent = t("Der Editor konnte nicht geladen werden."); return; }
     const sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey);
@@ -83,23 +75,55 @@
       if (!it) { el.remove(); return; }
       Object.assign(el.style, { left: u(it.x), top: u(it.y), width: u(it.w), height: u(it.h), transform: it.rot ? `rotate(${it.rot}deg)` : "" });
     }
-    function drawCanvas() {
-      stage.innerHTML = C.html(page, { links, base: cfg.supabaseUrl, edit: true, t });
+    // Bausteine haben keine feste Höhe: nach dem Zeichnen messen, damit Auswahlrahmen und Fläche stimmen
+    function measure() {
       const cv = stage.querySelector(".pc");
+      if (!cv) return;
+      const k = cv.getBoundingClientRect().width / C.W;
+      page.items.forEach((it) => {
+        if (it.type !== "block") return;
+        const el = cv.querySelector(`.pc-item[data-id="${CSS.escape(it.id)}"]`);
+        if (el && k) { const h = round(el.offsetHeight / k); if (Math.abs(h - it.h) > 0.3) it.h = Math.max(16, h); fit(it); }
+      });
+    }
+    function drawCanvas() {
+      stage.innerHTML = C.html(page, { links, base: cfg.supabaseUrl, edit: true, t, block: (kind) => blocks[kind] || "" });
+      C.mount(stage);
+      if (opts.after) opts.after(stage);
+      measure();
+      const cv = stage.querySelector(".pc");
+      cv.style.aspectRatio = `${C.W} / ${page.h}`;
       const it = current();
       if (it) {
         cv.insertAdjacentHTML("beforeend", `<div class="pe-sel"><i data-h="rot" title="${esc(t("Drehen (Umschalt = 15°-Schritte)"))}"></i><i data-h="nw"></i><i data-h="ne"></i><i data-h="sw"></i><i data-h="se"></i></div>`);
         placeOverlay();
       }
-      $("[data-count]").textContent = `${page.items.length} / ${limit()} ${t("Elemente")}`;
     }
-    function drawSide() {
-      $('[data-bg="color"]').value = page.bg.color;
-      $("[data-bg-gradient]").checked = !!page.bg.color2;
-      $('[data-bg="color2"]').value = page.bg.color2 || page.bg.color;
-      $("[data-bg2-row]").hidden = !page.bg.color2;
-      $("[data-height]").value = page.h;
+    // Hintergrund, Höhe, Anzahl: Fenster über der Werkzeugleiste
+    const bgPanel = () => `<h2>${esc(t("Hintergrund"))}</h2>
+      <label class="pe-field"><span>${esc(t("Farbe"))}</span><input type="color" data-bg="color" value="${page.bg.color}"></label>
+      <label class="pe-field"><span>${esc(t("Verlauf"))}</span><input type="checkbox" data-bg-gradient ${page.bg.color2 ? "checked" : ""}></label>
+      ${page.bg.color2 ? `<label class="pe-field"><span>${esc(t("Zweite Farbe"))}</span><input type="color" data-bg="color2" value="${page.bg.color2}"></label>` : ""}
+      <label class="pe-field"><span>${esc(t("Höhe"))}</span><input type="range" min="240" max="2400" step="10" data-height value="${page.h}"></label>
+      <p class="pe-count">${page.items.length} / ${limit()} ${esc(t("Elemente"))}</p>
+      <button type="button" class="pe-btn pe-danger" data-reset>${esc(t("Auf Standardseite zurücksetzen"))}</button>`;
+    let popName = "";
+    function showPop(name) {
+      popName = popName === name ? "" : name;
+      pop.hidden = !popName;
+      if (!popName) return;
+      if (name === "link") {
+        pop.innerHTML = links.length
+          ? `<h2>${esc(t("Link einfügen"))}</h2>` + links.map((l) => `<button type="button" class="pe-item" data-pick="${esc(l.id)}">${esc(l.title)}</button>`).join("")
+          : `<p>${esc(t("Du hast noch keine Links."))} <a class="text-link" href="/profil#links">${esc(t("Links anlegen"))}</a></p>`;
+      } else if (name === "block") {
+        const free = Object.keys(C.BLOCKS).filter((k) => blocks[k] && !page.items.some((i) => i.type === "block" && i.kind === k));
+        pop.innerHTML = `<h2>${esc(t("Bausteine deines Profils"))}</h2>` + (free.length
+          ? free.map((k) => `<button type="button" class="pe-item" data-block="${k}">${esc(t(C.BLOCKS[k][0]))}</button>`).join("")
+          : `<p>${esc(t("Alle Bausteine liegen schon auf der Seite."))}</p>`);
+      } else pop.innerHTML = bgPanel();
     }
+    function drawSide() { if (popName === "bg") pop.innerHTML = bgPanel(); }
     function drawAll() { drawCanvas(); drawSide(); drawInsp(); }
 
     // ---- Eigenschaften des gewählten Elements ----
@@ -109,9 +133,12 @@
     const seg$ = (k, opts, v) => `<div class="pe-row">${opts.map(([val, label]) => `<button type="button" class="pe-btn${String(v) === String(val) ? " is-on" : ""}" data-set="${k}" data-val="${val}">${esc(t(label))}</button>`).join("")}</div>`;
     function drawInsp() {
       const it = current();
-      if (!it) { insp.innerHTML = `<h2>${esc(t("Eigenschaften"))}</h2><p class="pe-hint">${esc(t("Tippe ein Element an, um es zu bearbeiten. Ziehen verschiebt, die Ecken ändern die Größe."))}</p>`; return; }
+      insp.hidden = !it;
+      if (!it) { insp.innerHTML = ""; return; }
       let body = "";
-      if (it.type === "text") {
+      if (it.type === "block") {
+        body = `<p class="pe-hint">${esc(t("Dieser Baustein zeigt deine Profilangaben. Ändern kannst du sie im Profil."))}</p>`;
+      } else if (it.type === "text") {
         body = `<textarea data-p="text" maxlength="1000" aria-label="${esc(t("Text"))}">${esc(it.text)}</textarea>
           ${range$("size", "Schriftgröße", it.size, 8, 120)}
           ${seg$("weight", [[400, "Normal"], [700, "Fett"]], it.weight)}
@@ -131,19 +158,20 @@
           <label class="pe-field"><span>${esc(t("Beschreibung"))}</span></label>
           <input type="text" data-p="alt" maxlength="120" value="${esc(it.alt)}" placeholder="${esc(t("Alternativtext für Screenreader"))}">`;
       }
-      insp.innerHTML = `<h2>${esc(t(it.type === "text" ? "Text" : it.type === "link" ? "Link" : "Bild"))}</h2>
+      const block = it.type === "block";
+      insp.innerHTML = `<h2>${esc(t(block ? C.BLOCKS[it.kind][0] : it.type === "text" ? "Text" : it.type === "link" ? "Link" : "Bild"))}</h2>
         ${body}
-        ${range$("radius", "Rundung", it.radius, 0, 120)}
+        ${block ? "" : range$("radius", "Rundung", it.radius, 0, 120)}
         ${range$("o", "Deckkraft", it.o, 0.1, 1, 0.05)}
         ${range$("rot", "Drehung", it.rot, -180, 180)}
         ${it.rot ? `<button type="button" class="pe-btn" data-set="rot" data-val="0">${esc(t("Gerade stellen"))}</button>` : ""}
         <h2>${esc(t("Position"))}</h2>
-        ${num$("x", "Links", it.x, -480, 960)}${num$("y", "Oben", it.y, -4000, 4000)}${num$("w", "Breite", it.w, 16, 960)}${num$("h", "Höhe", it.h, 16, 4000)}
+        ${num$("x", "Links", it.x, -480, 960)}${num$("y", "Oben", it.y, -4000, 4000)}${num$("w", "Breite", it.w, 16, 960)}${block ? "" : num$("h", "Höhe", it.h, 16, 4000)}
         <div class="pe-row">
           <button type="button" class="pe-btn" data-act="front">${esc(t("Nach vorn"))}</button>
           <button type="button" class="pe-btn" data-act="back">${esc(t("Nach hinten"))}</button>
-          <button type="button" class="pe-btn" data-act="dup">${esc(t("Duplizieren"))}</button>
-          <button type="button" class="pe-btn pe-danger" data-act="del">${esc(t("Löschen"))}</button>
+          ${block ? "" : `<button type="button" class="pe-btn" data-act="dup">${esc(t("Duplizieren"))}</button>`}
+          <button type="button" class="pe-btn pe-danger" data-act="del">${esc(t(block ? "Entfernen" : "Löschen"))}</button>
         </div>`;
     }
 
@@ -156,7 +184,10 @@
       if (!it) return null;
       // In die sichtbare Mitte der Fläche, leicht versetzt, damit mehrere neue nicht exakt übereinander liegen
       const off = (page.items.length % 6) * 12;
-      it.x = round(Math.max(0, (C.W - it.w) / 2) + off); it.y = round(Math.min(page.h - it.h, 40 + off * 4));
+      if (type === "block") {
+        // Bausteine kommen unter die vorhandenen Elemente, mittig
+        it.x = round((C.W - it.w) / 2); it.y = round(page.items.reduce((m, i) => Math.max(m, i.y + i.h), 6) + 18);
+      } else { it.x = round(Math.max(0, (C.W - it.w) / 2) + off); it.y = round(Math.min(page.h - it.h, 40 + off * 4)); }
       page.items.push(it); sel = it.id;
       fit(it); drawAll();
       return it;
@@ -207,7 +238,7 @@
     // ---- Seite: Hintergrund, Höhe ----
     document.addEventListener("input", (e) => {
       const el = e.target;
-      if (!editor.contains(el) || insp.contains(el)) return;
+      if (!pop.contains(el)) return;
       if (el.dataset.bg) { touch(`bg:${el.dataset.bg}`); page.bg[el.dataset.bg] = C.hex(el.value, page.bg[el.dataset.bg]); drawCanvas(); }
       else if (el.dataset.bgGradient !== undefined) { touch(); page.bg.color2 = el.checked ? (page.bg.color2 || "#3a2a6a") : ""; drawAll(); }
       else if (el.dataset.height !== undefined) { touch("height"); page.h = Math.round(num(el.value, C.MIN_H, C.MAX_H, page.h)); drawCanvas(); }
@@ -247,14 +278,21 @@
         const sx = drag.mode.includes("w") ? -1 : 1, sy = drag.mode.includes("n") ? -1 : 1;
         const th = (b.rot || 0) * Math.PI / 180, cos = Math.cos(th), sin = Math.sin(th);
         const lx = dx * cos + dy * sin, ly = -dx * sin + dy * cos;
-        const w = round(num(b.w + sx * lx, 16, 960, b.w)), h = round(num(b.h + sy * ly, 16, 4000, b.h));
+        const isBlock = it.type === "block";
+        const w = round(num(b.w + sx * lx, isBlock ? 60 : 16, 960, b.w));
+        // Bausteine behalten ihr Seitenverhältnis, alles andere ändert Breite und Höhe getrennt
+        const h = isBlock ? round(w * b.h / b.w) : round(num(b.h + sy * ly, 16, 4000, b.h));
         const px = sx * (w - b.w) / 2, py = sy * (h - b.h) / 2;
         const cx = b.x + b.w / 2 + px * cos - py * sin, cy = b.y + b.h / 2 + px * sin + py * cos;
         it.w = w; it.h = h; it.x = round(cx - w / 2); it.y = round(cy - h / 2);
       }
       // Direkt am Element, ohne die Fläche neu aufzubauen
       const el = stage.querySelector(`.pc-item[data-id="${CSS.escape(it.id)}"]`);
-      if (el) Object.assign(el.style, { left: u(it.x), top: u(it.y), width: u(it.w), height: u(it.h), transform: it.rot ? `rotate(${it.rot}deg)` : "" });
+      if (el) {
+        Object.assign(el.style, { left: u(it.x), top: u(it.y), width: u(it.w), transform: it.rot ? `rotate(${it.rot}deg)` : "" });
+        if (it.type === "block") { const inner = el.firstElementChild; if (inner && inner.classList.contains("pc-blk")) inner.style.zoom = C.zoomOf(it); }
+        else el.style.height = u(it.h);
+      }
       placeOverlay();
     });
     const endDrag = (e) => {
@@ -291,21 +329,19 @@
     redoBtn.addEventListener("click", () => travel(redo, undo));
 
     // ---- Hinzufügen ----
-    const pop = $("[data-links-pop]");
-    editor.addEventListener("click", (e) => {
+    root.addEventListener("click", (e) => {
       const a = e.target.closest("[data-add]");
       if (a) {
-        if (a.dataset.add === "text") { add("text"); insp.querySelector("textarea")?.select(); return; }
-        if (a.dataset.add === "window") { add("text", { text: "Neues Fenster", w: 260, h: 120, size: 18, weight: 400, bg: "#2a2a2a", radius: 20 }); insp.querySelector("textarea")?.select(); return; }
-        pop.hidden = !pop.hidden;
-        pop.innerHTML = links.length
-          ? links.map((l) => `<button type="button" data-pick="${esc(l.id)}">${esc(l.title)}</button>`).join("")
-          : `<p>${esc(t("Du hast noch keine Links."))} <a class="text-link" href="/profil#links">${esc(t("Links anlegen"))}</a></p>`;
+        const kind = a.dataset.add;
+        if (kind === "text") { popName = ""; pop.hidden = true; add("text"); insp.querySelector("textarea")?.select(); return; }
+        if (kind === "window") { popName = ""; pop.hidden = true; add("text", { text: "Neues Fenster", w: 260, h: 120, size: 18, weight: 400, bg: "#2a2a2a", radius: 20 }); insp.querySelector("textarea")?.select(); return; }
+        showPop(kind);
         return;
       }
-      const pick = e.target.closest("[data-pick]");
-      if (pick) { add("link", { ref: pick.dataset.pick }); pop.hidden = true; }
-      if (e.target.closest("[data-reset]")) reset();
+      const pick = e.target.closest("[data-pick]"), blk = e.target.closest("[data-block]");
+      if (pick) { add("link", { ref: pick.dataset.pick }); popName = ""; pop.hidden = true; }
+      else if (blk) { add("block", { kind: blk.dataset.block, w: C.BLOCKS[blk.dataset.block][0] === "Karte" ? 300 : 440 }); popName = ""; pop.hidden = true; }
+      else if (e.target.closest("[data-reset]")) reset();
     });
     $("[data-done]").addEventListener("click", () => {
       if (dirty && !confirm(t("Ungespeicherte Änderungen verwerfen?"))) return;
@@ -363,21 +399,27 @@
       try {
         const { error } = await sb.rpc("save_my_page", { p_page: null });
         if (error) throw error;
-        page = starter(); undo.length = redo.length = 0; sel = null; dirty = true; hasSaved = false; saveBtn.disabled = false;
+        page = starter(); drawAll(); relayout(); undo.length = redo.length = 0; sel = null; dirty = true; hasSaved = false; saveBtn.disabled = false;
         undoBtn.disabled = redoBtn.disabled = true; drawAll(); say(t("Zurückgesetzt. Deine Seite zeigt wieder das Standardlayout."), "ok");
       } catch { say(t("Zurücksetzen hat nicht geklappt."), "error"); } finally { busy = false; }
     }
     window.addEventListener("beforeunload", (e) => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
 
-    // Startlayout für Neue: Name, Kurztext, dann die Links untereinander
-    let cardInfo = null;
+    // Startlayout für Neue: die Bausteine der Profilseite untereinander, dann die Links (Höhen misst relayout nach dem Zeichnen)
+    let cardInfo = opts.cardInfo || null;
     function starter() {
       const items = [];
-      if (cardInfo && cardInfo.name) items.push({ id: uid8(), type: "text", text: cardInfo.name, x: 24, y: 32, w: 432, h: 52, size: 34, align: "center" });
-      if (cardInfo && cardInfo.pitch) items.push({ id: uid8(), type: "text", text: cardInfo.pitch, x: 40, y: 92, w: 400, h: 60, size: 16, weight: 400, align: "center", color: "#a09e98" });
-      let y = items.length ? 176 : 32;
-      links.filter((l) => l.active !== false).slice(0, limit() - items.length).forEach((l) => { items.push({ id: uid8(), type: "link", ref: l.id, x: 70, y, w: 340, h: 54 }); y += 68; });
-      return C.normalize({ h: Math.max(480, y + 40), items });
+      const put = (kind, w) => { if (blocks[kind]) items.push({ id: uid8(), type: "block", kind, x: 0, y: 0, w, h: 200 }); };
+      put("card", 300);
+      links.filter((l) => l.active !== false).slice(0, Math.max(0, limit() - 7)).forEach((l) => items.push({ id: uid8(), type: "link", ref: l.id, x: 70, y: 0, w: 340, h: 54 }));
+      ["head", "about", "offer", "seek", "skills"].forEach((k) => put(k, 440));
+      return C.normalize({ h: 640, items });
+    }
+    // Elemente in Reihenfolge untereinander setzen, mittig, mit echter Höhe
+    function relayout() {
+      let y = 24;
+      page.items.forEach((it) => { it.x = round((C.W - it.w) / 2); it.y = y; y += it.h + 18; });
+      page.h = Math.min(C.MAX_H, Math.max(480, Math.ceil(y + 24)));
     }
 
     // ---- Start ----
@@ -386,16 +428,15 @@
       if (!session) { loading.innerHTML = `${esc(t("Melde dich an, um deine Seite zu gestalten."))} <a class="text-link" href="/login">${esc(t("Anmelden"))}</a>`; return; }
       uid = session.user.id;
       try {
-        const [l, p, c, pr] = await Promise.all([sb.rpc("get_my_links"), sb.rpc("get_my_page"), sb.rpc("get_my_card"), sb.from("profiles").select("is_premium,is_admin").eq("id", uid).maybeSingle()]);
+        const [l, p, pr] = await Promise.all([sb.rpc("get_my_links"), sb.rpc("get_my_page"), sb.from("profiles").select("is_premium,is_admin").eq("id", uid).maybeSingle()]);
         if (l.error || p.error) throw l.error || p.error;
         links = Array.isArray(l.data) ? l.data : [];
-        cardInfo = c.data && typeof c.data === "object" ? c.data : null;
-        handle = cardInfo && cardInfo.handle || "";
         paid = !!(pr.data && (pr.data.is_premium || pr.data.is_admin));
         hasSaved = !!(p.data && Array.isArray(p.data.items) && p.data.items.length);
         page = hasSaved ? C.normalize(p.data) : starter();
-        if (!hasSaved) { dirty = true; saveBtn.disabled = false; }
-        loading.hidden = true; editor.hidden = false; drawAll();
+        loading.hidden = true; editor.hidden = false;
+        drawAll();
+        if (!hasSaved) { relayout(); drawAll(); dirty = true; saveBtn.disabled = false; }
       } catch {
         loading.textContent = t("Deine Seite lässt sich gerade nicht laden. Bitte versuch es später noch einmal.");
       }
