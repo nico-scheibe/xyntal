@@ -103,3 +103,32 @@ a.pc-ib:hover, button.pc-ib:hover { transform: translateY(-2px); filter: brightn
 /* Im Editor nur als Vorschau (Knopf „Vorschau“), sonst stört die Bewegung beim Platzieren */
 .pc.is-edit .pc-item:not(.is-preview) > * { animation-name: none !important; }
 @media (prefers-reduced-motion: reduce) { .pc-item[data-anim] > * { animation: none !important; } }
+
+/* Hover-Effekte (data-hover, page-canvas.js). Gelten für den Kasten des Elements; bei Link-Symbolen für jedes Symbol.
+   Im Editor zeigt die Vorschau (.is-hover) denselben Zustand. */
+.pc-item[data-hover] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { transition: transform .35s cubic-bezier(.2, .9, .3, 1.3), box-shadow .35s ease, filter .35s ease, color .35s ease, outline-offset .35s ease, outline-color .35s ease; }
+.pc-item[data-hover] .pc-l, .pc-item[data-hover] .pc-t, .pc-item[data-hover] .pc-ib { position: relative; overflow: hidden; isolation: isolate; }
+.pc-item[data-hover] a.pc-l:hover, .pc-item[data-hover] button.pc-l:hover { filter: none; }
+.pc-item[data-hover="lift"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover, .pc-item[data-hover="lift"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { transform: translateY(calc(-6px * var(--k, 1))); box-shadow: 0 calc(18px * var(--k, 1)) calc(36px * var(--k, 1)) calc(-12px * var(--k, 1)) rgba(0, 0, 0, .8); }
+.pc-item[data-hover="pop"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover, .pc-item[data-hover="pop"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { transform: scale(1.08); }
+.pc-item[data-hover="glow"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover, .pc-item[data-hover="glow"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { box-shadow: 0 0 0 calc(2px * var(--k, 1)) var(--hc), 0 0 calc(28px * var(--k, 1)) var(--hc); }
+.pc-item[data-hover="neon"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover, .pc-item[data-hover="neon"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { box-shadow: 0 0 calc(6px * var(--k, 1)) var(--hc), 0 0 calc(22px * var(--k, 1)) var(--hc), 0 0 calc(48px * var(--k, 1)) var(--hc), inset 0 0 calc(12px * var(--k, 1)) var(--hc); text-shadow: 0 0 calc(10px * var(--k, 1)) var(--hc); }
+.pc-item[data-hover="ring"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover, .pc-item[data-hover="ring"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { outline: calc(2px * var(--k, 1)) solid var(--hc); outline-offset: calc(6px * var(--k, 1)); }
+.pc-item[data-hover="ring"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { outline: calc(2px * var(--k, 1)) solid transparent; outline-offset: 0; }
+.pc-item[data-hover="outline"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover, .pc-item[data-hover="outline"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { animation: pc-hpulse 1s ease-out infinite; }
+.pc-item[data-hover="rainbow"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover, .pc-item[data-hover="rainbow"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { animation: pc-rainbow 1.6s linear infinite; }
+.pc-item[data-hover="shake"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover, .pc-item[data-hover="shake"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { animation: pc-shake .45s ease-in-out; }
+.pc-item[data-hover="blur"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover, .pc-item[data-hover="blur"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { transform: scale(1.04); filter: saturate(1.3) contrast(1.1); }
+/* Fokus: alle anderen Elemente werden unscharf, solange die Maus auf diesem ist */
+.pc:has(.pc-item[data-hover="blur"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover) .pc-item:not(:has(:hover)) { filter: blur(calc(3px * var(--k, 1))) brightness(.7); transition: filter .35s ease; }
+.pc-item[data-hover="shine"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img)::after { content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none; transform: translateX(-120%) skewX(-20deg); background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .55), transparent); }
+.pc-item[data-hover="shine"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover::after, .pc-item[data-hover="shine"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img)::after { transform: translateX(120%) skewX(-20deg); transition: transform .75s ease; }
+.pc-item[data-hover="fill"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img)::before { content: ""; position: absolute; inset: 0; z-index: -1; background: var(--hf); transform: scaleX(0); transform-origin: left; transition: transform .4s cubic-bezier(.7, 0, .2, 1); }
+.pc-item[data-hover="fill"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover, .pc-item[data-hover="fill"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { color: var(--hb) !important; }
+.pc-item[data-hover="fill"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover::before, .pc-item[data-hover="fill"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img)::before { transform: scaleX(1); }
+.pc-item[data-hover="tilt"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover, .pc-item[data-hover="tilt"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { transform: perspective(calc(700px * var(--k, 1))) rotateX(var(--rx, 6deg)) rotateY(var(--ry, -8deg)) scale(1.05); box-shadow: 0 calc(24px * var(--k, 1)) calc(40px * var(--k, 1)) calc(-16px * var(--k, 1)) rgba(0, 0, 0, .8); }
+.pc-item[data-hover="tilt"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { transition: transform .15s ease-out, box-shadow .3s ease; }
+.pc-item[data-hover="tilt"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img)::after { content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none; opacity: 0; transition: opacity .3s ease; background: radial-gradient(circle at var(--mx, 30%) var(--my, 20%), rgba(255, 255, 255, .45), transparent 55%); }
+.pc-item[data-hover="tilt"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover::after, .pc-item[data-hover="tilt"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img)::after { opacity: 1; }
+@keyframes pc-hpulse { 0% { box-shadow: 0 0 0 0 var(--hc); } 100% { box-shadow: 0 0 0 calc(16px * var(--k, 1)) transparent; } }
+@media (prefers-reduced-motion: reduce) { .pc-item[data-hover] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { transition: none; animation: none !important; transform: none !important; } }
