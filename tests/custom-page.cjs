@@ -239,6 +239,7 @@ const stub = `window.supabase = { createClient: () => ({
   await pg.click('[data-add="extras"]'); await pg.click('[data-add="extras"]');
   await pg.waitForSelector('[data-version]');
   await pg.click('[data-version]');
+  await pg.waitForSelector('.pc-t:has-text("Alte Version")', { timeout: 5000 });
   assert.equal(await pg.locator('.pc-t', { hasText: 'Alte Version' }).count(), 1, 'Version geladen');
   await pg.click('[data-undo]');
   // 4. Veröffentlichen
