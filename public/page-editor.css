@@ -90,3 +90,11 @@
 .pe-help summary { cursor: pointer; color: var(--text-3); }
 .pe-help p { margin: 6px 0 0; line-height: 1.6; }
 .pe-help code { padding: 1px 5px; border-radius: 5px; background: rgba(255, 255, 255, .08); font-size: 12px; }
+/* Bestätigung „eigenes Projekt“ bei Video / Musik */
+.pe-own { display: flex; gap: 8px; align-items: flex-start; padding: 10px; border: 1px solid #6b4a2a; border-radius: 10px; background: rgba(255, 170, 60, .07);
+  color: var(--text-2); font-size: 12.5px; line-height: 1.45; cursor: pointer; }
+.pe-own input { margin-top: 2px; flex: none; }
+/* Auswahllisten (Effekt, Link): ausgeklapptes Menü dunkel mit heller Schrift – sonst hell auf weiß (Windows/Chrome) */
+.pe-insp select, .pe-pop select { color-scheme: dark; background-color: #262626; color: var(--text); }
+.pe-insp select option, .pe-pop select option { background-color: #1c1c1c; color: #eceae4; }
+.pe-insp select option:checked, .pe-pop select option:checked { background-color: #3a5bd9; color: #fff; }

@@ -124,6 +124,10 @@
       { key: "button", group: "act", icon: "⬭", label: "Knopf", type: "button", v: {} },
       { key: "icons", group: "act", icon: "◎", label: "Link-Symbole", type: "icons", v: {} },
     ];
+    // Video / Musik: nur eigene Projekte – vor dem Einbetten bestätigen (Community-Richtlinien, Regel 8)
+    const ownCheck = (attr, on) => `<label class="pe-own"><input type="checkbox" ${attr}${on ? " checked" : ""}>
+      <span>${esc(t("Ich bestätige: Das ist mein eigenes Projekt (selbst gemacht oder ich habe alle Rechte daran). Fremde Videos oder Musik sind nicht erlaubt und können zur Sperre des Kontos führen."))}
+      <a class="text-link" href="/community-richtlinien#gesetz" target="_blank" rel="noopener">${esc(t("Richtlinien"))}</a></span></label>`;
     let popName = "";
     function showPop(name) {
       popName = popName === name ? "" : name;
@@ -146,7 +150,8 @@
             ${tile("data-embed-open", "▶", "Video / Musik")}</div>
           <div class="pe-embed" data-embed-box hidden>
             <input type="url" data-embed-url placeholder="${esc(t("Adresse von YouTube, Vimeo oder Spotify"))}">
-            <button type="button" class="pe-btn pe-primary" data-embed-go>${esc(t("Einbetten"))}</button>
+            ${ownCheck("data-embed-own", false)}
+            <button type="button" class="pe-btn pe-primary" data-embed-go disabled>${esc(t("Einbetten"))}</button>
           </div>
           <h2>${esc(t("Bausteine deines Profils"))}</h2>
           ${free.length ? `<div class="pe-tiles">${free.map((k) => tile(`data-block="${k}"`, "▣", C.BLOCKS[k][0])).join("")}</div>` : `<p>${esc(t("Alle Bausteine liegen schon auf der Seite."))}</p>`}`;
@@ -229,6 +234,8 @@
           ${color$("bg", "Hintergrund", it.bg || "#2a2a2a")}`;
       } else if (it.type === "embed") {
         body = `<p class="pe-hint">${esc(t({ youtube: "YouTube-Video", vimeo: "Vimeo-Video", spotify: "Spotify" }[it.provider]))}</p>
+          ${it.own ? "" : `<p class="pe-hint is-err">${esc(t("Noch nicht bestätigt – wird auf deiner Seite nicht gezeigt."))}</p>`}
+          ${ownCheck("data-own-confirm", it.own)}
           <input type="url" data-embed-change placeholder="${esc(t("Neue Adresse einfügen"))}">`;
       } else {
         body = `${seg$("fit", [["cover", "Füllen"], ["contain", "Einpassen"]], it.fit)}
@@ -354,10 +361,13 @@
       if (e.target.dataset.bgon !== undefined) { touch(); it.bg = e.target.checked ? "#2a2a2a" : ""; drawAll(); }
       else if (e.target.dataset.bg2on !== undefined) { touch(); it.bg2 = e.target.checked ? "#3fd8ff" : ""; drawAll(); }
       else if (e.target.dataset.p === "url") { touch(); setProp(it, "url", e.target.value); if (!it.url && e.target.value.trim()) say(t("Bitte eine Adresse mit https:// angeben."), "error"); drawCanvas(); }
+      else if (e.target.dataset.ownConfirm !== undefined) { touch(); it.own = e.target.checked; drawAll(); }
       else if (e.target.dataset.embedChange !== undefined) {
         const got = C.parseEmbed(e.target.value);
         if (!got) { say(t("Diese Adresse lässt sich nicht einbetten. Möglich sind YouTube, Vimeo und Spotify."), "error"); return; }
-        touch(); it.provider = got.provider; it.eid = got.id; drawAll();
+        // Neue Adresse = neuer Inhalt: Bestätigung erneut nötig
+        touch(); it.provider = got.provider; it.eid = got.id; it.own = false; drawAll();
+        say(t("Bitte bestätige, dass auch das neue Video bzw. die neue Musik dein eigenes Projekt ist."), "");
       }
     });
 
@@ -525,7 +535,8 @@
         if (!got) { say(t("Diese Adresse lässt sich nicht einbetten. Möglich sind YouTube, Vimeo und Spotify."), "error"); return; }
         const r = C.EMBEDS[got.provider].ratio, w = got.provider === "spotify" ? 420 : 520;
         popName = ""; pop.hidden = true;
-        add("embed", { provider: got.provider, eid: got.id, w, h: got.provider === "spotify" ? 152 : Math.round(w * r[1] / r[0]) });
+        if (!pop.querySelector("[data-embed-own]").checked) { say(t("Bitte bestätige, dass es dein eigenes Projekt ist."), "error"); return; }
+        add("embed", { provider: got.provider, eid: got.id, own: true, w, h: got.provider === "spotify" ? 152 : Math.round(w * r[1] / r[0]) });
         return;
       }
       const pick = e.target.closest("[data-pick]"), blk = e.target.closest("[data-block]");
@@ -533,6 +544,9 @@
       else if (blk) { add("block", { kind: blk.dataset.block, w: C.natOf(blk.dataset.block, page.w) }); popName = ""; pop.hidden = true; }
       else if (e.target.closest("[data-reset]")) reset();
       else if (e.target.closest("[data-width]")) setWidth(Number(e.target.closest("[data-width]").dataset.width));
+    });
+    pop.addEventListener("change", (e) => {
+      if (e.target.matches("[data-embed-own]")) pop.querySelector("[data-embed-go]").disabled = !e.target.checked;
     });
     $("[data-done]").addEventListener("click", () => {
       if (dirty && !confirm(t("Ungespeicherte Änderungen verwerfen?"))) return;
@@ -572,6 +586,10 @@
     // ---- Speichern, Zurücksetzen ----
     async function save() {
       if (busy || !dirty) return;
+      if (page.items.some((i) => i.type === "embed" && !i.own)) {
+        sel = page.items.find((i) => i.type === "embed" && !i.own).id; drawAll();
+        say(t("Bitte bestätige beim Video / bei der Musik, dass es dein eigenes Projekt ist – oder entferne es."), "error"); return;
+      }
       busy = true; saveBtn.disabled = true; say(t("Wird gespeichert …"));
       try {
         const { error } = await sb.rpc("save_my_page", { p_page: page });
