@@ -595,6 +595,26 @@
     });
 
     // ---- Speichern, Zurücksetzen ----
+    // Fehler von save_my_page verständlich machen (Meldungstexte aus den Migrationen 20261108110000 ff.)
+    function saveError(err) {
+      const code = err && err.code, msg = String((err && err.message) || "");
+      if (code === "54000") return t(/too large/.test(msg) ? "Die Seite ist zu groß. Entferne ein paar Elemente oder kürze Texte und Code." : "Zu viele Elemente für deinen Tarif.");
+      if (code === "P0002") return t("Lege zuerst deine Karte an.");
+      if (code === "42501") return t("Dein Konto ist gesperrt – Änderungen sind gerade nicht möglich.");
+      if (code === "28000") return t("Bitte melde dich neu an.");
+      const known = {
+        "invalid animation": "Die Datenbank lehnt eine Animation ab. Wahrscheinlich fehlt das neueste SQL (Klammern im Code erlaubt) – bitte im Supabase SQL Editor ausführen.",
+        "invalid hover effect": "Die Datenbank kennt den Hover-Effekt nicht – bitte das neueste SQL im Supabase SQL Editor ausführen.",
+        "embed not confirmed": "Bitte bestätige beim Video / bei der Musik, dass es dein eigenes Projekt ist.",
+        "invalid embed": "Ein Video / eine Musik-Adresse ist ungültig.",
+        "invalid button url": "Ein Knopf hat eine ungültige Adresse (nur https://).",
+        "invalid image": "Ein Bild gehört nicht zu deinem Konto – bitte neu hochladen.",
+        "invalid block": "Ein Baustein ist unbekannt – bitte das neueste SQL ausführen.",
+        "invalid item": "Ein Element ist unbekannt – bitte das neueste SQL im Supabase SQL Editor ausführen.",
+      };
+      const hit = Object.keys(known).find((k) => msg.includes(k));
+      return hit ? t(known[hit]) : `${t("Die Seite konnte nicht gespeichert werden.")}${msg ? ` (${msg.slice(0, 120)})` : ""}`;
+    }
     async function save() {
       if (busy || !dirty) return;
       if (page.items.some((i) => i.type === "embed" && !i.own)) {
@@ -608,8 +628,7 @@
         dirty = false; hasSaved = true; say(t("Gespeichert."), "ok");
       } catch (err) {
         saveBtn.disabled = false;
-        say(err && err.code === "54000" ? t("Zu viele oder zu große Elemente für deinen Tarif.")
-          : err && err.code === "P0002" ? t("Lege zuerst deine Karte an.") : t("Die Seite konnte nicht gespeichert werden. Bitte versuche es erneut."), "error");
+        say(saveError(err), "error");
       } finally { busy = false; }
     }
     saveBtn.addEventListener("click", save);
