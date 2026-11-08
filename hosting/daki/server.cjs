@@ -228,6 +228,42 @@ function supabaseConfig() {
   } catch {}
   return null;
 }
+// Vorschau beim Teilen (WhatsApp, Discord, X …): Name und Beschreibung der Seite xyntal.de/name in Titel und og:-Tags.
+// Fragt get_public_card (öffentlich), merkt sich das Ergebnis 5 Minuten und wartet höchstens 2,5 Sekunden.
+const metaCache = new Map();
+async function profileMeta(handle) {
+  const hit = metaCache.get(handle);
+  if (hit && hit.until > Date.now()) return hit.meta;
+  let meta = null;
+  const config = supabaseConfig();
+  if (config) {
+    try {
+      const response = await fetch(config.url + '/rest/v1/rpc/get_public_card', {
+        method: 'POST', headers: { apikey: config.key, Authorization: 'Bearer ' + config.key, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_handle: handle }), signal: AbortSignal.timeout(2500) });
+      const card = response.ok ? await response.json() : null;
+      if (card && card.name) {
+        const p = card.profile || {};
+        const clip = (v, n) => { const t = String(v || '').replace(/\s+/g, ' ').trim(); return t.length > n ? t.slice(0, n - 1) + '…' : t; };
+        const desc = clip(p.headline || card.pitch || p.about || [card.role, card.city].filter(Boolean).join(' · '), 180);
+        meta = { title: clip(card.name, 60) + ' · xyntal.de/' + card.handle, description: desc || 'Die Seite von ' + clip(card.name, 60) + ' auf Xyntal.' };
+      }
+    } catch {}
+  }
+  if (metaCache.size > 2000) metaCache.clear();
+  metaCache.set(handle, { meta, until: Date.now() + (meta ? 300000 : 60000) });
+  return meta;
+}
+function withProfileMeta(html, meta, handle) {
+  const e = escapeHtml;
+  // Ersetzungen als Funktion, damit „$“ im Text nicht als Platzhalter gelesen wird
+  return html
+    .replace(/<title>[^<]*<\/title>/, () => '<title>' + e(meta.title) + '</title>')
+    .replace(/(<meta name="description" content=")[^"]*/, (m, a) => a + e(meta.description))
+    .replace(/(<meta property="og:title" content=")[^"]*/, (m, a) => a + e(meta.title))
+    .replace(/(<meta property="og:description" content=")[^"]*/, (m, a) => a + e(meta.description))
+    .replace('<meta property="og:image"', () => '<meta property="og:url" content="https://xyntal.de/' + e(handle) + '">\n  <meta name="twitter:card" content="summary_large_image">\n  <meta property="og:image"');
+}
 // Kleiner SMTP-Client für IONOS (Port 465, TLS von Anfang an). Keine Abhängigkeiten nötig.
 const b64 = (s) => Buffer.from(s, 'utf8').toString('base64');
 // Text immer, HTML dazu als multipart/alternative; alles base64, damit Umlaute und lange Zeilen sicher ankommen.
@@ -399,6 +435,17 @@ http.createServer((req,res) => {
     return res.end(req.method === 'HEAD' ? undefined : fs.readFileSync(path.join(currentRoot,'404.html')));
   }
   if (!fs.realpathSync(file).startsWith(fs.realpathSync(currentRoot) + path.sep)) { res.writeHead(403); return res.end(); }
+  // Wunsch-Link xyntal.de/name: Vorschau-Tags mit Name und Beschreibung (ohne Treffer bleibt die Seite unverändert)
+  const handleMatch = file === path.join(currentRoot, 'u.html') && /^\/([a-z0-9][a-z0-9_-]{2,19})\/?$/i.exec(pathname);
+  if (handleMatch && req.method === 'GET') {
+    profileMeta(handleMatch[1].toLowerCase()).then((meta) => {
+      let html = fs.readFileSync(file, 'utf8');
+      if (meta) html = withProfileMeta(html, meta, handleMatch[1].toLowerCase());
+      res.writeHead(200, {'Content-Type':'text/html; charset=utf-8', 'Cache-Control':'no-cache', 'X-Content-Type-Options':'nosniff', 'X-Xyntal-Commit':commit});
+      res.end(html);
+    }).catch(() => { if (!res.headersSent) { res.writeHead(500); res.end(); } });
+    return;
+  }
   res.writeHead(200, {'Content-Type':types[path.extname(file)] || 'application/octet-stream', 'Cache-Control':'no-cache', 'X-Content-Type-Options':'nosniff', 'X-Xyntal-Commit':commit});
   if (req.method === 'HEAD') return res.end();
   const stream = fs.createReadStream(file);

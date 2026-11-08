@@ -8,7 +8,7 @@ const links = [{ id: LID, title: 'Portfolio', url: 'https://example.com', icon: 
   { id: '11111111-1111-1111-1111-111111111112', title: 'GitHub', url: 'https://github.com/x', icon: 'github', active: true, clicks: null },
   { id: '11111111-1111-1111-1111-111111111113', title: 'Discord', url: 'Username: nico', icon: 'discord', active: true, clicks: null }];
 const card = { handle: 'nico', name: 'Nico', role: 'Entwicklung', level: 'Fortgeschritten', skills: ['Qt', 'QML'], pitch: 'Ich baue Dinge', user_id: UID, links, design: {}, profile: { headline: 'Gründer von Xyntal', about: 'Ich baue Xyntal am Wochenende.', offer: 'Erfahrung', seek: 'Ein Team' } };
-let saved = null;
+let saved = null, draft = null, shared = null, viewsTracked = 0, removed = [];
 
 const stub = `window.supabase = { createClient: () => ({
   auth: { getSession: async () => ({ data: { session: { user: { id: '${UID}' } } } }) },
@@ -17,7 +17,9 @@ const stub = `window.supabase = { createClient: () => ({
     const r = await fetch('/__rpc/' + name, { method: 'POST', body: JSON.stringify(args || {}) });
     return { data: await r.json(), error: null };
   },
-  storage: { from: () => ({ upload: async () => ({ error: null }) }) },
+  storage: { from: () => ({ upload: async () => ({ error: null }),
+    list: async () => ({ data: [{ name: '22222222-2222-2222-2222-222222222222.webp', created_at: '2020-01-01T00:00:00Z' }, { name: '33333333-3333-3333-3333-333333333333.webp', created_at: '2020-01-01T00:00:00Z' }], error: null }),
+    remove: async (paths) => { await fetch('/__rpc/__remove', { method: 'POST', body: JSON.stringify(paths) }); return { error: null }; } }) },
 }) };`;
 
 (async () => {
@@ -33,7 +35,16 @@ const stub = `window.supabase = { createClient: () => ({
     if (name === 'get_my_links') body = links;
     else if (name === 'get_my_card') body = card;
     else if (name === 'get_my_page') body = saved;
-    else if (name === 'save_my_page') { saved = args.p_page; body = saved; }
+    else if (name === 'save_my_page') { saved = args.p_page; draft = null; body = saved; }
+    else if (name === 'get_my_page_state') body = { page: saved, draft, views: 1234, versions: 1 };
+    else if (name === 'save_my_page_draft') { draft = args.p_page; body = true; }
+    else if (name === 'list_my_page_versions') body = [{ id: 7, created_at: '2026-11-08T10:00:00Z', items: 2 }];
+    else if (name === 'get_my_page_version') body = { w: 1920, h: 700, items: [{ id: 'v1', type: 'text', text: 'Alte Version', x: 20, y: 20, w: 300, h: 60 }] };
+    else if (name === 'list_page_templates') body = [{ id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', name: 'Neon Grid', handle: 'lena', mine: false,
+      page: { w: 1920, h: 800, items: [{ id: 't1', type: 'text', text: 'Von Lena', x: 40, y: 20, w: 300, h: 60 }, { id: 't2', type: 'link', ref: '00000000-0000-0000-0000-000000000000', x: 40, y: 120, w: 320, h: 60 }] } }];
+    else if (name === 'share_page_template') { shared = args; body = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'; }
+    else if (name === 'get_my_page_media_refs') body = [UID + '/22222222-2222-2222-2222-222222222222.webp'];
+    else if (name === '__remove') { removed = args; body = true; }
     await r.fulfill({ contentType: 'application/json', body: JSON.stringify(body) });
   });
 
@@ -179,12 +190,67 @@ const stub = `window.supabase = { createClient: () => ({
   await pg.selectOption('[data-cursor-sel]', 'ring');
   await pg.click('[data-add="bg"]');
   assert.equal(await pg.locator('.pc-ov-network canvas').count(), 1, 'Netz-Partikel');
-  // 4. Speichern
+  // 3e. Kontakt, Aufrufe, Kopieren/Einfügen, Entwurf, Handy-Vorschau, Tastatur, Extras
+  // (unten ablegen, damit sie nichts verdecken)
+  await pg.click('[data-add="block"]'); await pg.click('[data-make="contact"]'); await pg.fill('input[data-p="y"]', '1400'); await pg.keyboard.press('Escape');
+  await pg.click('[data-add="block"]'); await pg.click('[data-make="counter"]'); await pg.fill('input[data-p="y"]', '1500');
+  assert.match(await pg.locator('.pc-counter .pc-cd-n').textContent(), /1\.234/, 'Aufrufe im Editor');
+  await pg.fill('input[data-p="mo"]', '1');
+  await pg.click('.pc-item.pc-counter');
+  const nc = await pg.locator('.pc-item').count();
+  await pg.keyboard.press('Control+c'); await pg.keyboard.press('Control+v');
+  assert.equal(await pg.locator('.pc-item').count(), nc + 1, 'Strg+C / Strg+V fügt eine Kopie ein');
+  await pg.keyboard.press('Delete');
+  await pg.waitForFunction(() => document.querySelector('[data-status]').textContent.includes('Entwurf gespeichert'), null, { timeout: 8000 });
+  assert.ok(draft && draft.items.some((i) => i.type === 'counter' && i.mo === 1), 'Entwurf automatisch gespeichert ' + JSON.stringify(draft && draft.items.filter((i) => i.type === 'counter')));
+  assert.equal(saved, null, 'Entwurf ist nicht öffentlich');
+  await pg.click('[data-phone]');
+  assert.equal(await pg.locator('.pe-phone .pc.is-wide:not(.is-edit)').count(), 1, 'Handy-Vorschau');
+  assert.equal(await pg.locator('.pe-phone .pc-item.pc-counter').evaluate((el) => getComputedStyle(el).position), 'relative', 'am Handy gestapelt');
+  const first = await pg.locator('.pe-phone .pc-item').evaluateAll((els) => els.filter((e) => e.offsetHeight).map((e) => [e.className, e.getBoundingClientRect().top]).sort((a, b) => a[1] - b[1])[0][0]);
+  assert.match(first, /pc-counter/, 'Platz am Handy 1 steht oben');
+  await pg.click('[data-phone]');
+  // Tastatur: Fokus auf ein Element wählt es aus
+  await pg.locator('.pc-item.pc-contact').focus();
+  assert.match(await pg.locator('.pe-insp h2').first().textContent(), /Kontakt/, 'Tab-Fokus wählt aus');
+  assert.equal(await pg.locator('.pc-item.pc-contact').getAttribute('role'), 'button');
+  await pg.keyboard.press('Escape');
+  // Extras: Statistik, Versionen, Vorlagen
+  pg.on('dialog', (d) => d.accept());
+  await pg.click('[data-add="extras"]');
+  await pg.waitForSelector('[data-version]');
+  assert.match(await pg.locator('[data-pop]').textContent(), /1\.234/, 'Statistik zeigt Aufrufe');
+  const keep = await pg.locator('.pc-item').count();
+  await pg.click('[data-tpl="creator"]');
+  assert.equal(await pg.locator('.pc-t', { hasText: 'Hi, ich bin Nico' }).count(), 1, 'eingebaute Vorlage');
+  assert.equal(await pg.locator('.pc-item.pc-link').count(), 3, 'Links bleiben');
+  await pg.click('[data-undo]');
+  assert.equal(await pg.locator('.pc-item').count(), keep, 'Vorlage rückgängig');
+  await pg.click('[data-add="extras"]'); await pg.click('[data-add="extras"]');
+  await pg.waitForSelector('[data-ctpl]');
+  await pg.fill('[data-share-name]', 'Meine Seite');
+  await pg.click('[data-share]');
+  await pg.waitForFunction(() => document.querySelector('[data-status]').textContent.includes('geteilt'));
+  assert.ok(shared && shared.p_page.items.every((i) => i.type !== 'embed' && i.type !== 'image' && !i.url && (i.type !== 'link' || i.ref === '00000000-0000-0000-0000-000000000000')), 'Vorlage ohne Medien und Links');
+  await pg.click('[data-ctpl]');
+  assert.equal(await pg.locator('.pc-t', { hasText: 'Von Lena' }).count(), 1, 'Community-Vorlage übernommen');
+  assert.equal(await pg.locator('.pc-item.pc-link').count(), 3, 'Platzhalter + eigene Links');
+  await pg.click('[data-undo]');
+  await pg.click('[data-add="extras"]'); await pg.click('[data-add="extras"]');
+  await pg.waitForSelector('[data-version]');
+  await pg.click('[data-version]');
+  await pg.waitForSelector('.pc-t:has-text("Alte Version")', { timeout: 5000 });
+  assert.equal(await pg.locator('.pc-t', { hasText: 'Alte Version' }).count(), 1, 'Version geladen');
+  await pg.click('[data-undo]');
+  // 4. Veröffentlichen
   await pg.click('[data-save]');
-  await pg.waitForFunction(() => document.querySelector('[data-status]').textContent.includes('Gespeichert'));
+  await pg.waitForFunction(() => document.querySelector('[data-status]').textContent.includes('Veröffentlicht'));
+  await pg.waitForTimeout(300);
+  assert.deepEqual(removed, [UID + '/33333333-3333-3333-3333-333333333333.webp'], 'nur unbenutzte alte Uploads gelöscht');
+  assert.equal(draft, null, 'Veröffentlichen löscht den Entwurf');
   assert.ok(saved && saved.items.length >= 3);
   assert.equal(await pg.evaluate(() => location.pathname), '/nico', 'Editor läuft auf der eigenen Adresse');
-  assert.ok(saved.items.every((i) => ['text', 'link', 'image', 'block', 'shape', 'button', 'embed', 'icons', 'countdown'].includes(i.type)));
+  assert.ok(saved.items.every((i) => ['text', 'link', 'image', 'block', 'shape', 'button', 'embed', 'icons', 'countdown', 'contact', 'counter'].includes(i.type)));
   await pg.screenshot({ path: process.env.SHOT_EDITOR || '/tmp/editor.png' });
 
   // 5. Öffentliche Seite zeigt das gespeicherte Layout, Text wird nicht als HTML gedeutet
@@ -203,7 +269,9 @@ const stub = `window.supabase = { createClient: () => ({
   assert.ok(await pub.locator('.pc > .pc-ov').count() >= 2, 'Overlays öffentlich');
   assert.equal(await pub.locator('.pc[data-cursor="ring"]').count(), 1, 'Cursor öffentlich');
   assert.ok(await pub.locator('.pc-item[data-px]').count() >= 1, 'Parallax öffentlich');
-  assert.equal(await pub.locator('.pc-cd').count(), 1, 'Countdown öffentlich');
+  assert.equal(await pub.locator('.pc-cd[data-cd]').count(), 1, 'Countdown öffentlich');
+  assert.equal(await pub.locator('a.pc-contact[href="/nachrichten"]').count(), 1, 'Kontakt (eigene Seite) führt zu den Nachrichten');
+  assert.equal(await pub.locator('.pf-report').count(), 0, 'eigene Seite: kein Melden');
   // Das Cyberpunk-Theme hat dem Knopf „Neon“ gegeben: beim Überfahren leuchtet er
   const btn = pub.locator('.pc-item[data-hover="neon"] a.pc-btn');
   const sh0 = await btn.evaluate((el) => getComputedStyle(el).boxShadow);
@@ -215,6 +283,19 @@ const stub = `window.supabase = { createClient: () => ({
   assert.equal(await pub.locator('.pc-icons a.pc-ib').count(), 2, 'Symbole (2 Links, 1 Text zum Kopieren)');
   assert.equal(await pub.evaluate(() => window.__xss), undefined, 'kein Skript aus Text');
   assert.equal(await pub.locator('.pc img[src=x]').count(), 0);
+  // Fremde Besucher ohne Konto: Kontakt führt zur Anmeldung, Melden ist da, Aufruf wird gezählt
+  const ctx2 = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const guest = await ctx2.newPage();
+  guest.on('pageerror', (e) => errors.push(e.message));
+  await guest.route('**/rest/v1/rpc/get_public_card', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ ...card, user_id: undefined, page: saved, design: {}, views: 42 }) }));
+  await guest.route('**/rest/v1/rpc/track_page_view', (r) => { viewsTracked++; r.fulfill({ status: 204, body: '' }); });
+  await guest.goto(`${base}/nico`);
+  await guest.waitForSelector('.pc .pc-item');
+  assert.equal(await guest.locator('a.pc-contact[href="/login"]').count(), 1, 'Gast: Kontakt → Anmeldung');
+  assert.match(await guest.locator('.pc-counter .pc-cd-n').textContent(), /42/, 'Aufrufe öffentlich');
+  assert.equal(await guest.locator('a.pf-report[href="/community-richtlinien?melden=nico#melden"]').count(), 1, 'Melden-Knopf');
+  await guest.reload(); await guest.waitForSelector('.pc .pc-item');
+  assert.equal(viewsTracked, 1, 'Aufruf einmal je Sitzung gezählt');
   await pub.setViewportSize({ width: 390, height: 800 });
   await pub.screenshot({ path: process.env.SHOT_PUBLIC || '/tmp/public.png', fullPage: true });
   assert.deepEqual(errors, []);
