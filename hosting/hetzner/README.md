@@ -87,6 +87,10 @@ Einrichtung als root auf `xyntal-db` (Docker, 2 GB Swap und ufw vorher installie
 4. Caddy: `hosting/hetzner/supabase/caddy/` nach `/opt/xyntal/caddy` kopieren, dort `docker compose up -d`.
 5. Daten umziehen: `supabase/migrate.sh` (`dump`, `restore`, `files`, `check`).
 
+Seit der Umstellung (9.11.2026) nutzen Website, API und App nur noch `db.xyntal.de`; Supabase-Cloud ist abgekoppelt.
+Backup: `/usr/local/bin/xyntal-db-backup` (cron täglich 03:30, `/etc/cron.d/xyntal-db-backup`) schreibt
+`pg_dumpall` nach `/opt/xyntal/backups/supabase-JJJJ-MM-TT.sql.gz`, 14 Tage. Zusätzlich auf einen zweiten Ort kopieren.
+
 Der Login-Mail-Hook geht über `https://db.xyntal.de/functions/v1/send-auth-email`, weil GoTrue für Hooks
 nur https annimmt; die Funktion prüft jede Anfrage per Signatur.
 
