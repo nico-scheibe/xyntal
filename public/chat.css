@@ -326,6 +326,22 @@ body.messages-page .site-footer { display: none; }
 .xc-projects small { margin-left: auto; color: var(--xc-text-3); }
 .xc-links { display: flex !important; flex-wrap: wrap; gap: 8px; }
 .xc-info section > .btn { justify-self: start; }
+.xc-info-head .btn { margin-top: 10px; }
+.xc-members li .xc-x { margin-left: 6px; }
+.xc-members li small + .xc-x, .xc-members li .xc-role + .xc-x { margin-left: 4px; }
+.xc-members .xc-role { margin-left: auto; max-width: 118px; padding: 2px 4px; border: 1px solid var(--xc-line); border-radius: 8px; background: none; color: var(--xc-text-2); font: inherit; font-size: 12px; }
+.xc-members .xc-x.is-armed { color: #FF6B6B; }
+.xc-edit label { display: grid; gap: 4px; color: var(--xc-text-3); font-size: 12px; }
+.xc-edit input, .xc-edit textarea, .xc-add input { width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid var(--xc-line); border-radius: 10px; background: none; color: var(--xc-text); font: inherit; font-size: 13.5px; }
+.xc-edit-label { color: var(--xc-text-3); font-size: 12px; }
+.xc-info .xc-emoji-row { display: flex; flex-wrap: wrap; gap: 4px; }
+.xc-info .xc-emoji-row button { width: 30px; height: 30px; border: 1px solid transparent; border-radius: 8px; background: none; color: var(--xc-text-2); font: inherit; font-size: 15px; cursor: pointer; }
+.xc-info .xc-emoji-row button[aria-checked="true"] { border-color: rgba(47, 123, 255, .5); background: rgba(47, 123, 255, .12); }
+.xc-add .xc-results { display: grid; gap: 2px; max-height: 220px; overflow-y: auto; margin: 0; padding: 0; list-style: none; }
+.xc-add .xc-results button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 6px; border: 0; border-radius: 10px; background: none; text-align: left; cursor: pointer; color: inherit; font: inherit; font-size: 13.5px; }
+.xc-add .xc-results button:hover { background: var(--xc-wash); }
+.xc-add .xc-results span { display: grid; min-width: 0; }
+.xc-add .xc-results small { color: var(--xc-text-3); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* Neues Gespräch, Bild groß */
 .xc-new .xc-results { display: grid; gap: 2px; max-height: 260px; overflow-y: auto; margin: 0; padding: 0; list-style: none; }
