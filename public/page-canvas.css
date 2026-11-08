@@ -67,3 +67,39 @@ a.pc-ib:hover, button.pc-ib:hover { transform: translateY(-2px); filter: brightn
   .pc.is-wide:not(.is-edit) .pc-ib { width: 46px !important; height: 46px !important; }
   .pc.is-wide:not(.is-edit) .pc-icons { gap: 10px !important; }
 }
+
+/* Animationen (page-canvas.js: data-anim, data-trig, --ad Dauer, --adl Verzögerung, --ai Wiederholung, --akf eigene Keyframes).
+   Sie laufen am Inhalt des Elements, damit Position und Drehung des Elements selbst unberührt bleiben. */
+.pc-item[data-anim] > * { animation-duration: var(--ad, 1.2s); animation-delay: var(--adl, 0s); animation-iteration-count: var(--ai, 1);
+  animation-fill-mode: both; animation-timing-function: ease-in-out; }
+.pc-item[data-anim="fade"] > * { animation-name: pc-fade; }
+.pc-item[data-anim="up"] > * { animation-name: pc-up; animation-timing-function: cubic-bezier(.2, .8, .2, 1); }
+.pc-item[data-anim="left"] > * { animation-name: pc-left; animation-timing-function: cubic-bezier(.2, .8, .2, 1); }
+.pc-item[data-anim="zoom"] > * { animation-name: pc-zoom; animation-timing-function: cubic-bezier(.2, .8, .2, 1); }
+.pc-item[data-anim="float"] > * { animation-name: pc-float; }
+.pc-item[data-anim="pulse"] > * { animation-name: pc-pulse; }
+.pc-item[data-anim="bounce"] > * { animation-name: pc-bounce; }
+.pc-item[data-anim="wobble"] > * { animation-name: pc-wobble; }
+.pc-item[data-anim="shake"] > * { animation-name: pc-shake; }
+.pc-item[data-anim="spin"] > * { animation-name: pc-spin; animation-timing-function: linear; }
+.pc-item[data-anim="glow"] > * { animation-name: pc-glow; }
+.pc-item[data-anim="rainbow"] > * { animation-name: pc-rainbow; animation-timing-function: linear; }
+.pc-item[data-anim="custom"] > * { animation-name: var(--akf); }
+@keyframes pc-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pc-up { from { opacity: 0; transform: translateY(calc(48px * var(--k, 1))); } to { opacity: 1; transform: none; } }
+@keyframes pc-left { from { opacity: 0; transform: translateX(calc(-64px * var(--k, 1))); } to { opacity: 1; transform: none; } }
+@keyframes pc-zoom { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: none; } }
+@keyframes pc-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(calc(-14px * var(--k, 1))); } }
+@keyframes pc-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.07); } }
+@keyframes pc-bounce { 0%, 100% { transform: translateY(0); } 35% { transform: translateY(calc(-26px * var(--k, 1))); } 55% { transform: translateY(0); } 70% { transform: translateY(calc(-9px * var(--k, 1))); } }
+@keyframes pc-wobble { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-6deg); } 75% { transform: rotate(6deg); } }
+@keyframes pc-shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(calc(-8px * var(--k, 1))); } 40%, 80% { transform: translateX(calc(8px * var(--k, 1))); } }
+@keyframes pc-spin { to { transform: rotate(360deg); } }
+@keyframes pc-glow { 0%, 100% { filter: drop-shadow(0 0 0 rgba(185, 92, 255, 0)); } 50% { filter: drop-shadow(0 0 calc(18px * var(--k, 1)) rgba(185, 92, 255, .95)); } }
+@keyframes pc-rainbow { to { filter: hue-rotate(360deg); } }
+/* Auslöser: beim Scrollen erst ab Sichtbarkeit, beim Überfahren nur solange die Maus darüber ist */
+.pc:not(.is-edit) .pc-item[data-trig="view"]:not(.is-in) > * { animation-play-state: paused; }
+.pc:not(.is-edit) .pc-item[data-trig="hover"]:not(:hover):not(:focus-within) > * { animation-name: none; }
+/* Im Editor nur als Vorschau (Knopf „Vorschau“), sonst stört die Bewegung beim Platzieren */
+.pc.is-edit .pc-item:not(.is-preview) > * { animation-name: none !important; }
+@media (prefers-reduced-motion: reduce) { .pc-item[data-anim] > * { animation: none !important; } }

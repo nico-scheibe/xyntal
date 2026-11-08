@@ -83,3 +83,10 @@
 .pe-tile:hover { background: rgba(255, 255, 255, .1); border-color: var(--line-2); }
 .pe-embed { display: grid; gap: 6px; }
 .pe-pop input[type="url"], .pe-insp input[type="url"] { width: 100%; min-height: 34px; padding: 6px 10px; border: 1px solid var(--line-2); border-radius: 8px; background: rgba(255, 255, 255, .04); color: var(--text); font: 14px/1.3 var(--f-text); }
+/* Animation: Code-Feld und Hilfe */
+.pe-insp textarea.pe-code { min-height: 120px; font: 12.5px/1.5 var(--f-mono, ui-monospace, monospace); white-space: pre; tab-size: 2; }
+.pe-hint.is-err { color: #ff8a8a; }
+.pe-help { font-size: 12.5px; color: var(--text-2); }
+.pe-help summary { cursor: pointer; color: var(--text-3); }
+.pe-help p { margin: 6px 0 0; line-height: 1.6; }
+.pe-help code { padding: 1px 5px; border-radius: 5px; background: rgba(255, 255, 255, .08); font-size: 12px; }

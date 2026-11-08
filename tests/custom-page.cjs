@@ -100,6 +100,21 @@ const stub = `window.supabase = { createClient: () => ({
   }
   assert.equal(await pg.locator('.pc-item').count(), before + 11, 'alle Vorlagen eingefügt');
   assert.equal(await pg.locator('.pc-icons .pc-ib').count(), 3, 'Link-Symbole zeigen alle Links');
+  // 3c. Animationen: fertiger Effekt mit Vorschau, eigener Code mit Prüfung
+  await pg.click('.pc-item.pc-shape.is-circle');
+  await pg.selectOption('select[data-p="a_p"]', 'float');
+  assert.equal(await pg.locator('.pc-item.pc-shape.is-circle[data-anim="float"]').count(), 1, 'Effekt am Element');
+  await pg.click('[data-act="preview"]');
+  assert.equal(await pg.locator('.pc-item.is-preview').count(), 1, 'Vorschau läuft');
+  await pg.keyboard.press('Escape');
+  await pg.click('.pc-item.pc-button');
+  await pg.selectOption('select[data-p="a_p"]', 'custom');
+  await pg.fill('textarea[data-p="a_code"]', '0% { drehen: 0 } 100% { background: url(x) }');
+  assert.match(await pg.locator('[data-anim-err]').textContent(), /Erlaubt sind nur/);
+  await pg.fill('textarea[data-p="a_code"]', '0% { drehen: 0; farbe: #ff00aa } 50% { verschieben: 0 -20; skalieren: 1.2 } 100% { drehen: 360 }');
+  assert.match(await pg.locator('[data-anim-err]').textContent(), /gültig/);
+  assert.equal(await pg.locator('.pc style').count(), 1, 'eigene Keyframes erzeugt');
+  await pg.keyboard.press('Escape');
   await pg.click('.pc-item.pc-button');
   await pg.fill('input[data-p="url"]', 'https://cal.com/nico'); await pg.press('input[data-p="url"]', 'Enter');
   await pg.locator('input[data-p="url"]').evaluate((el) => el.dispatchEvent(new Event('change', { bubbles: true })));
@@ -132,6 +147,10 @@ const stub = `window.supabase = { createClient: () => ({
   assert.ok(await pub.locator('a.pc-l[href="https://example.com"]').count() === 1, 'Link ist klickbar');
   assert.equal(await pub.locator('a.pc-btn[href="https://cal.com/nico"]').count(), 1, 'Knopf mit Adresse');
   assert.equal(await pub.locator('.pc-embed iframe').count(), 1, 'Video öffentlich');
+  assert.equal(await pub.locator('.pc-item[data-anim="float"]').count(), 1, 'Animation öffentlich');
+  assert.match(await pub.locator('.pc-item[data-anim="custom"] > *').evaluate((el) => getComputedStyle(el).animationName), /^pck-/, 'eigene Animation läuft');
+  assert.equal(await pub.locator('.pc-item[data-anim="float"] > *').evaluate((el) => getComputedStyle(el).animationName), 'pc-float', 'Effekt läuft');
+  assert.match(await pub.locator('.pc style').textContent(), /@keyframes pck-[a-z0-9]+\{0%\{color:#ff00aa;transform:rotate\(0deg\)\}/, 'eigene Animation öffentlich');
   assert.equal(await pub.locator('.pc-icons a.pc-ib').count(), 2, 'Symbole (2 Links, 1 Text zum Kopieren)');
   assert.equal(await pub.evaluate(() => window.__xss), undefined, 'kein Skript aus Text');
   assert.equal(await pub.locator('.pc img[src=x]').count(), 0);

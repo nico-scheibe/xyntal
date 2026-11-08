@@ -160,6 +160,31 @@
     const range$ = (k, label, v, lo, hi, step = 1) => `<label class="pe-field"><span>${esc(t(label))}</span><input type="range" data-p="${k}" value="${v}" min="${lo}" max="${hi}" step="${step}"></label>`;
     const color$ = (k, label, v) => `<label class="pe-field"><span>${esc(t(label))}</span><input type="color" data-p="${k}" value="${v || "#000000"}"></label>`;
     const seg$ = (k, opts, v) => `<div class="pe-row">${opts.map(([val, label]) => `<button type="button" class="pe-btn${String(v) === String(val) ? " is-on" : ""}" data-set="${k}" data-val="${val}">${esc(t(label))}</button>`).join("")}</div>`;
+    // Animation des Elements: fertiger Effekt oder eigener Code (Mini-Sprache, page-canvas.js compileAnim)
+    const ANIM_EXAMPLE = "0% { verschieben: 0 0; drehen: 0 }\n50% { verschieben: 0 -30; drehen: 10; skalieren: 1.1; farbton: 120 }\n100% { verschieben: 0 0; drehen: 0 }";
+    function animPanel(it) {
+      const a = it.anim;
+      const opts = [["", "Keine"], ...Object.entries(C.ANIMS).map(([k, v]) => [k, v[0]]), ["custom", "Eigene (Code)"]];
+      let html = `<h2>${esc(t("Animation"))}</h2>
+        <label class="pe-field"><span>${esc(t("Effekt"))}</span><select data-p="a_p">${opts.map(([k, l]) => `<option value="${k}"${(a ? a.p : "") === k ? " selected" : ""}>${esc(t(l))}</option>`).join("")}</select></label>`;
+      if (!a) return html;
+      html += `${seg$("a_trig", [["load", "Beim Laden"], ["view", "Beim Scrollen"], ["hover", "Bei Maus"]], a.trig)}
+        ${range$("a_d", `Dauer (${a.d} s)`, a.d, 0.2, 20, 0.1)}
+        ${range$("a_dl", `Verzögerung (${a.dl} s)`, a.dl, 0, 10, 0.1)}
+        <label class="pe-field"><span>${esc(t("Endlos wiederholen"))}</span><input type="checkbox" data-p="a_loop" ${a.loop ? "checked" : ""}></label>`;
+      if (a.p === "custom") {
+        const c = C.compileAnim(a.code, "x");
+        html += `<textarea class="pe-code" data-p="a_code" maxlength="1500" spellcheck="false" aria-label="${esc(t("Animations-Code"))}">${esc(a.code)}</textarea>
+          <p class="pe-hint${c.error ? " is-err" : ""}" data-anim-err>${esc(c.error ? t(c.error) : t("Code ist gültig."))}</p>
+          <details class="pe-help"><summary>${esc(t("Was geht im Code?"))}</summary>
+            <p>${esc(t("Schritte in Prozent (0% … 100%, oder von/bis) mit Eigenschaften:"))}</p>
+            <p><code>verschieben: x y</code> · <code>drehen: grad</code> · <code>skalieren: f</code> · <code>schräg: grad</code> · <code>deckkraft: 0–1</code> · <code>unschärfe: px</code> · <code>farbton: grad</code> · <code>helligkeit: f</code> · <code>farbe: #rrggbb</code> · <code>hintergrund: #rrggbb</code></p>
+            <p>${esc(t("Englisch geht auch: move, rotate, scale, skew, opacity, blur, hue, brightness, color, background."))}</p>
+          </details>`;
+      }
+      html += `<button type="button" class="pe-btn" data-act="preview">▶ ${esc(t("Vorschau"))}</button>`;
+      return html;
+    }
     function drawInsp() {
       const it = current();
       insp.hidden = !it;
@@ -221,6 +246,7 @@
         ${range$("o", "Deckkraft", it.o, 0.1, 1, 0.05)}
         ${range$("rot", "Drehung", it.rot, -180, 180)}
         ${it.rot ? `<button type="button" class="pe-btn" data-set="rot" data-val="0">${esc(t("Gerade stellen"))}</button>` : ""}
+        ${animPanel(it)}
         <h2>${esc(t("Position"))}</h2>
         ${num$("x", "Links", it.x, -page.w, page.w * 2)}${num$("y", "Oben", it.y, -4000, 4000)}${num$("w", "Breite", it.w, 16, page.w * 2)}${block ? "" : num$("h", "Höhe", it.h, 16, 4000)}
         ${it.type === "link" ? `<button type="button" class="pe-btn pe-primary" data-act="stack">${esc(t("Alle Links hierunter anheften"))}</button>
@@ -269,6 +295,15 @@
     // Wächst ein Element über die Fläche hinaus, wächst die Fläche mit
     function fit(it) { const need = Math.ceil(it.y + it.h + 24); if (need > page.h) page.h = Math.min(C.MAX_H, need); }
     function setProp(it, k, v) {
+      if (k.startsWith("a_")) {
+        const f = k.slice(2);
+        if (f === "p" && !v) { it.anim = null; return; }
+        const base = f === "p" ? { p: v, code: v === "custom" ? (it.anim && it.anim.code) || ANIM_EXAMPLE : "", trig: it.anim ? it.anim.trig : "load" } : { ...it.anim, [f]: v };
+        // beim Wechsel des Effekts Dauer und Wiederholung auf dessen Standard zurücksetzen
+        if (f === "p") { delete base.d; delete base.loop; }
+        it.anim = C.cleanAnim(base);
+        return;
+      }
       if (k === "text") it.text = String(v).slice(0, it.type === "button" ? 80 : 1000);
       else if (k === "url") it.url = C.safeUrl(String(v).trim().slice(0, 500));
       else if (k === "icon" || k === "sh") it[k] = !!v;
@@ -287,8 +322,14 @@
       setProp(it, k, e.target.type === "checkbox" ? e.target.checked : e.target.value);
       if (["y", "h"].includes(k)) fit(it);
       drawCanvas();
+      if (k === "a_code") {
+        const c = C.compileAnim(e.target.value, "x"), out = insp.querySelector("[data-anim-err]");
+        if (out) { out.textContent = c.error ? t(c.error) : t("Code ist gültig."); out.classList.toggle("is-err", !!c.error); }
+      }
     });
-    insp.addEventListener("change", (e) => { if (e.target.dataset.p) drawInsp(); });
+    // Nach Auswahl-Feldern neu zeichnen (Beschriftungen, abhängige Felder); Textfelder nicht – sonst verschwindet beim
+    // Weiterklicken das Feld, in das man gerade klickt
+    insp.addEventListener("change", (e) => { if (e.target.dataset.p && e.target.tagName !== "TEXTAREA" && e.target.type !== "text") drawInsp(); });
     insp.addEventListener("click", (e) => {
       const it = current();
       const seg = e.target.closest("[data-set]"), act = e.target.closest("[data-act]");
@@ -300,6 +341,7 @@
       else if (act.dataset.act === "front") { touch(); page.items.push(page.items.splice(i, 1)[0]); }
       else if (act.dataset.act === "back") { touch(); page.items.unshift(page.items.splice(i, 1)[0]); }
       else if (act.dataset.act === "stack") { stackLinks(it); return; }
+      else if (act.dataset.act === "preview") { preview(it); return; }
       else if (act.dataset.act === "dup") {
         if (page.items.length >= limit()) { say(t("Du hast die Höchstzahl an Elementen erreicht."), "error"); return; }
         touch(); const copy = { ...it, id: uid8(), x: it.x + 16, y: it.y + 16 }; page.items.push(copy); sel = copy.id; fit(copy);
@@ -311,7 +353,7 @@
       if (!it) return;
       if (e.target.dataset.bgon !== undefined) { touch(); it.bg = e.target.checked ? "#2a2a2a" : ""; drawAll(); }
       else if (e.target.dataset.bg2on !== undefined) { touch(); it.bg2 = e.target.checked ? "#3fd8ff" : ""; drawAll(); }
-      else if (e.target.dataset.p === "url") { touch(); setProp(it, "url", e.target.value); if (!it.url && e.target.value.trim()) say(t("Bitte eine Adresse mit https:// angeben."), "error"); drawAll(); }
+      else if (e.target.dataset.p === "url") { touch(); setProp(it, "url", e.target.value); if (!it.url && e.target.value.trim()) say(t("Bitte eine Adresse mit https:// angeben."), "error"); drawCanvas(); }
       else if (e.target.dataset.embedChange !== undefined) {
         const got = C.parseEmbed(e.target.value);
         if (!got) { say(t("Diese Adresse lässt sich nicht einbetten. Möglich sind YouTube, Vimeo und Spotify."), "error"); return; }
@@ -406,6 +448,13 @@
       if (bestX) it.x = round(it.x + bestX.d);
       if (bestY) it.y = round(it.y + bestY.d);
       showGuides([bestX && ["x", bestX.line], bestY && ["y", bestY.line]].filter(Boolean));
+    }
+    // Animation im Editor einmal abspielen (sonst ruhen Animationen beim Bearbeiten)
+    function preview(it) {
+      const el = stage.querySelector(`.pc-item[data-id="${CSS.escape(it.id)}"]`);
+      if (!el || !it.anim) return;
+      el.classList.remove("is-preview"); void el.offsetWidth; el.classList.add("is-preview");
+      clearTimeout(el._pv); el._pv = setTimeout(() => el.classList.remove("is-preview"), Math.max(2500, (it.anim.d * (it.anim.loop ? 3 : 1) + it.anim.dl) * 1000 + 200));
     }
     // Alle Links wie der gewählte: gleiche Breite, Höhe und Abstand, genau untereinander (Reihenfolge wie bisher von oben nach unten)
     function stackLinks(anchor) {
