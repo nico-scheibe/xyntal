@@ -39,6 +39,79 @@
   const natOf = (kind, pw) => BLOCKS[kind][pw === NARROW ? 1 : 2];
   const safeUrl = (u) => (/^https?:\/\/[^\s]+$/i.test(u || "") ? u : "");
 
+  // ---- Animationen ----
+  // Fertige Effekte (Keyframes in page-canvas.css). Einblend-Effekte laufen einmal, die anderen standardmäßig endlos.
+  const ANIMS = {
+    fade: ["Einblenden", false], up: ["Von unten", false], left: ["Von links", false], zoom: ["Heranzoomen", false],
+    float: ["Schweben", true], pulse: ["Pulsieren", true], bounce: ["Hüpfen", true], wobble: ["Wackeln", true],
+    shake: ["Schütteln", true], spin: ["Drehen", true], glow: ["Leuchten", true], rainbow: ["Farbwechsel", true],
+  };
+  const TRIGGERS = ["load", "view", "hover"];
+  // Eigene Animation: nur diese Zeichen (keine Klammern, Anführungszeichen, <, /, @) – dieselbe Regel prüft save_my_page
+  const CODE_CHARS = /[^A-Za-z0-9äöüÄÖÜß%#{}:;.,\s-]/g;
+  function cleanAnim(a) {
+    if (!a || typeof a !== "object" || !(ANIMS[a.p] || a.p === "custom")) return null;
+    const loopDefault = a.p === "custom" ? true : ANIMS[a.p][1];
+    return {
+      p: a.p,
+      trig: TRIGGERS.includes(a.trig) ? a.trig : "load",
+      d: round(num(a.d, 0.2, 20, a.p === "spin" || a.p === "rainbow" ? 6 : 1.2)),
+      dl: round(num(a.dl, 0, 10, 0)),
+      loop: typeof a.loop === "boolean" ? a.loop : loopDefault,
+      code: a.p === "custom" ? String(a.code ?? "").replace(CODE_CHARS, "").slice(0, 1500) : "",
+    };
+  }
+  // Mini-Sprache für eigene Animationen → sicheres CSS. Werte werden als Zahlen/Farben geprüft und neu geschrieben,
+  // nichts aus dem Text landet ungeprüft im CSS.
+  //   0% { verschieben: 0 -20; drehen: 8; skalieren: 1.1; deckkraft: 1; unschärfe: 0; farbton: 90; helligkeit: 1.2; schräg: 5; farbe: #ff00aa; hintergrund: #112233 }
+  const PROPS = {
+    verschieben: "move", move: "move", translate: "move", drehen: "rot", rotate: "rot", skalieren: "scale", scale: "scale",
+    deckkraft: "op", opacity: "op", "unschärfe": "blur", unschaerfe: "blur", blur: "blur", farbton: "hue", hue: "hue",
+    helligkeit: "bright", brightness: "bright", "schräg": "skew", schraeg: "skew", skew: "skew", farbe: "color", color: "color",
+    hintergrund: "bg", background: "bg",
+  };
+  function compileAnim(code, name) {
+    const src = String(code || "");
+    if (!src.trim()) return { error: "Noch kein Code." };
+    if (CODE_CHARS.test(src)) { CODE_CHARS.lastIndex = 0; return { error: "Erlaubt sind nur Buchstaben, Zahlen, % # { } : ; . , und -." }; }
+    CODE_CHARS.lastIndex = 0;
+    const frames = [];
+    const rest = src.replace(/(\d{1,3}(?:\.\d+)?%|von|bis|from|to)\s*\{([^{}]*)\}/gi, (m, at, body) => {
+      const pct = /^(von|from)$/i.test(at) ? 0 : /^(bis|to)$/i.test(at) ? 100 : Number(at.slice(0, -1));
+      frames.push({ pct, body });
+      return "";
+    });
+    if (rest.trim()) return { error: `Nicht verstanden: „${rest.trim().slice(0, 30)}“. Aufbau: 0% { drehen: 10 }` };
+    if (frames.length < 2) return { error: "Mindestens zwei Schritte, z. B. 0% { … } und 100% { … }." };
+    const n = (v, lo, hi) => { const x = Number(v); if (!Number.isFinite(x) || x < lo || x > hi) throw new Error(`Zahl außerhalb ${lo} bis ${hi}: ${v}`); return x; };
+    const out = [];
+    try {
+      frames.forEach(({ pct, body }) => {
+        if (!(pct >= 0 && pct <= 100)) throw new Error(`Prozent muss zwischen 0 und 100 liegen: ${pct}%`);
+        const tf = [], fl = [], css = [];
+        body.split(";").map((x) => x.trim()).filter(Boolean).forEach((decl) => {
+          const i = decl.indexOf(":");
+          if (i < 1) throw new Error(`„${decl.slice(0, 30)}“ braucht die Form name: wert`);
+          const key = PROPS[decl.slice(0, i).trim().toLowerCase()], vals = decl.slice(i + 1).trim().split(/[\s,]+/).filter(Boolean);
+          if (!key) throw new Error(`Unbekannt: „${decl.slice(0, i).trim()}“`);
+          if (key === "move") { const x = n(vals[0], -3000, 3000), y = n(vals[1] ?? 0, -3000, 3000); tf.push(`translate(calc(${x}px * var(--k, 1)), calc(${y}px * var(--k, 1)))`); }
+          else if (key === "rot") tf.push(`rotate(${n(vals[0], -3600, 3600)}deg)`);
+          else if (key === "scale") tf.push(`scale(${n(vals[0], 0, 10)}, ${n(vals[1] ?? vals[0], 0, 10)})`);
+          else if (key === "skew") tf.push(`skew(${n(vals[0], -80, 80)}deg, ${n(vals[1] ?? 0, -80, 80)}deg)`);
+          else if (key === "op") css.push(`opacity:${n(vals[0], 0, 1)}`);
+          else if (key === "blur") fl.push(`blur(calc(${n(vals[0], 0, 60)}px * var(--k, 1)))`);
+          else if (key === "hue") fl.push(`hue-rotate(${n(vals[0], -3600, 3600)}deg)`);
+          else if (key === "bright") fl.push(`brightness(${n(vals[0], 0, 5)})`);
+          else { const h = hex(vals[0], ""); if (!h) throw new Error(`Farbe als #rrggbb angeben: ${vals[0] || ""}`); css.push(`${key === "color" ? "color" : "background-color"}:${h}`); }
+        });
+        if (tf.length) css.push(`transform:${tf.join(" ")}`);
+        if (fl.length) css.push(`filter:${fl.join(" ")}`);
+        out.push(`${pct}%{${css.join(";")}}`);
+      });
+    } catch (err) { return { error: err.message }; }
+    return { css: `@keyframes ${name}{${out.join("")}}` };
+  }
+
   const DEFAULTS = {
     text: { w: 240, h: 56, text: "Dein Text", size: 24, weight: 700, align: "left", font: "sans", color: "#eceae4", bg: "", radius: 0 },
     link: { w: 280, h: 56, size: 16, color: "#eceae4", bg: "#2a2a2a", radius: 14, icon: true },
@@ -60,6 +133,7 @@
       w: round(num(raw.w, 16, FULL * 2, d.w)), h: round(num(raw.h, 16, MAX_H, d.h)),
       o: round(num(raw.o, 0.1, 1, 1)),
       rot: round(num(raw.rot, -360, 360, 0)),
+      anim: cleanAnim(raw.anim),
       radius: round(num(raw.radius, 0, 999, d.radius)),
       // Rahmen und Schatten (alle außer Profil-Bausteinen)
       bw: round(num(raw.bw, 0, 16, 0)), bc: hex(raw.bc, "#eceae4"), sh: raw.sh === true,
@@ -183,19 +257,35 @@
   function html(page, opts) {
     const p = normalize(page), o = { base: "", links: [], edit: false, ...opts, pw: p.w };
     const wide = p.w !== NARROW, full = p.w === FULL;
-    return `<div class="pc-wrap${full ? " is-full" : ""}"${p.w === WIDE ? ' style="max-width:1080px"' : ""}><div class="pc${o.edit ? " is-edit" : ""}${wide ? " is-wide" : ""}" data-w="${p.w}" style="aspect-ratio:${p.w} / ${p.h};background:${background(p.bg)}">${p.items.map((it) => itemHtml(it, o.links, o)).join("")}</div></div>`;
+    const keyframes = [];
+    const items = p.items.map((it) => {
+      let out = itemHtml(it, o.links, o);
+      const a = it.anim;
+      if (!out || !a) return out;
+      // Animation am Element: Effekt, Auslöser und Zeiten als Attribute/Variablen; eigene Keyframes aus compileAnim
+      let name = "";
+      if (a.p === "custom") { const c = compileAnim(a.code, `pck-${it.id}`); if (!c.css) return out; keyframes.push(c.css); name = `;--akf:pck-${it.id}`; }
+      return out.replace(/^<div /, `<div data-anim="${a.p}" data-trig="${a.trig}" `)
+        .replace('style="', `style="--ad:${a.d}s;--adl:${a.dl}s;--ai:${a.loop ? "infinite" : 1}${name};`);
+    }).join("");
+    const style = keyframes.length ? `<style>${keyframes.join("")}</style>` : "";
+    return `<div class="pc-wrap${full ? " is-full" : ""}"${p.w === WIDE ? ' style="max-width:1080px"' : ""}><div class="pc${o.edit ? " is-edit" : ""}${wide ? " is-wide" : ""}" data-w="${p.w}" style="aspect-ratio:${p.w} / ${p.h};background:${background(p.bg)}">${style}${items}</div></div>`;
   }
 
   // --k = Pixel je Einheit, damit Bausteine (feste Pixelgröße) mit der Fläche mitskalieren
   const widthOf = (el) => Number(el.dataset.w) || NARROW;
   const ro = typeof ResizeObserver === "function" ? new ResizeObserver((list) => list.forEach((e) => e.target.style.setProperty("--k", String(e.contentRect.width / widthOf(e.target))))) : null;
+  // Animation „beim Scrollen“: startet, sobald das Element sichtbar wird
+  const io = typeof IntersectionObserver === "function"
+    ? new IntersectionObserver((list) => list.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("is-in"); io.unobserve(e.target); } }), { threshold: 0.2 }) : null;
   function mount(host) {
     host.querySelectorAll(".pc").forEach((el) => {
       el.style.setProperty("--k", String(el.getBoundingClientRect().width / widthOf(el)));
       if (ro) ro.observe(el);
     });
+    host.querySelectorAll('.pc-item[data-trig="view"]').forEach((el) => { if (io) io.observe(el); else el.classList.add("is-in"); });
   }
   function zoomOf(it, pw) { return `calc(var(--k, 1) * ${it.w} / ${natOf(it.kind, pw)})`; }
 
-  window.XyntalPageCanvas = { EMBEDS, parseEmbed, BLOCKS, NARROW, WIDE, FULL, WIDTHS, natOf, mount, zoomOf, W, MIN_H, MAX_H, DEFAULTS, normalize, html, itemHtml, background, hex, num, round, esc, safeUrl };
+  window.XyntalPageCanvas = { ANIMS, TRIGGERS, cleanAnim, compileAnim, EMBEDS, parseEmbed, BLOCKS, NARROW, WIDE, FULL, WIDTHS, natOf, mount, zoomOf, W, MIN_H, MAX_H, DEFAULTS, normalize, html, itemHtml, background, hex, num, round, esc, safeUrl };
 })();
