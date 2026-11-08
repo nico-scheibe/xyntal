@@ -1,0 +1,19 @@
+# Caddy vor Supabase auf xyntal-db: holt das Zertifikat für db.xyntal.de und leitet an das
+# Supabase-Gateway (127.0.0.1:8000) weiter. Start: docker compose -f …/caddy/compose.yaml up -d
+services:
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      ACME_EMAIL: ${ACME_EMAIL:-admin@xyntal.com}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    logging:
+      driver: json-file
+      options: { max-size: 10m, max-file: '3' }
+volumes:
+  caddy_data:
+  caddy_config:

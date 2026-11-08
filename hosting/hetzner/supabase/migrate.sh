@@ -86,24 +86,36 @@ restore)
 files)
     need_cloud
     ensure_rclone
-    # rclone-Ziele nur für diesen Aufruf, über Umgebungsvariablen (keine Konfigurationsdatei mit Schlüsseln).
-    export RCLONE_CONFIG_OLD_TYPE=s3 RCLONE_CONFIG_OLD_PROVIDER=Other
+    # Alte Dateien per S3 holen (rclone-Ziel nur über Umgebungsvariablen, keine Konfigurationsdatei mit Schlüsseln).
+    export RCLONE_CONFIG_OLD_TYPE=s3 RCLONE_CONFIG_OLD_PROVIDER=Other RCLONE_CONFIG_OLD_FORCE_PATH_STYLE=true
     RCLONE_CONFIG_OLD_ENDPOINT="$(get "$CLOUD" OLD_S3_ENDPOINT)"
     RCLONE_CONFIG_OLD_REGION="$(get "$CLOUD" OLD_S3_REGION)"
     RCLONE_CONFIG_OLD_ACCESS_KEY_ID="$(get "$CLOUD" OLD_S3_ACCESS_KEY)"
     RCLONE_CONFIG_OLD_SECRET_ACCESS_KEY="$(get "$CLOUD" OLD_S3_SECRET_KEY)"
     export RCLONE_CONFIG_OLD_ENDPOINT RCLONE_CONFIG_OLD_REGION RCLONE_CONFIG_OLD_ACCESS_KEY_ID RCLONE_CONFIG_OLD_SECRET_ACCESS_KEY
-    export RCLONE_CONFIG_NEW_TYPE=s3 RCLONE_CONFIG_NEW_PROVIDER=Other RCLONE_CONFIG_NEW_ENDPOINT=http://127.0.0.1:8000/storage/v1/s3
-    RCLONE_CONFIG_NEW_REGION="$(get "$DIR/.env" REGION)"
-    RCLONE_CONFIG_NEW_ACCESS_KEY_ID="$(get "$DIR/.env" S3_PROTOCOL_ACCESS_KEY_ID)"
-    RCLONE_CONFIG_NEW_SECRET_ACCESS_KEY="$(get "$DIR/.env" S3_PROTOCOL_ACCESS_KEY_SECRET)"
-    export RCLONE_CONFIG_NEW_REGION RCLONE_CONFIG_NEW_ACCESS_KEY_ID RCLONE_CONFIG_NEW_SECRET_ACCESS_KEY
-    # Die Bucket-Einträge (storage.buckets) kamen mit dem Daten-Import; hier nur die Dateien.
+    # Einspielen über die Storage-API (Service-Schlüssel). Die S3-Schnittstelle des eigenen Servers lehnt
+    # Signaturen hinter dem Gateway ab (Pfad /storage/v1/s3 wird umgeschrieben).
+    key="$(get "$DIR/.env" SERVICE_ROLE_KEY)"
+    tmp="$WORK/files"; rm -rf "$tmp"; mkdir -p "$tmp"; chmod 700 "$tmp"
     for bucket in $(rclone lsf OLD: | tr -d '/'); do
         echo "→ Bucket $bucket"
-        rclone copy "OLD:$bucket" "NEW:$bucket" --transfers 4 --checkers 8 --stats-one-line --stats 10s
+        rclone copy "OLD:$bucket" "$tmp/$bucket"
     done
-    echo "Dateien kopiert."
+    ok=0; bad=0
+    ( cd "$tmp" && find . -type f | sed 's#^\./##' ) > "$WORK/files.lst"
+    while IFS= read -r f; do
+        b="${f%%/*}"; p="${f#*/}"
+        case "$f" in
+            *.jpg|*.jpeg) ct=image/jpeg ;; *.png) ct=image/png ;; *.gif) ct=image/gif ;; *.webp) ct=image/webp ;;
+            *.mp4) ct=video/mp4 ;; *.webm) ct=video/webm ;; *.pdf) ct=application/pdf ;; *) ct=application/octet-stream ;;
+        esac
+        code="$(curl -s -o /dev/null -w '%{http_code}' -X POST "http://127.0.0.1:8000/storage/v1/object/$b/$p" \
+            -H "apikey: $key" -H "Authorization: Bearer $key" -H "Content-Type: $ct" -H "x-upsert: true" --data-binary "@$tmp/$f")"
+        if [ "$code" = 200 ]; then ok=$((ok + 1)); else bad=$((bad + 1)); echo "  Fehler $code: $f"; fi
+    done < "$WORK/files.lst"
+    rm -rf "$tmp" "$WORK/files.lst"
+    echo "Dateien kopiert: $ok, fehlgeschlagen: $bad."
+    [ "$bad" = 0 ] || exit 1
     ;;
 check)
     echo "Eigener Server:"

@@ -36,7 +36,9 @@ services:
       GOTRUE_MFA_TOTP_ENROLL_ENABLED: "true"
       GOTRUE_MFA_TOTP_VERIFY_ENABLED: "true"
       GOTRUE_HOOK_SEND_EMAIL_ENABLED: "true"
-      GOTRUE_HOOK_SEND_EMAIL_URI: "http://functions:9000/send-auth-email"
+      # GoTrue erlaubt für Hooks nur https (http nur für localhost). Daher über die öffentliche
+      # Adresse; die Funktion prüft jede Anfrage per Signatur (SEND_EMAIL_HOOK_SECRET).
+      GOTRUE_HOOK_SEND_EMAIL_URI: "${SUPABASE_PUBLIC_URL}/functions/v1/send-auth-email"
       GOTRUE_HOOK_SEND_EMAIL_SECRETS: ${SEND_EMAIL_HOOK_SECRET}
       # Login-Anbieter: in .env eintragen (GOOGLE_*, LINKEDIN_*, APPLE_*), siehe README.
       GOTRUE_EXTERNAL_GOOGLE_ENABLED: ${GOOGLE_ENABLED:-false}

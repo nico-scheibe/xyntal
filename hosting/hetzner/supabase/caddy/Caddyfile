@@ -1,0 +1,18 @@
+# HTTPS für das selbst gehostete Supabase (eigener Server xyntal-db).
+# Voraussetzung: db.xyntal.de zeigt in Cloudflare per A-Record auf diesen Server, „DNS only“ (graue Wolke).
+{
+	email {$ACME_EMAIL}
+}
+
+db.xyntal.de {
+	encode zstd gzip
+	header {
+		X-Content-Type-Options nosniff
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+	# Realtime (WebSockets) und große Uploads ungepuffert durchreichen.
+	reverse_proxy 127.0.0.1:8000 {
+		flush_interval -1
+	}
+}

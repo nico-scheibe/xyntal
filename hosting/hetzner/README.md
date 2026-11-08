@@ -71,6 +71,25 @@ Den Zugang (`MEDIA_S3_*`) schreibt `deploy.sh` bei jedem Ausrollen aus `api.env`
 `/opt/xyntal/secrets/media.env`; die Website liest ihn von dort. Fehlt er, lädt der Editor wie bisher zu Supabase.
 Ersetzte oder entfernte Dateien löscht der Editor direkt nach dem Veröffentlichen (auch wenn nur eine ältere Version sie noch nutzte); nur fremde Uploads der letzten 10 Minuten bleiben verschont.
 
+## Eigenes Supabase (Server `xyntal-db`)
+
+Supabase läuft auf einem eigenen Server, damit Datenbank und Website sich nicht den RAM teilen:
+Hetzner Cloud CX23, Falkenstein, IPv4 `49.13.93.175`, erreichbar als `https://db.xyntal.de`
+(A-Record in Cloudflare, „DNS only“). Von außen offen sind nur 22, 80 und 443 (ufw); Gateway und
+Datenbank-Pooler hören nur auf `127.0.0.1`.
+
+Einrichtung als root auf `xyntal-db` (Docker, 2 GB Swap und ufw vorher installieren):
+
+1. `git clone --depth 1 https://github.com/nico-scheibe/xyntal.git /opt/xyntal/site`
+2. `/opt/xyntal/secrets/api.env` nur mit den `MEDIA_S3_*`-Zeilen, `/opt/xyntal/secrets/website.env`
+   nur mit `BREVO_API_KEY`, `BREVO_SENDER_EMAIL` und `SMTP_*` (je `chmod 600`).
+3. `sh /opt/xyntal/site/hosting/hetzner/supabase/install.sh`
+4. Caddy: `hosting/hetzner/supabase/caddy/` nach `/opt/xyntal/caddy` kopieren, dort `docker compose up -d`.
+5. Daten umziehen: `supabase/migrate.sh` (`dump`, `restore`, `files`, `check`).
+
+Der Login-Mail-Hook geht über `https://db.xyntal.de/functions/v1/send-auth-email`, weil GoTrue für Hooks
+nur https annimmt; die Funktion prüft jede Anfrage per Signatur.
+
 ## Alltag
 
 | Was | Befehl |
