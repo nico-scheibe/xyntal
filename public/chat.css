@@ -336,6 +336,11 @@ body.messages-page .site-footer { display: none; }
 .xc-new .xc-results small { color: var(--text-2, #A6A4BD); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .xc-new .xc-chosen { display: flex; flex-wrap: wrap; gap: 6px; }
 .xc-new .xc-chosen:empty { display: none; }
+.xc-new .xc-emoji-row { display: flex; flex-wrap: wrap; gap: 4px; }
+.xc-new .xc-emoji-row[hidden] { display: none; }
+.xc-new .xc-emoji-row button { width: 32px; height: 32px; border: 1px solid transparent; border-radius: 8px; background: none; color: var(--text-2, #A6A4BD); font: inherit; font-size: 16px; cursor: pointer; }
+.xc-new .xc-emoji-row button:hover { background: var(--panel-3, #181624); }
+.xc-new .xc-emoji-row button[aria-checked="true"] { border-color: rgba(47, 123, 255, .5); background: rgba(47, 123, 255, .12); }
 .xc-new .xc-av { width: 34px; height: 34px; font-size: 12px; }
 .xc-lightbox { max-width: 94vw; max-height: 92vh; padding: 0; border: 0; border-radius: 14px; background: #000; }
 .xc-lightbox::backdrop { background: rgba(0, 0, 0, .85); }
