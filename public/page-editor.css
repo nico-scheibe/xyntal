@@ -1,8 +1,7 @@
-/* Editor für die freie Seite (/meine-seite): oben Leiste, links Werkzeuge, Mitte Zeichenfläche, rechts Eigenschaften.
+/* Editor für die freie Seite (läuft auf xyntal.de/name, ersetzt dort die Seite): oben Leiste, links Werkzeuge, Mitte Zeichenfläche, rechts Eigenschaften.
    Am Handy untereinander: Werkzeuge, Fläche, Eigenschaften. */
-body.pe { background: var(--bg); min-height: 100dvh; }
-.pe-bar { position: sticky; top: 0; z-index: 30; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 10px 16px;
-  background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+.pe-bar { position: relative; z-index: 30; width: 100%; border-radius: 14px; border: 1px solid var(--line); margin-bottom: 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 10px 14px;
+  background: color-mix(in srgb, var(--bg) 92%, transparent); }
 .pe-bar h1 { font: 600 16px/1.2 var(--f-text); margin: 0; }
 .pe-back { color: var(--text-2); text-decoration: none; font-size: 14px; }
 .pe-back:hover { color: var(--text); }
@@ -19,10 +18,10 @@ body.pe { background: var(--bg); min-height: 100dvh; }
 .pe-btn.is-on { background: var(--text); color: #1c1c1c; }
 .pe-msg { padding: 48px 16px; text-align: center; color: var(--text-2); }
 
-.pe-main { display: grid; grid-template-columns: 1fr; gap: 16px; padding: 16px; max-width: 1400px; margin: 0 auto; align-items: start; }
+.pe-main { display: grid; grid-template-columns: 1fr; gap: 16px; width: 100%; max-width: 1400px; margin: 0 auto; align-items: start; text-align: left; }
 @media (min-width: 1000px) {
   .pe-main { grid-template-columns: 230px minmax(0, 1fr) 280px; }
-  .pe-tools, .pe-insp { position: sticky; top: 72px; max-height: calc(100dvh - 88px); overflow-y: auto; }
+  .pe-tools, .pe-insp { position: sticky; top: 84px; max-height: calc(100dvh - 100px); overflow-y: auto; }
 }
 .pe-tools, .pe-insp { display: grid; gap: 10px; padding: 14px; border: 1px solid var(--line); border-radius: 16px; background: rgba(255, 255, 255, .02); align-content: start; }
 .pe-tools h2, .pe-insp h2 { margin: 6px 0 0; font: 600 12px/1 var(--f-text); letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
@@ -44,9 +43,9 @@ body.pe { background: var(--bg); min-height: 100dvh; }
 .pe-pop button:hover { background: rgba(255, 255, 255, .1); }
 .pe-pop p { margin: 0; font-size: 13px; color: var(--text-2); }
 
-.pe-stage { min-width: 0; padding: 12px; border-radius: 16px; background: repeating-conic-gradient(#202020 0 25%, #1a1a1a 0 50%) 0 0 / 24px 24px; display: grid; justify-items: center; }
+.pe-stage { min-width: 0; display: grid; justify-items: center; }
 .pe-stage .pc-wrap { width: 100%; }
-.pe-stage .pc { box-shadow: 0 20px 60px -30px #000; touch-action: pan-y; }
+.pe-stage .pc { touch-action: pan-y; outline: 1px dashed rgba(255, 255, 255, .25); outline-offset: 4px; }
 .pe-stage .pc-item { cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
 .pe-stage .pc-item * { pointer-events: none; }
 .pe-stage.is-moving, .pe-stage.is-moving .pc-item { cursor: grabbing; }
