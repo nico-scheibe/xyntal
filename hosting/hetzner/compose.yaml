@@ -32,7 +32,11 @@ services:
       dockerfile: hosting/hetzner/website.Dockerfile
     restart: unless-stopped
     init: true
-    env_file: /opt/xyntal/secrets/website.env
+    env_file:
+      - /opt/xyntal/secrets/website.env
+      # Zugang zum Hetzner-Bucket für Uploads der freien Seite (deploy.sh schreibt ihn aus api.env)
+      - path: /opt/xyntal/secrets/media.env
+        required: false
     volumes:
       - website_state:/srv/site/.deploy
     logging: *logs

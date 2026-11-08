@@ -162,7 +162,7 @@
       ${page.cursor === "emoji" ? `<div class="pe-row">${C.CURSOR_EMOJI.map((e) => `<button type="button" class="pe-btn${page.cemo === e ? " is-on" : ""}" data-cemo="${e}">${e}</button>`).join("")}</div>` : ""}
       <h2>${esc(t("Hintergrund-Video"))}</h2>
       ${page.bgv ? `<p class="pe-hint">${esc(t("Eigenes Video läuft stumm im Hintergrund."))}</p><button type="button" class="pe-btn pe-danger" data-bgv-del>${esc(t("Video entfernen"))}</button>`
-        : `${ownCheck("data-bgv-own", false)}<label class="pe-btn" data-bgv-label>+ ${esc(t(admin ? "Video hochladen (MP4/WebM, ohne Größenlimit)" : "Video hochladen (MP4/WebM, max. 15 MB)"))}<input type="file" accept="video/mp4,video/webm" data-bgv-file hidden></label>`}
+        : `${ownCheck("data-bgv-own", false)}<label class="pe-btn" data-bgv-label>+ ${esc(t(admin ? "Video hochladen (MP4/WebM, bis 5 GB)" : "Video hochladen (MP4/WebM, max. 15 MB)"))}<input type="file" accept="video/mp4,video/webm" data-bgv-file hidden></label>`}
       <p class="pe-count">${page.items.length} / ${limit()} ${esc(t("Elemente"))}</p>
       <button type="button" class="pe-btn pe-danger" data-reset>${esc(t("Auf Standardseite zurücksetzen"))}</button>`;
     // Vorlagen im Menü „+ Mehr“: Typ und Startwerte
@@ -774,11 +774,9 @@
         if (!admin && file.size > 15 * 1024 * 1024) { say(t("Das Video ist größer als 15 MB."), "error"); return; }
         say(t("Video wird hochgeladen …"));
         try {
-          const path = `${uid}/${crypto.randomUUID()}.${file.type === "video/webm" ? "webm" : "mp4"}`;
-          const { error } = await sb.storage.from("page-media").upload(path, file, { contentType: file.type, upsert: false });
-          if (error) throw error;
+          const path = await uploadMedia(file, file.type === "video/webm" ? "webm" : "mp4", "Video wird hochgeladen …");
           touch(); page.bgv = path; page.bgvOwn = true; drawAll(); say(t("Video eingefügt."), "ok");
-        } catch { say(t("Das Video konnte nicht hochgeladen werden."), "error"); }
+        } catch (err) { say(uploadError(err, "Das Video konnte nicht hochgeladen werden."), "error"); }
       }
     });
     $("[data-phone]").addEventListener("click", (e) => {
@@ -794,6 +792,43 @@
       dirty = false; location.assign(location.pathname);
     });
     $("[data-upload-label]").addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("[data-upload]").click(); } });
+
+    // ---- Hochladen ----
+    // Admins: auf den eigenen Server (Hetzner-Bucket, hosting/daki/media-store.cjs) – dort gilt die 50-MB-Grenze
+    // von Supabase nicht. Ist er nicht eingerichtet (503), geht es wie bei allen anderen zu Supabase.
+    const MIMES = { jpg: "image/jpeg", png: "image/png", webp: "image/webp", gif: "image/gif", mp4: "video/mp4", webm: "video/webm" };
+    const SUPA_MAX = 50 * 1024 * 1024;
+    async function uploadMedia(blob, ext, label) {
+      const type = MIMES[ext];
+      if (admin) {
+        const { data: { session } } = await sb.auth.getSession();
+        const res = await new Promise((ok, fail) => {
+          const x = new XMLHttpRequest();
+          x.open("POST", "/api/page-media");
+          x.setRequestHeader("Authorization", `Bearer ${session ? session.access_token : ""}`);
+          x.setRequestHeader("Content-Type", type);
+          x.upload.onprogress = (ev) => { if (ev.lengthComputable && ev.total > 2 * 1024 * 1024) say(`${t(label)} ${Math.floor(ev.loaded / ev.total * 100)} %`); };
+          x.onload = () => { let body = {}; try { body = JSON.parse(x.responseText); } catch { /* leer */ } ok({ status: x.status, body }); };
+          x.onerror = () => fail(new Error("network"));
+          x.send(blob);
+        });
+        if (res.status === 200 && /^s\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.[a-z0-9]{3,4}$/.test(res.body.path || "")) return res.body.path;
+        if (res.status !== 503 && res.status !== 404) throw new Error(res.status === 413 ? "too large" : `server ${res.status}`);
+        if (blob.size > SUPA_MAX) throw new Error("no server");
+      }
+      say(t(label));
+      const path = `${uid}/${crypto.randomUUID()}.${ext}`;
+      const { error } = await sb.storage.from("page-media").upload(path, blob, { contentType: type, upsert: false });
+      if (error) throw error;
+      return path;
+    }
+    function uploadError(err, fallback) {
+      const m = String((err && err.message) || "");
+      if (m === "no server") return t("Dateien über 50 MB brauchen den eigenen Speicher auf dem Server – der ist noch nicht eingerichtet.");
+      if (m === "too large") return t("Die Datei ist zu groß.");
+      if (/exceeded|maximum allowed size|too large|413/i.test(m)) return t("Die Datei ist zu groß für Supabase (höchstens 50 MB).");
+      return t(fallback);
+    }
 
     // Bild: Fotos werden auf höchstens 1600 px (Admins 4096 px) verkleinert und als WebP hochgeladen; GIFs bleiben unverändert (Animation)
     async function prepare(file) {
@@ -813,14 +848,12 @@
       try {
         const { blob, ext, w, h } = await prepare(file);
         if (!admin && blob.size > 3 * 1024 * 1024) throw new Error("size");
-        const path = `${uid}/${crypto.randomUUID()}.${ext}`;
-        const { error } = await sb.storage.from("page-media").upload(path, blob, { contentType: blob.type, upsert: false });
-        if (error) throw error;
+        const path = await uploadMedia(blob, ext, "Bild wird hochgeladen …");
         const ratio = w && h ? h / w : 1, width = 200;
         add("image", { src: path, w: width, h: Math.round(width * ratio) });
         say("");
       } catch (err) {
-        say(err && err.message === "size" ? t("Das Bild ist größer als 3 MB.") : t("Das Bild konnte nicht hochgeladen werden."), "error");
+        say(err && err.message === "size" ? t("Das Bild ist größer als 3 MB.") : uploadError(err, "Das Bild konnte nicht hochgeladen werden."), "error");
       }
     });
 
@@ -887,10 +920,22 @@
         const r = await sb.rpc("get_my_page_media_refs");
         if (r.error || !uid) return;
         const keep = new Set(Array.isArray(r.data) ? r.data : []);
-        [snap(), ...undo, ...redo].forEach((js) => { (js.match(/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp|gif|mp4|webm)/g) || []).forEach((m) => keep.add(m)); });
+        [snap(), ...undo, ...redo].forEach((js) => { (js.match(/(?:s\/)?[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp|gif|mp4|webm)/g) || []).forEach((m) => keep.add(m)); });
+        const old = Date.now() - 36e5;
+        // Eigener Server (nur Admins laden dorthin hoch)
+        if (admin) {
+          try {
+            const { data: { session } } = await sb.auth.getSession();
+            const auth = { Authorization: `Bearer ${session ? session.access_token : ""}` };
+            const r2 = await fetch("/api/page-media", { headers: auth });
+            const list = r2.ok ? ((await r2.json()).files || []) : [];
+            const gone2 = list.filter((f) => /^[0-9a-f-]{36}\.(jpg|png|webp|gif|mp4|webm)$/.test(f.name || "") && !keep.has(`s/${uid}/${f.name}`)
+              && new Date(f.created_at || Date.now()).getTime() < old).slice(0, 100);
+            for (const f of gone2) await fetch(`/api/page-media/${f.name}`, { method: "DELETE", headers: auth });
+          } catch { /* Server-Speicher optional */ }
+        }
         const { data, error } = await sb.storage.from("page-media").list(uid, { limit: 1000 });
         if (error || !Array.isArray(data)) return;
-        const old = Date.now() - 36e5;
         const gone = data.filter((f) => /^[0-9a-f-]{36}\.(jpg|png|webp|gif|mp4|webm)$/.test(f.name || "") && !keep.has(`${uid}/${f.name}`)
           && new Date(f.created_at || Date.now()).getTime() < old).map((f) => `${uid}/${f.name}`);
         if (gone.length) await sb.storage.from("page-media").remove(gone.slice(0, 100));

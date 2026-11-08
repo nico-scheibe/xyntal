@@ -6,6 +6,9 @@ const { execFileSync } = require('node:child_process');
 const tls = require('node:tls');
 const { promisify } = require('node:util');
 const exec = promisify(require('node:child_process').execFile);
+// Uploads der freien Seite im eigenen Bucket (Hetzner); fehlt das Modul (alter Daki-Stand), läuft alles wie bisher.
+let mediaHandler = () => false;
+try { mediaHandler = require('./media-store.cjs').createMediaHandler({ supabase: () => supabaseConfig() }); } catch {}
 const state = path.join(__dirname, '.deploy');
 const repository = 'https://github.com/nico-scheibe/xyntal.git';
 const cache = path.join(state, 'repo.git');
@@ -395,7 +398,7 @@ const SECURITY_HEADERS = {
   // Vorschaubilder kommen als blob: vom App-Server (img-src blob:).
   'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://rralgrlujoupprwlvoyo.supabase.co https://media.giphy.com https://media0.giphy.com https://media1.giphy.com https://media2.giphy.com https://media3.giphy.com https://media4.giphy.com https://i.giphy.com; media-src 'self' blob:; font-src 'self'; connect-src 'self' https://api.xyntal.de https://rralgrlujoupprwlvoyo.supabase.co wss://rralgrlujoupprwlvoyo.supabase.co https://*.sibforms.com; frame-src 'self' https://www.youtube-nocookie.com https://www.tiktok.com https://www.instagram.com https://player.vimeo.com https://open.spotify.com; form-action 'self' https://*.sibforms.com; frame-ancestors 'self'; base-uri 'self'; object-src 'none'",
 };
-http.createServer((req,res) => {
+const httpServer = http.createServer((req,res) => {
   for (const [name, value] of Object.entries(SECURITY_HEADERS)) res.setHeader(name, value);
   let pathname;
   try { pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname); }
@@ -404,6 +407,7 @@ http.createServer((req,res) => {
     res.writeHead(308, { Location: pathname.slice(0, -1) + new URL(req.url, 'http://localhost').search });
     return res.end();
   }
+  if (mediaHandler(req, res, pathname)) return;
   if (pathname === '/api/beta-feedback') { handleBetaFeedback(req, res); return; }
   if (pathname === '/api/beta-status-mail') { handleBetaStatusMail(req, res); return; }
   if (!['GET','HEAD'].includes(req.method)) { res.writeHead(405); return res.end(); }
@@ -452,5 +456,7 @@ http.createServer((req,res) => {
   stream.on('error', () => res.destroy());
   stream.pipe(res);
 }).listen(Number(process.env.SERVER_PORT || process.env.PORT || 4129), '0.0.0.0', () => console.log('Xyntal Daki server ready'));
+// Große Uploads (Videos der freien Seite) dürfen länger als die Standard-5-Minuten dauern
+httpServer.requestTimeout = 0;
 update();
 setInterval(update, 30000);

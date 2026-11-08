@@ -14,7 +14,8 @@
   const round = (n) => Math.round(n * 10) / 10;
   const hex = (v, d) => (/^#[0-9a-f]{6}$/i.test(String(v || "")) ? String(v).toLowerCase() : d);
   const FONTS = { sans: "var(--f-text, system-ui, sans-serif)", serif: "'Source Serif 4', Georgia, serif", mono: "ui-monospace, 'IBM Plex Mono', monospace" };
-  const SRC = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp|gif)$/;
+  // Eigene Dateien: Supabase-Bucket page-media (konto/datei) oder eigener Server (s/konto/datei, xyntal.de/media/…)
+  const SRC = /^(s\/)?[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp|gif)$/;
   const UUID = /^[0-9a-f-]{36}$/;
   const TYPES = ["text", "link", "image", "block", "shape", "button", "embed", "icons", "countdown", "contact", "counter"];
   // Platzhalter-Link in geteilten Vorlagen (wird beim Übernehmen durch eigene Links ersetzt)
@@ -25,7 +26,8 @@
   const CURSORS = { dot: "Dot", ring: "Ring", glow: "Glow", emoji: "Emoji" };
   const CURSOR_EMOJI = ["🚀", "✨", "🔥", "💜", "👾", "⭐", "⚡", "🦄", "👀", "🎯"];
   const DATE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
-  const VIDEO = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(mp4|webm)$/;
+  const VIDEO = /^(s\/)?[0-9a-f-]{36}\/[0-9a-f-]{36}\.(mp4|webm)$/;
+  const mediaUrl = (base, p) => (p.startsWith("s/") ? `/media/${p.slice(2)}` : `${base}/storage/v1/object/public/page-media/${p}`);
   // Einbettungen: nur diese Anbieter, nur geprüfte Ids (Adressen baut page-canvas.js selbst); CSP frame-src in hosting/daki/server.cjs
   const EMBEDS = {
     youtube: { re: /^[A-Za-z0-9_-]{11}$/, src: (id) => `https://www.youtube-nocookie.com/embed/${id}`, ratio: [16, 9] },
@@ -416,7 +418,7 @@
       return `<div ${attrs}><a class="pc-l pc-btn${gl}" style="${box}" href="${esc(it.url)}" target="_blank" rel="noopener noreferrer nofollow"><b data-no-i18n>${esc(it.text)}</b></a></div>`;
     }
     if (it.type === "image") {
-      return `<div ${attrs}><img src="${esc(`${o.base}/storage/v1/object/public/page-media/${it.src}`)}" alt="${esc(it.alt)}" draggable="false" loading="lazy" decoding="async" style="object-fit:${it.fit};border-radius:${uu(it.radius)};${deco}"></div>`;
+      return `<div ${attrs}><img src="${esc(mediaUrl(o.base, it.src))}" alt="${esc(it.alt)}" draggable="false" loading="lazy" decoding="async" style="object-fit:${it.fit};border-radius:${uu(it.radius)};${deco}"></div>`;
     }
     const box = `--fs:${it.size};font-size:${uu(it.size)};color:${it.color};${it.bg ? `background:${it.bg};` : ""}border-radius:${uu(it.radius)};${deco}`;
     if (it.type === "text") {
@@ -467,7 +469,7 @@
     const style = keyframes.length ? `<style>${keyframes.join("")}</style>` : "";
     const layer = (where) => p.ov.filter((k) => OVERLAYS[k][1] === where).map((k) => `<div class="pc-ov pc-ov-${k}" aria-hidden="true"></div>`).join("");
     const flow = p.bga === "flow" && p.bg.color2 ? " is-flow" : "";
-    const video = p.bgv ? `<video class="pc-bgv" src="${esc(`${o.base}/storage/v1/object/public/page-media/${p.bgv}`)}" autoplay muted loop playsinline aria-hidden="true"></video>` : "";
+    const video = p.bgv ? `<video class="pc-bgv" src="${esc(mediaUrl(o.base, p.bgv))}" autoplay muted loop playsinline aria-hidden="true"></video>` : "";
     const cur = p.cursor && !o.edit ? ` data-cursor="${p.cursor}" data-cemo="${esc(p.cemo)}"` : "";
     return `<div class="pc-wrap${full ? " is-full" : ""}"${p.w === WIDE ? ' style="max-width:1080px"' : ""}><div class="pc${o.edit ? " is-edit" : ""}${wide ? " is-wide" : ""}${flow}" data-w="${p.w}"${cur} style="aspect-ratio:${p.w} / ${p.h};background:${background(p.bg)};--bg1:${p.bg.color};--bg2:${p.bg.color2 || p.bg.color}">${video}${style}${layer("back")}${items}${layer("top")}</div></div>`;
   }
@@ -623,5 +625,5 @@
   }
   function zoomOf(it, pw) { return `calc(var(--k, 1) * ${it.w} / ${natOf(it.kind, pw)})`; }
 
-  window.XyntalPageCanvas = { SLOT, hoverFits, TEXT_FX, PARALLAX, CURSORS, CURSOR_EMOJI, OVERLAYS, HOVERS, HOVER_TYPES, ANIMS, TRIGGERS, cleanAnim, compileAnim, EMBEDS, parseEmbed, BLOCKS, NARROW, WIDE, FULL, WIDTHS, natOf, mount, zoomOf, W, MIN_H, MAX_H, DEFAULTS, normalize, html, itemHtml, background, hex, num, round, esc, safeUrl };
+  window.XyntalPageCanvas = { SLOT, mediaUrl, hoverFits, TEXT_FX, PARALLAX, CURSORS, CURSOR_EMOJI, OVERLAYS, HOVERS, HOVER_TYPES, ANIMS, TRIGGERS, cleanAnim, compileAnim, EMBEDS, parseEmbed, BLOCKS, NARROW, WIDE, FULL, WIDTHS, natOf, mount, zoomOf, W, MIN_H, MAX_H, DEFAULTS, normalize, html, itemHtml, background, hex, num, round, esc, safeUrl };
 })();

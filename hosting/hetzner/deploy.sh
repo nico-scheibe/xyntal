@@ -8,6 +8,8 @@ ROOT=/opt/xyntal
 APP_REF=${APP_REF:-master}
 
 git -C "$ROOT/site" pull --ff-only --quiet
+# Bucket-Zugang (MEDIA_S3_*) aus api.env auch der Website geben: Uploads der freien Seite (media-store.cjs)
+if [ -f "$ROOT/secrets/api.env" ]; then (umask 077; grep '^MEDIA_S3_' "$ROOT/secrets/api.env" > "$ROOT/secrets/media.env" || true); fi
 
 TOKEN=$(tr -d '[:space:]' < "$ROOT/secrets/github-token")
 # Der Token geht als Header mit, nie in eine URL oder in .git/config.
