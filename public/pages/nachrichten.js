@@ -19,6 +19,8 @@
   const BG_KEY = "xyntal-chat-bg";
   const CHAT_BGS = [["xyntal", "Xyntal"], ["space", "Weltall"], ["natur", "Natur"], ["tech", "Tech"], ["fun", "Fun"], ["none", "Ohne Muster"]];
   const FILTERS = [["all", "Alle"], ["unread", "Ungelesen"], ["requests", "Anfragen"], ["groups", "Gruppen"], ["archived", "Archiviert"]];
+  const GROUP_EMOJI = ["", "🚀", "💡", "🎯", "🛠️", "🎨", "📈", "🤝", "🔥", "🌱", "📚", "🎉"];
+  const emojiRow = (attr, current, label) => `<div class="xc-emoji-row" role="radiogroup" aria-label="${esc(label)}">${GROUP_EMOJI.map((x) => `<button type="button" role="radio" aria-checked="${x === current}" ${attr}="${x}" aria-label="${esc(x || t("Initialen"))}">${x || "Aa"}</button>`).join("")}</div>`;
   const HANDLE = /^[a-z0-9][a-z0-9_-]{2,19}$/;
   const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -27,6 +29,7 @@
     active: "", messages: [], hasMore: false, readers: [], members: new Map(), users: new Map(), presence: new Map(),
     insight: new Map(), tagFilter: "", tagFilterName: "", filterTagDropped: false, chatTags: [], replyTo: null, editId: "", pending: [], tag: null,
     mentionIds: new Map(), typing: new Map(), view: "list", infoOpen: true, draft: new Map(), loadingOlder: false,
+    editGroup: false, editEmoji: "", addingPeople: false,
   };
   let chatBg = "xyntal";
   try { const saved = localStorage.getItem(BG_KEY); if (CHAT_BGS.some(([k]) => k === saved)) chatBg = saved; } catch { /* Standard */ }
@@ -55,8 +58,11 @@
     const img = user && /^data:image\/(jpeg|png);base64,/.test(user.avatar || "") ? `<img src="${esc(user.avatar)}" alt="">` : esc(initials(name));
     return `<span class="xc-av ${size}" aria-hidden="true">${img}</span>`;
   }
+  // Ein eigenes Gruppenbild (vom Server als data-URL) geht vor Emoji und Initialen.
+  const PICTURE_OK = /^data:image\/(jpeg|png);base64,/;
   function groupAvatar(c, size = "") {
-    return `<span class="xc-av xc-av-group ${size}" aria-hidden="true">${c.emoji ? esc(c.emoji) : esc(initials(c.title))}</span>`;
+    const inner = PICTURE_OK.test(c.avatar || "") ? `<img src="${esc(c.avatar)}" alt="">` : c.emoji ? esc(c.emoji) : esc(initials(c.title));
+    return `<span class="xc-av xc-av-group ${size}" aria-hidden="true">${inner}</span>`;
   }
   const presenceOf = (id) => S.presence.get(id) || "offline";
   const presenceLabel = (p) => t({ online: "Online", busy: "Beschäftigt", away: "Abwesend" }[p] || "Offline");
@@ -347,7 +353,7 @@
   // ---------- Gespräch öffnen ----------
   async function open(id, { push = true } = {}) {
     if (S.active && S.active !== id) S.draft.set(S.active, composerText());
-    S.active = id;
+    S.active = id; S.editGroup = false; S.addingPeople = false;
     S.messages = []; S.hasMore = false; S.readers = []; S.replyTo = null; S.editId = ""; S.pending = []; S.tag = null;
     S.mentionIds = new Map(); S.tagFilter = ""; S.tagFilterName = ""; S.filterTagDropped = false; S.chatTags = [];
     setView("thread");
@@ -643,9 +649,32 @@
     const projects = S.chatTags.length ? `<section><h3>${esc(t("In diesem Chat markiert"))}</h3><ul class="xc-projects">${S.chatTags.filter((g) => TAG_KINDS.includes(g.kind)).map((g) => `<li><button type="button" data-tag-filter="${esc(tagKey(g))}" data-name="${esc(g.name)}" aria-pressed="${S.tagFilter === tagKey(g)}" title="${esc(t(TAG_LABEL[g.kind]))}">${ICON[TAG_ICON[g.kind]]}<span data-no-i18n>${esc(g.name)}</span><small>${g.count}</small></button></li>`).join("")}</ul><p class="xc-hint">${esc(t("Klick auf einen Eintrag, um nur seine Nachrichten zu sehen. In einer Nachricht markierst du mit /projekt, /arbeitsbereich oder /gruppe."))}</p></section>` : "";
     if (isGroup(c)) {
       const r = S.members.get(c.id) || { members: [] };
+      const can = r.can || {};
+      const myRole = (r.members.find((m) => m.mine) || {}).conversationRole;
+      const roleLabel = (role) => (role === "owner" ? t("Inhaber") : role === "admin" ? "Admin" : "");
+      const memberRow = (m) => {
+        const canRole = can.setRole && !m.mine;
+        const canRemove = can.removeMember && !m.mine && m.conversationRole !== "owner" && (m.conversationRole !== "admin" || myRole === "owner");
+        const role = canRole
+          ? `<select class="xc-role" data-role="${esc(m.id)}" aria-label="${esc(t("Rolle"))}"><option value="member"${m.conversationRole === "member" ? " selected" : ""}>${esc(t("Mitglied"))}</option><option value="admin"${m.conversationRole === "admin" ? " selected" : ""}>Admin</option><option value="owner"${m.conversationRole === "owner" ? " selected" : ""}>${esc(t("Inhaber werden"))}</option></select>`
+          : roleLabel(m.conversationRole) ? `<small>${esc(roleLabel(m.conversationRole))}</small>` : "";
+        const remove = canRemove ? `<button type="button" class="xc-x" data-remove-member="${esc(m.id)}" aria-label="${esc(t("Entfernen"))}" title="${esc(t("Entfernen"))}">×</button>` : "";
+        return `<li>${avatar(userNow(m.id) || { displayName: m.displayName }, "xc-av-sm")}<span data-no-i18n>${esc(m.displayName)}${m.mine ? ` (${esc(t("du"))})` : ""}</span>${role}${remove}</li>`;
+      };
+      const editForm = S.editGroup && can.rename ? `<section class="xc-edit">
+          <label>${esc(t("Name"))}<input data-edit-title maxlength="120" value="${esc(c.title)}"></label>
+          <label>${esc(t("Beschreibung"))}<textarea data-edit-desc maxlength="500" rows="3" placeholder="${esc(t("Wofür ist diese Gruppe?"))}">${esc(c.description || "")}</textarea></label>
+          <span class="xc-edit-label">${esc(t("Gruppenbild"))}</span>
+          ${emojiRow("data-edit-emoji", S.editEmoji, t("Gruppenbild"))}
+          <div class="xm-row"><button type="button" class="btn btn-small btn-ghost" data-pick-image>${esc(t("Bild hochladen"))}</button>${PICTURE_OK.test(c.avatar || "") ? `<button type="button" class="btn btn-small btn-ghost" data-remove-image>${esc(t("Bild entfernen"))}</button>` : ""}<input type="file" accept="image/png,image/jpeg,image/webp" data-image-file hidden></div>
+          <div class="xm-row"><button type="button" class="btn btn-small" data-edit-save>${esc(t("Speichern"))}</button><button type="button" class="btn btn-small btn-ghost" data-edit-cancel>${esc(t("Abbrechen"))}</button></div>
+        </section>` : "";
+      const addPeople = can.invite ? `<section class="xc-add"><button type="button" class="btn btn-small btn-ghost" data-add-toggle>${esc(t(S.addingPeople ? "Fertig" : "Personen hinzufügen"))}</button>${S.addingPeople ? `<input type="search" data-add-q placeholder="${esc(t("Name eingeben …"))}" autocomplete="off" aria-label="${esc(t("Personen suchen"))}"><ul class="xc-results" data-add-results></ul>` : ""}</section>` : "";
       setInfo(`
-        <div class="xc-info-head">${groupAvatar(c, "xc-av-xl")}<h2 data-no-i18n>${esc(c.title)}</h2><p>${esc(t("Gruppe"))} · ${r.members.length} ${esc(t("Mitglieder"))}</p>${c.description ? `<p class="xc-about" data-no-i18n>${esc(c.description)}</p>` : ""}</div>
-        <section><h3>${esc(t("Mitglieder"))}</h3><ul class="xc-members">${r.members.map((m) => `<li>${avatar(userNow(m.id) || { displayName: m.displayName }, "xc-av-sm")}<span data-no-i18n>${esc(m.displayName)}${m.mine ? ` (${esc(t("du"))})` : ""}</span>${m.conversationRole === "owner" ? `<small>${esc(t("Inhaber"))}</small>` : m.conversationRole === "admin" ? `<small>Admin</small>` : ""}</li>`).join("")}</ul></section>
+        <div class="xc-info-head">${groupAvatar(c, "xc-av-xl")}<h2 data-no-i18n>${esc(c.title)}</h2><p>${esc(t("Gruppe"))} · ${r.members.length} ${esc(t("Mitglieder"))}</p>${c.description ? `<p class="xc-about" data-no-i18n>${esc(c.description)}</p>` : ""}${can.rename && !S.editGroup ? `<button type="button" class="btn btn-small btn-ghost" data-edit-open>${esc(t("Gruppe bearbeiten"))}</button>` : ""}</div>
+        ${editForm}
+        <section><h3>${esc(t("Mitglieder"))}</h3><ul class="xc-members">${r.members.map(memberRow).join("")}</ul></section>
+        ${addPeople}
         ${projects}
         <section><button type="button" class="btn btn-small btn-ghost" data-leave>${esc(t("Gruppe verlassen"))}</button></section>`);
       return;
@@ -659,9 +688,95 @@
       ${projects}
       <section class="xc-links">${handle ? `<a class="btn btn-small btn-ghost" href="/${esc(handle)}">${esc(t("Profil ansehen"))}</a>` : ""}<a class="btn btn-small btn-ghost" href="/fuer-dich?person=${encodeURIComponent(c.partnerId)}">${esc(t("Eure Passung"))}</a></section>`);
   }
+  // ---------- Gruppe verwalten (wie im Gruppen-Dialog der App) ----------
+  const base = () => `/conversations/${encodeURIComponent(S.active)}`;
+  async function afterGroupChange(id = S.active) {
+    await loadMembers(id);
+    await loadConversations();
+    renderInfo();
+  }
+  async function patchGroup(fields) {
+    try { await X.api("PATCH", base(), fields); await afterGroupChange(); return true; }
+    catch (err) { say(fail(err), "error"); return false; }
+  }
+  // Mittig zugeschnitten, 256 px, JPEG – wie das Profilbild in der App.
+  function squarePicture(file) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file), img = new Image();
+      img.onload = () => {
+        const side = Math.min(img.naturalWidth, img.naturalHeight), out = Math.min(256, side);
+        const cv = document.createElement("canvas");
+        cv.width = cv.height = out;
+        cv.getContext("2d").drawImage(img, (img.naturalWidth - side) / 2, (img.naturalHeight - side) / 2, side, side, 0, 0, out, out);
+        URL.revokeObjectURL(url);
+        resolve(cv.toDataURL("image/jpeg", 0.85));
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error(t("Das Bild konnte nicht gelesen werden."))); };
+      img.src = url;
+    });
+  }
+  let addTimer = 0;
+  infoEl.addEventListener("input", (e) => {
+    const q = e.target.closest("[data-add-q]");
+    if (!q) return;
+    clearTimeout(addTimer);
+    addTimer = setTimeout(async () => {
+      const list = infoEl.querySelector("[data-add-results]");
+      const term = q.value.trim();
+      if (!list) return;
+      if (term.length < 2) { list.innerHTML = ""; return; }
+      const inGroup = new Set(((S.members.get(S.active) || {}).members || []).map((m) => m.id));
+      let found = [];
+      try { found = ((await X.api("GET", `/users/search?q=${encodeURIComponent(term)}`)).users || []).filter((u) => u.id !== S.me && !inGroup.has(u.id)); } catch { found = []; }
+      list.innerHTML = found.map((u) => `<li><button type="button" data-add-user="${esc(u.id)}">${avatar(u, "xc-av-sm")}<span><b data-no-i18n>${esc(u.displayName)}</b>${u.headline ? `<small data-no-i18n>${esc(u.headline)}</small>` : ""}</span></button></li>`).join("") || `<li class="xc-hint">${esc(t("Niemand gefunden."))}</li>`;
+    }, 250);
+  });
+  infoEl.addEventListener("change", async (e) => {
+    const sel = e.target.closest("[data-role]");
+    if (sel) {
+      if (sel.value === "owner" && !confirm(t("Du gibst die Gruppe ab und wirst Admin. Fortfahren?"))) { renderInfo(); return; }
+      try { await X.api("PATCH", `${base()}/members/${encodeURIComponent(sel.dataset.role)}`, { role: sel.value }); await afterGroupChange(); }
+      catch (err) { say(fail(err), "error"); renderInfo(); }
+      return;
+    }
+    const file = e.target.closest("[data-image-file]");
+    if (file && file.files[0]) {
+      try { await patchGroup({ avatar: await squarePicture(file.files[0]) }); }
+      catch (err) { say(fail(err), "error"); }
+    }
+  });
   infoEl.addEventListener("click", async (e) => {
     const f = e.target.closest("[data-tag-filter]");
     if (f) { setTagFilter(f.dataset.tagFilter, f.dataset.name); return; }
+    if (e.target.closest("[data-edit-open]")) { S.editGroup = true; S.editEmoji = (conv(S.active) || {}).emoji || ""; renderInfo(); return; }
+    if (e.target.closest("[data-edit-cancel]")) { S.editGroup = false; renderInfo(); return; }
+    const em = e.target.closest("[data-edit-emoji]");
+    if (em) { S.editEmoji = em.dataset.editEmoji; infoEl.querySelectorAll("[data-edit-emoji]").forEach((b) => b.setAttribute("aria-checked", String(b === em))); return; }
+    if (e.target.closest("[data-pick-image]")) { infoEl.querySelector("[data-image-file]").click(); return; }
+    if (e.target.closest("[data-remove-image]")) { await patchGroup({ avatar: "" }); return; }
+    if (e.target.closest("[data-edit-save]")) {
+      const c = conv(S.active), title = infoEl.querySelector("[data-edit-title]").value.trim();
+      if (!title) { say(t("Die Gruppe braucht einen Namen."), "error"); return; }
+      const fields = { title, description: infoEl.querySelector("[data-edit-desc]").value.trim(), emoji: S.editEmoji };
+      // Ein neu gewähltes Emoji (oder die Initialen) ersetzt ein eigenes Bild.
+      if (S.editEmoji !== (c.emoji || "") && PICTURE_OK.test(c.avatar || "")) fields.avatar = "";
+      if (await patchGroup(fields)) { S.editGroup = false; renderInfo(); }
+      return;
+    }
+    if (e.target.closest("[data-add-toggle]")) { S.addingPeople = !S.addingPeople; renderInfo(); infoEl.querySelector("[data-add-q]")?.focus(); return; }
+    const add = e.target.closest("[data-add-user]");
+    if (add) {
+      try { await X.api("POST", `${base()}/members`, { userIds: [add.dataset.addUser] }); add.closest("li").remove(); await afterGroupChange(); }
+      catch (err) { say(fail(err), "error"); }
+      return;
+    }
+    const rm = e.target.closest("[data-remove-member]");
+    if (rm) {
+      if (!rm.dataset.armed) { rm.dataset.armed = "1"; rm.classList.add("is-armed"); rm.setAttribute("aria-label", t("Wirklich entfernen?")); setTimeout(() => { delete rm.dataset.armed; rm.classList.remove("is-armed"); rm.setAttribute("aria-label", t("Entfernen")); }, 4000); return; }
+      try { await X.api("DELETE", `${base()}/members/${encodeURIComponent(rm.dataset.removeMember)}`); await afterGroupChange(); }
+      catch (err) { say(fail(err), "error"); }
+      return;
+    }
     if (e.target.closest("[data-leave]")) {
       const b = e.target.closest("[data-leave]");
       if (!b.dataset.armed) { b.dataset.armed = "1"; b.textContent = t("Wirklich verlassen?"); setTimeout(() => { delete b.dataset.armed; b.textContent = t("Gruppe verlassen"); }, 5000); return; }
@@ -1120,7 +1235,6 @@
   // ---------- Neues Gespräch ----------
   // Wie in der App: „Neue Gruppe“ macht auch mit einer Person eine Gruppe; Name und Bild
   // erscheinen nur im Gruppenmodus (von Anfang an oder ab der zweiten gewählten Person).
-  const GROUP_EMOJI = ["", "🚀", "💡", "🎯", "🛠️", "🎨", "📈", "🤝", "🔥", "🌱", "📚", "🎉"];
   function newConversation({ asGroup = false } = {}) {
     const dlg = document.createElement("dialog");
     dlg.className = "xm-dialog xc-new";
@@ -1131,7 +1245,7 @@
       <div class="xc-chosen" data-chosen></div>
       <ul class="xc-results" data-results></ul>
       <label data-group-name hidden>${esc(t("Gruppenname (optional)"))}<input name="title" maxlength="120" placeholder="${esc(t("z. B. Launch-Team"))}"></label>
-      <div class="xc-emoji-row" data-group-emoji hidden role="radiogroup" aria-label="${esc(t("Gruppenbild"))}">${GROUP_EMOJI.map((x, i) => `<button type="button" role="radio" aria-checked="${i === 0}" data-emoji="${x}" aria-label="${esc(x || t("Initialen"))}">${x || "Aa"}</button>`).join("")}</div>
+      <div data-group-emoji hidden>${emojiRow("data-emoji", "", t("Gruppenbild"))}</div>
       <p class="xm-error" data-err></p>
       <div class="xm-row"><button class="btn btn-small" value="ok" data-start disabled>${esc(t("Gespräch starten"))}</button><button class="btn btn-small btn-ghost" value="cancel" formnovalidate>${esc(t("Abbrechen"))}</button></div>
     </form>`;
