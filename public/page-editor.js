@@ -295,7 +295,7 @@
         ${range$("rot", "Drehung", it.rot, -180, 180)}
         ${it.rot ? `<button type="button" class="pe-btn" data-set="rot" data-val="0">${esc(t("Gerade stellen"))}</button>` : ""}
         ${C.HOVER_TYPES.includes(it.type) ? `<h2 data-no-i18n>Hover</h2>
-        <label class="pe-field"><span>${esc(t("Bei Maus"))}</span><select data-p="hover" data-no-i18n><option value="">None</option>${[...new Set(Object.values(C.HOVERS).map((v) => v[1]))].map((g) => `<optgroup label="${esc(g)}">${Object.entries(C.HOVERS).filter(([, v]) => v[1] === g).map(([k, v]) => `<option value="${k}"${it.hover === k ? " selected" : ""}>${esc(v[0])}</option>`).join("")}</optgroup>`).join("")}</select></label>
+        <label class="pe-field"><span>${esc(t("Bei Maus"))}</span><select data-p="hover" data-no-i18n><option value="">None</option>${[...new Set(Object.values(C.HOVERS).map((v) => v[1]))].map((g) => { const opts = Object.entries(C.HOVERS).filter(([k, v]) => v[1] === g && C.hoverFits(k, it.type, it.kind)).map(([k, v]) => `<option value="${k}"${it.hover === k ? " selected" : ""}>${esc(v[0])}</option>`).join(""); return opts ? `<optgroup label="${esc(g)}">${opts}</optgroup>` : ""; }).join("")}</select></label>
         ${it.hover ? `<button type="button" class="pe-btn" data-act="hover-preview">▶ ${esc(t("Hover testen"))}</button>` : ""}` : ""}
         ${animPanel(it)}
         <h2>${esc(t("Position"))}</h2>

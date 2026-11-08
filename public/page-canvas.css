@@ -274,3 +274,6 @@ a.pc-ib:hover, button.pc-ib:hover { transform: translateY(-2px); filter: brightn
 
 /* Schatten-Häkchen als Variable, damit Hover-Effekte (Glow, Neon …) den Schatten überschreiben können */
 .pc-l, .pc-t, .pc-ib, .pc-shape, .pc-frame, .pc-image img, .pc-cd { box-shadow: var(--sh, none); }
+
+/* Ich biete / Ich suche als Baustein: ohne den farbigen Streifen links */
+.pc-block .pf-tile::before { display: none; }
