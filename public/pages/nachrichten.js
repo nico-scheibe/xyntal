@@ -61,8 +61,10 @@
   // Ein eigenes Gruppenbild (vom Server als data-URL) geht vor Emoji und Initialen.
   const PICTURE_OK = /^data:image\/(jpeg|png);base64,/;
   function groupAvatar(c, size = "") {
-    const inner = PICTURE_OK.test(c.avatar || "") ? `<img src="${esc(c.avatar)}" alt="">` : c.emoji ? esc(c.emoji) : esc(initials(c.title));
-    return `<span class="xc-av xc-av-group ${size}" aria-hidden="true">${inner}</span>`;
+    const pic = PICTURE_OK.test(c.avatar || "");
+    const inner = pic ? `<img src="${esc(c.avatar)}" alt="">` : c.emoji ? esc(c.emoji) : esc(initials(c.title));
+    // Emoji und Initialen sitzen auf einer Kachel, ein hochgeladenes Bild ist rund (wie die Profilbilder).
+    return `<span class="xc-av xc-av-group${pic ? " xc-av-pic" : ""} ${size}" aria-hidden="true">${inner}</span>`;
   }
   const presenceOf = (id) => S.presence.get(id) || "offline";
   const presenceLabel = (p) => t({ online: "Online", busy: "Beschäftigt", away: "Abwesend" }[p] || "Offline");
