@@ -45,3 +45,7 @@ a.pc-l:focus-visible, button.pc-l:focus-visible { outline: 2px solid currentColo
   .pc.is-wide:not(.is-edit) .pc-blk { zoom: 1 !important; width: 100% !important; }
   .pc.is-wide:not(.is-edit) .pc-block[data-kind="card"] { max-width: 360px; }
 }
+
+/* Ganzer Bildschirm: die Fläche verlässt die Inhaltsspalte und reicht (mit 16 px Rand) über die volle Fensterbreite */
+.pc-wrap.is-full, .pe-stage .pc-wrap.is-full { position: relative; left: 50%; width: calc(100vw - 32px); max-width: none; margin: 0; transform: translateX(-50%); justify-self: start; }
+.pf.pf--custom:has(.pc-wrap.is-full) { max-width: none; }

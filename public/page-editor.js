@@ -104,9 +104,9 @@
       <label class="pe-field"><span>${esc(t("Farbe"))}</span><input type="color" data-bg="color" value="${page.bg.color}"></label>
       <label class="pe-field"><span>${esc(t("Verlauf"))}</span><input type="checkbox" data-bg-gradient ${page.bg.color2 ? "checked" : ""}></label>
       ${page.bg.color2 ? `<label class="pe-field"><span>${esc(t("Zweite Farbe"))}</span><input type="color" data-bg="color2" value="${page.bg.color2}"></label>` : ""}
-      <div class="pe-field"><span>${esc(t("Breite"))}</span><div class="pe-row">
-        <button type="button" class="pe-btn${page.w === C.WIDE ? " is-on" : ""}" data-width="${C.WIDE}">${esc(t("Ganze Seite"))}</button>
-        <button type="button" class="pe-btn${page.w === C.NARROW ? " is-on" : ""}" data-width="${C.NARROW}">${esc(t("Eine Spalte"))}</button></div></div>
+      <div class="pe-field"><span>${esc(t("Breite"))}</span></div>
+      <div class="pe-row">${[[C.FULL, "Ganzer Bildschirm"], [C.WIDE, "Inhaltsbreite"], [C.NARROW, "Eine Spalte"]].map(([w, label]) =>
+        `<button type="button" class="pe-btn${page.w === w ? " is-on" : ""}" data-width="${w}">${esc(t(label))}</button>`).join("")}</div>
       <label class="pe-field"><span>${esc(t("Höhe"))}</span><input type="range" min="240" max="2400" step="10" data-height value="${page.h}"></label>
       <p class="pe-count">${page.items.length} / ${limit()} ${esc(t("Elemente"))}</p>
       <button type="button" class="pe-btn pe-danger" data-reset>${esc(t("Auf Standardseite zurücksetzen"))}</button>`;
@@ -220,7 +220,7 @@
       else if (["align", "font", "fit", "ref", "alt"].includes(k)) it[k] = v;
       else if (k === "weight") it.weight = Number(v) === 400 ? 400 : 700;
       else {
-        const R = { x: [-C.WIDE, C.WIDE * 2], y: [-4000, 4000], w: [16, C.WIDE * 2], h: [16, 4000], size: [8, 160], radius: [0, 200], o: [0.1, 1], rot: [-360, 360] }[k];
+        const R = { x: [-C.FULL, C.FULL * 2], y: [-4000, 4000], w: [16, C.FULL * 2], h: [16, 4000], size: [8, 160], radius: [0, 200], o: [0.1, 1], rot: [-360, 360] }[k];
         if (R) it[k] = round(num(v, R[0], R[1], it[k]));
       }
     }
@@ -434,29 +434,37 @@
       put("card", 340);
       links.filter((l) => l.active !== false).slice(0, Math.max(0, limit() - 7)).forEach((l) => items.push({ id: uid8(), type: "link", ref: l.id, x: 0, y: 0, w: 340, h: 60, size: 16 }));
       put("head", 620); put("about", 620); put("offer", 300); put("seek", 300); put("skills", 620);
-      return C.normalize({ w: C.WIDE, h: 900, items });
+      return C.normalize({ w: C.FULL, h: 900, items });
     }
     function relayout() {
-      if (page.w !== C.WIDE) {
+      if (page.w === C.NARROW) {
         // Eine Spalte: alles mittig untereinander
         let y = 24;
         page.items.forEach((it) => { it.x = round((page.w - it.w) / 2); it.y = y; y += it.h + 18; });
         page.h = Math.min(C.MAX_H, Math.max(480, Math.ceil(y + 24)));
         return;
       }
+      // Zwei Spalten (zusammen 1000 Einheiten) mittig auf der Fläche; der Rest bleibt frei zum Gestalten
+      const L = Math.round((page.w - 1000) / 2);
       let yl = 40, yr = 40, prev = null;
       page.items.forEach((it) => {
-        if (it.type === "link" || it.kind === "card") { it.x = 40; it.y = yl; yl += it.h + 14; return; }
-        if (it.kind === "seek" && prev && prev.kind === "offer") { it.x = 740; it.y = prev.y; yr = Math.max(yr, it.y + it.h + 24); }
-        else { it.x = 420; it.y = yr; yr += it.h + 24; }
+        if (it.type === "link" || it.kind === "card") { it.x = L; it.y = yl; yl += it.h + 14; return; }
+        if (it.kind === "seek" && prev && prev.kind === "offer") { it.x = L + 700; it.y = prev.y; yr = Math.max(yr, it.y + it.h + 24); }
+        else { it.x = L + 380; it.y = yr; yr += it.h + 24; }
         prev = it;
       });
       page.h = Math.min(C.MAX_H, Math.max(600, Math.ceil(Math.max(yl, yr) + 40)));
     }
     // Zwischen „Ganze Seite“ und „Eine Spalte“ wechseln: alles maßstabsgetreu umrechnen
     function setWidth(w) {
-      if (w === page.w || (w !== C.WIDE && w !== C.NARROW)) return;
+      if (w === page.w || !C.WIDTHS.includes(w)) return;
       touch();
+      // Inhaltsbreite ↔ ganzer Bildschirm: gleiche Pixelgröße, nur mittig verschieben; von/zu „Eine Spalte“ maßstabsgetreu umrechnen
+      if (page.w !== C.NARROW && w !== C.NARROW) {
+        const dx = (w - page.w) / 2;
+        page.items.forEach((it) => { it.x = round(it.x + dx); });
+        page.w = w; drawAll(); return;
+      }
       const f = w / page.w;
       page.items.forEach((it) => {
         ["x", "y", "w", "h", "radius"].forEach((k) => { it[k] = round(it[k] * f); });
