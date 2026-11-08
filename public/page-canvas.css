@@ -23,3 +23,12 @@ a.pc-l:focus-visible, button.pc-l:focus-visible { outline: 2px solid currentColo
 /* Öffentliche Seite mit freiem Layout: Zeichenfläche, darunter die üblichen Knöpfe */
 .pf--custom { display: grid; gap: 22px; width: 100%; max-width: 720px; margin: 0 auto; justify-items: center; }
 .pf--custom .pf-actions { display: grid; gap: 10px; justify-items: center; }
+
+/* Bausteine der Profilseite (Karte, Steckbrief, Über mich …): feste Pixelgröße, skaliert per zoom mit der Fläche */
+.pc-block { height: auto; }
+.pc-block > .pc-blk { height: auto; text-align: left; transform-origin: top left; }
+.pc-block .pf-prose { max-width: none; }
+.pc-block .bp-stage { max-width: none; }
+.pc-block.is-empty { height: auto; min-height: 40px; }
+.pc-blk-empty { display: grid; place-items: center; min-height: 60px; border: 1px dashed rgba(255, 255, 255, .3); border-radius: 12px; color: var(--text-3); font-size: 13px; }
+.pf.pf--custom { grid-template-columns: minmax(0, 1fr); gap: 22px; }

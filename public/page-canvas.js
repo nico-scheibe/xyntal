@@ -11,13 +11,16 @@
   const FONTS = { sans: "var(--f-text, system-ui, sans-serif)", serif: "'Source Serif 4', Georgia, serif", mono: "ui-monospace, 'IBM Plex Mono', monospace" };
   const SRC = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp|gif)$/;
   const UUID = /^[0-9a-f-]{36}$/;
-  const TYPES = ["text", "link", "image"];
+  const TYPES = ["text", "link", "image", "block"];
+  // Bausteine der Profilseite: Inhalt liefert u.js aus dem Profil; hier nur Name, Anzeigename und natürliche Breite in px
+  const BLOCKS = { card: ["Karte", 360], head: ["Steckbrief", 440], about: ["Über mich", 440], offer: ["Ich biete", 340], seek: ["Ich suche", 340], skills: ["Skills", 440] };
   const safeUrl = (u) => (/^https?:\/\/[^\s]+$/i.test(u || "") ? u : "");
 
   const DEFAULTS = {
     text: { w: 240, h: 56, text: "Dein Text", size: 24, weight: 700, align: "left", font: "sans", color: "#eceae4", bg: "", radius: 0 },
     link: { w: 280, h: 56, size: 16, color: "#eceae4", bg: "#2a2a2a", radius: 14, icon: true },
     image: { w: 180, h: 180, radius: 16, fit: "cover" },
+    block: { w: 300, h: 200, radius: 0 },
   };
 
   function cleanItem(raw, i) {
@@ -32,7 +35,7 @@
       rot: round(num(raw.rot, -360, 360, 0)),
       radius: round(num(raw.radius, 0, 200, d.radius)),
     };
-    if (type !== "image") {
+    if (type !== "image" && type !== "block") {
       it.size = round(num(raw.size, 8, 160, d.size));
       it.color = hex(raw.color, d.color);
       it.bg = raw.bg === "" ? "" : hex(raw.bg, d.bg);
@@ -46,6 +49,9 @@
       it.ref = UUID.test(raw.ref || "") ? raw.ref : "";
       if (!it.ref) return null;
       it.icon = raw.icon !== false;
+    } else if (type === "block") {
+      if (!BLOCKS[raw.kind]) return null;
+      it.kind = raw.kind;
     } else {
       if (!SRC.test(raw.src || "")) return null;
       it.src = raw.src;
@@ -74,6 +80,12 @@
   function itemHtml(it, links, o) {
     const pos = `left:${u(it.x)};top:${u(it.y)};width:${u(it.w)};height:${u(it.h)};opacity:${it.o}${it.rot ? `;transform:rotate(${it.rot}deg)` : ""}`;
     const attrs = `class="pc-item pc-${it.type}" data-id="${esc(it.id)}" style="${pos}"`;
+    if (it.type === "block") {
+      // Höhe ergibt sich aus dem Inhalt; der Baustein wird mit seiner Breite skaliert (zoom, --k = Pixel je Einheit, gesetzt von mount)
+      const inner = o.block ? o.block(it.kind) : "";
+      if (!inner) return o.edit ? `<div class="pc-item pc-block is-empty" data-id="${esc(it.id)}" style="${pos.replace(/height:[^;]+;/, "")}"><div class="pc-blk-empty">${esc(BLOCKS[it.kind][0])}</div></div>` : "";
+      return `<div class="pc-item pc-block" data-id="${esc(it.id)}" data-kind="${it.kind}" style="${pos.replace(/height:[^;]+;/, "")}"><div class="pc-blk" style="width:${BLOCKS[it.kind][1]}px;zoom:calc(var(--k, 1) * ${it.w} / ${BLOCKS[it.kind][1]})">${inner}</div></div>`;
+    }
     if (it.type === "image") {
       return `<div ${attrs}><img src="${esc(`${o.base}/storage/v1/object/public/page-media/${it.src}`)}" alt="${esc(it.alt)}" draggable="false" loading="lazy" decoding="async" style="object-fit:${it.fit};border-radius:${u(it.radius)}"></div>`;
     }
@@ -99,5 +111,15 @@
     return `<div class="pc-wrap"><div class="pc${o.edit ? " is-edit" : ""}" style="aspect-ratio:${W} / ${p.h};background:${background(p.bg)}">${p.items.map((it) => itemHtml(it, o.links, o)).join("")}</div></div>`;
   }
 
-  window.XyntalPageCanvas = { W, MIN_H, MAX_H, DEFAULTS, normalize, html, itemHtml, background, hex, num, round, esc, safeUrl };
+  // --k = Pixel je Einheit, damit Bausteine (feste Pixelgröße) mit der Fläche mitskalieren
+  const ro = typeof ResizeObserver === "function" ? new ResizeObserver((list) => list.forEach((e) => e.target.style.setProperty("--k", String(e.contentRect.width / W)))) : null;
+  function mount(host) {
+    host.querySelectorAll(".pc").forEach((el) => {
+      el.style.setProperty("--k", String(el.getBoundingClientRect().width / W));
+      if (ro) ro.observe(el);
+    });
+  }
+  const zoomOf = (it) => `calc(var(--k, 1) * ${it.w} / ${BLOCKS[it.kind][1]})`;
+
+  window.XyntalPageCanvas = { BLOCKS, mount, zoomOf, W, MIN_H, MAX_H, DEFAULTS, normalize, html, itemHtml, background, hex, num, round, esc, safeUrl };
 })();
