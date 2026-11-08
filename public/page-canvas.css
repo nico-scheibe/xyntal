@@ -150,3 +150,29 @@ a.pc-ib:hover, button.pc-ib:hover { transform: translateY(-2px); filter: brightn
   background: radial-gradient(circle calc(70px * var(--k, 1)) at var(--mx, 50%) var(--my, 50%), color-mix(in srgb, var(--hc) 55%, transparent), transparent 70%); mix-blend-mode: screen; }
 .pc-item[data-hover="spotlight"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover::after, .pc-item[data-hover="spotlight"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img)::after { opacity: 1; }
 .pc-item[data-hover="spotlight"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img):hover, .pc-item[data-hover="spotlight"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img) { box-shadow: 0 0 0 calc(1px * var(--k, 1)) color-mix(in srgb, var(--hc) 60%, transparent); }
+
+/* Overlays der ganzen Seite (page-canvas.js OVERLAYS): hinter den Elementen (Aurora, Sterne, Raster, Punkte)
+   oder darüber (Körnung, Vignette, Scanlines). Klicks gehen immer durch. */
+.pc-ov { position: absolute; inset: 0; pointer-events: none; overflow: hidden; border-radius: inherit; }
+.pc-ov-grid { background-image: linear-gradient(rgba(255, 255, 255, .07) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, .07) 1px, transparent 1px);
+  background-size: calc(44px * var(--k, 1)) calc(44px * var(--k, 1)); mask-image: radial-gradient(ellipse at 50% 40%, #000 30%, transparent 85%); }
+.pc-ov-dots { background-image: radial-gradient(rgba(255, 255, 255, .16) calc(1.2px * var(--k, 1)), transparent calc(1.8px * var(--k, 1)));
+  background-size: calc(24px * var(--k, 1)) calc(24px * var(--k, 1)); }
+.pc-ov-stars, .pc-ov-stars::after { background-image:
+    radial-gradient(1.5px 1.5px at 8% 12%, #fff, transparent), radial-gradient(1px 1px at 23% 64%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 37% 28%, #fff, transparent), radial-gradient(1px 1px at 52% 83%, #fff, transparent),
+    radial-gradient(2px 2px at 64% 18%, #fff, transparent), radial-gradient(1px 1px at 77% 47%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 89% 72%, #fff, transparent), radial-gradient(1px 1px at 95% 9%, #fff, transparent);
+  background-size: 240px 240px; }
+.pc-ov-stars::after { content: ""; position: absolute; inset: 0; background-position: 120px 80px; animation: pc-twinkle 4s ease-in-out infinite alternate; }
+.pc-ov-stars { opacity: .8; }
+@keyframes pc-twinkle { from { opacity: .2; } to { opacity: 1; } }
+.pc-ov-aurora::before, .pc-ov-aurora::after { content: ""; position: absolute; width: 70%; height: 70%; border-radius: 50%; filter: blur(calc(80px * var(--k, 1))); opacity: .65; mix-blend-mode: screen; }
+.pc-ov-aurora::before { left: -10%; top: -20%; background: radial-gradient(circle, #b95cff, transparent 65%); animation: pc-aurora-a 18s ease-in-out infinite alternate; }
+.pc-ov-aurora::after { right: -15%; bottom: -25%; background: radial-gradient(circle, #3fd8ff, transparent 65%); animation: pc-aurora-b 22s ease-in-out infinite alternate; }
+@keyframes pc-aurora-a { to { transform: translate(35%, 25%) scale(1.2); } }
+@keyframes pc-aurora-b { to { transform: translate(-30%, -20%) scale(1.15); } }
+.pc-ov-grain { background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); background-size: 160px 160px; opacity: .14; mix-blend-mode: overlay; }
+.pc-ov-vignette { background: radial-gradient(ellipse at center, transparent 50%, rgba(0, 0, 0, .7) 100%); }
+.pc-ov-scan { background: repeating-linear-gradient(0deg, rgba(0, 0, 0, .28) 0 1px, transparent 1px 3px); mix-blend-mode: multiply; }
+@media (prefers-reduced-motion: reduce) { .pc-ov-stars::after, .pc-ov-aurora::before, .pc-ov-aurora::after { animation: none; } }
