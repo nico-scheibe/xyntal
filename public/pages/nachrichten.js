@@ -29,7 +29,7 @@
     active: "", messages: [], hasMore: false, readers: [], members: new Map(), users: new Map(), presence: new Map(),
     insight: new Map(), tagFilter: "", tagFilterName: "", filterTagDropped: false, chatTags: [], replyTo: null, editId: "", pending: [], tag: null,
     mentionIds: new Map(), typing: new Map(), view: "list", infoOpen: true, draft: new Map(), loadingOlder: false,
-    editGroup: false, editEmoji: "", addingPeople: false,
+    editGroup: false, editEmoji: "", addingPeople: false, confirmDelete: false,
   };
   let chatBg = "xyntal";
   try { const saved = localStorage.getItem(BG_KEY); if (CHAT_BGS.some(([k]) => k === saved)) chatBg = saved; } catch { /* Standard */ }
@@ -353,7 +353,7 @@
   // ---------- Gespräch öffnen ----------
   async function open(id, { push = true } = {}) {
     if (S.active && S.active !== id) S.draft.set(S.active, composerText());
-    S.active = id; S.editGroup = false; S.addingPeople = false;
+    S.active = id; S.editGroup = false; S.addingPeople = false; S.confirmDelete = false;
     S.messages = []; S.hasMore = false; S.readers = []; S.replyTo = null; S.editId = ""; S.pending = []; S.tag = null;
     S.mentionIds = new Map(); S.tagFilter = ""; S.tagFilterName = ""; S.filterTagDropped = false; S.chatTags = [];
     setView("thread");
@@ -642,6 +642,13 @@
   function setInfo(html) {
     infoEl.innerHTML = `<button type="button" class="xc-icon xc-info-back" data-info-back aria-label="${esc(t("Zurück zum Gespräch"))}">${ICON.back}</button>${html}`;
   }
+  // Löschen trifft alle Mitglieder: erst nach Eingabe des Gruppennamens möglich (nur Inhaber).
+  function deleteBlock(c) {
+    if (!S.confirmDelete) return `<section><button type="button" class="btn btn-small btn-ghost xc-danger" data-delete-open>${esc(t("Gruppe löschen"))}</button></section>`;
+    return `<section class="xc-delete"><p class="xc-hint">${esc(t("Das löscht die Gruppe und alle Nachrichten für alle. Tippe zur Bestätigung den Gruppennamen ein:"))} <b data-no-i18n>${esc(c.title)}</b></p>
+      <input data-delete-name autocomplete="off" placeholder="${esc(c.title)}" aria-label="${esc(t("Gruppenname zur Bestätigung"))}">
+      <div class="xm-row"><button type="button" class="btn btn-small xc-danger-fill" data-delete-confirm disabled>${esc(t("Endgültig löschen"))}</button><button type="button" class="btn btn-small btn-ghost" data-delete-cancel>${esc(t("Abbrechen"))}</button></div></section>`;
+  }
   function renderInfo() {
     const c = conv(S.active);
     root.classList.toggle("info-closed", !S.infoOpen);
@@ -677,7 +684,8 @@
         ${editForm}
         <section><div class="xc-sec-head"><h3>${esc(t("Mitglieder"))}</h3>${addToggle}</div><ul class="xc-members">${r.members.map(memberRow).join("")}</ul>${addPeople}</section>
         ${projects}
-        <section><button type="button" class="btn btn-small btn-ghost" data-leave>${esc(t("Gruppe verlassen"))}</button></section>`);
+        <section><button type="button" class="btn btn-small btn-ghost" data-leave>${esc(t("Gruppe verlassen"))}</button></section>
+        ${can.delete ? deleteBlock(c) : ""}`);
       return;
     }
     const p = userNow(c.partnerId);
@@ -718,6 +726,8 @@
   }
   let addTimer = 0;
   infoEl.addEventListener("input", (e) => {
+    const dn = e.target.closest("[data-delete-name]");
+    if (dn) { infoEl.querySelector("[data-delete-confirm]").disabled = dn.value.trim() !== (conv(S.active) || {}).title; return; }
     const q = e.target.closest("[data-add-q]");
     if (!q) return;
     clearTimeout(addTimer);
@@ -749,6 +759,18 @@
   infoEl.addEventListener("click", async (e) => {
     const f = e.target.closest("[data-tag-filter]");
     if (f) { setTagFilter(f.dataset.tagFilter, f.dataset.name); return; }
+    if (e.target.closest("[data-delete-open]")) { S.confirmDelete = true; renderInfo(); infoEl.querySelector("[data-delete-name]")?.focus(); return; }
+    if (e.target.closest("[data-delete-cancel]")) { S.confirmDelete = false; renderInfo(); return; }
+    if (e.target.closest("[data-delete-confirm]")) {
+      const input = infoEl.querySelector("[data-delete-name]");
+      if (!input || input.value.trim() !== (conv(S.active) || {}).title) return;
+      try {
+        await X.api("DELETE", base());
+        S.confirmDelete = false; S.active = ""; setView("list"); history.replaceState(null, "", "nachrichten");
+        threadEl.innerHTML = emptyThread(); await loadConversations(); renderInfo();
+      } catch (err) { say(fail(err), "error"); }
+      return;
+    }
     if (e.target.closest("[data-edit-open]")) { S.editGroup = true; S.editEmoji = (conv(S.active) || {}).emoji || ""; renderInfo(); return; }
     if (e.target.closest("[data-edit-cancel]")) { S.editGroup = false; renderInfo(); return; }
     const em = e.target.closest("[data-edit-emoji]");

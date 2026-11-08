@@ -344,6 +344,15 @@ body.messages-page .site-footer { display: none; }
 .xc-info [data-leave] { border-color: transparent; color: var(--xc-text-3); }
 .xc-info [data-leave]:hover, .xc-info [data-leave][data-armed] { border-color: rgba(255, 107, 129, .35); background: rgba(255, 107, 129, .10); color: #FF8597; }
 .xc-info .xm-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.xc-info .xc-danger { border-color: transparent; color: var(--xc-text-3); }
+.xc-info .xc-danger:hover { border-color: rgba(255, 107, 129, .35); background: rgba(255, 107, 129, .10); color: #FF8597; }
+.xc-info .xc-danger-fill:not(.btn-ghost) { background: #E5484D; box-shadow: none; }
+.xc-info .xc-danger-fill:disabled { opacity: .4; cursor: not-allowed; filter: none; }
+.xc-delete { gap: 10px !important; }
+.xc-delete input { width: 100%; box-sizing: border-box; min-width: 0; padding: 9px 12px; border: 1px solid var(--xc-line-2); border-radius: 10px; background: var(--xc-wash); color: var(--xc-text); font: inherit; font-size: 13.5px; }
+.xc-delete input:focus { outline: none; border-color: transparent; box-shadow: var(--xc-ring); }
+.xc-delete .xc-hint { margin: 0; }
+.xc-delete .xc-hint b { color: var(--xc-text); overflow-wrap: anywhere; }
 .xc-info-head .btn { margin-top: 12px; }
 .xc-info-head .xc-av-xl { box-shadow: 0 10px 28px rgba(0, 0, 0, .35), inset 0 0 0 1px rgba(255, 255, 255, .10); }
 .xc-info section h3 { margin-bottom: 2px; }
