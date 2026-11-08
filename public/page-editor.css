@@ -4,7 +4,8 @@
 .pe-edit { width: 100%; padding-bottom: 96px; }
 .pe-stage { min-width: 0; display: grid; justify-items: center; }
 .pe-stage .pc-wrap { width: 100%; }
-.pe-edit { max-width: 1080px; margin: 0 auto; }
+.pe-edit { margin: 0 auto; }
+.pe-stage:has(.pc-wrap.is-full) { display: block; }
 .pe-stage .pc { touch-action: pan-y; outline: 1px dashed rgba(255, 255, 255, .28); outline-offset: 4px; }
 .pe-stage .pc-item { cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
 .pe-stage .pc-item * { pointer-events: none; }

@@ -5,7 +5,9 @@
   // Breite der Zeichenfläche in Einheiten; die Seite skaliert sie auf die echte Breite.
   // Schmal (480, ältere Seiten): eine Spalte. Breit (1080): ganze Seitenbreite, 1 Einheit = 1 px bei voller Breite;
   // auf schmalen Bildschirmen stapelt page-canvas.css die Elemente einer breiten Seite untereinander.
-  const NARROW = 480, WIDE = 1080, W = NARROW;
+  // Ganzer Bildschirm (1920): die Fläche reicht über die volle Fensterbreite, 1 Einheit = 1 px bei 1920 px.
+  const NARROW = 480, WIDE = 1080, FULL = 1920, W = NARROW;
+  const WIDTHS = [NARROW, WIDE, FULL];
   const MIN_H = 240, MAX_H = 4000;
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const num = (v, lo, hi, d) => { const n = Number(v); return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : d; };
@@ -17,7 +19,7 @@
   const TYPES = ["text", "link", "image", "block"];
   // Bausteine der Profilseite: Inhalt liefert u.js aus dem Profil; hier Anzeigename und natürliche Breite in px (schmale / breite Seite)
   const BLOCKS = { card: ["Karte", 360, 340], head: ["Steckbrief", 440, 620], about: ["Über mich", 440, 620], offer: ["Ich biete", 340, 300], seek: ["Ich suche", 340, 300], skills: ["Skills", 440, 620] };
-  const natOf = (kind, pw) => BLOCKS[kind][pw === WIDE ? 2 : 1];
+  const natOf = (kind, pw) => BLOCKS[kind][pw === NARROW ? 1 : 2];
   const safeUrl = (u) => (/^https?:\/\/[^\s]+$/i.test(u || "") ? u : "");
 
   const DEFAULTS = {
@@ -33,8 +35,8 @@
     const it = {
       id: /^[a-z0-9]{1,12}$/i.test(raw.id || "") ? raw.id : `i${i}`,
       type,
-      x: round(num(raw.x, -WIDE, WIDE * 2, 0)), y: round(num(raw.y, -MAX_H, MAX_H, 0)),
-      w: round(num(raw.w, 16, WIDE * 2, d.w)), h: round(num(raw.h, 16, MAX_H, d.h)),
+      x: round(num(raw.x, -FULL, FULL * 2, 0)), y: round(num(raw.y, -MAX_H, MAX_H, 0)),
+      w: round(num(raw.w, 16, FULL * 2, d.w)), h: round(num(raw.h, 16, MAX_H, d.h)),
       o: round(num(raw.o, 0.1, 1, 1)),
       rot: round(num(raw.rot, -360, 360, 0)),
       radius: round(num(raw.radius, 0, 200, d.radius)),
@@ -75,7 +77,7 @@
       seen.add(it.id);
       return it;
     });
-    return { v: 1, w: p.w === WIDE ? WIDE : NARROW, h: Math.round(num(p.h, MIN_H, MAX_H, 640)), bg: { color: hex(bg.color, "#1c1c1c"), color2: hex(bg.color2, "") }, items };
+    return { v: 1, w: WIDTHS.includes(p.w) ? p.w : NARROW, h: Math.round(num(p.h, MIN_H, MAX_H, 640)), bg: { color: hex(bg.color, "#1c1c1c"), color2: hex(bg.color2, "") }, items };
   }
 
   const u = (n, pw = NARROW) => `calc(${round(n)} * 100cqw / ${pw})`;
@@ -84,7 +86,7 @@
   function itemHtml(it, links, o) {
     const pw = o.pw || NARROW, uu = (n) => u(n, pw);
     // --ord: Reihenfolge, wenn eine breite Seite am Handy gestapelt wird (oben vor unten, links vor rechts)
-    const ord = Math.round(Math.max(0, it.y)) * 4000 + Math.round(it.x + WIDE);
+    const ord = Math.round(Math.max(0, it.y)) * 8000 + Math.round(it.x + FULL);
     const pos = `left:${uu(it.x)};top:${uu(it.y)};width:${uu(it.w)};height:${uu(it.h)};opacity:${it.o};--ord:${ord}${it.rot ? `;transform:rotate(${it.rot}deg)` : ""}`;
     const attrs = `class="pc-item pc-${it.type}" data-id="${esc(it.id)}" style="${pos}"`;
     if (it.type === "block") {
@@ -115,8 +117,8 @@
   // opts: { links, base (Supabase-URL), edit, t }
   function html(page, opts) {
     const p = normalize(page), o = { base: "", links: [], edit: false, ...opts, pw: p.w };
-    const wide = p.w === WIDE;
-    return `<div class="pc-wrap"${wide ? ' style="max-width:1080px"' : ""}><div class="pc${o.edit ? " is-edit" : ""}${wide ? " is-wide" : ""}" data-w="${p.w}" style="aspect-ratio:${p.w} / ${p.h};background:${background(p.bg)}">${p.items.map((it) => itemHtml(it, o.links, o)).join("")}</div></div>`;
+    const wide = p.w !== NARROW, full = p.w === FULL;
+    return `<div class="pc-wrap${full ? " is-full" : ""}"${p.w === WIDE ? ' style="max-width:1080px"' : ""}><div class="pc${o.edit ? " is-edit" : ""}${wide ? " is-wide" : ""}" data-w="${p.w}" style="aspect-ratio:${p.w} / ${p.h};background:${background(p.bg)}">${p.items.map((it) => itemHtml(it, o.links, o)).join("")}</div></div>`;
   }
 
   // --k = Pixel je Einheit, damit Bausteine (feste Pixelgröße) mit der Fläche mitskalieren
@@ -130,5 +132,5 @@
   }
   function zoomOf(it, pw) { return `calc(var(--k, 1) * ${it.w} / ${natOf(it.kind, pw)})`; }
 
-  window.XyntalPageCanvas = { BLOCKS, NARROW, WIDE, natOf, mount, zoomOf, W, MIN_H, MAX_H, DEFAULTS, normalize, html, itemHtml, background, hex, num, round, esc, safeUrl };
+  window.XyntalPageCanvas = { BLOCKS, NARROW, WIDE, FULL, WIDTHS, natOf, mount, zoomOf, W, MIN_H, MAX_H, DEFAULTS, normalize, html, itemHtml, background, hex, num, round, esc, safeUrl };
 })();
