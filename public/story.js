@@ -1,224 +1,341 @@
 // Xyntal – Startseite: „Heute / Mit Xyntal“.
-// Eine Grafik mit Punkten (= Leute) erzählt beim Scrollen das Problem und die Lösung.
-// Jeder Schritt (.story-step[data-step]) hat einen Zielzustand; die Punkte gleiten dorthin.
-// Läuft nur, solange der Abschnitt sichtbar ist. Bei „Bewegung reduzieren“ springt die Grafik.
+// Rechts (bzw. oben) eine Bühne mit Profilkarten, links die Schritte. Beim Scrollen wechselt
+// die Bühne in den Zustand des aktiven Schritts (.story-step[data-step]):
+//   0  Überall suchen: Man sieht, was jemand kann. Zeit und Ziel sind „?“.
+//   1  Drei Calls über Wochen, jeder scheitert an etwas, das man vorher hätte wissen können.
+//   2  Du beschreibst dein Vorhaben, alle anderen ihres: Die „?“ werden zu echten Angaben.
+//   3  Was nicht passt, fällt raus. Übrig bleiben drei.
+//   4  Die drei mit Begründung (✓ je Angabe).
+//   5  Ihr schreibt euch. Woche 1 statt Woche 9.
+// Karten bewegen sich per CSS-Transition; dieses Skript setzt nur Ziele und Klassen.
+// Bei „Bewegung reduzieren“ springt alles sofort in den Endzustand.
 (() => {
   const root = document.querySelector("[data-story]");
   if (!root) return;
   const stage = root.querySelector(".story-stage");
-  const svg = stage.querySelector("svg");
-  const tagLayer = stage.querySelector(".story-tags");
   const phaseEl = stage.querySelector(".story-phase");
   const dotsEl = stage.querySelector(".story-dots");
   const steps = [...root.querySelectorAll(".story-step")];
-  const NS = "http://www.w3.org/2000/svg";
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const NS = "http://www.w3.org/2000/svg";
 
-  const css = getComputedStyle(document.documentElement);
-  const C = {
-    text: css.getPropertyValue("--text").trim() || "#ECEAE4",
-    dim: css.getPropertyValue("--text-3").trim() || "#73716B",
-    line: css.getPropertyValue("--line-2").trim() || "#4A4A4A",
-    key: css.getPropertyValue("--key").trim() || "#8FB8FF",
+  // Alte Punkte-Grafik aufräumen, falls das HTML sie noch enthält
+  stage.querySelector(":scope > svg")?.remove();
+  stage.querySelector(".story-tags")?.remove();
+
+  // ---------- Daten ----------
+  // Gesucht: Backend · etwa 10 Std. · Mitgründung
+  const WANT = { skill: "Backend", goal: "Mitgründen" };
+  const okTime = (h) => h >= 8 && h <= 16;
+  const PEOPLE = [
+    { n: "Lena", src: "Discord", skill: "Backend", h: 12, goal: "Mitgründen" },
+    { n: "Jonas", src: "LinkedIn", skill: "Backend", h: 2, goal: "Mitgründen", fail: "time" },
+    { n: "Mira", src: "Freunde", skill: "Design", h: 6, goal: "Nebenbei" },
+    { n: "Can", src: "LinkedIn", skill: "Backend", h: 15, goal: "nur bezahlt", fail: "goal" },
+    { n: "Tom", src: "Discord", skill: "Marketing", h: 10, goal: "Mitgründen" },
+    { n: "Aylin", src: "Freunde", skill: "Backend", h: 8, goal: "Mitgründen" },
+    { n: "Sara", src: "Discord", skill: "Backend", h: 10, goal: "eigene Idee", fail: "goal" },
+    { n: "Noah", src: "LinkedIn", skill: "Backend", h: 10, goal: "Mitgründen" },
+    { n: "Felix", src: "Discord", skill: "Frontend", h: 4, goal: "Nebenbei" },
+    { n: "Ben", src: "LinkedIn", skill: "Daten", h: 20, goal: "nur bezahlt" },
+    { n: "Emma", src: "Freunde", skill: "Design", h: 12, goal: "Mitgründen" },
+    { n: "Paul", src: "Discord", skill: "Vertrieb", h: 5, goal: "nur bezahlt" },
+  ].map((p, i) => ({
+    ...p, i,
+    ok: { skill: p.skill === WANT.skill, time: okTime(p.h), goal: p.goal === WANT.goal },
+  }));
+  PEOPLE.forEach((p) => { p.match = p.ok.skill && p.ok.time && p.ok.goal; });
+  // Die drei Calls von „Heute · 2“: Woche, Person, woran es scheitert
+  const CALLS = [
+    { wk: 2, who: 1, why: "keine Zeit" },
+    { wk: 5, who: 3, why: "nur gegen Bezahlung" },
+    { wk: 9, who: 6, why: "ganz andere Vorstellung" },
+  ];
+  const WEEKS = 10;
+
+  // ---------- Bühne bauen ----------
+  const el = (tag, cls, text) => {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
   };
 
-  // ---------- Leute ----------
-  // 0 = du · 1–3 = passen · 4–6 = Gespräche, die scheitern · Rest = alle anderen
-  const N = 31, MATCH = [1, 2, 3], FAIL = [4, 5, 6];
-  let seed = 7;
-  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-  const people = Array.from({ length: N }, (_, i) => {
-    let u, v;
-    do { u = rnd() * 2 - 1; v = rnd() * 2 - 1; } while (Math.hypot(u, v * 0.9) < 0.3);
-    return { i, u, v, ph: rnd() * Math.PI * 2, sp: 0.4 + rnd() * 0.5,
-      x: 0, y: 0, o: 0, r: 4, c: [0, 0, 0] };
+  const svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("class", "st-lines");
+  svg.innerHTML = `<defs><linearGradient id="st-grad" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#B36BFF"/><stop offset=".55" stop-color="#3A8AFF"/><stop offset="1" stop-color="#3FE0F0"/></linearGradient></defs>`;
+  const path = (cls) => { const p = document.createElementNS(NS, "path"); p.setAttribute("class", cls); svg.append(p); return p; };
+
+  const brief = el("div", "st-brief");
+  brief.innerHTML = `<span class="st-av st-av-me">Du</span><span class="st-brief-l">Du suchst</span>`;
+  const briefVals = ["Backend", "8–16 h/Woche", "Mitgründen"].map((t) => {
+    const s = el("span", "st-brief-v", t); brief.append(s); return s;
   });
 
-  const hex = (h) => { const n = parseInt(h.replace("#", ""), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
-  const RGB = { text: hex(C.text), dim: hex(C.dim), key: hex(C.key) };
-
-  const lineG = document.createElementNS(NS, "g");
-  const dotG = document.createElementNS(NS, "g");
-  const pulse = document.createElementNS(NS, "circle");
-  pulse.setAttribute("r", "3"); pulse.setAttribute("fill", C.key); pulse.setAttribute("opacity", "0");
-  svg.append(lineG, dotG, pulse);
-  people.forEach((p) => { p.el = document.createElementNS(NS, "circle"); dotG.append(p.el); });
-  const halo = document.createElementNS(NS, "circle");
-  halo.setAttribute("fill", "none"); halo.setAttribute("stroke", C.text); halo.setAttribute("stroke-width", "1");
-  dotG.append(halo);
-
-  // ---------- Schilder ----------
-  const TAGS = [
-    { node: 4, dy: -24, text: "keine Zeit", steps: [1], fail: 0 },
-    { node: 5, dy: -24, text: "nur gegen Bezahlung", steps: [1], fail: 1 },
-    { node: 6, dy: 24, text: "ganz andere Vorstellung", steps: [1], fail: 2 },
-    { node: 0, dy: 34, text: "Suche: Backend · 10 Std./Woche · Mitgründer:in", steps: [2, 3], cls: "is-me" },
-    { node: 1, dy: -28, text: "Backend ✓ · 12 Std./Woche ✓ · Mitgründer:in ✓", steps: [4], cls: "is-key" },
-    { node: 2, dy: 26, text: "Backend · 8 Std./Woche", steps: [4], cls: "is-key", wide: true },
-    { node: 3, dy: 26, text: "Backend · am Wochenende", steps: [4], cls: "is-key", wide: true },
-    { node: 1, dy: -58, text: "„Klingt spannend! Wann hast du Zeit für einen Call?“", steps: [5], cls: "is-msg" },
-  ].map((t) => {
-    const el = document.createElement("span");
-    el.className = "story-tag" + (t.cls ? " " + t.cls : "");
-    el.textContent = t.text;
-    tagLayer.append(el);
-    return { ...t, el };
+  const cards = PEOPLE.map((p) => {
+    const c = el("div", "sp");
+    const head = el("div", "sp-head");
+    const av = el("span", "st-av", p.n[0]); av.dataset.noI18n = "";
+    const name = el("span", "sp-name", p.n); name.dataset.noI18n = "";
+    head.append(av, name, el("span", "sp-src", p.src));
+    const attrs = el("div", "sp-attrs");
+    const attr = (k, val, q) => {
+      const a = el("div", "sp-a"); a.dataset.k = k;
+      if (q) a.append(el("span", "sp-q", q));
+      a.append(el("span", "sp-v", val));
+      attrs.append(a); return a;
+    };
+    p.a = {
+      skill: attr("skill", p.skill),
+      time: attr("time", `${p.h} h/Woche`, "Zeit ?"),
+      goal: attr("goal", p.goal, "Ziel ?"),
+    };
+    c.append(head, attrs);
+    p.el = c;
+    return c;
   });
 
-  steps.forEach(() => dotsEl.append(document.createElement("span")));
+  const time = el("div", "st-time");
+  const timeBar = el("div", "st-time-bar");
+  const timeFill = el("i");
+  timeBar.append(timeFill);
+  for (let w = 0; w <= WEEKS; w++) { const t = el("b"); t.style.left = `${(w / WEEKS) * 100}%`; timeBar.append(t); }
+  const timeHint = el("span", "st-time-l st-hint", "? = weißt du erst nach dem Gespräch");
+  const timeBad = el("span", "st-time-l st-bad", "Woche 9 · 3 Calls · noch niemand gefunden");
+  const timeGood = el("span", "st-time-l st-good", "Woche 1 · Call ausgemacht");
+  const timeEnd = el("span", "st-time-wk st-wkN", `Woche ${WEEKS}`);
+  const marks = CALLS.map((c) => {
+    const m = el("span", "st-mark");
+    m.style.left = `${(c.wk / WEEKS) * 100}%`;
+    m.append(el("span", "st-mark-why", c.why));
+    if (c.wk / WEEKS > 0.75) m.classList.add("is-end");
+    timeBar.append(m);
+    return m;
+  });
+  const goodMark = el("span", "st-mark st-mark-good");
+  goodMark.style.left = `${(1 / WEEKS) * 100}%`;
+  timeBar.append(goodMark);
+  time.append(timeHint, timeBad, timeGood, timeBar, timeEnd);
+
+  const count = el("div", "st-count");
+  count.innerHTML = `<span class="st-count-n">12</span> <span class="st-count-l">Profile</span> <span class="st-count-arrow">→</span> <span class="st-count-n st-count-k">3</span> <span class="st-count-l">passen</span>`;
+
+  const chat = el("div", "st-chat");
+  const bubbles = [
+    ["me", "Hi Lena, du suchst auch eine Mitgründung fürs Backend. Lust auf einen Call?"],
+    ["them", "Klingt spannend! Donnerstag, 18 Uhr?"],
+    ["me", "Passt. Bis Donnerstag!"],
+  ].map(([who, text]) => { const b = el("p", `st-bubble is-${who}`, text); chat.append(b); return b; });
+  const typing = el("p", "st-bubble is-them st-typing");
+  typing.setAttribute("aria-hidden", "true");
+  typing.innerHTML = "<i></i><i></i><i></i>";
+  chat.insertBefore(typing, bubbles[1]);
+
+  const linesRail = path("st-rail");
+  const linesLink = path("st-link");
+  const callLines = CALLS.map(() => path("st-call"));
+
+  stage.append(svg, time, count, brief, ...cards, chat);
+  steps.forEach(() => dotsEl.append(el("span")));
 
   // ---------- Maße ----------
-  let W = 0, H = 0, cx = 0, cy = 0, R = 0;
+  let G = {};
   function measure() {
     const r = stage.getBoundingClientRect();
-    W = r.width; H = r.height; cx = W / 2; cy = H / 2 + 10;
-    R = Math.min(W * 0.46, H * 0.4);
+    const W = r.width, H = r.height;
+    const compact = W < 560;
+    const cols = compact ? 3 : 4;
+    const pad = compact ? 12 : 22;
+    const gap = compact ? 8 : 12;
+    const top = compact ? 40 : 54;
+    const tlH = compact ? 62 : 74;
+    const briefH = compact ? 40 : 50;
+    const cw = (W - 2 * pad - (cols - 1) * gap) / cols;
+    const ch = Math.max(64, Math.min(compact ? 92 : 124,
+      (H - top - tlH - 2 * gap) / 3,
+      (H - top - briefH - gap - 40 - 2 * gap) / 3));
+    const gridY2 = top + briefH + gap + 4;
+    // Zeitleiste direkt unter das Raster, nicht ganz unten an den Rand
+    const tlY = Math.min(H - tlH, top + 3 * ch + 2 * gap + (compact ? 20 : 34));
+    G = { W, H, compact, cols, pad, gap, top, tlH, tlY, briefH, cw, ch, gridY2,
+      rowH: compact ? 58 : 66, indent: compact ? 18 : 26 };
+    stage.classList.toggle("is-compact", compact);
+    stage.style.setProperty("--cw", cw + "px");
+    stage.style.setProperty("--ch", ch + "px");
     svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    const lg = svg.querySelector("#st-grad");
+    lg.setAttribute("y1", top); lg.setAttribute("y2", top + briefH + G.rowH + 40);
   }
 
-  // ---------- Zielzustände ----------
-  const polar = (a, rad) => [cx + Math.cos(a) * rad, cy + Math.sin(a) * rad];
-  const deg = (d) => (d * Math.PI) / 180;
-  const FAIL_AT = [deg(205), deg(325), deg(90)];
-  const MATCH_AT = [deg(-40), deg(90), deg(165)];
-  const others = people.filter((p) => p.i !== 0);
+  const place = (e, x, y, w, h) => {
+    e.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
+    if (w != null) e.style.width = w.toFixed(1) + "px";
+    if (h != null) e.style.height = h.toFixed(1) + "px";
+  };
+  const gridXY = (k, y0) => [
+    G.pad + (k % G.cols) * (G.cw + G.gap),
+    y0 + Math.floor(k / G.cols) * (G.ch + G.gap),
+  ];
 
-  function target(p, step, t, te) {
-    const scatter = () => {
-      const dx = reduce ? 0 : Math.sin(t * p.sp + p.ph) * 9;
-      const dy = reduce ? 0 : Math.cos(t * p.sp * 0.8 + p.ph) * 7;
-      return [cx + p.u * (W / 2 - 24) + dx, cy - 10 + p.v * (H / 2 - 40) + dy];
-    };
-    if (p.i === 0) {
-      if (step === 5) return { xy: [cx - R * 0.42, cy], o: 1, r: 7, c: "text" };
-      return { xy: [cx, cy], o: 1, r: 7, c: "text" };
-    }
-    const fi = FAIL.indexOf(p.i), mi = MATCH.indexOf(p.i);
-    if (step === 0) return { xy: scatter(), o: 0.6, r: 4, c: "dim" };
-    if (step === 1) {
-      if (fi >= 0) {
-        const broken = te > 1.5 + fi * 0.7;
-        return { xy: polar(FAIL_AT[fi], R * 0.68), o: broken ? 0.3 : 1, r: 5, c: broken ? "dim" : "text" };
-      }
-      return { xy: scatter(), o: 0.28, r: 4, c: "dim" };
-    }
-    // ab hier: alle sortiert im Kreis
-    const k = others.indexOf(p);
-    const inner = k < 12;
-    const ringA = inner ? (k / 12) * Math.PI * 2 + 0.2 : ((k - 12) / 18) * Math.PI * 2;
-    const ring = polar(ringA, inner ? R * 0.6 : R * 0.98);
-    if (step === 2) return { xy: ring, o: 0.75, r: 4.5, c: "dim" };
-    if (mi >= 0) {
-      if (step === 5) {
-        if (mi === 0) return { xy: [cx + R * 0.42, cy], o: 1, r: 7, c: "key" };
-        return { xy: polar(MATCH_AT[mi], R * 0.62), o: 0.3, r: 5, c: "key" };
-      }
-      return { xy: polar(MATCH_AT[mi], R * 0.62), o: 1, r: 6, c: "key" };
-    }
-    const out = polar(ringA, R * (inner ? 1.02 : 1.12));
-    return { xy: out, o: step === 5 ? 0.07 : 0.14, r: 3.5, c: "dim" };
-  }
+  // ---------- Zustände ----------
+  let timers = [], scanTimer = 0;
+  const later = (ms, fn) => { if (reduce) fn(); else timers.push(setTimeout(fn, ms)); };
+  const clearTimers = () => { timers.forEach(clearTimeout); timers = []; clearInterval(scanTimer); scanTimer = 0; };
 
-  function linesFor(step, t, te) {
-    const L = [];
+  const matches = PEOPLE.filter((p) => p.match);
+  const visible = () => PEOPLE.slice(0, G.cols * 3);
+
+  function apply(step, instant) {
+    clearTimers();
+    stage.dataset.step = step;
+    stage.classList.toggle("is-instant", !!instant || reduce);
+    const shown = visible();
+
+    // Alles zurücksetzen, was nur in einzelnen Schritten gilt
+    PEOPLE.forEach((p) => {
+      p.el.className = "sp";
+      p.el.style.setProperty("--d", "0ms");
+      Object.values(p.a).forEach((a) => { a.className = "sp-a"; a.style.setProperty("--d", "0ms"); });
+      p.el.hidden = !shown.includes(p);
+    });
+    marks.forEach((m) => m.classList.remove("is-on"));
+    callLines.forEach((l) => l.classList.remove("is-on"));
+    bubbles.forEach((b) => b.classList.remove("is-on"));
+    typing.classList.remove("is-on");
+    briefVals.forEach((v) => v.classList.remove("is-on"));
+    timeFill.style.width = "0%";
+
+    // Feste Plätze: Vorhaben oben, Zeitleiste/Zähler unten, Chat unter dem Vorschlag
+    place(brief, G.pad, G.top, G.W - 2 * G.pad, G.briefH);
+    place(time, G.pad, G.tlY, G.W - 2 * G.pad);
+    place(count, G.pad, G.gridY2 + 3 * G.ch + 2 * G.gap + (G.compact ? 14 : 22));
+    const chatY = G.top + G.briefH + G.gap + 6 + G.rowH + G.gap * 2;
+    place(chat, G.pad + G.indent, chatY, G.W - 2 * G.pad - G.indent, G.tlY - chatY - G.gap);
+
+    // --- 0 + 1: Heute ---
+    if (step <= 1) {
+      shown.forEach((p, k) => {
+        const [x, y] = gridXY(k, G.top);
+        place(p.el, x, y, G.cw, G.ch);
+        p.el.style.setProperty("--d", `${k * 25}ms`);
+      });
+    }
     if (step === 0 && !reduce) {
-      const slot = Math.floor(t / 1.3), ph = (t / 1.3) % 1;
-      const pick = 7 + ((slot * 7919) % (N - 7));
-      L.push({ k: "try" + slot, a: 0, b: pick, color: C.line, dash: "3 5", o: Math.sin(Math.PI * ph) * 0.9, w: 1 });
+      // Man klickt sich durch Profile: ein Rahmen springt von Karte zu Karte
+      let last = -1;
+      const hop = () => {
+        shown[last]?.el.classList.remove("is-scan");
+        let k; do { k = Math.floor(Math.random() * shown.length); } while (k === last);
+        last = k; shown[k].el.classList.add("is-scan");
+      };
+      hop(); scanTimer = setInterval(hop, 1100);
     }
-    if (step === 1) FAIL.forEach((n, fi) => {
-      if (te < fi * 0.5 && !reduce) return;
-      const broken = reduce || te > 1.5 + fi * 0.7;
-      L.push({ k: "fail" + n, a: 0, b: n, color: C.line, dash: "3 5", o: broken ? 0.15 : 0.9, w: 1 });
-    });
-    if (step === 4) MATCH.forEach((n) => L.push({ k: "m" + n, a: 0, b: n, color: C.key, dash: "", o: 0.8, w: 1.4 }));
-    if (step === 5) L.push({ k: "m1", a: 0, b: 1, color: C.key, dash: "", o: 1, w: 2 });
-    return L;
-  }
+    if (step === 1) {
+      shown.forEach((p) => p.el.classList.add("is-dim"));
+      const barY = G.tlY + (G.compact ? 30 : 36);
+      CALLS.forEach((c, j) => {
+        const p = PEOPLE[c.who];
+        if (!shown.includes(p)) return;
+        const at = 250 + j * 1100;
+        later(at, () => {
+          p.el.classList.remove("is-dim");
+          p.el.classList.add("is-focus");
+          const [x, y] = gridXY(shown.indexOf(p), G.top);
+          const mx = G.pad + (c.wk / WEEKS) * (G.W - 2 * G.pad);
+          const sx = x + G.cw / 2, sy = y + G.ch;
+          callLines[j].setAttribute("d", `M${sx},${sy} C${sx},${(sy + barY) / 2} ${mx},${(sy + barY) / 2} ${mx},${barY - 6}`);
+          callLines[j].classList.add("is-on");
+          marks[j].classList.add("is-on");
+          timeFill.style.width = `${(c.wk / WEEKS) * 100}%`;
+        });
+        later(at + 550, () => {
+          p.el.classList.add("is-known");
+          p.a[p.fail].classList.add("is-no");
+        });
+        later(at + 1050, () => {
+          p.el.classList.remove("is-focus");
+          p.el.classList.add("is-failed");
+          callLines[j].classList.add("is-past");
+        });
+      });
+    }
 
-  // ---------- Zeichnen ----------
-  const lineEls = new Map(); // key -> { el, o }
-  let step = 0, stepAt = 0, last = 0, running = false, first = true;
+    // --- 2 + 3: Vorhaben beschreiben, Filtern ---
+    if (step === 2 || step === 3) {
+      shown.forEach((p, k) => {
+        const [x, y] = gridXY(k, G.gridY2);
+        place(p.el, x, y, G.cw, G.ch);
+        p.el.style.setProperty("--d", `${k * 30}ms`);
+        p.el.classList.add("is-known");
+        // Angaben klappen eine nach der anderen auf
+        ["time", "goal"].forEach((key, j) => p.a[key].style.setProperty("--d", `${(step === 2 ? 350 : 0) + k * 60 + j * 90}ms`));
+      });
+      briefVals.forEach((v, j) => later(step === 2 ? 120 + j * 140 : 0, () => v.classList.add("is-on")));
+    }
+    if (step === 3) {
+      shown.forEach((p, k) => {
+        const delay = 150 + k * 70;
+        Object.entries(p.ok).forEach(([key, ok], j) => {
+          p.a[key].style.setProperty("--d", `${delay + j * 60}ms`);
+          p.a[key].classList.add(ok ? "is-ok" : "is-no");
+        });
+        later(delay + 380, () => p.el.classList.add(p.match ? "is-match" : "is-out"));
+      });
+    }
 
-  function frame(now) {
-    const t = now / 1000, te = t - stepAt;
-    const ease = reduce || first ? 1 : 1 - Math.pow(0.0015, Math.min(0.05, (now - last) / 1000));
-    last = now;
+    // --- 4: Vorschläge mit Begründung ---
+    if (step === 4 || step === 5) {
+      briefVals.forEach((v) => v.classList.add("is-on"));
+      shown.forEach((p) => { if (!p.match) { p.el.classList.add("is-gone"); } });
+      const x0 = G.pad + G.indent;
+      const w = G.W - 2 * G.pad - G.indent;
+      const y0 = G.top + G.briefH + G.gap + 6;
+      matches.forEach((p, j) => {
+        const show = step === 4 || j === 0;
+        p.el.classList.add("is-known", "is-row", "is-match");
+        Object.entries(p.ok).forEach(([key], q) => {
+          p.a[key].classList.add("is-ok");
+          p.a[key].style.setProperty("--d", step === 4 ? `${300 + j * 160 + q * 90}ms` : "0ms");
+        });
+        p.el.style.setProperty("--d", `${j * 90}ms`);
+        place(p.el, x0, y0 + j * (G.rowH + G.gap), w, G.rowH);
+        if (!show) p.el.classList.add("is-gone");
+      });
+      // Linie vom Vorhaben zu den Vorschlägen
+      const rx = G.pad + 12, ry = G.top + G.briefH;
+      const ends = (step === 4 ? matches : matches.slice(0, 1)).map((_, j) => y0 + j * (G.rowH + G.gap) + G.rowH / 2);
+      linesRail.setAttribute("d", ends.map((ey) => `M${rx},${ry} V${ey - 6} Q${rx},${ey} ${rx + 6},${ey} H${x0}`).join(" "));
+      linesLink.setAttribute("d", `M${rx},${ry} V${ends[0] - 6} Q${rx},${ends[0]} ${rx + 6},${ends[0]} H${x0}`);
+    }
 
-    people.forEach((p) => {
-      const g = target(p, step, t, reduce ? 99 : te);
-      p.x += (g.xy[0] - p.x) * ease; p.y += (g.xy[1] - p.y) * ease;
-      p.o += (g.o - p.o) * ease; p.r += (g.r - p.r) * ease;
-      const want = RGB[g.c];
-      p.c = p.c.map((v, j) => v + (want[j] - v) * ease);
-      p.el.setAttribute("cx", p.x.toFixed(1)); p.el.setAttribute("cy", p.y.toFixed(1));
-      p.el.setAttribute("r", p.r.toFixed(2)); p.el.setAttribute("opacity", p.o.toFixed(3));
-      p.el.setAttribute("fill", `rgb(${p.c.map(Math.round).join(",")})`);
-    });
-    const me = people[0];
-    halo.setAttribute("cx", me.x.toFixed(1)); halo.setAttribute("cy", me.y.toFixed(1));
-    halo.setAttribute("r", (13 + (reduce ? 0 : Math.sin(t * 2) * 2)).toFixed(1));
-    halo.setAttribute("opacity", "0.35");
+    // --- 5: Nachricht ---
+    if (step === 5) {
+      later(300, () => bubbles[0].classList.add("is-on"));
+      later(1000, () => typing.classList.add("is-on"));
+      later(2100, () => { typing.classList.remove("is-on"); bubbles[1].classList.add("is-on"); });
+      later(3000, () => bubbles[2].classList.add("is-on"));
+      later(400, () => { timeFill.style.width = `${(1 / WEEKS) * 100}%`; });
+    }
 
-    // Linien: ein- und ausblenden statt hart wechseln
-    const want = linesFor(step, t, reduce ? 99 : te);
-    const keys = new Set(want.map((l) => l.k));
-    want.forEach((l) => {
-      let rec = lineEls.get(l.k);
-      if (!rec) { rec = { el: document.createElementNS(NS, "line"), o: 0 }; lineG.append(rec.el); lineEls.set(l.k, rec); }
-      rec.o += (l.o - rec.o) * (reduce ? 1 : Math.min(1, ease * 1.6));
-      Object.assign(rec, { a: l.a, b: l.b });
-      rec.el.setAttribute("stroke", l.color); rec.el.setAttribute("stroke-width", l.w);
-      if (l.dash) rec.el.setAttribute("stroke-dasharray", l.dash); else rec.el.removeAttribute("stroke-dasharray");
-    });
-    lineEls.forEach((rec, k) => {
-      if (!keys.has(k)) { rec.o -= rec.o * (reduce ? 1 : Math.min(1, ease * 1.6)); if (rec.o < 0.01) { rec.el.remove(); lineEls.delete(k); return; } }
-      const a = people[rec.a], b = people[rec.b];
-      rec.el.setAttribute("x1", a.x.toFixed(1)); rec.el.setAttribute("y1", a.y.toFixed(1));
-      rec.el.setAttribute("x2", b.x.toFixed(1)); rec.el.setAttribute("y2", b.y.toFixed(1));
-      rec.el.setAttribute("opacity", rec.o.toFixed(3));
-    });
-
-    // Nachricht läuft hin und her
-    if (step === 5 && !reduce) {
-      const q = (t / 1.6) % 1, f = q < 0.5 ? q * 2 : 2 - q * 2;
-      const a = people[0], b = people[1];
-      pulse.setAttribute("cx", (a.x + (b.x - a.x) * f).toFixed(1));
-      pulse.setAttribute("cy", (a.y + (b.y - a.y) * f).toFixed(1));
-      pulse.setAttribute("opacity", "0.9");
-    } else pulse.setAttribute("opacity", "0");
-
-    // Schilder folgen ihrem Punkt
-    TAGS.forEach((tg) => {
-      const p = people[tg.node];
-      const on = tg.steps.includes(step) && (!tg.wide || W >= 520) && (tg.fail === undefined || reduce || te > tg.fail * 0.5 + 0.2);
-      const off = tg.fail !== undefined && (reduce || te > 1.5 + tg.fail * 0.7);
-      tg.el.classList.toggle("is-on", on);
-      tg.el.classList.toggle("is-off", off);
-      const w = tg.el.offsetWidth / 2;
-      const x = Math.max(w + 8, Math.min(W - w - 8, p.x));
-      const y = Math.max(40, Math.min(H - 20, p.y + tg.dy));
-      if (on) { tg.el.style.left = x.toFixed(1) + "px"; tg.el.style.top = y.toFixed(1) + "px"; } // aus: bleibt stehen und blendet aus
-    });
-
-    first = false;
-    if (running) requestAnimationFrame(frame);
+    // Phase oben links, Punkte oben rechts
+    const ph = steps[step].dataset.phase;
+    phaseEl.dataset.phase = ph;
+    phaseEl.textContent = ph === "xyntal" ? "Mit Xyntal" : "Heute";
+    [...dotsEl.children].forEach((d, i) => d.classList.toggle("is-on", i === step));
+    steps.forEach((s, i) => s.classList.toggle("is-active", i === step));
   }
 
   // ---------- Welcher Schritt ist dran? ----------
-  function pickStep() {
+  let step = -1;
+  function pickStep(force) {
     const sr = stage.getBoundingClientRect();
     const wide = innerWidth >= 900;
     const below = Math.max(sr.bottom, 0);
     const line = wide ? innerHeight * 0.55 : below + (innerHeight - below) * 0.4;
     let s = 0;
-    steps.forEach((el, i) => { if (el.getBoundingClientRect().top < line) s = i; });
-    if (s !== step) { step = s; stepAt = performance.now() / 1000; }
-    steps.forEach((el, i) => el.classList.toggle("is-active", i === step));
-    [...dotsEl.children].forEach((d, i) => d.classList.toggle("is-on", i === step));
-    const ph = steps[step].dataset.phase;
-    phaseEl.dataset.phase = ph;
-    phaseEl.textContent = ph === "xyntal" ? "Mit Xyntal" : "Heute";
+    steps.forEach((e, i) => { if (e.getBoundingClientRect().top < line) s = i; });
+    if (s !== step || force) { const first = step < 0; step = s; apply(step, first || force === "instant"); }
   }
 
   let queued = false;
@@ -226,15 +343,20 @@
     if (queued) return; queued = true;
     requestAnimationFrame(() => { queued = false; pickStep(); });
   }, { passive: true });
-  addEventListener("resize", pickStep);
-  // Größe der Bühne kann sich nach dem Laden noch ändern (Schriften, Karten oben drüber)
-  new ResizeObserver(() => { measure(); first = true; }).observe(stage);
+  let lastW = 0, lastH = 0;
+  new ResizeObserver(() => {
+    const r = stage.getBoundingClientRect();
+    if (Math.abs(r.width - lastW) < 1 && Math.abs(r.height - lastH) < 1) return;
+    lastW = r.width; lastH = r.height;
+    measure(); pickStep("instant");
+  }).observe(stage);
 
+  // Animationen erst starten, wenn die Bühne im Bild ist, damit man den Anfang sieht
   new IntersectionObserver(([e]) => {
-    if (e.isIntersecting && !running) { running = true; last = performance.now(); requestAnimationFrame(frame); }
-    else if (!e.isIntersecting) running = false;
-  }).observe(root);
+    if (e.isIntersecting) pickStep(true);
+    else clearTimers();
+  }, { threshold: 0.35 }).observe(stage);
 
   measure();
-  pickStep();
+  pickStep("instant");
 })();
