@@ -49,3 +49,21 @@ a.pc-l:focus-visible, button.pc-l:focus-visible { outline: 2px solid currentColo
 /* Ganzer Bildschirm: die Fläche verlässt die Inhaltsspalte und reicht (mit 16 px Rand) über die volle Fensterbreite */
 .pc-wrap.is-full, .pe-stage .pc-wrap.is-full { position: relative; left: 50%; width: calc(100vw - 32px); max-width: none; margin: 0; transform: translateX(-50%); justify-self: start; }
 .pf.pf--custom:has(.pc-wrap.is-full) { max-width: none; }
+
+/* Weitere Elemente: Formen, Knopf, Link-Symbole, Einbettungen */
+.pc-shape { width: 100%; height: 100%; box-sizing: border-box; }
+.pc-frame { display: block; width: 100%; height: 100%; border: 0; background: #000; box-sizing: border-box; }
+.pc-icons { display: flex; flex-wrap: wrap; align-items: center; width: 100%; height: 100%; }
+.pc-ib { display: grid; place-items: center; flex: none; padding: 0; border: 0; box-sizing: border-box; cursor: pointer; position: relative; transition: transform .18s ease, filter .18s ease; }
+.pc-ib svg { width: 46%; height: 46%; }
+a.pc-ib:hover, button.pc-ib:hover { transform: translateY(-2px); filter: brightness(1.15); }
+.pc-ib .pc-copied { inset: auto 50% calc(100% + 4px) auto; transform: translateX(50%); white-space: nowrap; }
+.pc-btn b { font-weight: 650; }
+@media (prefers-reduced-motion: reduce) { .pc-ib { transition: none; } a.pc-ib:hover, button.pc-ib:hover { transform: none; } }
+@container (max-width: 700px) {
+  .pc.is-wide:not(.is-edit) .pc-item.pc-shape { display: none; }
+  .pc.is-wide:not(.is-edit) .pc-embed { aspect-ratio: 16 / 9; }
+  .pc.is-wide:not(.is-edit) .pc-embed.is-spotify { aspect-ratio: auto; height: 152px !important; }
+  .pc.is-wide:not(.is-edit) .pc-ib { width: 46px !important; height: 46px !important; }
+  .pc.is-wide:not(.is-edit) .pc-icons { gap: 10px !important; }
+}

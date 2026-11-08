@@ -23,7 +23,8 @@ grant select on public.profiles to authenticated;
 create function public.ban_active(b boolean, u timestamptz) returns boolean language sql immutable as $$ select coalesce(b,false) and (u is null or u > now()) $$;
 \i supabase/migrations/20261108110000_custom_page.sql
 \i supabase/migrations/20261108120000_page_blocks.sql
-\i supabase/migrations/20261108120000_page_blocks.sql
+\i supabase/migrations/20261108130000_page_more_elements.sql
+\i supabase/migrations/20261108130000_page_more_elements.sql
 
 create trigger waitlist_cards_reserved_handle before insert or update of handle on public.waitlist_cards for each row execute function public.reject_page_handles();
 
@@ -47,6 +48,10 @@ end $$;
 do $$ begin
   begin perform public.save_my_page('[1]'); raise exception 'array accepted'; exception when invalid_parameter_value then null; end;
   begin perform public.save_my_page('{"items":[{"type":"script"}]}'); raise exception 'bad type accepted'; exception when invalid_parameter_value then null; end;
+  begin perform public.save_my_page('{"items":[{"type":"button","url":"javascript:alert(1)"}]}'); raise exception 'js button accepted'; exception when invalid_parameter_value then null; end;
+  begin perform public.save_my_page('{"items":[{"type":"embed","provider":"youtube","eid":"x\"><script>"}]}'); raise exception 'bad embed accepted'; exception when invalid_parameter_value then null; end;
+  begin perform public.save_my_page('{"items":[{"type":"embed","provider":"evil","eid":"dQw4w9WgXcQ"}]}'); raise exception 'bad provider accepted'; exception when invalid_parameter_value then null; end;
+  perform public.save_my_page('{"items":[{"type":"embed","provider":"youtube","eid":"dQw4w9WgXcQ"},{"type":"embed","provider":"spotify","eid":"track/4uLU6hMCjMI75M1A2tKUQC"},{"type":"button","url":"https://a.de","text":"Hi"},{"type":"shape","kind":"circle"},{"type":"icons"}]}');
   begin perform public.save_my_page('{"items":[{"type":"block","kind":"evil"}]}'); raise exception 'bad block accepted'; exception when invalid_parameter_value then null; end;
   begin perform public.save_my_page('{"items":[{"type":"link","ref":"x"}]}'); raise exception 'bad ref accepted'; exception when invalid_parameter_value then null; end;
   begin perform public.save_my_page('{"items":[{"type":"image","src":"00000000-0000-0000-0000-000000000002/22222222-2222-2222-2222-222222222222.png"}]}'); raise exception 'foreign image accepted'; exception when invalid_parameter_value then null; end;
@@ -68,7 +73,7 @@ end $$;
 set role anon;
 select set_config('request.jwt.claim.sub','',false);
 do $$ begin
-  if jsonb_array_length(public.get_public_card('nico')->'page'->'items') <> 4 then raise exception 'public page missing'; end if;
+  if jsonb_array_length(public.get_public_card('nico')->'page'->'items') <> 5 then raise exception 'public page missing'; end if;
   begin perform public.save_my_page('{}'); raise exception 'anon save allowed'; exception when insufficient_privilege then null; end;
 end $$;
 

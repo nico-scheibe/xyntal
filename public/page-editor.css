@@ -74,3 +74,12 @@
 .pe-guide { position: absolute; z-index: 9998; pointer-events: none; background: #ff4fd8; }
 .pe-guide.is-v { top: 0; bottom: 0; width: 1px; }
 .pe-guide.is-h { left: 0; right: 0; height: 1px; }
+/* Menü „+ Mehr“: Kacheln */
+.pe-pop { width: min(380px, calc(100vw - 24px)); max-height: 62vh; }
+.pe-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.pe-tile { display: grid; justify-items: center; gap: 4px; padding: 10px 6px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255, 255, 255, .04);
+  color: var(--text); font: 500 12px/1.2 var(--f-text); cursor: pointer; text-align: center; }
+.pe-tile span { font-size: 20px; line-height: 1; }
+.pe-tile:hover { background: rgba(255, 255, 255, .1); border-color: var(--line-2); }
+.pe-embed { display: grid; gap: 6px; }
+.pe-pop input[type="url"], .pe-insp input[type="url"] { width: 100%; min-height: 34px; padding: 6px 10px; border: 1px solid var(--line-2); border-radius: 8px; background: rgba(255, 255, 255, .04); color: var(--text); font: 14px/1.3 var(--f-text); }
