@@ -57,7 +57,7 @@
     borderflow: ["Border Flow", "Fill & Border"], underline: ["Underline", "Fill & Border"],
     type: ["Type", "Text"], spread: ["Spread", "Text"], glitch: ["Glitch", "Text"],
   };
-  const HOVER_TYPES = ["link", "button", "icons", "text", "image", "shape"];
+  const HOVER_TYPES = ["link", "button", "icons", "text", "image", "shape", "block"];
   // Overlays für die ganze Seite: „back“ liegt hinter allen Elementen, „top“ darüber (klickt nicht mit)
   const OVERLAYS = {
     aurora: ["Aurora", "back"], stars: ["Sterne", "back"], grid: ["Raster", "back"], dots: ["Punkte", "back"],
@@ -269,6 +269,8 @@
     } else if (type === "block") {
       if (!BLOCKS[raw.kind]) return null;
       it.kind = raw.kind;
+      // Effektfarbe für Hover (Leuchten, Neon, Ring …); leer = helles Standardlicht
+      it.color = hex(raw.color, "");
     } else if (type === "shape") {
       it.kind = ["rect", "circle", "line"].includes(raw.kind) ? raw.kind : "rect";
       it.bg = hex(raw.bg, d.bg); it.bg2 = hex(raw.bg2, "");
