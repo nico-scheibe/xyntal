@@ -93,6 +93,11 @@ const stub = `window.supabase = { createClient: () => ({
   assert.ok(Math.abs(rot - 90) < 3, 'Griff nach rechts = 90°, war ' + rot);
   // 3. Rückgängig
   await pg.keyboard.press('Escape');
+  // 3-. Aufbau-Vorlage: Links stehen danach in einem Raster mit gleicher Breite
+  await pg.click('[data-add="layout"]'); await pg.click('[data-layout="grid"]');
+  const lb = await Promise.all([0, 1].map((i) => pg.locator('.pc-item.pc-link').nth(i).boundingBox()));
+  assert.ok(Math.abs(lb[0].y - lb[1].y) < 1 && Math.abs(lb[0].width - lb[1].width) < 1, 'Raster-Vorlage: zwei Links nebeneinander');
+  await pg.click('[data-undo]');
   // 3a. Overlays der Seite
   await pg.click('[data-add="bg"]'); await pg.click('[data-ov="aurora"]'); await pg.click('[data-ov="grain"]');
   assert.equal(await pg.locator('.pc > .pc-ov-aurora').count(), 1, 'Aurora hinter den Elementen');
