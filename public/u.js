@@ -21,16 +21,17 @@
   const page = (html) => { document.body.classList.remove("admin-profile"); root.innerHTML = html; };
   root.addEventListener("click", (e) => { if (e.target.closest("[data-reload]")) location.reload(); });
   // Angemeldete sind schon dabei: statt Warteliste zu den Projekten
-  let member = false, me = null;
-  try {
-    const raw = localStorage.getItem("sb-rralgrlujoupprwlvoyo-auth-token");
-    if (raw) {
-      member = true;
-      const ses = JSON.parse(raw);
-      // gültiges Token mitschicken, damit die Datenbank weiß, wer fragt (für „Nachricht schreiben“)
-      if (ses?.access_token && (!ses.expires_at || ses.expires_at * 1000 > Date.now() + 30000)) me = { id: ses.user?.id, token: ses.access_token };
-    }
-  } catch { /* privat */ }
+  let member = false, me = null, staleSession = false;
+  // Gültiges Token mitschicken, damit die Datenbank weiß, wer fragt („Nachricht schreiben“, eigene Seite erkennen)
+  const readMe = () => {
+    try {
+      const ses = JSON.parse(localStorage.getItem("sb-rralgrlujoupprwlvoyo-auth-token") || "null");
+      if (ses?.access_token && (!ses.expires_at || ses.expires_at * 1000 > Date.now() + 30000)) return { id: ses.user?.id, token: ses.access_token };
+      return ses && ses.refresh_token ? "stale" : null;
+    } catch { return null; }
+  };
+  try { member = !!localStorage.getItem("sb-rralgrlujoupprwlvoyo-auth-token"); } catch { /* privat */ }
+  { const r = readMe(); if (r === "stale") staleSession = true; else me = r; }
   const UUID = /^[0-9a-f-]{36}$/;
   const ctas = (primary) => `<div class="profile-actions">${primary}${member
     ? `<a class="btn btn-glass" href="/mitglieder">${esc(t("Mitglieder entdecken"))}</a>`
@@ -88,7 +89,7 @@
     if (editing) return;
     editing = true;
     try {
-      const css = loadAsset("link", "href", "/page-canvas.css?v=11"), css2 = loadAsset("link", "href", "/page-editor.css?v=12");
+      const css = loadAsset("link", "href", "/page-canvas.css?v=12"), css2 = loadAsset("link", "href", "/page-editor.css?v=12");
       if (!window.supabase) await loadAsset("script", "src", "/vendor/supabase.js?v=31");
       await Promise.all([css, css2]);
       await loadAsset("script", "src", "/page-editor.js?v=14");
@@ -110,10 +111,10 @@
         <div class="pf-actions">
           ${primary}
           ${own ? `<a class="btn btn-glass" href="#gestalten" data-edit-page><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>${esc(t("Gestalten"))}</a>` : ""}
-          ${!member && !own ? `<p class="pf-invited">${esc(t("Du wurdest eingeladen: Mit einem Konto bekommst du 7 Tage Plus gratis – und die Person, die dich eingeladen hat, auch."))} <a class="text-link" href="/login#registrieren">${esc(t("Konto anlegen"))}</a></p>` : ""}
           <button class="btn btn-glass" type="button" data-copy-link><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>${esc(t(navigator.share ? "Teilen" : "Link kopieren"))}</button>
           <p class="pf-copied" role="status" data-copy-status></p>
         </div>
+        ${!member && !own ? `<p class="pf-invited">${esc(t("Du wurdest eingeladen: Mit einem Konto bekommst du 7 Tage Plus gratis – und die Person, die dich eingeladen hat, auch."))} <a class="text-link" href="/login#registrieren">${esc(t("Konto anlegen"))}</a></p>` : ""}
       </div>`);
     document.body.classList.remove("admin-profile");
     window.XyntalPageCanvas.mount(root);
@@ -415,4 +416,14 @@
   }
   load();
   document.addEventListener("xyntal:lang", load);
+  // Abgelaufenes Token (nach ~1 Stunde): das Konto-Menü (account-menu.js) erneuert es gleich. Dann neu laden,
+  // damit die eigene Seite wieder als eigene erkannt wird („Karte bearbeiten“, „Gestalten“, Editor über #gestalten).
+  if (staleSession) {
+    let tries = 0;
+    const iv = setInterval(() => {
+      const r = readMe();
+      if (r && r !== "stale") { clearInterval(iv); me = r; if (!editing) load(); }
+      else if (++tries > 30) clearInterval(iv);
+    }, 400);
+  }
 })();
