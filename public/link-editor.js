@@ -198,6 +198,8 @@
       grandfathered = rows.length;
       const handle = card && card.handle;
       if (handle && leUrl) leUrl.textContent = `xyntal.de/${handle}`;
+      const design = $("[data-le-design]");
+      if (handle && design) design.href = `/${handle}#gestalten`;
       if (handle && view) { view.href = `/${handle}`; view.hidden = false; }
       box.hidden = false; showUi(true); render();
     } catch {

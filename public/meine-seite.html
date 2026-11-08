@@ -13,20 +13,26 @@
 <main class="shell" style="padding:96px 0;text-align:center">
   <p data-msg style="color:var(--text-2)">Deine Seite wird geöffnet …</p>
 </main>
-<script src="/vendor/supabase.js?v=31"></script>
 <script src="/config.js?v=31"></script>
 <script>
-// Die Seite wird direkt unter xyntal.de/deinname gestaltet (u.js, Adresse mit #gestalten): hierher führen nur ältere Links
+// Die Seite wird direkt unter xyntal.de/deinname gestaltet (u.js, Adresse mit #gestalten): hierher führen nur ältere Links.
+// Ohne Supabase-Client: gespeicherte Anmeldung lesen, eigenen Wunsch-Link abfragen, weiterleiten – mit Zeitlimit statt endlosem Warten.
 (async () => {
   const msg = document.querySelector("[data-msg]"), c = window.XYNTAL_CONFIG;
+  const fail = (html) => { msg.innerHTML = html; };
+  let token = "";
+  try { token = JSON.parse(localStorage.getItem("sb-rralgrlujoupprwlvoyo-auth-token") || "{}").access_token || ""; } catch { /* privat */ }
+  if (!token) return fail('Melde dich an, um deine Seite zu gestalten. <a class="text-link" href="/login">Anmelden</a>');
   try {
-    const sb = window.supabase.createClient(c.supabaseUrl, c.supabaseKey);
-    const { data: { session } } = await sb.auth.getSession();
-    if (!session) { msg.innerHTML = 'Melde dich an, um deine Seite zu gestalten. <a class="text-link" href="/login">Anmelden</a>'; return; }
-    const { data } = await sb.rpc("get_my_card");
-    if (data && data.handle) { location.replace(`/${data.handle}#gestalten`); return; }
-    msg.innerHTML = 'Lege zuerst deine Karte an. <a class="text-link" href="/meine-karte">Zur Karte</a>';
-  } catch { msg.textContent = "Das hat gerade nicht geklappt. Bitte versuch es gleich noch einmal."; }
+    const res = await fetch(`${c.supabaseUrl}/rest/v1/rpc/get_my_card`, {
+      method: "POST", headers: { apikey: c.supabaseKey, Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, body: "{}", signal: AbortSignal.timeout(8000),
+    });
+    if (res.status === 401) return fail('Deine Anmeldung ist abgelaufen. <a class="text-link" href="/login">Neu anmelden</a>');
+    if (!res.ok) throw new Error(String(res.status));
+    const card = await res.json();
+    if (card && /^[a-z0-9][a-z0-9_-]{2,19}$/.test(card.handle || "")) { location.replace(`/${card.handle}#gestalten`); return; }
+    fail('Lege zuerst deine Karte an. <a class="text-link" href="/meine-karte">Zur Karte</a>');
+  } catch { fail('Das hat gerade nicht geklappt. <a class="text-link" href="/meine-seite">Noch einmal versuchen</a>'); }
 })();
 </script>
 </body>
