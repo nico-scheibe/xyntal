@@ -1119,6 +1119,7 @@ window.XYNTAL_EN = {
   "Willkommen bei": "Welcome to",
   "Einloggen oder Konto anlegen": "Sign in or create an account",
   "Passwort anzeigen": "Show password",
+  "Ziehen zum Verschieben": "Drag to move",
   "https://… oder Text, z. B. Username: nico": "https://… or text, e.g. Username: nico",
   "Adresse oder Text": "Address or text",
   "Text zum Kopieren": "Text to copy",

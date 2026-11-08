@@ -24,7 +24,8 @@
   // Statt einer Adresse darf auch Text stehen (z. B. „Username: nico“): der erscheint auf der Seite zum Kopieren
   const validEntry = (u) => { const v = String(u || "").trim(); return v.length > 0 && v.length <= 500; };
   // Eingabe ohne Schema („github.com/x“) wird zu https://
-  const normalize = (u) => { const v = String(u || "").trim(); return v && !/^[a-z][a-z0-9+.-]*:/i.test(v) && /^[^\s/]+\.[^\s/]+/.test(v) ? `https://${v}` : v; };
+  // Nur „https://…“ oder „http://…“ ist ein Link; „xyntal.de“ ohne Schema bleibt Text (wird nicht ergänzt)
+  const normalize = (u) => String(u || "").trim();
 
   // Kleine Symbole für die Werkzeuge einer Zeile
   const TOOL = {
@@ -34,6 +35,7 @@
     off: '<path d="M2.5 12s3.5-6 9.5-6c1.6 0 3 .4 4.3 1M21.5 12s-3.5 6-9.5 6c-1.6 0-3-.4-4.3-1M4 4l16 16"/>',
     del: '<path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13"/>',
     chev: '<path d="m7 10 5 5 5-5"/>',
+    grip: '<circle cx="9" cy="6" r="1.3"/><circle cx="15" cy="6" r="1.3"/><circle cx="9" cy="12" r="1.3"/><circle cx="15" cy="12" r="1.3"/><circle cx="9" cy="18" r="1.3"/><circle cx="15" cy="18" r="1.3"/>',
   };
   const tool = (k) => `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${TOOL[k]}</svg>`;
 
@@ -50,6 +52,7 @@
           ${r.url && !validUrl(normalize(r.url)) ? `<span class="le-kind">${esc(t("Text zum Kopieren"))}</span>` : ""}
         </div>
         <div class="le-tools">
+          <button type="button" class="le-btn le-grip" data-drag title="${esc(t("Ziehen zum Verschieben"))}" aria-label="${esc(t("Ziehen zum Verschieben"))}" tabindex="-1">${tool("grip")}</button>
           <button type="button" class="le-btn" data-act="up" title="${esc(t("Nach oben"))}" aria-label="${esc(t("Nach oben"))}"${i === 0 ? " disabled" : ""}>${tool("up")}</button>
           <button type="button" class="le-btn" data-act="down" title="${esc(t("Nach unten"))}" aria-label="${esc(t("Nach unten"))}"${i === rows.length - 1 ? " disabled" : ""}>${tool("down")}</button>
           <button type="button" class="le-btn" data-act="toggle" aria-pressed="${r.active ? "false" : "true"}" title="${esc(t(r.active ? "Ausblenden" : "Einblenden"))}" aria-label="${esc(t(r.active ? "Ausblenden" : "Einblenden"))}">${tool(r.active ? "on" : "off")}</button>
@@ -87,6 +90,56 @@
     if (validUrl(r.url) && (r.icon === "link" || r.iconAuto)) { r.icon = I.guess(r.url); r.iconAuto = true; }
     render();
   });
+  // Ziehen zum Sortieren: am Griff oder an einer freien Stelle der Zeile packen (Maus, Stift, Finger).
+  // Die Zeile folgt dem Zeiger, die anderen rücken nach; beim Loslassen gilt die neue Reihenfolge.
+  let drag = null;
+  list.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0 || busy) return;
+    const row = e.target.closest(".le-row");
+    if (!row) return;
+    const onGrip = e.target.closest("[data-drag]");
+    if (!onGrip && e.target.closest("input, select, button, label, a")) return;
+    e.preventDefault();
+    drag = { row, startY: e.clientY, offset: 0, moved: false, id: e.pointerId };
+    row.setPointerCapture(e.pointerId);
+  });
+  list.addEventListener("pointermove", (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    let dy = e.clientY - drag.startY;
+    if (!drag.moved) {
+      if (Math.abs(dy) < 4) return;
+      drag.moved = true;
+      drag.row.classList.add("is-dragging");
+      list.classList.add("is-sorting");
+    }
+    const row = drag.row;
+    const gap = parseFloat(getComputedStyle(list).rowGap) || 10;
+    // An einem Nachbarn vorbei: im DOM tauschen und den Versatz um dessen Höhe ausgleichen
+    const next = row.nextElementSibling, prev = row.previousElementSibling;
+    if (next && dy > next.offsetHeight / 2) {
+      next.after(row); drag.startY += next.offsetHeight + gap; dy = e.clientY - drag.startY;
+    } else if (prev && dy < -prev.offsetHeight / 2) {
+      prev.before(row); drag.startY -= prev.offsetHeight + gap; dy = e.clientY - drag.startY;
+    }
+    row.style.transform = `translateY(${dy}px)`;
+  });
+  const endDrag = (e) => {
+    if (!drag || (e && e.pointerId !== drag.id)) return;
+    const { row, moved } = drag;
+    drag = null;
+    row.classList.remove("is-dragging"); list.classList.remove("is-sorting");
+    row.style.transform = "";
+    if (!moved) return;
+    const order = [...list.children].map((li) => Number(li.dataset.i));
+    if (order.some((v, i) => v !== i)) {
+      rows = order.map((i) => rows[i]);
+      dirty = true;
+    }
+    render();
+  };
+  list.addEventListener("pointerup", endDrag);
+  list.addEventListener("pointercancel", endDrag);
+
   list.addEventListener("click", (e) => {
     const b = e.target.closest("[data-act]"), row = e.target.closest("[data-i]");
     if (!b || !row) return;
