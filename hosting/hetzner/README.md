@@ -62,6 +62,15 @@ Danach auf dem Server `chown -R 1000:1000 /opt/xyntal/data/api`.
 MX-, SPF-, DKIM- und DMARC-Einträge für IONOS-Mail bleiben unverändert.
 Den Tunnel `xyntal-daki` erst löschen, wenn alles auf dem neuen Server läuft.
 
+## Uploads der freien Seite (Bilder, Hintergrund-Videos)
+
+Admins laden im Seiten-Editor (xyntal.de/name#gestalten) nicht zu Supabase hoch (dort höchstens 50 MB je Datei),
+sondern über die Website (`hosting/daki/media-store.cjs`) in den Hetzner-Bucket: bis 5 GB je Datei, Ordner
+`page-media/<konto>/`, ausgeliefert unter `xyntal.de/media/<konto>/<datei>`.
+Den Zugang (`MEDIA_S3_*`) schreibt `deploy.sh` bei jedem Ausrollen aus `api.env` nach
+`/opt/xyntal/secrets/media.env`; die Website liest ihn von dort. Fehlt er, lädt der Editor wie bisher zu Supabase.
+Nicht mehr benutzte Dateien löscht der Editor nach dem Veröffentlichen selbst (älter als 1 Stunde).
+
 ## Alltag
 
 | Was | Befehl |

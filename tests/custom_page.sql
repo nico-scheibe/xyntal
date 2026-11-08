@@ -36,6 +36,7 @@ create function public.content_problem(p text) returns text language sql stable 
 \i supabase/migrations/20261108210000_page_pro.sql
 \i supabase/migrations/20261108210000_page_pro.sql
 \i supabase/migrations/20261108220000_page_media_admin.sql
+\i supabase/migrations/20261108230000_page_media_server.sql
 
 create trigger waitlist_cards_reserved_handle before insert or update of handle on public.waitlist_cards for each row execute function public.reject_page_handles();
 
@@ -119,6 +120,13 @@ do $$ begin
   begin insert into storage.objects(bucket_id,name) values ('page-media','00000000-0000-0000-0000-000000000001/x.exe'); raise exception 'bad name allowed'; exception when insufficient_privilege then null; end;
 end $$;
 
+-- Dateien vom eigenen Server (s/konto/datei): eigene erlaubt, fremde nicht
+do $$ begin
+  perform public.save_my_page('{"bgv":"s/00000000-0000-0000-0000-000000000001/55555555-5555-5555-5555-555555555555.mp4","bgvOwn":true,"items":[{"type":"image","src":"s/00000000-0000-0000-0000-000000000001/55555555-5555-5555-5555-555555555556.webp"}]}');
+  if not ('s/00000000-0000-0000-0000-000000000001/55555555-5555-5555-5555-555555555556.webp' = any(public.get_my_page_media_refs())) then raise exception 'server ref missing'; end if;
+  begin perform public.save_my_page('{"items":[{"type":"image","src":"s/00000000-0000-0000-0000-000000000002/55555555-5555-5555-5555-555555555556.webp"}]}'); raise exception 'foreign server image accepted'; exception when invalid_parameter_value then null; end;
+  begin perform public.save_my_page('{"items":[{"type":"image","src":"x/00000000-0000-0000-0000-000000000001/55555555-5555-5555-5555-555555555556.webp"}]}'); raise exception 'bad prefix accepted'; exception when invalid_parameter_value then null; end;
+end $$;
 -- Upload-Größe: normal Bild 3 MB / Video 15 MB, Admins ohne Grenze
 do $$ begin
   insert into storage.objects(bucket_id,name,metadata) values ('page-media','00000000-0000-0000-0000-000000000001/44444444-4444-4444-4444-444444444441.mp4','{"size":15000000}');

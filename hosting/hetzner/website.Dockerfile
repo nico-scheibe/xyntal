@@ -5,6 +5,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends git ca-certific
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /srv/site
 COPY hosting/daki/server.cjs ./server.cjs
+COPY hosting/daki/media-store.cjs ./media-store.cjs
 RUN mkdir -p .deploy && chown -R node:node /srv/site
 USER node
 ENV NODE_ENV=production PORT=4129 TRUST_PROXY=1
