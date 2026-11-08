@@ -65,6 +65,18 @@
     type: ["Type", "Text"], spread: ["Spread", "Text"], glitch: ["Glitch", "Text"],
   };
   const HOVER_TYPES = ["link", "button", "icons", "text", "image", "shape", "block"];
+  // Welche Effekte wo wirken (geprüft mit tests/hover-audit.cjs): Schrift-Effekte nur bei Elementen mit Schrift,
+  // Licht-/Flächen-Effekte (Pseudo-Elemente) nicht bei Bildern und nicht bei der Karte.
+  const TEXT_ONLY = ["type", "spread"];
+  const NO_IMAGE = ["shine", "fill", "reveal", "underline", "borderflow", "spotlight"];
+  const NO_CARD = ["shine", "fill", "reveal", "underline"];
+  function hoverFits(key, type, kind) {
+    if (!HOVERS[key] || !HOVER_TYPES.includes(type)) return false;
+    if (TEXT_ONLY.includes(key)) return type === "text" || type === "link" || type === "button";
+    if (type === "image" && NO_IMAGE.includes(key)) return false;
+    if (type === "block" && kind === "card" && NO_CARD.includes(key)) return false;
+    return true;
+  }
   // Overlays für die ganze Seite: „back“ liegt hinter allen Elementen, „top“ darüber (klickt nicht mit)
   const OVERLAYS = {
     particles: ["Partikel", "back"], network: ["Netz", "back"], aurora: ["Aurora", "back"], stars: ["Sterne", "back"], grid: ["Raster", "back"], dots: ["Punkte", "back"],
@@ -255,7 +267,7 @@
       o: round(num(raw.o, 0.1, 1, 1)),
       rot: round(num(raw.rot, -360, 360, 0)),
       anim: cleanAnim(raw.anim),
-      hover: HOVERS[raw.hover] && HOVER_TYPES.includes(raw.type) ? raw.hover : "",
+      hover: hoverFits(raw.hover, raw.type, raw.kind) ? raw.hover : "",
       radius: round(num(raw.radius, 0, 999, d.radius)),
       // Rahmen und Schatten (alle außer Profil-Bausteinen)
       bw: round(num(raw.bw, 0, 16, 0)), bc: hex(raw.bc, "#eceae4"), sh: raw.sh === true,
@@ -587,5 +599,5 @@
   }
   function zoomOf(it, pw) { return `calc(var(--k, 1) * ${it.w} / ${natOf(it.kind, pw)})`; }
 
-  window.XyntalPageCanvas = { TEXT_FX, PARALLAX, CURSORS, CURSOR_EMOJI, OVERLAYS, HOVERS, HOVER_TYPES, ANIMS, TRIGGERS, cleanAnim, compileAnim, EMBEDS, parseEmbed, BLOCKS, NARROW, WIDE, FULL, WIDTHS, natOf, mount, zoomOf, W, MIN_H, MAX_H, DEFAULTS, normalize, html, itemHtml, background, hex, num, round, esc, safeUrl };
+  window.XyntalPageCanvas = { hoverFits, TEXT_FX, PARALLAX, CURSORS, CURSOR_EMOJI, OVERLAYS, HOVERS, HOVER_TYPES, ANIMS, TRIGGERS, cleanAnim, compileAnim, EMBEDS, parseEmbed, BLOCKS, NARROW, WIDE, FULL, WIDTHS, natOf, mount, zoomOf, W, MIN_H, MAX_H, DEFAULTS, normalize, html, itemHtml, background, hex, num, round, esc, safeUrl };
 })();
