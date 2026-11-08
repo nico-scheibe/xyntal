@@ -2,6 +2,6 @@
 // geschützt werden die Daten durch die Row-Level-Security-Regeln in supabase/schema.sql.
 // Niemals den "secret" / "service_role" Key hier eintragen!
 window.XYNTAL_CONFIG = {
-  supabaseUrl: "https://rralgrlujoupprwlvoyo.supabase.co",
-  supabaseKey: "sb_publishable_YxSngs1ePBoxqI6f26GRww_2_kNaLfh",
+  supabaseUrl: "https://db.xyntal.de",
+  supabaseKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzk0MTc3MzEwLCJleHAiOjE5NTE4NTczMTB9.1H1nAG_eqZLMIsCvkNDqdCGDluTM0p3zhdx5aWLvToQ",
 };

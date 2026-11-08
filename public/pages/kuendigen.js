@@ -13,7 +13,7 @@
 
   // Angemeldet auf der Website: Name und E-Mail vorausfüllen
   try {
-    const ses = JSON.parse(localStorage.getItem("sb-rralgrlujoupprwlvoyo-auth-token") || "null");
+    const ses = JSON.parse(localStorage.getItem("sb-db-auth-token") || "null");
     const user = ses?.user;
     if (user?.email) form.email.value = user.email;
     const name = user?.user_metadata?.full_name || user?.user_metadata?.name;

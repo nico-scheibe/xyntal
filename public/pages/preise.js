@@ -13,7 +13,7 @@
   let packCredits = [];
   let cycle = "month";
   let signedIn = false;
-  try { signedIn = !!localStorage.getItem("sb-rralgrlujoupprwlvoyo-auth-token"); } catch { /* privat */ }
+  try { signedIn = !!localStorage.getItem("sb-db-auth-token"); } catch { /* privat */ }
 
   const euro = (cents) => (cents / 100).toLocaleString(en() ? "en-GB" : "de-DE", { minimumFractionDigits: cents % 100 ? 2 : 0, maximumFractionDigits: 2 }) + " €";
   const bytes = (n) => (n >= 1024 ** 3 ? `${Math.round(n / 1024 ** 3)} GB` : `${Math.round(n / 1024 ** 2)} MB`);

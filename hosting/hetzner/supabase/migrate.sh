@@ -23,6 +23,7 @@ set -eu
 
 BASE=/opt/xyntal
 DIR="$BASE/supabase"
+HERE="$(cd "$(dirname "$0")" && pwd)"
 WORK="$BASE/migration"
 CLOUD="$BASE/secrets/supabase-cloud.env"
 CLI_VERSION="${SUPABASE_CLI_VERSION:-2.122.1}"
@@ -71,13 +72,16 @@ dump)
     supabase db dump --db-url "$url" -f data.sql --use-copy --data-only
     # Postgres-17-Einstellung, die ältere Versionen nicht kennen (laut Anleitung harmlos zu entfernen).
     sed -i 's/^SET transaction_timeout/-- &/' data.sql
-    ls -la roles.sql schema.sql data.sql
+    # Was `db dump` auslässt (Trigger auf auth-Tabellen, Storage-Zugriffsregeln), siehe extras-export.sql.
+    docker run --rm -v "$HERE:/q:ro" postgres:17-alpine psql "$url" -X -v ON_ERROR_STOP=1 -q -f /q/extras-export.sql > extras.sql
+    echo "Zusätze: $(grep -c '^create trigger\|^CREATE TRIGGER' extras.sql) Trigger, $(grep -c '^create policy' extras.sql) Storage-Regeln"
+    ls -la roles.sql schema.sql data.sql extras.sql
     echo "Export fertig in $WORK."
     ;;
 restore)
-    for f in roles.sql schema.sql data.sql; do [ -s "$f" ] || die "$WORK/$f fehlt – zuerst: migrate.sh dump"; done
+    for f in roles.sql schema.sql data.sql extras.sql; do [ -s "$f" ] || die "$WORK/$f fehlt – zuerst: migrate.sh dump"; done
     echo "→ Import in die eigene Datenbank (eine Transaktion: klappt alles oder nichts)"
-    { cat roles.sql schema.sql; echo "SET session_replication_role = replica;"; cat data.sql; } \
+    { cat roles.sql schema.sql; echo "SET session_replication_role = replica;"; cat data.sql; echo "SET session_replication_role = origin;"; cat extras.sql; } \
         | local_psql --single-transaction --variable ON_ERROR_STOP=1 --quiet --output /dev/null
     echo "→ PostgREST neu laden"
     local_psql -c "NOTIFY pgrst, 'reload schema';" >/dev/null

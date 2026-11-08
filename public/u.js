@@ -9,8 +9,8 @@
     "karte", "login", "logout", "mail", "meine-karte", "mitglieder", "mitglied-werden", "nachrichten", "news", "passwort-neu",
     "preise", "pricing", "profil", "projekte", "register", "settings", "signup", "support", "team", "warteliste", "www",
     "xyntal", "invite", "boerse", "community", "events"]);
-  const SUPA = "https://rralgrlujoupprwlvoyo.supabase.co";
-  const KEY = "sb_publishable_YxSngs1ePBoxqI6f26GRww_2_kNaLfh";
+  const SUPA = "https://db.xyntal.de";
+  const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzk0MTc3MzEwLCJleHAiOjE5NTE4NTczMTB9.1H1nAG_eqZLMIsCvkNDqdCGDluTM0p3zhdx5aWLvToQ";
 
   // Name aus /name, /u#name oder /u?name=…
   let handle = location.pathname.replace(/^\/+|\/+$/g, "");
@@ -25,12 +25,12 @@
   // Gültiges Token mitschicken, damit die Datenbank weiß, wer fragt („Nachricht schreiben“, eigene Seite erkennen)
   const readMe = () => {
     try {
-      const ses = JSON.parse(localStorage.getItem("sb-rralgrlujoupprwlvoyo-auth-token") || "null");
+      const ses = JSON.parse(localStorage.getItem("sb-db-auth-token") || "null");
       if (ses?.access_token && (!ses.expires_at || ses.expires_at * 1000 > Date.now() + 30000)) return { id: ses.user?.id, token: ses.access_token };
       return ses && ses.refresh_token ? "stale" : null;
     } catch { return null; }
   };
-  try { member = !!localStorage.getItem("sb-rralgrlujoupprwlvoyo-auth-token"); } catch { /* privat */ }
+  try { member = !!localStorage.getItem("sb-db-auth-token"); } catch { /* privat */ }
   { const r = readMe(); if (r === "stale") staleSession = true; else me = r; }
   const UUID = /^[0-9a-f-]{36}$/;
   const ctas = (primary) => `<div class="profile-actions">${primary}${member

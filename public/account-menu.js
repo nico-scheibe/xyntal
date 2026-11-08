@@ -2,10 +2,9 @@
 // Läuft auf allen Seiten – auch auf denen ohne Supabase-Bibliothek. Ob jemand angemeldet ist,
 // steht in der Supabase-Sitzung im localStorage; Name und Foto kommen, wenn möglich, aus dem Profil.
 (() => {
-  const REF = "rralgrlujoupprwlvoyo";
-  const URL_ = `https://${REF}.supabase.co`;
-  const KEY = "sb_publishable_YxSngs1ePBoxqI6f26GRww_2_kNaLfh";
-  const TOKEN = `sb-${REF}-auth-token`;
+  const URL_ = "https://db.xyntal.de";
+  const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzk0MTc3MzEwLCJleHAiOjE5NTE4NTczMTB9.1H1nAG_eqZLMIsCvkNDqdCGDluTM0p3zhdx5aWLvToQ";
+  const TOKEN = "sb-db-auth-token";
 
   // Rückkehr von Google & Co. auf einer Seite ohne Supabase (z. B. Startseite):
   // weiter zum Login, der die Sitzung aus der Adresse übernimmt bzw. den Fehler zeigt.

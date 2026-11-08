@@ -117,8 +117,7 @@
   // Angemeldet? Die Supabase-Sitzung liegt im localStorage – dafür muss die große Bibliothek nicht laden.
   // Angemeldete landen bei „Projekt starten“ direkt bei ihren Vorschlägen statt in der Anmeldung.
   try {
-    const ref = "rralgrlujoupprwlvoyo";
-    if (localStorage.getItem(`sb-${ref}-auth-token`)) {
+    if (localStorage.getItem("sb-db-auth-token")) {
       const slot = $("[data-account]");
       if (slot) { slot.textContent = "Mein Profil"; slot.href = "profil"; }
       $$("[data-start]").forEach((a) => { a.href = "fuer-dich"; });
@@ -695,8 +694,8 @@
      Warteliste: Brevo mit Double-Opt-in, Eingabe bleibt auf der Seite
      --------------------------------------------------------------- */
   const WAITLIST_URL = "https://67406864.sibforms.com/serve/MUIFAP_vKT3wGvb_oCMmNCfxk9r4kS47ziUcgIjOp7ibD-hlikkWAA_l-Wo4pedNGsTJEc-yCsM1TIj41aX0dzDASKRcDC_ZxNn9envMBdU_zWmo7HHDj-FKtvyCz63RuFRQHleImiTRDarw8DCC1sKXSfU6F-RoppW0XftCBPzMdF-ch3vutYeokCLF5_Fzn5uooz6XScdhsGQS2w==?isAjax=1";
-  const SUPA = "https://rralgrlujoupprwlvoyo.supabase.co";
-  const SUPA_KEY = "sb_publishable_YxSngs1ePBoxqI6f26GRww_2_kNaLfh";
+  const SUPA = "https://db.xyntal.de";
+  const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzk0MTc3MzEwLCJleHAiOjE5NTE4NTczMTB9.1H1nAG_eqZLMIsCvkNDqdCGDluTM0p3zhdx5aWLvToQ";
   const rpc = (fn, args) => fetch(`${SUPA}/rest/v1/rpc/${fn}`, {
     method: "POST",
     headers: { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}`, "Content-Type": "application/json" },

@@ -15,7 +15,7 @@
   let signedIn = false;
   let session = null;
   try {
-    session = JSON.parse(localStorage.getItem("sb-rralgrlujoupprwlvoyo-auth-token") || "null");
+    session = JSON.parse(localStorage.getItem("sb-db-auth-token") || "null");
     signedIn = !!session;
   } catch { /* privat */ }
   // Den Download sehen nur Beta-Tester (profiles.is_beta_tester – dieselbe Regel wie die

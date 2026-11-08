@@ -2,8 +2,8 @@
 // zur Registrierung. Der Name wird gemerkt (xyntal-ref-handle); eingelöst wird er in account-menu.js, sobald das
 // neue Konto die E-Mail bestätigt hat. Eingeloggte Konten brauchen keine Einladung.
 (() => {
-  const SUPA = "https://rralgrlujoupprwlvoyo.supabase.co";
-  const KEY = "sb_publishable_YxSngs1ePBoxqI6f26GRww_2_kNaLfh";
+  const SUPA = "https://db.xyntal.de";
+  const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzk0MTc3MzEwLCJleHAiOjE5NTE4NTczMTB9.1H1nAG_eqZLMIsCvkNDqdCGDluTM0p3zhdx5aWLvToQ";
   const $ = (s) => document.querySelector(s);
   const t = (de) => (window.XyntalI18n ? window.XyntalI18n.t(de) : de);
   const m = location.pathname.toLowerCase().match(/^\/([a-z0-9][a-z0-9_-]{2,19})\/invite\/?$/);
@@ -12,7 +12,7 @@
   const set = (el, de) => { el.textContent = t(de); };
 
   let member = false;
-  try { member = !!localStorage.getItem("sb-rralgrlujoupprwlvoyo-auth-token"); } catch { /* privat */ }
+  try { member = !!localStorage.getItem("sb-db-auth-token"); } catch { /* privat */ }
 
   function invalid() {
     set(eyebrow, "Einladung");

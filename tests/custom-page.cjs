@@ -48,7 +48,7 @@ const stub = `window.supabase = { createClient: () => ({
   });
 
   // 1. Editor öffnet direkt auf der eigenen Seite (xyntal.de/name#gestalten)
-  await pg.addInitScript(([uid]) => localStorage.setItem('sb-rralgrlujoupprwlvoyo-auth-token', JSON.stringify({ access_token: 'x', expires_at: 9999999999, user: { id: uid } })), [UID]);
+  await pg.addInitScript(([uid]) => localStorage.setItem('sb-db-auth-token', JSON.stringify({ access_token: 'x', expires_at: 9999999999, user: { id: uid } })), [UID]);
   await pg.route('**/rest/v1/rpc/get_public_card', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ ...card, page: saved, design: {} }) }));
   await pg.goto(`${base}/nico#gestalten`);
   await pg.waitForSelector('.pc-item');

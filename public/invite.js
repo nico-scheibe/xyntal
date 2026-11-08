@@ -2,15 +2,15 @@
 // Füllt jedes [data-invite]: eingeloggt mit Wunsch-Link zeigt es den Link und den Stand, sonst (nur data-invite="always"
 // oder nach dem Eintragen auf der Startseite) den Hinweis, ein Konto anzulegen. Eingelöst wird in account-menu.js.
 (() => {
-  const SUPA = "https://rralgrlujoupprwlvoyo.supabase.co";
-  const KEY = "sb_publishable_YxSngs1ePBoxqI6f26GRww_2_kNaLfh";
+  const SUPA = "https://db.xyntal.de";
+  const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzk0MTc3MzEwLCJleHAiOjE5NTE4NTczMTB9.1H1nAG_eqZLMIsCvkNDqdCGDluTM0p3zhdx5aWLvToQ";
   const t = (de) => (window.XyntalI18n ? window.XyntalI18n.t(de) : de);
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const ICON = '<span class="lp-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 12v8H4v-8M2 7h20v5H2zM12 22V7M12 7H8a2.5 2.5 0 1 1 0-5c3 0 4 5 4 5zM12 7h4a2.5 2.5 0 1 0 0-5c-3 0-4 5-4 5z"/></svg></span>';
 
   function session() {
     try {
-      const s = JSON.parse(localStorage.getItem("sb-rralgrlujoupprwlvoyo-auth-token") || "null");
+      const s = JSON.parse(localStorage.getItem("sb-db-auth-token") || "null");
       if (s?.access_token && (!s.expires_at || s.expires_at * 1000 > Date.now() + 30000)) return { jwt: s.access_token, uid: s.user?.id || "" };
     } catch { /* privat */ }
     return null;
