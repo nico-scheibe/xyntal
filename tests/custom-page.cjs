@@ -93,6 +93,11 @@ const stub = `window.supabase = { createClient: () => ({
   assert.ok(Math.abs(rot - 90) < 3, 'Griff nach rechts = 90°, war ' + rot);
   // 3. Rückgängig
   await pg.keyboard.press('Escape');
+  // 3a. Overlays der Seite
+  await pg.click('[data-add="bg"]'); await pg.click('[data-ov="aurora"]'); await pg.click('[data-ov="grain"]');
+  assert.equal(await pg.locator('.pc > .pc-ov-aurora').count(), 1, 'Aurora hinter den Elementen');
+  assert.equal(await pg.locator('.pc > .pc-ov-grain').count(), 1, 'Körnung über den Elementen');
+  await pg.click('[data-add="bg"]');
   // 3b. Menü „+ Mehr“: Vorlagen, Formen, Knopf, Link-Symbole, Video
   const before = await pg.locator('.pc-item').count();
   for (const key of ['heading', 'quote', 'sticker', 'badge', 'card', 'rect', 'circle', 'line', 'glow', 'button', 'icons']) {
@@ -158,6 +163,7 @@ const stub = `window.supabase = { createClient: () => ({
   assert.equal(await pub.locator('.pc-embed iframe').count(), 1, 'Video öffentlich');
   assert.ok(saved.items.some((i) => i.type === 'embed' && i.own === true), 'Bestätigung gespeichert');
   assert.equal(await pub.locator('.pc-item[data-anim="float"]').count(), 1, 'Animation öffentlich');
+  assert.equal(await pub.locator('.pc > .pc-ov-aurora, .pc > .pc-ov-grain').count(), 2, 'Overlays öffentlich');
   const btn = pub.locator('.pc-item[data-hover="tilt"] a.pc-btn');
   const tf0 = await btn.evaluate((el) => getComputedStyle(el).transform);
   await btn.hover({ force: true }); await pub.waitForTimeout(400);

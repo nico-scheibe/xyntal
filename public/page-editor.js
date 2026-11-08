@@ -100,7 +100,9 @@
       }
     }
     // Hintergrund, Höhe, Anzahl: Fenster über der Werkzeugleiste
-    const bgPanel = () => `<h2>${esc(t("Hintergrund"))}</h2>
+    const bgPanel = () => `<h2>${esc(t("Overlays"))}</h2>
+      <div class="pe-tiles">${Object.entries(C.OVERLAYS).map(([k, v]) => `<button type="button" class="pe-tile${page.ov.includes(k) ? " is-on" : ""}" data-ov="${k}" aria-pressed="${page.ov.includes(k)}">${esc(t(v[0]))}</button>`).join("")}</div>
+      <h2>${esc(t("Hintergrund"))}</h2>
       <label class="pe-field"><span>${esc(t("Farbe"))}</span><input type="color" data-bg="color" value="${page.bg.color}"></label>
       <label class="pe-field"><span>${esc(t("Verlauf"))}</span><input type="checkbox" data-bg-gradient ${page.bg.color2 ? "checked" : ""}></label>
       ${page.bg.color2 ? `<label class="pe-field"><span>${esc(t("Zweite Farbe"))}</span><input type="color" data-bg="color2" value="${page.bg.color2}"></label>` : ""}
@@ -555,6 +557,10 @@
       else if (blk) { add("block", { kind: blk.dataset.block, w: C.natOf(blk.dataset.block, page.w) }); popName = ""; pop.hidden = true; }
       else if (e.target.closest("[data-reset]")) reset();
       else if (e.target.closest("[data-width]")) setWidth(Number(e.target.closest("[data-width]").dataset.width));
+      else if (e.target.closest("[data-ov]")) {
+        const k = e.target.closest("[data-ov]").dataset.ov;
+        touch(); page.ov = page.ov.includes(k) ? page.ov.filter((x) => x !== k) : [...page.ov, k]; drawAll();
+      }
     });
     pop.addEventListener("change", (e) => {
       if (e.target.matches("[data-embed-own]")) pop.querySelector("[data-embed-go]").disabled = !e.target.checked;

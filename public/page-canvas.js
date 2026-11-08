@@ -54,6 +54,11 @@
     spotlight: "Spotlight",
   };
   const HOVER_TYPES = ["link", "button", "icons", "text", "image", "shape"];
+  // Overlays für die ganze Seite: „back“ liegt hinter allen Elementen, „top“ darüber (klickt nicht mit)
+  const OVERLAYS = {
+    aurora: ["Aurora", "back"], stars: ["Sterne", "back"], grid: ["Raster", "back"], dots: ["Punkte", "back"],
+    grain: ["Körnung", "top"], vignette: ["Vignette", "top"], scan: ["Scanlines", "top"],
+  };
   // Leuchtfarbe: die hellere der beiden Farben des Elements, damit Leuchten/Ring auf dunklem Grund sichtbar sind
   const lum = (h) => { const n = parseInt(String(h || "").slice(1), 16); return Number.isFinite(n) ? ((n >> 16) * 299 + ((n >> 8) & 255) * 587 + (n & 255) * 114) / 1000 : 0; };
   const glowOf = (it) => { const a = it.bg || "", b = it.color || ""; return (lum(a) >= lum(b) ? a : b) || "#eceae4"; };
@@ -294,7 +299,8 @@
       seen.add(it.id);
       return it;
     });
-    return { v: 1, w: WIDTHS.includes(p.w) ? p.w : NARROW, h: Math.round(num(p.h, MIN_H, MAX_H, 640)), bg: { color: hex(bg.color, "#1c1c1c"), color2: hex(bg.color2, "") }, items };
+    const ov = [...new Set((Array.isArray(p.ov) ? p.ov : []).filter((k) => OVERLAYS[k]))].slice(0, 7);
+    return { v: 1, w: WIDTHS.includes(p.w) ? p.w : NARROW, h: Math.round(num(p.h, MIN_H, MAX_H, 640)), bg: { color: hex(bg.color, "#1c1c1c"), color2: hex(bg.color2, "") }, ov, items };
   }
 
   const u = (n, pw = NARROW) => `calc(${round(n)} * 100cqw / ${pw})`;
@@ -382,7 +388,8 @@
         .replace('style="', `style="--ad:${a.d}s;--adl:${a.dl}s;--ai:${a.loop ? "infinite" : 1}${name};`);
     }).join("");
     const style = keyframes.length ? `<style>${keyframes.join("")}</style>` : "";
-    return `<div class="pc-wrap${full ? " is-full" : ""}"${p.w === WIDE ? ' style="max-width:1080px"' : ""}><div class="pc${o.edit ? " is-edit" : ""}${wide ? " is-wide" : ""}" data-w="${p.w}" style="aspect-ratio:${p.w} / ${p.h};background:${background(p.bg)}">${style}${items}</div></div>`;
+    const layer = (where) => p.ov.filter((k) => OVERLAYS[k][1] === where).map((k) => `<div class="pc-ov pc-ov-${k}" aria-hidden="true"></div>`).join("");
+    return `<div class="pc-wrap${full ? " is-full" : ""}"${p.w === WIDE ? ' style="max-width:1080px"' : ""}><div class="pc${o.edit ? " is-edit" : ""}${wide ? " is-wide" : ""}" data-w="${p.w}" style="aspect-ratio:${p.w} / ${p.h};background:${background(p.bg)}">${style}${layer("back")}${items}${layer("top")}</div></div>`;
   }
 
   // --k = Pixel je Einheit, damit Bausteine (feste Pixelgröße) mit der Fläche mitskalieren
@@ -418,5 +425,5 @@
   }
   function zoomOf(it, pw) { return `calc(var(--k, 1) * ${it.w} / ${natOf(it.kind, pw)})`; }
 
-  window.XyntalPageCanvas = { HOVERS, HOVER_TYPES, ANIMS, TRIGGERS, cleanAnim, compileAnim, EMBEDS, parseEmbed, BLOCKS, NARROW, WIDE, FULL, WIDTHS, natOf, mount, zoomOf, W, MIN_H, MAX_H, DEFAULTS, normalize, html, itemHtml, background, hex, num, round, esc, safeUrl };
+  window.XyntalPageCanvas = { OVERLAYS, HOVERS, HOVER_TYPES, ANIMS, TRIGGERS, cleanAnim, compileAnim, EMBEDS, parseEmbed, BLOCKS, NARROW, WIDE, FULL, WIDTHS, natOf, mount, zoomOf, W, MIN_H, MAX_H, DEFAULTS, normalize, html, itemHtml, background, hex, num, round, esc, safeUrl };
 })();
