@@ -22,7 +22,7 @@
   let busy = false;
 
   const css = document.createElement("link");
-  css.rel = "stylesheet"; css.href = "/site-chat.css?v=2";
+  css.rel = "stylesheet"; css.href = "/site-chat.css?v=3";
   document.head.append(css);
 
   const root = document.createElement("div");
@@ -48,11 +48,37 @@
   // Die Xyntal-Marke: Sechseck mit Auge (atmet, blinzelt; läuft ein Bogen, während der Assistent antwortet).
   const ORB = '<span class="sc-orb" aria-hidden="true"><svg viewBox="0 0 48 48"><polygon class="sc-orb-hex" points="24,3.5 41.8,13.75 41.8,34.25 24,44.5 6.2,34.25 6.2,13.75"/><polygon class="sc-orb-sweep" points="24,3.5 41.8,13.75 41.8,34.25 24,44.5 6.2,34.25 6.2,13.75" pathLength="100"/><ellipse class="sc-orb-eye" cx="24" cy="24" rx="6.5" ry="6.5"/></svg></span>';
 
+  // 3D-Kern im Chat-Kopf: three.js und der Kern werden erst beim ersten Öffnen geladen (nicht auf jeder Seite).
+  // Ohne WebGL, bei reduzierter Bewegung oder wenn das Laden scheitert, bleibt die flache SVG-Marke stehen.
+  let core = null, coreLoading = false, speakTimer = 0;
+  const loadScript = (src) => new Promise((ok, fail) => {
+    const el = document.createElement("script");
+    el.src = src; el.onload = ok; el.onerror = fail; document.head.append(el);
+  });
+  const coreState = () => core && core.setState(busy ? "think" : speakTimer ? "speak" : "idle");
+  async function mountCore() {
+    const slot = root.querySelector("#sc-core");
+    if (!slot || coreLoading) return;
+    if (core) { core.setActive(true); return; }
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    coreLoading = true;
+    try {
+      if (!window.THREE) await loadScript("/vendor/three.min.js?v=2");
+      if (!window.XyntalCore) await loadScript("/xyntal-core.js?v=2");
+      const canvas = document.createElement("canvas");
+      canvas.className = "sc-core-canvas";
+      const api3d = window.XyntalCore.mount(canvas);
+      if (api3d && root.contains(slot)) { slot.replaceChildren(canvas); core = api3d; core.setActive(!root.querySelector(".sc-panel").hidden); coreState(); }
+      else if (api3d) api3d.destroy();
+    } catch { /* bleibt bei der SVG-Marke */ }
+    coreLoading = false;
+  }
+
   function renderShell() {
     root.innerHTML = `
       <button type="button" class="sc-open" aria-expanded="false" aria-controls="sc-panel">${ORB}${T("Fragen zu Xyntal?", "Questions about Xyntal?")}</button>
       <section class="sc-panel" id="sc-panel" role="dialog" aria-modal="false" aria-labelledby="sc-title" hidden>
-        <header class="sc-head"><div class="sc-id">${ORB}<div><p class="sc-mono">${T("KI-Assistent · Beta", "AI assistant · beta")}</p><h2 id="sc-title">${T("Xyntal-Assistent", "Xyntal assistant")}</h2></div></div>
+        <header class="sc-head"><div class="sc-id"><span class="sc-core" id="sc-core">${ORB}</span><div><p class="sc-mono">${T("KI-Assistent · Beta", "AI assistant · beta")}</p><h2 id="sc-title">${T("Xyntal-Assistent", "Xyntal assistant")}</h2></div></div>
           <div class="sc-head-act"><button type="button" class="sc-icon" data-sc="clear" aria-label="${T("Gespräch löschen", "Clear conversation")}" title="${T("Gespräch löschen", "Clear conversation")}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button><button type="button" class="sc-icon" data-sc="close" aria-label="${T("Schließen", "Close")}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div></header>
         <ol class="sc-log" aria-live="polite"></ol>
         <form class="sc-form"><label class="sc-sr" for="sc-input">${T("Deine Frage", "Your question")}</label><textarea id="sc-input" rows="1" maxlength="800" placeholder="${T("Frag etwas zu Xyntal …", "Ask anything about Xyntal …")}"></textarea><button type="submit" class="sc-send">${T("Senden", "Send")}</button></form>
@@ -62,6 +88,7 @@
 
   function renderLog() {
     root.classList.toggle("is-busy", busy);
+    coreState();
     const log = root.querySelector(".sc-log");
     if (!log) return;
     const intro = `<li class="sc-msg sc-bot"><p>${T("Hallo! Ich beantworte Fragen zu Xyntal, helfe dir, den passenden Tarif zu finden, und sage dir, wo du bei Problemen Hilfe bekommst.", "Hi! I answer questions about Xyntal, help you find the right plan and tell you where to get help with problems.")}</p></li>`;
@@ -91,7 +118,10 @@
     } catch {
       msgs.push({ role: "assistant", error: true, text: T("Keine Verbindung. Prüf dein Internet oder schreib an admin@xyntal.com.", "No connection. Check your internet or write to admin@xyntal.com.") });
     }
-    busy = false; save(); renderLog();
+    busy = false; save();
+    clearTimeout(speakTimer);
+    speakTimer = setTimeout(() => { speakTimer = 0; coreState(); }, 2800);
+    renderLog();
     root.querySelector("#sc-input")?.focus();
   }
 
@@ -102,7 +132,7 @@
     panel.hidden = !open;
     btn.setAttribute("aria-expanded", String(open));
     root.classList.toggle("is-open", open);
-    if (open) { renderLog(); root.querySelector("#sc-input").focus(); } else btn.focus();
+    if (open) { renderLog(); root.querySelector("#sc-input").focus(); mountCore(); } else { btn.focus(); if (core) core.setActive(false); }
   };
 
   root.addEventListener("click", (e) => {
@@ -119,7 +149,7 @@
     if (e.target.id === "sc-input" && e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); ask(e.target.value); }
     if (e.key === "Escape" && !root.querySelector(".sc-panel").hidden) setOpen(false);
   });
-  document.addEventListener("xyntal:lang", () => { const open = !root.querySelector(".sc-panel")?.hidden; renderShell(); if (open) setOpen(true); });
+  document.addEventListener("xyntal:lang", () => { const open = !root.querySelector(".sc-panel")?.hidden; if (core) { core.destroy(); core = null; } renderShell(); if (open) setOpen(true); });
 
   renderShell();
 })();

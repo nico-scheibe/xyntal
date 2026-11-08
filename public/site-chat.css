@@ -80,3 +80,8 @@
 }
 @media (prefers-reduced-motion: reduce) { .sc-typing span { animation: none; } }
 @media print { .sc { display: none; } }
+
+/* 3D-Kern im Chat-Kopf (ersetzt die SVG-Marke, sobald three.js geladen ist) */
+.sc-core { display: block; width: 76px; height: 76px; margin: -8px -6px -8px -10px; flex: none; }
+.sc-core .sc-orb { width: 36px; height: 36px; margin: 20px; }
+.sc-core-canvas { display: block; width: 100%; height: 100%; }
