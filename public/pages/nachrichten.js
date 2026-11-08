@@ -669,12 +669,13 @@
           <div class="xm-row"><button type="button" class="btn btn-small btn-ghost" data-pick-image>${esc(t("Bild hochladen"))}</button>${PICTURE_OK.test(c.avatar || "") ? `<button type="button" class="btn btn-small btn-ghost" data-remove-image>${esc(t("Bild entfernen"))}</button>` : ""}<input type="file" accept="image/png,image/jpeg,image/webp" data-image-file hidden></div>
           <div class="xm-row"><button type="button" class="btn btn-small" data-edit-save>${esc(t("Speichern"))}</button><button type="button" class="btn btn-small btn-ghost" data-edit-cancel>${esc(t("Abbrechen"))}</button></div>
         </section>` : "";
-      const addPeople = can.invite ? `<section class="xc-add"><button type="button" class="btn btn-small btn-ghost" data-add-toggle>${esc(t(S.addingPeople ? "Fertig" : "Personen hinzufügen"))}</button>${S.addingPeople ? `<input type="search" data-add-q placeholder="${esc(t("Name eingeben …"))}" autocomplete="off" aria-label="${esc(t("Personen suchen"))}"><ul class="xc-results" data-add-results></ul>` : ""}</section>` : "";
+      // „+“ neben „Mitglieder“ öffnet die Suche direkt unter der Liste; dasselbe Zeichen dreht sich zum Schließen.
+      const addToggle = can.invite ? `<button type="button" class="xc-icon xc-add-toggle${S.addingPeople ? " is-open" : ""}" data-add-toggle aria-expanded="${S.addingPeople}" aria-label="${esc(t("Personen hinzufügen"))}" title="${esc(t("Personen hinzufügen"))}">${ICON.plus}</button>` : "";
+      const addPeople = can.invite && S.addingPeople ? `<div class="xc-add"><input type="search" data-add-q placeholder="${esc(t("Name eingeben …"))}" autocomplete="off" aria-label="${esc(t("Personen suchen"))}"><ul class="xc-results" data-add-results></ul></div>` : "";
       setInfo(`
         <div class="xc-info-head">${groupAvatar(c, "xc-av-xl")}<h2 data-no-i18n>${esc(c.title)}</h2><p>${esc(t("Gruppe"))} · ${r.members.length} ${esc(t("Mitglieder"))}</p>${c.description ? `<p class="xc-about" data-no-i18n>${esc(c.description)}</p>` : ""}${can.rename && !S.editGroup ? `<button type="button" class="btn btn-small btn-ghost" data-edit-open>${esc(t("Gruppe bearbeiten"))}</button>` : ""}</div>
         ${editForm}
-        <section><h3>${esc(t("Mitglieder"))}</h3><ul class="xc-members">${r.members.map(memberRow).join("")}</ul></section>
-        ${addPeople}
+        <section><div class="xc-sec-head"><h3>${esc(t("Mitglieder"))}</h3>${addToggle}</div><ul class="xc-members">${r.members.map(memberRow).join("")}</ul>${addPeople}</section>
         ${projects}
         <section><button type="button" class="btn btn-small btn-ghost" data-leave>${esc(t("Gruppe verlassen"))}</button></section>`);
       return;
