@@ -48,10 +48,14 @@
   };
   const TRIGGERS = ["load", "view", "hover"];
   // Hover-Effekte für Knöpfe, Links, Symbole, Fenster, Bilder und Formen (page-canvas.css; „tilt“ braucht mount)
+  // Namen bewusst immer englisch (wie in Design-Tools), unabhängig von der Seitensprache; [Name, Gruppe]
   const HOVERS = {
-    lift: "Anheben", pop: "Aufploppen", glow: "Leuchten", neon: "Neon", shine: "Glanz", fill: "Füllen",
-    ring: "Ring", outline: "Rahmen-Puls", rainbow: "Regenbogen", tilt: "3D-Kippen", shake: "Wackeln", blur: "Fokus",
-    spotlight: "Spotlight",
+    lift: ["Lift", "Motion"], pop: ["Pop", "Motion"], pulse: ["Pulse", "Motion"], stretch: ["Stretch", "Motion"], jelly: ["Jelly", "Motion"],
+    shake: ["Shake", "Motion"], flip: ["Flip", "Motion"], tilt: ["Tilt 3D", "Motion"], magnet: ["Magnet", "Motion"],
+    glow: ["Glow", "Light"], neon: ["Neon", "Light"], shine: ["Shine", "Light"], spotlight: ["Spotlight", "Light"], rainbow: ["Rainbow", "Light"], blur: ["Focus", "Light"],
+    fill: ["Fill", "Fill & Border"], reveal: ["Reveal", "Fill & Border"], ring: ["Ring", "Fill & Border"], outline: ["Pulse Ring", "Fill & Border"],
+    borderflow: ["Border Flow", "Fill & Border"], underline: ["Underline", "Fill & Border"],
+    type: ["Type", "Text"], spread: ["Spread", "Text"], glitch: ["Glitch", "Text"],
   };
   const HOVER_TYPES = ["link", "button", "icons", "text", "image", "shape"];
   // Overlays für die ganze Seite: „back“ liegt hinter allen Elementen, „top“ darüber (klickt nicht mit)
@@ -410,16 +414,18 @@
       if (cv._tilt) return;
       cv._tilt = true;
       cv.addEventListener("pointermove", (e) => {
-        const item = e.target.closest && e.target.closest('.pc-item[data-hover="tilt"], .pc-item[data-hover="spotlight"]');
+        const item = e.target.closest && e.target.closest('.pc-item[data-hover="tilt"], .pc-item[data-hover="spotlight"], .pc-item[data-hover="reveal"], .pc-item[data-hover="magnet"]');
         if (!item) return;
         const box = item.querySelector(".pc-ib:hover") || item.firstElementChild, r = box.getBoundingClientRect();
         const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
         if (item.dataset.hover === "tilt") { box.style.setProperty("--rx", `${((0.5 - y) * 18).toFixed(1)}deg`); box.style.setProperty("--ry", `${((x - 0.5) * 22).toFixed(1)}deg`); }
+        // Magnet: das Element zieht ein Stück zur Maus
+        if (item.dataset.hover === "magnet") { box.style.setProperty("--tx", `${((x - 0.5) * r.width * 0.3).toFixed(1)}px`); box.style.setProperty("--ty", `${((y - 0.5) * r.height * 0.4).toFixed(1)}px`); }
         box.style.setProperty("--mx", `${(x * 100).toFixed(0)}%`); box.style.setProperty("--my", `${(y * 100).toFixed(0)}%`);
       });
       cv.addEventListener("pointerout", (e) => {
-        const item = e.target.closest && e.target.closest('.pc-item[data-hover="tilt"]');
-        if (item && !item.contains(e.relatedTarget)) item.querySelectorAll("*").forEach((el) => { el.style.removeProperty("--rx"); el.style.removeProperty("--ry"); });
+        const item = e.target.closest && e.target.closest('.pc-item[data-hover="tilt"], .pc-item[data-hover="magnet"]');
+        if (item && !item.contains(e.relatedTarget)) item.querySelectorAll("*").forEach((el) => { ["--rx", "--ry", "--tx", "--ty"].forEach((v) => el.style.removeProperty(v)); });
       });
     });
   }
