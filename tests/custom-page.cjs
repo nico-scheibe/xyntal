@@ -4,7 +4,9 @@ const assert = require('node:assert/strict');
 const { chromium } = require('playwright');
 const base = `http://localhost:${process.env.PORT || 4173}`;
 const UID = '00000000-0000-0000-0000-000000000001', LID = '11111111-1111-1111-1111-111111111111';
-const links = [{ id: LID, title: 'Portfolio', url: 'https://example.com', icon: 'globe', active: true, clicks: null }];
+const links = [{ id: LID, title: 'Portfolio', url: 'https://example.com', icon: 'globe', active: true, clicks: null },
+  { id: '11111111-1111-1111-1111-111111111112', title: 'GitHub', url: 'https://github.com/x', icon: 'github', active: true, clicks: null },
+  { id: '11111111-1111-1111-1111-111111111113', title: 'Discord', url: 'Username: nico', icon: 'discord', active: true, clicks: null }];
 const card = { handle: 'nico', name: 'Nico', role: 'Entwicklung', level: 'Fortgeschritten', skills: ['Qt', 'QML'], pitch: 'Ich baue Dinge', user_id: UID, links, design: {}, profile: { headline: 'Gründer von Xyntal', about: 'Ich baue Xyntal am Wochenende.', offer: 'Erfahrung', seek: 'Ein Team' } };
 let saved = null;
 
@@ -41,7 +43,30 @@ const stub = `window.supabase = { createClient: () => ({
   await pg.goto(`${base}/nico#gestalten`);
   await pg.waitForSelector('.pc-item');
   assert.ok(await pg.locator('.pc-item.pc-block').count() >= 5, 'Profil-Bausteine liegen als Elemente auf der Seite');
-  assert.equal(await pg.locator('.pc-item.pc-link').count(), 1, 'ein Link');
+  assert.equal(await pg.locator('.pc-item.pc-link').count(), 3, 'drei Links');
+  // Links verstreuen, dann am ersten anheften: alle genau untereinander, gleiche Breite
+  const lk = pg.locator('.pc-item.pc-link');
+  for (const [i, dx, dy] of [[1, 300, 40], [2, 520, -60]]) {
+    const bb = await lk.nth(i).boundingBox();
+    await pg.mouse.move(bb.x + 10, bb.y + 10); await pg.mouse.down(); await pg.mouse.move(bb.x + 10 + dx, bb.y + 10 + dy, { steps: 8 }); await pg.mouse.up();
+  }
+  await lk.nth(0).click();
+  await pg.click('[data-act="stack"]');
+  const boxes = await Promise.all([0, 1, 2].map((i) => lk.nth(i).boundingBox()));
+  boxes.sort((a, b) => a.y - b.y);
+  assert.ok(boxes.every((b) => Math.abs(b.x - boxes[0].x) < 1 && Math.abs(b.width - boxes[0].width) < 1), 'gleiche Kante und Breite');
+  const g1 = boxes[1].y - (boxes[0].y + boxes[0].height), g2 = boxes[2].y - (boxes[1].y + boxes[1].height);
+  assert.ok(g1 > 2 && Math.abs(g1 - g2) < 1, 'gleicher Abstand');
+  // Magnet: einen Link grob unter einen anderen ziehen – er rastet an der linken Kante ein
+  const a0 = await lk.nth(2).boundingBox(), t0 = boxes[0];
+  await pg.mouse.move(a0.x + 10, a0.y + 10); await pg.mouse.down();
+  await pg.mouse.move(a0.x + 10 + 200, a0.y + 10, { steps: 4 });
+  await pg.mouse.move(t0.x + 10 + 4, a0.y + 10, { steps: 4 });
+  assert.ok(await pg.locator('.pe-guide.is-v').count() >= 1, 'Hilfslinie sichtbar');
+  await pg.mouse.up();
+  const a1 = await lk.nth(2).boundingBox();
+  assert.ok(Math.abs(a1.x - t0.x) < 1, 'Kante eingerastet');
+  await pg.keyboard.press('Escape');
   const n0 = await pg.locator('.pc-item').count();
 
   // 2. Text hinzufügen, ziehen, Größe ändern
