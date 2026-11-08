@@ -798,6 +798,8 @@
     // von Supabase nicht. Ist er nicht eingerichtet (503), geht es wie bei allen anderen zu Supabase.
     const MIMES = { jpg: "image/jpeg", png: "image/png", webp: "image/webp", gif: "image/gif", mp4: "video/mp4", webm: "video/webm" };
     const SUPA_MAX = 50 * 1024 * 1024;
+    // In diesem Editor hochgeladen: darf beim Aufräumen sofort weg, wenn die veröffentlichte Seite es nicht mehr nutzt
+    const uploadedHere = new Set();
     async function uploadMedia(blob, ext, label) {
       const type = MIMES[ext];
       if (admin) {
@@ -812,7 +814,7 @@
           x.onerror = () => fail(new Error("network"));
           x.send(blob);
         });
-        if (res.status === 200 && /^s\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.[a-z0-9]{3,4}$/.test(res.body.path || "")) return res.body.path;
+        if (res.status === 200 && /^s\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.[a-z0-9]{3,4}$/.test(res.body.path || "")) { uploadedHere.add(res.body.path); return res.body.path; }
         if (res.status !== 503 && res.status !== 404) throw new Error(res.status === 413 ? "too large" : `server ${res.status}`);
         if (blob.size > SUPA_MAX) throw new Error("no server");
       }
@@ -820,6 +822,7 @@
       const path = `${uid}/${crypto.randomUUID()}.${ext}`;
       const { error } = await sb.storage.from("page-media").upload(path, blob, { contentType: type, upsert: false });
       if (error) throw error;
+      uploadedHere.add(path);
       return path;
     }
     function uploadError(err, fallback) {
@@ -914,14 +917,16 @@
       } catch { say(t("Zurücksetzen hat nicht geklappt."), "error"); } finally { busy = false; }
     }
     window.addEventListener("beforeunload", (e) => { if (dirty && !draftSaved) { e.preventDefault(); e.returnValue = ""; } });
-    // Hochgeladene Dateien, die weder Seite, Entwurf, Versionen noch der Verlauf hier benutzen, nach 1 Stunde löschen
+    // Nach dem Veröffentlichen: jede Datei löschen, die die Seite jetzt nicht mehr benutzt (ersetzte Videos und Bilder,
+    // entfernte Elemente). Ältere Versionen und der Rückgängig-Verlauf halten Dateien bewusst nicht mehr fest.
+    // Nur fremde, ganz frische Uploads (z. B. gerade in einem zweiten Tab) bleiben 10 Minuten verschont.
     async function cleanupMedia() {
       try {
-        const r = await sb.rpc("get_my_page_media_refs");
-        if (r.error || !uid) return;
-        const keep = new Set(Array.isArray(r.data) ? r.data : []);
-        [snap(), ...undo, ...redo].forEach((js) => { (js.match(/(?:s\/)?[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp|gif|mp4|webm)/g) || []).forEach((m) => keep.add(m)); });
-        const old = Date.now() - 36e5;
+        if (!uid) return;
+        const keep = new Set();
+        (snap().match(/(?:s\/)?[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp|gif|mp4|webm)/g) || []).forEach((m) => keep.add(m));
+        const recent = Date.now() - 6e5;
+        const old = (path, created) => uploadedHere.has(path) || new Date(created || Date.now()).getTime() < recent;
         // Eigener Server (nur Admins laden dorthin hoch)
         if (admin) {
           try {
@@ -930,14 +935,14 @@
             const r2 = await fetch("/api/page-media", { headers: auth });
             const list = r2.ok ? ((await r2.json()).files || []) : [];
             const gone2 = list.filter((f) => /^[0-9a-f-]{36}\.(jpg|png|webp|gif|mp4|webm)$/.test(f.name || "") && !keep.has(`s/${uid}/${f.name}`)
-              && new Date(f.created_at || Date.now()).getTime() < old).slice(0, 100);
+              && old(`s/${uid}/${f.name}`, f.created_at)).slice(0, 100);
             for (const f of gone2) await fetch(`/api/page-media/${f.name}`, { method: "DELETE", headers: auth });
           } catch { /* Server-Speicher optional */ }
         }
         const { data, error } = await sb.storage.from("page-media").list(uid, { limit: 1000 });
         if (error || !Array.isArray(data)) return;
         const gone = data.filter((f) => /^[0-9a-f-]{36}\.(jpg|png|webp|gif|mp4|webm)$/.test(f.name || "") && !keep.has(`${uid}/${f.name}`)
-          && new Date(f.created_at || Date.now()).getTime() < old).map((f) => `${uid}/${f.name}`);
+          && old(`${uid}/${f.name}`, f.created_at)).map((f) => `${uid}/${f.name}`);
         if (gone.length) await sb.storage.from("page-media").remove(gone.slice(0, 100));
       } catch { /* Aufräumen ist optional */ }
     }

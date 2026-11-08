@@ -69,7 +69,7 @@ sondern über die Website (`hosting/daki/media-store.cjs`) in den Hetzner-Bucket
 `page-media/<konto>/`, ausgeliefert unter `xyntal.de/media/<konto>/<datei>`.
 Den Zugang (`MEDIA_S3_*`) schreibt `deploy.sh` bei jedem Ausrollen aus `api.env` nach
 `/opt/xyntal/secrets/media.env`; die Website liest ihn von dort. Fehlt er, lädt der Editor wie bisher zu Supabase.
-Nicht mehr benutzte Dateien löscht der Editor nach dem Veröffentlichen selbst (älter als 1 Stunde).
+Ersetzte oder entfernte Dateien löscht der Editor direkt nach dem Veröffentlichen (auch wenn nur eine ältere Version sie noch nutzte); nur fremde Uploads der letzten 10 Minuten bleiben verschont.
 
 ## Alltag
 
