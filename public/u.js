@@ -88,10 +88,10 @@
     if (editing) return;
     editing = true;
     try {
-      const css = loadAsset("link", "href", "/page-canvas.css?v=4"), css2 = loadAsset("link", "href", "/page-editor.css?v=5");
+      const css = loadAsset("link", "href", "/page-canvas.css?v=5"), css2 = loadAsset("link", "href", "/page-editor.css?v=6");
       if (!window.supabase) await loadAsset("script", "src", "/vendor/supabase.js?v=31");
       await Promise.all([css, css2]);
-      await loadAsset("script", "src", "/page-editor.js?v=4");
+      await loadAsset("script", "src", "/page-editor.js?v=5");
       document.body.classList.remove("admin-profile");
       window.XyntalPageEditor.open(root, { card: shown, blocks: blockMap(shown), after: (host) => afterBlocks(host, shown), cardInfo: shown });
     } catch { editing = false; location.assign(location.pathname); }

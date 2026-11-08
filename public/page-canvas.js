@@ -2,7 +2,10 @@
 // Genutzt von u.js (öffentliche Seite) und page-editor.js (Editor), damit beide exakt dasselbe zeigen.
 // Alles, was aus der Datenbank kommt, wird hier auf erlaubte Werte begrenzt – Farben nur als #rrggbb, Bilder nur aus dem eigenen Ordner.
 (() => {
-  const W = 480;                       // Breite der Zeichenfläche in Einheiten; die Seite skaliert sie auf die echte Breite
+  // Breite der Zeichenfläche in Einheiten; die Seite skaliert sie auf die echte Breite.
+  // Schmal (480, ältere Seiten): eine Spalte. Breit (1080): ganze Seitenbreite, 1 Einheit = 1 px bei voller Breite;
+  // auf schmalen Bildschirmen stapelt page-canvas.css die Elemente einer breiten Seite untereinander.
+  const NARROW = 480, WIDE = 1080, W = NARROW;
   const MIN_H = 240, MAX_H = 4000;
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const num = (v, lo, hi, d) => { const n = Number(v); return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : d; };
@@ -12,8 +15,9 @@
   const SRC = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp|gif)$/;
   const UUID = /^[0-9a-f-]{36}$/;
   const TYPES = ["text", "link", "image", "block"];
-  // Bausteine der Profilseite: Inhalt liefert u.js aus dem Profil; hier nur Name, Anzeigename und natürliche Breite in px
-  const BLOCKS = { card: ["Karte", 360], head: ["Steckbrief", 440], about: ["Über mich", 440], offer: ["Ich biete", 340], seek: ["Ich suche", 340], skills: ["Skills", 440] };
+  // Bausteine der Profilseite: Inhalt liefert u.js aus dem Profil; hier Anzeigename und natürliche Breite in px (schmale / breite Seite)
+  const BLOCKS = { card: ["Karte", 360, 340], head: ["Steckbrief", 440, 620], about: ["Über mich", 440, 620], offer: ["Ich biete", 340, 300], seek: ["Ich suche", 340, 300], skills: ["Skills", 440, 620] };
+  const natOf = (kind, pw) => BLOCKS[kind][pw === WIDE ? 2 : 1];
   const safeUrl = (u) => (/^https?:\/\/[^\s]+$/i.test(u || "") ? u : "");
 
   const DEFAULTS = {
@@ -29,8 +33,8 @@
     const it = {
       id: /^[a-z0-9]{1,12}$/i.test(raw.id || "") ? raw.id : `i${i}`,
       type,
-      x: round(num(raw.x, -W, W * 2, 0)), y: round(num(raw.y, -MAX_H, MAX_H, 0)),
-      w: round(num(raw.w, 16, W * 2, d.w)), h: round(num(raw.h, 16, MAX_H, d.h)),
+      x: round(num(raw.x, -WIDE, WIDE * 2, 0)), y: round(num(raw.y, -MAX_H, MAX_H, 0)),
+      w: round(num(raw.w, 16, WIDE * 2, d.w)), h: round(num(raw.h, 16, MAX_H, d.h)),
       o: round(num(raw.o, 0.1, 1, 1)),
       rot: round(num(raw.rot, -360, 360, 0)),
       radius: round(num(raw.radius, 0, 200, d.radius)),
@@ -71,25 +75,28 @@
       seen.add(it.id);
       return it;
     });
-    return { v: 1, h: Math.round(num(p.h, MIN_H, MAX_H, 640)), bg: { color: hex(bg.color, "#1c1c1c"), color2: hex(bg.color2, "") }, items };
+    return { v: 1, w: p.w === WIDE ? WIDE : NARROW, h: Math.round(num(p.h, MIN_H, MAX_H, 640)), bg: { color: hex(bg.color, "#1c1c1c"), color2: hex(bg.color2, "") }, items };
   }
 
-  const u = (n) => `calc(${round(n)} * 100cqw / ${W})`;
+  const u = (n, pw = NARROW) => `calc(${round(n)} * 100cqw / ${pw})`;
   const background = (bg) => (bg.color2 ? `linear-gradient(160deg, ${bg.color}, ${bg.color2})` : bg.color);
 
   function itemHtml(it, links, o) {
-    const pos = `left:${u(it.x)};top:${u(it.y)};width:${u(it.w)};height:${u(it.h)};opacity:${it.o}${it.rot ? `;transform:rotate(${it.rot}deg)` : ""}`;
+    const pw = o.pw || NARROW, uu = (n) => u(n, pw);
+    // --ord: Reihenfolge, wenn eine breite Seite am Handy gestapelt wird (oben vor unten, links vor rechts)
+    const ord = Math.round(Math.max(0, it.y)) * 4000 + Math.round(it.x + WIDE);
+    const pos = `left:${uu(it.x)};top:${uu(it.y)};width:${uu(it.w)};height:${uu(it.h)};opacity:${it.o};--ord:${ord}${it.rot ? `;transform:rotate(${it.rot}deg)` : ""}`;
     const attrs = `class="pc-item pc-${it.type}" data-id="${esc(it.id)}" style="${pos}"`;
     if (it.type === "block") {
       // Höhe ergibt sich aus dem Inhalt; der Baustein wird mit seiner Breite skaliert (zoom, --k = Pixel je Einheit, gesetzt von mount)
       const inner = o.block ? o.block(it.kind) : "";
       if (!inner) return o.edit ? `<div class="pc-item pc-block is-empty" data-id="${esc(it.id)}" style="${pos.replace(/height:[^;]+;/, "")}"><div class="pc-blk-empty">${esc(BLOCKS[it.kind][0])}</div></div>` : "";
-      return `<div class="pc-item pc-block" data-id="${esc(it.id)}" data-kind="${it.kind}" style="${pos.replace(/height:[^;]+;/, "")}"><div class="pc-blk" style="width:${BLOCKS[it.kind][1]}px;zoom:calc(var(--k, 1) * ${it.w} / ${BLOCKS[it.kind][1]})">${inner}</div></div>`;
+      return `<div class="pc-item pc-block" data-id="${esc(it.id)}" data-kind="${it.kind}" style="${pos.replace(/height:[^;]+;/, "")}"><div class="pc-blk" style="width:${natOf(it.kind, pw)}px;zoom:${zoomOf(it, pw)}">${inner}</div></div>`;
     }
     if (it.type === "image") {
-      return `<div ${attrs}><img src="${esc(`${o.base}/storage/v1/object/public/page-media/${it.src}`)}" alt="${esc(it.alt)}" draggable="false" loading="lazy" decoding="async" style="object-fit:${it.fit};border-radius:${u(it.radius)}"></div>`;
+      return `<div ${attrs}><img src="${esc(`${o.base}/storage/v1/object/public/page-media/${it.src}`)}" alt="${esc(it.alt)}" draggable="false" loading="lazy" decoding="async" style="object-fit:${it.fit};border-radius:${uu(it.radius)}"></div>`;
     }
-    const box = `font-size:${u(it.size)};color:${it.color};${it.bg ? `background:${it.bg};` : ""}border-radius:${u(it.radius)}`;
+    const box = `--fs:${it.size};font-size:${uu(it.size)};color:${it.color};${it.bg ? `background:${it.bg};` : ""}border-radius:${uu(it.radius)}`;
     if (it.type === "text") {
       return `<div ${attrs}><div class="pc-t${it.bg ? " has-bg" : ""}" data-no-i18n style="${box};text-align:${it.align};font-weight:${it.weight};font-family:${FONTS[it.font]}">${esc(it.text)}</div></div>`;
     }
@@ -107,19 +114,21 @@
 
   // opts: { links, base (Supabase-URL), edit, t }
   function html(page, opts) {
-    const p = normalize(page), o = { base: "", links: [], edit: false, ...opts };
-    return `<div class="pc-wrap"><div class="pc${o.edit ? " is-edit" : ""}" style="aspect-ratio:${W} / ${p.h};background:${background(p.bg)}">${p.items.map((it) => itemHtml(it, o.links, o)).join("")}</div></div>`;
+    const p = normalize(page), o = { base: "", links: [], edit: false, ...opts, pw: p.w };
+    const wide = p.w === WIDE;
+    return `<div class="pc-wrap"${wide ? ' style="max-width:1080px"' : ""}><div class="pc${o.edit ? " is-edit" : ""}${wide ? " is-wide" : ""}" data-w="${p.w}" style="aspect-ratio:${p.w} / ${p.h};background:${background(p.bg)}">${p.items.map((it) => itemHtml(it, o.links, o)).join("")}</div></div>`;
   }
 
   // --k = Pixel je Einheit, damit Bausteine (feste Pixelgröße) mit der Fläche mitskalieren
-  const ro = typeof ResizeObserver === "function" ? new ResizeObserver((list) => list.forEach((e) => e.target.style.setProperty("--k", String(e.contentRect.width / W)))) : null;
+  const widthOf = (el) => Number(el.dataset.w) || NARROW;
+  const ro = typeof ResizeObserver === "function" ? new ResizeObserver((list) => list.forEach((e) => e.target.style.setProperty("--k", String(e.contentRect.width / widthOf(e.target))))) : null;
   function mount(host) {
     host.querySelectorAll(".pc").forEach((el) => {
-      el.style.setProperty("--k", String(el.getBoundingClientRect().width / W));
+      el.style.setProperty("--k", String(el.getBoundingClientRect().width / widthOf(el)));
       if (ro) ro.observe(el);
     });
   }
-  const zoomOf = (it) => `calc(var(--k, 1) * ${it.w} / ${BLOCKS[it.kind][1]})`;
+  function zoomOf(it, pw) { return `calc(var(--k, 1) * ${it.w} / ${natOf(it.kind, pw)})`; }
 
-  window.XyntalPageCanvas = { BLOCKS, mount, zoomOf, W, MIN_H, MAX_H, DEFAULTS, normalize, html, itemHtml, background, hex, num, round, esc, safeUrl };
+  window.XyntalPageCanvas = { BLOCKS, NARROW, WIDE, natOf, mount, zoomOf, W, MIN_H, MAX_H, DEFAULTS, normalize, html, itemHtml, background, hex, num, round, esc, safeUrl };
 })();
