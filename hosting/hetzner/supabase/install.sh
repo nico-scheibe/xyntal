@@ -66,6 +66,9 @@ put ADDITIONAL_REDIRECT_URLS "https://xyntal.de/**,https://www.xyntal.de/**"
 put ENABLE_EMAIL_SIGNUP "true"
 put ENABLE_EMAIL_AUTOCONFIRM "false"
 put ENABLE_ANONYMOUS_USERS "false"
+# Kein SMS-Anbieter eingerichtet: sonst zeigt die Login-Seite ein Handynummer-Feld, das nicht funktioniert.
+put ENABLE_PHONE_SIGNUP "false"
+put ENABLE_PHONE_AUTOCONFIRM "false"
 put DISABLE_SIGNUP "false"
 for k in MEDIA_S3_ENDPOINT MEDIA_S3_REGION MEDIA_S3_BUCKET MEDIA_S3_ACCESS_KEY MEDIA_S3_SECRET_KEY; do
     put "$k" "$(get "$SECRETS/api.env" "$k")"
