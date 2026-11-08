@@ -22,7 +22,13 @@ a.pc-l:focus-visible, button.pc-l:focus-visible { outline: 2px solid currentColo
 
 /* Öffentliche Seite mit freiem Layout: Zeichenfläche, darunter die üblichen Knöpfe */
 .pf--custom { display: grid; gap: 22px; width: 100%; max-width: 720px; margin: 0 auto; justify-items: center; }
-.pf--custom .pf-actions { display: grid; gap: 10px; justify-items: center; }
+/* Knöpfe unter der freien Seite: eine kompakte Zeile kleiner Pillen statt großer Balken */
+.pf.pf--custom .pf-actions { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; max-width: none; width: auto; }
+.pf.pf--custom .pf-actions .btn { --h: 34px; width: auto; padding: 0 14px; border-radius: 999px; font-size: 13px; font-weight: 600; gap: 6px; }
+.pf.pf--custom .pf-actions .btn svg { width: 14px; height: 14px; }
+.pf.pf--custom .pf-actions .btn-glass { background: rgba(255, 255, 255, .05); border-color: var(--line, #333); }
+.pf.pf--custom .pf-actions .btn-glass:hover { background: rgba(255, 255, 255, .1); }
+.pf.pf--custom .pf-invited, .pf.pf--custom .pf-copied { flex-basis: 100%; }
 
 /* Bausteine der Profilseite (Karte, Steckbrief, Über mich …): feste Pixelgröße, skaliert per zoom mit der Fläche */
 .pc-block { height: auto; }
