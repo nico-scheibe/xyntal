@@ -658,7 +658,7 @@
         const role = canRole
           ? `<select class="xc-role" data-role="${esc(m.id)}" aria-label="${esc(t("Rolle"))}"><option value="member"${m.conversationRole === "member" ? " selected" : ""}>${esc(t("Mitglied"))}</option><option value="admin"${m.conversationRole === "admin" ? " selected" : ""}>Admin</option><option value="owner"${m.conversationRole === "owner" ? " selected" : ""}>${esc(t("Inhaber werden"))}</option></select>`
           : roleLabel(m.conversationRole) ? `<small>${esc(roleLabel(m.conversationRole))}</small>` : "";
-        const remove = canRemove ? `<button type="button" class="xc-x" data-remove-member="${esc(m.id)}" aria-label="${esc(t("Entfernen"))}" title="${esc(t("Entfernen"))}">×</button>` : "";
+        const remove = canRemove ? `<button type="button" class="xc-x" data-remove-member="${esc(m.id)}" aria-label="${esc(t("Entfernen"))}" title="${esc(t("Entfernen"))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>` : "";
         return `<li>${avatar(userNow(m.id) || { displayName: m.displayName }, "xc-av-sm")}<span data-no-i18n>${esc(m.displayName)}${m.mine ? ` (${esc(t("du"))})` : ""}</span>${role}${remove}</li>`;
       };
       const editForm = S.editGroup && can.rename ? `<section class="xc-edit">

@@ -363,7 +363,8 @@ body.messages-page .site-footer { display: none; }
 .xc-members .xc-role:hover { border-color: var(--xc-line-3); color: var(--xc-text); }
 .xc-members .xc-role:focus-visible { outline: none; box-shadow: var(--xc-ring); }
 .xc-members .xc-role option { background: var(--xc-panel-2); color: var(--xc-text); }
-.xc-members li .xc-x { width: 28px; height: 28px; margin: 0; border-radius: 99px; font-size: 18px; opacity: .55; }
+.xc-members li .xc-x { width: 28px; height: 28px; margin: 0; padding: 0; border-radius: 99px; opacity: .55; }
+.xc-members li .xc-x svg { width: 14px; height: 14px; }
 .xc-members li:hover .xc-x, .xc-members li .xc-x:focus-visible, .xc-members li .xc-x.is-armed { opacity: 1; }
 .xc-members li .xc-x:hover, .xc-members li .xc-x.is-armed { background: rgba(255, 107, 129, .14); color: #FF8597 !important; }
 
