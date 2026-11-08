@@ -29,7 +29,8 @@ create function public.ban_active(b boolean, u timestamptz) returns boolean lang
 \i supabase/migrations/20261108160000_page_hover.sql
 \i supabase/migrations/20261108170000_page_hover_spotlight.sql
 \i supabase/migrations/20261108180000_page_hover_names.sql
-\i supabase/migrations/20261108180000_page_hover_names.sql
+\i supabase/migrations/20261108190000_page_extras.sql
+\i supabase/migrations/20261108190000_page_extras.sql
 
 create trigger waitlist_cards_reserved_handle before insert or update of handle on public.waitlist_cards for each row execute function public.reject_page_handles();
 
@@ -55,6 +56,10 @@ do $$ begin
   begin perform public.save_my_page('{"items":[{"type":"script"}]}'); raise exception 'bad type accepted'; exception when invalid_parameter_value then null; end;
   begin perform public.save_my_page('{"items":[{"type":"text","anim":{"p":"custom","code":"0% { drehen: 1 } </style><script>"}}]}'); raise exception 'bad anim code accepted'; exception when invalid_parameter_value then null; end;
   begin perform public.save_my_page('{"items":[{"type":"embed","provider":"youtube","eid":"dQw4w9WgXcQ"}]}'); raise exception 'unconfirmed embed accepted'; exception when invalid_parameter_value then null; end;
+  begin perform public.save_my_page('{"bgv":"00000000-0000-0000-0000-000000000002/22222222-2222-2222-2222-222222222222.mp4","bgvOwn":true,"items":[]}'); raise exception 'foreign video accepted'; exception when invalid_parameter_value then null; end;
+  begin perform public.save_my_page('{"bgv":"00000000-0000-0000-0000-000000000001/22222222-2222-2222-2222-222222222222.mp4","items":[]}'); raise exception 'unconfirmed video accepted'; exception when invalid_parameter_value then null; end;
+  begin perform public.save_my_page('{"items":[{"type":"countdown","date":"tomorrow"}]}'); raise exception 'bad countdown accepted'; exception when invalid_parameter_value then null; end;
+  perform public.save_my_page('{"bgv":"00000000-0000-0000-0000-000000000001/22222222-2222-2222-2222-222222222222.webm","bgvOwn":true,"items":[{"type":"countdown","date":"2027-01-01T12:00"}]}');
   begin perform public.save_my_page('{"items":[{"type":"button","hover":"x\"><script>"}]}'); raise exception 'bad hover accepted'; exception when invalid_parameter_value then null; end;
   begin perform public.save_my_page('{"items":[{"type":"text","anim":{"p":"explode"}}]}'); raise exception 'bad anim preset accepted'; exception when invalid_parameter_value then null; end;
   begin perform public.save_my_page('{"items":[{"type":"button","url":"javascript:alert(1)"}]}'); raise exception 'js button accepted'; exception when invalid_parameter_value then null; end;
@@ -75,6 +80,7 @@ end $$;
 insert into storage.objects(bucket_id,name) values ('page-media','00000000-0000-0000-0000-000000000001/22222222-2222-2222-2222-222222222222.png');
 do $$ begin
   begin insert into storage.objects(bucket_id,name) values ('page-media','00000000-0000-0000-0000-000000000002/22222222-2222-2222-2222-222222222223.png'); raise exception 'foreign upload allowed'; exception when insufficient_privilege then null; end;
+  insert into storage.objects(bucket_id,name) values ('page-media','00000000-0000-0000-0000-000000000001/22222222-2222-2222-2222-222222222229.mp4');
   begin insert into storage.objects(bucket_id,name) values ('page-media','00000000-0000-0000-0000-000000000001/x.exe'); raise exception 'bad name allowed'; exception when insufficient_privilege then null; end;
 end $$;
 

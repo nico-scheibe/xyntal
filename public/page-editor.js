@@ -20,6 +20,7 @@
       <label class="pe-btn" tabindex="0" data-upload-label>+ ${esc(t("Bild"))}<input type="file" accept="image/jpeg,image/png,image/webp,image/gif" data-upload hidden></label>
       <button type="button" class="pe-btn" data-add="block">+ ${esc(t("Mehr"))}</button>
       <button type="button" class="pe-btn" data-add="layout">${esc(t("Layout"))}</button>
+      <button type="button" class="pe-btn" data-add="layers">${esc(t("Ebenen"))}</button>
       <button type="button" class="pe-btn" data-add="bg">${esc(t("Hintergrund"))}</button>
       <i class="pe-sep" aria-hidden="true"></i>
       <button type="button" class="pe-btn" data-undo title="${esc(t("Rückgängig (Strg+Z)"))}" aria-label="${esc(t("Rückgängig"))}" disabled>↶</button>
@@ -94,6 +95,7 @@
       measure();
       const cv = stage.querySelector(".pc");
       cv.style.aspectRatio = `${page.w} / ${page.h}`;
+      group.forEach((id) => stage.querySelector(`.pc-item[data-id="${CSS.escape(id)}"]`)?.classList.add("pe-in-group"));
       const it = current();
       if (it) {
         cv.insertAdjacentHTML("beforeend", `<div class="pe-sel"><i data-h="rot" title="${esc(t("Drehen (Umschalt = 15°-Schritte)"))}"></i><i data-h="nw"></i><i data-h="ne"></i><i data-h="sw"></i><i data-h="se"></i></div>`);
@@ -111,6 +113,13 @@
       <div class="pe-row">${[[C.FULL, "Ganzer Bildschirm"], [C.WIDE, "Inhaltsbreite"], [C.NARROW, "Eine Spalte"]].map(([w, label]) =>
         `<button type="button" class="pe-btn${page.w === w ? " is-on" : ""}" data-width="${w}">${esc(t(label))}</button>`).join("")}</div>
       <label class="pe-field"><span>${esc(t("Höhe"))}</span><input type="range" min="240" max="2400" step="10" data-height value="${page.h}"></label>
+      <label class="pe-field"><span>${esc(t("Bewegter Verlauf"))}</span><input type="checkbox" data-bga ${page.bga ? "checked" : ""}></label>
+      <h2 data-no-i18n>Cursor</h2>
+      <label class="pe-field"><span>${esc(t("Mauszeiger"))}</span><select data-cursor-sel data-no-i18n><option value="">Default</option>${Object.entries(C.CURSORS).map(([k, v]) => `<option value="${k}"${page.cursor === k ? " selected" : ""}>${v}</option>`).join("")}</select></label>
+      ${page.cursor === "emoji" ? `<div class="pe-row">${C.CURSOR_EMOJI.map((e) => `<button type="button" class="pe-btn${page.cemo === e ? " is-on" : ""}" data-cemo="${e}">${e}</button>`).join("")}</div>` : ""}
+      <h2>${esc(t("Hintergrund-Video"))}</h2>
+      ${page.bgv ? `<p class="pe-hint">${esc(t("Eigenes Video läuft stumm im Hintergrund."))}</p><button type="button" class="pe-btn pe-danger" data-bgv-del>${esc(t("Video entfernen"))}</button>`
+        : `${ownCheck("data-bgv-own", false)}<label class="pe-btn" data-bgv-label>+ ${esc(t("Video hochladen (MP4/WebM, max. 15 MB)"))}<input type="file" accept="video/mp4,video/webm" data-bgv-file hidden></label>`}
       <p class="pe-count">${page.items.length} / ${limit()} ${esc(t("Elemente"))}</p>
       <button type="button" class="pe-btn pe-danger" data-reset>${esc(t("Auf Standardseite zurücksetzen"))}</button>`;
     // Vorlagen im Menü „+ Mehr“: Typ und Startwerte
@@ -126,6 +135,10 @@
       { key: "glow", group: "shape", icon: "◐", label: "Verlauf", type: "shape", v: { kind: "rect", w: 420, h: 260, radius: 32, bg: "#ff5fd2", bg2: "#5b8cff", o: 0.35 } },
       { key: "button", group: "act", icon: "⬭", label: "Knopf", type: "button", v: {} },
       { key: "icons", group: "act", icon: "◎", label: "Link-Symbole", type: "icons", v: {} },
+      { key: "countdown", group: "act", icon: "⏱", label: "Countdown", type: "countdown", v: {} },
+      { key: "status", group: "text", icon: "🟢", label: "Status", type: "text", v: { text: "● Open to Work", w: 220, h: 44, size: 15, weight: 700, align: "center", bg: "#123d2a", color: "#7dffb2", radius: 999, anim: { p: "pulse", trig: "load", d: 1.8, loop: true } } },
+      { key: "gradtext", group: "text", icon: "🌈", label: "Verlaufstext", type: "text", v: { text: "Bau was Großes", w: 560, h: 80, size: 56, weight: 700, align: "center", color: "#ff5fd2", c2: "#5b8cff", tfx: "gradient" } },
+      { key: "glass", group: "text", icon: "◫", label: "Glas-Fenster", type: "text", v: { text: "Glas-Fenster\nLiegt halbdurchsichtig über allem dahinter.", w: 320, h: 140, size: 17, weight: 400, bg: "#ffffff", radius: 22, glass: true } },
     ];
     // Video / Musik: nur eigene Projekte – vor dem Einbetten bestätigen (Community-Richtlinien, Regel 8)
     const ownCheck = (attr, on) => `<label class="pe-own"><input type="checkbox" ${attr}${on ? " checked" : ""}>
@@ -161,10 +174,15 @@
       } else if (name === "layout") {
         pop.innerHTML = `<h2>${esc(t("Aufbau-Vorlagen"))}</h2>
           <p>${esc(t("Ordnet Karte, Links, Profil-Bausteine, Texte und Bilder neu an. Rückgängig geht mit ↶."))}</p>
-          <div class="pe-tiles pe-layouts">${Object.entries(LAYOUTS).map(([k, v]) => `<button type="button" class="pe-tile" data-layout="${k}">${v.icon}${esc(t(v.label))}</button>`).join("")}</div>`;
+          <div class="pe-tiles pe-layouts">${Object.entries(LAYOUTS).map(([k, v]) => `<button type="button" class="pe-tile" data-layout="${k}">${v.icon}${esc(t(v.label))}</button>`).join("")}</div>
+          <h2 data-no-i18n>Themes</h2>
+          <p>${esc(t("Färbt die ganze Seite auf einmal um: Hintergrund, Overlays, Farben, Schrift und Hover."))}</p>
+          <div class="pe-tiles">${Object.entries(THEMES).map(([k, v]) => `<button type="button" class="pe-tile pe-theme" data-theme="${k}" style="--t1:${v.bg[0]};--t2:${v.bg[1] || v.bg[0]};--ta:${v.accent}"><span aria-hidden="true"></span><b data-no-i18n>${v.name}</b></button>`).join("")}</div>`;
+      } else if (name === "layers") {
+        pop.innerHTML = layersPanel();
       } else pop.innerHTML = bgPanel();
     }
-    function drawSide() { if (popName === "bg") pop.innerHTML = bgPanel(); }
+    function drawSide() { if (popName === "bg") pop.innerHTML = bgPanel(); else if (popName === "layers") pop.innerHTML = layersPanel(); }
     function drawAll() { drawCanvas(); drawSide(); drawInsp(); }
 
     // ---- Eigenschaften des gewählten Elements ----
@@ -198,7 +216,9 @@
       html += `<button type="button" class="pe-btn" data-act="preview">▶ ${esc(t("Vorschau"))}</button>`;
       return html;
     }
+    const glass$ = (it) => `<label class="pe-field"><span data-no-i18n>Glass</span><input type="checkbox" data-p="glass" ${it.glass ? "checked" : ""}></label>`;
     function drawInsp() {
+      if (group.size > 1) return drawGroupInsp();
       const it = current();
       insp.hidden = !it;
       if (!it) { insp.innerHTML = ""; return; }
@@ -214,7 +234,17 @@
           ${seg$("font", [["sans", "Sans"], ["serif", "Serif"], ["mono", "Mono"]], it.font)}
           ${color$("color", "Textfarbe", it.color)}
           <label class="pe-field"><span>${esc(t("Hintergrund"))}</span><input type="checkbox" data-bgon ${it.bg ? "checked" : ""}></label>
-          ${it.bg ? color$("bg", "Hintergrundfarbe", it.bg) : ""}`;
+          ${it.bg ? color$("bg", "Hintergrundfarbe", it.bg) : ""}
+          <label class="pe-field"><span>${esc(t("Text-Effekt"))}</span><select data-p="tfx" data-no-i18n><option value="">None</option>${Object.entries(C.TEXT_FX).map(([k, v]) => `<option value="${k}"${it.tfx === k ? " selected" : ""}>${v}</option>`).join("")}</select></label>
+          ${it.tfx === "gradient" || it.tfx === "shimmer" ? color$("c2", "Zweite Farbe", it.c2) : ""}
+          ${glass$(it)}`;
+      } else if (it.type === "countdown") {
+        body = `<label class="pe-field"><span>${esc(t("Beschriftung"))}</span></label>
+          <input type="text" data-p="text" maxlength="60" value="${esc(it.text)}">
+          <label class="pe-field"><span>${esc(t("Bis"))}</span><input type="datetime-local" data-p="date" value="${esc(it.date)}"></label>
+          ${range$("size", "Schriftgröße", it.size, 12, 120)}
+          ${color$("color", "Textfarbe", it.color)}
+          ${color$("bg", "Hintergrundfarbe", it.bg || "#1f1f2b")}`;
       } else if (it.type === "link") {
         body = `<label class="pe-field"><span>${esc(t("Link"))}</span><select data-p="ref">${links.map((l) => `<option value="${esc(l.id)}"${l.id === it.ref ? " selected" : ""}>${esc(l.title)}</option>`).join("")}</select></label>
           ${range$("size", "Schriftgröße", it.size, 8, 60)}
@@ -225,7 +255,8 @@
         body = `${seg$("kind", [["rect", "Rechteck"], ["circle", "Kreis"], ["line", "Linie"]], it.kind)}
           ${color$("bg", "Farbe", it.bg)}
           <label class="pe-field"><span>${esc(t("Verlauf"))}</span><input type="checkbox" data-bg2on ${it.bg2 ? "checked" : ""}></label>
-          ${it.bg2 ? color$("bg2", "Zweite Farbe", it.bg2) : ""}`;
+          ${it.bg2 ? color$("bg2", "Zweite Farbe", it.bg2) : ""}
+          ${glass$(it)}`;
       } else if (it.type === "button") {
         body = `<label class="pe-field"><span>${esc(t("Beschriftung"))}</span></label>
           <input type="text" data-p="text" maxlength="80" value="${esc(it.text)}">
@@ -234,7 +265,8 @@
           ${it.url ? "" : `<p class="pe-hint">${esc(t("Ohne gültige https://-Adresse ist der Knopf auf der Seite nicht klickbar."))}</p>`}
           ${range$("size", "Schriftgröße", it.size, 8, 60)}
           ${color$("color", "Textfarbe", it.color)}
-          ${color$("bg", "Hintergrundfarbe", it.bg || "#eceae4")}`;
+          ${color$("bg", "Hintergrundfarbe", it.bg || "#eceae4")}
+          ${glass$(it)}`;
       } else if (it.type === "icons") {
         body = `<p class="pe-hint">${esc(t("Zeigt alle deine Links als Symbole. Links verwaltest du im Profil unter Links."))}</p>
           ${range$("size", "Größe", it.size, 12, 60)}
@@ -252,7 +284,7 @@
           <input type="text" data-p="alt" maxlength="120" value="${esc(it.alt)}" placeholder="${esc(t("Alternativtext für Screenreader"))}">`;
       }
       const block = it.type === "block";
-      const TITLES = { text: "Text", link: "Link", image: "Bild", shape: "Form", button: "Knopf", icons: "Link-Symbole", embed: "Video / Musik" };
+      const TITLES = { text: "Text", link: "Link", image: "Bild", shape: "Form", button: "Knopf", icons: "Link-Symbole", embed: "Video / Musik", countdown: "Countdown" };
       const frame = block ? "" : `${range$("bw", "Rahmen", it.bw, 0, 16)}${it.bw ? color$("bc", "Rahmenfarbe", it.bc) : ""}
         <label class="pe-field"><span>${esc(t("Schatten"))}</span><input type="checkbox" data-p="sh" ${it.sh ? "checked" : ""}></label>`;
       insp.innerHTML = `<div class="pe-insp-head" data-insp-drag title="${esc(t("Ziehen zum Verschieben"))}"><h2>${esc(t(block ? C.BLOCKS[it.kind][0] : TITLES[it.type]))}</h2><button type="button" class="pe-x" data-insp-close aria-label="${esc(t("Schließen"))}">×</button></div>
@@ -267,6 +299,7 @@
         ${it.hover ? `<button type="button" class="pe-btn" data-act="hover-preview">▶ ${esc(t("Hover testen"))}</button>` : ""}` : ""}
         ${animPanel(it)}
         <h2>${esc(t("Position"))}</h2>
+        <label class="pe-field"><span data-no-i18n>Parallax</span><select data-p="px" data-no-i18n><option value="">Off</option><option value="back"${it.px === "back" ? " selected" : ""}>Back (slow)</option><option value="mid"${it.px === "mid" ? " selected" : ""}>Middle</option><option value="front"${it.px === "front" ? " selected" : ""}>Front (fast)</option></select></label>
         ${num$("x", "Links", it.x, -page.w, page.w * 2)}${num$("y", "Oben", it.y, -4000, 4000)}${num$("w", "Breite", it.w, 16, page.w * 2)}${block ? "" : num$("h", "Höhe", it.h, 16, 4000)}
         ${it.type === "link" ? `<button type="button" class="pe-btn pe-primary" data-act="stack">${esc(t("Alle Links hierunter anheften"))}</button>
         <p class="pe-hint">${esc(t("Alle anderen Links bekommen Breite, Höhe und Aussehen dieses Links und stehen genau untereinander."))}</p>` : ""}
@@ -323,10 +356,13 @@
         it.anim = C.cleanAnim(base);
         return;
       }
-      if (k === "text") it.text = String(v).slice(0, it.type === "button" ? 80 : 1000);
+      if (k === "text") it.text = String(v).slice(0, it.type === "button" ? 80 : it.type === "countdown" ? 60 : 1000);
+      else if (k === "date") { if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(v)) it.date = v; }
+      else if (k === "tfx") it.tfx = C.TEXT_FX[v] ? v : "";
+      else if (k === "px") it.px = C.PARALLAX[v] !== undefined ? v : "";
       else if (k === "url") it.url = C.safeUrl(String(v).trim().slice(0, 500));
-      else if (k === "icon" || k === "sh") it[k] = !!v;
-      else if (["color", "bg", "bg2", "bc"].includes(k)) it[k] = C.hex(v, it[k]);
+      else if (k === "icon" || k === "sh" || k === "glass") it[k] = !!v;
+      else if (["color", "bg", "bg2", "bc", "c2"].includes(k)) it[k] = C.hex(v, it[k]);
       else if (["align", "font", "fit", "ref", "alt", "kind"].includes(k)) it[k] = v;
       else if (k === "hover") it.hover = C.HOVERS[v] ? v : "";
       else if (k === "weight") it.weight = Number(v) === 400 ? 400 : 700;
@@ -396,6 +432,8 @@
       if (!pop.contains(el)) return;
       if (el.dataset.bg) { touch(`bg:${el.dataset.bg}`); page.bg[el.dataset.bg] = C.hex(el.value, page.bg[el.dataset.bg]); drawCanvas(); }
       else if (el.dataset.bgGradient !== undefined) { touch(); page.bg.color2 = el.checked ? (page.bg.color2 || "#3a2a6a") : ""; drawAll(); }
+      else if (el.dataset.bga !== undefined) { touch(); page.bga = el.checked ? "flow" : ""; if (el.checked && !page.bg.color2) page.bg.color2 = "#3a2a6a"; drawAll(); }
+      else if (el.dataset.cursorSel !== undefined) { touch(); page.cursor = C.CURSORS[el.value] ? el.value : ""; drawAll(); }
       else if (el.dataset.height !== undefined) { touch("height"); page.h = Math.round(num(el.value, C.MIN_H, C.MAX_H, page.h)); drawCanvas(); }
     });
 
@@ -406,7 +444,25 @@
     stage.addEventListener("pointerdown", (e) => {
       if (e.button !== 0) return;
       const handleEl = e.target.closest("[data-h]"), itemEl = e.target.closest(".pc-item");
-      if (!handleEl && !itemEl) { if (sel) { sel = null; drawAll(); } return; }
+      if (!handleEl && !itemEl) { if (sel || group.size) { sel = null; group.clear(); drawAll(); } return; }
+      // Umschalt+Klick: zur Mehrfachauswahl hinzufügen/entfernen
+      if (itemEl && !handleEl && e.shiftKey) {
+        e.preventDefault();
+        const gid = itemEl.dataset.id;
+        if (sel && !group.size) group.add(sel);
+        if (group.has(gid)) group.delete(gid); else group.add(gid);
+        sel = group.size === 1 ? [...group][0] : null;
+        if (group.size === 1) group.clear();
+        drawAll(); return;
+      }
+      // Gruppe ziehen
+      if (itemEl && !handleEl && group.size > 1 && group.has(itemEl.dataset.id)) {
+        e.preventDefault();
+        drag = { mode: "group", x0: e.clientX, y0: e.clientY, s: scale(), moved: false, pid: e.pointerId,
+          starts: [...group].map((gid) => { const g = byId(gid); return g && { it: g, x: g.x, y: g.y }; }).filter(Boolean) };
+        stage.setPointerCapture(e.pointerId); return;
+      }
+      if (group.size) { group.clear(); }
       const id = handleEl ? sel : itemEl.dataset.id, it = byId(id);
       if (!it) return;
       e.preventDefault();
@@ -416,6 +472,16 @@
     });
     stage.addEventListener("pointermove", (e) => {
       if (!drag || e.pointerId !== drag.pid) return;
+      if (drag.mode === "group") {
+        const gx = (e.clientX - drag.x0) * drag.s, gy = (e.clientY - drag.y0) * drag.s;
+        if (!drag.moved) { if (Math.abs(gx) + Math.abs(gy) < 3 / drag.s) return; drag.moved = true; touch(); stage.classList.add("is-moving"); }
+        drag.starts.forEach((st) => {
+          st.it.x = round(st.x + gx); st.it.y = round(st.y + gy);
+          const el = stage.querySelector(`.pc-item[data-id="${CSS.escape(st.it.id)}"]`);
+          if (el) Object.assign(el.style, { left: u(st.it.x), top: u(st.it.y) });
+        });
+        return;
+      }
       const it = byId(drag.id), dx = (e.clientX - drag.x0) * drag.s, dy = (e.clientY - drag.y0) * drag.s, b = drag.start;
       if (!drag.moved) {
         if (Math.abs(dx) + Math.abs(dy) < 3 / drag.s) return;
@@ -501,9 +567,10 @@
     const endDrag = (e) => {
       if (!drag || (e && e.pointerId !== drag.pid)) return;
       showGuides([]);
-      const moved = drag.moved, it = byId(drag.id); drag = null;
+      const moved = drag.moved, it = drag.id ? byId(drag.id) : null, wasGroup = drag.mode === "group"; drag = null;
       stage.classList.remove("is-moving");
-      if (moved && it) { fit(it); drawAll(); }
+      if (moved && wasGroup) { page.items.filter((i) => group.has(i.id)).forEach(fit); drawAll(); }
+      else if (moved && it) { fit(it); drawAll(); }
     };
     stage.addEventListener("pointerup", endDrag);
     stage.addEventListener("pointercancel", endDrag);
@@ -517,6 +584,18 @@
       if (typing) return;
       if (mod && k === "z") { e.preventDefault(); travel(e.shiftKey ? redo : undo, e.shiftKey ? undo : redo); return; }
       if (mod && k === "y") { e.preventDefault(); travel(redo, undo); return; }
+      // Mehrfachauswahl: Pfeile schieben alle, Entf löscht alle, Esc hebt auf
+      if (group.size > 1) {
+        if (k === "escape") { group.clear(); drawAll(); }
+        else if (k === "delete" || k === "backspace") { e.preventDefault(); touch(); page.items = page.items.filter((i) => !group.has(i.id)); group.clear(); drawAll(); }
+        else if (k.startsWith("arrow")) {
+          e.preventDefault(); touch("group:nudge");
+          const n = e.shiftKey ? 10 : 1;
+          page.items.filter((i) => group.has(i.id)).forEach((i) => { if (k === "arrowleft") i.x -= n; else if (k === "arrowright") i.x += n; else if (k === "arrowup") i.y -= n; else i.y += n; });
+          drawAll();
+        }
+        return;
+      }
       const it = current();
       if (!it) return;
       if (mod && k === "d") { e.preventDefault(); insp.querySelector('[data-act="dup"]')?.click(); }
@@ -545,7 +624,10 @@
       const make = e.target.closest("[data-make]");
       if (make) {
         const m = MAKE.find((x) => x.key === make.dataset.make);
-        if (m) { popName = ""; pop.hidden = true; add(m.type, { ...C.DEFAULTS[m.type], ...m.v }); if (m.type === "text") insp.querySelector("textarea")?.select(); }
+        if (m) {
+          popName = ""; pop.hidden = true;
+          const extra = m.type === "countdown" ? { date: new Date(Date.now() + 7 * 864e5 - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 16) } : {};
+          add(m.type, { ...C.DEFAULTS[m.type], ...m.v, ...extra }); if (m.type === "text") insp.querySelector("textarea")?.select(); }
         return;
       }
       if (e.target.closest("[data-embed-open]")) { const box = pop.querySelector("[data-embed-box]"); box.hidden = false; box.querySelector("input").focus(); return; }
@@ -563,14 +645,36 @@
       else if (blk) { add("block", { kind: blk.dataset.block, w: C.natOf(blk.dataset.block, page.w) }); popName = ""; pop.hidden = true; }
       else if (e.target.closest("[data-reset]")) reset();
       else if (e.target.closest("[data-width]")) setWidth(Number(e.target.closest("[data-width]").dataset.width));
+      else if (e.target.closest("[data-theme]")) { applyTheme(e.target.closest("[data-theme]").dataset.theme); popName = ""; pop.hidden = true; }
+      else if (e.target.closest("[data-cemo]")) { touch(); page.cemo = e.target.closest("[data-cemo]").dataset.cemo; drawAll(); }
+      else if (e.target.closest("[data-bgv-del]")) { touch(); page.bgv = ""; page.bgvOwn = false; drawAll(); }
+      else if (e.target.closest("[data-lsel]")) { group.clear(); sel = e.target.closest("[data-lsel]").dataset.lsel; drawAll(); }
+      else if (e.target.closest("[data-lmove]")) {
+        const b = e.target.closest("[data-lmove]"), i = page.items.findIndex((x) => x.id === b.dataset.lmove), j = i + Number(b.dataset.dir);
+        if (i >= 0 && j >= 0 && j < page.items.length) { touch(); [page.items[i], page.items[j]] = [page.items[j], page.items[i]]; drawAll(); }
+      }
       else if (e.target.closest("[data-layout]")) { applyLayout(e.target.closest("[data-layout]").dataset.layout); popName = ""; pop.hidden = true; }
       else if (e.target.closest("[data-ov]")) {
         const k = e.target.closest("[data-ov]").dataset.ov;
         touch(); page.ov = page.ov.includes(k) ? page.ov.filter((x) => x !== k) : [...page.ov, k]; drawAll();
       }
     });
-    pop.addEventListener("change", (e) => {
+    pop.addEventListener("change", async (e) => {
       if (e.target.matches("[data-embed-own]")) pop.querySelector("[data-embed-go]").disabled = !e.target.checked;
+      if (e.target.matches("[data-bgv-file]")) {
+        const file = e.target.files && e.target.files[0]; e.target.value = "";
+        if (!file) return;
+        if (!pop.querySelector("[data-bgv-own]")?.checked) { say(t("Bitte bestätige, dass es dein eigenes Video ist."), "error"); return; }
+        if (!/^video\/(mp4|webm)$/.test(file.type)) { say(t("Nur MP4 oder WebM."), "error"); return; }
+        if (file.size > 15 * 1024 * 1024) { say(t("Das Video ist größer als 15 MB."), "error"); return; }
+        say(t("Video wird hochgeladen …"));
+        try {
+          const path = `${uid}/${crypto.randomUUID()}.${file.type === "video/webm" ? "webm" : "mp4"}`;
+          const { error } = await sb.storage.from("page-media").upload(path, file, { contentType: file.type, upsert: false });
+          if (error) throw error;
+          touch(); page.bgv = path; page.bgvOwn = true; drawAll(); say(t("Video eingefügt."), "ok");
+        } catch { say(t("Das Video konnte nicht hochgeladen werden."), "error"); }
+      }
     });
     $("[data-done]").addEventListener("click", () => {
       if (dirty && !confirm(t("Ungespeicherte Änderungen verwerfen?"))) return;
@@ -687,6 +791,89 @@
       });
       page.h = Math.min(C.MAX_H, Math.max(600, Math.ceil(Math.max(yl, yr) + 40)));
     }
+    // ---- Themes: ganze Seite auf einmal umfärben ----
+    const THEMES = {
+      cyber: { name: "Cyberpunk", bg: ["#0a0014", "#2a0045"], ov: ["grid", "scan"], flow: true, text: "#f6ecff", panel: "#16052a", accent: "#ff2bd6", accent2: "#2bf3ff", font: "mono", hover: "neon" },
+      minimal: { name: "Minimal", bg: ["#111111", ""], ov: [], flow: false, text: "#ececec", panel: "#1c1c1c", accent: "#ececec", accent2: "#8a8a8a", font: "sans", hover: "lift" },
+      pastel: { name: "Pastel", bg: ["#2a2340", "#3d2f57"], ov: ["aurora"], flow: true, text: "#fde7f3", panel: "#382c52", accent: "#ffc4e1", accent2: "#b7e4ff", font: "serif", hover: "pop" },
+      retro: { name: "Retro", bg: ["#1b120a", "#3a2210"], ov: ["grain", "vignette"], flow: false, text: "#ffe2b3", panel: "#2a1a0c", accent: "#ffb347", accent2: "#ff6b3d", font: "serif", hover: "shine" },
+      ocean: { name: "Ocean", bg: ["#021a26", "#05445e"], ov: ["network"], flow: true, text: "#d8f7ff", panel: "#06293a", accent: "#7ee7ff", accent2: "#3fa9ff", font: "sans", hover: "glow" },
+      space: { name: "Space", bg: ["#05050c", "#140a30"], ov: ["stars", "aurora"], flow: false, text: "#ecebff", panel: "#12122a", accent: "#b95cff", accent2: "#5b8cff", font: "sans", hover: "spotlight" },
+    };
+    function applyTheme(key) {
+      const th = THEMES[key];
+      if (!th) return;
+      touch();
+      page.bg = { color: th.bg[0], color2: th.bg[1] }; page.ov = [...th.ov]; page.bga = th.flow && th.bg[1] ? "flow" : "";
+      page.items.forEach((it) => {
+        if (it.type === "text") { it.color = th.text; it.font = th.font; if (it.bg && !it.glass) it.bg = th.panel; if (it.tfx === "gradient" || it.tfx === "shimmer") { it.color = th.accent; it.c2 = th.accent2; } }
+        else if (it.type === "link") { it.bg = th.panel; it.color = th.accent; it.hover = th.hover; }
+        else if (it.type === "button") { it.bg = th.accent; it.color = th.bg[0]; it.hover = th.hover; }
+        else if (it.type === "icons") { it.bg = th.panel; it.color = th.accent; it.hover = th.hover; }
+        else if (it.type === "countdown") { it.bg = th.panel; it.color = th.accent; }
+        else if (it.type === "shape") { it.bg = th.accent; if (it.bg2) it.bg2 = th.accent2; }
+        else if (it.type === "block") { it.color = th.accent; }
+      });
+      drawAll(); say(t("Theme angewendet – mit ↶ rückgängig."), "ok");
+    }
+
+    // ---- Ebenen: alle Elemente als Liste (oben = vorne), auswählen und Reihenfolge ändern ----
+    function itemName(it) {
+      if (it.type === "block") return C.BLOCKS[it.kind][0];
+      if (it.type === "link") { const l = links.find((x) => x.id === it.ref); return `Link · ${l ? l.title : "?"}`; }
+      if (it.type === "text" || it.type === "button" || it.type === "countdown") return `${{ text: "Text", button: "Knopf", countdown: "Countdown" }[it.type]} · ${String(it.text || "").replace(/\s+/g, " ").slice(0, 24)}`;
+      return { image: "Bild", shape: "Form", icons: "Link-Symbole", embed: "Video / Musik" }[it.type] || it.type;
+    }
+    function layersPanel() {
+      const list = [...page.items].reverse();
+      return `<h2>${esc(t("Ebenen"))}</h2><p>${esc(t("Oben liegt vorne. Mit Umschalt+Klick auf der Seite wählst du mehrere Elemente aus."))}</p>
+        <div class="pe-layers">${list.map((it, n) => `<div class="pe-layer${it.id === sel || group.has(it.id) ? " is-on" : ""}">
+          <button type="button" class="pe-item" data-lsel="${esc(it.id)}">${esc(itemName(it))}</button>
+          <button type="button" class="pe-x" data-lmove="${esc(it.id)}" data-dir="1" aria-label="${esc(t("Nach vorn"))}"${n === 0 ? " disabled" : ""}>▲</button>
+          <button type="button" class="pe-x" data-lmove="${esc(it.id)}" data-dir="-1" aria-label="${esc(t("Nach hinten"))}"${n === list.length - 1 ? " disabled" : ""}>▼</button></div>`).join("")}</div>`;
+    }
+
+    // ---- Mehrfachauswahl: Umschalt+Klick, zusammen verschieben, ausrichten, verteilen ----
+    const group = new Set();
+    function drawGroupInsp() {
+      insp.hidden = false;
+      const b = (k, label) => `<button type="button" class="pe-btn" data-galign="${k}">${esc(t(label))}</button>`;
+      insp.innerHTML = `<div class="pe-insp-head" data-insp-drag><h2>${group.size} ${esc(t("Elemente"))}</h2><button type="button" class="pe-x" data-gclear aria-label="${esc(t("Auswahl aufheben"))}">×</button></div>
+        <p class="pe-hint">${esc(t("Ziehen verschiebt alle zusammen. Umschalt+Klick nimmt Elemente dazu oder heraus."))}</p>
+        <h2>${esc(t("Ausrichten"))}</h2>
+        <div class="pe-row">${b("left", "Links")}${b("hcenter", "Mitte")}${b("right", "Rechts")}</div>
+        <div class="pe-row">${b("top", "Oben")}${b("vcenter", "Mittig")}${b("bottom", "Unten")}</div>
+        <h2>${esc(t("Verteilen"))}</h2>
+        <div class="pe-row">${b("dist-h", "Waagerecht")}${b("dist-v", "Senkrecht")}</div>
+        <div class="pe-row"><button type="button" class="pe-btn pe-danger" data-gdel>${esc(t("Alle löschen"))}</button></div>`;
+    }
+    function alignGroup(kind) {
+      const L = [...group].map(byId).filter(Boolean);
+      if (L.length < 2) return;
+      touch();
+      const minX = Math.min(...L.map((i) => i.x)), maxR = Math.max(...L.map((i) => i.x + i.w)), minY = Math.min(...L.map((i) => i.y)), maxB = Math.max(...L.map((i) => i.y + i.h));
+      L.forEach((i) => {
+        if (kind === "left") i.x = minX; else if (kind === "right") i.x = round(maxR - i.w); else if (kind === "hcenter") i.x = round((minX + maxR) / 2 - i.w / 2);
+        else if (kind === "top") i.y = minY; else if (kind === "bottom") i.y = round(maxB - i.h); else if (kind === "vcenter") i.y = round((minY + maxB) / 2 - i.h / 2);
+      });
+      if (kind === "dist-h" || kind === "dist-v") {
+        const h = kind === "dist-h", key = h ? "x" : "y", size = h ? "w" : "h";
+        const sorted = [...L].sort((a, b) => a[key] - b[key]);
+        const span = (h ? maxR - minX : maxB - minY) - sorted.reduce((t2, i) => t2 + i[size], 0);
+        const gap = span / (sorted.length - 1);
+        let pos = h ? minX : minY;
+        sorted.forEach((i) => { i[key] = round(pos); pos += i[size] + gap; });
+      }
+      drawAll();
+    }
+    insp.addEventListener("click", (e) => {
+      if (!(group.size > 1)) return;
+      const a = e.target.closest("[data-galign]");
+      if (a) { alignGroup(a.dataset.galign); return; }
+      if (e.target.closest("[data-gclear]")) { group.clear(); drawAll(); return; }
+      if (e.target.closest("[data-gdel]")) { touch(); page.items = page.items.filter((i) => !group.has(i.id)); group.clear(); drawAll(); }
+    });
+
     // ---- Aufbau-Vorlagen ----
     // Kleine Skizzen: K = Karte, Striche = Links, Flächen = Profil-Bausteine
     const sk = (inner) => `<svg viewBox="0 0 60 40" aria-hidden="true" fill="currentColor">${inner}</svg>`;

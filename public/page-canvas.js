@@ -16,7 +16,14 @@
   const FONTS = { sans: "var(--f-text, system-ui, sans-serif)", serif: "'Source Serif 4', Georgia, serif", mono: "ui-monospace, 'IBM Plex Mono', monospace" };
   const SRC = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp|gif)$/;
   const UUID = /^[0-9a-f-]{36}$/;
-  const TYPES = ["text", "link", "image", "block", "shape", "button", "embed", "icons"];
+  const TYPES = ["text", "link", "image", "block", "shape", "button", "embed", "icons", "countdown"];
+  // Text-Effekte (nur Text-Elemente), Parallax-Tiefen, eigener Cursor, Hintergrund-Bewegung
+  const TEXT_FX = { gradient: "Gradient", shimmer: "Shimmer", outline: "Outline", letters: "Letters" };
+  const PARALLAX = { back: 0.3, mid: 0.15, front: -0.18 };
+  const CURSORS = { dot: "Dot", ring: "Ring", glow: "Glow", emoji: "Emoji" };
+  const CURSOR_EMOJI = ["🚀", "✨", "🔥", "💜", "👾", "⭐", "⚡", "🦄", "👀", "🎯"];
+  const DATE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
+  const VIDEO = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(mp4|webm)$/;
   // Einbettungen: nur diese Anbieter, nur geprüfte Ids (Adressen baut page-canvas.js selbst); CSP frame-src in hosting/daki/server.cjs
   const EMBEDS = {
     youtube: { re: /^[A-Za-z0-9_-]{11}$/, src: (id) => `https://www.youtube-nocookie.com/embed/${id}`, ratio: [16, 9] },
@@ -60,7 +67,7 @@
   const HOVER_TYPES = ["link", "button", "icons", "text", "image", "shape", "block"];
   // Overlays für die ganze Seite: „back“ liegt hinter allen Elementen, „top“ darüber (klickt nicht mit)
   const OVERLAYS = {
-    aurora: ["Aurora", "back"], stars: ["Sterne", "back"], grid: ["Raster", "back"], dots: ["Punkte", "back"],
+    particles: ["Partikel", "back"], network: ["Netz", "back"], aurora: ["Aurora", "back"], stars: ["Sterne", "back"], grid: ["Raster", "back"], dots: ["Punkte", "back"],
     grain: ["Körnung", "top"], vignette: ["Vignette", "top"], scan: ["Scanlines", "top"],
   };
   // Leuchtfarbe: die hellere der beiden Farben des Elements, damit Leuchten/Ring auf dunklem Grund sichtbar sind
@@ -233,6 +240,7 @@
     button: { w: 240, h: 56, size: 17, color: "#1c1c1c", bg: "#eceae4", radius: 999, text: "Schreib mir" },
     embed: { w: 480, h: 270, radius: 16 },
     icons: { w: 320, h: 56, size: 22, color: "#eceae4", bg: "#2a2a2a", radius: 999, align: "center" },
+    countdown: { w: 420, h: 110, size: 34, color: "#eceae4", bg: "#1f1f2b", radius: 20, text: "Launch in" },
     block: { w: 300, h: 200, radius: 0 },
   };
 
@@ -251,8 +259,11 @@
       radius: round(num(raw.radius, 0, 999, d.radius)),
       // Rahmen und Schatten (alle außer Profil-Bausteinen)
       bw: round(num(raw.bw, 0, 16, 0)), bc: hex(raw.bc, "#eceae4"), sh: raw.sh === true,
+      // Parallax-Tiefe beim Scrollen (leer = aus)
+      px: PARALLAX[raw.px] !== undefined ? raw.px : "",
     };
-    if (type === "text" || type === "link" || type === "button" || type === "icons") {
+    if (type === "text" || type === "button" || type === "shape") it.glass = raw.glass === true;
+    if (type === "text" || type === "link" || type === "button" || type === "icons" || type === "countdown") {
       it.size = round(num(raw.size, 8, 160, d.size));
       it.color = hex(raw.color, d.color);
       it.bg = raw.bg === "" ? "" : hex(raw.bg, d.bg);
@@ -262,6 +273,11 @@
       it.weight = raw.weight === 400 || raw.weight === "400" ? 400 : 700;
       it.align = ["left", "center", "right"].includes(raw.align) ? raw.align : d.align;
       it.font = FONTS[raw.font] ? raw.font : d.font;
+      it.tfx = TEXT_FX[raw.tfx] ? raw.tfx : "";
+      it.c2 = hex(raw.c2, "#b95cff");
+    } else if (type === "countdown") {
+      it.text = String(raw.text ?? d.text).slice(0, 60);
+      it.date = DATE.test(raw.date || "") ? raw.date : "";
     } else if (type === "link") {
       it.ref = UUID.test(raw.ref || "") ? raw.ref : "";
       if (!it.ref) return null;
@@ -306,7 +322,11 @@
       return it;
     });
     const ov = [...new Set((Array.isArray(p.ov) ? p.ov : []).filter((k) => OVERLAYS[k]))].slice(0, 7);
-    return { v: 1, w: WIDTHS.includes(p.w) ? p.w : NARROW, h: Math.round(num(p.h, MIN_H, MAX_H, 640)), bg: { color: hex(bg.color, "#1c1c1c"), color2: hex(bg.color2, "") }, ov, items };
+    return { v: 1, w: WIDTHS.includes(p.w) ? p.w : NARROW, h: Math.round(num(p.h, MIN_H, MAX_H, 640)), bg: { color: hex(bg.color, "#1c1c1c"), color2: hex(bg.color2, "") }, ov, items,
+      // Bewegter Verlauf, Hintergrund-Video (nur eigenes, bestätigt), eigener Cursor
+      bga: p.bga === "flow" ? "flow" : "",
+      bgv: VIDEO.test(p.bgv || "") && p.bgvOwn === true ? p.bgv : "", bgvOwn: p.bgvOwn === true,
+      cursor: CURSORS[p.cursor] ? p.cursor : "", cemo: CURSOR_EMOJI.includes(p.cemo) ? p.cemo : "🚀" };
   }
 
   const u = (n, pw = NARROW) => `calc(${round(n)} * 100cqw / ${pw})`;
@@ -324,12 +344,17 @@
       if (!inner) return o.edit ? `<div class="pc-item pc-block is-empty" data-id="${esc(it.id)}" style="${pos.replace(/height:[^;]+;/, "")}"><div class="pc-blk-empty">${esc(BLOCKS[it.kind][0])}</div></div>` : "";
       return `<div class="pc-item pc-block" data-id="${esc(it.id)}" data-kind="${it.kind}" style="${pos.replace(/height:[^;]+;/, "")}"><div class="pc-blk" style="width:${natOf(it.kind, pw)}px;zoom:${zoomOf(it, pw)}">${inner}</div></div>`;
     }
-    // Rahmen/Schatten für Kästen
-    const deco = `${it.bw ? `border:${uu(it.bw)} solid ${it.bc};` : ""}${it.sh ? "box-shadow:0 18px 40px -16px rgba(0,0,0,.75);" : ""}`;
+    // Rahmen/Schatten für Kästen; Glas: halbdurchsichtig mit Unschärfe dahinter
+    const deco = `${it.bw ? `border:${uu(it.bw)} solid ${it.bc};` : ""}${it.sh ? "--sh:0 18px 40px -16px rgba(0,0,0,.75);" : ""}${it.glass ? `--gb:${it.bg || "#ffffff"};` : ""}`;
+    const gl = it.glass ? " pc-glass" : "";
+    if (it.type === "countdown") {
+      const box = `--fs:${it.size};font-size:${uu(it.size)};color:${it.color};background:${it.bg || "transparent"};border-radius:${uu(it.radius)};${deco}`;
+      return `<div ${attrs}><div class="pc-cd" data-cd="${esc(it.date)}" style="${box}"><span class="pc-cd-l" data-no-i18n>${esc(it.text)}</span><span class="pc-cd-n" data-cd-n>${it.date ? "–" : "Datum wählen"}</span></div></div>`;
+    }
     if (it.type === "shape") {
       const fill = it.bg2 ? `linear-gradient(135deg, ${it.bg}, ${it.bg2})` : it.bg;
       const r = it.kind === "circle" ? "50%" : it.kind === "line" ? "999px" : uu(it.radius);
-      return `<div ${attrs.replace('class="pc-item', `class="pc-item is-${it.kind}`)}><div class="pc-shape" style="background:${fill};border-radius:${r};${deco}"></div></div>`;
+      return `<div ${attrs.replace('class="pc-item', `class="pc-item is-${it.kind}`)}><div class="pc-shape${gl}" style="background:${fill};border-radius:${r};${deco}"></div></div>`;
     }
     if (it.type === "embed") {
       if (!it.own && !o.edit) return "";
@@ -351,15 +376,23 @@
     }
     if (it.type === "button") {
       const box = `--fs:${it.size};font-size:${uu(it.size)};color:${it.color};background:${it.bg || "transparent"};border-radius:${uu(it.radius)};${deco}`;
-      if (o.edit || !it.url) return `<div ${attrs}><div class="pc-l pc-btn" style="${box}"><b data-no-i18n>${esc(it.text)}</b></div></div>`;
-      return `<div ${attrs}><a class="pc-l pc-btn" style="${box}" href="${esc(it.url)}" target="_blank" rel="noopener noreferrer nofollow"><b data-no-i18n>${esc(it.text)}</b></a></div>`;
+      if (o.edit || !it.url) return `<div ${attrs}><div class="pc-l pc-btn${gl}" style="${box}"><b data-no-i18n>${esc(it.text)}</b></div></div>`;
+      return `<div ${attrs}><a class="pc-l pc-btn${gl}" style="${box}" href="${esc(it.url)}" target="_blank" rel="noopener noreferrer nofollow"><b data-no-i18n>${esc(it.text)}</b></a></div>`;
     }
     if (it.type === "image") {
       return `<div ${attrs}><img src="${esc(`${o.base}/storage/v1/object/public/page-media/${it.src}`)}" alt="${esc(it.alt)}" draggable="false" loading="lazy" decoding="async" style="object-fit:${it.fit};border-radius:${uu(it.radius)};${deco}"></div>`;
     }
     const box = `--fs:${it.size};font-size:${uu(it.size)};color:${it.color};${it.bg ? `background:${it.bg};` : ""}border-radius:${uu(it.radius)};${deco}`;
     if (it.type === "text") {
-      return `<div ${attrs}><div class="pc-t${it.bg ? " has-bg" : ""}" data-no-i18n style="${box};text-align:${it.align};font-weight:${it.weight};font-family:${FONTS[it.font]}">${esc(it.text)}</div></div>`;
+      // Text-Effekte: Inhalt in .pc-tx (Gradient/Shimmer/Outline) bzw. Buchstaben-Spans (Letters, erscheinen beim Scrollen)
+      let content = esc(it.text);
+      if (it.tfx === "letters") {
+        let n = 0;
+        content = String(it.text).split(/(\s+)/).map((w) => (/^\s+$/.test(w) || !w ? esc(w)
+          : `<span class="pc-w">${[...w].map((ch) => `<span class="pc-ch" style="--i:${n++}">${esc(ch)}</span>`).join("")}</span>`)).join("");
+      } else if (it.tfx) content = `<span class="pc-tx">${content}</span>`;
+      const fx = it.tfx ? ` pc-tfx-${it.tfx}` : "";
+      return `<div ${attrs}><div class="pc-t${it.bg ? " has-bg" : ""}${fx}${gl}" data-no-i18n style="${box};--c1:${it.color};--c2:${it.c2};text-align:${it.align};font-weight:${it.weight};font-family:${FONTS[it.font]}">${content}</div></div>`;
     }
     const l = (links || []).find((x) => x && x.id === it.ref);
     const I = window.XyntalLinkIcons;
@@ -380,6 +413,8 @@
     const keyframes = [];
     const items = p.items.map((it) => {
       let out = itemHtml(it, o.links, o);
+      if (out && it.px) out = out.replace(/^<div /, `<div data-px="${PARALLAX[it.px]}" `);
+      if (out && it.tfx === "letters") out = out.replace(/^<div /, '<div data-tfx="letters" ');
       if (out && it.hover) {
         // Hover: Effekt als Attribut, Farben des Elements als Variablen (--hc Text/Akzent, --hb Hintergrund)
         out = out.replace(/^<div /, `<div data-hover="${it.hover}" `)
@@ -395,7 +430,10 @@
     }).join("");
     const style = keyframes.length ? `<style>${keyframes.join("")}</style>` : "";
     const layer = (where) => p.ov.filter((k) => OVERLAYS[k][1] === where).map((k) => `<div class="pc-ov pc-ov-${k}" aria-hidden="true"></div>`).join("");
-    return `<div class="pc-wrap${full ? " is-full" : ""}"${p.w === WIDE ? ' style="max-width:1080px"' : ""}><div class="pc${o.edit ? " is-edit" : ""}${wide ? " is-wide" : ""}" data-w="${p.w}" style="aspect-ratio:${p.w} / ${p.h};background:${background(p.bg)}">${style}${layer("back")}${items}${layer("top")}</div></div>`;
+    const flow = p.bga === "flow" && p.bg.color2 ? " is-flow" : "";
+    const video = p.bgv ? `<video class="pc-bgv" src="${esc(`${o.base}/storage/v1/object/public/page-media/${p.bgv}`)}" autoplay muted loop playsinline aria-hidden="true"></video>` : "";
+    const cur = p.cursor && !o.edit ? ` data-cursor="${p.cursor}" data-cemo="${esc(p.cemo)}"` : "";
+    return `<div class="pc-wrap${full ? " is-full" : ""}"${p.w === WIDE ? ' style="max-width:1080px"' : ""}><div class="pc${o.edit ? " is-edit" : ""}${wide ? " is-wide" : ""}${flow}" data-w="${p.w}"${cur} style="aspect-ratio:${p.w} / ${p.h};background:${background(p.bg)};--bg1:${p.bg.color};--bg2:${p.bg.color2 || p.bg.color}">${video}${style}${layer("back")}${items}${layer("top")}</div></div>`;
   }
 
   // --k = Pixel je Einheit, damit Bausteine (feste Pixelgröße) mit der Fläche mitskalieren
@@ -404,12 +442,128 @@
   // Animation „beim Scrollen“: startet, sobald das Element sichtbar wird
   const io = typeof IntersectionObserver === "function"
     ? new IntersectionObserver((list) => list.forEach((e) => { if (e.isIntersecting) { e.target.classList.add("is-in"); io.unobserve(e.target); } }), { threshold: 0.2 }) : null;
+  // ---- Countdown: ein gemeinsamer Takt für alle Countdowns auf der Seite ----
+  let cdTimer = 0;
+  function tickCountdowns() {
+    document.querySelectorAll("[data-cd]").forEach((el) => {
+      const out = el.querySelector("[data-cd-n]"), d = el.dataset.cd;
+      if (!out || !d) return;
+      let ms = new Date(d).getTime() - Date.now();
+      if (!Number.isFinite(ms)) return;
+      if (ms <= 0) { out.textContent = "LIVE"; el.classList.add("is-done"); return; }
+      const dd = Math.floor(ms / 864e5); ms -= dd * 864e5;
+      const hh = Math.floor(ms / 36e5); ms -= hh * 36e5;
+      const mm = Math.floor(ms / 6e4); const ss = Math.floor((ms - mm * 6e4) / 1e3);
+      const p2 = (x) => String(x).padStart(2, "0");
+      out.textContent = `${dd ? `${dd}d ` : ""}${p2(hh)}:${p2(mm)}:${p2(ss)}`;
+    });
+  }
+  function startCountdowns() { tickCountdowns(); if (!cdTimer && document.querySelector("[data-cd]")) cdTimer = setInterval(tickCountdowns, 1000); }
+
+  // ---- Parallax: Elemente bewegen sich beim Scrollen unterschiedlich schnell (nicht im Editor) ----
+  let pxBound = false;
+  function startParallax(host) {
+    const els = () => [...document.querySelectorAll(".pc:not(.is-edit) .pc-item[data-px]")];
+    if (!els().length) return;
+    const run = () => {
+      const vh = innerHeight / 2;
+      els().forEach((el) => {
+        const pc = el.parentElement.getBoundingClientRect();
+        const center = pc.top + el.offsetTop + el.offsetHeight / 2;
+        el.style.translate = `0 ${((center - vh) * Number(el.dataset.px)).toFixed(1)}px`;
+      });
+    };
+    run();
+    if (pxBound) return;
+    pxBound = true;
+    let f = 0;
+    addEventListener("scroll", () => { cancelAnimationFrame(f); f = requestAnimationFrame(run); }, { passive: true });
+    addEventListener("resize", () => { cancelAnimationFrame(f); f = requestAnimationFrame(run); });
+  }
+
+  // ---- Eigener Cursor auf der Seite (nur Maus) ----
+  let cursorEl = null;
+  function startCursor(host) {
+    const pc = host.querySelector(".pc[data-cursor]");
+    if (!pc || !matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+    if (!cursorEl) { cursorEl = document.createElement("div"); cursorEl.setAttribute("aria-hidden", "true"); document.body.append(cursorEl); }
+    const kind = pc.dataset.cursor;
+    cursorEl.className = `pc-cursor is-${kind}`;
+    cursorEl.textContent = kind === "emoji" ? pc.dataset.cemo || "🚀" : "";
+    pc.classList.add("has-cursor");
+    let tx = 0, ty = 0, cx = 0, cy = 0, raf = 0;
+    const loop = () => {
+      // Ring zieht weich hinterher, alles andere folgt direkt
+      const k = kind === "ring" ? 0.18 : 1;
+      cx += (tx - cx) * k; cy += (ty - cy) * k;
+      cursorEl.style.transform = `translate(${cx}px, ${cy}px)`;
+      raf = Math.abs(tx - cx) + Math.abs(ty - cy) > 0.3 ? requestAnimationFrame(loop) : 0;
+    };
+    pc.addEventListener("pointermove", (e) => {
+      tx = e.clientX; ty = e.clientY;
+      cursorEl.classList.add("is-on");
+      cursorEl.classList.toggle("is-link", !!e.target.closest("a, button"));
+      if (!raf) raf = requestAnimationFrame(loop);
+    });
+    pc.addEventListener("pointerleave", () => cursorEl.classList.remove("is-on"));
+  }
+
+  // ---- Partikel / Netz im Hintergrund (Canvas, reagiert auf die Maus) ----
+  const fields = [];
+  let fieldRaf = 0;
+  function startParticles(host) {
+    host.querySelectorAll(".pc-ov-particles, .pc-ov-network").forEach((ov) => {
+      if (ov.querySelector("canvas")) return;
+      const cv = document.createElement("canvas"); ov.append(cv);
+      const net = ov.classList.contains("pc-ov-network");
+      const f = { ov, cv, net, pts: [], mouse: null };
+      const pc = ov.parentElement;
+      pc.addEventListener("pointermove", (e) => { const r = cv.getBoundingClientRect(); f.mouse = { x: e.clientX - r.left, y: e.clientY - r.top }; });
+      pc.addEventListener("pointerleave", () => { f.mouse = null; });
+      fields.push(f);
+    });
+    const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const step = () => {
+      for (let i = fields.length - 1; i >= 0; i--) {
+        const f = fields[i];
+        if (!f.ov.isConnected) { fields.splice(i, 1); continue; }
+        const w = f.ov.clientWidth, h = f.ov.clientHeight, dpr = Math.min(2, devicePixelRatio || 1);
+        if (f.cv.width !== Math.round(w * dpr) || f.cv.height !== Math.round(h * dpr)) {
+          f.cv.width = Math.round(w * dpr); f.cv.height = Math.round(h * dpr);
+          const count = Math.min(140, Math.round((w * h) / (f.net ? 14000 : 9000)));
+          f.pts = Array.from({ length: count }, () => ({ x: Math.random() * w, y: Math.random() * h, vx: (Math.random() - 0.5) * 0.35, vy: f.net ? (Math.random() - 0.5) * 0.35 : -0.15 - Math.random() * 0.35, r: 0.6 + Math.random() * 1.8 }));
+        }
+        const g = f.cv.getContext("2d");
+        g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+        f.pts.forEach((p) => {
+          if (!calm) { p.x += p.vx; p.y += p.vy; }
+          if (f.mouse) { const dx = p.x - f.mouse.x, dy = p.y - f.mouse.y, d2 = dx * dx + dy * dy; if (d2 < 9000) { p.x += dx * 0.02; p.y += dy * 0.02; } }
+          if (p.x < -10) p.x = w + 10; if (p.x > w + 10) p.x = -10; if (p.y < -10) p.y = h + 10; if (p.y > h + 10) p.y = -10;
+          g.beginPath(); g.arc(p.x, p.y, p.r, 0, 6.283); g.fillStyle = "rgba(255,255,255,.7)"; g.fill();
+        });
+        if (f.net) {
+          const pts = f.mouse ? [...f.pts, { x: f.mouse.x, y: f.mouse.y }] : f.pts;
+          for (let a = 0; a < pts.length; a++) for (let b = a + 1; b < pts.length; b++) {
+            const dx = pts[a].x - pts[b].x, dy = pts[a].y - pts[b].y, d = Math.sqrt(dx * dx + dy * dy);
+            if (d < 120) { g.strokeStyle = `rgba(150,180,255,${(1 - d / 120) * 0.45})`; g.lineWidth = 1; g.beginPath(); g.moveTo(pts[a].x, pts[a].y); g.lineTo(pts[b].x, pts[b].y); g.stroke(); }
+          }
+        }
+      }
+      fieldRaf = fields.length && !calm ? requestAnimationFrame(step) : 0;
+    };
+    if (fields.length && !fieldRaf) step();
+  }
+
   function mount(host) {
     host.querySelectorAll(".pc").forEach((el) => {
       el.style.setProperty("--k", String(el.getBoundingClientRect().width / widthOf(el)));
       if (ro) ro.observe(el);
     });
-    host.querySelectorAll('.pc-item[data-trig="view"]').forEach((el) => { if (io) io.observe(el); else el.classList.add("is-in"); });
+    host.querySelectorAll('.pc-item[data-trig="view"], .pc-item[data-tfx="letters"]').forEach((el) => { if (io) io.observe(el); else el.classList.add("is-in"); });
+    startCountdowns();
+    startParticles(host);
+    const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!calm) { startParallax(host); startCursor(host); }
     // 3D-Kippen: Neigung und Lichtreflex folgen dem Mauszeiger (nur Maus, nicht bei reduzierter Bewegung)
     if (!matchMedia("(hover: hover) and (pointer: fine)").matches || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     host.querySelectorAll(".pc").forEach((cv) => {
@@ -433,5 +587,5 @@
   }
   function zoomOf(it, pw) { return `calc(var(--k, 1) * ${it.w} / ${natOf(it.kind, pw)})`; }
 
-  window.XyntalPageCanvas = { OVERLAYS, HOVERS, HOVER_TYPES, ANIMS, TRIGGERS, cleanAnim, compileAnim, EMBEDS, parseEmbed, BLOCKS, NARROW, WIDE, FULL, WIDTHS, natOf, mount, zoomOf, W, MIN_H, MAX_H, DEFAULTS, normalize, html, itemHtml, background, hex, num, round, esc, safeUrl };
+  window.XyntalPageCanvas = { TEXT_FX, PARALLAX, CURSORS, CURSOR_EMOJI, OVERLAYS, HOVERS, HOVER_TYPES, ANIMS, TRIGGERS, cleanAnim, compileAnim, EMBEDS, parseEmbed, BLOCKS, NARROW, WIDE, FULL, WIDTHS, natOf, mount, zoomOf, W, MIN_H, MAX_H, DEFAULTS, normalize, html, itemHtml, background, hex, num, round, esc, safeUrl };
 })();
