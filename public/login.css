@@ -5,12 +5,14 @@
    ===================================================================== */
 /* Neumorphes Login im Xyntal-Schema: dunkle Fläche, weiche Licht-/Schattenkanten, Off-White als Akzent */
 .auth-panel {
-  --nm-base: #242424;
-  --nm-dark: #131313;
-  --nm-light: #313131;
-  --nm-raise: 8px 8px 18px var(--nm-dark), -8px -8px 18px var(--nm-light);
-  --nm-raise-sm: 4px 4px 9px var(--nm-dark), -4px -4px 9px var(--nm-light);
-  --nm-inset: inset 4px 4px 9px var(--nm-dark), inset -4px -4px 9px var(--nm-light);
+  --nm-base: #212121;
+  --nm-well: #181818;
+  --nm-key: #2a2a2a;
+  --nm-line: rgba(255, 255, 255, 0.07);
+  --nm-line-strong: rgba(255, 255, 255, 0.14);
+  --nm-edge: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --nm-raise-sm: var(--nm-edge), 0 1px 2px rgba(0, 0, 0, 0.5), 0 6px 14px -8px rgba(0, 0, 0, 0.7);
+  --nm-inset: inset 0 1px 3px rgba(0, 0, 0, 0.55), 0 1px 0 rgba(255, 255, 255, 0.04);
   --nm-ease: cubic-bezier(0.65, 0, 0.35, 1);
 }
 .auth-main {
@@ -23,9 +25,9 @@
   width: min(100%, 460px);
   display: grid; gap: 22px;
   padding: 36px 34px 30px;
-  border: 1px solid rgba(255, 255, 255, 0.04); border-radius: 24px;
-  background: var(--nm-base);
-  box-shadow: 14px 14px 32px var(--nm-dark), -10px -10px 28px #2b2b2b;
+  border: 1px solid var(--nm-line); border-radius: 24px;
+  background: linear-gradient(180deg, #252525 0%, var(--nm-base) 40%);
+  box-shadow: var(--nm-edge), 0 2px 6px rgba(0, 0, 0, 0.35), 0 40px 80px -32px rgba(0, 0, 0, 0.85);
 }
 .auth-pane { display: contents; }
 .auth-stack { display: grid; gap: 22px; }
@@ -39,7 +41,7 @@
 /* Einloggen | Konto anlegen */
 .auth-switch {
   display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px;
-  border: 0; border-radius: 999px; background: var(--nm-base); box-shadow: var(--nm-inset);
+  border: 1px solid var(--nm-line); border-radius: 999px; background: var(--nm-well); box-shadow: var(--nm-inset);
 }
 .auth-switch button {
   display: grid; place-items: center; min-height: 40px; margin: 0; padding: 0 14px;
@@ -48,7 +50,7 @@
   transition: color 0.15s, background 0.15s;
 }
 .auth-switch button:hover { color: #ECEAE4; }
-.auth-switch button[aria-selected="true"] { background: var(--nm-base); color: var(--accent); box-shadow: var(--nm-raise-sm); }
+.auth-switch button[aria-selected="true"] { background: var(--nm-key); color: var(--text); box-shadow: var(--nm-raise-sm); }
 .auth-switch button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* Anbieter */
@@ -56,18 +58,18 @@
 .auth-panel .oauth-btn {
   min-height: 48px; padding: 0 16px; border-radius: 12px;
   font-size: 14.5px; font-weight: 600;
-  background: var(--nm-base); border-color: transparent; color: #ECEAE4; box-shadow: var(--nm-raise-sm);
-  transition: box-shadow 0.2s, color 0.2s;
+  background: var(--nm-key); border-color: var(--nm-line); color: #ECEAE4; box-shadow: var(--nm-raise-sm);
+  transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
 }
-.auth-panel .oauth-btn:hover { color: var(--accent); }
-.auth-panel .oauth-btn:active { box-shadow: var(--nm-inset); }
+.auth-panel .oauth-btn:hover { background: #313131; border-color: var(--nm-line-strong); }
+.auth-panel .oauth-btn:active { background: var(--nm-well); box-shadow: var(--nm-inset); }
 .auth-panel .oauth-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .auth-panel .phone-login { border-radius: 16px; }
 
 /* oder */
 .auth-panel .auth-divider { margin: 4px 0; gap: 12px; }
 .auth-panel .auth-divider span {
-  padding: 5px 12px; border: 0; border-radius: 999px; background: var(--nm-base); box-shadow: var(--nm-inset);
+  padding: 5px 12px; border: 1px solid var(--nm-line); border-radius: 999px; background: transparent;
   font: 500 11px/1 "JetBrains Mono", ui-monospace, Menlo, monospace; letter-spacing: 0.08em; text-transform: uppercase; color: #73716B;
 }
 
@@ -80,10 +82,11 @@
 .field { display: grid; gap: 7px; font-size: 13px; font-weight: 600; color: #ECEAE4; }
 .field-box {
   display: grid; grid-template-columns: 44px 1fr auto; align-items: center;
-  min-height: 50px; border: 0; border-radius: 14px; background: var(--nm-base); box-shadow: var(--nm-inset);
+  min-height: 50px; border: 1px solid var(--nm-line); border-radius: 12px; background: var(--nm-well); box-shadow: var(--nm-inset);
   transition: border-color 0.15s, box-shadow 0.15s;
 }
-.field-box:focus-within { box-shadow: var(--nm-inset), 0 0 0 1.5px var(--accent); }
+.field-box:hover { border-color: var(--nm-line-strong); }
+.field-box:focus-within { border-color: rgba(236, 234, 228, 0.55); box-shadow: var(--nm-inset), 0 0 0 3px rgba(236, 234, 228, 0.07); }
 .field-box > svg { width: 18px; height: 18px; justify-self: center; fill: none; stroke: #73716B; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .field-box:focus-within > svg { stroke: var(--accent); }
 .field-box input {
@@ -97,7 +100,7 @@
 .field-box input:-webkit-autofill:hover,
 .field-box input:-webkit-autofill:focus {
   -webkit-text-fill-color: #ECEAE4; caret-color: #ECEAE4;
-  -webkit-box-shadow: 0 0 0 1000px #242424 inset !important; box-shadow: 0 0 0 1000px #242424 inset !important;
+  -webkit-box-shadow: 0 0 0 1000px #181818 inset !important; box-shadow: 0 0 0 1000px #181818 inset !important;
   transition: background-color 9999s ease-out 0s;
 }
 .field-box input:autofill { background: transparent !important; }
@@ -117,7 +120,7 @@
 /* Passwortstärke */
 .pw-meter { display: grid; gap: 8px; margin-top: -6px; }
 .pw-bars { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-.pw-bars i { height: 5px; border-radius: 4px; background: var(--nm-base); box-shadow: inset 1px 1px 2px var(--nm-dark), inset -1px -1px 2px var(--nm-light); transition: background 0.2s; }
+.pw-bars i { height: 5px; border-radius: 4px; background: #333333; transition: background 0.2s; }
 .pw-label { font-size: 12.5px; color: #73716B; }
 .pw-meter[data-level="1"] .pw-bars i:nth-child(-n+1) { background: #E0705F; }
 .pw-meter[data-level="2"] .pw-bars i:nth-child(-n+2) { background: #D9B25F; }
@@ -141,12 +144,12 @@
   width: 100%; min-height: 50px; margin-top: 4px;
   border: 0 !important; border-radius: 999px !important;
   background: var(--accent) !important; color: var(--on-accent) !important; letter-spacing: 0.04em;
-  box-shadow: 0 8px 22px -8px rgba(236, 234, 228, 0.35), 4px 4px 10px var(--nm-dark), -3px -3px 9px var(--nm-light) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 1px 2px rgba(0, 0, 0, 0.5), 0 10px 22px -12px rgba(0, 0, 0, 0.9) !important;
   transition: transform 0.15s, box-shadow 0.2s, filter 0.2s; font-size: 16px !important;
   font-family: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
 }
 .auth-panel .btn.auth-submit:hover { filter: brightness(1.08); }
-.auth-panel .btn.auth-submit:active { transform: translateY(1px) scale(0.99); box-shadow: inset 2px 2px 6px rgba(0, 0, 0, 0.35) !important; }
+.auth-panel .btn.auth-submit:active { transform: translateY(1px) scale(0.99); box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3) !important; }
 .auth-panel .btn.auth-submit:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 3px; }
 .auth-panel .form-status { text-align: center; }
 .auth-panel .form-status:empty { display: none; }
@@ -210,10 +213,10 @@
     background:
       radial-gradient(120% 80% at 20% 0%, rgba(58, 138, 255, 0.26), transparent 60%),
       linear-gradient(160deg, #10213F 0%, #0C131F 55%, #101010 100%);
-    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.45);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
     transition: transform 0.8s var(--nm-ease), border-radius 0.8s var(--nm-ease), box-shadow 0.8s var(--nm-ease);
   }
-  .auth-panel[data-mode="signup"] .auth-overlay { transform: translateX(150%); border-radius: 0 28px 28px 0; box-shadow: -10px 0 30px rgba(0, 0, 0, 0.45); }
+  .auth-panel[data-mode="signup"] .auth-overlay { transform: translateX(150%); border-radius: 0 28px 28px 0; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06); }
   .auth-panel[data-mode="done"] .auth-overlay, .auth-panel[data-mode="mfa"] .auth-overlay { display: none; }
   .auth-panel[data-mode="done"] .auth-pane, .auth-panel[data-mode="mfa"] .auth-pane { display: none; }
   .auth-panel[data-mode="done"], .auth-panel[data-mode="mfa"] { padding: 40px 36px; border-radius: 28px; }
@@ -221,8 +224,8 @@
   /* weiche, runde Formen im Overlay – wandern beim Wechsel mit */
   .auth-overlay::before, .auth-overlay::after {
     content: ""; position: absolute; border-radius: 50%; pointer-events: none;
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.01));
-    box-shadow: inset 6px 6px 16px rgba(255, 255, 255, 0.06), inset -8px -8px 20px rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    background: radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.05), transparent 65%);
     transition: transform 1s var(--nm-ease);
   }
   .auth-overlay::before { width: 320px; height: 320px; left: -120px; bottom: -110px; }
