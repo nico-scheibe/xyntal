@@ -32,3 +32,16 @@ a.pc-l:focus-visible, button.pc-l:focus-visible { outline: 2px solid currentColo
 .pc-block.is-empty { height: auto; min-height: 40px; }
 .pc-blk-empty { display: grid; place-items: center; min-height: 60px; border: 1px dashed rgba(255, 255, 255, .3); border-radius: 12px; color: var(--text-3); font-size: 13px; }
 .pf.pf--custom { grid-template-columns: minmax(0, 1fr); gap: 22px; }
+
+/* Breite Seite auf schmalen Bildschirmen: statt winzig zu skalieren werden die Elemente untereinander gestapelt
+   (Reihenfolge: oben vor unten, links vor rechts – --ord aus page-canvas.js). Gilt nicht im Editor. */
+@container (max-width: 700px) {
+  .pc.is-wide:not(.is-edit) { aspect-ratio: auto !important; display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 20px 14px; }
+  .pc.is-wide:not(.is-edit) .pc-item { position: relative; left: auto !important; top: auto !important; width: 100% !important; height: auto !important;
+    transform: none !important; order: var(--ord); }
+  .pc.is-wide:not(.is-edit) .pc-t, .pc.is-wide:not(.is-edit) .pc-l { font-size: max(15px, calc(var(--fs) * .62px)) !important; border-radius: 14px !important; }
+  .pc.is-wide:not(.is-edit) .pc-l { min-height: 54px; }
+  .pc.is-wide:not(.is-edit) .pc-image img { height: auto; max-height: 70vh; border-radius: 14px !important; }
+  .pc.is-wide:not(.is-edit) .pc-blk { zoom: 1 !important; width: 100% !important; }
+  .pc.is-wide:not(.is-edit) .pc-block[data-kind="card"] { max-width: 360px; }
+}

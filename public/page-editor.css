@@ -4,6 +4,7 @@
 .pe-edit { width: 100%; padding-bottom: 96px; }
 .pe-stage { min-width: 0; display: grid; justify-items: center; }
 .pe-stage .pc-wrap { width: 100%; }
+.pe-edit { max-width: 1080px; margin: 0 auto; }
 .pe-stage .pc { touch-action: pan-y; outline: 1px dashed rgba(255, 255, 255, .28); outline-offset: 4px; }
 .pe-stage .pc-item { cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; }
 .pe-stage .pc-item * { pointer-events: none; }
@@ -64,3 +65,7 @@
 .pe-row { display: flex; flex-wrap: wrap; gap: 6px; }
 .pe-row .pe-btn { min-height: 34px; padding: 0 10px; font-size: 13px; flex: 1 1 auto; }
 .pe-hint { margin: 0; font-size: 13px; color: var(--text-3); }
+.pe-insp-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: -4px -4px 0 0; cursor: move; user-select: none; touch-action: none; }
+.pe-x { width: 28px; height: 28px; border: 0; border-radius: 8px; background: transparent; color: var(--text-2); font-size: 18px; line-height: 1; cursor: pointer; }
+.pe-x:hover { background: rgba(255, 255, 255, .1); color: var(--text); }
+@media (max-width: 1100px) { .pe-insp-head { cursor: default; } }

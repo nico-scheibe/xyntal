@@ -68,7 +68,7 @@
     }
 
     // ---- Zeichnen ----
-    const u = (n) => `calc(${round(n)} * 100cqw / ${C.W})`;
+    const u = (n) => `calc(${round(n)} * 100cqw / ${page.w})`;
     function placeOverlay() {
       const el = stage.querySelector(".pe-sel"), it = current();
       if (!el) return;
@@ -79,7 +79,7 @@
     function measure() {
       const cv = stage.querySelector(".pc");
       if (!cv) return;
-      const k = cv.getBoundingClientRect().width / C.W;
+      const k = cv.getBoundingClientRect().width / page.w;
       page.items.forEach((it) => {
         if (it.type !== "block") return;
         const el = cv.querySelector(`.pc-item[data-id="${CSS.escape(it.id)}"]`);
@@ -92,7 +92,7 @@
       if (opts.after) opts.after(stage);
       measure();
       const cv = stage.querySelector(".pc");
-      cv.style.aspectRatio = `${C.W} / ${page.h}`;
+      cv.style.aspectRatio = `${page.w} / ${page.h}`;
       const it = current();
       if (it) {
         cv.insertAdjacentHTML("beforeend", `<div class="pe-sel"><i data-h="rot" title="${esc(t("Drehen (Umschalt = 15°-Schritte)"))}"></i><i data-h="nw"></i><i data-h="ne"></i><i data-h="sw"></i><i data-h="se"></i></div>`);
@@ -104,6 +104,9 @@
       <label class="pe-field"><span>${esc(t("Farbe"))}</span><input type="color" data-bg="color" value="${page.bg.color}"></label>
       <label class="pe-field"><span>${esc(t("Verlauf"))}</span><input type="checkbox" data-bg-gradient ${page.bg.color2 ? "checked" : ""}></label>
       ${page.bg.color2 ? `<label class="pe-field"><span>${esc(t("Zweite Farbe"))}</span><input type="color" data-bg="color2" value="${page.bg.color2}"></label>` : ""}
+      <div class="pe-field"><span>${esc(t("Breite"))}</span><div class="pe-row">
+        <button type="button" class="pe-btn${page.w === C.WIDE ? " is-on" : ""}" data-width="${C.WIDE}">${esc(t("Ganze Seite"))}</button>
+        <button type="button" class="pe-btn${page.w === C.NARROW ? " is-on" : ""}" data-width="${C.NARROW}">${esc(t("Eine Spalte"))}</button></div></div>
       <label class="pe-field"><span>${esc(t("Höhe"))}</span><input type="range" min="240" max="2400" step="10" data-height value="${page.h}"></label>
       <p class="pe-count">${page.items.length} / ${limit()} ${esc(t("Elemente"))}</p>
       <button type="button" class="pe-btn pe-danger" data-reset>${esc(t("Auf Standardseite zurücksetzen"))}</button>`;
@@ -159,14 +162,14 @@
           <input type="text" data-p="alt" maxlength="120" value="${esc(it.alt)}" placeholder="${esc(t("Alternativtext für Screenreader"))}">`;
       }
       const block = it.type === "block";
-      insp.innerHTML = `<h2>${esc(t(block ? C.BLOCKS[it.kind][0] : it.type === "text" ? "Text" : it.type === "link" ? "Link" : "Bild"))}</h2>
+      insp.innerHTML = `<div class="pe-insp-head" data-insp-drag title="${esc(t("Ziehen zum Verschieben"))}"><h2>${esc(t(block ? C.BLOCKS[it.kind][0] : it.type === "text" ? "Text" : it.type === "link" ? "Link" : "Bild"))}</h2><button type="button" class="pe-x" data-insp-close aria-label="${esc(t("Schließen"))}">×</button></div>
         ${body}
         ${block ? "" : range$("radius", "Rundung", it.radius, 0, 120)}
         ${range$("o", "Deckkraft", it.o, 0.1, 1, 0.05)}
         ${range$("rot", "Drehung", it.rot, -180, 180)}
         ${it.rot ? `<button type="button" class="pe-btn" data-set="rot" data-val="0">${esc(t("Gerade stellen"))}</button>` : ""}
         <h2>${esc(t("Position"))}</h2>
-        ${num$("x", "Links", it.x, -480, 960)}${num$("y", "Oben", it.y, -4000, 4000)}${num$("w", "Breite", it.w, 16, 960)}${block ? "" : num$("h", "Höhe", it.h, 16, 4000)}
+        ${num$("x", "Links", it.x, -page.w, page.w * 2)}${num$("y", "Oben", it.y, -4000, 4000)}${num$("w", "Breite", it.w, 16, page.w * 2)}${block ? "" : num$("h", "Höhe", it.h, 16, 4000)}
         <div class="pe-row">
           <button type="button" class="pe-btn" data-act="front">${esc(t("Nach vorn"))}</button>
           <button type="button" class="pe-btn" data-act="back">${esc(t("Nach hinten"))}</button>
@@ -174,6 +177,22 @@
           <button type="button" class="pe-btn pe-danger" data-act="del">${esc(t(block ? "Entfernen" : "Löschen"))}</button>
         </div>`;
     }
+
+    // Eigenschaften-Fenster: am Kopf verschiebbar (große Bildschirme), × hebt die Auswahl auf
+    let pane = null;
+    insp.addEventListener("pointerdown", (e) => {
+      if (!e.target.closest("[data-insp-drag]") || e.target.closest("[data-insp-close]") || !matchMedia("(min-width: 1101px)").matches) return;
+      const r = insp.getBoundingClientRect();
+      pane = { dx: e.clientX - r.left, dy: e.clientY - r.top, id: e.pointerId };
+      insp.setPointerCapture(e.pointerId); e.preventDefault();
+    });
+    insp.addEventListener("pointermove", (e) => {
+      if (!pane || e.pointerId !== pane.id) return;
+      const x = Math.min(innerWidth - 80, Math.max(0, e.clientX - pane.dx)), y = Math.min(innerHeight - 60, Math.max(56, e.clientY - pane.dy));
+      Object.assign(insp.style, { left: `${x}px`, top: `${y}px`, right: "auto" });
+    });
+    insp.addEventListener("pointerup", () => { pane = null; });
+    insp.addEventListener("click", (e) => { if (e.target.closest("[data-insp-close]")) { sel = null; drawAll(); } });
 
     // ---- Elemente ändern ----
     function add(type, extra = {}) {
@@ -186,8 +205,8 @@
       const off = (page.items.length % 6) * 12;
       if (type === "block") {
         // Bausteine kommen unter die vorhandenen Elemente, mittig
-        it.x = round((C.W - it.w) / 2); it.y = round(page.items.reduce((m, i) => Math.max(m, i.y + i.h), 6) + 18);
-      } else { it.x = round(Math.max(0, (C.W - it.w) / 2) + off); it.y = round(Math.min(page.h - it.h, 40 + off * 4)); }
+        it.x = round((page.w - it.w) / 2); it.y = round(page.items.reduce((m, i) => Math.max(m, i.y + i.h), 6) + 18);
+      } else { it.x = round(Math.max(0, (page.w - it.w) / 2) + off); it.y = round(Math.min(page.h - it.h, 40 + off * 4)); }
       page.items.push(it); sel = it.id;
       fit(it); drawAll();
       return it;
@@ -201,7 +220,7 @@
       else if (["align", "font", "fit", "ref", "alt"].includes(k)) it[k] = v;
       else if (k === "weight") it.weight = Number(v) === 400 ? 400 : 700;
       else {
-        const R = { x: [-480, 960], y: [-4000, 4000], w: [16, 960], h: [16, 4000], size: [8, 160], radius: [0, 200], o: [0.1, 1], rot: [-360, 360] }[k];
+        const R = { x: [-C.WIDE, C.WIDE * 2], y: [-4000, 4000], w: [16, C.WIDE * 2], h: [16, 4000], size: [8, 160], radius: [0, 200], o: [0.1, 1], rot: [-360, 360] }[k];
         if (R) it[k] = round(num(v, R[0], R[1], it[k]));
       }
     }
@@ -246,7 +265,7 @@
 
     // ---- Ziehen und Skalieren (Maus, Stift, Finger) ----
     let drag = null;
-    const scale = () => C.W / stage.querySelector(".pc").getBoundingClientRect().width;
+    const scale = () => page.w / stage.querySelector(".pc").getBoundingClientRect().width;
     const centerOf = (id) => { const el = stage.querySelector(`.pc-item[data-id="${CSS.escape(id)}"]`), r = el && el.getBoundingClientRect(); return r ? { x: r.left + r.width / 2, y: r.top + r.height / 2 } : { x: 0, y: 0 }; };
     stage.addEventListener("pointerdown", (e) => {
       if (e.button !== 0) return;
@@ -267,7 +286,7 @@
         drag.moved = true; touch(); stage.classList.add("is-moving");
       }
       if (drag.mode === "move") {
-        it.x = round(num(b.x + dx, 16 - b.w, C.W - 16, b.x)); it.y = round(num(b.y + dy, 16 - b.h, page.h - 16, b.y));
+        it.x = round(num(b.x + dx, 16 - b.w, page.w - 16, b.x)); it.y = round(num(b.y + dy, 16 - b.h, page.h - 16, b.y));
       } else if (drag.mode === "rot") {
         // Der Griff über dem Element zeigt zum Zeiger
         let a = Math.atan2(e.clientY - drag.c.y, e.clientX - drag.c.x) * 180 / Math.PI + 90;
@@ -279,7 +298,7 @@
         const th = (b.rot || 0) * Math.PI / 180, cos = Math.cos(th), sin = Math.sin(th);
         const lx = dx * cos + dy * sin, ly = -dx * sin + dy * cos;
         const isBlock = it.type === "block";
-        const w = round(num(b.w + sx * lx, isBlock ? 60 : 16, 960, b.w));
+        const w = round(num(b.w + sx * lx, isBlock ? 60 : 16, page.w * 2, b.w));
         // Bausteine behalten ihr Seitenverhältnis, alles andere ändert Breite und Höhe getrennt
         const h = isBlock ? round(w * b.h / b.w) : round(num(b.h + sy * ly, 16, 4000, b.h));
         const px = sx * (w - b.w) / 2, py = sy * (h - b.h) / 2;
@@ -290,7 +309,7 @@
       const el = stage.querySelector(`.pc-item[data-id="${CSS.escape(it.id)}"]`);
       if (el) {
         Object.assign(el.style, { left: u(it.x), top: u(it.y), width: u(it.w), transform: it.rot ? `rotate(${it.rot}deg)` : "" });
-        if (it.type === "block") { const inner = el.firstElementChild; if (inner && inner.classList.contains("pc-blk")) inner.style.zoom = C.zoomOf(it); }
+        if (it.type === "block") { const inner = el.firstElementChild; if (inner && inner.classList.contains("pc-blk")) inner.style.zoom = C.zoomOf(it, page.w); }
         else el.style.height = u(it.h);
       }
       placeOverlay();
@@ -340,8 +359,9 @@
       }
       const pick = e.target.closest("[data-pick]"), blk = e.target.closest("[data-block]");
       if (pick) { add("link", { ref: pick.dataset.pick }); popName = ""; pop.hidden = true; }
-      else if (blk) { add("block", { kind: blk.dataset.block, w: C.BLOCKS[blk.dataset.block][0] === "Karte" ? 300 : 440 }); popName = ""; pop.hidden = true; }
+      else if (blk) { add("block", { kind: blk.dataset.block, w: C.natOf(blk.dataset.block, page.w) }); popName = ""; pop.hidden = true; }
       else if (e.target.closest("[data-reset]")) reset();
+      else if (e.target.closest("[data-width]")) setWidth(Number(e.target.closest("[data-width]").dataset.width));
     });
     $("[data-done]").addEventListener("click", () => {
       if (dirty && !confirm(t("Ungespeicherte Änderungen verwerfen?"))) return;
@@ -405,21 +425,45 @@
     }
     window.addEventListener("beforeunload", (e) => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
 
-    // Startlayout für Neue: die Bausteine der Profilseite untereinander, dann die Links (Höhen misst relayout nach dem Zeichnen)
+    // Startlayout für Neue: wie die normale Profilseite – links Karte und Links, rechts Steckbrief, Über mich,
+    // Ich biete / Ich suche nebeneinander und Skills (Höhen misst relayout nach dem ersten Zeichnen)
     let cardInfo = opts.cardInfo || null;
     function starter() {
       const items = [];
       const put = (kind, w) => { if (blocks[kind]) items.push({ id: uid8(), type: "block", kind, x: 0, y: 0, w, h: 200 }); };
-      put("card", 300);
-      links.filter((l) => l.active !== false).slice(0, Math.max(0, limit() - 7)).forEach((l) => items.push({ id: uid8(), type: "link", ref: l.id, x: 70, y: 0, w: 340, h: 54 }));
-      ["head", "about", "offer", "seek", "skills"].forEach((k) => put(k, 440));
-      return C.normalize({ h: 640, items });
+      put("card", 340);
+      links.filter((l) => l.active !== false).slice(0, Math.max(0, limit() - 7)).forEach((l) => items.push({ id: uid8(), type: "link", ref: l.id, x: 0, y: 0, w: 340, h: 60, size: 16 }));
+      put("head", 620); put("about", 620); put("offer", 300); put("seek", 300); put("skills", 620);
+      return C.normalize({ w: C.WIDE, h: 900, items });
     }
-    // Elemente in Reihenfolge untereinander setzen, mittig, mit echter Höhe
     function relayout() {
-      let y = 24;
-      page.items.forEach((it) => { it.x = round((C.W - it.w) / 2); it.y = y; y += it.h + 18; });
-      page.h = Math.min(C.MAX_H, Math.max(480, Math.ceil(y + 24)));
+      if (page.w !== C.WIDE) {
+        // Eine Spalte: alles mittig untereinander
+        let y = 24;
+        page.items.forEach((it) => { it.x = round((page.w - it.w) / 2); it.y = y; y += it.h + 18; });
+        page.h = Math.min(C.MAX_H, Math.max(480, Math.ceil(y + 24)));
+        return;
+      }
+      let yl = 40, yr = 40, prev = null;
+      page.items.forEach((it) => {
+        if (it.type === "link" || it.kind === "card") { it.x = 40; it.y = yl; yl += it.h + 14; return; }
+        if (it.kind === "seek" && prev && prev.kind === "offer") { it.x = 740; it.y = prev.y; yr = Math.max(yr, it.y + it.h + 24); }
+        else { it.x = 420; it.y = yr; yr += it.h + 24; }
+        prev = it;
+      });
+      page.h = Math.min(C.MAX_H, Math.max(600, Math.ceil(Math.max(yl, yr) + 40)));
+    }
+    // Zwischen „Ganze Seite“ und „Eine Spalte“ wechseln: alles maßstabsgetreu umrechnen
+    function setWidth(w) {
+      if (w === page.w || (w !== C.WIDE && w !== C.NARROW)) return;
+      touch();
+      const f = w / page.w;
+      page.items.forEach((it) => {
+        ["x", "y", "w", "h", "radius"].forEach((k) => { it[k] = round(it[k] * f); });
+        if (it.size) it.size = round(Math.min(160, Math.max(8, it.size * f)));
+      });
+      page.w = w; page.h = Math.min(C.MAX_H, Math.max(C.MIN_H, Math.round(page.h * f)));
+      drawAll();
     }
 
     // ---- Start ----
