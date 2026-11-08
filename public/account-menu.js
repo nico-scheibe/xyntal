@@ -212,7 +212,7 @@
         menu.innerHTML = `
           <a href="${loginHref}" role="menuitem">${ICONS.login}${t("Einloggen")}</a>
           <div class="acct-hint">${t("Noch kein Konto?")}</div>
-          <a class="acct-primary" href="/beta#bewerben" role="menuitem">${ICONS.neu}${t("Konto anlegen")}</a>`;
+          <a class="acct-primary" href="/login#registrieren" role="menuitem">${ICONS.neu}${t("Konto anlegen")}</a>`;
       }
       menu.setAttribute("role", "menu");
     }
