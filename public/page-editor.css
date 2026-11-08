@@ -99,3 +99,5 @@
 .pe-insp select option, .pe-pop select option { background-color: #1c1c1c; color: #eceae4; }
 .pe-insp select option:checked, .pe-pop select option:checked { background-color: #3a5bd9; color: #fff; }
 .pe-tile.is-on { background: var(--text); color: #1c1c1c; border-color: var(--text); }
+.pe-layouts .pe-tile svg { width: 60px; height: 40px; color: var(--text-2); }
+.pe-layouts .pe-tile:hover svg { color: var(--text); }

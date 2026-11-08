@@ -19,6 +19,7 @@
       <button type="button" class="pe-btn" data-add="link">+ ${esc(t("Link"))}</button>
       <label class="pe-btn" tabindex="0" data-upload-label>+ ${esc(t("Bild"))}<input type="file" accept="image/jpeg,image/png,image/webp,image/gif" data-upload hidden></label>
       <button type="button" class="pe-btn" data-add="block">+ ${esc(t("Mehr"))}</button>
+      <button type="button" class="pe-btn" data-add="layout">${esc(t("Layout"))}</button>
       <button type="button" class="pe-btn" data-add="bg">${esc(t("Hintergrund"))}</button>
       <i class="pe-sep" aria-hidden="true"></i>
       <button type="button" class="pe-btn" data-undo title="${esc(t("Rückgängig (Strg+Z)"))}" aria-label="${esc(t("Rückgängig"))}" disabled>↶</button>
@@ -157,6 +158,10 @@
           </div>
           <h2>${esc(t("Bausteine deines Profils"))}</h2>
           ${free.length ? `<div class="pe-tiles">${free.map((k) => tile(`data-block="${k}"`, "▣", C.BLOCKS[k][0])).join("")}</div>` : `<p>${esc(t("Alle Bausteine liegen schon auf der Seite."))}</p>`}`;
+      } else if (name === "layout") {
+        pop.innerHTML = `<h2>${esc(t("Aufbau-Vorlagen"))}</h2>
+          <p>${esc(t("Ordnet Karte, Links, Profil-Bausteine, Texte und Bilder neu an. Rückgängig geht mit ↶."))}</p>
+          <div class="pe-tiles pe-layouts">${Object.entries(LAYOUTS).map(([k, v]) => `<button type="button" class="pe-tile" data-layout="${k}">${v.icon}${esc(t(v.label))}</button>`).join("")}</div>`;
       } else pop.innerHTML = bgPanel();
     }
     function drawSide() { if (popName === "bg") pop.innerHTML = bgPanel(); }
@@ -557,6 +562,7 @@
       else if (blk) { add("block", { kind: blk.dataset.block, w: C.natOf(blk.dataset.block, page.w) }); popName = ""; pop.hidden = true; }
       else if (e.target.closest("[data-reset]")) reset();
       else if (e.target.closest("[data-width]")) setWidth(Number(e.target.closest("[data-width]").dataset.width));
+      else if (e.target.closest("[data-layout]")) { applyLayout(e.target.closest("[data-layout]").dataset.layout); popName = ""; pop.hidden = true; }
       else if (e.target.closest("[data-ov]")) {
         const k = e.target.closest("[data-ov]").dataset.ov;
         touch(); page.ov = page.ov.includes(k) ? page.ov.filter((x) => x !== k) : [...page.ov, k]; drawAll();
@@ -680,6 +686,98 @@
       });
       page.h = Math.min(C.MAX_H, Math.max(600, Math.ceil(Math.max(yl, yr) + 40)));
     }
+    // ---- Aufbau-Vorlagen ----
+    // Kleine Skizzen: K = Karte, Striche = Links, Flächen = Profil-Bausteine
+    const sk = (inner) => `<svg viewBox="0 0 60 40" aria-hidden="true" fill="currentColor">${inner}</svg>`;
+    const LAYOUTS = {
+      classic: { label: "Klassisch", icon: sk('<rect x="6" y="5" width="16" height="20" rx="2"/><rect x="6" y="28" width="16" height="3" rx="1"/><rect x="6" y="33" width="16" height="3" rx="1"/><rect x="26" y="5" width="28" height="6" rx="1" opacity=".6"/><rect x="26" y="14" width="28" height="10" rx="1" opacity=".6"/><rect x="26" y="27" width="13" height="8" rx="1" opacity=".6"/><rect x="41" y="27" width="13" height="8" rx="1" opacity=".6"/>') },
+      mirror: { label: "Gespiegelt", icon: sk('<rect x="38" y="5" width="16" height="20" rx="2"/><rect x="38" y="28" width="16" height="3" rx="1"/><rect x="38" y="33" width="16" height="3" rx="1"/><rect x="6" y="5" width="28" height="6" rx="1" opacity=".6"/><rect x="6" y="14" width="28" height="10" rx="1" opacity=".6"/><rect x="6" y="27" width="13" height="8" rx="1" opacity=".6"/><rect x="21" y="27" width="13" height="8" rx="1" opacity=".6"/>') },
+      center: { label: "Zentriert", icon: sk('<rect x="22" y="3" width="16" height="16" rx="2"/><rect x="18" y="21" width="24" height="3" rx="1"/><rect x="18" y="26" width="24" height="3" rx="1"/><rect x="16" y="31" width="28" height="7" rx="1" opacity=".6"/>') },
+      hero: { label: "Hero", icon: sk('<rect x="6" y="3" width="48" height="9" rx="1" opacity=".6"/><rect x="6" y="15" width="14" height="18" rx="2"/><rect x="23" y="15" width="14" height="3" rx="1"/><rect x="23" y="20" width="14" height="3" rx="1"/><rect x="23" y="25" width="14" height="3" rx="1"/><rect x="40" y="15" width="14" height="18" rx="1" opacity=".6"/>') },
+      grid: { label: "Raster", icon: sk('<rect x="22" y="3" width="16" height="14" rx="2"/><rect x="12" y="20" width="17" height="4" rx="1"/><rect x="31" y="20" width="17" height="4" rx="1"/><rect x="12" y="26" width="17" height="4" rx="1"/><rect x="31" y="26" width="17" height="4" rx="1"/><rect x="12" y="32" width="36" height="6" rx="1" opacity=".6"/>') },
+      split: { label: "Halbe-Halbe", icon: sk('<rect x="4" y="4" width="25" height="32" rx="2" opacity=".35"/><rect x="9" y="9" width="15" height="20" rx="2"/><rect x="33" y="6" width="23" height="4" rx="1"/><rect x="33" y="12" width="23" height="4" rx="1"/><rect x="33" y="18" width="23" height="4" rx="1"/><rect x="33" y="25" width="23" height="10" rx="1" opacity=".6"/>') },
+    };
+    // Fehlende Profil-Bausteine und Links ergänzen (ohne Doppelte), damit jede Vorlage vollständig ist
+    function ensureBasics() {
+      Object.keys(C.BLOCKS).forEach((k) => {
+        if (blocks[k] && !page.items.some((i) => i.type === "block" && i.kind === k) && page.items.length < limit()) page.items.push(C.normalize({ items: [{ id: uid8(), type: "block", kind: k, x: 0, y: 0, w: 300, h: 200 }] }).items[0]);
+      });
+      links.filter((l) => l.active !== false).forEach((l) => {
+        if (!page.items.some((i) => i.type === "link" && i.ref === l.id) && page.items.length < limit()) page.items.push(C.normalize({ items: [{ id: uid8(), type: "link", ref: l.id, x: 0, y: 0, w: 340, h: 60 }] }).items[0]);
+      });
+    }
+    function applyLayout(name) {
+      if (!LAYOUTS[name]) return;
+      touch(); ensureBasics();
+      const narrow = page.w === C.NARROW, col = narrow || name === "center";
+      const blk = (k) => page.items.find((i) => i.type === "block" && i.kind === k);
+      const lnk = page.items.filter((i) => i.type === "link");
+      const rest = page.items.filter((i) => i.type !== "link" && i.type !== "block");
+      // 1) Breiten setzen, zeichnen (misst die Höhen der Bausteine), 2) anordnen
+      const sizeW = { card: 340, head: 620, about: 620, offer: 300, seek: 300, skills: 620 };
+      if (col) Object.assign(sizeW, { card: narrow ? 300 : 360, head: narrow ? 440 : 600, about: narrow ? 440 : 600, offer: narrow ? 440 : 600, seek: narrow ? 440 : 600, skills: narrow ? 440 : 600 });
+      if (name === "hero") Object.assign(sizeW, { card: 320, head: 1000, about: 620, offer: 320, seek: 320, skills: 360 });
+      if (name === "grid") Object.assign(sizeW, { card: 340, head: 640, about: 640, offer: 310, seek: 310, skills: 640 });
+      if (name === "split") Object.assign(sizeW, { card: 380, head: 460, about: 460, offer: 460, seek: 460, skills: 460 });
+      page.items.forEach((it) => { if (it.type === "block") it.w = sizeW[it.kind]; });
+      lnk.forEach((it) => { it.w = col ? (narrow ? 380 : 420) : name === "grid" ? 300 : name === "hero" ? 300 : name === "split" ? 460 : 340; it.h = 60; it.rot = 0; });
+      drawAll();
+      const W = page.w, L = Math.round((W - 1000) / 2), G = 18;
+      const stack = (list, x, y, gap = G) => { list.filter(Boolean).forEach((it) => { it.x = x; it.y = y; it.rot = 0; y += it.h + gap; }); return y; };
+      const centerX = (it) => round((W - it.w) / 2);
+      let bottom = 40;
+      if (col) {
+        let y = 32;
+        [blk("card"), ...lnk, blk("head"), blk("about"), blk("offer"), blk("seek"), blk("skills")].filter(Boolean).forEach((it) => { it.x = centerX(it); it.y = y; it.rot = 0; y += it.h + G; });
+        bottom = y;
+      } else if (name === "classic" || name === "mirror") {
+        const left = name === "classic" ? L : L + 660, right = name === "classic" ? L + 380 : L;
+        const yl = stack([blk("card"), ...lnk], left, 40, 14);
+        let yr = stack([blk("head"), blk("about")], right, 40, 24);
+        const o = blk("offer"), s2 = blk("seek");
+        if (o) { o.x = right; o.y = yr; } if (s2) { s2.x = right + 320; s2.y = yr; }
+        if (o || s2) yr += Math.max(o ? o.h : 0, s2 ? s2.h : 0) + 24;
+        yr = stack([blk("skills")], right, yr, 24);
+        bottom = Math.max(yl, yr);
+      } else if (name === "hero") {
+        let y = stack([blk("head")], L, 40, 28);
+        const c = blk("card"); if (c) { c.x = L; c.y = y; }
+        const yl = stack(lnk, L + 350, y, 14);
+        const yo = stack([blk("offer"), blk("seek")], L + 680, y, 16);
+        y = Math.max(c ? y + c.h : y, yl, yo) + 28;
+        const a = blk("about"); if (a) { a.x = L; a.y = y; }
+        const sk2 = blk("skills"); if (sk2) { sk2.x = L + 640; sk2.y = y; }
+        bottom = y + Math.max(a ? a.h : 0, sk2 ? sk2.h : 0) + 24;
+      } else if (name === "grid") {
+        const c = blk("card"); let y = 40;
+        if (c) { c.x = centerX(c); c.y = y; y += c.h + 28; }
+        lnk.forEach((it, i) => { it.x = round(W / 2 - 310 + (i % 2) * 320); it.y = y + Math.floor(i / 2) * 74; });
+        if (lnk.length) y += Math.ceil(lnk.length / 2) * 74 + 14;
+        [blk("head"), blk("about")].filter(Boolean).forEach((it) => { it.x = centerX(it); it.y = y; y += it.h + 24; });
+        const o = blk("offer"), s2 = blk("seek");
+        if (o) { o.x = round(W / 2 - 320); o.y = y; } if (s2) { s2.x = round(W / 2 + 10); s2.y = y; }
+        if (o || s2) y += Math.max(o ? o.h : 0, s2 ? s2.h : 0) + 24;
+        const sk2 = blk("skills"); if (sk2) { sk2.x = centerX(sk2); sk2.y = y; y += sk2.h + 24; }
+        bottom = y;
+      } else if (name === "split") {
+        const c = blk("card"); if (c) { c.x = L + 40; c.y = 60; }
+        const yr = stack([...lnk, blk("head"), blk("about"), blk("offer"), blk("seek"), blk("skills")], L + 520, 40, 16);
+        bottom = Math.max(yr, c ? 60 + c.h + 40 : 0);
+      }
+      // Eigene Texte, Bilder, Formen usw.: unter die Vorlage, mittig nebeneinander mit Umbruch
+      if (rest.length) {
+        let x = 0, y = bottom + 24, rowH = 0; const maxW = Math.min(W - 40, 1000), x0 = round((W - maxW) / 2);
+        rest.forEach((it) => {
+          if (x && x + it.w > maxW) { x = 0; y += rowH + G; rowH = 0; }
+          it.x = round(x0 + x); it.y = round(y); x += it.w + G; rowH = Math.max(rowH, it.h);
+        });
+        bottom = y + rowH + G;
+      }
+      page.h = Math.min(C.MAX_H, Math.max(narrow ? 480 : 600, Math.ceil(bottom + 40)));
+      sel = null; drawAll();
+      say(t("Vorlage angewendet – mit ↶ rückgängig."), "ok");
+    }
+
     // Zwischen „Ganze Seite“ und „Eine Spalte“ wechseln: alles maßstabsgetreu umrechnen
     function setWidth(w) {
       if (w === page.w || !C.WIDTHS.includes(w)) return;
