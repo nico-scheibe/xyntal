@@ -2,60 +2,32 @@
 <html lang="de">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#1C1C1C">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex">
   <title>Seite gestalten – Xyntal</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/fonts/fonts.css?v=32">
   <link rel="stylesheet" href="/home.css?v=37">
-  <link rel="stylesheet" href="/page-canvas.css?v=1">
-  <link rel="stylesheet" href="/page-editor.css?v=1">
-  <script src="/i18n-en.js?v=102" defer></script>
-  <script src="/i18n.js?v=31" defer></script>
 </head>
-<body class="pe">
-<header class="pe-bar">
-  <a class="pe-back" href="/profil#links">← Profil</a>
-  <h1>Seite gestalten</h1>
-  <p class="pe-status" role="status" aria-live="polite" data-status></p>
-  <div class="pe-bar-actions">
-    <button type="button" class="pe-btn" data-undo title="Rückgängig (Strg+Z)" disabled>Rückgängig</button>
-    <button type="button" class="pe-btn" data-redo title="Wiederholen (Strg+Umschalt+Z)" disabled>Wiederholen</button>
-    <a class="pe-btn" data-view href="#" target="_blank" rel="noopener" hidden>Ansehen ↗</a>
-    <button type="button" class="pe-btn pe-primary" data-save disabled>Speichern</button>
-  </div>
-</header>
-
-<p class="pe-msg" data-loading>Wird geladen …</p>
-
-<main class="pe-main" data-editor hidden>
-  <aside class="pe-tools" aria-label="Hinzufügen">
-    <h2>Hinzufügen</h2>
-    <button type="button" class="pe-btn" data-add="text">+ Text</button>
-    <button type="button" class="pe-btn" data-add="link">+ Link</button>
-    <label class="pe-btn" tabindex="0" data-upload-label>+ Bild<input type="file" accept="image/jpeg,image/png,image/webp,image/gif" data-upload hidden></label>
-    <div class="pe-pop" data-links-pop hidden></div>
-
-    <h2>Hintergrund</h2>
-    <label class="pe-field"><span>Farbe</span><input type="color" data-bg="color"></label>
-    <label class="pe-field"><span>Verlauf</span><input type="checkbox" data-bg-gradient></label>
-    <label class="pe-field" data-bg2-row hidden><span>Zweite Farbe</span><input type="color" data-bg="color2"></label>
-    <label class="pe-field"><span>Höhe</span><input type="range" min="240" max="2400" step="10" data-height></label>
-
-    <p class="pe-count" data-count></p>
-    <button type="button" class="pe-btn pe-danger" data-reset>Auf Standardseite zurücksetzen</button>
-  </aside>
-
-  <section class="pe-stage" data-stage aria-label="Vorschau – Elemente ziehen zum Verschieben"></section>
-
-  <aside class="pe-insp" data-insp aria-label="Eigenschaften"></aside>
+<body>
+<main class="shell" style="padding:96px 0;text-align:center">
+  <p data-msg style="color:var(--text-2)">Deine Seite wird geöffnet …</p>
 </main>
-
 <script src="/vendor/supabase.js?v=31"></script>
 <script src="/config.js?v=31"></script>
-<script src="/link-icons.js?v=1"></script>
-<script src="/page-canvas.js?v=1"></script>
-<script src="/page-editor.js?v=1"></script>
+<script>
+// Die Seite wird direkt unter xyntal.de/deinname gestaltet (u.js, Adresse mit #gestalten): hierher führen nur ältere Links
+(async () => {
+  const msg = document.querySelector("[data-msg]"), c = window.XYNTAL_CONFIG;
+  try {
+    const sb = window.supabase.createClient(c.supabaseUrl, c.supabaseKey);
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { msg.innerHTML = 'Melde dich an, um deine Seite zu gestalten. <a class="text-link" href="/login">Anmelden</a>'; return; }
+    const { data } = await sb.rpc("get_my_card");
+    if (data && data.handle) { location.replace(`/${data.handle}#gestalten`); return; }
+    msg.innerHTML = 'Lege zuerst deine Karte an. <a class="text-link" href="/meine-karte">Zur Karte</a>';
+  } catch { msg.textContent = "Das hat gerade nicht geklappt. Bitte versuch es gleich noch einmal."; }
+})();
+</script>
 </body>
 </html>

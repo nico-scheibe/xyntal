@@ -60,6 +60,7 @@
           <div class="bp-stage${admin ? " pf-admin-stage" : ""}">${window.XyntalCardHtml(c, { t, heading: "h1", avatarAttrs: "data-pub-avatar" })}</div>
           <div class="pf-actions">
             ${primary}
+            ${own ? `<a class="btn btn-glass" href="#gestalten" data-edit-page>${esc(t("Seite frei gestalten"))}</a>` : ""}
             ${!member && !own ? `<p class="pf-invited">${esc(t("Du wurdest eingeladen: Mit einem Konto bekommst du 7 Tage Plus gratis – und die Person, die dich eingeladen hat, auch."))} <a class="text-link" href="/login#registrieren">${esc(t("Konto anlegen"))}</a></p>` : ""}
             <button class="btn btn-glass" type="button" data-copy-link>${esc(t(navigator.share ? "Profil teilen" : "Link kopieren"))}</button>
             <p class="pf-copied" role="status" data-copy-status></p>
@@ -78,7 +79,23 @@
     if (admin) adminTilt();
     else linkGlow();
   }
-  // Freie Seite (Editor /meine-seite): nur wenn die Person Elemente platziert hat, sonst bleibt die Standardseite
+  // Editor: öffnet sich direkt auf der eigenen Seite (xyntal.de/name#gestalten) und ersetzt sie, bis „Fertig“ gedrückt wird
+  const loadAsset = (tag, attr, url) => new Promise((ok, fail) => { const el = document.createElement(tag); if (tag === "link") el.rel = "stylesheet"; el[attr] = url; el.onload = ok; el.onerror = fail; document.head.append(el); });
+  let editing = false;
+  async function startEditor() {
+    if (editing) return;
+    editing = true;
+    try {
+      const css = loadAsset("link", "href", "/page-canvas.css?v=2"), css2 = loadAsset("link", "href", "/page-editor.css?v=2");
+      if (!window.supabase) await loadAsset("script", "src", "/vendor/supabase.js?v=31");
+      await Promise.all([css, css2]);
+      await loadAsset("script", "src", "/page-editor.js?v=2");
+      document.body.classList.remove("admin-profile");
+      window.XyntalPageEditor.open(root);
+    } catch { editing = false; location.assign(location.pathname); }
+  }
+  root.addEventListener("click", (e) => { if (e.target.closest("[data-edit-page]")) { e.preventDefault(); history.replaceState(null, "", "#gestalten"); startEditor(); } });
+  // Freie Seite (Editor): nur wenn die Person Elemente platziert hat, sonst bleibt die Standardseite
   const customPage = (c) => !!(window.XyntalPageCanvas && c.page && Array.isArray(c.page.items) && window.XyntalPageCanvas.normalize(c.page).items.length);
   function renderCustom(c, primary) {
     const own = !!(me && c.user_id && c.user_id === me.id);
@@ -87,7 +104,7 @@
         ${window.XyntalPageCanvas.html(c.page, { links: Array.isArray(c.links) ? c.links : [], base: SUPA, t })}
         <div class="pf-actions">
           ${primary}
-          ${own ? `<a class="btn btn-glass" href="/meine-seite">${esc(t("Seite gestalten"))}</a>` : ""}
+          ${own ? `<a class="btn btn-glass" href="#gestalten" data-edit-page>${esc(t("Seite frei gestalten"))}</a>` : ""}
           ${!member && !own ? `<p class="pf-invited">${esc(t("Du wurdest eingeladen: Mit einem Konto bekommst du 7 Tage Plus gratis – und die Person, die dich eingeladen hat, auch."))} <a class="text-link" href="/login#registrieren">${esc(t("Konto anlegen"))}</a></p>` : ""}
           <button class="btn btn-glass" type="button" data-copy-link>${esc(t(navigator.share ? "Profil teilen" : "Link kopieren"))}</button>
           <p class="pf-copied" role="status" data-copy-status></p>
@@ -351,7 +368,10 @@
       });
       if (!res.ok) throw new Error(String(res.status));
       const card = await res.json();
-      if (card && card.name) { renderCard(card); window.XyntalCardHtml.hydrate?.(root); loadMatch(card.user_id); if (card.profile) loadAvatar(card.profile.avatar_path); return; }
+      if (card && card.name && !editing) { renderCard(card); window.XyntalCardHtml.hydrate?.(root); loadMatch(card.user_id); if (card.profile) loadAvatar(card.profile.avatar_path);
+        if (location.hash === "#gestalten" && me && card.user_id === me.id) startEditor();
+        return; }
+      if (card && card.name && editing) return;
       if (card && card.reserved) {
         document.title = `xyntal.de/${handle} – ${t("reserviert")}`;
         return page(`<div class="profile-msg"><h1><b>xyntal.de/${esc(handle)}</b><br>${esc(t("ist reserviert."))}</h1><p>${esc(t("Dieses Profil ist noch nicht öffentlich freigegeben. Es kann schon jetzt im eigenen Konto veröffentlicht werden."))}</p>${ctas(`<a class="btn btn-primary" href="/#karte">${esc(t("Eigenen Link sichern"))}</a>`)}</div>`);

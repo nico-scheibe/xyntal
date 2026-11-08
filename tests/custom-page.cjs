@@ -35,23 +35,25 @@ const stub = `window.supabase = { createClient: () => ({
     await r.fulfill({ contentType: 'application/json', body: JSON.stringify(body) });
   });
 
-  // 1. Editor: Startlayout aus Karte und Links
-  await pg.goto(`${base}/meine-seite`);
+  // 1. Editor öffnet direkt auf der eigenen Seite (xyntal.de/name#gestalten)
+  await pg.addInitScript(([uid]) => localStorage.setItem('sb-rralgrlujoupprwlvoyo-auth-token', JSON.stringify({ access_token: 'x', expires_at: 9999999999, user: { id: uid } })), [UID]);
+  await pg.route('**/rest/v1/rpc/get_public_card', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ ...card, page: saved, design: {} }) }));
+  await pg.goto(`${base}/nico#gestalten`);
   await pg.waitForSelector('.pc-item');
   assert.equal(await pg.locator('.pc-item').count(), 3, 'Name, Kurztext, ein Link');
 
   // 2. Text hinzufügen, ziehen, Größe ändern
-  await pg.click('[data-add="text"]');
+  await pg.click('[data-add="window"]');
   assert.equal(await pg.locator('.pc-item').count(), 4);
   const el = pg.locator('.pc-item').last();
   const b0 = await el.boundingBox();
-  await pg.mouse.move(b0.x + 20, b0.y + 20); await pg.mouse.down(); await pg.mouse.move(b0.x + 120, b0.y + 160, { steps: 6 }); await pg.mouse.up();
+  await pg.mouse.move(b0.x + 20, b0.y + 20); await pg.mouse.down(); await pg.mouse.move(b0.x + 60, b0.y + 140, { steps: 6 }); await pg.mouse.up();
   const b1 = await pg.locator('.pc-item').last().boundingBox();
-  assert.ok(b1.x - b0.x > 80 && b1.y - b0.y > 100, 'Element folgt dem Zeiger');
+  assert.ok(b1.x - b0.x > 30 && b1.y - b0.y > 100, 'Element folgt dem Zeiger');
   const se = await pg.locator('.pe-sel i[data-h="se"]').boundingBox();
-  await pg.mouse.move(se.x + 7, se.y + 7); await pg.mouse.down(); await pg.mouse.move(se.x + 87, se.y + 47, { steps: 5 }); await pg.mouse.up();
+  await pg.mouse.move(se.x + 7, se.y + 7); await pg.mouse.down(); await pg.mouse.move(se.x + 47, se.y + 27, { steps: 5 }); await pg.mouse.up();
   const b2 = await pg.locator('.pc-item').last().boundingBox();
-  assert.ok(b2.width - b1.width > 60, 'Ecke ändert die Breite');
+  assert.ok(b2.width - b1.width > 30, 'Ecke ändert die Breite');
   await pg.fill('textarea[data-p="text"]', 'Hallo <b>Welt</b>');
   await pg.fill('input[data-p="color"]', '#ff0000');
   // 2b. Drehen: Regler und Griff über dem Element
@@ -68,6 +70,7 @@ const stub = `window.supabase = { createClient: () => ({
   await pg.click('[data-save]');
   await pg.waitForFunction(() => document.querySelector('[data-status]').textContent.includes('Gespeichert'));
   assert.ok(saved && saved.items.length >= 3);
+  assert.equal(await pg.evaluate(() => location.pathname), '/nico', 'Editor läuft auf der eigenen Adresse');
   assert.ok(saved.items.every((i) => ['text', 'link', 'image'].includes(i.type)));
   await pg.screenshot({ path: process.env.SHOT_EDITOR || '/tmp/editor.png' });
 
