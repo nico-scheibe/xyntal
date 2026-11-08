@@ -368,7 +368,13 @@ body.messages-page .site-footer { display: none; }
 .xc-members li .xc-x:hover, .xc-members li .xc-x.is-armed { background: rgba(255, 107, 129, .14); color: #FF8597 !important; }
 
 /* Gruppe bearbeiten / Personen hinzufügen */
-.xc-edit, .xc-add { gap: 12px !important; }
+.xc-edit { gap: 12px !important; }
+.xc-sec-head { display: flex; align-items: center; justify-content: space-between; min-height: 28px; }
+.xc-add-toggle { width: 28px; height: 28px; margin-right: -6px; border-radius: 99px; }
+.xc-add-toggle svg { width: 16px; height: 16px; transition: transform var(--xc-ease); }
+.xc-add-toggle.is-open { background: var(--xc-wash-2); color: var(--xc-text) !important; }
+.xc-add-toggle.is-open svg { transform: rotate(45deg); }
+.xc-add { display: grid; gap: 8px; margin-top: 4px; }
 .xc-edit label { display: grid; gap: 6px; min-width: 0; color: var(--xc-text-3); font-size: 12px; font-weight: 600; }
 .xc-edit-label { color: var(--xc-text-3); font-size: 12px; font-weight: 600; }
 .xc-edit input, .xc-edit textarea, .xc-add input {
