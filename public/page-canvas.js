@@ -168,6 +168,8 @@
       const e = EMBEDS[raw.provider];
       if (!e || !e.re.test(String(raw.eid || ""))) return null;
       it.provider = raw.provider; it.eid = raw.eid;
+      // Nur eigene Inhalte (Community-Richtlinien Regel 8): ohne Bestätigung wird nichts öffentlich gezeigt
+      it.own = raw.own === true;
     } else {
       if (!SRC.test(raw.src || "")) return null;
       it.src = raw.src;
@@ -213,6 +215,7 @@
       return `<div ${attrs.replace('class="pc-item', `class="pc-item is-${it.kind}`)}><div class="pc-shape" style="background:${fill};border-radius:${r};${deco}"></div></div>`;
     }
     if (it.type === "embed") {
+      if (!it.own && !o.edit) return "";
       const e = EMBEDS[it.provider], title = { youtube: "YouTube", vimeo: "Vimeo", spotify: "Spotify" }[it.provider];
       return `<div ${attrs.replace('class="pc-item', `class="pc-item is-${it.provider}`)}><iframe class="pc-frame" src="${esc(e.src(it.eid))}" title="${title}" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" style="border-radius:${uu(it.radius)};${deco}"></iframe></div>`;
     }

@@ -121,11 +121,13 @@ const stub = `window.supabase = { createClient: () => ({
   await pg.check('input[data-p="sh"]');
   await pg.keyboard.press('Escape');
   await pg.click('[data-add="block"]'); await pg.click('[data-embed-open]');
-  await pg.fill('[data-embed-url]', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=10'); await pg.click('[data-embed-go]');
+  await pg.fill('[data-embed-url]', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=10');
+  assert.ok(await pg.locator('[data-embed-go]').isDisabled(), 'Einbetten erst nach Bestätigung');
+  await pg.check('[data-embed-own]'); await pg.click('[data-embed-go]');
   assert.equal(await pg.locator('.pc-embed iframe[src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"]').count(), 1, 'YouTube eingebettet');
   await pg.keyboard.press('Escape');
   await pg.click('[data-add="block"]'); await pg.click('[data-embed-open]');
-  await pg.fill('[data-embed-url]', 'javascript:alert(1)'); await pg.click('[data-embed-go]');
+  await pg.fill('[data-embed-url]', 'javascript:alert(1)'); await pg.check('[data-embed-own]'); await pg.click('[data-embed-go]');
   assert.match(await pg.locator('[data-status]').textContent(), /nicht einbetten/);
   await pg.keyboard.press('Escape'); await pg.click('[data-add="block"]');
   // 4. Speichern
@@ -147,6 +149,7 @@ const stub = `window.supabase = { createClient: () => ({
   assert.ok(await pub.locator('a.pc-l[href="https://example.com"]').count() === 1, 'Link ist klickbar');
   assert.equal(await pub.locator('a.pc-btn[href="https://cal.com/nico"]').count(), 1, 'Knopf mit Adresse');
   assert.equal(await pub.locator('.pc-embed iframe').count(), 1, 'Video öffentlich');
+  assert.ok(saved.items.some((i) => i.type === 'embed' && i.own === true), 'Bestätigung gespeichert');
   assert.equal(await pub.locator('.pc-item[data-anim="float"]').count(), 1, 'Animation öffentlich');
   assert.match(await pub.locator('.pc-item[data-anim="custom"] > *').evaluate((el) => getComputedStyle(el).animationName), /^pck-/, 'eigene Animation läuft');
   assert.equal(await pub.locator('.pc-item[data-anim="float"] > *').evaluate((el) => getComputedStyle(el).animationName), 'pc-float', 'Effekt läuft');
