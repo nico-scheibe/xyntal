@@ -119,6 +119,9 @@ const stub = `window.supabase = { createClient: () => ({
   await pg.fill('input[data-p="url"]', 'https://cal.com/nico'); await pg.press('input[data-p="url"]', 'Enter');
   await pg.locator('input[data-p="url"]').evaluate((el) => el.dispatchEvent(new Event('change', { bubbles: true })));
   await pg.check('input[data-p="sh"]');
+  await pg.selectOption('select[data-p="hover"]', 'tilt');
+  await pg.click('[data-act="hover-preview"]');
+  assert.equal(await pg.locator('.pc-item.pc-button.is-hover[data-hover="tilt"]').count(), 1, 'Hover-Vorschau');
   await pg.keyboard.press('Escape');
   await pg.click('[data-add="block"]'); await pg.click('[data-embed-open]');
   await pg.fill('[data-embed-url]', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=10');
@@ -151,6 +154,10 @@ const stub = `window.supabase = { createClient: () => ({
   assert.equal(await pub.locator('.pc-embed iframe').count(), 1, 'Video öffentlich');
   assert.ok(saved.items.some((i) => i.type === 'embed' && i.own === true), 'Bestätigung gespeichert');
   assert.equal(await pub.locator('.pc-item[data-anim="float"]').count(), 1, 'Animation öffentlich');
+  const btn = pub.locator('.pc-item[data-hover="tilt"] a.pc-btn');
+  const tf0 = await btn.evaluate((el) => getComputedStyle(el).transform);
+  await btn.hover({ force: true }); await pub.waitForTimeout(400);
+  assert.notEqual(await btn.evaluate((el) => getComputedStyle(el).transform), tf0, 'Hover-Effekt greift');
   assert.match(await pub.locator('.pc-item[data-anim="custom"] > *').evaluate((el) => getComputedStyle(el).animationName), /^pck-/, 'eigene Animation läuft');
   assert.equal(await pub.locator('.pc-item[data-anim="float"] > *').evaluate((el) => getComputedStyle(el).animationName), 'pc-float', 'Effekt läuft');
   assert.match(await pub.locator('.pc style').textContent(), /@keyframes pck-[a-z0-9]+\{0%\{color:#ff00aa;transform:rotate\(0deg\)\}/, 'eigene Animation öffentlich');

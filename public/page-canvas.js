@@ -47,6 +47,15 @@
     shake: ["Schütteln", true], spin: ["Drehen", true], glow: ["Leuchten", true], rainbow: ["Farbwechsel", true],
   };
   const TRIGGERS = ["load", "view", "hover"];
+  // Hover-Effekte für Knöpfe, Links, Symbole, Fenster, Bilder und Formen (page-canvas.css; „tilt“ braucht mount)
+  const HOVERS = {
+    lift: "Anheben", pop: "Aufploppen", glow: "Leuchten", neon: "Neon", shine: "Glanz", fill: "Füllen",
+    ring: "Ring", outline: "Rahmen-Puls", rainbow: "Regenbogen", tilt: "3D-Kippen", shake: "Wackeln", blur: "Fokus",
+  };
+  const HOVER_TYPES = ["link", "button", "icons", "text", "image", "shape"];
+  // Leuchtfarbe: die hellere der beiden Farben des Elements, damit Leuchten/Ring auf dunklem Grund sichtbar sind
+  const lum = (h) => { const n = parseInt(String(h || "").slice(1), 16); return Number.isFinite(n) ? ((n >> 16) * 299 + ((n >> 8) & 255) * 587 + (n & 255) * 114) / 1000 : 0; };
+  const glowOf = (it) => { const a = it.bg || "", b = it.color || ""; return (lum(a) >= lum(b) ? a : b) || "#eceae4"; };
   // Eigene Animation: nur diese Zeichen (keine Klammern, Anführungszeichen, <, /, @) – dieselbe Regel prüft save_my_page
   const CODE_CHARS = /[^A-Za-z0-9äöüÄÖÜß%#{}:;.,\s-]/g;
   function cleanAnim(a) {
@@ -134,6 +143,7 @@
       o: round(num(raw.o, 0.1, 1, 1)),
       rot: round(num(raw.rot, -360, 360, 0)),
       anim: cleanAnim(raw.anim),
+      hover: HOVERS[raw.hover] && HOVER_TYPES.includes(raw.type) ? raw.hover : "",
       radius: round(num(raw.radius, 0, 999, d.radius)),
       // Rahmen und Schatten (alle außer Profil-Bausteinen)
       bw: round(num(raw.bw, 0, 16, 0)), bc: hex(raw.bc, "#eceae4"), sh: raw.sh === true,
@@ -263,6 +273,11 @@
     const keyframes = [];
     const items = p.items.map((it) => {
       let out = itemHtml(it, o.links, o);
+      if (out && it.hover) {
+        // Hover: Effekt als Attribut, Farben des Elements als Variablen (--hc Text/Akzent, --hb Hintergrund)
+        out = out.replace(/^<div /, `<div data-hover="${it.hover}" `)
+          .replace('style="', `style="--hc:${glowOf(it)};--hf:${it.color || "#eceae4"};--hb:${it.bg || "#1c1c1c"};`);
+      }
       const a = it.anim;
       if (!out || !a) return out;
       // Animation am Element: Effekt, Auslöser und Zeiten als Attribute/Variablen; eigene Keyframes aus compileAnim
@@ -287,8 +302,26 @@
       if (ro) ro.observe(el);
     });
     host.querySelectorAll('.pc-item[data-trig="view"]').forEach((el) => { if (io) io.observe(el); else el.classList.add("is-in"); });
+    // 3D-Kippen: Neigung und Lichtreflex folgen dem Mauszeiger (nur Maus, nicht bei reduzierter Bewegung)
+    if (!matchMedia("(hover: hover) and (pointer: fine)").matches || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    host.querySelectorAll(".pc").forEach((cv) => {
+      if (cv._tilt) return;
+      cv._tilt = true;
+      cv.addEventListener("pointermove", (e) => {
+        const item = e.target.closest && e.target.closest('.pc-item[data-hover="tilt"]');
+        if (!item) return;
+        const box = item.querySelector(".pc-ib:hover") || item.firstElementChild, r = box.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+        box.style.setProperty("--rx", `${((0.5 - y) * 18).toFixed(1)}deg`); box.style.setProperty("--ry", `${((x - 0.5) * 22).toFixed(1)}deg`);
+        box.style.setProperty("--mx", `${(x * 100).toFixed(0)}%`); box.style.setProperty("--my", `${(y * 100).toFixed(0)}%`);
+      });
+      cv.addEventListener("pointerout", (e) => {
+        const item = e.target.closest && e.target.closest('.pc-item[data-hover="tilt"]');
+        if (item && !item.contains(e.relatedTarget)) item.querySelectorAll("*").forEach((el) => { el.style.removeProperty("--rx"); el.style.removeProperty("--ry"); });
+      });
+    });
   }
   function zoomOf(it, pw) { return `calc(var(--k, 1) * ${it.w} / ${natOf(it.kind, pw)})`; }
 
-  window.XyntalPageCanvas = { ANIMS, TRIGGERS, cleanAnim, compileAnim, EMBEDS, parseEmbed, BLOCKS, NARROW, WIDE, FULL, WIDTHS, natOf, mount, zoomOf, W, MIN_H, MAX_H, DEFAULTS, normalize, html, itemHtml, background, hex, num, round, esc, safeUrl };
+  window.XyntalPageCanvas = { HOVERS, HOVER_TYPES, ANIMS, TRIGGERS, cleanAnim, compileAnim, EMBEDS, parseEmbed, BLOCKS, NARROW, WIDE, FULL, WIDTHS, natOf, mount, zoomOf, W, MIN_H, MAX_H, DEFAULTS, normalize, html, itemHtml, background, hex, num, round, esc, safeUrl };
 })();

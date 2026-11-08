@@ -253,6 +253,9 @@
         ${range$("o", "Deckkraft", it.o, 0.1, 1, 0.05)}
         ${range$("rot", "Drehung", it.rot, -180, 180)}
         ${it.rot ? `<button type="button" class="pe-btn" data-set="rot" data-val="0">${esc(t("Gerade stellen"))}</button>` : ""}
+        ${C.HOVER_TYPES.includes(it.type) ? `<h2>${esc(t("Hover-Effekt"))}</h2>
+        <label class="pe-field"><span>${esc(t("Bei Maus"))}</span><select data-p="hover"><option value="">${esc(t("Keiner"))}</option>${Object.entries(C.HOVERS).map(([k, l]) => `<option value="${k}"${it.hover === k ? " selected" : ""}>${esc(t(l))}</option>`).join("")}</select></label>
+        ${it.hover ? `<button type="button" class="pe-btn" data-act="hover-preview">▶ ${esc(t("Hover testen"))}</button>` : ""}` : ""}
         ${animPanel(it)}
         <h2>${esc(t("Position"))}</h2>
         ${num$("x", "Links", it.x, -page.w, page.w * 2)}${num$("y", "Oben", it.y, -4000, 4000)}${num$("w", "Breite", it.w, 16, page.w * 2)}${block ? "" : num$("h", "Höhe", it.h, 16, 4000)}
@@ -316,6 +319,7 @@
       else if (k === "icon" || k === "sh") it[k] = !!v;
       else if (["color", "bg", "bg2", "bc"].includes(k)) it[k] = C.hex(v, it[k]);
       else if (["align", "font", "fit", "ref", "alt", "kind"].includes(k)) it[k] = v;
+      else if (k === "hover") it.hover = C.HOVERS[v] ? v : "";
       else if (k === "weight") it.weight = Number(v) === 400 ? 400 : 700;
       else {
         const R = { x: [-C.FULL, C.FULL * 2], y: [-4000, 4000], w: [16, C.FULL * 2], h: [16, 4000], size: [8, 160], radius: [0, 999], o: [0.1, 1], rot: [-360, 360], bw: [0, 16] }[k];
@@ -349,6 +353,12 @@
       else if (act.dataset.act === "back") { touch(); page.items.unshift(page.items.splice(i, 1)[0]); }
       else if (act.dataset.act === "stack") { stackLinks(it); return; }
       else if (act.dataset.act === "preview") { preview(it); return; }
+      else if (act.dataset.act === "hover-preview") {
+        // Hover im Editor zeigen (Mausereignisse gehen hier an den Editor): Zustand 1,6 s halten
+        const el = stage.querySelector(`.pc-item[data-id="${CSS.escape(it.id)}"]`);
+        if (el) { el.classList.add("is-hover"); clearTimeout(el._hv); el._hv = setTimeout(() => el.classList.remove("is-hover"), 1600); }
+        return;
+      }
       else if (act.dataset.act === "dup") {
         if (page.items.length >= limit()) { say(t("Du hast die Höchstzahl an Elementen erreicht."), "error"); return; }
         touch(); const copy = { ...it, id: uid8(), x: it.x + 16, y: it.y + 16 }; page.items.push(copy); sel = copy.id; fit(copy);
