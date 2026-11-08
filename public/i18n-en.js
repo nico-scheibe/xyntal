@@ -2632,6 +2632,7 @@ window.XYNTAL_EN = {
   "Eigenes Video läuft stumm im Hintergrund.": "Your own video plays muted in the background.",
   "Video entfernen": "Remove video",
   "Video hochladen (MP4/WebM, max. 15 MB)": "Upload video (MP4/WebM, max. 15 MB)",
+  "Video hochladen (MP4/WebM, ohne Größenlimit)": "Upload video (MP4/WebM, no size limit)",
   "Elemente": "elements",
   "Auf Standardseite zurücksetzen": "Reset to standard page",
   "Ich bestätige: Das ist mein eigenes Projekt (selbst gemacht oder ich habe alle Rechte daran). Fremde Videos oder Musik sind nicht erlaubt und können zur Sperre des Kontos führen.": "I confirm: this is my own project (I made it or hold all rights to it). Other people's videos or music aren't allowed and can get your account suspended.",
