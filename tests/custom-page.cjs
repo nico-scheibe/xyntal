@@ -147,12 +147,44 @@ const stub = `window.supabase = { createClient: () => ({
   await pg.fill('[data-embed-url]', 'javascript:alert(1)'); await pg.check('[data-embed-own]'); await pg.click('[data-embed-go]');
   assert.match(await pg.locator('[data-status]').textContent(), /nicht einbetten/);
   await pg.keyboard.press('Escape'); await pg.click('[data-add="block"]');
+  // 3d. Extras: Countdown, Text-Effekt, Glas, Parallax, Theme, Ebenen, Mehrfachauswahl, Cursor, Partikel
+  await pg.click('[data-add="block"]'); await pg.click('[data-make="countdown"]');
+  assert.match(await pg.locator('.pc-cd [data-cd-n]').first().textContent(), /\d+d \d\d:\d\d:\d\d/, 'Countdown läuft');
+  await pg.selectOption('select[data-p="px"]', 'front');
+  await pg.keyboard.press('Escape');
+  await pg.click('[data-add="block"]'); await pg.click('[data-make="gradtext"]');
+  assert.equal(await pg.locator('.pc-tfx-gradient .pc-tx').count(), 1, 'Verlaufstext');
+  await pg.selectOption('select[data-p="tfx"]', 'letters');
+  assert.ok(await pg.locator('.pc-tfx-letters .pc-ch').count() > 5, 'Buchstaben einzeln');
+  await pg.check('input[data-p="glass"]');
+  assert.equal(await pg.locator('.pc-t.pc-glass').count() >= 1, true, 'Glas');
+  await pg.keyboard.press('Escape');
+  // Mehrfachauswahl: zwei Links mit Umschalt anklicken, links ausrichten
+  const L2 = pg.locator('.pc-item.pc-link');
+  await L2.nth(0).click(); await L2.nth(1).click({ modifiers: ['Shift'] });
+  assert.equal(await pg.locator('.pe-in-group').count(), 2, 'zwei ausgewählt');
+  await pg.click('[data-galign="left"]');
+  const g = await Promise.all([0, 1].map((i) => L2.nth(i).boundingBox()));
+  assert.ok(Math.abs(g[0].x - g[1].x) < 1, 'links ausgerichtet');
+  await pg.keyboard.press('Escape');
+  // Ebenen-Liste
+  await pg.click('[data-add="layers"]');
+  assert.ok(await pg.locator('.pe-layer').count() > 5, 'Ebenen-Liste');
+  await pg.click('[data-add="layers"]');
+  // Theme
+  await pg.click('[data-add="layout"]'); await pg.click('[data-theme="cyber"]');
+  assert.equal(await pg.locator('.pc > .pc-ov-grid').count(), 1, 'Theme setzt Overlays');
+  // Hintergrund: Partikel, bewegter Verlauf, Cursor
+  await pg.click('[data-add="bg"]'); await pg.click('[data-ov="network"]');
+  await pg.selectOption('[data-cursor-sel]', 'ring');
+  await pg.click('[data-add="bg"]');
+  assert.equal(await pg.locator('.pc-ov-network canvas').count(), 1, 'Netz-Partikel');
   // 4. Speichern
   await pg.click('[data-save]');
   await pg.waitForFunction(() => document.querySelector('[data-status]').textContent.includes('Gespeichert'));
   assert.ok(saved && saved.items.length >= 3);
   assert.equal(await pg.evaluate(() => location.pathname), '/nico', 'Editor läuft auf der eigenen Adresse');
-  assert.ok(saved.items.every((i) => ['text', 'link', 'image', 'block', 'shape', 'button', 'embed', 'icons'].includes(i.type)));
+  assert.ok(saved.items.every((i) => ['text', 'link', 'image', 'block', 'shape', 'button', 'embed', 'icons', 'countdown'].includes(i.type)));
   await pg.screenshot({ path: process.env.SHOT_EDITOR || '/tmp/editor.png' });
 
   // 5. Öffentliche Seite zeigt das gespeicherte Layout, Text wird nicht als HTML gedeutet
@@ -168,11 +200,15 @@ const stub = `window.supabase = { createClient: () => ({
   assert.equal(await pub.locator('.pc-embed iframe').count(), 1, 'Video öffentlich');
   assert.ok(saved.items.some((i) => i.type === 'embed' && i.own === true), 'Bestätigung gespeichert');
   assert.equal(await pub.locator('.pc-item[data-anim="float"]').count(), 1, 'Animation öffentlich');
-  assert.equal(await pub.locator('.pc > .pc-ov-aurora, .pc > .pc-ov-grain').count(), 2, 'Overlays öffentlich');
-  const btn = pub.locator('.pc-item[data-hover="tilt"] a.pc-btn');
-  const tf0 = await btn.evaluate((el) => getComputedStyle(el).transform);
-  await btn.hover({ force: true }); await pub.waitForTimeout(400);
-  assert.notEqual(await btn.evaluate((el) => getComputedStyle(el).transform), tf0, 'Hover-Effekt greift');
+  assert.ok(await pub.locator('.pc > .pc-ov').count() >= 2, 'Overlays öffentlich');
+  assert.equal(await pub.locator('.pc[data-cursor="ring"]').count(), 1, 'Cursor öffentlich');
+  assert.ok(await pub.locator('.pc-item[data-px]').count() >= 1, 'Parallax öffentlich');
+  assert.equal(await pub.locator('.pc-cd').count(), 1, 'Countdown öffentlich');
+  // Das Cyberpunk-Theme hat dem Knopf „Neon“ gegeben: beim Überfahren leuchtet er
+  const btn = pub.locator('.pc-item[data-hover="neon"] a.pc-btn');
+  const sh0 = await btn.evaluate((el) => getComputedStyle(el).boxShadow);
+  await btn.hover({ force: true }); await pub.waitForTimeout(450);
+  assert.notEqual(await btn.evaluate((el) => getComputedStyle(el).boxShadow), sh0, 'Hover-Effekt greift');
   assert.match(await pub.locator('.pc-item[data-anim="custom"] > *').evaluate((el) => getComputedStyle(el).animationName), /^pck-/, 'eigene Animation läuft');
   assert.equal(await pub.locator('.pc-item[data-anim="float"] > *').evaluate((el) => getComputedStyle(el).animationName), 'pc-float', 'Effekt läuft');
   assert.match(await pub.locator('.pc style').textContent(), /@keyframes pck-[a-z0-9]+\{0%\{color:#ff00aa;transform:rotate\(0deg\)\}/, 'eigene Animation öffentlich');
