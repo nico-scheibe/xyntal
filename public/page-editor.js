@@ -1,0 +1,351 @@
+// Editor der freien Seite (/meine-seite): Text, Links und Bilder ohne Raster platzieren, Farben wählen, speichern (RPC save_my_page).
+// Darstellung kommt aus page-canvas.js – der Editor zeigt exakt, was Besucher unter xyntal.de/name sehen.
+(() => {
+  const C = window.XyntalPageCanvas, I = window.XyntalLinkIcons, cfg = window.XYNTAL_CONFIG;
+  const $ = (s) => document.querySelector(s);
+  const t = (de) => (window.XyntalI18n ? window.XyntalI18n.t(de) : de);
+  const { esc, round, num } = C;
+  const loading = $("[data-loading]"), editor = $("[data-editor]"), stage = $("[data-stage]"), insp = $("[data-insp]");
+  const statusEl = $("[data-status]"), saveBtn = $("[data-save]"), undoBtn = $("[data-undo]"), redoBtn = $("[data-redo]");
+  if (!window.supabase || !cfg) { loading.textContent = t("Der Editor konnte nicht geladen werden."); return; }
+  const sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey);
+
+  let page = C.normalize(null), links = [], sel = null, dirty = false, busy = false, uid = "", handle = "", paid = false, hasSaved = false;
+  const undo = [], redo = [];
+  let lastKey = "", lastAt = 0;
+  // Gleiche Grenzen prüft die Datenbank (page_item_limit, Migration 20261108110000)
+  const limit = () => (paid ? 100 : 20);
+  const say = (text, kind = "") => { statusEl.textContent = text; statusEl.className = "pe-status" + (kind ? ` is-${kind}` : ""); };
+  const uid8 = () => Math.random().toString(36).slice(2, 10);
+  const byId = (id) => page.items.find((i) => i.id === id);
+  const current = () => byId(sel);
+
+  // ---- Verlauf (Rückgängig / Wiederholen) ----
+  const snap = () => JSON.stringify(page);
+  function touch(key) {
+    // Fortlaufende Eingaben (Regler, Farbe, Tippen) zählen als ein Schritt
+    const now = Date.now();
+    if (!(key && key === lastKey && now - lastAt < 900)) { undo.push(snap()); if (undo.length > 100) undo.shift(); redo.length = 0; }
+    lastKey = key || ""; lastAt = now;
+    dirty = true; saveBtn.disabled = false; say("");
+    undoBtn.disabled = !undo.length; redoBtn.disabled = !redo.length;
+  }
+  function travel(from, to) {
+    if (!from.length) return;
+    to.push(snap()); page = C.normalize(JSON.parse(from.pop()));
+    if (sel && !byId(sel)) sel = null;
+    lastKey = ""; dirty = true; saveBtn.disabled = false;
+    undoBtn.disabled = !undo.length; redoBtn.disabled = !redo.length;
+    drawAll();
+  }
+
+  // ---- Zeichnen ----
+  const u = (n) => `calc(${round(n)} * 100cqw / ${C.W})`;
+  function placeOverlay() {
+    const el = stage.querySelector(".pe-sel"), it = current();
+    if (!el) return;
+    if (!it) { el.remove(); return; }
+    Object.assign(el.style, { left: u(it.x), top: u(it.y), width: u(it.w), height: u(it.h) });
+  }
+  function drawCanvas() {
+    stage.innerHTML = C.html(page, { links, base: cfg.supabaseUrl, edit: true, t });
+    const cv = stage.querySelector(".pc");
+    const it = current();
+    if (it) {
+      cv.insertAdjacentHTML("beforeend", `<div class="pe-sel"><i data-h="nw"></i><i data-h="ne"></i><i data-h="sw"></i><i data-h="se"></i></div>`);
+      placeOverlay();
+    }
+    $("[data-count]").textContent = `${page.items.length} / ${limit()} ${t("Elemente")}`;
+  }
+  function drawSide() {
+    $('[data-bg="color"]').value = page.bg.color;
+    $("[data-bg-gradient]").checked = !!page.bg.color2;
+    $('[data-bg="color2"]').value = page.bg.color2 || page.bg.color;
+    $("[data-bg2-row]").hidden = !page.bg.color2;
+    $("[data-height]").value = page.h;
+  }
+  function drawAll() { drawCanvas(); drawSide(); drawInsp(); }
+
+  // ---- Eigenschaften des gewählten Elements ----
+  const num$ = (k, label, v, lo, hi, step = 1) => `<label class="pe-field"><span>${esc(t(label))}</span><input type="number" data-p="${k}" value="${round(v)}" min="${lo}" max="${hi}" step="${step}"></label>`;
+  const range$ = (k, label, v, lo, hi, step = 1) => `<label class="pe-field"><span>${esc(t(label))}</span><input type="range" data-p="${k}" value="${v}" min="${lo}" max="${hi}" step="${step}"></label>`;
+  const color$ = (k, label, v) => `<label class="pe-field"><span>${esc(t(label))}</span><input type="color" data-p="${k}" value="${v || "#000000"}"></label>`;
+  const seg$ = (k, opts, v) => `<div class="pe-row">${opts.map(([val, label]) => `<button type="button" class="pe-btn${String(v) === String(val) ? " is-on" : ""}" data-set="${k}" data-val="${val}">${esc(t(label))}</button>`).join("")}</div>`;
+  function drawInsp() {
+    const it = current();
+    if (!it) { insp.innerHTML = `<h2>${esc(t("Eigenschaften"))}</h2><p class="pe-hint">${esc(t("Tippe ein Element an, um es zu bearbeiten. Ziehen verschiebt, die Ecken ändern die Größe."))}</p>`; return; }
+    let body = "";
+    if (it.type === "text") {
+      body = `<textarea data-p="text" maxlength="1000" aria-label="${esc(t("Text"))}">${esc(it.text)}</textarea>
+        ${range$("size", "Schriftgröße", it.size, 8, 120)}
+        ${seg$("weight", [[400, "Normal"], [700, "Fett"]], it.weight)}
+        ${seg$("align", [["left", "Links"], ["center", "Mitte"], ["right", "Rechts"]], it.align)}
+        ${seg$("font", [["sans", "Sans"], ["serif", "Serif"], ["mono", "Mono"]], it.font)}
+        ${color$("color", "Textfarbe", it.color)}
+        <label class="pe-field"><span>${esc(t("Hintergrund"))}</span><input type="checkbox" data-bgon ${it.bg ? "checked" : ""}></label>
+        ${it.bg ? color$("bg", "Hintergrundfarbe", it.bg) : ""}`;
+    } else if (it.type === "link") {
+      body = `<label class="pe-field"><span>${esc(t("Link"))}</span><select data-p="ref">${links.map((l) => `<option value="${esc(l.id)}"${l.id === it.ref ? " selected" : ""}>${esc(l.title)}</option>`).join("")}</select></label>
+        ${range$("size", "Schriftgröße", it.size, 8, 60)}
+        ${color$("color", "Textfarbe", it.color)}
+        ${color$("bg", "Hintergrundfarbe", it.bg || "#2a2a2a")}
+        <label class="pe-field"><span>${esc(t("Symbol zeigen"))}</span><input type="checkbox" data-p="icon" ${it.icon ? "checked" : ""}></label>`;
+    } else {
+      body = `${seg$("fit", [["cover", "Füllen"], ["contain", "Einpassen"]], it.fit)}
+        <label class="pe-field"><span>${esc(t("Beschreibung"))}</span></label>
+        <input type="text" data-p="alt" maxlength="120" value="${esc(it.alt)}" placeholder="${esc(t("Alternativtext für Screenreader"))}">`;
+    }
+    insp.innerHTML = `<h2>${esc(t(it.type === "text" ? "Text" : it.type === "link" ? "Link" : "Bild"))}</h2>
+      ${body}
+      ${range$("radius", "Rundung", it.radius, 0, 120)}
+      ${range$("o", "Deckkraft", it.o, 0.1, 1, 0.05)}
+      <h2>${esc(t("Position"))}</h2>
+      ${num$("x", "Links", it.x, -480, 960)}${num$("y", "Oben", it.y, -4000, 4000)}${num$("w", "Breite", it.w, 16, 960)}${num$("h", "Höhe", it.h, 16, 4000)}
+      <div class="pe-row">
+        <button type="button" class="pe-btn" data-act="front">${esc(t("Nach vorn"))}</button>
+        <button type="button" class="pe-btn" data-act="back">${esc(t("Nach hinten"))}</button>
+        <button type="button" class="pe-btn" data-act="dup">${esc(t("Duplizieren"))}</button>
+        <button type="button" class="pe-btn pe-danger" data-act="del">${esc(t("Löschen"))}</button>
+      </div>`;
+  }
+
+  // ---- Elemente ändern ----
+  function add(type, extra = {}) {
+    if (page.items.length >= limit()) { say(t("Du hast die Höchstzahl an Elementen erreicht."), "error"); return null; }
+    touch();
+    const d = C.DEFAULTS[type];
+    const it = C.normalize({ items: [{ id: uid8(), type, x: 0, y: 0, ...d, ...extra }] }).items[0];
+    if (!it) return null;
+    // In die sichtbare Mitte der Fläche, leicht versetzt, damit mehrere neue nicht exakt übereinander liegen
+    const off = (page.items.length % 6) * 12;
+    it.x = round(Math.max(0, (C.W - it.w) / 2) + off); it.y = round(Math.min(page.h - it.h, 40 + off * 4));
+    page.items.push(it); sel = it.id;
+    fit(it); drawAll();
+    return it;
+  }
+  // Wächst ein Element über die Fläche hinaus, wächst die Fläche mit
+  function fit(it) { const need = Math.ceil(it.y + it.h + 24); if (need > page.h) page.h = Math.min(C.MAX_H, need); }
+  function setProp(it, k, v) {
+    if (k === "text") it.text = String(v).slice(0, 1000);
+    else if (k === "icon") it.icon = !!v;
+    else if (["color", "bg"].includes(k)) it[k] = C.hex(v, it[k]);
+    else if (["align", "font", "fit", "ref", "alt"].includes(k)) it[k] = v;
+    else if (k === "weight") it.weight = Number(v) === 400 ? 400 : 700;
+    else {
+      const R = { x: [-480, 960], y: [-4000, 4000], w: [16, 960], h: [16, 4000], size: [8, 160], radius: [0, 200], o: [0.1, 1] }[k];
+      if (R) it[k] = round(num(v, R[0], R[1], it[k]));
+    }
+  }
+  insp.addEventListener("input", (e) => {
+    const it = current(), k = e.target.dataset.p;
+    if (!it || !k) return;
+    touch(`${it.id}:${k}`);
+    setProp(it, k, e.target.type === "checkbox" ? e.target.checked : e.target.value);
+    if (["y", "h"].includes(k)) fit(it);
+    drawCanvas();
+  });
+  insp.addEventListener("change", (e) => { if (e.target.dataset.p) drawInsp(); });
+  insp.addEventListener("click", (e) => {
+    const it = current();
+    const seg = e.target.closest("[data-set]"), act = e.target.closest("[data-act]");
+    if (!it) return;
+    if (seg) { touch(); setProp(it, seg.dataset.set, seg.dataset.val); drawAll(); return; }
+    if (!act) return;
+    const i = page.items.indexOf(it);
+    if (act.dataset.act === "del") { touch(); page.items.splice(i, 1); sel = null; }
+    else if (act.dataset.act === "front") { touch(); page.items.push(page.items.splice(i, 1)[0]); }
+    else if (act.dataset.act === "back") { touch(); page.items.unshift(page.items.splice(i, 1)[0]); }
+    else if (act.dataset.act === "dup") {
+      if (page.items.length >= limit()) { say(t("Du hast die Höchstzahl an Elementen erreicht."), "error"); return; }
+      touch(); const copy = { ...it, id: uid8(), x: it.x + 16, y: it.y + 16 }; page.items.push(copy); sel = copy.id; fit(copy);
+    }
+    drawAll();
+  });
+  insp.addEventListener("change", (e) => {
+    const it = current();
+    if (it && e.target.dataset.bgon !== undefined) { touch(); it.bg = e.target.checked ? "#2a2a2a" : ""; drawAll(); }
+  });
+
+  // ---- Seite: Hintergrund, Höhe ----
+  document.addEventListener("input", (e) => {
+    const el = e.target;
+    if (!editor.contains(el) || insp.contains(el)) return;
+    if (el.dataset.bg) { touch(`bg:${el.dataset.bg}`); page.bg[el.dataset.bg] = C.hex(el.value, page.bg[el.dataset.bg]); drawCanvas(); }
+    else if (el.dataset.bgGradient !== undefined) { touch(); page.bg.color2 = el.checked ? (page.bg.color2 || "#3a2a6a") : ""; drawAll(); }
+    else if (el.dataset.height !== undefined) { touch("height"); page.h = Math.round(num(el.value, C.MIN_H, C.MAX_H, page.h)); drawCanvas(); }
+  });
+
+  // ---- Ziehen und Skalieren (Maus, Stift, Finger) ----
+  let drag = null;
+  const scale = () => C.W / stage.querySelector(".pc").getBoundingClientRect().width;
+  stage.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0) return;
+    const handleEl = e.target.closest("[data-h]"), itemEl = e.target.closest(".pc-item");
+    if (!handleEl && !itemEl) { if (sel) { sel = null; drawAll(); } return; }
+    const id = handleEl ? sel : itemEl.dataset.id, it = byId(id);
+    if (!it) return;
+    e.preventDefault();
+    if (sel !== id) { sel = id; drawCanvas(); drawInsp(); }
+    drag = { id, mode: handleEl ? handleEl.dataset.h : "move", x0: e.clientX, y0: e.clientY, start: { x: it.x, y: it.y, w: it.w, h: it.h }, s: scale(), moved: false, pid: e.pointerId };
+    stage.setPointerCapture(e.pointerId);
+  });
+  stage.addEventListener("pointermove", (e) => {
+    if (!drag || e.pointerId !== drag.pid) return;
+    const it = byId(drag.id), dx = (e.clientX - drag.x0) * drag.s, dy = (e.clientY - drag.y0) * drag.s, b = drag.start;
+    if (!drag.moved) {
+      if (Math.abs(dx) + Math.abs(dy) < 3 / drag.s) return;
+      drag.moved = true; touch(); stage.classList.add("is-moving");
+    }
+    if (drag.mode === "move") {
+      it.x = round(num(b.x + dx, 16 - b.w, C.W - 16, b.x)); it.y = round(num(b.y + dy, 16 - b.h, page.h - 16, b.y));
+    } else {
+      // Gegenüberliegende Ecke bleibt stehen
+      const west = drag.mode.includes("w"), north = drag.mode.includes("n");
+      const w = round(num(west ? b.w - dx : b.w + dx, 16, 960, b.w)), h = round(num(north ? b.h - dy : b.h + dy, 16, 4000, b.h));
+      it.w = w; it.h = h; if (west) it.x = round(b.x + b.w - w); if (north) it.y = round(b.y + b.h - h);
+    }
+    // Direkt am Element, ohne die Fläche neu aufzubauen
+    const el = stage.querySelector(`.pc-item[data-id="${CSS.escape(it.id)}"]`);
+    if (el) Object.assign(el.style, { left: u(it.x), top: u(it.y), width: u(it.w), height: u(it.h) });
+    placeOverlay();
+  });
+  const endDrag = (e) => {
+    if (!drag || (e && e.pointerId !== drag.pid)) return;
+    const moved = drag.moved, it = byId(drag.id); drag = null;
+    stage.classList.remove("is-moving");
+    if (moved && it) { fit(it); drawAll(); }
+  };
+  stage.addEventListener("pointerup", endDrag);
+  stage.addEventListener("pointercancel", endDrag);
+  stage.addEventListener("dblclick", (e) => { if (e.target.closest(".pc-text")) insp.querySelector("textarea")?.focus(); });
+
+  // Tastatur: Pfeile schieben, Entf löscht, Strg+Z/Y, Strg+D, Strg+S
+  document.addEventListener("keydown", (e) => {
+    const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) && e.target.type !== "checkbox" && e.target.type !== "range";
+    const mod = e.ctrlKey || e.metaKey, k = e.key.toLowerCase();
+    if (mod && k === "s") { e.preventDefault(); save(); return; }
+    if (typing) return;
+    if (mod && k === "z") { e.preventDefault(); travel(e.shiftKey ? redo : undo, e.shiftKey ? undo : redo); return; }
+    if (mod && k === "y") { e.preventDefault(); travel(redo, undo); return; }
+    const it = current();
+    if (!it) return;
+    if (mod && k === "d") { e.preventDefault(); insp.querySelector('[data-act="dup"]')?.click(); }
+    else if (k === "delete" || k === "backspace") { e.preventDefault(); insp.querySelector('[data-act="del"]')?.click(); }
+    else if (k === "escape") { sel = null; drawAll(); }
+    else if (k.startsWith("arrow")) {
+      e.preventDefault(); touch(`${it.id}:nudge`);
+      const n = e.shiftKey ? 10 : 1;
+      if (k === "arrowleft") it.x -= n; else if (k === "arrowright") it.x += n; else if (k === "arrowup") it.y -= n; else it.y += n;
+      it.x = round(it.x); it.y = round(it.y); fit(it); drawAll();
+    }
+  });
+  undoBtn.addEventListener("click", () => travel(undo, redo));
+  redoBtn.addEventListener("click", () => travel(redo, undo));
+
+  // ---- Hinzufügen ----
+  const pop = $("[data-links-pop]");
+  editor.addEventListener("click", (e) => {
+    const a = e.target.closest("[data-add]");
+    if (a) {
+      if (a.dataset.add === "text") { add("text"); insp.querySelector("textarea")?.select(); return; }
+      pop.hidden = !pop.hidden;
+      pop.innerHTML = links.length
+        ? links.map((l) => `<button type="button" data-pick="${esc(l.id)}">${esc(l.title)}</button>`).join("")
+        : `<p>${esc(t("Du hast noch keine Links."))} <a class="text-link" href="/profil#links">${esc(t("Links anlegen"))}</a></p>`;
+      return;
+    }
+    const pick = e.target.closest("[data-pick]");
+    if (pick) { add("link", { ref: pick.dataset.pick }); pop.hidden = true; }
+    if (e.target.closest("[data-reset]")) reset();
+  });
+  $("[data-upload-label]").addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("[data-upload]").click(); } });
+
+  // Bild: Fotos werden auf höchstens 1600 px verkleinert und als WebP hochgeladen; GIFs bleiben unverändert (Animation)
+  async function prepare(file) {
+    if (file.type === "image/gif") return { blob: file, ext: "gif" };
+    const bmp = await createImageBitmap(file);
+    const s = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+    const cv = document.createElement("canvas"); cv.width = Math.round(bmp.width * s); cv.height = Math.round(bmp.height * s);
+    cv.getContext("2d").drawImage(bmp, 0, 0, cv.width, cv.height);
+    const blob = await new Promise((res) => cv.toBlob(res, "image/webp", 0.86));
+    return blob && blob.type === "image/webp" ? { blob, ext: "webp", w: cv.width, h: cv.height } : { blob: file, ext: file.type === "image/png" ? "png" : "jpg", w: cv.width, h: cv.height };
+  }
+  $("[data-upload]").addEventListener("change", async (e) => {
+    const file = e.target.files && e.target.files[0]; e.target.value = "";
+    if (!file) return;
+    if (page.items.length >= limit()) { say(t("Du hast die Höchstzahl an Elementen erreicht."), "error"); return; }
+    say(t("Bild wird hochgeladen …"));
+    try {
+      const { blob, ext, w, h } = await prepare(file);
+      if (blob.size > 3 * 1024 * 1024) throw new Error("size");
+      const path = `${uid}/${crypto.randomUUID()}.${ext}`;
+      const { error } = await sb.storage.from("page-media").upload(path, blob, { contentType: blob.type, upsert: false });
+      if (error) throw error;
+      const ratio = w && h ? h / w : 1, width = 200;
+      add("image", { src: path, w: width, h: Math.round(width * ratio) });
+      say("");
+    } catch (err) {
+      say(err && err.message === "size" ? t("Das Bild ist größer als 3 MB.") : t("Das Bild konnte nicht hochgeladen werden."), "error");
+    }
+  });
+
+  // ---- Speichern, Zurücksetzen ----
+  async function save() {
+    if (busy || !dirty) return;
+    busy = true; saveBtn.disabled = true; say(t("Wird gespeichert …"));
+    try {
+      const { error } = await sb.rpc("save_my_page", { p_page: page });
+      if (error) throw error;
+      dirty = false; hasSaved = true; say(t("Gespeichert."), "ok");
+    } catch (err) {
+      saveBtn.disabled = false;
+      say(err && err.code === "54000" ? t("Zu viele oder zu große Elemente für deinen Tarif.")
+        : err && err.code === "P0002" ? t("Lege zuerst deine Karte an.") : t("Die Seite konnte nicht gespeichert werden. Bitte versuche es erneut."), "error");
+    } finally { busy = false; }
+  }
+  saveBtn.addEventListener("click", save);
+  async function reset() {
+    if (!confirm(t("Die freie Seite wirklich löschen und zur Standardseite zurückkehren?"))) return;
+    busy = true; say(t("Wird zurückgesetzt …"));
+    try {
+      const { error } = await sb.rpc("save_my_page", { p_page: null });
+      if (error) throw error;
+      page = starter(); undo.length = redo.length = 0; sel = null; dirty = true; hasSaved = false; saveBtn.disabled = false;
+      undoBtn.disabled = redoBtn.disabled = true; drawAll(); say(t("Zurückgesetzt. Deine Seite zeigt wieder das Standardlayout."), "ok");
+    } catch { say(t("Zurücksetzen hat nicht geklappt."), "error"); } finally { busy = false; }
+  }
+  window.addEventListener("beforeunload", (e) => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
+
+  // Startlayout für Neue: Name, Kurztext, dann die Links untereinander
+  let cardInfo = null;
+  function starter() {
+    const items = [];
+    if (cardInfo && cardInfo.name) items.push({ id: uid8(), type: "text", text: cardInfo.name, x: 24, y: 32, w: 432, h: 52, size: 34, align: "center" });
+    if (cardInfo && cardInfo.pitch) items.push({ id: uid8(), type: "text", text: cardInfo.pitch, x: 40, y: 92, w: 400, h: 60, size: 16, weight: 400, align: "center", color: "#a09e98" });
+    let y = items.length ? 176 : 32;
+    links.filter((l) => l.active !== false).slice(0, limit() - items.length).forEach((l) => { items.push({ id: uid8(), type: "link", ref: l.id, x: 70, y, w: 340, h: 54 }); y += 68; });
+    return C.normalize({ h: Math.max(480, y + 40), items });
+  }
+
+  // ---- Start ----
+  (async () => {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { loading.innerHTML = `${esc(t("Melde dich an, um deine Seite zu gestalten."))} <a class="text-link" href="/login">${esc(t("Anmelden"))}</a>`; return; }
+    uid = session.user.id;
+    try {
+      const [l, p, c, pr] = await Promise.all([sb.rpc("get_my_links"), sb.rpc("get_my_page"), sb.rpc("get_my_card"), sb.from("profiles").select("is_premium,is_admin").eq("id", uid).maybeSingle()]);
+      if (l.error || p.error) throw l.error || p.error;
+      links = Array.isArray(l.data) ? l.data : [];
+      cardInfo = c.data && typeof c.data === "object" ? c.data : null;
+      handle = cardInfo && cardInfo.handle || "";
+      paid = !!(pr.data && (pr.data.is_premium || pr.data.is_admin));
+      hasSaved = !!(p.data && Array.isArray(p.data.items) && p.data.items.length);
+      page = hasSaved ? C.normalize(p.data) : starter();
+      if (!hasSaved) { dirty = true; saveBtn.disabled = false; }
+      if (handle) { const v = $("[data-view]"); v.href = `/${handle}`; v.hidden = false; }
+      loading.hidden = true; editor.hidden = false; drawAll();
+    } catch {
+      loading.textContent = t("Deine Seite lässt sich gerade nicht laden. Bitte versuch es später noch einmal.");
+    }
+  })();
+})();

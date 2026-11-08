@@ -53,6 +53,7 @@
         : UUID.test(c.user_id || "")
           ? `<a class="btn btn-primary" href="/nachrichten?an=${encodeURIComponent(c.user_id)}">${esc(t("Nachricht schreiben"))}</a>`
           : "";
+    if (customPage(c)) return renderCustom(c, primary);
     page(`
       <div class="pf pf--links">
         <aside class="pf-side">
@@ -76,6 +77,23 @@
     document.body.classList.toggle("admin-profile", admin);
     if (admin) adminTilt();
     else linkGlow();
+  }
+  // Freie Seite (Editor /meine-seite): nur wenn die Person Elemente platziert hat, sonst bleibt die Standardseite
+  const customPage = (c) => !!(window.XyntalPageCanvas && c.page && Array.isArray(c.page.items) && window.XyntalPageCanvas.normalize(c.page).items.length);
+  function renderCustom(c, primary) {
+    const own = !!(me && c.user_id && c.user_id === me.id);
+    page(`
+      <div class="pf pf--custom">
+        ${window.XyntalPageCanvas.html(c.page, { links: Array.isArray(c.links) ? c.links : [], base: SUPA, t })}
+        <div class="pf-actions">
+          ${primary}
+          ${own ? `<a class="btn btn-glass" href="/meine-seite">${esc(t("Seite gestalten"))}</a>` : ""}
+          ${!member && !own ? `<p class="pf-invited">${esc(t("Du wurdest eingeladen: Mit einem Konto bekommst du 7 Tage Plus gratis – und die Person, die dich eingeladen hat, auch."))} <a class="text-link" href="/login#registrieren">${esc(t("Konto anlegen"))}</a></p>` : ""}
+          <button class="btn btn-glass" type="button" data-copy-link>${esc(t(navigator.share ? "Profil teilen" : "Link kopieren"))}</button>
+          <p class="pf-copied" role="status" data-copy-status></p>
+        </div>
+      </div>`);
+    document.body.classList.remove("admin-profile");
   }
   // Normale Profile: Links leuchten beim Überfahren in der Kartenfarbe der Person, das Licht folgt dem Mauszeiger
   function linkGlow() {
@@ -201,7 +219,7 @@
   root.addEventListener("click", async (e) => {
     const b = e.target.closest("[data-copy-text]");
     if (!b) return;
-    const note = b.querySelector(".lp-copied");
+    const note = b.querySelector(".lp-copied, .pc-copied");
     try { await navigator.clipboard.writeText(b.dataset.copyText); note.textContent = t("Kopiert"); }
     catch { note.textContent = t("Zum Kopieren markieren"); }
     b.classList.add("is-copied");
