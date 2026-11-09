@@ -151,14 +151,6 @@ pw.addEventListener("input", () => {
   if (ok(code)) field.value = code;
 })();
 
-// Kästchen „kein Bot“ zeigen, sobald das Registrierungsformular sichtbar ist
-if (window.XyntalTurnstile && window.XyntalTurnstile.enabled) {
-  const box = signupForm.querySelector("[data-turnstile]");
-  const show = () => { if (!signupForm.hidden) window.XyntalTurnstile.mount(box); };
-  new MutationObserver(show).observe(signupForm, { attributes: true, attributeFilter: ["hidden"] });
-  show();
-}
-
 signupForm.addEventListener("submit", (e) => {
   e.preventDefault();
   submitWith(signupForm, signupStatus, async (d) => {
@@ -167,18 +159,10 @@ signupForm.addEventListener("submit", (e) => {
     if (d.name.trim().length < 2) throw new Error("Bitte gib deinen Namen an.");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email.trim())) throw new Error("Bitte gib eine gültige E-Mail-Adresse an.");
     if (d.password.length < 8) throw new Error("Dein Passwort braucht mindestens 8 Zeichen.");
-    // „Kein Bot“-Prüfung (nur wenn in config.js eingeschaltet); Supabase prüft das Token beim Anlegen
-    const botBox = signupForm.querySelector("[data-turnstile]");
-    const turnstile = window.XyntalTurnstile ? await window.XyntalTurnstile.token(botBox) : "";
-    let result;
-    try {
-      result = unwrap(await sb.auth.signUp({
-        email: d.email.trim(), password: d.password,
-        options: { data: { ...profileFrom({ name: d.name.trim() }), ...(turnstile ? { turnstile } : {}) }, emailRedirectTo: new URL(NEXT, location.href).href },
-      }));
-    } finally {
-      if (window.XyntalTurnstile) window.XyntalTurnstile.reset(botBox); // jedes Token gilt nur einmal
-    }
+    const result = unwrap(await sb.auth.signUp({
+      email: d.email.trim(), password: d.password,
+      options: { data: profileFrom({ name: d.name.trim() }), emailRedirectTo: new URL(NEXT, location.href).href },
+    }));
     // Supabase meldet bei schon vorhandener E-Mail keinen Fehler, sondern ein Konto ohne Identitäten
     if (result.user && result.user.identities && result.user.identities.length === 0) {
       throw new Error("Mit dieser E-Mail gibt es schon ein Konto. Logg dich ein oder setz dein Passwort zurück.");
