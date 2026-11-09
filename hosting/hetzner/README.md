@@ -71,6 +71,9 @@ alle anderen Seiten leiten auf `https://xyntal.de` um. Auf xyntal.de antworten `
 
 Kein Cloudflare Access davor: die Seite lädt für alle, Inhalte gibt es erst nach der Anmeldung.
 Die Rechte prüfen Supabase (`is_admin` + 2FA) und der App-Server (Staff-Rolle).
+Die Anmeldung gilt auf allen xyntal.de-Adressen: `public/session-share.js` legt die Sitzungs-Tokens zusätzlich in ein
+Cookie für `.xyntal.de` (Test `tests/session-share.cjs`). Wer auf xyntal.de angemeldet ist, muss sich im Admin nicht
+noch einmal anmelden; fehlt der zweite Faktor, fragt der Admin nur noch den Code ab.
 
 Cloudflare-Einstellungen:
 
