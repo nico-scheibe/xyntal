@@ -89,7 +89,7 @@
       const sc = document.createElement("script"); sc.src = "/vendor/supabase.js?v=31"; sc.onload = res; sc.onerror = rej; document.head.append(sc);
     }));
     if (client()) return client(); // app.js war schneller
-    ownClient = window.supabase.createClient(URL_, KEY);
+    ownClient = window.supabase.createClient(URL_, KEY, window.XyntalSession ? window.XyntalSession.clientOptions : undefined);
     return ownClient;
   }
   // Name und Foto merken, damit sie beim nächsten Seitenaufruf sofort da sind
@@ -283,6 +283,7 @@
         localStorage.removeItem("xyntal-app-session");
       } catch { /* egal */ }
       try { localStorage.removeItem(TOKEN); localStorage.removeItem(CACHE); } catch { /* egal */ }
+      if (window.XyntalSession) window.XyntalSession.clear(); // auch auf den anderen xyntal.de-Adressen abmelden
       location.href = "/";
     });
 
