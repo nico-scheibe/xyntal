@@ -124,23 +124,10 @@ html.js .reveal.is-visible { opacity: 1; transform: none; animation: none; }
 .card-fan .mc-site { pointer-events: none; }
 .opener-card figcaption { font-size: 13px; line-height: 1.5; color: var(--text-3); text-align: center; max-width: 36ch; }
 @media (max-width: 480px) {
-  .card-fan > [data-pos="1"] { transform: translate(16px, -18px) rotate(4deg) scale(0.95); }
-  .card-fan > [data-pos="2"] { transform: translate(-16px, -30px) rotate(-5deg) scale(0.9); }
+  .card-fan > [data-pos="1"] { transform: translate(8px, -18px) rotate(3deg) scale(0.95); }
+  .card-fan > [data-pos="2"] { transform: translate(-8px, -30px) rotate(-4deg) scale(0.9); }
 }
 
-/* ---------- Wen du hier findest ---------- */
-.kinds { display: grid; gap: 36px; padding: clamp(40px, 6vw, 72px) 0; border-top: 1px solid var(--line); }
-.kinds-list { display: grid; }
-.kinds-list li { display: grid; gap: 10px; padding: 22px 0; border-top: 1px solid var(--line); }
-.kinds-list li:first-child { border-top: 0; padding-top: 0; }
-.kinds-list h3 { font: 400 clamp(1.45rem, 2.4vw, 1.9rem)/1.15 var(--f-serif); font-optical-sizing: auto; letter-spacing: -0.01em; }
-.kinds-list p { color: var(--text-2); font-size: 15.5px; max-width: 34ch; }
-@media (min-width: 760px) {
-  .kinds-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .kinds-list li { padding: 4px 28px 4px 28px; border-top: 0; border-left: 1px solid var(--line); }
-  .kinds-list li:first-child { padding-left: 0; border-left: 0; }
-  .kinds-list li:last-child { padding-right: 0; }
-}
 
 /* ---------- Zitat ---------- */
 .voice { position: relative; padding: clamp(48px, 7vw, 88px) 0; border-top: 1px solid var(--line); }
@@ -320,8 +307,6 @@ body.front .site-footer a { text-decoration: none; }
 .facts dd { margin: 0; color: var(--text); font-size: 15px; line-height: 1.45; }
 .facts-empty dd { color: var(--text-3); font-family: var(--f-mono); }
 .place-view .facts { margin: 10px 0 4px; }
-.kinds-list .facts { margin-top: 6px; }
-.kinds-list .facts dd { color: var(--text-2); font-size: 14.5px; }
 .facts-lg { gap: 10px; padding-top: 16px; }
 .facts-lg dd { font-size: 16px; }
 .facts-lg div { grid-template-columns: 6.5rem 1fr; }
@@ -330,5 +315,25 @@ body.front .site-footer a { text-decoration: none; }
 .qa dt { font: 400 clamp(1.25rem, 2vw, 1.45rem)/1.3 var(--f-serif); font-optical-sizing: auto; letter-spacing: -0.01em; }
 .qa dd { line-height: 1.65; }
 .qa dd a { text-decoration-color: var(--key); }
-.kinds-list li { grid-template-rows: auto 1fr auto; align-content: stretch; }
-.kinds-list p { max-width: 36ch; }
+
+/* ---------- Nach der Kritik: weniger Schablone ----------
+   Zitat in Plex Sans statt Serif-Pullquote; Fragen einspaltig und schmal,
+   ohne Kapitel-Label; Zugang ohne Linie und ohne kursive Pointe. */
+.voice { padding-left: 0 !important; }
+.voice::before { content: none; }
+.voice p { padding-top: 0 !important; font: 400 clamp(1.15rem, 1.8vw, 1.35rem)/1.6 var(--f-sans); font-style: normal; letter-spacing: 0; max-width: 46ch; color: var(--text); }
+@media (min-width: 900px) { .voice { display: grid; grid-template-columns: 5fr 7fr; column-gap: 56px; } .voice p, .voice footer { grid-column: 2; } }
+.qa dl { max-width: 44rem; }
+@media (min-width: 900px) {
+  .qa dl > div { grid-template-columns: 1fr; gap: 10px; }
+  .qa dd::before { content: none; }
+}
+.closer { border-top: 0; padding-top: clamp(24px, 4vw, 48px); }
+.closer-title { max-width: 22ch; font-size: clamp(1.9rem, 3.6vw, 3rem); line-height: 1.12; }
+.news { margin-top: clamp(48px, 8vw, 96px); font-size: 14px; color: var(--text-3); }
+.news > p { max-width: 46ch; }
+/* Die hintere Karte im Fächer ist um 28px nach rechts versetzt und gedreht: Platz dafür lassen,
+   sonst ragt sie bei ~1024 px über den Fensterrand und die Seite scrollt seitlich. */
+@media (min-width: 900px) { .opener-card { padding-right: 44px; } }
+@media (max-width: 899px) { .opener-card { justify-self: center; padding-inline: 32px; } }
+@media (max-width: 480px) { .opener-card { padding-inline: 20px; } }
