@@ -56,9 +56,10 @@ body {
   -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
   overflow-x: clip;
 }
-/* Raster: vier feine Spaltenlinien hinter allem */
+/* Raster: vier feine Spaltenlinien hinter allem. Die Außenlinien liegen im Rand,
+   damit kein Text und kein Etikett direkt an einer Linie klebt. */
 body::before {
-  content: ""; position: fixed; inset: 0 var(--pad); z-index: 0; pointer-events: none;
+  content: ""; position: fixed; inset: 0 calc(var(--pad) * .45); z-index: 0; pointer-events: none;
   background: linear-gradient(90deg, var(--line) 1px, transparent 1px) 0 0 / 25% 100%;
   border-right: 1px solid var(--line); opacity: .45;
 }
@@ -131,31 +132,15 @@ a { color: inherit; text-decoration: none; }
 figcaption.mono { margin-top: 14px; }
 figcaption.mono b { color: var(--t-1); font-weight: 500; margin-right: 8px; }
 
-/* Durchstreichen, das sich zeichnet */
-[data-strike] { position: relative; display: inline-block; }
-[data-strike]::after {
-  content: ""; position: absolute; left: -.08em; right: -.08em; top: 56%; height: 2px;
-  background: var(--grad); transform: scaleX(0); transform-origin: 0 50%; transition: transform .9s var(--ease-io);
+/* Durchstreichen, das sich zeichnet. Die Linie ist ein Hintergrund am Text selbst,
+   damit sie bei einem Umbruch in jeder Zeile sitzt und nie über den Text hinausläuft. */
+[data-strike] {
+  background: var(--grad) no-repeat 0 58% / 0% 2px;
+  -webkit-box-decoration-break: clone; box-decoration-break: clone;
+  transition: background-size .9s var(--ease-io);
 }
-[data-strike].is-in::after { transform: scaleX(1); }
-.no-js [data-strike]::after { transform: none; }
-
-/* Eigener Cursor */
-.cur { position: fixed; left: 0; top: 0; z-index: 120; pointer-events: none; display: none; }
-.has-cur .cur { display: block; }
-.has-cur, .has-cur a, .has-cur button, .has-cur label, .has-cur summary, .has-cur input { cursor: none; }
-.cur__dot, .cur__ring { position: absolute; left: 0; top: 0; border-radius: 50%; will-change: transform; }
-.cur__dot { width: 6px; height: 6px; margin: -3px; background: var(--t-1); transition: opacity .2s; }
-.cur__ring { width: 38px; height: 38px; margin: -19px; border: 1px solid rgba(var(--t-rgb), .55); transition: opacity .3s, border-color .3s, background .3s; }
-.cur__label { position: absolute; left: 0; top: 0; color: var(--g-0); opacity: 0; transition: opacity .2s; white-space: nowrap; font-size: .62rem; }
-.cur.is-link .cur__dot { opacity: 0; }
-.cur.is-link .cur__ring { background: rgba(var(--t-rgb), .12); border-color: var(--t-1); }
-.cur.is-light .cur__ring { border-color: rgba(63, 224, 240, .5); }
-.cur.is-drag .cur__ring { background: var(--t-1); border-color: var(--t-1); }
-.cur.is-drag .cur__dot { opacity: 0; }
-.cur.is-drag .cur__label { opacity: 1; }
-.cur.is-down .cur__ring { border-color: var(--pu); }
-.cur.is-hidden { opacity: 0; }
+[data-strike].is-in { background-size: 100% 2px; }
+.no-js [data-strike] { background-size: 100% 2px; }
 
 /* Intro */
 .intro { position: fixed; inset: 0; z-index: 200; display: none; place-items: center; background: var(--g-0); will-change: transform; }
@@ -269,7 +254,7 @@ figcaption.mono b { color: var(--t-1); font-weight: 500; margin-right: 8px; }
 .pin__stage .win { transform: rotateY(-7deg) rotateX(2deg); transform-origin: 0 50%; will-change: transform; }
 .win__cam { position: absolute; left: 0; top: 0; width: 100%; transform-origin: 0 0; will-change: transform; }
 .win__cam picture { display: block; }
-.win__cam picture + picture { position: absolute; inset: 0; }
+.win__cam picture + picture { position: absolute; left: 0; top: 0; width: 100%; }   /* zweites Bild ist höher als das erste */
 .win__cam .win__img { height: auto; opacity: 0; transition: opacity .6s var(--ease); }
 .win__cam .win__img.is-on { opacity: 1; }
 .win__focus { position: absolute; left: 0; top: 0; z-index: 2; border: 1px solid rgba(var(--t-rgb), .9); border-radius: 10px; opacity: 0; transition: opacity .4s; will-change: transform; box-shadow: 0 0 0 4000px rgba(8, 9, 14, .42); }
@@ -516,10 +501,10 @@ figcaption.mono b { color: var(--t-1); font-weight: 500; margin-right: 8px; }
 @media (prefers-reduced-motion: reduce) {
   .js .ch { opacity: 1; animation: none !important; }
   .js .hero__foot, .js .hero__meta { opacity: 1; transition: none; }
-  .hero__scroll, .cur { display: none !important; }
+  .hero__scroll { display: none !important; }
   .say__text .w { opacity: 1; }
   .me__quote .ln > span { transform: none; transition: none; }
-  [data-strike]::after { transition: none; }
+  [data-strike] { transition: none; }
   .pin { height: auto; }
   .pin__stick { position: static; height: auto; overflow: visible; padding-bottom: var(--s-6); }
   .pin__steps { min-height: 0; }
