@@ -46,3 +46,10 @@
 .pr-pack small { color: var(--text-3); font: 500 11px/1.4 var(--mono); text-transform: uppercase; letter-spacing: 0.06em; }
 .pr-credit-act { margin-top: 16px; }
 @media (max-width: 720px) { .pr-faq dl > div { grid-template-columns: minmax(0, 1fr); } .pr-cta { padding: 24px 20px; } }
+
+/* Hinweis auf die Firmen-Seite über den Tarifen */
+.pr-company { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 16px; margin: 0 0 12px; padding: 16px 20px; border: 1px solid var(--border-2); color: var(--text); text-decoration: none; }
+.pr-company:hover { border-color: var(--text-2); }
+.pr-company b { font-weight: 600; }
+.pr-company span { grid-column: 1; color: var(--text-2); font-size: 14px; }
+.pr-company i { grid-column: 2; grid-row: 1 / span 2; font-style: normal; font-size: 20px; }

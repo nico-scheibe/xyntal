@@ -1,0 +1,74 @@
+/* Firmen-Seite (/unternehmen, pages/unternehmen.js) – im Look der Website: dunkles Grau, eckig, Serif-Titel.
+   Baut auf preise.css auf (Karten, Fragen). */
+.un-head-act { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+.un-section { margin-top: 64px; }
+.un-section:first-child { margin-top: 8px; }
+.un-section h2 { margin: 0 0 12px; font: 600 clamp(1.6rem, 3vw, 2.2rem)/1.1 var(--f); }
+.un-lead { margin: 0 0 24px; max-width: 46rem; color: var(--text-2); line-height: 1.55; }
+.un-note { margin: 16px 0 0; color: var(--text-3); font-size: 14px; line-height: 1.5; }
+.un-note a, .un-privacy a, .un-perks a { color: var(--text); }
+
+/* Was Xyntal ersetzt */
+.un-replace { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0; margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--border); border-left: 1px solid var(--border); }
+.un-replace li { display: grid; gap: 6px; padding: 18px 18px 20px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.un-replace b { font-weight: 600; }
+.un-replace span { color: var(--text-2); font-size: 14px; line-height: 1.45; }
+
+/* Rechner */
+.un-calc-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 12px; }
+.un-calc-in, .un-calc-out { padding: 22px 20px; border: 1px solid var(--border); background: var(--panel); }
+.un-field { display: grid; gap: 6px; }
+.un-field > span { color: var(--text-2); font-size: 14px; }
+.un-field input, .un-field select, .un-field textarea, .un-tools input[type="number"] {
+  width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--border-2); background: var(--bg); color: var(--text);
+}
+.un-field textarea { resize: vertical; min-height: 96px; }
+.un-field input:focus, .un-field select:focus, .un-field textarea:focus, .un-tools input:focus { outline: 2px solid var(--text-2); outline-offset: 1px; }
+.un-range { width: 100%; margin: 14px 0 6px; accent-color: var(--text); }
+.un-tools { display: grid; gap: 8px; margin: 18px 0 0; padding: 0; border: 0; }
+.un-tools legend { margin-bottom: 8px; padding: 0; color: var(--text-2); font: 500 12px/1.3 var(--mono); text-transform: uppercase; letter-spacing: 0.06em; }
+.un-tools label { display: grid; grid-template-columns: auto minmax(0, 1fr) 84px auto; align-items: center; gap: 10px; font-size: 15px; }
+.un-tools input[type="checkbox"], .un-check input { width: 18px; height: 18px; accent-color: var(--text); }
+.un-tools input[type="number"] { min-height: 38px; padding: 6px 8px; text-align: right; }
+.un-tools label.is-off span, .un-tools label.is-off input[type="number"] { opacity: 0.45; }
+.un-calc-out { display: grid; align-content: start; gap: 0; }
+.un-calc-out > div { display: grid; gap: 4px; padding: 16px 0; border-bottom: 1px solid var(--border); }
+.un-calc-out > div:first-child { padding-top: 0; }
+.un-calc-out > div:last-child { border-bottom: 0; padding-bottom: 0; }
+.un-calc-out span { color: var(--text-2); font-size: 14px; }
+.un-calc-out b { font: 600 30px/1.1 var(--f); }
+.un-calc-out small { color: var(--text-3); font-size: 13px; line-height: 1.4; }
+.un-calc-out .is-total b { font-size: 40px; }
+
+/* Firmentarife: „pro Person“-Zeile unter dem Preis */
+.un-plans .pr-price em { color: var(--text-2); font-style: normal; font-size: 13px; }
+.pr-card.is-pick { border-color: var(--text-2); }
+.pr-card .pr-tag { align-self: flex-start; padding: 3px 8px; border: 1px solid var(--border-2); color: var(--text-2); font: 500 11px/1.2 var(--mono); text-transform: uppercase; letter-spacing: 0.06em; }
+
+/* Vorteile */
+.un-perks { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin: 16px 0 0; }
+.un-perks > div { padding: 20px; border: 1px solid var(--border); }
+.un-perks dt { margin-bottom: 8px; font-weight: 600; }
+.un-perks dd { margin: 0; color: var(--text-2); line-height: 1.55; font-size: 15px; }
+
+/* Anfrage */
+.un-ask { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 32px; padding: 32px; border: 1px solid var(--border); }
+.un-ask-text p { margin: 0 0 14px; color: var(--text-2); line-height: 1.6; }
+.un-sign { color: var(--text) !important; font-family: var(--f); font-size: 18px; }
+.un-form { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.un-wide { grid-column: 1 / -1; }
+.un-check { display: flex; align-items: center; gap: 10px; font-size: 15px; }
+.un-hp { position: absolute !important; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.un-privacy { margin: 0; color: var(--text-3); font-size: 13px; }
+.un-form-act { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; }
+.un-status { margin: 0; color: var(--text-2); font-size: 14px; }
+.un-status.is-error { color: #E8A0A0; }
+
+@media (max-width: 860px) {
+  .un-calc-grid, .un-ask { grid-template-columns: minmax(0, 1fr); }
+  .un-ask { padding: 24px 20px; }
+}
+@media (max-width: 520px) {
+  .un-form { grid-template-columns: minmax(0, 1fr); }
+  .un-tools label { grid-template-columns: auto minmax(0, 1fr) 72px auto; gap: 8px; font-size: 14px; }
+}
