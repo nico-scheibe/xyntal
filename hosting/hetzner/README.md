@@ -69,16 +69,8 @@ Test `tests/admin-host.cjs`). Dort zeigt `/` die Admin-Seite; Login und Passwort
 alle anderen Seiten leiten auf `https://xyntal.de` um. Auf xyntal.de antworten `admin.html`, `admin*.css`,
 `world-geo.js` und `pages/admin*.js` mit 404.
 
-Schutz in zwei Schichten:
-
-1. **Cloudflare Access** (Zero Trust → Access controls → Applications → „Xyntal Admin“, Policy „Nur Nico“):
-   nur freigegebene E-Mail-Adressen laden die Seite überhaupt (Einmal-Code per Mail).
-2. **Token-Prüfung im Server:** jede Anfrage an admin.xyntal.de braucht ein gültiges `Cf-Access-Jwt-Assertion`
-   (RS256, Schlüssel von `https://morning-star-6e71.cloudflareaccess.com/cdn-cgi/access/certs`, AUD der
-   Anwendung). Ohne Token 403 – auch wer die Server-IP direkt mit `Host: admin.xyntal.de` anspricht.
-   Andere Werte über `ACCESS_TEAM_DOMAIN` / `ACCESS_AUD` in `website.env`.
-
-Rechte prüfen weiterhin Supabase (`is_admin` + 2FA) und der App-Server (Staff-Rolle).
+Kein Cloudflare Access davor: die Seite lädt für alle, Inhalte gibt es erst nach der Anmeldung.
+Die Rechte prüfen Supabase (`is_admin` + 2FA) und der App-Server (Staff-Rolle).
 
 Cloudflare-Einstellungen:
 
