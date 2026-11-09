@@ -1,6 +1,14 @@
 // Xyntal – englische Texte. Schlüssel = deutscher Originaltext (Leerzeichen zusammengefasst).
 // Neue deutsche Texte auf der Website hier ergänzen, sonst bleiben sie auf Englisch deutsch.
 window.XYNTAL_EN = {
+  // Suchleiste in der Kopfzeile (site-search.js)
+  "Website durchsuchen": "Search the website",
+  "Treffer": "Results",
+  "Konto & Rechtliches": "Account & legal",
+  "Nichts gefunden": "Nothing found",
+  "Widerruf": "Withdrawal",
+  "Einstellungen": "Settings",
+  "Community-Beitrag erstellen": "Create community post",
   // Firmen-Seite (/unternehmen) und Firmen-Hinweise auf /preise
   "Für Firmen": "For companies",
   "Xyntal für Unternehmen": "Xyntal for companies",
