@@ -14,31 +14,51 @@
 .un-replace b { font-weight: 600; }
 .un-replace span { color: var(--text-2); font-size: 14px; line-height: 1.45; }
 
-/* Rechner */
-.un-calc-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 12px; }
+/* Rechner: zwei Schritte links, Ergebnis rechts (Ersparnis zuerst, darunter die Rechnung im Klartext) */
+.un-calc-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 12px; }
 .un-calc-in, .un-calc-out { padding: 22px 20px; border: 1px solid var(--border); background: var(--panel); }
 .un-field { display: grid; gap: 6px; }
 .un-field > span { color: var(--text-2); font-size: 14px; }
-.un-field input, .un-field select, .un-field textarea, .un-tools input[type="number"] {
+.un-field input, .un-field select, .un-field textarea, .un-tools input[type="number"], .un-people input {
   width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--border-2); background: var(--bg); color: var(--text);
 }
 .un-field textarea { resize: vertical; min-height: 96px; }
-.un-field input:focus, .un-field select:focus, .un-field textarea:focus, .un-tools input:focus { outline: 2px solid var(--text-2); outline-offset: 1px; }
-.un-range { width: 100%; margin: 14px 0 6px; accent-color: var(--text); }
-.un-tools { display: grid; gap: 8px; margin: 18px 0 0; padding: 0; border: 0; }
-.un-tools legend { margin-bottom: 8px; padding: 0; color: var(--text-2); font: 500 12px/1.3 var(--mono); text-transform: uppercase; letter-spacing: 0.06em; }
-.un-tools label { display: grid; grid-template-columns: auto minmax(0, 1fr) 84px auto; align-items: center; gap: 10px; font-size: 15px; }
+.un-field input:focus, .un-field select:focus, .un-field textarea:focus, .un-tools input:focus, .un-people input:focus { outline: 2px solid var(--text-2); outline-offset: 1px; }
+.un-step { display: grid; gap: 10px; margin: 0; padding: 0; border: 0; }
+.un-step + .un-step { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--border); }
+.un-step-title { display: flex; align-items: center; gap: 10px; margin: 0; padding: 0; font: 600 18px/1.2 var(--f); color: var(--text); }
+.un-step-title > span { display: inline-grid; place-items: center; width: 24px; height: 24px; border: 1px solid var(--border-2); font: 500 12px/1 var(--mono); color: var(--text-2); }
+.un-step-hint { margin: -2px 0 4px; color: var(--text-3); font-size: 13px; line-height: 1.45; }
+.un-people { display: grid; grid-template-columns: 140px auto; align-items: center; gap: 10px; }
+.un-people input { font: 600 22px/1 var(--f); }
+.un-people span { color: var(--text-2); font-size: 15px; }
+.un-range { width: 100%; margin: 4px 0 0; accent-color: var(--text); }
+.un-tools label { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 8px 0; }
+.un-tools label > span:first-of-type { display: grid; gap: 2px; }
+.un-tools label b { font-weight: 600; font-size: 15px; }
+.un-tools label small { color: var(--text-3); font-size: 12.5px; }
 .un-tools input[type="checkbox"], .un-check input { width: 18px; height: 18px; accent-color: var(--text); }
-.un-tools input[type="number"] { min-height: 38px; padding: 6px 8px; text-align: right; }
-.un-tools label.is-off span, .un-tools label.is-off input[type="number"] { opacity: 0.45; }
-.un-calc-out { display: grid; align-content: start; gap: 0; }
-.un-calc-out > div { display: grid; gap: 4px; padding: 16px 0; border-bottom: 1px solid var(--border); }
-.un-calc-out > div:first-child { padding-top: 0; }
-.un-calc-out > div:last-child { border-bottom: 0; padding-bottom: 0; }
-.un-calc-out span { color: var(--text-2); font-size: 14px; }
-.un-calc-out b { font: 600 30px/1.1 var(--f); }
-.un-calc-out small { color: var(--text-3); font-size: 13px; line-height: 1.4; }
-.un-calc-out .is-total b { font-size: 40px; }
+.un-price { display: grid; grid-template-columns: 88px auto; align-items: center; gap: 8px; }
+.un-tools .un-price input[type="number"] { min-height: 38px; padding: 6px 8px; text-align: right; }
+.un-price small { white-space: nowrap; }
+.un-tools label.is-off > span { opacity: 0.45; }
+.un-tools label.is-capped .un-price input { border-color: var(--text-2); }
+.un-calc-warn { margin: 4px 0 0; color: var(--text); font-size: 13px; line-height: 1.45; }
+.un-calc-out { display: grid; align-content: start; gap: 6px; }
+.un-out-label { margin: 0; color: var(--text-2); font-size: 14px; }
+.un-out-save { font: 600 44px/1.05 var(--f); }
+.un-out-rows { display: grid; gap: 0; margin: 14px 0 0; border-top: 1px solid var(--border); }
+.un-out-rows > div { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+.un-out-rows dt { color: var(--text-2); font-size: 14px; padding-top: 4px; }
+.un-out-rows dd { display: grid; gap: 4px; margin: 0; }
+.un-out-rows b { font: 600 24px/1.1 var(--f); }
+.un-out-rows small { color: var(--text-3); font-size: 13px; line-height: 1.45; }
+.un-out-note { margin: 10px 0 0; color: var(--text-3); font-size: 13px; line-height: 1.5; }
+@media (max-width: 560px) {
+  .un-tools label { grid-template-columns: auto minmax(0, 1fr); }
+  .un-tools .un-price { grid-column: 2; }
+  .un-out-save { font-size: 36px; }
+}
 
 /* Firmentarife: „pro Person“-Zeile unter dem Preis */
 .un-plans .pr-price em { color: var(--text-2); font-style: normal; font-size: 13px; }

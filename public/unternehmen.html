@@ -18,14 +18,14 @@
   <link rel="stylesheet" href="fonts/fonts.css?v=32">
   <link rel="stylesheet" href="style.css?v=38">
   <link rel="stylesheet" href="cosmos.css?v=43">
-  <script src="i18n-en.js?v=113" defer></script>
+  <script src="i18n-en.js?v=114" defer></script>
   <script src="i18n.js?v=31" defer></script>
   <script src="cosmos.js?v=40" defer></script>
   <link rel="stylesheet" href="/backdrop.css?v=7">
   <link rel="stylesheet" href="/site-footer.css?v=4">
   <link rel="stylesheet" href="/site-header.css?v=7">
 <link rel="stylesheet" href="/preise.css?v=3">
-<link rel="stylesheet" href="/unternehmen.css?v=1">
+<link rel="stylesheet" href="/unternehmen.css?v=2">
 </head>
 <body>
 <div class="xy-bg" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i><span class="xy-grid"></span><span class="xy-stars"></span><span class="xy-stars"></span></div>
@@ -77,29 +77,36 @@
 
       <section class="un-section un-calc" id="rechner" aria-labelledby="rechner-title">
         <h2 id="rechner-title">Was ihr sparen würdet</h2>
-        <p class="un-lead">Trag ein, wie viele Leute ihr seid und was ihr heute pro Person und Monat zahlt. Die Werte sind Beispiele – ersetzt sie durch eure echten Preise.</p>
+        <p class="un-lead">Zwei Angaben reichen: wie viele ihr seid und welche Tools ihr heute bezahlt. Die Preise sind übliche Listenpreise pro Kopf – passt sie an, wenn ihr eure echten kennt.</p>
         <div class="un-calc-grid">
           <form class="un-calc-in" data-calc onsubmit="return false">
-            <label class="un-field"><span>Wie viele Leute arbeiten mit?</span>
-              <input type="number" name="people" min="1" max="100000" step="1" value="120" inputmode="numeric">
-            </label>
-            <input class="un-range" type="range" name="peopleRange" min="10" max="1000" step="10" value="120" aria-label="Anzahl Personen">
-            <fieldset class="un-tools">
-              <legend>Was ihr heute bezahlt (pro Person und Monat)</legend>
-              <label><input type="checkbox" name="t-chat" checked><span>Chat und Anrufe</span><input type="number" name="c-chat" min="0" step="0.5" value="7" aria-label="Chat und Anrufe, Euro pro Person"> €</label>
-              <label><input type="checkbox" name="t-pm" checked><span>Projekte und Aufgaben</span><input type="number" name="c-pm" min="0" step="0.5" value="10" aria-label="Projekte und Aufgaben, Euro pro Person"> €</label>
-              <label><input type="checkbox" name="t-wiki" checked><span>Notizen und Wiki</span><input type="number" name="c-wiki" min="0" step="0.5" value="9" aria-label="Notizen und Wiki, Euro pro Person"> €</label>
-              <label><input type="checkbox" name="t-ai"><span>KI-Abo</span><input type="number" name="c-ai" min="0" step="0.5" value="20" aria-label="KI-Abo, Euro pro Person"> €</label>
-              <label><input type="checkbox" name="t-files"><span>Dateien und Speicher</span><input type="number" name="c-files" min="0" step="0.5" value="5" aria-label="Dateien und Speicher, Euro pro Person"> €</label>
+            <div class="un-step">
+              <p class="un-step-title"><span aria-hidden="true">1</span>Wie viele seid ihr?</p>
+              <label class="un-people"><input type="number" name="people" min="1" max="100000" step="1" value="120" inputmode="numeric" aria-label="Anzahl Personen"><span>Personen</span></label>
+              <input class="un-range" type="range" name="peopleRange" min="10" max="1000" step="10" value="120" aria-label="Anzahl Personen">
+            </div>
+            <fieldset class="un-step un-tools">
+              <legend class="un-step-title"><span aria-hidden="true">2</span>Was bezahlt ihr heute?</legend>
+              <p class="un-step-hint">Haken an für jedes Tool, das ihr heute habt. Der Preis gilt pro Person und Monat.</p>
+              <label><input type="checkbox" name="t-chat" checked><span><b>Chat und Anrufe</b><small>z. B. Slack, Microsoft Teams</small></span><span class="un-price"><input type="number" name="c-chat" min="0" max="100" step="0.5" value="7" aria-label="Chat und Anrufe, Euro pro Person und Monat"><small>€ pro Kopf</small></span></label>
+              <label><input type="checkbox" name="t-pm" checked><span><b>Projekte und Aufgaben</b><small>z. B. Asana, Jira, Monday</small></span><span class="un-price"><input type="number" name="c-pm" min="0" max="100" step="0.5" value="10" aria-label="Projekte und Aufgaben, Euro pro Person und Monat"><small>€ pro Kopf</small></span></label>
+              <label><input type="checkbox" name="t-wiki" checked><span><b>Notizen und Wiki</b><small>z. B. Notion, Confluence</small></span><span class="un-price"><input type="number" name="c-wiki" min="0" max="100" step="0.5" value="9" aria-label="Notizen und Wiki, Euro pro Person und Monat"><small>€ pro Kopf</small></span></label>
+              <label><input type="checkbox" name="t-ai"><span><b>KI-Abo</b><small>z. B. ChatGPT, Copilot</small></span><span class="un-price"><input type="number" name="c-ai" min="0" max="100" step="0.5" value="20" aria-label="KI-Abo, Euro pro Person und Monat"><small>€ pro Kopf</small></span></label>
+              <label><input type="checkbox" name="t-files"><span><b>Dateien und Speicher</b><small>z. B. Dropbox, Box</small></span><span class="un-price"><input type="number" name="c-files" min="0" max="100" step="0.5" value="5" aria-label="Dateien und Speicher, Euro pro Person und Monat"><small>€ pro Kopf</small></span></label>
+              <p class="un-calc-warn" data-calc-warn role="status" hidden></p>
             </fieldset>
           </form>
           <div class="un-calc-out" aria-live="polite">
-            <div><span>Heute im Monat</span><b data-out-today>–</b></div>
-            <div><span data-out-plan-label>Mit Xyntal im Monat</span><b data-out-xyntal>–</b><small data-out-plan></small></div>
-            <div class="is-total"><span>Ersparnis im Jahr</span><b data-out-save>–</b><small data-out-head></small></div>
+            <p class="un-out-label">Ihr spart im Jahr etwa</p>
+            <b class="un-out-save" data-out-save>–</b>
+            <dl class="un-out-rows">
+              <div><dt>Heute</dt><dd><b data-out-today>–</b><small data-out-today-how></small></dd></div>
+              <div><dt>Mit Xyntal</dt><dd><b data-out-xyntal>–</b><small data-out-plan></small></dd></div>
+            </dl>
+            <p class="un-out-note" data-out-note hidden></p>
           </div>
         </div>
-        <p class="un-note">Xyntal rechnet pro Konto ab, nicht pro Person: Der Tarif des Arbeitsbereichs gilt für alle, die darin mitarbeiten. Beim Jahrestarif sind zwei Monate geschenkt.</p>
+        <p class="un-note">Bei Xyntal zahlt ihr einen festen Preis für euer ganzes Team – egal, ob noch jemand dazukommt. Beim Jahrestarif sind zwei Monate geschenkt.</p>
       </section>
 
       <section class="un-section" aria-labelledby="firmentarife">
@@ -238,7 +245,7 @@
 <script src="avatars.js?v=35"></script>
 <script src="notifications.js?v=34"></script>
 <script src="effects.js?v=39"></script>
-<script src="/pages/unternehmen.js?v=1" defer></script>
+<script src="/pages/unternehmen.js?v=2" defer></script>
 <script src="/account-menu.js?v=19" defer></script>
 <script src="/site-chat.js?v=6" defer></script>
 </body>

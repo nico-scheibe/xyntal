@@ -39,9 +39,16 @@
   }
 
   // ---- Rechner ----------------------------------------------------------------
+  // Zwei Schritte: wie viele Leute, welche Tools zu welchem Preis pro Kopf. Das Ergebnis
+  // nennt zuerst die Ersparnis im Jahr und darunter die Rechnung im Klartext. Mehr als
+  // 100 € pro Kopf und Tool ist fast immer eine Gesamtsumme – dann wird gekappt und
+  // darauf hingewiesen, statt Millionen-Ersparnisse auszurechnen.
+  const MAX_PER_HEAD = 100;
   const out = (k) => document.querySelector(`[data-out-${k}]`);
   const field = (n) => calc.elements.namedItem(n);
+  const warn = document.querySelector("[data-calc-warn]");
   const TOOLS = ["chat", "pm", "wiki", "ai", "files"];
+  const count = (n) => n.toLocaleString(loc());
   function people() {
     const n = Number.parseInt(field("people").value, 10);
     return Number.isFinite(n) && n > 0 ? Math.min(n, 100000) : 0;
@@ -49,28 +56,51 @@
   function update() {
     const n = people();
     let perHead = 0;
+    let capped = false;
     for (const t of TOOLS) {
       const on = field(`t-${t}`).checked;
-      field(`t-${t}`).closest("label").classList.toggle("is-off", !on);
-      const c = Number.parseFloat(String(field(`c-${t}`).value).replace(",", "."));
+      const row = field(`t-${t}`).closest("label");
+      row.classList.toggle("is-off", !on);
+      let c = Number.parseFloat(String(field(`c-${t}`).value).replace(",", "."));
+      const tooHigh = on && Number.isFinite(c) && c > MAX_PER_HEAD;
+      row.classList.toggle("is-capped", tooHigh);
+      if (tooHigh) { c = MAX_PER_HEAD; capped = true; }
       if (on && Number.isFinite(c) && c > 0) perHead += c;
     }
+    warn.hidden = !capped;
+    warn.textContent = capped
+      ? T(`Mehr als ${MAX_PER_HEAD} € pro Kopf und Tool? Bitte den Preis pro Person eintragen, nicht die Summe fürs ganze Team. Wir rechnen hier mit höchstens ${MAX_PER_HEAD} €.`,
+          `More than €${MAX_PER_HEAD} per person and tool? Please enter the price per person, not the total for the whole team. We count at most €${MAX_PER_HEAD} here.`)
+      : "";
     const today = Math.round(n * perHead * 100); // Cent im Monat
     const plan = n > 0 ? pick(n) : null;
-    out("today").textContent = n > 0 ? euroRound(today) : "–";
-    if (!plan) { out("xyntal").textContent = "–"; out("save").textContent = "–"; out("plan").textContent = ""; out("head").textContent = ""; return; }
+    out("today").textContent = n > 0 ? T(`${euroRound(today)} im Monat`, `${euroRound(today)} a month`) : "–";
+    out("today-how").textContent = n > 0
+      ? T(`${count(n)} ${n === 1 ? "Person" : "Personen"} × ${euro(Math.round(perHead * 100))} pro Kopf`, `${count(n)} ${n === 1 ? "person" : "people"} × ${euro(Math.round(perHead * 100))} per person`)
+      : T("Tragt oben ein, wie viele ihr seid.", "Enter above how many you are.");
+    const note = out("note");
+    note.hidden = !field("t-ai").checked;
+    note.textContent = T("Die KI in Xyntal läuft über ein gemeinsames Budget pro Monat statt über ein Abo pro Kopf. Wer viel KI nutzt, lädt Guthaben auf.",
+      "AI in Xyntal runs on one shared monthly budget instead of a subscription per person. Heavy users top up credit.");
+    if (!plan) { out("xyntal").textContent = "–"; out("save").textContent = "–"; out("plan").textContent = ""; return; }
     const yearly = plan.yearlyPriceCents;
     const monthly = Math.round(yearly / 12);
+    const max = members(plan);
     const from = plan.contactSales ? T("ab ", "from ") : "";
-    out("xyntal").textContent = from + euroRound(monthly);
+    out("xyntal").textContent = T(`${from}${euroRound(monthly)} im Monat`, `${from}${euroRound(monthly)} a month`);
+    const scope = max ? T(`fester Preis für bis zu ${count(max)} Leute`, `fixed price for up to ${count(max)} people`)
+      : plan.id === "Enterprise" ? T(`Jahresvertrag, Einstiegspreis gilt bis ${count(ENTERPRISE_SEATS)} Leute`, `annual contract, entry price covers up to ${count(ENTERPRISE_SEATS)} people`)
+      : T("Jahresvertrag, Angebot nach Größe", "annual contract, quoted by size");
     out("plan").textContent = plan.contactSales
-      ? T(`${plan.name}, Jahresvertrag – Angebot nach Größe`, `${plan.name}, annual contract – quoted by size`)
-      : T(`${plan.name}, bei jährlicher Zahlung (monatlich ${euro(plan.priceCents)})`, `${plan.name}, billed yearly (monthly ${euro(plan.priceCents)})`);
+      ? T(`${plan.name} · ${scope}`, `${plan.name} · ${scope}`)
+      : T(`${plan.name} · ${scope}, bei jährlicher Zahlung`, `${plan.name} · ${scope}, billed yearly`);
     const save = today * 12 - yearly;
-    out("save").textContent = save > 0 ? euroRound(save) : "–";
-    out("head").textContent = save > 0
-      ? T(`Xyntal kostet euch etwa ${euro(Math.round(monthly / n), 2)} pro Person und Monat.`, `Xyntal costs you about ${euro(Math.round(monthly / n), 2)} per person a month.`)
-      : T("Wählt aus, was ihr heute bezahlt.", "Pick what you pay for today.");
+    out("save").textContent = save > 0 ? euroRound(save) : T("nichts", "nothing");
+    if (save <= 0 && n > 0) {
+      note.hidden = false;
+      note.textContent = T("Bei so wenigen Tools oder Leuten spart ihr mit Xyntal kein Geld – dann lohnt es sich eher, weil alles an einem Ort ist.",
+        "With this few tools or people you won't save money with Xyntal – the gain is having everything in one place.");
+    }
     document.querySelectorAll(".pr-card[data-plan]").forEach((c) => {
       const on = c.dataset.plan === plan.id;
       c.classList.toggle("is-pick", on);
