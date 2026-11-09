@@ -18,6 +18,10 @@ function friendlyError(err) {
     [/XYNTAL_MODERATION:zu_viele_links/, "Bitte höchstens 5 Links pro Text."],
     [/XYNTAL_MODERATION:zu_schnell/, "Du sendest gerade sehr viele Nachrichten. Bitte warte einen Moment."],
     [/XYNTAL_MODERATION:wiederholung/, "Diese Nachricht hast du gerade schon mehrfach verschickt."],
+    // Zusatzregeln (supabase/migrations/20261110100000_content_rules.sql)
+    [/XYNTAL_MODERATION:abzocke/, "Dein Text sieht nach Abzocke aus (z. B. MLM, Krypto-Pump oder Werde-reich-Versprechen) und wurde blockiert."],
+    [/XYNTAL_MODERATION:daten/, "Bitte keine Bankdaten wie eine IBAN öffentlich posten. Teile sie nur direkt per Nachricht."],
+    [/XYNTAL_MODERATION:kontaktdaten/, "Bitte keine Telefonnummern, E-Mail-Adressen oder Messenger-Kontakte in Profil, Projekten oder Börse. Kontakt läuft über Xyntal, deine Website kannst du im Profil verlinken."],
     [/XYNTAL_TIMEOUT/, "Das hat zu lange gedauert. Prüfe deine Verbindung und versuch es noch einmal."],
     [/bucket not found/i, "Der Bildspeicher ist noch nicht eingerichtet. Bitte versuch es später erneut."],
     [/payload too large|maximum allowed size|exceeded.*size/i, "Das Bild ist zu groß. Bitte wähle eine kleinere Datei."],
