@@ -18,12 +18,20 @@
   const TAB = Math.random().toString(36).slice(2, 10);
   const BG_KEY = "xyntal-chat-bg";
   const CHAT_BGS = [["xyntal", "Xyntal"], ["space", "Weltall"], ["natur", "Natur"], ["tech", "Tech"], ["fun", "Fun"], ["none", "Ohne Muster"]];
-  const FILTERS = [["all", "Alle"], ["unread", "Ungelesen"], ["requests", "Anfragen"], ["groups", "Gruppen"], ["archived", "Archiviert"]];
   const HANDLE = /^[a-z0-9][a-z0-9_-]{2,19}$/;
   const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const INVITE = /^[A-Za-z0-9_-]{8,64}$/;
+  // Gruppen finden und beitreten (App-Server: messaging/groups.ts)
+  const CATEGORY_LABEL = { tech: "Tech & Code", design: "Design", startup: "Gründen", marketing: "Marketing", ai: "KI", gaming: "Gaming",
+    learning: "Lernen", career: "Karriere", local: "Vor Ort", social: "Austausch", other: "Sonstiges" };
+  const CATEGORY_EMOJI = { tech: "💻", design: "🎨", startup: "🚀", marketing: "📣", ai: "🤖", gaming: "🎮", learning: "📚", career: "💼", local: "📍", social: "💬", other: "✨" };
+  const VIS_LABEL = { private: "Privat", workspace: "Nur Arbeitsbereich", public: "Öffentlich" };
+  const POLICY_LABEL = { open: "Offen – direkt beitreten", request: "Auf Anfrage", invite: "Nur mit Einladung" };
 
   const S = {
-    me: "", meName: "", conversations: [], filter: "all", query: "", searchHits: [],
+    me: "", meName: "", conversations: [], filter: "all", space: "all", query: "", searchHits: [], myRequests: [],
+    mode: "thread", discover: { q: "", category: "", scope: "all", groups: [], loading: false, categoryCounts: {} },
+    access: new Map(), requests: new Map(), invites: new Map(),
     active: "", messages: [], hasMore: false, readers: [], members: new Map(), users: new Map(), presence: new Map(),
     insight: new Map(), tagFilter: "", tagFilterName: "", filterTagDropped: false, chatTags: [], replyTo: null, editId: "", pending: [], tag: null,
     mentionIds: new Map(), typing: new Map(), view: "list", infoOpen: true, draft: new Map(), loadingOlder: false,
@@ -55,8 +63,31 @@
     const img = user && /^data:image\/(jpeg|png);base64,/.test(user.avatar || "") ? `<img src="${esc(user.avatar)}" alt="">` : esc(initials(name));
     return `<span class="xc-av ${size}" aria-hidden="true">${img}</span>`;
   }
+  // Jede Gruppe bekommt einen festen Farbton aus dem Logo-Verlauf (Lila → Blau → Cyan), abgeleitet vom Namen
+  function hue(text) {
+    let h = 0;
+    for (const ch of String(text || "")) h = (h * 31 + ch.codePointAt(0)) >>> 0;
+    return h % 4;
+  }
   function groupAvatar(c, size = "") {
-    return `<span class="xc-av xc-av-group ${size}" aria-hidden="true">${c.emoji ? esc(c.emoji) : esc(initials(c.title))}</span>`;
+    const pic = /^data:image\/(jpeg|png);base64,/.test(c.avatar || "") ? `<img src="${esc(c.avatar)}" alt="">` : c.emoji ? esc(c.emoji) : esc(initials(c.title));
+    return `<span class="xc-av xc-av-group xc-hue-${hue(c.id || c.title)}${c.emoji && !c.avatar ? " has-emoji" : ""} ${size}" aria-hidden="true">${pic}</span>`;
+  }
+  // In welchen Bereich ein Gespräch gehört: Privat (Direktnachrichten, private Gruppen),
+  // Teams (an einen Arbeitsbereich oder ein Projekt gebunden), Gruppen (öffentlich, zum Beitreten)
+  function spaceOf(c) {
+    if (c.workspaceId || c.projectId) return "teams";
+    if (c.kind !== "dm" && c.visibility === "public") return "groups";
+    return "private";
+  }
+  const ICON_SVG = (name) => ICON[name] || "";
+  function visBadge(c) {
+    // Heißt der Chat wie sein Projekt bzw. Arbeitsbereich, reicht das Symbol
+    const named = (name) => (name && name !== c.title ? `<span data-no-i18n>${esc(name)}</span>` : "");
+    if (c.projectName) return `<span class="xc-vis" title="${esc(t("Projekt"))}: ${esc(c.projectName)}">${ICON_SVG("folder")}${named(c.projectName)}</span>`;
+    if (c.workspaceName) return `<span class="xc-vis" title="${esc(t("Arbeitsbereich"))}: ${esc(c.workspaceName)}">${ICON_SVG("building")}${named(c.workspaceName)}</span>`;
+    if (c.kind !== "dm" && c.visibility === "public") return `<span class="xc-vis" title="${esc(t("Öffentliche Gruppe"))}">${ICON_SVG("globe")}</span>`;
+    return "";
   }
   const presenceOf = (id) => S.presence.get(id) || "offline";
   const presenceLabel = (p) => t({ online: "Online", busy: "Beschäftigt", away: "Abwesend" }[p] || "Offline");
@@ -272,11 +303,14 @@
 
   // ---------- Gesprächsliste ----------
   function passes(c) {
-    if (S.query) return (c.title || "").toLowerCase().includes(S.query.toLowerCase());
+    if (S.space !== "all" && spaceOf(c) !== S.space) return false;
+    if (S.query) {
+      const q = S.query.toLowerCase();
+      return [c.title, c.workspaceName, c.projectName, c.description].some((v) => (v || "").toLowerCase().includes(q));
+    }
     switch (S.filter) {
       case "unread": return !c.archived && c.unread > 0;
-      case "requests": return !c.archived && (c.myRole === "invited" || c.myRole === "pending");
-      case "groups": return !c.archived && c.kind === "group";
+      case "requests": return !c.archived && c.pendingRequests > 0;
       case "archived": return c.archived;
       default: return !c.archived;
     }
@@ -284,33 +318,65 @@
   function snippet(c) {
     if (c.lastKind === "voice") return t("🎤 Sprachnachricht");
     if (c.lastKind === "gif") return "GIF";
+    if (c.lastKind === "system") return t("Neues in der Gruppe");
     if (!c.lastSnippet && c.lastKind) return t("📎 Datei");
     return c.lastSnippet || t("Noch keine Nachrichten");
   }
+  function itemHtml(c) {
+    const partner = c.partnerId ? userNow(c.partnerId) : null;
+    const av = isGroup(c) ? groupAvatar(c) : avatar(partner || { displayName: c.title });
+    const dot = !isGroup(c) ? `<i class="xc-dot xc-${presenceOf(c.partnerId)}"></i>` : "";
+    const req = c.pendingRequests ? `<em class="xc-badge xc-badge-req" title="${esc(t("Beitrittsanfragen"))}">+${c.pendingRequests}</em>` : "";
+    return `<li><button type="button" class="xc-item${c.id === S.active && S.mode === "thread" ? " is-active" : ""}${c.unread ? " is-unread" : ""}" data-open="${esc(c.id)}" aria-current="${c.id === S.active}">
+      <span class="xc-av-wrap">${av}${dot}</span>
+      <span class="xc-item-main"><span class="xc-item-top"><b data-no-i18n>${esc(c.title || t("Gespräch"))}</b>${visBadge(c)}<time>${esc(listTime(c.updatedTs))}</time></span>
+      <span class="xc-item-sub"><span data-no-i18n>${esc(snippet(c))}</span>${req}${c.mentions ? `<em class="xc-badge xc-badge-at">@</em>` : ""}${c.unread ? `<em class="xc-badge">${c.unread > 99 ? "99+" : c.unread}</em>` : ""}</span></span>
+    </button></li>`;
+  }
   function renderList() {
     const shown = S.conversations.filter(passes);
-    const items = shown.map((c) => {
-      const partner = c.partnerId ? userNow(c.partnerId) : null;
-      const av = isGroup(c) ? groupAvatar(c) : avatar(partner || { displayName: c.title });
-      const dot = !isGroup(c) ? `<i class="xc-dot xc-${presenceOf(c.partnerId)}"></i>` : "";
-      return `<li><button type="button" class="xc-item${c.id === S.active ? " is-active" : ""}${c.unread ? " is-unread" : ""}" data-open="${esc(c.id)}" aria-current="${c.id === S.active}">
-        <span class="xc-av-wrap">${av}${dot}</span>
-        <span class="xc-item-main"><span class="xc-item-top"><b data-no-i18n>${esc(c.title || t("Gespräch"))}</b><time>${esc(listTime(c.updatedTs))}</time></span>
-        <span class="xc-item-sub"><span data-no-i18n>${esc(snippet(c))}</span>${c.mentions ? `<em class="xc-badge xc-badge-at">@</em>` : ""}${c.unread ? `<em class="xc-badge">${c.unread > 99 ? "99+" : c.unread}</em>` : ""}</span></span>
-      </button></li>`;
-    }).join("");
+    // Favoriten zuerst, dann wie gehabt nach letzter Nachricht
+    const pinned = shown.filter((c) => c.favorite);
+    const rest = shown.filter((c) => !c.favorite);
+    let items = "";
+    if (pinned.length && !S.query) items += `<p class="xc-label">${esc(t("Angeheftet"))}</p><ul class="xc-items">${pinned.map(itemHtml).join("")}</ul>`;
+    if (rest.length) items += `${pinned.length && !S.query ? `<p class="xc-label">${esc(t("Gespräche"))}</p>` : ""}<ul class="xc-items">${rest.map(itemHtml).join("")}</ul>`;
+    // Eigene offene Beitrittsanfragen: sichtbar unter „Anfragen“, bis jemand entscheidet
+    const waiting = S.filter === "requests" && !S.query && S.myRequests.length
+      ? `<p class="xc-label">${esc(t("Deine Anfragen"))}</p><ul class="xc-items">${S.myRequests.map((g) => `<li><div class="xc-item is-waiting">${groupAvatar({ id: g.id, title: g.title, emoji: g.emoji, avatar: g.avatar })}<span class="xc-item-main"><span class="xc-item-top"><b data-no-i18n>${esc(g.title)}</b></span><span class="xc-item-sub"><span>${esc(t("Wartet auf Freigabe"))}</span></span></span><button type="button" class="xc-link" data-withdraw="${esc(g.id)}">${esc(t("Zurückziehen"))}</button></div></li>`).join("")}</ul>`
+      : "";
     const hits = S.query.length >= 2 && S.searchHits.length ? `<p class="xc-label">${esc(t("Nachrichten"))}</p><ul class="xc-hits">${S.searchHits.map((m) => `<li><button type="button" data-open="${esc(m.conversationId)}"><b data-no-i18n>${esc(conv(m.conversationId)?.title || m.author)}</b><span data-no-i18n>${esc(m.author)}: ${esc((m.body || "").slice(0, 90))}</span></button></li>`).join("")}</ul>` : "";
-    listEl.querySelector("[data-items]").innerHTML = items || hits
-      ? `<ul class="xc-items">${items}</ul>${hits}`
-      : `<p class="xc-empty">${esc(t(S.query ? "Nichts gefunden." : S.filter === "all" ? "Noch keine Gespräche. Starte eins mit dem Stift oben." : "Hier ist gerade nichts."))}</p>`;
+    const emptyText = S.query ? "Nichts gefunden."
+      : S.filter === "requests" ? "Keine offenen Anfragen."
+      : S.filter !== "all" ? "Hier ist gerade nichts."
+      : { all: "Noch keine Gespräche. Starte eins mit dem Plus oben.", private: "Noch keine privaten Gespräche.",
+          teams: "Noch kein Team-Chat. Leg einen für deinen Arbeitsbereich oder ein Projekt an.", groups: "Du bist noch in keiner öffentlichen Gruppe – schau mal unter „Gruppen entdecken“." }[S.space];
+    listEl.querySelector("[data-items]").innerHTML = items || hits || waiting
+      ? `${waiting}${items}${hits}`
+      : `<div class="xc-empty xc-empty-list"><p>${esc(t(emptyText))}</p>${S.space === "teams" ? `<button type="button" class="btn btn-small btn-ghost" data-new-team>${esc(t("Team-Chat anlegen"))}</button>` : S.space === "groups" ? `<button type="button" class="btn btn-small btn-ghost" data-discover>${esc(t("Gruppen entdecken"))}</button>` : ""}</div>`;
     listEl.querySelectorAll("[data-filter]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.filter === S.filter)));
+    listEl.querySelectorAll("[data-space]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.space === S.space)));
+    // Ungelesene je Bereich an den Reitern
+    for (const sp of ["all", "private", "teams", "groups"]) {
+      const n = S.conversations.filter((c) => !c.archived && (sp === "all" || spaceOf(c) === sp)).reduce((sum, c) => sum + (c.unread || 0), 0);
+      const el = listEl.querySelector(`[data-space-count="${sp}"]`);
+      if (el) el.textContent = n ? (n > 99 ? "99+" : String(n)) : "";
+    }
+    const reqs = S.conversations.reduce((n, c) => n + (c.pendingRequests || 0), 0);
+    const reqChip = listEl.querySelector('[data-filter="requests"]');
+    if (reqChip) reqChip.dataset.count = reqs ? String(reqs) : "";
+    listEl.querySelector("[data-discover]")?.classList.toggle("is-active", S.mode === "discover");
     const total = S.conversations.filter((c) => !c.archived).reduce((n, c) => n + (c.unread || 0), 0);
     const nav = document.querySelector("[data-messages]");
     if (nav) nav.innerHTML = `${esc(t("Nachrichten"))}${total ? ` <span class="badge">${total}</span>` : ""}`;
   }
   async function loadConversations() {
-    const { conversations } = await X.api("GET", "/conversations");
+    const [{ conversations }, mine] = await Promise.all([
+      X.api("GET", "/conversations"),
+      X.api("GET", "/groups/requests/mine").catch(() => ({ requests: [] })),
+    ]);
     S.conversations = conversations;
+    S.myRequests = mine.requests || [];
     renderList();
     const ids = [...new Set(conversations.map((c) => c.partnerId).filter(Boolean))];
     await Promise.all(ids.map(user));
@@ -335,11 +401,21 @@
       renderList();
     }, 250);
   });
-  listEl.addEventListener("click", (e) => {
+  listEl.addEventListener("click", async (e) => {
     const f = e.target.closest("[data-filter]");
     if (f) { S.filter = f.dataset.filter; renderList(); return; }
+    const sp = e.target.closest("[data-space]");
+    if (sp) { S.space = sp.dataset.space; renderList(); return; }
+    const w = e.target.closest("[data-withdraw]");
+    if (w) {
+      try { await X.api("DELETE", `/groups/${encodeURIComponent(w.dataset.withdraw)}/request`); await loadConversations(); }
+      catch (err) { notice.innerHTML = `<div class="notice">${esc(fail(err))}</div>`; }
+      return;
+    }
     const o = e.target.closest("[data-open]");
-    if (o) open(o.dataset.open);
+    if (o) { open(o.dataset.open); return; }
+    if (e.target.closest("[data-discover]")) { openDiscover(); return; }
+    if (e.target.closest("[data-new-team]")) { newConversation("team"); return; }
     if (e.target.closest("[data-new]")) newConversation();
   });
 
@@ -347,6 +423,7 @@
   async function open(id, { push = true } = {}) {
     if (S.active && S.active !== id) S.draft.set(S.active, composerText());
     S.active = id;
+    S.mode = "thread";
     S.messages = []; S.hasMore = false; S.readers = []; S.replyTo = null; S.editId = ""; S.pending = []; S.tag = null;
     S.mentionIds = new Map(); S.tagFilter = ""; S.tagFilterName = ""; S.filterTagDropped = false; S.chatTags = [];
     setView("thread");
@@ -357,6 +434,7 @@
       await Promise.all([loadMessages(), loadMembers(id), loadChatTags()]);
       const c = conv(id);
       if (c && !isGroup(c)) loadInsight(c.partnerId);
+      if (c && isGroup(c)) loadAccess(id);
       markRead();
     } catch (err) {
       threadEl.querySelector("[data-messages]").innerHTML = `<p class="xc-empty">${esc(fail(err))}</p>`;
@@ -369,6 +447,22 @@
       await Promise.all(r.members.filter((m) => !m.mine).slice(0, 20).map((m) => user(m.id)));
     } catch { S.members.set(id, { members: [], can: {} }); }
     renderHeader(); renderInfo();
+  }
+  // Wer die Gruppe finden darf, wie man reinkommt, offene Anfragen und Einladungslinks (nur Inhaber/Admins)
+  async function loadAccess(id) {
+    try {
+      const r = await X.api("GET", `/conversations/${encodeURIComponent(id)}/join-settings`);
+      S.access.set(id, r);
+      if (r.canManage) {
+        const [reqs, inv] = await Promise.all([
+          r.pendingRequests ? X.api("GET", `/conversations/${encodeURIComponent(id)}/requests`).catch(() => ({ requests: [] })) : { requests: [] },
+          X.api("GET", `/conversations/${encodeURIComponent(id)}/invites`).catch(() => ({ invites: [] })),
+        ]);
+        S.requests.set(id, reqs.requests || []);
+        S.invites.set(id, inv.invites || []);
+      }
+    } catch { S.access.delete(id); }
+    if (S.active === id) { renderInfo(); renderHeader(); }
   }
   // Alles, was in diesem Gespräch markiert wurde (Projekte, Arbeitsbereiche, Gruppen) – die Filter rechts
   async function loadChatTags() {
@@ -490,8 +584,11 @@
     if (!head || !c) return;
     const partner = c.partnerId ? userNow(c.partnerId) : null;
     const members = (S.members.get(c.id) || {}).members || [];
+    const count = members.length || c.memberCount;
+    const kindLabel = c.projectName ? `${t("Projekt-Chat")} · ${c.projectName}` : c.workspaceName ? `${t("Team-Chat")} · ${c.workspaceName}`
+      : c.visibility === "public" ? t("Öffentliche Gruppe") : t("Gruppe");
     const sub = isGroup(c)
-      ? (members.length === 1 ? t("Gruppe · 1 Mitglied") : `${t("Gruppe")} · ${members.length || c.memberCount} ${t("Mitglieder")}`)
+      ? `${kindLabel} · ${count === 1 ? t("1 Mitglied") : `${count} ${t("Mitglieder")}`}`
       : `${t("Direktnachricht")} · ${presenceLabel(presenceOf(c.partnerId))}`;
     head.innerHTML = `
       <button type="button" class="xc-icon xc-back" data-back aria-label="${esc(t("Zurück zur Liste"))}">${ICON.back}</button>
@@ -515,6 +612,7 @@
       case "left": return `${who} ${t(me ? "hast die Gruppe verlassen" : "hat die Gruppe verlassen")}`;
       case "renamed": return `${who} ${t(me ? "hast die Gruppe umbenannt in" : "hat die Gruppe umbenannt in")} „${s.title}“`;
       case "owner": return `${s.targets && s.targets[0] ? s.targets[0] : who} ${t("leitet jetzt die Gruppe")}`;
+      case "joined": return `${who} ${t(me ? "bist der Gruppe beigetreten" : "ist der Gruppe beigetreten")}`;
       default: return m.body || "";
     }
   }
@@ -638,15 +736,52 @@
   function renderInfo() {
     const c = conv(S.active);
     root.classList.toggle("info-closed", !S.infoOpen);
+    if (S.mode === "discover") {
+      setInfo(`<div class="xc-info-head"><span class="xc-ph-mark" aria-hidden="true">${ICON_SVG("compass")}</span><h2>${esc(t("So funktionieren Gruppen"))}</h2></div>
+        <section><h3>${esc(t("Drei Arten"))}</h3><ul class="xc-howto">
+          <li>${ICON_SVG("lock")}<span><b>${esc(t("Privat"))}</b>${esc(t("Nur wer eingeladen ist, sieht die Gruppe – für Freunde und Privates."))}</span></li>
+          <li>${ICON_SVG("building")}<span><b>${esc(t("Team"))}</b>${esc(t("Gehört zu einem Arbeitsbereich oder Projekt. Alle dort können sie finden."))}</span></li>
+          <li>${ICON_SVG("globe")}<span><b>${esc(t("Öffentlich"))}</b>${esc(t("Steht hier unter Entdecken. Jeder auf Xyntal kann beitreten oder anfragen."))}</span></li>
+        </ul></section>
+        <section><h3>${esc(t("Voraussetzungen"))}</h3><p class="xc-about">${esc(t("Gruppen können verlangen, dass dein Profil bestimmte Skills, Sprachen oder ein bestätigtes Konto zeigt. Was dir fehlt, siehst du direkt an der Karte."))}</p><a class="btn btn-small btn-ghost" href="/profil#matching">${esc(t("Meine Skills pflegen"))}</a></section>`);
+      return;
+    }
     if (!c) { setInfo(`<p class="xc-empty">${esc(t("Wähle ein Gespräch, um Details zu sehen."))}</p>`); return; }
     const projects = S.chatTags.length ? `<section><h3>${esc(t("In diesem Chat markiert"))}</h3><ul class="xc-projects">${S.chatTags.filter((g) => TAG_KINDS.includes(g.kind)).map((g) => `<li><button type="button" data-tag-filter="${esc(tagKey(g))}" data-name="${esc(g.name)}" aria-pressed="${S.tagFilter === tagKey(g)}" title="${esc(t(TAG_LABEL[g.kind]))}">${ICON[TAG_ICON[g.kind]]}<span data-no-i18n>${esc(g.name)}</span><small>${g.count}</small></button></li>`).join("")}</ul><p class="xc-hint">${esc(t("Klick auf einen Eintrag, um nur seine Nachrichten zu sehen. In einer Nachricht markierst du mit /projekt, /arbeitsbereich oder /gruppe."))}</p></section>` : "";
     if (isGroup(c)) {
       const r = S.members.get(c.id) || { members: [] };
+      const acc = S.access.get(c.id);
+      const a = acc ? acc.access : { visibility: c.visibility || "private", joinPolicy: c.joinPolicy || "invite", criteria: null, tags: [] };
+      const manage = acc && acc.canManage;
+      const chips = [
+        `<span class="xc-chip">${ICON_SVG(a.visibility === "public" ? "globe" : a.visibility === "workspace" ? "building" : "lock")}${esc(t(VIS_LABEL[a.visibility] || "Privat"))}</span>`,
+        a.visibility !== "private" ? `<span class="xc-chip">${esc(t(POLICY_LABEL[a.joinPolicy] || ""))}</span>` : "",
+        a.category ? `<span class="xc-chip">${CATEGORY_EMOJI[a.category] || ""} ${esc(t(CATEGORY_LABEL[a.category] || a.category))}</span>` : "",
+        a.memberLimit ? `<span class="xc-chip">${esc(t("max."))} ${a.memberLimit}</span>` : "",
+      ].join("");
+      const team = a.projectName || a.workspaceName
+        ? `<section><h3>${esc(t(a.projectName ? "Projekt" : "Arbeitsbereich"))}</h3><p class="xc-team">${ICON_SVG(a.projectName ? "folder" : "building")}<span data-no-i18n>${esc(a.projectName || a.workspaceName)}</span>${a.projectName && a.workspaceName ? `<small data-no-i18n>${esc(a.workspaceName)}</small>` : ""}</p></section>` : "";
+      const crit = criteriaHtml(a.criteria);
+      const reqs = manage ? (S.requests.get(c.id) || []) : [];
+      const requests = reqs.length ? `<section class="xc-requests"><h3>${esc(t("Beitrittsanfragen"))} <em class="xc-badge xc-badge-req">${reqs.length}</em></h3><ul>${reqs.map((q) => `<li>
+          <div class="xc-req-top">${avatar({ displayName: q.displayName, avatar: q.avatar }, "xc-av-sm")}<span><b data-no-i18n>${esc(q.displayName)}</b>${q.headline ? `<small data-no-i18n>${esc(q.headline)}</small>` : ""}</span></div>
+          ${q.message ? `<p class="xc-req-msg" data-no-i18n>„${esc(q.message)}“</p>` : ""}
+          ${q.skills.length ? `<div class="xc-tags">${q.skills.slice(0, 6).map((s) => `<span data-no-i18n>${esc(X.tagLabel("skills", s))}</span>`).join("")}</div>` : ""}
+          ${q.eligibility && !q.eligibility.ok ? `<p class="xc-hint xc-warn">${esc(t("Erfüllt die Voraussetzungen gerade nicht"))}</p>` : ""}
+          <div class="xc-req-actions"><button type="button" class="btn btn-small" data-req-approve="${esc(q.userId)}">${esc(t("Aufnehmen"))}</button><button type="button" class="btn btn-small btn-ghost" data-req-decline="${esc(q.userId)}">${esc(t("Ablehnen"))}</button></div>
+        </li>`).join("")}</ul></section>` : "";
+      const invites = manage ? (S.invites.get(c.id) || []) : [];
+      const inviteBox = manage ? `<section><h3>${esc(t("Einladungslink"))}</h3>${invites.length ? invites.slice(0, 3).map((i) => `<div class="xc-invite"><code data-no-i18n>${esc(inviteUrl(c.id, i.code).replace(/^https?:\/\//, ""))}</code><button type="button" class="xc-icon" data-invite-copy="${esc(i.code)}" aria-label="${esc(t("Link kopieren"))}" title="${esc(t("Link kopieren"))}">${ICON_SVG("copy")}</button><button type="button" class="xc-icon" data-invite-revoke="${esc(i.code)}" aria-label="${esc(t("Link widerrufen"))}" title="${esc(t("Link widerrufen"))}">${ICON_SVG("trash")}</button></div>`).join("") : `<p class="xc-hint">${esc(t("Mit einem Link kommen Leute direkt in die Gruppe – auch wenn sie privat ist. Die Voraussetzungen gelten trotzdem."))}</p>`}<button type="button" class="btn btn-small btn-ghost" data-invite-new>${esc(t(invites.length ? "Weiteren Link erstellen" : "Link erstellen"))}</button></section>` : "";
       setInfo(`
-        <div class="xc-info-head">${groupAvatar(c, "xc-av-xl")}<h2 data-no-i18n>${esc(c.title)}</h2><p>${esc(t("Gruppe"))} · ${r.members.length} ${esc(t("Mitglieder"))}</p>${c.description ? `<p class="xc-about" data-no-i18n>${esc(c.description)}</p>` : ""}</div>
+        <div class="xc-info-head">${groupAvatar(c, "xc-av-xl")}<h2 data-no-i18n>${esc(c.title)}</h2><p>${r.members.length} ${esc(t("Mitglieder"))}</p><div class="xc-chips">${chips}</div>${c.description ? `<p class="xc-about" data-no-i18n>${esc(c.description)}</p>` : ""}${manage ? `<button type="button" class="btn btn-small btn-ghost" data-group-settings>${ICON_SVG("gear")}${esc(t("Gruppe bearbeiten"))}</button>` : ""}</div>
+        ${requests}
+        ${team}
+        ${crit ? `<section><h3>${esc(t("Voraussetzungen"))}</h3>${crit}</section>` : ""}
+        ${a.tags && a.tags.length ? `<section><h3>${esc(t("Themen"))}</h3><div class="xc-tags">${a.tags.map((x) => `<span data-no-i18n>#${esc(x)}</span>`).join("")}</div></section>` : ""}
         <section><h3>${esc(t("Mitglieder"))}</h3><ul class="xc-members">${r.members.map((m) => `<li>${avatar(userNow(m.id) || { displayName: m.displayName }, "xc-av-sm")}<span data-no-i18n>${esc(m.displayName)}${m.mine ? ` (${esc(t("du"))})` : ""}</span>${m.conversationRole === "owner" ? `<small>${esc(t("Inhaber"))}</small>` : m.conversationRole === "admin" ? `<small>Admin</small>` : ""}</li>`).join("")}</ul></section>
+        ${inviteBox}
         ${projects}
-        <section><button type="button" class="btn btn-small btn-ghost" data-leave>${esc(t("Gruppe verlassen"))}</button></section>`);
+        <section><button type="button" class="btn btn-small btn-ghost xc-danger" data-leave>${esc(t("Gruppe verlassen"))}</button></section>`);
       return;
     }
     const p = userNow(c.partnerId);
@@ -661,6 +796,36 @@
   infoEl.addEventListener("click", async (e) => {
     const f = e.target.closest("[data-tag-filter]");
     if (f) { setTagFilter(f.dataset.tagFilter, f.dataset.name); return; }
+    const id = S.active;
+    const ap = e.target.closest("[data-req-approve], [data-req-decline]");
+    if (ap) {
+      const approve = ap.hasAttribute("data-req-approve");
+      const who = approve ? ap.dataset.reqApprove : ap.dataset.reqDecline;
+      ap.disabled = true;
+      try {
+        await X.api("POST", `/conversations/${encodeURIComponent(id)}/requests/${encodeURIComponent(who)}`, { approve });
+        await Promise.all([loadAccess(id), loadMembers(id), loadConversations()]);
+      } catch (err) { say(fail(err), "error"); ap.disabled = false; }
+      return;
+    }
+    if (e.target.closest("[data-invite-new]")) {
+      try {
+        const { invite } = await X.api("POST", `/conversations/${encodeURIComponent(id)}/invites`, {});
+        await loadAccess(id);
+        copyText(inviteUrl(id, invite.code));
+      } catch (err) { say(fail(err), "error"); }
+      return;
+    }
+    const cp = e.target.closest("[data-invite-copy]");
+    if (cp) { copyText(inviteUrl(id, cp.dataset.inviteCopy)); return; }
+    const rv = e.target.closest("[data-invite-revoke]");
+    if (rv) {
+      if (!rv.dataset.armed) { rv.dataset.armed = "1"; rv.classList.add("is-armed"); setTimeout(() => { delete rv.dataset.armed; rv.classList.remove("is-armed"); }, 4000); return; }
+      try { await X.api("DELETE", `/conversations/${encodeURIComponent(id)}/invites/${encodeURIComponent(rv.dataset.inviteRevoke)}`); await loadAccess(id); }
+      catch (err) { say(fail(err), "error"); }
+      return;
+    }
+    if (e.target.closest("[data-group-settings]")) { groupSettings(id); return; }
     if (e.target.closest("[data-leave]")) {
       const b = e.target.closest("[data-leave]");
       if (!b.dataset.armed) { b.dataset.armed = "1"; b.textContent = t("Wirklich verlassen?"); setTimeout(() => { delete b.dataset.armed; b.textContent = t("Gruppe verlassen"); }, 5000); return; }
@@ -1116,29 +1281,364 @@
     dlg.showModal();
   }
 
-  // ---------- Neues Gespräch ----------
-  function newConversation() {
+  // ---------- Gruppen: Voraussetzungen, Links ----------
+  const inviteUrl = (id, code) => `${location.origin}/nachrichten?gruppe=${encodeURIComponent(id)}&einladung=${encodeURIComponent(code)}`;
+  async function copyText(text) {
+    try { await navigator.clipboard.writeText(text); say(t("Link kopiert.")); }
+    catch { window.prompt(t("Link kopieren:"), text); }
+  }
+  const skillName = (s) => X.tagLabel("skills", s);
+  // Die Voraussetzungen als Zeilen; mit `elig` (Prüfung für dich) bekommt jede ein ✓ oder ✗
+  function criteriaHtml(c, elig) {
+    if (!c) return "";
+    const miss = new Set(((elig && elig.missing) || []).map((m) => m.kind));
+    const row = (kind, text) => `<li class="${elig ? (miss.has(kind) ? "is-miss" : "is-ok") : ""}">${elig ? ICON_SVG(miss.has(kind) ? "x" : "check") : ICON_SVG("dot")}<span>${text}</span></li>`;
+    const rows = [];
+    if (c.skills && c.skills.length) {
+      const list = c.skills.map((s) => `<b data-no-i18n>${esc(skillName(s))}</b>`).join(c.skillsMode === "all" ? " + " : ` ${esc(t("oder"))} `);
+      rows.push(row("skills", `${esc(t(c.skillsMode === "all" ? "Skills (alle):" : "Skills (mind. einer):"))} ${list}`));
+    }
+    if (c.languages && c.languages.length) rows.push(row("languages", `${esc(t("Spricht"))} ${c.languages.map((l) => `<b data-no-i18n>${esc(X.tagLabel("languages", l))}</b>`).join(` ${esc(t("oder"))} `)}`));
+    if (c.verifiedOnly) rows.push(row("verified", esc(t("Bestätigtes Konto"))));
+    if (c.minAccountDays) rows.push(row("accountAge", `${esc(t("Konto seit mindestens"))} ${c.minAccountDays} ${esc(t(c.minAccountDays === 1 ? "Tag" : "Tagen"))}`));
+    return rows.length ? `<ul class="xc-criteria">${rows.join("")}</ul>` : "";
+  }
+
+  // ---------- Gruppen entdecken ----------
+  async function openDiscover({ push = true } = {}) {
+    if (S.active) S.draft.set(S.active, composerText());
+    S.mode = "discover";
+    S.active = "";
+    stopPlayer();
+    setView("thread");
+    if (push) history.replaceState(null, "", "nachrichten?entdecken=1");
+    renderList();
+    renderInfo();
+    threadEl.innerHTML = `
+      <div class="xd" data-discover-view>
+        <header class="xd-hero">
+          <button type="button" class="xc-icon xc-back" data-back aria-label="${esc(t("Zurück zur Liste"))}">${ICON.back}</button>
+          <div class="xd-hero-text">
+            <p class="xd-kicker">${ICON_SVG("compass")}${esc(t("Entdecken"))}</p>
+            <h2>${esc(t("Finde deine Leute"))}</h2>
+            <p>${esc(t("Öffentliche Gruppen zu Themen, die dich interessieren, und die Gruppen deiner Arbeitsbereiche. Manche sind offen, andere nehmen nur Leute mit bestimmten Skills auf."))}</p>
+          </div>
+          <button type="button" class="btn btn-small" data-new-group>${ICON_SVG("plus")}${esc(t("Gruppe gründen"))}</button>
+        </header>
+        <div class="xd-controls">
+          <input type="search" data-d-q placeholder="${esc(t("Gruppen, Themen oder Skills suchen"))}" value="${esc(S.discover.q)}" autocomplete="off" aria-label="${esc(t("Gruppen suchen"))}">
+          <div class="xd-scopes" role="tablist">
+            ${[["all", "Alle"], ["fits", "Passt zu dir"], ["public", "Öffentlich"], ["workspace", "Meine Arbeitsbereiche"]].map(([k, l]) => `<button type="button" role="tab" data-d-scope="${k}" aria-selected="${S.discover.scope === k}">${esc(t(l))}</button>`).join("")}
+          </div>
+        </div>
+        <div class="xd-cats" data-d-cats></div>
+        <div class="xd-grid" data-d-grid><p class="xc-empty">${esc(t("Wird geladen …"))}</p></div>
+      </div>
+      <p class="xc-status" data-status role="status" aria-live="polite"></p>`;
+    await loadDiscover();
+  }
+  let discoverSeq = 0;
+  async function loadDiscover() {
+    const seq = ++discoverSeq;
+    const d = S.discover;
+    const qs = new URLSearchParams({ scope: d.scope });
+    if (d.q) qs.set("q", d.q);
+    if (d.category) qs.set("category", d.category);
+    try {
+      const r = await X.api("GET", `/groups/discover?${qs}`);
+      if (seq !== discoverSeq) return;
+      d.groups = r.groups || [];
+      d.categoryCounts = r.categoryCounts || {};
+    } catch (err) {
+      if (seq !== discoverSeq) return;
+      d.groups = [];
+      const grid = threadEl.querySelector("[data-d-grid]");
+      if (grid) grid.innerHTML = `<p class="xc-empty">${esc(fail(err))}</p>`;
+      return;
+    }
+    renderDiscover();
+  }
+  function renderDiscover() {
+    const view = threadEl.querySelector("[data-discover-view]");
+    if (!view) return;
+    const d = S.discover;
+    view.querySelectorAll("[data-d-scope]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.dScope === d.scope)));
+    const cats = Object.keys(CATEGORY_LABEL);
+    view.querySelector("[data-d-cats]").innerHTML = [`<button type="button" class="xm-chip" data-d-cat="" aria-pressed="${!d.category}">${esc(t("Alle Themen"))}</button>`,
+      ...cats.map((k) => `<button type="button" class="xm-chip" data-d-cat="${k}" aria-pressed="${d.category === k}">${CATEGORY_EMOJI[k]} ${esc(t(CATEGORY_LABEL[k]))}${d.categoryCounts[k] ? ` <small>${d.categoryCounts[k]}</small>` : ""}</button>`)].join("");
+    const grid = view.querySelector("[data-d-grid]");
+    if (!d.groups.length) {
+      grid.innerHTML = `<div class="xd-empty"><span class="xd-empty-ico">${ICON_SVG("compass")}</span><h3>${esc(t(d.q || d.category || d.scope !== "all" ? "Nichts Passendes gefunden" : "Noch keine öffentlichen Gruppen"))}</h3><p>${esc(t(d.scope === "fits" ? "Trag deine Skills im Profil ein – dann zeigen wir dir Gruppen, die zu dir passen." : "Gründe die erste Gruppe zu deinem Thema. Andere finden sie dann hier."))}</p><div class="xm-row">${d.scope === "fits" ? `<a class="btn btn-small btn-ghost" href="/profil#matching">${esc(t("Skills eintragen"))}</a>` : ""}<button type="button" class="btn btn-small" data-new-group>${esc(t("Gruppe gründen"))}</button></div></div>`;
+      return;
+    }
+    grid.innerHTML = d.groups.map(groupCard).join("");
+  }
+  function groupCard(g) {
+    const e = g.eligibility || { ok: true, missing: [] };
+    const fits = g.fit > 0 && e.ok && !g.isMember;
+    const where = g.projectName ? `${ICON_SVG("folder")}<span data-no-i18n>${esc(g.projectName)}</span>` : g.workspaceName ? `${ICON_SVG("building")}<span data-no-i18n>${esc(g.workspaceName)}</span>` : `${ICON_SVG("globe")}<span>${esc(t("Öffentlich"))}</span>`;
+    const people = (g.membersPreview || []).slice(0, 4).map((p) => avatar(userNow(p.id) || { displayName: p.name }, "xc-av-xs")).join("");
+    const activity = g.activeWeek ? `${g.activeWeek} ${esc(t(g.activeWeek === 1 ? "Nachricht diese Woche" : "Nachrichten diese Woche"))}` : esc(t("Ruhig gerade"));
+    let cta;
+    if (g.isMember) cta = `<button type="button" class="btn btn-small btn-ghost" data-open="${esc(g.id)}">${esc(t("Öffnen"))}</button>`;
+    else if (g.request === "pending") cta = `<button type="button" class="btn btn-small btn-ghost" data-d-withdraw="${esc(g.id)}">${esc(t("Angefragt · zurückziehen"))}</button>`;
+    else if (g.full) cta = `<button type="button" class="btn btn-small btn-ghost" disabled>${esc(t("Voll"))}</button>`;
+    else if (!e.ok) cta = `<button type="button" class="btn btn-small btn-ghost" data-d-why="${esc(g.id)}">${esc(t("Voraussetzungen ansehen"))}</button>`;
+    else if (g.joinable === "join") cta = `<button type="button" class="btn btn-small" data-d-join="${esc(g.id)}">${esc(t("Beitreten"))}</button>`;
+    else if (g.joinable === "request") cta = `<button type="button" class="btn btn-small" data-d-ask="${esc(g.id)}">${esc(t("Beitritt anfragen"))}</button>`;
+    else cta = `<span class="xc-hint">${esc(t("Nur mit Einladung"))}</span>`;
+    return `<article class="xd-card${fits ? " is-fit" : ""}${g.isMember ? " is-member" : ""}" data-group-card="${esc(g.id)}">
+      <div class="xd-card-top">${groupAvatar(g, "xc-av-lg")}<div class="xd-card-title"><h3 data-no-i18n>${esc(g.title)}</h3><p class="xd-where">${where}${g.category ? `<span class="xd-dot">·</span><span>${CATEGORY_EMOJI[g.category] || ""} ${esc(t(CATEGORY_LABEL[g.category] || ""))}</span>` : ""}</p></div>${g.isMember ? `<span class="xd-fit is-in">${ICON_SVG("check")}${esc(t("Dabei"))}</span>` : fits ? `<span class="xd-fit">${ICON_SVG("spark")}${esc(t("Passt zu dir"))}</span>` : ""}</div>
+      ${g.description ? `<p class="xd-desc" data-no-i18n>${esc(g.description)}</p>` : ""}
+      ${g.tags && g.tags.length ? `<div class="xc-tags">${g.tags.slice(0, 5).map((x) => `<span data-no-i18n>#${esc(x)}</span>`).join("")}</div>` : ""}
+      ${criteriaHtml(g.criteria, e)}
+      <footer class="xd-card-foot"><span class="xd-people">${people}<small>${g.memberCount} ${esc(t(g.memberCount === 1 ? "Mitglied" : "Mitglieder"))}${g.memberLimit ? ` / ${g.memberLimit}` : ""} · ${activity}</small></span>${cta}</footer>
+    </article>`;
+  }
+  async function joinGroup(id, { message = "", invite = "" } = {}) {
+    const body = {};
+    if (message) body.message = message;
+    if (invite) body.invite = invite;
+    const r = await X.api("POST", `/groups/${encodeURIComponent(id)}/join`, body);
+    await loadConversations();
+    if (r.status === "member") { await open(id); say(t("Willkommen in der Gruppe!")); }
+    return r.status;
+  }
+  // Beitritt anfragen: kurze Nachricht an die Admins (freiwillig)
+  function askToJoin(g, invite = "") {
     const dlg = document.createElement("dialog");
     dlg.className = "xm-dialog xc-new";
-    const chosen = new Map();
     dlg.innerHTML = `<form method="dialog" class="xm-dialog-body">
-      <h2>${esc(t("Neues Gespräch"))}</h2>
-      <label>${esc(t("Personen suchen"))}<input type="search" data-q placeholder="${esc(t("Name eingeben …"))}" autocomplete="off"></label>
-      <div class="xc-chosen" data-chosen></div>
-      <ul class="xc-results" data-results></ul>
-      <label data-group-name hidden>${esc(t("Gruppenname (optional)"))}<input name="title" maxlength="120" placeholder="${esc(t("z. B. Launch-Team"))}"></label>
-      <p class="xm-error" data-err></p>
-      <div class="xm-row"><button class="btn btn-small" value="ok" data-start disabled>${esc(t("Gespräch starten"))}</button><button class="btn btn-small btn-ghost" value="cancel" formnovalidate>${esc(t("Abbrechen"))}</button></div>
+      <h2>${esc(t("Beitritt anfragen"))}</h2>
+      <p class="xc-hint">${esc(t("Die Admins von"))} <b data-no-i18n>${esc(g.title)}</b> ${esc(t("sehen deine Anfrage mit deinem Profil und deinen Skills."))}</p>
+      <label>${esc(t("Nachricht an die Admins (optional)"))}<textarea name="message" rows="3" maxlength="500" placeholder="${esc(t("z. B. woran du arbeitest und warum du dabei sein willst"))}"></textarea></label>
+      <div class="xm-row"><button class="btn btn-small" value="ok">${esc(t("Anfrage senden"))}</button><button class="btn btn-small btn-ghost" value="cancel" formnovalidate>${esc(t("Abbrechen"))}</button></div>
     </form>`;
     document.body.append(dlg);
+    dlg.addEventListener("close", async () => {
+      const message = dlg.querySelector("[name=message]").value.trim();
+      const go = dlg.returnValue === "ok";
+      dlg.remove();
+      if (!go) return;
+      try {
+        const status = await joinGroup(g.id, { message, invite });
+        if (status === "pending") { say(t("Anfrage gesendet. Du bekommst Bescheid, sobald jemand entscheidet.")); if (S.mode === "discover") loadDiscover(); }
+      } catch (err) { say(fail(err), "error"); }
+    });
+    dlg.showModal();
+  }
+  // Warum es nicht klappt – und was du tun kannst
+  function showWhy(g) {
+    const dlg = document.createElement("dialog");
+    dlg.className = "xm-dialog xc-new";
+    dlg.innerHTML = `<form method="dialog" class="xm-dialog-body">
+      <h2 data-no-i18n>${esc(g.title)}</h2>
+      <p class="xc-hint">${esc(t("Diese Gruppe nimmt Leute auf, deren Profil Folgendes zeigt:"))}</p>
+      ${criteriaHtml(g.criteria, g.eligibility)}
+      <p class="xc-hint">${esc(t("Skills, Sprachen und Bestätigung pflegst du in deinem Profil. Danach kannst du direkt beitreten."))}</p>
+      <div class="xm-row"><a class="btn btn-small" href="/profil#matching">${esc(t("Profil ergänzen"))}</a><button class="btn btn-small btn-ghost" value="cancel">${esc(t("Schließen"))}</button></div>
+    </form>`;
+    document.body.append(dlg);
+    dlg.addEventListener("close", () => dlg.remove());
+    dlg.showModal();
+  }
+  // Ein geteilter Link (?gruppe=…&einladung=…): Vorschau mit Beitreten
+  async function previewGroup(id, invite) {
+    let g;
+    try {
+      const path = invite && !id ? `/groups/invite/${encodeURIComponent(invite)}` : `/groups/${encodeURIComponent(id)}${invite ? `?invite=${encodeURIComponent(invite)}` : ""}`;
+      g = (await X.api("GET", path)).group;
+    } catch (err) {
+      notice.innerHTML = `<div class="notice">${esc(err && err.status === 404 ? t("Diese Gruppe gibt es nicht (mehr) oder der Link gilt nicht mehr.") : fail(err))}</div>`;
+      return;
+    }
+    if (g.isMember) { await open(g.id); return; }
+    const dlg = document.createElement("dialog");
+    dlg.className = "xm-dialog xc-new xc-preview";
+    dlg.innerHTML = `<form method="dialog" class="xm-dialog-body">${groupCard(g)}<div class="xm-row"><button class="btn btn-small btn-ghost" value="cancel">${esc(t("Schließen"))}</button></div></form>`;
+    document.body.append(dlg);
+    dlg.addEventListener("close", () => dlg.remove());
+    dlg.addEventListener("click", (e) => discoverAction(e, g, invite, dlg));
+    dlg.showModal();
+  }
+  async function discoverAction(e, g, invite = "", dlg = null) {
+    const done = () => { if (dlg) dlg.close(); };
+    if (e.target.closest("[data-d-join]")) {
+      e.preventDefault();
+      try { done(); await joinGroup(g.id, { invite }); }
+      catch (err) {
+        // Profil passt (inzwischen) nicht: frisch nachsehen, was fehlt
+        const fresh = err && err.status === 403 ? await X.api("GET", `/groups/${encodeURIComponent(g.id)}${invite ? `?invite=${encodeURIComponent(invite)}` : ""}`).then((r) => r.group).catch(() => null) : null;
+        if (fresh && fresh.eligibility && !fresh.eligibility.ok) showWhy(fresh); else say(fail(err), "error");
+      }
+      return true;
+    }
+    if (e.target.closest("[data-d-ask]")) { e.preventDefault(); done(); askToJoin(g, invite); return true; }
+    if (e.target.closest("[data-d-why]")) { e.preventDefault(); done(); showWhy(g); return true; }
+    if (e.target.closest("[data-d-withdraw]")) {
+      e.preventDefault();
+      try { await X.api("DELETE", `/groups/${encodeURIComponent(g.id)}/request`); done(); await loadConversations(); if (S.mode === "discover") loadDiscover(); }
+      catch (err) { say(fail(err), "error"); }
+      return true;
+    }
+    if (e.target.closest("[data-open]")) { e.preventDefault(); done(); open(g.id); return true; }
+    return false;
+  }
+  let dTimer = 0;
+  threadEl.addEventListener("input", (e) => {
+    if (!e.target.matches("[data-d-q]")) return;
+    clearTimeout(dTimer);
+    dTimer = setTimeout(() => { S.discover.q = e.target.value.trim(); loadDiscover(); }, 250);
+  });
+  threadEl.addEventListener("click", async (e) => {
+    if (S.mode !== "discover") return;
+    const sc = e.target.closest("[data-d-scope]");
+    if (sc) { S.discover.scope = sc.dataset.dScope; loadDiscover(); return; }
+    const cat = e.target.closest("[data-d-cat]");
+    if (cat) { S.discover.category = S.discover.category === cat.dataset.dCat ? "" : cat.dataset.dCat; loadDiscover(); return; }
+    if (e.target.closest("[data-new-group]")) { newConversation("group"); return; }
+    const card = e.target.closest("[data-group-card]");
+    if (!card) return;
+    const g = S.discover.groups.find((x) => x.id === card.dataset.groupCard);
+    if (g) await discoverAction(e, g);
+  });
+
+  // ---------- Neues Gespräch, neue Gruppe, Team-Chat ----------
+  // Ein Formular für Gründen und Bearbeiten: Name, Emoji, Beschreibung, wer sie finden darf,
+  // wie man reinkommt, Thema, Stichwörter, Voraussetzungen (Skills, Sprachen, Bestätigung, Kontoalter), Höchstzahl
+  const GROUP_EMOJI = ["💬", "🚀", "💻", "🎨", "🤖", "📚", "🎮", "📣", "💼", "📍", "⚡", "🌱", "🔥", "🧠", "🛠️", "🎧"];
+  function groupFormHtml(v, { team = false, workspaces = [] } = {}) {
+    const c = v.criteria || {};
+    const skillOpts = Object.keys(X.TAGS.skills.options).concat(Object.keys(X.TAGS.techStack.options)).filter((s, i, all) => all.indexOf(s) === i);
+    return `
+      <div class="xg-row xg-ident">
+        <div class="xc-pop-anchor"><button type="button" class="xg-emoji" data-g-emoji-btn aria-label="${esc(t("Emoji wählen"))}">${esc(v.emoji || "💬")}</button>
+          <div class="xc-pop xc-emoji xg-emoji-pop" data-g-emoji-pop hidden>${GROUP_EMOJI.map((x) => `<button type="button" data-g-emoji="${x}">${x}</button>`).join("")}</div></div>
+        <label class="xg-grow">${esc(t(team ? "Name (leer = Name des Projekts bzw. Arbeitsbereichs)" : "Name der Gruppe"))}<input name="title" maxlength="120" value="${esc(v.title || "")}" placeholder="${esc(t(team ? "z. B. Website-Relaunch" : "z. B. React Builders Berlin"))}"></label>
+      </div>
+      <input type="hidden" name="emoji" value="${esc(v.emoji || "")}">
+      <label>${esc(t("Worum geht's? (optional)"))}<textarea name="description" rows="2" maxlength="500" placeholder="${esc(t("Ein Satz, damit andere wissen, ob sie hier richtig sind"))}">${esc(v.description || "")}</textarea></label>
+      ${team ? `<label>${esc(t("Arbeitsbereich oder Projekt"))}<select name="where">${workspaces.map((w) => `<option value="ws:${esc(w.id)}" ${v.workspaceId === w.id && !v.projectId ? "selected" : ""}>${esc(w.name)}</option>${(w.projects || []).map((p) => `<option value="pr:${esc(p.id)}" ${v.projectId === p.id ? "selected" : ""}>&nbsp;&nbsp;↳ ${esc(p.name)}</option>`).join("")}`).join("")}</select></label>` : ""}
+      <fieldset class="xg-seg"><legend>${esc(t("Wer kann die Gruppe finden?"))}</legend>
+        ${(team ? [["workspace", "Alle im Arbeitsbereich", "building"], ["private", "Nur eingeladene Leute", "lock"]] : [["private", "Nur eingeladene Leute", "lock"], ["public", "Alle auf Xyntal", "globe"]])
+          .map(([k, l, ic]) => `<label class="xg-opt"><input type="radio" name="visibility" value="${k}" ${v.visibility === k ? "checked" : ""}><span>${ICON_SVG(ic)}<b>${esc(t(l))}</b><small>${esc(t({ private: "Privat – unsichtbar für alle anderen", public: "Erscheint unter „Gruppen entdecken“", workspace: "Mitglieder des Arbeitsbereichs sehen und betreten sie" }[k]))}</small></span></label>`).join("")}
+      </fieldset>
+      <div class="xg-public" data-g-public ${v.visibility === "private" ? "hidden" : ""}>
+        <fieldset class="xg-seg xg-seg-3"><legend>${esc(t("Wie kommt man rein?"))}</legend>
+          ${[["open", "Direkt beitreten"], ["request", "Auf Anfrage"], ["invite", "Nur mit Einladung"]].map(([k, l]) => `<label class="xg-opt"><input type="radio" name="joinPolicy" value="${k}" ${v.joinPolicy === k ? "checked" : ""}><span><b>${esc(t(l))}</b></span></label>`).join("")}
+        </fieldset>
+        ${team ? "" : `<label>${esc(t("Thema"))}<select name="category"><option value="">${esc(t("Kein Thema"))}</option>${Object.keys(CATEGORY_LABEL).map((k) => `<option value="${k}" ${v.category === k ? "selected" : ""}>${CATEGORY_EMOJI[k]} ${esc(t(CATEGORY_LABEL[k]))}</option>`).join("")}</select></label>
+        <label>${esc(t("Stichwörter (mit Komma getrennt)"))}<input name="tags" maxlength="200" value="${esc((v.tags || []).join(", "))}" placeholder="${esc(t("z. B. Frontend, Open Source, Berlin"))}"></label>`}
+      </div>
+      <details class="xg-crit" ${(c.skills || []).length || (c.languages || []).length || c.verifiedOnly || c.minAccountDays || v.memberLimit ? "open" : ""}>
+        <summary>${ICON_SVG("filter")}<span><b>${esc(t("Voraussetzungen für neue Mitglieder"))}</b><small>${esc(t("z. B. nur Leute mit React oder Figma im Profil"))}</small></span></summary>
+        <label>${esc(t("Skills"))}<input name="skills" list="xg-skill-list" value="${esc((c.skills || []).map(skillName).join(", "))}" placeholder="${esc(t("z. B. React, TypeScript, Figma"))}"></label>
+        <datalist id="xg-skill-list">${skillOpts.map((s) => `<option value="${esc(skillName(s))}">`).join("")}</datalist>
+        <div class="xg-inline"><label class="xg-check"><input type="radio" name="skillsMode" value="any" ${c.skillsMode !== "all" ? "checked" : ""}>${esc(t("mindestens einer davon"))}</label><label class="xg-check"><input type="radio" name="skillsMode" value="all" ${c.skillsMode === "all" ? "checked" : ""}>${esc(t("alle davon"))}</label></div>
+        <label>${esc(t("Sprachen (eine davon)"))}<input name="languages" value="${esc((c.languages || []).map((l) => X.tagLabel("languages", l)).join(", "))}" placeholder="${esc(t("z. B. Deutsch, Englisch"))}"></label>
+        <div class="xg-inline">
+          <label class="xg-check"><input type="checkbox" name="verifiedOnly" ${c.verifiedOnly ? "checked" : ""}>${esc(t("Nur bestätigte Konten"))}</label>
+          <label class="xg-num">${esc(t("Konto mind."))} <input type="number" name="minAccountDays" min="0" max="3650" value="${Number(c.minAccountDays) || ""}" placeholder="0"> ${esc(t("Tage alt"))}</label>
+          <label class="xg-num">${esc(t("Höchstens"))} <input type="number" name="memberLimit" min="0" max="5000" value="${Number(v.memberLimit) || ""}" placeholder="∞"> ${esc(t("Mitglieder"))}</label>
+        </div>
+      </details>`;
+  }
+  const splitList = (s) => String(s || "").split(",").map((x) => x.trim()).filter(Boolean);
+  function readGroupForm(form) {
+    const val = (n) => (form.querySelector(`[name=${n}]`) || {}).value || "";
+    const checked = (n) => (form.querySelector(`[name=${n}]:checked`) || {}).value || "";
+    const skills = splitList(val("skills")).map((s) => X.canonicalTag("skills", s));
+    const languages = splitList(val("languages")).map((s) => X.canonicalTag("languages", s));
+    const out = {
+      title: val("title").trim(),
+      emoji: val("emoji"),
+      description: val("description").trim(),
+      visibility: checked("visibility") || "private",
+      joinPolicy: checked("joinPolicy") || "open",
+      criteria: { skills, skillsMode: checked("skillsMode") || "any", languages, verifiedOnly: !!form.querySelector("[name=verifiedOnly]:checked"), minAccountDays: Number(val("minAccountDays")) || 0 },
+      memberLimit: Number(val("memberLimit")) || 0,
+    };
+    if (form.querySelector("[name=category]")) { out.category = val("category"); out.tags = splitList(val("tags")); }
+    const where = val("where");
+    if (where.startsWith("pr:")) out.projectId = where.slice(3);
+    else if (where.startsWith("ws:")) out.workspaceId = where.slice(3);
+    if (out.visibility === "private") out.joinPolicy = "invite";
+    return out;
+  }
+  function wireGroupForm(dlg) {
+    dlg.addEventListener("change", (e) => {
+      if (e.target.name === "visibility") dlg.querySelector("[data-g-public]").hidden = e.target.value === "private";
+    });
+    dlg.addEventListener("click", (e) => {
+      if (e.target.closest("[data-g-emoji-btn]")) { const p = dlg.querySelector("[data-g-emoji-pop]"); p.hidden = !p.hidden; return; }
+      const em = e.target.closest("[data-g-emoji]");
+      if (em) { dlg.querySelector("[name=emoji]").value = em.dataset.gEmoji; dlg.querySelector("[data-g-emoji-btn]").textContent = em.dataset.gEmoji; dlg.querySelector("[data-g-emoji-pop]").hidden = true; }
+    });
+  }
+  let teamCache = null;
+  function teamChoices() {
+    if (teamCache) return teamCache;
+    teamCache = (async () => {
+      const { workspaces } = await X.api("GET", "/workspaces");
+      return Promise.all((workspaces || []).map(async (w) => ({
+        id: w.id, name: w.name,
+        projects: await X.api("GET", `/workspaces/${encodeURIComponent(w.id)}/projects`).then((r) => (r.projects || []).filter((p) => p.archived !== true)).catch(() => []),
+      })));
+    })();
+    teamCache.catch(() => { teamCache = null; });
+    return teamCache;
+  }
+
+  async function newConversation(startMode = "dm") {
+    const dlg = document.createElement("dialog");
+    dlg.className = "xm-dialog xc-new xc-new-wide";
+    const chosen = new Map();
+    let mode = startMode;
+    let workspaces = [];
+    dlg.innerHTML = `<form method="dialog" class="xm-dialog-body">
+      <h2>${esc(t("Neu"))}</h2>
+      <div class="xg-tabs" role="tablist">
+        ${[["dm", "Direktnachricht", "chat"], ["group", "Gruppe", "users"], ["team", "Team-Chat", "building"]].map(([k, l, ic]) => `<button type="button" role="tab" data-mode="${k}" aria-selected="${k === mode}">${ICON_SVG(ic)}<span>${esc(t(l))}</span></button>`).join("")}
+      </div>
+      <div data-people>
+        <label>${esc(t("Personen suchen"))}<input type="search" data-q placeholder="${esc(t("Name eingeben …"))}" autocomplete="off"></label>
+        <div class="xc-chosen" data-chosen></div>
+        <ul class="xc-results" data-results></ul>
+      </div>
+      <div data-group-form></div>
+      <label class="xg-check" data-addall hidden><input type="checkbox" name="addWorkspaceMembers" checked>${esc(t("Alle Mitglieder des Arbeitsbereichs gleich hinzufügen"))}</label>
+      <p class="xm-error" data-err></p>
+      <div class="xm-row"><button class="btn btn-small" value="ok" data-start>${esc(t("Gespräch starten"))}</button><button class="btn btn-small btn-ghost" value="cancel" formnovalidate>${esc(t("Abbrechen"))}</button></div>
+    </form>`;
+    document.body.append(dlg);
+    wireGroupForm(dlg);
     const q = dlg.querySelector("[data-q]"), results = dlg.querySelector("[data-results]");
     let timer = 0, found = [];
     const sync = () => {
+      dlg.querySelectorAll("[data-mode]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.mode === mode)));
       dlg.querySelector("[data-chosen]").innerHTML = [...chosen.values()].map((u) => `<button type="button" class="xm-chip" aria-pressed="true" data-unpick="${esc(u.id)}"><span data-no-i18n>${esc(u.displayName)}</span> ×</button>`).join("");
-      dlg.querySelector("[data-group-name]").hidden = chosen.size < 2;
+      dlg.querySelector("[data-addall]").hidden = mode !== "team" || !workspaces.length;
       const start = dlg.querySelector("[data-start]");
-      start.disabled = chosen.size === 0;
-      start.textContent = t(chosen.size > 1 ? "Gruppe erstellen" : "Gespräch starten");
+      start.disabled = (mode === "dm" && chosen.size !== 1) || (mode === "team" && !workspaces.length);
+      start.textContent = t(mode === "dm" ? "Gespräch starten" : mode === "team" ? "Team-Chat anlegen" : "Gruppe gründen");
+      dlg.querySelector("[data-people] label").firstChild.textContent = t(mode === "dm" ? "Mit wem?" : "Leute einladen (optional)");
+      // Bei Gruppen zuerst Name und Einstellungen, dann wen du einlädst
+      dlg.querySelector("form").classList.toggle("xg-group-first", mode !== "dm");
+    };
+    const renderForm = async () => {
+      const box = dlg.querySelector("[data-group-form]");
+      if (mode === "dm") { box.innerHTML = ""; sync(); return; }
+      if (mode === "team") {
+        box.innerHTML = `<p class="xc-hint">${esc(t("Wird geladen …"))}</p>`;
+        try { workspaces = await teamChoices(); } catch { workspaces = []; }
+        if (mode !== "team") return;
+        box.innerHTML = workspaces.length
+          ? groupFormHtml({ visibility: "workspace", joinPolicy: "open", emoji: "🛠️" }, { team: true, workspaces })
+          : `<p class="xc-hint">${esc(t("Du bist noch in keinem Arbeitsbereich. Leg einen in der Xyntal-App an – dann kannst du hier Team- und Projekt-Chats anlegen."))}</p>`;
+      } else {
+        box.innerHTML = groupFormHtml({ visibility: "public", joinPolicy: "open", emoji: "💬" });
+      }
+      sync();
     };
     q.addEventListener("input", () => {
       clearTimeout(timer);
@@ -1151,25 +1651,77 @@
       }, 250);
     });
     dlg.addEventListener("click", (e) => {
+      const m = e.target.closest("[data-mode]");
+      if (m) { mode = m.dataset.mode; if (mode === "dm" && chosen.size > 1) { const [first] = chosen; chosen.clear(); chosen.set(first[0], first[1]); } renderForm(); return; }
       const p = e.target.closest("[data-pick-user]");
-      if (p) { const u = found.find((x) => x.id === p.dataset.pickUser); if (chosen.has(u.id)) chosen.delete(u.id); else chosen.set(u.id, u); p.setAttribute("aria-pressed", String(chosen.has(u.id))); sync(); }
+      if (p) {
+        const u = found.find((x) => x.id === p.dataset.pickUser);
+        if (chosen.has(u.id)) chosen.delete(u.id);
+        else { if (mode === "dm") chosen.clear(); chosen.set(u.id, u); }
+        results.querySelectorAll("[data-pick-user]").forEach((b) => b.setAttribute("aria-pressed", String(chosen.has(b.dataset.pickUser))));
+        sync();
+      }
       const un = e.target.closest("[data-unpick]");
       if (un) { chosen.delete(un.dataset.unpick); sync(); }
     });
     dlg.addEventListener("close", async () => {
-      const go = dlg.returnValue === "ok" && chosen.size > 0;
-      const title = dlg.querySelector("[name=title]").value.trim();
+      const go = dlg.returnValue === "ok";
+      const form = dlg.querySelector("form");
+      const ids = [...chosen.keys()];
+      const payload = mode === "dm" ? null : readGroupForm(form);
+      const addAll = !!dlg.querySelector("[name=addWorkspaceMembers]:checked");
       dlg.remove();
       if (!go) return;
       try {
-        const ids = [...chosen.keys()];
-        const { conversation } = await X.api("POST", "/conversations", ids.length === 1 ? { kind: "dm", memberIds: ids } : { kind: "group", memberIds: ids, title });
+        const body = mode === "dm" ? { kind: "dm", memberIds: ids }
+          : { kind: "group", memberIds: ids, ...payload, ...(mode === "team" ? { addWorkspaceMembers: addAll } : {}) };
+        const { conversation } = await X.api("POST", "/conversations", body);
         await loadConversations();
         open(conversation.id);
-      } catch (err) { say(fail(err), "error"); notice.innerHTML = `<div class="notice">${esc(fail(err))}</div>`; }
+        if (mode === "group" && body.visibility === "public") say(t("Deine Gruppe ist jetzt unter „Gruppen entdecken“ zu finden."));
+      } catch (err) { notice.innerHTML = `<div class="notice">${esc(fail(err))}</div>`; }
+    });
+    renderForm();
+    dlg.showModal();
+    if (mode === "dm") q.focus();
+  }
+
+  // Gruppe bearbeiten (Inhaber/Admins): dieselben Felder wie beim Gründen
+  async function groupSettings(id) {
+    const c = conv(id);
+    const acc = S.access.get(id);
+    if (!c || !acc) return;
+    const a = acc.access;
+    const team = !!a.workspaceId;
+    let workspaces = [];
+    if (team) { try { workspaces = await teamChoices(); } catch { workspaces = []; } }
+    const dlg = document.createElement("dialog");
+    dlg.className = "xm-dialog xc-new xc-new-wide";
+    dlg.innerHTML = `<form method="dialog" class="xm-dialog-body">
+      <h2>${esc(t("Gruppe bearbeiten"))}</h2>
+      ${groupFormHtml({ ...a, title: c.title, emoji: c.emoji, description: c.description }, { team, workspaces })}
+      <p class="xm-error" data-err></p>
+      <div class="xm-row"><button class="btn btn-small" value="ok">${esc(t("Speichern"))}</button><button class="btn btn-small btn-ghost" value="cancel" formnovalidate>${esc(t("Abbrechen"))}</button></div>
+    </form>`;
+    document.body.append(dlg);
+    wireGroupForm(dlg);
+    dlg.addEventListener("close", async () => {
+      const go = dlg.returnValue === "ok";
+      const v = readGroupForm(dlg.querySelector("form"));
+      dlg.remove();
+      if (!go) return;
+      try {
+        const look = { description: v.description, emoji: v.emoji };
+        if (v.title) look.title = v.title;
+        await X.api("PATCH", `/conversations/${encodeURIComponent(id)}`, look);
+        const { title, emoji, description, ...rest } = v;
+        await X.api("PUT", `/conversations/${encodeURIComponent(id)}/join-settings`, rest);
+        await Promise.all([loadConversations(), loadAccess(id)]);
+        renderHeader();
+        say(t("Gespeichert."));
+      } catch (err) { say(fail(err), "error"); }
     });
     dlg.showModal();
-    q.focus();
   }
 
   // ---------- Live-Updates (Long-Polling wie die App, eine Warteschlange pro Tab) ----------
@@ -1206,6 +1758,7 @@
         presence = true;
       }
     }
+    if (refreshThread && isGroup(conv(S.active))) loadAccess(S.active);
     if (refreshThread) { for (const [id, v] of S.typing) if (v.conv === S.active) S.typing.delete(id); renderTyping(); refreshActive(); }
     if (refreshList) { clearTimeout(refreshTimer); refreshTimer = setTimeout(() => loadConversations().catch(() => {}), 300); }
     if (presence) { renderList(); if (S.active) { renderHeader(); renderInfo(); } }
@@ -1219,7 +1772,22 @@
     if (v === "info") renderInfo();
   }
   infoEl.addEventListener("click", (e) => { if (e.target.closest("[data-info-back]")) setView("thread"); });
-  const emptyThread = () => `<div class="xc-placeholder"><p>${esc(t("Wähle links ein Gespräch oder starte ein neues."))}</p></div>`;
+  const emptyThread = () => `<div class="xc-placeholder">
+    <span class="xc-ph-mark" aria-hidden="true">${ICON_SVG("chat")}</span>
+    <h2>${esc(t("Deine Nachrichten"))}</h2>
+    <p>${esc(t("Schreib Leuten direkt, organisier dein Team in Projekt-Chats oder tritt Gruppen zu deinen Themen bei."))}</p>
+    <div class="xc-ph-actions">
+      <button type="button" data-ph="dm">${ICON_SVG("chat")}<span><b>${esc(t("Direktnachricht"))}</b><small>${esc(t("Eine Person anschreiben"))}</small></span></button>
+      <button type="button" data-ph="group">${ICON_SVG("users")}<span><b>${esc(t("Gruppe gründen"))}</b><small>${esc(t("Privat oder öffentlich, mit Voraussetzungen"))}</small></span></button>
+      <button type="button" data-ph="team">${ICON_SVG("building")}<span><b>${esc(t("Team-Chat"))}</b><small>${esc(t("Für Arbeitsbereich oder Projekt"))}</small></span></button>
+      <button type="button" data-ph="discover">${ICON_SVG("compass")}<span><b>${esc(t("Gruppen entdecken"))}</b><small>${esc(t("Leute mit deinen Interessen finden"))}</small></span></button>
+    </div>
+  </div>`;
+  threadEl.addEventListener("click", (e) => {
+    const ph = e.target.closest("[data-ph]");
+    if (!ph) return;
+    if (ph.dataset.ph === "discover") openDiscover(); else newConversation(ph.dataset.ph);
+  });
 
   // Chat-Hintergrund (nur in diesem Browser gemerkt)
   function bgPickerHtml() {
@@ -1256,6 +1824,17 @@
     trash: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12"/></svg>',
     smile: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.5 14a4 4 0 0 0 7 0M9 9.5v.01M15 9.5v.01"/></svg>',
     palette: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.4 0 2-1 2-2 0-1.5-1.2-1.8-1.2-3.2 0-1.2 1-1.8 2.2-1.8H17a4 4 0 0 0 4-4c0-4-4-7-9-7z"/></svg>',
+    globe: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg>',
+    lock: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg>',
+    gear: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
+    copy: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M5 15V6a2 2 0 0 1 2-2h8"/></svg>',
+    compass: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>',
+    check: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+    x: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+    dot: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="2.5"/></svg>',
+    spark: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM18.5 15.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></svg>',
+    filter: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16l-6 7.5V19l-4 1.5v-8z"/></svg>',
+    chat: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 0 1-11.6 7.1L4 20l1-4.2A8 8 0 1 1 20 12z"/></svg>',
   };
 
   // ---------- Start ----------
@@ -1296,8 +1875,16 @@
         await prefillListing(params.get("anzeige"));
       } else if (params.get("c") && conv(params.get("c"))) {
         await open(params.get("c"), { push: false });
+      } else if (UUID.test(params.get("gruppe") || "") || INVITE.test(params.get("einladung") || "")) {
+        // Geteilter Gruppen- oder Einladungslink
+        const id = UUID.test(params.get("gruppe") || "") ? params.get("gruppe") : "";
+        const code = INVITE.test(params.get("einladung") || "") ? params.get("einladung") : "";
+        if (id && conv(id)) await open(id); else { await openDiscover({ push: false }); await previewGroup(id, code); }
+        history.replaceState(null, "", id && conv(id) ? `nachrichten?c=${encodeURIComponent(id)}` : "nachrichten?entdecken=1");
+      } else if (params.get("entdecken") === "1") {
+        await openDiscover({ push: false });
       } else if (params.get("neu") === "1") {
-        newConversation();
+        newConversation(params.get("art") === "gruppe" ? "group" : params.get("art") === "team" ? "team" : "dm");
       }
     } catch (err) {
       notice.innerHTML = `<div class="notice">${esc(err && err.status === 404 ? t("Diese Person kann gerade nicht angeschrieben werden.") : fail(err))}</div>`;
@@ -1306,6 +1893,7 @@
   // Sprache gewechselt: Server-Texte (Einblick) neu holen, alles neu zeichnen, Entwurf behalten
   document.addEventListener("xyntal:lang", () => {
     renderList();
+    if (S.mode === "discover") { openDiscover({ push: false }); return; }
     if (!S.active) { renderInfo(); return; }
     S.draft.set(S.active, composerText());
     S.insight.clear();
