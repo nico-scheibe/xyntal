@@ -39,6 +39,14 @@
       nav.addEventListener("click", (e) => { if (e.target.closest("a")) setOpen(false); });
       document.addEventListener("keydown", (e) => { if (e.key === "Escape" && nav.classList.contains("open")) { setOpen(false); toggle.focus(); } });
     }
+    // Oben liegt die Kopfzeile frei auf der Seite, beim Scrollen bekommt sie ihre Glasfläche (site-header.css)
+    const bar = document.querySelector("header.nav");
+    if (bar && !bar.dataset.scroll) {
+      bar.dataset.scroll = "1";
+      const onScroll = () => bar.classList.toggle("is-top", window.scrollY <= 8);
+      window.addEventListener("scroll", onScroll, { passive: true });
+      onScroll();
+    }
     const page = location.pathname.replace(/\.html$/, "").split("/").filter(Boolean).pop() || "";
     document.querySelectorAll("#main-nav a").forEach((a) => {
       const href = (a.getAttribute("href") || "").split(/[?#]/)[0].replace(/^\//, "");
