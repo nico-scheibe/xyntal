@@ -397,3 +397,17 @@ body.xp-locked { overflow:hidden; }
   body.xp-docked .xp-drawer { top:72px; z-index:20; width:min(600px,38vw); box-shadow:none; animation:none; }
   body.xp-docked .xa-main { padding-right:calc(min(600px,38vw) + 28px); }
 }
+
+/* Aufgaben & Überblick: neue Nutzer als Info (keine Aufgabe), Zweitkonten getrennt */
+.xp-newbox { margin:26px 0 0; padding:20px 22px; border:1px solid var(--admin-line); border-radius:2px; background:#1F1F1F; }
+.xp-newhead { display:grid; grid-template-columns:auto minmax(0,1fr); gap:18px; align-items:center; }
+.xp-newhead > b { font:600 40px/1 var(--f-display, var(--f-text)); color:#ECEAE4; }
+.xp-newhead h2 { margin:0; font-size:18px !important; }
+.xp-newhead p { margin:4px 0 0; color:#AAA7B8; font-size:13px; }
+.xp-newlist { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:6px; margin:16px 0 0; padding:0; list-style:none; }
+#admin-view .xp-newlist button { display:flex; justify-content:space-between; align-items:center; gap:10px; width:100%; padding:10px 12px; border:1px solid transparent; background:#242424; text-align:left; }
+#admin-view .xp-newlist button:hover { border-color:rgba(236,234,228,.4); }
+.xp-newlist .xp-date { flex:none; color:#8D89A0; font-size:12px; }
+.xp-alts { margin:14px 0 0; }
+.xp-alts summary { cursor:pointer; color:#E8B86B; font-size:13px; }
+.xp-alts .hint { margin:8px 0 0; }

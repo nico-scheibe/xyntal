@@ -20,7 +20,15 @@
     app: [], appError: "", appLimited: false, stats: null,
     rows: [], filter: "all", q: "", sort: "new", shown: PAGE,
     sel: new Set(), openKey: null, appDetailsOpen: false, lastFocus: null,
+    fresh: null, lastVisit: 0,
   };
+  // Letzter Besuch des Admin-Bereichs (nur in diesem Browser): „seit deinem letzten Besuch“
+  // Ein Besuch endet nach einer Stunde ohne Aufruf; Neuladen zählt nicht als neuer Besuch.
+  try {
+    const now = Date.now(), saved = JSON.parse(localStorage.getItem("xa-visit") || "{}");
+    const base = saved.at && now - saved.at > 3600000 ? saved.at : saved.base || 0;
+    P.lastVisit = base; localStorage.setItem("xa-visit", JSON.stringify({ base, at: now }));
+  } catch { /* privates Fenster */ }
 
   // ---------- Hilfen ----------
   const lc = (s) => String(s || "").trim().toLowerCase();
@@ -69,6 +77,15 @@
     for (const r of rows) r.v = view(r);
     return rows;
   }
+  // Zweitkonto-Hinweis vom App-Server (/admin/users/new): gleiches Gerät wie ein älteres Konto
+  function markAlts() {
+    const map = new Map((P.fresh || []).map((u) => [u.id, u]));
+    for (const r of P.rows) {
+      const f = r.app && map.get(r.app.id);
+      r.v.altOf = f ? f.altOf || [] : [];
+      r.v.alt = r.v.altOf.length > 0;
+    }
+  }
   function view(r) {
     const a = r.app, m = r.site, b = r.beta;
     const appMuted = !!a && a.mutedUntil !== null && a.mutedUntil !== undefined;
@@ -98,6 +115,7 @@
     ["applied", "Beta-Bewerbungen", (r) => !!r.beta],
     ["banned", "Gesperrt", (r) => r.v.banned],
     ["team", "Team", (r) => !!r.v.team],
+    ["alt", "Mögliche Zweitkonten", (r) => !!r.v.alt],
   ];
   const filterFn = (key) => (FILTERS.find((f) => f[0] === key) || FILTERS[0])[2];
   function matches(r, q) {
@@ -126,6 +144,11 @@
       P.appError = "";
     } catch (err) { P.appError = failText(err); }
   }
+  async function loadFresh() {
+    if (!P.appOk || !can("users.view")) { P.fresh = null; return; }
+    try { P.fresh = (await PLAT.api("GET", "/admin/users/new?days=30")).users || []; }
+    catch { P.fresh = null; } // älterer App-Server ohne diese Abfrage: dann ohne Zweitkonto-Erkennung
+  }
   async function loadStats() {
     if (!P.staff) return;
     try { P.stats = (await PLAT.api("GET", "/admin/stats")).stats; } catch { P.stats = PLAT.stats ? PLAT.stats() : null; }
@@ -133,10 +156,11 @@
   function rebuild() {
     const d = siteData();
     P.rows = buildRows(P.siteAdmin && d ? d.members : [], P.app, P.siteAdmin && d && Array.isArray(d.beta) ? d.beta : []);
+    markAlts();
     for (const k of [...P.sel]) if (!rowByKey(k)) P.sel.delete(k);
   }
   async function refresh({ app = true, site = true } = {}) {
-    await Promise.all([site && P.siteAdmin ? SITE.reload() : null, app ? loadApp() : null, loadStats()]);
+    await Promise.all([site && P.siteAdmin ? SITE.reload() : null, app ? loadApp() : null, app ? loadFresh() : null, loadStats()]);
     rebuild(); renderAll();
   }
 
@@ -147,7 +171,6 @@
   }
   function todos() {
     const d = siteData() || {}, s = P.stats || {};
-    const cards = Array.isArray(d.cards) ? d.cards : [];
     const refs = d.invites && Array.isArray(d.invites.referrals) ? d.invites.referrals : [];
     const unmailed = P.siteAdmin && Array.isArray(d.beta) ? autoUnmailed(d.beta).length : 0;
     return [
@@ -156,7 +179,6 @@
       [unmailed, "Status-Mails noch nicht verschickt", "Automatisch angenommene Beta-Tester wissen noch nichts davon.", { mail: true }],
       [can("tickets.handle") ? s.openTickets || 0 : 0, "Support-Tickets offen", "Fragen von Nutzern beantworten.", { tab: "support" }],
       [can("reports.handle") ? s.openReports || 0 : 0, "Meldungen offen", "Gemeldete Inhalte oder Personen prüfen.", { tab: "reports" }],
-      [P.siteAdmin ? cards.filter((c) => c.status === "neu").length : 0, "Karten noch nicht bearbeitet", "Karten von der Warteliste ansehen.", { tab: "cards" }],
       [P.siteAdmin ? refs.filter((r) => "credited_at" in r && !r.credited_at).length : 0, "Einladungen nicht gutgeschrieben", "Bei den Karten unten unter „Einladungen“.", { tab: "cards" }],
     ].filter(([n]) => n > 0);
   }
@@ -166,6 +188,26 @@
     set("c-start", t.reduce((n, x) => n + x[0], 0));
     set("c-people", P.rows.filter((r) => r.v.pending || r.v.betaWaiting).length);
     const s = P.stats || {};
+  }
+
+  // Info statt Aufgabe: wer neu ist. Mögliche Zweitkonten zählen nicht mit, sie stehen darunter.
+  function newcomers() {
+    const since = P.lastVisit || Date.now() - 7 * 86400000;
+    const week = Date.now() - 7 * 86400000;
+    const isNew = (r, t) => time(r.v.created) > t;
+    const real = (t) => P.rows.filter((r) => isNew(r, t) && !r.v.alt);
+    const alts = P.rows.filter((r) => isNew(r, week) && r.v.alt);
+    const sinceVisit = real(since), inWeek = real(week);
+    const list = [...inWeek].sort((x, y) => time(y.v.created) - time(x.v.created)).slice(0, 12);
+    const label = P.lastVisit ? `seit deinem letzten Besuch (${when(new Date(P.lastVisit).toISOString())})` : "in den letzten 7 Tagen";
+    return `<section class="xp-newbox" aria-labelledby="xp-new-h">
+      <div class="xp-newhead"><b>${sinceVisit.length}</b><div><h2 id="xp-new-h">${sinceVisit.length === 1 ? "neuer Nutzer" : "neue Nutzer"} ${esc(label)}</h2>
+        <p>In den letzten 7 Tagen ${plural(inWeek.length, "neue Person", "neue Personen")}${P.fresh ? "" : " (Zweitkonten werden erkannt, sobald der App-Server erreichbar ist)"}. Hier musst du nichts tun.</p></div></div>
+      ${list.length ? `<ul class="xp-newlist">${list.map((r) => `<li><button type="button" data-xp-open="${esc(r.key)}">${person(r)}<span class="xp-date">${esc(when(r.v.created))}</span></button></li>`).join("")}</ul>` : ""}
+      ${alts.length ? `<details class="xp-alts"><summary>${plural(alts.length, "mögliches Zweitkonto", "mögliche Zweitkonten")} nicht mitgezählt</summary>
+        <p class="hint">Diese Konten wurden auf einem Gerät angelegt, das schon ein älteres Konto benutzt hat.</p>
+        <ul class="xp-newlist">${alts.map((r) => `<li><button type="button" data-xp-open="${esc(r.key)}">${person(r)}<span class="xp-date">Gerät wie ${esc(r.v.altOf.map((a) => a.displayName || a.email || "älteres Konto").join(", "))}</span></button></li>`).join("")}</ul></details>` : ""}
+    </section>`;
   }
 
   function renderStart() {
@@ -181,11 +223,12 @@
           <b>${n}</b><span><strong>${esc(label)}</strong><small>${esc(go.mail ? `Klicken, um ${plural(n, "Mail", "Mails")} jetzt zu senden.` : hint)}</small></span><i aria-hidden="true">→</i></button>`).join("")}</div>`
         : `<div class="xp-alldone"><b>Alles erledigt.</b><span>Neue Aufgaben erscheinen hier von selbst.</span></div>`}
       <p class="admin-message" data-xp-start-msg role="status" aria-live="polite"></p>
+      ${newcomers()}
       <h2 class="xp-h2">Auf einen Blick</h2>
       <div class="xp-numbers">
         ${num("Nutzer insgesamt", P.rows.length, "App und Website zusammen", "people", "all")}
         ${num("Beta-Tester", P.rows.filter((r) => r.v.betaOn).length, "dürfen die Beta nutzen", "people", "beta")}
-        ${num("Neu in 7 Tagen", P.rows.filter((r) => time(r.v.created) > week).length, "neue Personen", "people", "all")}
+        ${num("Neu in 7 Tagen", P.rows.filter((r) => time(r.v.created) > week && !r.v.alt).length, "ohne mögliche Zweitkonten", "people", "all")}
         ${num("Gesperrt", P.rows.filter((r) => r.v.banned).length, "können sich nicht anmelden", "people", "banned")}
         ${P.siteAdmin ? `<article class="xp-num"><b id="overview-confirmed">${confirmed ? esc(confirmed.textContent) : "–"}</b><span>Bestätigte Warteliste</span><small>aus Brevo</small></article>` : ""}
         ${P.staff ? `<article class="xp-num"><b>${Number(s.activeSessions || 0).toLocaleString("de-DE")}</b><span>Gerade angemeldet</span><small>aktive Sitzungen in der App</small></article>` : ""}
@@ -212,6 +255,7 @@
     if (v.banned) out.push(pill(v.bannedUntil ? `Gesperrt bis ${day(v.bannedUntil)}` : "Gesperrt", "danger"));
     if (v.muted) out.push(pill(v.mutedUntil ? `Stumm bis ${day(v.mutedUntil)}` : "Stumm", "warn"));
     if (v.team) out.push(pill(v.team, "accent"));
+    if (v.alt) out.push(pill("Mögliches Zweitkonto", "warn"));
     if (v.verified) out.push(pill("Verifiziert", "ok"));
     if (!out.length) out.push(pill(r.site || r.app ? "Aktiv" : "Nur Bewerbung"));
     return out.join(" ");
@@ -326,6 +370,21 @@
     return out.join("");
   }
 
+  // Wunsch-Link (xyntal.de/name) der Karte dieser Person: über das Website-Konto oder die E-Mail
+  function cardOf(r) {
+    const d = siteData(); if (!P.siteAdmin || !d || !Array.isArray(d.cards)) return null;
+    const email = lc(r.v.email);
+    return d.cards.find((c) => r.site && c.user_id === r.site.id) || (email ? d.cards.find((c) => lc(c.email) === email) : null) || null;
+  }
+  function wishLinkSection(r) {
+    const c = cardOf(r); if (!c) return "";
+    return `<section class="xp-dsec"><h3>Wunsch-Link</h3>
+      <div class="handle-edit"><span>xyntal.de/</span><input type="text" maxlength="20" value="${esc(c.handle || "")}" data-xp-handle aria-label="Wunsch-Link" autocapitalize="off" spellcheck="false"></div>
+      <div class="row-actions"><button type="button" data-xp-act="handle-save">Speichern</button>${c.handle ? `<button type="button" data-xp-act="handle-free">Freigeben</button><a class="text-link" href="/${esc(c.handle)}" target="_blank" rel="noopener">Öffnen ↗</a>` : ""}</div>
+      <p class="hint">${c.is_public ? "Die Karte ist unter dem Link öffentlich sichtbar." : "Unter dem Link steht nur „reserviert“, bis die Person ihre Karte öffentlich macht."}</p>
+    </section>`;
+  }
+
   function renderDrawer(r) {
     const v = r.v, a = r.app, m = r.site, b = r.beta;
     const link = b && /^https?:\/\//i.test(b.link || "") ? b.link : "";
@@ -367,6 +426,8 @@
         ${link ? `<p><a class="text-link" href="${esc(link)}" target="_blank" rel="noopener noreferrer nofollow">Projekt / Profil öffnen ↗</a></p>` : ""}
         ${P.siteAdmin ? `<label class="xp-note">Interne Notiz (sieht nur das Team)<textarea data-xp-beta-note maxlength="2000" rows="3" placeholder="Gespräch, nächste Schritte oder Rückfragen …">${esc(b.admin_note || "")}</textarea></label><button type="button" data-xp-act="beta-note">Notiz speichern</button>` : ""}
       </section>` : ""}
+      ${v.alt ? `<p class="notice">Mögliches Zweitkonto: angelegt auf demselben Gerät wie ${esc(v.altOf.map((x) => x.displayName || x.email || "ein älteres Konto").join(", "))}.</p>` : ""}
+      ${wishLinkSection(r)}
       <section class="xp-dsec"><h3>Über die Person</h3><ul class="xa-kv">${facts.map(([k, val]) => `<li><span>${esc(k)}</span><b>${esc(val)}</b></li>`).join("")}</ul></section>
       ${a && can("users.view") ? `<details class="xp-dsec xp-more-details" data-xp-app-details ${P.appDetailsOpen ? "open" : ""}><summary>Mehr zum App-Konto <small>Sitzungen, Verwarnungen, Rolle, KI-Guthaben, Notizen</small></summary><div data-xp-app-box></div></details>` : ""}
       ${danger ? `<details class="xp-dsec xp-danger-zone"><summary>Gefahrenzone <small>Löschen lässt sich nicht rückgängig machen</small></summary><div class="row-actions">${danger}</div></details>` : ""}`;
@@ -404,6 +465,18 @@
     const v = r.v, a = r.app, m = r.site, b = r.beta;
     const appId = a && encodeURIComponent(a.id);
     switch (kind) {
+      case "handle-save": case "handle-free": {
+        const c = cardOf(r); if (!c) return null;
+        const input = $("[data-xp-handle]", drawer);
+        const value = kind === "handle-free" ? null : lc(input && input.value);
+        if (value !== null && !HANDLE_RE.test(value)) throw Error("Wunsch-Link: 3–20 Zeichen, Kleinbuchstaben, Zahlen, - und _, beginnt mit Buchstabe oder Zahl.");
+        if (value === null && !(await ask({ title: `xyntal.de/${c.handle} freigeben?`, text: "Danach kann jemand anderes diesen Link wählen.", confirm: "Freigeben", danger: true }))) return null;
+        try {
+          const changed = unwrap(await sb.from("waitlist_cards").update({ handle: value }).eq("id", c.id).select("id,handle"));
+          if (!changed.length) throw Error("Karte nicht mehr vorhanden oder keine Berechtigung.");
+        } catch (err) { if (/duplicate|unique/i.test(err.message)) throw Error(`xyntal.de/${value} ist schon vergeben.`); throw err; }
+        return value ? `Wunsch-Link xyntal.de/${value} gespeichert.` : "Wunsch-Link freigegeben.";
+      }
       case "approve": await rpc("admin_set_status", { p_id: m.id, p_status: "approved" }); return `${v.name} ist freigeschaltet.`;
       case "reject": {
         if (!(await ask({ title: `${v.name} ablehnen?`, text: "Das Konto bleibt bestehen, wird aber nicht freigeschaltet. Du kannst das später ändern.", confirm: "Ablehnen", danger: true }))) return null;
@@ -481,7 +554,7 @@
     }
   }
   // Was nach einer Aktion neu geladen werden muss
-  const TOUCHES = { approve: "site", reject: "site", "beta-on": "site", "beta-off": "site", "beta-mail": "site", "beta-note": "none", "delete-site": "site", "delete-beta": "site", mute: "app", unmute: "app", "delete-app": "app", verify: "both", ban: "both", unban: "both" };
+  const TOUCHES = { "handle-save": "site", "handle-free": "site", approve: "site", reject: "site", "beta-on": "site", "beta-off": "site", "beta-mail": "site", "beta-note": "none", "delete-site": "site", "delete-beta": "site", mute: "app", unmute: "app", "delete-app": "app", verify: "both", ban: "both", unban: "both" };
   async function runAction(key, kind, button, say) {
     const r = rowByKey(key); if (!r) return;
     if (button) button.disabled = true;
@@ -607,6 +680,9 @@
     catch (err) { sel.value = old; drawerMsg(`Nicht gespeichert: ${failText(err)}`, false); }
     finally { if (sel.isConnected) sel.disabled = false; }
   });
+  drawer.addEventListener("input", (e) => {
+    if (e.target.matches("[data-xp-handle]")) { const v = e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, "").slice(0, 20); if (v !== e.target.value) e.target.value = v; }
+  });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !drawer.hidden && !document.querySelector("dialog[open]")) closeDrawer(); });
 
   // Von anderen Bereichen aus (z. B. Sicherheit): App-Konto per ID öffnen
@@ -621,7 +697,7 @@
     P.staff = !!(plat && plat.staff); P.siteAdmin = !!(site && site.admin);
     P.appOk = can("users.view");
     if (!P.staff && !P.siteAdmin) return;
-    await Promise.all([loadApp(), loadStats()]);
+    await Promise.all([loadApp(), loadFresh(), loadStats()]);
     rebuild(); renderAll();
     document.addEventListener("xa:site-data", () => { rebuild(); renderAll(); });
   }

@@ -139,3 +139,39 @@ nur https annimmt; die Funktion prüft jede Anfrage per Signatur.
 
 Website-Änderungen (`public/`) brauchen kein Deploy, sie sind nach spätestens 30 s online.
 Backups zusätzlich regelmäßig auf einen zweiten Ort kopieren (z. B. Hetzner Storage Box).
+
+## Bot-Schutz
+
+- **Website (`hosting/daki/server.cjs`):** höchstens 600 Anfragen pro IP und Minute,
+  60 für Profilseiten (`xyntal.de/name`) und `/api/*`. Darüber antwortet sie mit 429.
+  Ändern lässt sich das mit `SITE_RATE_LIMIT` und `SITE_RATE_LIMIT_HEAVY` in
+  `website.env` (0 = aus). Verbindungen ohne Kopfzeilen nach 20 s und ohne Datenfluss
+  nach 2 Minuten werden getrennt.
+- **App-Server:** 200 Anfragen pro Minute (`RATE_LIMIT_MAX`), Login und Registrierung
+  10 pro Minute, und höchstens 5 neue Konten pro IP bzw. 3 pro Gerät in 24 Stunden
+  (`SIGNUP_DAILY_PER_IP`, `SIGNUP_DAILY_PER_DEVICE` in `api.env`).
+- **Gegen echte Überlastung (DDoS)** hilft nur ein vorgeschalteter Schutz: in Cloudflare
+  bei `xyntal.de`, `www`, `api` und `db` die Wolke auf orange („Proxied“) stellen,
+  SSL/TLS auf „Full (strict)“ und unter Security → Bots „Bot Fight Mode“ einschalten.
+  Caddy holt seine Zertifikate dann weiter, weil Cloudflare `/.well-known/acme-challenge`
+  durchreicht.
+
+### „Kein Bot“-Prüfung bei der Registrierung (Cloudflare Turnstile)
+
+Beim Anlegen eines Kontos mit E-Mail und Passwort zeigt die Website die Turnstile-Prüfung.
+Supabase prüft das Token selbst (Edge Function `before-user-created`), bevor das Konto
+entsteht. Ein Bot kommt also auch nicht durch, wenn er Supabase direkt anspricht. Login,
+Google, Discord, LinkedIn und Apple bleiben unberührt.
+
+Einschalten, in dieser Reihenfolge:
+1. In Cloudflare unter **Turnstile → Add widget** die Hostnamen `xyntal.de` und `www.xyntal.de`
+   eintragen, Modus „Managed“. Du bekommst einen **Site Key** und einen **Secret Key**.
+2. Den Site Key in `public/config.js` bei `turnstileSiteKey` eintragen und auf `main` bringen.
+   Danach zeigt die Website die Prüfung.
+3. Auf `xyntal-db` in `/opt/xyntal/supabase/.env` diese Zeilen ergänzen:
+   `TURNSTILE_SECRET_KEY=<Secret Key>` und `TURNSTILE_ENABLED=true`.
+   Danach `sh /opt/xyntal/site/hosting/hetzner/supabase/install.sh` ausführen. Das Skript kopiert
+   die Funktion, legt das Hook-Geheimnis an und startet Supabase neu.
+
+Ausschalten: `TURNSTILE_ENABLED=false` und `install.sh` erneut ausführen. Ist Cloudflare nicht
+erreichbar, lässt der Hook Registrierungen durch, damit niemand ausgesperrt wird.
