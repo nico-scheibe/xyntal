@@ -1,0 +1,76 @@
+/* Admin → Firmenverträge: Editor in den Admin-Farben, Vorschau und Druck als weißes A4-Dokument. */
+.xa-ico[data-ico="contract"] { --ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z'/%3E%3Cpath d='M14 3v5h5'/%3E%3Cpath d='M9 13h6M9 17h3'/%3E%3C/svg%3E"); }
+
+.ct-editor { display:grid; grid-template-columns:minmax(340px,1fr) minmax(0,1.15fr); gap:24px; align-items:start; }
+.admin-app .ct-form { display:grid; gap:16px; min-width:0; margin:0; padding:0; border:0; border-radius:0; background:none; }
+.ct-form fieldset { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin:0; padding:18px; border:1px solid var(--admin-line); border-radius:2px; background:#111119; min-width:0; }
+.ct-form legend { padding:0 6px; color:#ECEAE4; font:600 11px/1.5 var(--f-text); letter-spacing:.1em; text-transform:uppercase; }
+.ct-form .ct-wide { grid-column:1 / -1; }
+.ct-form input, .ct-form select, .ct-form textarea, .admin-app .panel-heading select { width:100%; min-height:40px; padding:9px 11px; border:1px solid var(--admin-line); border-radius:2px; background:#0B0B12; color:#ECEAE4; font:400 13px/1.4 var(--f-text); color-scheme:dark; }
+.ct-form textarea { resize:vertical; min-height:64px; }
+.ct-form small { color:#8D899C; font-size:11px; }
+.ct-form .ct-check { display:flex; align-items:center; gap:9px; grid-column:1 / -1; font-size:13px; color:#ECEAE4; }
+.ct-form .ct-check input { width:18px; min-height:18px; height:18px; accent-color:#ECEAE4; }
+.ct-item { display:grid; grid-template-columns:72px minmax(0,1fr) minmax(0,1.2fr) 40px; gap:8px; align-items:end; margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid var(--admin-line); }
+.ct-item .ct-item-label { grid-column:1 / -1; }
+.ct-item button { padding:0 !important; height:40px; }
+.ct-totals { margin:0; color:#ECEAE4; font-size:13px; font-variant-numeric:tabular-nums; }
+.ct-actions { display:flex; flex-wrap:wrap; gap:8px; }
+#admin-view .ct-primary { background:#ECEAE4 !important; color:#111 !important; border-color:#ECEAE4 !important; font-weight:600 !important; }
+.admin-message.is-error { color:#E0705F; }
+.ct-status { display:inline-flex; padding:5px 9px; border-radius:2px; font-size:11px; white-space:nowrap; color:#ECEAE4; background:rgba(236,234,228,.1); }
+.ct-status-verschickt { color:#8DD9F5; }
+.ct-status-unterschrieben { color:#7DE6BF; background:rgba(52,211,153,.1); }
+.ct-status-gekuendigt { color:#E0705F; background:rgba(245,106,143,.08); }
+
+.ct-preview { position:sticky; top:100px; max-height:calc(100vh - 120px); overflow:auto; padding:18px; border:1px solid var(--admin-line); border-radius:2px; background:#0B0B12; }
+.ct-paper { background:#fff; box-shadow:0 10px 40px rgba(0,0,0,.45); }
+.ct-paper .contract-doc { padding:44px 48px; font-size:12px; }
+
+/* ---------- Vertragsdokument (Vorschau und PDF) ---------- */
+.contract-doc { color:#1a1a1a; background:#fff; font:400 10.5pt/1.55 var(--f-text, system-ui, sans-serif); }
+.contract-doc * { color:inherit; }
+.contract-doc .cd-head { display:flex; justify-content:space-between; gap:24px; padding-bottom:14px; border-bottom:1.5px solid #1a1a1a; }
+.contract-doc .cd-brand b { display:block; font-size:18pt; letter-spacing:-.02em; }
+.contract-doc .cd-brand small { color:#555; font-size:8pt; }
+.contract-doc .cd-meta { display:grid; grid-template-columns:auto auto; gap:1px 12px; align-content:start; font-size:8.5pt; text-align:right; }
+.contract-doc .cd-meta span { color:#666; }
+.contract-doc h1 { margin:28px 0 0; font-size:17pt; line-height:1.25; letter-spacing:-.01em; color:#111; }
+.contract-doc .cd-sub { margin:2px 0 22px; color:#555; }
+.contract-doc .cd-parties { display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:22px; }
+.contract-doc .cd-parties span { display:block; margin-bottom:4px; color:#666; font-size:8pt; letter-spacing:.08em; text-transform:uppercase; }
+.contract-doc .cd-parties p { margin:0 0 4px; }
+.contract-doc .cd-parties small { color:#666; font-size:8.5pt; }
+.contract-doc section { margin:0 0 14px; padding:0; background:none; border:0; break-inside:avoid-page; }
+.contract-doc h3 { margin:0 0 5px; font-size:11pt; color:#111; letter-spacing:0; }
+.contract-doc p { margin:0 0 6px; }
+.contract-doc .cd-table { width:100%; margin:6px 0 10px; border-collapse:collapse; background:none; }
+.contract-doc .cd-table th, .contract-doc .cd-table td { padding:6px 8px; border-bottom:1px solid #ddd; background:none; color:#1a1a1a; font-size:9.5pt; text-transform:none; letter-spacing:0; vertical-align:top; }
+.contract-doc .cd-table th { border-bottom:1.5px solid #1a1a1a; font-size:8pt; color:#555; text-transform:uppercase; letter-spacing:.06em; }
+.contract-doc .cd-table tfoot td { font-weight:600; border-bottom:0; }
+.contract-doc .cd-table small { color:#666; font-weight:400; font-size:8pt; }
+.contract-doc .cd-table .num { text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.contract-doc tbody tr:hover { background:none; }
+.contract-doc .cd-sign { display:grid; grid-template-columns:1fr 1fr; gap:40px; margin-top:40px; break-inside:avoid; }
+.contract-doc .cd-sign p { min-height:1.5em; margin:0; }
+.contract-doc .cd-sign i { display:block; height:44px; border-bottom:1px solid #1a1a1a; }
+.contract-doc .cd-sign span { display:block; margin-top:4px; color:#555; font-size:8.5pt; }
+
+#contract-print-root { display:none; }
+
+@media (max-width:1180px) { .ct-editor { grid-template-columns:minmax(0,1fr); } .ct-preview { position:static; max-height:none; } }
+@media (max-width:600px) {
+  .ct-form fieldset { grid-template-columns:minmax(0,1fr); padding:14px; }
+  .ct-item { grid-template-columns:64px minmax(0,1fr) 40px; }
+  .ct-item label:nth-child(4) { grid-column:1 / 3; }
+  .ct-paper .contract-doc { padding:24px 18px; }
+  .contract-doc .cd-parties, .contract-doc .cd-sign { grid-template-columns:1fr; gap:16px; }
+}
+
+@media print {
+  @page { size:A4; margin:18mm 18mm 20mm; }
+  body.printing-contract { background:#fff !important; }
+  body.printing-contract > *:not(#contract-print-root) { display:none !important; }
+  body.printing-contract #contract-print-root { display:block; }
+  body.printing-contract .contract-doc { padding:0; font-size:10.5pt; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+}
