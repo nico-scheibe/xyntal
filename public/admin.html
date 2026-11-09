@@ -35,6 +35,7 @@
     .card-note.is-saved { border-color: #34D399; }
   </style>
   <link rel="stylesheet" href="admin.css?v=10">
+  <link rel="stylesheet" href="admin-contracts.css?v=1">
   <link rel="stylesheet" href="/backdrop.css?v=7">
   <link rel="stylesheet" href="/site-header.css?v=7">
 </head>
@@ -102,6 +103,7 @@
           <button role="tab" data-tab="beta" data-site aria-selected="false"><i class="xa-ico" data-ico="beta"></i>Beta <span id="c-beta"></span></button>
           <button role="tab" data-tab="signups" data-site aria-selected="false"><i class="xa-ico" data-ico="archive"></i>Archiv: Anmeldungen <span id="c-signups"></span></button>
           <button role="tab" data-tab="newsletter" data-site aria-selected="false"><i class="xa-ico" data-ico="mail"></i>Newsletter &amp; Brevo <span id="c-newsletter"></span></button>
+          <button role="tab" data-tab="contracts" data-site aria-selected="false"><i class="xa-ico" data-ico="contract"></i>Firmenverträge</button>
         </div>
         <button id="admin-logout" style="margin-left: auto">Ausloggen</button>
       </div>
@@ -131,6 +133,9 @@
       <div data-panel="beta" hidden></div>
       <div data-panel="signups" hidden></div>
       <div data-panel="newsletter" hidden></div>
+
+      <!-- Firmenverträge (Tabelle business_contracts, nur Website-Admins); Vertragstext bleibt deutsch -->
+      <div data-panel="contracts" data-no-i18n hidden></div>
     </div>
   </section>
 </main>
@@ -144,6 +149,7 @@
 <script src="/app-api.js?v=5"></script>
 <script src="/world-geo.js?v=1"></script>
 <script src="/pages/admin-platform.js?v=8"></script>
+<script src="/pages/admin-contracts.js?v=1"></script>
 <script src="/pages/admin.js?v=7"></script>
 <script src="/account-menu.js?v=19" defer></script>
 </body>
