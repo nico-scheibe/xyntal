@@ -233,6 +233,8 @@ window.XYNTAL_EN = {
   "App-Demo ansehen": "View the app demo",
   "Mitglieder entdecken": "Discover members",
   "Passende Leute ansehen": "See people who fit",
+  "Mitglieder ansehen": "Browse members",
+  "Brief": "Letter",
   "Dein Team finden": "Find your team",
   "Zu deinen Vorschlägen": "To your suggestions",
   "Klick dich inzwischen durch die App-Demo": "Click through the app demo in the meantime",

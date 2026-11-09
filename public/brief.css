@@ -104,20 +104,6 @@ button, input { font: inherit; color: inherit; }
 body.is-member .news { display: none; }
 
 /* ---------- Kopfzeile ---------- */
-body.brief .nav { background: var(--paper) !important; border-bottom: 1px solid var(--rule) !important; font-family: var(--f-sans); }
-body.brief .nav .logo { color: var(--ink); }
-body.brief .nav .nav-links a { color: var(--ink-2); }
-body.brief .nav .nav-links a:hover { color: var(--ink); }
-body.brief .nav .nav-links a[aria-current="page"] { color: var(--ink); box-shadow: inset 0 -1px 0 var(--ink); }
-body.brief .nav .nav-links .nav-cta { background: var(--ink) !important; border-color: var(--ink); color: var(--paper) !important; }
-body.brief .nav .nav-links .nav-cta:hover { background: transparent !important; color: var(--ink) !important; }
-body.brief .nav .nav-toggle { color: var(--ink); border-color: var(--rule-2); }
-body.brief .nav .nav-links.open { background: var(--paper); border-bottom-color: var(--rule); }
-body.brief .nav .cmdk-trigger { color: var(--ink-3); border-color: var(--rule); }
-body.brief .nav .cmdk-trigger kbd { background: var(--paper-2); color: var(--ink-2); }
-body.brief .nav .lang-switch { border-color: var(--rule-2); }
-body.brief .nav .lang-switch button { color: var(--ink-2); }
-body.brief .nav .lang-switch button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
 body.brief .acct-btn { border-color: var(--rule-2) !important; background: transparent !important; color: var(--ink) !important; }
 body.brief .acct-menu { background: var(--paper-2) !important; border-color: var(--rule-2) !important; color: var(--ink); }
 body.brief .acct-menu a { color: var(--ink) !important; }

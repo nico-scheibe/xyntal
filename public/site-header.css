@@ -3,90 +3,124 @@
    Wird als letztes Stylesheet geladen. Verhalten: account-menu.js (Menü, aktive Seite),
    effects.js (Suche), i18n.js (DE/EN), account-menu.js (Konto). */
 .nav {
+  --nh-bg: 28, 28, 28; --nh-1: #ECEAE4; --nh-2: #B9B7B0; --nh-3: #918F89;
+  --nh-line: rgba(236, 234, 228, .10); --nh-line-2: rgba(236, 234, 228, .22);
+  --nh-pad: clamp(20px, 4.2vw, 76px); --nh-h: 72px;
+  --nh-grad: linear-gradient(90deg, #B36BFF, #3A8AFF 50%, #3FE0F0);
   position: sticky; top: 0; z-index: 50;
   padding-top: env(safe-area-inset-top);
-  background: #1C1C1C !important;
-  border-bottom: 1px solid #333333 !important;
+  background: transparent !important; border-bottom: 0 !important;
+  -webkit-backdrop-filter: none; backdrop-filter: none;
   font-family: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
+/* Fläche als eigene Ebene: oben durchsichtig wie auf der Startseite, beim Scrollen mattes Glas.
+   (Der Weichzeichner liegt nicht auf .nav selbst, damit fixierte Menüs darin richtig sitzen.) */
+.nav::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: rgba(var(--nh-bg), .86); box-shadow: 0 1px 0 var(--nh-line);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  transition: opacity .3s;
+}
+.nav.is-top::before { opacity: 0; }
 .nav .wrap {
-  display: flex; align-items: center; gap: 4px; height: 64px; position: relative;
-  width: min(1240px, 100% - 32px); max-width: none; margin-inline: auto; padding: 0;
+  display: flex; align-items: center; justify-content: flex-start; gap: 0; height: var(--nh-h); position: relative;
+  width: 100%; max-width: none; margin: 0; padding: 0 var(--nh-pad); box-sizing: border-box;
 }
 .nav .logo {
-  display: inline-flex; align-items: center; gap: 10px; flex: none; margin-right: 14px;
-  font-family: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-  font-weight: 600 !important; font-size: 20px; letter-spacing: -0.02em !important;
-  color: #ECEAE4; text-decoration: none;
+  display: inline-flex; align-items: center; gap: 9px; flex: none; margin: 0;
+  font-family: "Archivo", "IBM Plex Sans", -apple-system, "Segoe UI", Roboto, sans-serif !important;
+  font-weight: 600 !important; font-size: 18.4px; line-height: 1; font-stretch: 110%; letter-spacing: -0.01em !important;
+  color: var(--nh-1); text-decoration: none;
 }
 .nav .logo-mark { width: 22px; height: 22px; fill: none; stroke-width: 2.6; stroke-linecap: round; }
 
-/* Links */
-.nav .nav-links { display: flex; gap: 2px; align-items: center; flex: 1 1 auto; min-width: 0; }
+/* Links: die Hauptpunkte stehen mittig zwischen Logo und rechter Gruppe */
+.nav .nav-links { display: flex; gap: clamp(18px, 2.4vw, 40px); align-items: center; flex: 1 1 auto; min-width: 0; }
 .nav .nav-links a {
-  text-decoration: none; color: #A09E98; white-space: nowrap;
-  font-family: inherit; font-size: 14.5px; font-weight: 500;
-  padding: 8px 11px; border-radius: 2px; transition: color .15s;
-  box-shadow: inset 0 -1px 0 transparent;
+  position: relative; text-decoration: none; color: var(--nh-2); white-space: nowrap;
+  font-family: inherit; font-size: 15px; font-weight: 400; line-height: 1.55; letter-spacing: 0;
+  padding: 6px 0; border-radius: 0; background: none; box-shadow: none; transition: color .25s;
 }
-.nav .nav-links a:hover { color: #ECEAE4; }
-.nav .nav-links a[aria-current="page"] { color: #ECEAE4; box-shadow: inset 0 -1px 0 #ECEAE4; }
+.nav .nav-links a:hover { color: var(--nh-1); }
+.nav .nav-links a[aria-current="page"] { color: var(--nh-1); }
+.nav .nav-links a.nav-main[aria-current="page"]::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: var(--nh-grad);
+}
+.nav .nav-links .nav-main:first-child { margin-left: auto; }
+.nav .nav-links .nav-end { margin-right: auto; }
+/* Pillen-Knopf wie auf der Startseite: helle Fläche, das Farblicht liegt als Linie darunter */
 .nav .nav-links .nav-cta {
-  line-height: 1.2; white-space: nowrap;
-  margin-left: auto; padding: 9px 16px; border-radius: 2px; font-weight: 600; font-size: 14px;
-  font-family: "Space Grotesk", inherit;
-  color: #1C1C1C !important; background: #ECEAE4 !important; border: 1px solid #ECEAE4;
-  box-shadow: none;
+  display: inline-flex; align-items: center; margin: 0; padding: .7em 1.15em; border: 0; border-radius: 999px;
+  font: 500 14.4px/1 "IBM Plex Sans", -apple-system, "Segoe UI", Roboto, sans-serif; white-space: nowrap;
+  color: #151516 !important; background: var(--nh-1) !important; box-shadow: none;
+  transition: background .3s cubic-bezier(.2, .8, .2, 1);
 }
-.nav .nav-links .nav-cta:hover { background: transparent !important; color: #ECEAE4 !important; }
+.nav .nav-links .nav-cta::after {
+  content: ""; position: absolute; left: 18%; right: 18%; bottom: -7px; height: 2px; border-radius: 2px;
+  background: var(--nh-grad); filter: blur(1.5px); opacity: .9; transform: scaleX(.55);
+  transition: transform .5s cubic-bezier(.2, .8, .2, 1);
+}
+.nav .nav-links .nav-cta:hover { background: #fff !important; color: #151516 !important; }
+.nav .nav-links .nav-cta:hover::after, .nav .nav-links .nav-cta:focus-visible::after { transform: scaleX(1.25); }
 .nav .nav-links [hidden] { display: none !important; }
 .nav .nav-links .hide-sm { display: none; }
 .nav .nav-links .nav-main { display: none; }
-@media (min-width: 1180px) { .nav .nav-links .nav-main { display: inline-block; } }
+@media (min-width: 1001px) { .nav .nav-links .nav-main { display: inline-block; } }
 /* Login steckt im Konto-Symbol; als Text nur im ausgeklappten Menü */
 .nav .nav-links:not(.open) [data-account] { display: none; }
+.nav a:focus-visible, .nav button:focus-visible { outline: 2px solid #3FE0F0; outline-offset: 4px; border-radius: 4px; }
+.nav .nav-cta:focus-visible, .nav .nav-toggle:focus-visible { border-radius: 999px; }
 
-/* Menü-Knopf (unter 1180 px) */
+/* Menü-Knopf (bis 1000 px) */
 .nav .nav-toggle {
   display: none; flex: none; order: 9;
-  font: 500 13px/1 inherit; color: #ECEAE4; cursor: pointer;
-  background: transparent; border: 1px solid #4A4A4A;
-  border-radius: 2px; padding: 9px 14px; margin: 0 0 0 8px;
+  font: 500 13.5px/1 inherit; color: var(--nh-1); cursor: pointer;
+  background: transparent; border: 0; box-shadow: inset 0 0 0 1px var(--nh-line-2);
+  border-radius: 999px; padding: 10px 16px; margin: 0 0 0 12px; transition: box-shadow .25s;
 }
-@media (max-width: 1179px) {
+.nav .nav-toggle:hover { box-shadow: inset 0 0 0 1px var(--nh-1); }
+@media (max-width: 1000px) {
+  .nav { --nh-h: 64px; }
   .nav .nav-toggle { display: inline-block; }
-  .nav .nav-links:not(.open) .nav-cta { display: inline-block; }
+  .nav .nav-links { justify-content: flex-end; }
+  .nav .nav-links:not(.open) .nav-cta { display: inline-flex; }
   .nav .nav-links.open {
-    position: absolute; top: 64px; left: -16px; right: -16px;
-    flex-direction: column; align-items: stretch; gap: 2px;
+    position: absolute; top: 100%; left: 0; right: 0;
+    flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 0;
     max-height: calc(100dvh - 80px); overflow-y: auto;
-    padding: 10px 16px 18px;
-    background: #1C1C1C; border-bottom: 1px solid #333333;
+    padding: 6px var(--nh-pad) 22px;
+    background: rgb(var(--nh-bg)); box-shadow: 0 1px 0 var(--nh-line);
   }
-  .nav .nav-links.open a { padding: 12px 14px; border-radius: 2px; }
+  .nav:has(.nav-links.open)::before { opacity: 1; }
+  .nav .nav-links.open a { margin: 0; padding: 14px 0; font-size: 17px; color: var(--nh-1); border-bottom: 1px solid var(--nh-line); }
+  .nav .nav-links.open a.nav-main[aria-current="page"]::after { display: none; }
   .nav .nav-links.open .nav-main, .nav .nav-links.open .hide-sm { display: block; }
-  .nav .nav-links.open .nav-cta { margin: 10px 0 0; text-align: center; }
+  .nav .nav-links.open .nav-main:first-child, .nav .nav-links.open .nav-end { margin: 0; }
+  .nav .nav-links.open .nav-cta { margin: 20px 0 0; padding: 1em 1.4em; justify-content: center; border-bottom: 0; font-size: 15px; color: #151516 !important; }
 }
 @media (max-width: 640px) { .nav .nav-links:not(.open) .nav-cta { display: none; } }
 
 /* Suche (effects.js), Sprache (i18n.js), Konto (account-menu.js) */
 .nav .cmdk-trigger {
   display: none; align-items: center; gap: 8px; flex: none; order: 6;
-  font: inherit; font-size: 13px; color: #73716B; cursor: pointer;
-  background: transparent; border: 1px solid #333333;
-  border-radius: 2px; padding: 6px 8px 6px 12px; margin: 0 4px 0 8px !important;
+  font: inherit; font-size: 13px; color: var(--nh-3); cursor: pointer;
+  background: transparent; border: 0; box-shadow: inset 0 0 0 1px var(--nh-line);
+  border-radius: 999px; padding: 7px 9px 7px 14px; margin: 0 0 0 22px !important; transition: color .25s, box-shadow .25s;
 }
-.nav .cmdk-trigger:hover { color: #A1A1AA; border-color: rgba(0, 0, 0, 0.14); }
-.nav .cmdk-trigger kbd { font: 500 11px/1 "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace; padding: 3px 5px; border-radius: 2px; background: #333333; color: #A09E98; }
+.nav .cmdk-trigger:hover { color: var(--nh-1); box-shadow: inset 0 0 0 1px var(--nh-line-2); }
+.nav .cmdk-trigger kbd { font: 500 11px/1 "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace; padding: 3px 5px; border-radius: 4px; background: rgba(236, 234, 228, .08); color: var(--nh-2); }
 @media (min-width: 1400px) { .nav .cmdk-trigger { display: inline-flex; } }
 .nav .lang-switch {
-  display: inline-flex; align-items: center; flex: none; order: 7; height: 32px; padding: 2px;
-  border-radius: 2px; background: transparent; border: 1px solid #4A4A4A; margin: 0 0 0 6px;
+  display: inline-flex; align-items: center; flex: none; order: 7; height: 32px; padding: 3px;
+  border-radius: 999px; background: transparent; border: 0; box-shadow: inset 0 0 0 1px var(--nh-line); margin: 0 0 0 22px;
 }
-.nav .lang-switch button { height: 26px; min-width: 34px; padding: 0 9px; border: 0; border-radius: 1px; background: transparent; color: #A09E98; font: 500 12px/1 "JetBrains Mono", ui-monospace, monospace; cursor: pointer; }
-.nav .lang-switch button[aria-pressed="true"] { background: #ECEAE4; color: #1C1C1C; }
-.nav .wrap > .acct { order: 8; margin-left: 8px; }
-.nav .badge { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 4px; border-radius: 2px; background: #ECEAE4; color: #1C1C1C; font-size: 11px; font-weight: 700; }
+.nav .cmdk-trigger + .lang-switch, .nav .cmdk-trigger ~ .lang-switch { margin-left: 22px; }
+@media (min-width: 1400px) { .nav .cmdk-trigger ~ .lang-switch { margin-left: 10px; } }
+.nav .lang-switch button { height: 26px; min-width: 34px; padding: 0 9px; border: 0; border-radius: 999px; background: transparent; color: var(--nh-3); font: 500 11.5px/1 "JetBrains Mono", ui-monospace, monospace; cursor: pointer; transition: color .2s, background .2s; }
+.nav .lang-switch button:hover { color: var(--nh-1); }
+.nav .lang-switch button[aria-pressed="true"] { background: rgba(236, 234, 228, .12); color: var(--nh-1); }
+.nav .wrap > .acct { order: 8; margin-left: 16px !important; }
+.nav .badge { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 4px; border-radius: 999px; background: var(--nh-1); color: #151516; font-size: 11px; font-weight: 700; }
 
 /* Befehlspalette (effects.js) – auch auf Seiten ohne style.css */
 .cmdk { position: fixed; inset: 0; z-index: 100; display: grid; justify-items: center; align-items: start; padding: 12vh 16px 16px; background: rgba(255, 255, 255, 0.5);  }
@@ -104,7 +138,7 @@
 .cmdk-foot { display: flex; gap: 16px; padding: 10px 16px; border-top: 1px solid rgba(0, 0, 0, 0.09); font-size: 12px; color: #6E6E78; }
 .cmdk-empty { padding: 28px; text-align: center; color: #6E6E78; font-size: 14px; }
 
-@media (prefers-reduced-motion: reduce) { .nav .nav-links a { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .nav::before, .nav .nav-links a, .nav .nav-links .nav-cta, .nav .nav-links .nav-cta::after { transition: none; } }
 
 /* Profilbilder bleiben immer exakt in ihrer Form (Kreis), egal wie groß das Bild ist */
 .avatar, .acct-face { overflow: hidden; }
@@ -120,8 +154,8 @@
    Unterstrich) dürfen nicht auf die Einträge im Panel durchschlagen, sonst wird der Text abgeschnitten. */
 .nav .nav-links .notification-panel { white-space: normal; }
 .nav .nav-links .notification-panel a.notification-item {
-  display: grid; gap: 4px; padding: 12px; margin-top: 4px; white-space: normal; overflow-wrap: anywhere;
-  font-size: 14px; line-height: 1.45; color: #ECEAE4; box-shadow: none; border-radius: 2px;
+  display: grid; gap: 4px; padding: 12px; margin: 4px 0 0; white-space: normal; overflow-wrap: anywhere;
+  font-size: 14px; line-height: 1.45; color: #ECEAE4; box-shadow: none; border-radius: 2px; border-bottom: 0;
 }
 .nav .nav-links .notification-panel a.notification-item:hover { color: #ECEAE4; background: #2A2A2A; }
 .nav .nav-links .notification-panel a.notification-item.unread { background: rgba(236, 234, 228, .10); }
