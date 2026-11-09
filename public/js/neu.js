@@ -4,8 +4,8 @@
    Alle Scroll-Szenen hängen an EINER Schleife (requestAnimationFrame) und
    schreiben nur transform/opacity (Ausnahmen sind im Code benannt).
 
-   Inhalt:  1 Helfer · 2 Text zerlegen · 3 Intro · 4 Scrollen · 5 Szenen
-            6 Rechenbeispiel · 7 Magnet, Lichtreflex · 8 Start
+   Inhalt:  1 Helfer · 2 Text zerlegen · 3 Start · 4 Scrollen · 5 Szenen
+            6 Rechenbeispiel · 7 Lichtreflex · 8 Schleife
    ========================================================================== */
 (function () {
   'use strict';
@@ -74,24 +74,8 @@
     });
   });
 
-  // ---------- 3 Intro ----------
-  function go() { root.classList.add('go'); if (window.XyHero) window.XyHero.start(); }
-  (function () {
-    var intro = $('[data-intro]');
-    if (!intro || !root.classList.contains('intro-on')) { if (intro) intro.remove(); requestAnimationFrame(go); return; }
-    var done = false, timer = setTimeout(out, 1050);
-    function out() {
-      if (done) return; done = true; clearTimeout(timer);
-      try { sessionStorage.setItem('xy-intro', '1'); } catch (e) {}
-      intro.style.display = 'grid';
-      root.classList.remove('intro-on');
-      intro.classList.add('is-out');
-      go();
-      setTimeout(function () { intro.remove(); }, 700);
-      window.removeEventListener('keydown', out); window.removeEventListener('pointerdown', out);
-    }
-    window.addEventListener('keydown', out); window.addEventListener('pointerdown', out);
-  })();
+  // ---------- 3 Start der Einstiegs-Animation ----------
+  requestAnimationFrame(function () { root.classList.add('go'); if (window.XyHero) window.XyHero.start(); });
 
   // ---------- 4 Scrollen ----------
   // Lenis nur mit Maus/Trackpad. Auf Touch bleibt das Scrollen des Systems, das fühlt sich dort besser an.
@@ -105,7 +89,6 @@
   // 5.0 Einstieg: Punkte lösen sich beim Wegscrollen, Überschrift bleibt etwas zurück.
   (function () {
     var hero = $('[data-hero]'), h1 = $('.hero__h'); if (!hero) return;
-    var hint = $('[data-hero-hint]'); if (hint && !fine) hint.textContent = 'Tipp ins Logo';
     tickers.push(function () {
       var p = clamp(scrollY / (hero.offsetHeight || vh), 0, 1);
       if (window.XyHero) window.XyHero.spread(calm ? 0 : p * 1.1);
@@ -375,19 +358,9 @@
     });
   })();
 
-  // ---------- 7 Magnet, Lichtreflex (nur mit Maus) ----------
+  // ---------- 7 Lichtreflex (nur mit Maus) ----------
   (function () {
     if (!fine || calm) return;
-    // Magnet: der Knopf kommt der Maus ein Stück entgegen.
-    $$('[data-magnet]').forEach(function (b) {
-      b.addEventListener('pointermove', function (e) {
-        var r = b.getBoundingClientRect();
-        b.style.transition = 'transform .15s linear, background .3s';
-        b.style.transform = 'translate3d(' + ((e.clientX - r.left - r.width / 2) * .28).toFixed(1) + 'px,' + ((e.clientY - r.top - r.height / 2) * .38).toFixed(1) + 'px,0)';
-      });
-      b.addEventListener('pointerleave', function () { b.style.transition = 'transform .7s cubic-bezier(.2,.8,.2,1), background .3s'; b.style.transform = ''; });
-    });
-
     // Lichtreflex auf den App-Fenstern: die Maus ist die Lichtquelle.
     $$('.win').forEach(function (w) {
       var g = $('.win__glare', w); if (!g) return;
