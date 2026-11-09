@@ -86,6 +86,10 @@ put SMTP_SENDER_NAME "Xyntal"
 if [ -z "$(get .env SEND_EMAIL_HOOK_SECRET)" ]; then
     put SEND_EMAIL_HOOK_SECRET "v1,whsec_$(openssl rand -base64 32)"
 fi
+# Geheimnis für den Bot-Schutz-Hook (before-user-created): ebenso einmalig.
+if [ -z "$(get .env BEFORE_USER_CREATED_HOOK_SECRET)" ]; then
+    put BEFORE_USER_CREATED_HOOK_SECRET "v1,whsec_$(openssl rand -base64 32)"
+fi
 
 cp "$HERE/docker-compose.xyntal.yml" ./docker-compose.xyntal.yml
 compose="$(get .env COMPOSE_FILE)"
@@ -94,10 +98,12 @@ case ":$compose:" in
     *) put COMPOSE_FILE "${compose:-docker-compose.yml}:docker-compose.xyntal.yml" ;;
 esac
 
-# 3. Edge Function für Login-Mails
-echo "→ Edge Function send-auth-email"
+# 3. Edge Functions für Login-Mails und Bot-Schutz
+echo "→ Edge Functions send-auth-email, before-user-created"
 mkdir -p volumes/functions/send-auth-email
 cp "$HERE/../../../supabase/functions/send-auth-email/"* volumes/functions/send-auth-email/
+mkdir -p volumes/functions/before-user-created
+cp "$HERE/../../../supabase/functions/before-user-created/"* volumes/functions/before-user-created/
 
 # 4. Starten
 echo "→ Supabase starten (der erste Start lädt die Images, das dauert ein paar Minuten)"
