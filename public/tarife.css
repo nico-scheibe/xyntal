@@ -1,0 +1,279 @@
+/* ==========================================================================
+   Xyntal · gemeinsame Bausteine für /preise und /unternehmen
+   Bildsprache der Startseite (css/neu.css): Anthrazit in feinen Stufen, Archivo für
+   Überschriften und Zahlen, Plex Sans für Text, Mono für Labels und Grenzen.
+   Der Logo-Verlauf ist Licht und Linie, nie Fläche.
+   Alles hängt an .xs (auf <main>), damit Kopf- und Fußzeile unberührt bleiben.
+   Aufbau: 1 Variablen · 2 Grundlagen · 3 Bausteine · 4 Zählwerk · 5 Regler und Schalter
+           6 Vergleichstabelle · 7 Fragen · 8 Ruhige Fassung · 9 Druck
+   ========================================================================== */
+
+/* ---------- 1 Variablen ---------- */
+.xs {
+  --g-0: #151516; --g-1: #1A1A1C; --g-2: #1F1F21; --g-3: #262629; --g-4: #2E2E32; --g-5: #3A3A3F;
+  --t-1: #ECEAE4; --t-2: #B9B7B0; --t-3: #918F89; --t-rgb: 236, 234, 228;
+  --line: rgba(var(--t-rgb), .10); --line-2: rgba(var(--t-rgb), .22);
+  --pu: #B36BFF; --bl: #3A8AFF; --cy: #3FE0F0;
+  --grad: linear-gradient(90deg, var(--pu), var(--bl) 50%, var(--cy));
+  --err: #E8907F;
+  --f-display: "Archivo", "Arial Narrow", Arial, sans-serif;
+  --f-text: "IBM Plex Sans", -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  --f-serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --pad: clamp(20px, 4.2vw, 76px);
+  --gap: clamp(16px, 2vw, 32px);
+  --scene: clamp(88px, 14vh, 168px);
+  --ease: cubic-bezier(.2, .8, .2, 1);
+  --ease-io: cubic-bezier(.65, 0, .35, 1);
+  --spring: cubic-bezier(.3, 1.35, .5, 1);
+  --top: 76px;   /* Höhe der Kopfzeile, für alles, was darunter stehen bleibt */
+  position: relative; z-index: 1; overflow-x: clip;
+  color: var(--t-1);
+  font: 400 clamp(1rem, .95rem + .2vw, 1.125rem)/1.55 var(--f-text);
+  -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+}
+@supports (transition-timing-function: linear(0, 1)) {
+  /* Feder: schwingt einmal leicht über und setzt sich */
+  .xs { --spring: linear(0, .009, .035 2.1%, .141 4.4%, .723 12.9%, .938 16.7%, 1.017, 1.077, 1.121, 1.149 24.3%, 1.159, 1.163, 1.161, 1.154 29.9%, 1.129 32.8%, 1.051 39.6%, 1.017 43.1%, .991, .977 51%, .974 53.8%, .975 57.1%, .997 69.8%, 1.003 76.9%, 1.004 83.8%, 1); }
+}
+@media (max-width: 1000px) { .xs { --top: 64px; } }
+
+/* ---------- 2 Grundlagen ----------
+   Setzt zurück, was style.css und cosmos.css für die älteren Unterseiten mitbringen.
+   Mit :where(), damit jede Klasse hier drin ohne Kraftprobe gewinnt. */
+:where(.xs) *, :where(.xs) *::before, :where(.xs) *::after { box-sizing: border-box; }
+:where(.xs) section { padding: 0; animation: none; }
+:where(.xs) :is(h1, h2, h3, p, ul, ol, dl, dd, figure, blockquote, fieldset) { margin: 0; padding: 0; }
+/* cosmos.css legt Schrift, Gewicht und Laufweite aller Überschriften mit !important fest –
+   hier gehen sie über --fw und --ls, die jede Überschrift selbst setzen kann. */
+.xs :is(h1, h2, h3) { font-family: var(--f-display) !important; font-weight: var(--fw, 800) !important; letter-spacing: var(--ls, -.01em) !important; text-wrap: balance; }
+.xs legend { font-family: inherit !important; font-weight: inherit !important; letter-spacing: inherit !important; }
+.xs legend.xs-mono { font-family: var(--f-mono) !important; font-weight: 400 !important; letter-spacing: .06em !important; }
+:where(.xs) :is(p, dd, li) { text-wrap: pretty; }
+:where(.xs) :is(ul, ol) { list-style: none; }
+:where(.xs) a { color: inherit; text-decoration: none; }
+:where(.xs) :is(img, svg) { display: block; max-width: 100%; }
+:where(.xs) form { display: block; padding: 0; border: 0; border-radius: 0; background: none; }
+:where(.xs) label { display: block; gap: 0; font: inherit; color: inherit; }
+:where(.xs) fieldset { display: block; border: 0; min-width: 0; }
+:where(.xs) legend { margin: 0; padding: 0; font-size: inherit; }
+:where(.xs) :is(input, select, textarea, button) { font: inherit; color: inherit; }
+:where(.xs) :is(input, select, textarea) { width: auto; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; transition: none; }
+.xs :is(input, select, textarea):focus { border-color: transparent; box-shadow: none; }
+:where(.xs) button { margin: 0; padding: 0; border: 0; background: none; cursor: pointer; text-align: inherit; -webkit-tap-highlight-color: transparent; }
+:where(.xs) table { width: 100%; border-collapse: collapse; font-size: inherit; }
+:where(.xs) :is(th, td) { padding: 0; border: 0; text-align: left; vertical-align: baseline; font-size: inherit; font-weight: inherit; letter-spacing: 0; text-transform: none; color: inherit; }
+:where(.xs) :focus-visible { outline: 2px solid var(--cy); outline-offset: 4px; border-radius: 4px; }
+.xs ::selection { background: var(--bl); color: #fff; }
+.xs [id] { scroll-margin-top: calc(var(--top) + 20px); }
+
+/* Raster wie auf der Startseite: vier feine Spaltenlinien hinter allem */
+.xs::before {
+  content: ""; position: absolute; inset: 0 calc(var(--pad) * .45); z-index: -1; pointer-events: none;
+  background: linear-gradient(90deg, var(--line) 1px, transparent 1px) 0 0 / 25% 100%;
+  border-right: 1px solid var(--line); opacity: .4;
+}
+/* Die Fußzeile schließt ohne Lücke an die letzte Szene an */
+.xs + .site-footer { margin-top: 0; }
+
+.xs-skip { position: absolute; left: 20px; top: -80px; z-index: 300; padding: 10px 16px; border-radius: 999px; background: #ECEAE4; color: #151516; font: 500 14px/1 "IBM Plex Sans", sans-serif; text-decoration: none; }
+.xs-skip:focus { top: 12px; }
+
+/* ---------- 3 Bausteine ---------- */
+.xs-mono { font: 400 .72rem/1.4 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--t-3); font-variant-numeric: tabular-nums; }
+.xs-label { display: flex; align-items: center; gap: 12px; }
+.xs-label::before { content: ""; flex: none; width: 28px; height: 1px; background: var(--grad); transform-origin: 0 50%; }
+.xs-label b { color: var(--t-1); font-weight: 400; }
+.xs .thin { font-weight: 200; font-stretch: 118%; letter-spacing: -.035em; }
+.xs-num { font-variant-numeric: tabular-nums; }
+
+/* Pillen-Knopf der Startseite: helle Fläche, das Farblicht liegt als Linie darunter */
+.xs-pill {
+  position: relative; display: inline-flex; align-items: center; justify-content: center; gap: .7em;
+  min-height: 48px; padding: .95em 1.55em; border-radius: 999px; background: var(--t-1); color: var(--g-0) !important;
+  font: 500 1rem/1 var(--f-text); white-space: nowrap; cursor: pointer;
+  transition: background .3s var(--ease);
+}
+.xs-pill::after {
+  content: ""; position: absolute; left: 18%; right: 18%; bottom: -7px; height: 2px; border-radius: 2px;
+  background: var(--grad); filter: blur(1.5px); opacity: .9; transform: scaleX(.55);
+  transition: transform .5s var(--ease);
+}
+.xs-pill:hover { background: #fff; }
+.xs-pill:hover::after, .xs-pill:focus-visible::after { transform: scaleX(1.25); }
+.xs-pill:focus-visible { border-radius: 999px; }
+.xs-pill i { font-style: normal; display: inline-block; transition: transform .4s var(--ease); }
+.xs-pill:hover i { transform: translateX(5px); }
+.xs-pill--line { background: transparent; color: var(--t-1) !important; box-shadow: inset 0 0 0 1px var(--line-2); transition: box-shadow .25s; }
+.xs-pill--line::after { content: none; }
+.xs-pill--line:hover { background: transparent; box-shadow: inset 0 0 0 1px var(--t-1); }
+.xs-pill--sm { min-height: 40px; padding: .7em 1.15em; font-size: .9rem; }
+.xs-pill[disabled], .xs-pill[aria-busy="true"] { cursor: progress; background: var(--t-2); }
+
+/* Textlink: Linie, die beim Drüberfahren in Logo-Farben neu gezogen wird */
+.xs-tlink { position: relative; display: inline-block; padding-bottom: 3px; color: var(--t-1); cursor: pointer; background: linear-gradient(var(--line-2), var(--line-2)) 0 100% / 100% 1px no-repeat; }
+.xs-tlink::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: var(--grad); transform: scaleX(0); transform-origin: 0 50%; transition: transform .5s var(--ease); }
+.xs-tlink:hover::after, .xs-tlink:focus-visible::after { transform: scaleX(1); }
+.xs p a:not([class]), .xs dd a:not([class]), .xs li a:not([class]), .xs td a:not([class]) { color: var(--t-1); text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 3px; transition: text-decoration-color .2s; }
+.xs p a:not([class]):hover, .xs dd a:not([class]):hover, .xs li a:not([class]):hover { text-decoration-color: var(--cy); }
+
+/* Kopf einer Szene: Label, große Zeile, daneben der erklärende Satz */
+.xs-scene { position: relative; padding: var(--scene) var(--pad) 0; }
+.xs-head { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--s, 20px) var(--gap); align-items: end; margin-bottom: clamp(32px, 5vw, 72px); }
+.xs-head .xs-label { grid-column: 1 / -1; }
+.xs-h2 { --fw: var(--h2-w, 800); grid-column: 1 / span 8; font-size: var(--h2, clamp(2.4rem, 6.4vw, 7.4rem)); line-height: .9; font-stretch: var(--h2-s, 62%); }
+.xs-lead { grid-column: 9 / -1; color: var(--t-2); font-size: .97rem; max-width: 44ch; padding-bottom: .3em; }
+@media (max-width: 860px) { .xs-h2, .xs-lead { grid-column: 1 / -1; } }
+
+/* Erscheinen: das Label zieht seinen Strich, die Zeile schiebt sich aus ihrer Maske.
+   Nur wo es etwas ankündigt; Inhalte selbst stehen einfach da. */
+@media (scripting: enabled) { .xs [data-in] .xs-label::before { transform: scaleX(0); transition: transform .9s var(--ease) .1s; } }
+@media (scripting: enabled) { .xs [data-in].is-in .xs-label::before { transform: none; } }
+@media (scripting: enabled) { .xs [data-in] .xs-h2 { clip-path: inset(0 0 100% 0); transform: translateY(.18em); transition: clip-path .9s var(--ease), transform .9s var(--ease); } }
+@media (scripting: enabled) { .xs [data-in].is-in .xs-h2 { clip-path: inset(-.1em -.1em -.2em -.1em); transform: none; } }
+
+/* Kurzer Hinweis, der wie eine Randnotiz gesetzt ist */
+.xs-note { display: flex; gap: 14px; align-items: baseline; color: var(--t-2); font-size: .9rem; line-height: 1.5; }
+.xs-note > .xs-mono { flex: none; padding: 3px 7px; border-radius: 4px; box-shadow: inset 0 0 0 1px var(--line-2); color: var(--t-2); }
+
+/* Meldung nach „Kopieren“ */
+.xs-toast { position: fixed; left: 50%; bottom: calc(28px + env(safe-area-inset-bottom)); z-index: 120; padding: 12px 18px; border-radius: 999px; background: var(--t-1); color: var(--g-0); font: 500 .9rem/1.2 var(--f-text); pointer-events: none; opacity: 0; transform: translate(-50%, 12px); transition: opacity .25s, transform .45s var(--ease); }
+.xs-toast.is-on { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------- 4 Zählwerk: Ziffern rollen wie auf einer Anzeigetafel ---------- */
+.xs-odo { display: inline-flex; align-items: baseline; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.xs-odo__d { display: inline-block; height: 1em; line-height: 1; overflow: hidden; vertical-align: baseline; padding-inline: .01em; }
+.xs-odo__r { display: block; transition: transform .85s var(--ease); transition-delay: calc(var(--i, 0) * 45ms); will-change: transform; }
+.xs-odo__r > span { display: block; height: 1em; line-height: 1; }
+.xs-odo__c { display: inline-block; line-height: 1; }
+.xs-odo__c--sp { width: .22em; }
+
+/* ---------- 5 Regler und Schalter ---------- */
+/* Umschalter mit Fläche, die unter die gewählte Seite gleitet */
+.xs-seg { position: relative; display: inline-flex; padding: 4px; border-radius: 999px; box-shadow: inset 0 0 0 1px var(--line-2); isolation: isolate; }
+.xs-seg button { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 16px; border-radius: 999px; color: var(--t-2); font: 500 .94rem/1 var(--f-text); white-space: nowrap; transition: color .25s; }
+.xs-seg button:hover { color: var(--t-1); }
+.xs-seg button[aria-pressed="true"] { color: var(--g-0); }
+.xs-seg button small { font: 400 .68rem/1 var(--f-mono); letter-spacing: .04em; text-transform: uppercase; color: var(--cy); transition: color .25s; }
+.xs-seg button[aria-pressed="true"] small { color: var(--g-0); }
+.xs-seg__thumb { position: absolute; z-index: 0; inset: 4px; border-radius: 999px; background: var(--t-1); clip-path: inset(0 var(--r, 50%) 0 var(--l, 0px) round 999px); transition: clip-path .5s var(--ease); }
+.xs-seg:not(.is-ready) .xs-seg__thumb { opacity: 0; }
+.xs-seg:not(.is-ready) button[aria-pressed="true"] { background: var(--t-1); }
+
+/* Schalter (an/aus) */
+.xs-switch { display: inline-flex; align-items: center; gap: 14px; min-height: 44px; color: var(--t-1); }
+.xs-switch__track { position: relative; flex: none; width: 46px; height: 26px; border-radius: 999px; box-shadow: inset 0 0 0 1px var(--line-2); transition: box-shadow .25s; }
+.xs-switch__track::before { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--grad); opacity: 0; transition: opacity .3s; }
+.xs-switch__track::after { content: ""; position: absolute; left: 4px; top: 4px; width: 18px; height: 18px; border-radius: 50%; background: var(--t-2); transition: transform .5s var(--spring), background .25s; }
+.xs-switch[aria-checked="true"] .xs-switch__track::before { opacity: 1; }
+.xs-switch[aria-checked="true"] .xs-switch__track::after { transform: translateX(20px); background: #fff; }
+
+/* Schieberegler: eine Haarlinie, der gefüllte Teil in Logo-Farben, Griff als Ring */
+.xs-range { -webkit-appearance: none; appearance: none; display: block; width: 100%; height: 44px; margin: 0; background: transparent; cursor: pointer; touch-action: pan-y; }
+.xs-range::-webkit-slider-runnable-track { height: 2px; border-radius: 2px; background: linear-gradient(90deg, var(--pu), var(--bl) calc(var(--p, 0) * .5%), var(--cy) calc(var(--p, 0) * 1%), var(--line-2) calc(var(--p, 0) * 1%)); }
+.xs-range::-moz-range-track { height: 2px; background: var(--line-2); }
+.xs-range::-moz-range-progress { height: 2px; background: var(--grad); }
+.xs-range::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; margin-top: -11px; border-radius: 50%; background: var(--g-2); box-shadow: inset 0 0 0 2px var(--t-1), 0 0 0 6px rgba(var(--t-rgb), 0); transition: transform .25s var(--ease), background .2s, box-shadow .3s; }
+.xs-range::-moz-range-thumb { width: 24px; height: 24px; border: 0; border-radius: 50%; background: var(--g-2); box-shadow: inset 0 0 0 2px var(--t-1); }
+.xs-range:hover::-webkit-slider-thumb { box-shadow: inset 0 0 0 2px var(--t-1), 0 0 0 6px rgba(var(--t-rgb), .08); }
+.xs-range:active::-webkit-slider-thumb { background: var(--t-1); transform: scale(1.15); }
+.xs .xs-range:focus-visible { outline: none; }
+.xs-range:focus-visible::-webkit-slider-thumb { outline: 2px solid var(--cy); outline-offset: 4px; }
+.xs-range:focus-visible::-moz-range-thumb { outline: 2px solid var(--cy); outline-offset: 4px; }
+
+/* ---------- 6 Vergleichstabelle ----------
+   Breit: Kopfzeile bleibt unter der Seitenleiste stehen, die gewählte Spalte trägt Licht.
+   Schmal: erste Spalte bleibt, die Tarife wischt man seitlich, Spalte für Spalte. */
+.xs-cmp { position: relative; }
+.xs-cmp__jump { display: none; }
+.xs-cmp table { table-layout: fixed; font-size: .94rem; }
+.xs-cmp col.is-first { width: 23%; }
+.xs-cmp thead th { position: sticky; top: var(--top); z-index: 3; padding: 18px 14px 16px; vertical-align: bottom; background: var(--g-2); box-shadow: 0 1px 0 var(--line-2); }
+.xs-cmp thead th:first-child { padding-left: 0; }
+.xs-cmp tbody th, .xs-cmp tbody td { padding: 13px 14px; border-bottom: 1px solid var(--line); line-height: 1.35; }
+.xs-cmp tbody th { padding-left: 0; color: var(--t-2); font-weight: 400; }
+.xs-cmp tbody td { font-variant-numeric: tabular-nums; }
+.xs-cmp tbody tr.is-group th { padding-top: 34px; border-bottom-color: var(--line-2); font: 400 .72rem/1.4 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--t-3); }
+.xs-cmp td, .xs-cmp thead th { transition: background-color .35s, color .35s; }
+.xs-cmp .is-sel { background: rgba(var(--t-rgb), .045); }
+.xs-cmp thead th.is-sel { background: var(--g-3); box-shadow: 0 1px 0 var(--line-2), inset 0 2px 0 0 var(--cy); }
+.xs-cmp thead th.is-sel::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px; background: var(--grad); }
+.xs-cmp tbody tr:not(.is-group):hover th, .xs-cmp tbody tr:not(.is-group):hover td { background-color: rgba(var(--t-rgb), .03); }
+.xs-cmp tbody tr:not(.is-group):hover td.is-sel { background-color: rgba(var(--t-rgb), .07); }
+.xs-cmp .is-dim { color: var(--t-3); }
+/* Haken zeichnet sich, wenn die Zeile ins Bild kommt; Strich heißt „nicht enthalten“ */
+.xs-y, .xs-n { display: inline-block; width: 18px; height: 18px; vertical-align: -4px; }
+.xs-y svg { width: 18px; height: 18px; fill: none; stroke: var(--t-1); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.xs-y path { stroke-dasharray: 1; stroke-dashoffset: 0; }
+@media (scripting: enabled) { .xs tr[data-in] .xs-y path { stroke-dashoffset: 1; transition: stroke-dashoffset .5s var(--ease-io); transition-delay: calc(var(--c, 0) * 60ms + 80ms); } }
+@media (scripting: enabled) { .xs tr[data-in].is-in .xs-y path { stroke-dashoffset: 0; } }
+.xs-cmp .is-sel .xs-y svg { stroke: var(--cy); }
+.xs-y:empty { background: no-repeat center / 18px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18' fill='none' stroke='%23ECEAE4' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 9.6l3.6 3.6 7.4-8'/%3E%3C/svg%3E"); }
+.xs-n { position: relative; }
+.xs-n::before { content: ""; position: absolute; left: 4px; right: 4px; top: 50%; height: 1px; background: var(--t-3); }
+
+@media (max-width: 900px) {
+  .xs-cmp__jump {
+    position: sticky; top: var(--top); z-index: 4; display: flex; gap: 6px; margin: 0 calc(-1 * var(--pad)); padding: 10px var(--pad);
+    overflow-x: auto; scrollbar-width: none; background: rgba(31, 31, 33, .94); box-shadow: 0 1px 0 var(--line-2);
+  }
+  .xs-cmp__jump::-webkit-scrollbar { display: none; }
+  .xs-cmp__jump button { flex: none; min-height: 36px; padding: 0 14px; border-radius: 999px; box-shadow: inset 0 0 0 1px var(--line-2); color: var(--t-2); font: 500 .86rem/1 var(--f-text); transition: background .25s, color .25s; }
+  .xs-cmp__jump button[aria-pressed="true"] { background: var(--t-1); color: var(--g-0); box-shadow: none; }
+  .xs-cmp__scroll { margin: 0 calc(-1 * var(--pad)); padding-right: var(--pad); overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-left: var(--c1); scrollbar-width: none; -webkit-overflow-scrolling: touch; --c1: 43vw; --cn: 44vw; }
+  .xs-cmp__scroll::-webkit-scrollbar { display: none; }
+  .xs-cmp table { width: max-content; table-layout: auto; font-size: .9rem; }
+  .xs-cmp thead th { position: static; }
+  .xs-cmp thead th, .xs-cmp tbody td { width: var(--cn); min-width: var(--cn); max-width: var(--cn); scroll-snap-align: start; }
+  .xs-cmp thead th:first-child, .xs-cmp tbody th { position: sticky; left: 0; z-index: 2; width: var(--c1); min-width: var(--c1); max-width: var(--c1); padding-left: var(--pad); background: var(--g-2); scroll-snap-align: none; box-shadow: 1px 0 0 var(--line); }
+  .xs-cmp tbody tr.is-group th { background: var(--g-2); }
+  .xs-cmp tbody tr.is-group th:only-child, .xs-cmp tbody tr.is-group th[colspan] { position: sticky; left: 0; max-width: none; width: auto; box-shadow: none; }
+}
+
+/* ---------- 7 Fragen: klappen weich auf, jede hat ihre eigene Adresse ---------- */
+.xs-faq { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--gap); padding: var(--scene) var(--pad) 0; }
+.xs-faq__head { grid-column: 1 / span 4; align-self: start; position: sticky; top: calc(var(--top) + 32px); display: grid; gap: 18px; justify-items: start; }
+.xs-faq__title { font-size: clamp(2.2rem, 5vw, 5rem); line-height: .9; font-stretch: 62%; }
+.xs-faq__out { display: grid; gap: 12px; justify-items: start; margin-top: 10px; color: var(--t-2); font-size: .94rem; max-width: 30ch; }
+.xs-faq__list { grid-column: 5 / -1; border-top: 1px solid var(--line-2); }
+.xs-q { border-bottom: 1px solid var(--line); }
+.xs-q summary { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 28px; gap: 20px; align-items: center; padding: 24px 0; list-style: none; cursor: pointer; font: 600 clamp(1.2rem, 1.9vw, 1.8rem)/1.1 var(--f-display); font-stretch: 84%; letter-spacing: -.01em; transition: color .25s; }
+.xs-q summary::-webkit-details-marker { display: none; }
+.xs-q summary::before { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px; background: var(--grad); transform: scaleX(0); transform-origin: 0 50%; transition: transform .7s var(--ease); }
+.xs-q[open] summary::before { transform: scaleX(1); }
+@media (hover: hover) { .xs-q summary:hover::before { transform: scaleX(1); } }
+.xs-q summary i { position: relative; width: 28px; height: 28px; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--line-2); transition: transform .6s var(--spring), box-shadow .25s; }
+.xs-q summary i::before, .xs-q summary i::after { content: ""; position: absolute; left: 8px; right: 8px; top: 50%; height: 1px; background: var(--t-1); }
+.xs-q summary i::after { transform: rotate(90deg); transition: transform .5s var(--ease); }
+.xs-q[open] summary i { transform: rotate(180deg); box-shadow: inset 0 0 0 1px var(--t-2); }
+.xs-q[open] summary i::after { transform: rotate(0deg); }
+.xs-q__a { display: grid; gap: 14px; justify-items: start; padding: 2px 48px 28px 0; color: var(--t-2); max-width: 62ch; }
+.xs-q__link { font: 400 .7rem/1.4 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--t-3); transition: color .2s; }
+.xs-q__link:hover { color: var(--t-1); }
+@media (max-width: 860px) {
+  .xs-faq__head, .xs-faq__list { grid-column: 1 / -1; }
+  .xs-faq__head { position: static; }
+  .xs-q__a { padding-right: 0; }
+}
+
+/* ---------- 8 Ruhige Fassung ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .xs *, .xs *::before, .xs *::after { transition-duration: .01ms !important; transition-delay: 0s !important; animation-duration: .01ms !important; animation-delay: 0s !important; }
+  @media (scripting: enabled) { .xs [data-in] .xs-h2 { clip-path: none; transform: none; } }
+  @media (scripting: enabled) { .xs [data-in] .xs-label::before { transform: none; } }
+  @media (scripting: enabled) { .xs tr[data-in] .xs-y path { stroke-dashoffset: 0; } }
+}
+
+/* ---------- 9 Druck: schwarz auf weiß, nur was auf Papier Sinn ergibt ---------- */
+@media print {
+  header.nav, .site-footer, .sc, .xs::before, .xs-cmp__jump, .xs-toast, [data-noprint] { display: none !important; }
+  html, body { background: #fff !important; }
+  .xs { --t-1: #111; --t-2: #333; --t-3: #555; --t-rgb: 0, 0, 0; --g-0: #fff; --g-1: #fff; --g-2: #fff; --g-3: #fff; --g-4: #f3f3f3; --cy: #111; color: #111; font-size: 10.5pt; overflow: visible; }
+  .xs-scene, .xs-faq { padding: 18pt 0 0; }
+  .xs-h2 { font-size: 22pt; clip-path: none !important; transform: none !important; }
+  .xs-cmp thead th { position: static; background: #fff; }
+  .xs-cmp .is-sel { background: #f1f1f1 !important; }
+  .xs-cmp tbody tr { break-inside: avoid; }
+  .xs-y svg { stroke: #111 !important; } .xs-y path { stroke-dashoffset: 0 !important; }
+  .xs-q__a { display: grid !important; }
+}

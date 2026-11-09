@@ -16,19 +16,23 @@
   <meta property="og:image:alt" content="Xyntal: Große Ideen beginnen mit den richtigen Menschen.">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="fonts/archivo-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/plexsans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="fonts/fonts.css?v=32">
   <link rel="stylesheet" href="style.css?v=38">
   <link rel="stylesheet" href="cosmos.css?v=43">
-  <script src="i18n-en.js?v=122" defer></script>
+  <script src="i18n-en.js?v=123" defer></script>
   <script src="i18n.js?v=31" defer></script>
   <script src="cosmos.js?v=40" defer></script>
   <link rel="stylesheet" href="/backdrop.css?v=7">
   <link rel="stylesheet" href="/site-footer.css?v=4">
   <link rel="stylesheet" href="/site-header.css?v=11">
   <link rel="stylesheet" href="/site-search.css?v=2">
-<link rel="stylesheet" href="/preise.css?v=3">
+  <link rel="stylesheet" href="/tarife.css?v=1">
+  <link rel="stylesheet" href="/preise.css?v=4">
 </head>
 <body>
+<a class="xs-skip" href="#inhalt">Zum Inhalt springen</a>
 <div class="xy-bg" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i><span class="xy-grid"></span><span class="xy-stars"></span><span class="xy-stars"></span></div>
 
 <header class="nav">
@@ -48,59 +52,188 @@
   </div>
 </header>
 
-<main>
-  <section class="page-head" id="top">
-    <div class="wrap">
-      <div class="eyebrow"><b>xyntal</b> / preise</div>
-      <h1>Tarife, die mit dir <em>wachsen.</em></h1>
-      <p>Fang kostenlos an und wechsle erst, wenn dein Team oder deine Projekte mehr brauchen. In der Beta kostet Xyntal nichts – die Preise unten können sich bis zum Start noch ändern.</p>
+<main class="xs xp" id="inhalt">
+
+  <!-- ============ EINSTIEG ============ -->
+  <section class="xp-hero" id="top" aria-labelledby="hero-title">
+    <p class="xs-mono xs-label"><span><b>xyntal</b> / preise</span></p>
+    <h1 class="xp-hero__h" id="hero-title"><span class="xp-hero__a">Fang kostenlos an.</span> <span class="xp-hero__b thin">Wechsle, wenn es eng wird.</span></h1>
+    <div class="xp-hero__foot">
+      <p class="xp-hero__p">In der Beta kostet Xyntal nichts. Fang mit Free an und wechsle erst, wenn dein Team oder deine Projekte mehr brauchen.</p>
+      <p class="xs-note"><span class="xs-mono">Beta</span><span>Die Preise unten können sich bis zum Start noch ändern.</span></p>
     </div>
   </section>
 
-  <section class="page-body">
-    <div class="wrap pr">
-      <div class="pr-bar">
-        <div class="pr-toggle" role="group" aria-label="Abrechnung">
-          <button type="button" data-cycle="month" aria-pressed="true">Monatlich</button>
-          <button type="button" data-cycle="year" aria-pressed="false">Jährlich <span>2 Monate geschenkt</span></button>
+  <!-- ============ 01 · TARIFE: die Treppe ============ -->
+  <section class="xs-scene xp-find" id="tarife" aria-labelledby="find-title" data-in>
+    <header class="xs-head">
+      <p class="xs-mono xs-label">01 / Tarife</p>
+      <h2 class="xs-h2" id="find-title">Welcher passt?</h2>
+      <p class="xs-lead">Zwei Angaben, dann leuchtet deine Stufe. Du kannst auch jede andere antippen und nachsehen, was drin ist.</p>
+    </header>
+
+    <form class="xp-ask" data-finder>
+      <div class="xp-ask__people">
+        <label class="xs-mono" for="xp-people">Wie viele seid ihr?</label>
+        <p class="xp-ask__n" aria-hidden="true"><b class="xs-num" data-people-n data-no-i18n>3</b><span data-people-unit>Leute</span></p>
+        <input class="xs-range" id="xp-people" type="range" min="0" max="54" step="1" value="2" data-people>
+      </div>
+      <div class="xp-ask__ai">
+        <span class="xs-mono" id="xp-ai-l">Brauchst du KI in der App?</span>
+        <button type="button" class="xs-switch" role="switch" aria-checked="false" aria-labelledby="xp-ai-l" data-ai><span class="xs-switch__track" aria-hidden="true"></span><span data-ai-text>Nein</span></button>
+      </div>
+      <div class="xp-ask__cycle">
+        <span class="xs-mono" id="xp-cycle-l">Abrechnung</span>
+        <div class="xs-seg" role="group" aria-labelledby="xp-cycle-l" data-cycle>
+          <button type="button" data-value="month" aria-pressed="true">Monatlich</button>
+          <button type="button" data-value="year" aria-pressed="false">Jährlich <small>2 Monate geschenkt</small></button>
         </div>
-        <p class="pr-hint">Alle Preise in Euro pro Konto. <a href="#fragen">Fragen zu den Tarifen</a></p>
       </div>
+    </form>
 
-      <a class="pr-company" href="/unternehmen"><b>Ihr seid eine Firma mit 50 oder mehr Leuten?</b><span>Festpreis statt Kosten pro Kopf, Ersparnis-Rechner und 30 Tage kostenlos testen</span><i aria-hidden="true">→</i></a>
+    <div class="xp-stage" data-stage>
+      <ol class="xp-stairs is-loading" data-stairs aria-label="Tarife, von klein nach groß" style="--n:7">
+        <li class="xp-step" style="--i:0"><span class="xp-step__riser"></span></li>
+        <li class="xp-step" style="--i:1"><span class="xp-step__riser"></span></li>
+        <li class="xp-step" style="--i:2"><span class="xp-step__riser"></span></li>
+        <li class="xp-step" style="--i:3"><span class="xp-step__riser"></span></li>
+        <li class="xp-step" style="--i:4"><span class="xp-step__riser"></span></li>
+        <li class="xp-step" style="--i:5"><span class="xp-step__riser"></span></li>
+        <li class="xp-step" style="--i:6"><span class="xp-step__riser"></span></li>
+      </ol>
+      <span class="xp-you" data-you aria-hidden="true" hidden><i></i><b class="xs-mono" data-you-text>du</b></span>
+      <p class="xp-stage__msg" data-plans-status role="status">Tarife werden geladen …</p>
+    </div>
 
-      <div class="pr-grid" data-plans aria-live="polite">
-        <p class="pr-loading" data-plans-status>Tarife werden geladen …</p>
+    <article class="xp-plan is-loading" data-plan aria-labelledby="xp-plan-name">
+      <p class="sr-only" aria-live="polite" data-plan-sr></p>
+      <div class="xp-plan__top">
+        <div class="xp-plan__id">
+          <p class="xs-mono xp-plan__tag"><i aria-hidden="true"></i><span data-plan-tag>Passt zu dir</span></p>
+          <h3 class="xp-plan__name" id="xp-plan-name" data-plan-name data-no-i18n>&nbsp;</h3>
+        </div>
+        <div class="xp-plan__cost">
+          <p class="xp-plan__price" aria-hidden="true"><span data-plan-price></span></p>
+          <p class="xp-plan__per" data-plan-per>&nbsp;</p>
+        </div>
       </div>
+      <div class="xp-plan__mid">
+        <div class="xp-plan__say">
+          <p class="xp-plan__why" data-plan-why>&nbsp;</p>
+          <p class="xp-plan__blurb" data-plan-blurb>&nbsp;</p>
+          <div class="xp-plan__cta" data-plan-cta></div>
+        </div>
+        <div class="xp-months" data-months hidden>
+          <ol class="xp-months__cells" aria-hidden="true" data-months-cells></ol>
+          <p class="xs-mono xp-months__say" data-months-say></p>
+        </div>
+      </div>
+      <ul class="xp-plan__feat" data-plan-feat></ul>
+    </article>
 
-      <section class="pr-compare" aria-labelledby="vergleich" data-compare hidden>
-        <h2 id="vergleich">Im Vergleich</h2>
-        <div class="pr-table-wrap"><table class="pr-table" data-compare-table></table></div>
-      </section>
+    <p class="xp-fine">Alle Preise in Euro pro Konto. <a href="#fragen">Fragen zu den Tarifen</a></p>
+  </section>
 
-      <section class="pr-credit" id="guthaben" aria-labelledby="guthaben-title" data-credit hidden>
-        <h2 id="guthaben-title">KI-Guthaben</h2>
-        <p class="pr-credit-text">Ab Plus sind jeden Monat KI-Anfragen an Claude inklusive. Brauchst du mehr, lädst du Guthaben auf – es verfällt nie und wird nie automatisch abgebucht. Deinen Verbrauch siehst du jederzeit unter Profil → Tarif.</p>
-        <div class="pr-packs" data-packs></div>
-        <div class="pr-credit-act" data-credit-cta></div>
-      </section>
+  <!-- ============ 02 · KI-GUTHABEN ============ -->
+  <section class="xs-scene xp-ai" id="guthaben" aria-labelledby="guthaben-title" data-credit data-in>
+    <header class="xs-head">
+      <p class="xs-mono xs-label">02 / KI-Guthaben</p>
+      <h2 class="xs-h2" id="guthaben-title">Leer heißt leer.</h2>
+      <p class="xs-lead">Ab Plus sind jeden Monat KI-Anfragen an Claude inklusive. Brauchst du mehr, lädst du Guthaben auf. Deinen Verbrauch siehst du jederzeit unter Profil → Tarif.</p>
+    </header>
 
-      <section class="pr-faq" id="fragen" aria-labelledby="fragen-title">
-        <h2 id="fragen-title">Häufige Fragen</h2>
-        <dl>
-          <div><dt>Was kostet Xyntal in der Beta?</dt><dd>Nichts. Wer in der Beta dabei ist, nutzt Xyntal kostenlos. Bezahlte Tarife sind für später gedacht – und für alle, die schon jetzt mehr Platz, KI oder Automationen brauchen.</dd></div>
-          <div><dt>Welcher Tarif passt zu mir?</dt><dd>Allein oder zu fünft ohne KI reicht Free. Mit KI in der App oder mehr als fünf Leuten pro Arbeitsbereich ist Plus der Einstieg, ab eigenen KI-Agenten oder Teams bis 25 Leute Pro. Bis 100 Leute passt Ultra, bis 300 Business. Unsicher? Frag unten rechts den Xyntal-Assistenten.</dd></div>
-          <div><dt>Was heißt „KI-Anfragen inklusive“?</dt><dd>Jeder bezahlte Tarif enthält jeden Monat ein Kontingent an Anfragen an die Xyntal KI in der App. Die Zahl ist ein Durchschnitt – lange Anfragen zählen mehr, kurze weniger. Ist es aufgebraucht, kannst du Guthaben aufladen. Im Free-Tarif gibt es keine KI – bis auf einmal das Profil per KI ausfüllen.</dd></div>
-          <div><dt>Kann ich jederzeit wechseln oder kündigen?</dt><dd>Ja. Tarif wechseln und kündigen kannst du jederzeit in der App oder auf der Website unter Profil → Tarif.</dd></div>
-          <div><dt>Wer braucht Enterprise?</dt><dd>Firmen ab 300 Leuten und alle, die einen Jahresvertrag auf Rechnung mit Bestellnummer brauchen. Das läuft nicht über die Kasse, sondern persönlich – mehr dazu unter <a href="/unternehmen">Xyntal für Firmen</a>.</dd></div>
-        </dl>
-      </section>
+    <div class="xp-tank">
+      <div class="xp-tank__row" data-tank="inc">
+        <div class="xp-tank__what">
+          <p class="xs-mono" id="xp-inc-l">Im Tarif enthalten</p>
+          <div class="xp-chips" role="group" aria-labelledby="xp-inc-l" data-ai-plans></div>
+        </div>
+        <div class="xp-tank__meter">
+          <div class="xp-tank__bar" aria-hidden="true"><i data-bar="inc"></i></div>
+          <p class="xp-tank__n"><span class="xs-mono" data-about>etwa</span><b class="xs-num" data-n="inc" data-no-i18n>–</b><span data-unit="inc">KI-Anfragen im Monat</span></p>
+        </div>
+        <p class="xp-tank__rule"><i class="xp-ico xp-ico--loop" aria-hidden="true"></i><span>Füllt sich jeden Monat neu.</span></p>
+      </div>
+      <div class="xp-tank__row" data-tank="top">
+        <div class="xp-tank__what">
+          <p class="xs-mono" id="xp-top-l">Selbst aufgeladen</p>
+          <div class="xp-chips" role="group" aria-labelledby="xp-top-l" data-packs></div>
+        </div>
+        <div class="xp-tank__meter">
+          <div class="xp-tank__bar" aria-hidden="true"><i data-bar="top"></i></div>
+          <p class="xp-tank__n"><span class="xs-mono" data-about>etwa</span><b class="xs-num" data-n="top" data-no-i18n>–</b><span data-unit="top">KI-Anfragen</span><em class="xs-mono" data-bonus hidden></em></p>
+        </div>
+        <p class="xp-tank__rule"><i class="xp-ico xp-ico--keep" aria-hidden="true"></i><span>Bleibt, bis du es verbrauchst.</span></p>
+      </div>
+      <div class="xp-tank__time">
+        <button type="button" class="xs-pill xs-pill--line xs-pill--sm" data-month>Einen Monat weiterdrehen <i aria-hidden="true">→</i></button>
+        <p class="xs-mono" aria-live="polite"><span data-month-n>Monat 1</span></p>
+      </div>
+    </div>
 
-      <section class="pr-cta">
-        <h2>Erst mal ausprobieren?</h2>
-        <p>Bewirb dich für die Beta oder klick dich durch die App-Demo – beides kostenlos und ohne Zahlungsdaten.</p>
-        <div class="pr-cta-act"><a class="btn" href="/beta">Für die Beta bewerben</a><a class="btn btn-ghost" href="/demo">App-Demo ansehen</a></div>
-      </section>
+    <ul class="xp-never">
+      <li><span data-strike>Automatische Abbuchung</span><i aria-hidden="true"></i><b class="xs-mono">gibt es nicht</b></li>
+      <li><span data-strike>Verfallsdatum fürs Guthaben</span><i aria-hidden="true"></i><b class="xs-mono">gibt es nicht</b></li>
+    </ul>
+    <div class="xp-ai__cta" data-credit-cta></div>
+  </section>
+
+  <!-- ============ 03 · VERGLEICH ============ -->
+  <section class="xs-scene xp-cmp" id="vergleich" aria-labelledby="vergleich-title" data-compare data-in>
+    <header class="xs-head">
+      <p class="xs-mono xs-label">03 / Vergleich</p>
+      <h2 class="xs-h2" id="vergleich-title">Zeile für Zeile.</h2>
+      <p class="xs-lead">Alle Grenzen nebeneinander. Die Spalte deiner Stufe ist hervorgehoben; ein Klick auf einen Namen wechselt sie.</p>
+    </header>
+    <div class="xs-cmp is-loading" data-cmp>
+      <div class="xs-cmp__jump" role="group" aria-label="Tarif zeigen" data-noprint></div>
+      <div class="xs-cmp__scroll"><table data-compare-table></table></div>
+    </div>
+  </section>
+
+  <!-- ============ DIE KANTE: dahinter liegt die Seite für Firmen ============ -->
+  <a class="xp-edge" href="/unternehmen" data-in>
+    <div class="xp-edge__say">
+      <p class="xs-mono xs-label">Für Firmen</p>
+      <p class="xp-edge__h">Ihr seid 50 oder mehr?</p>
+      <p class="xp-edge__p">Dann zahlt ihr einen Festpreis statt Kosten pro Kopf. Drüben wartet ein Ersparnis-Rechner, und testen könnt ihr 30 Tage kostenlos.</p>
+      <span class="xs-tlink">Zur Seite für Firmen <i aria-hidden="true">→</i></span>
+    </div>
+    <div class="xp-edge__peek" aria-hidden="true">
+      <svg class="xp-edge__cut" viewBox="0 0 100 100" preserveAspectRatio="none"><defs><linearGradient id="xp-eg" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#B36BFF"/><stop offset=".5" stop-color="#3A8AFF"/><stop offset="1" stop-color="#3FE0F0"/></linearGradient></defs><line x1="0" y1="100" x2="14" y2="0" stroke="url(#xp-eg)" vector-effect="non-scaling-stroke" stroke-width="1.5"/></svg>
+      <div class="xp-edge__page">
+        <p class="xs-mono">xyntal / für unternehmen</p>
+        <p class="xp-edge__big"><span>Ein Werkzeug</span> <span class="thin">statt fünf.</span></p>
+        <svg class="xp-edge__chart" viewBox="0 0 400 120" preserveAspectRatio="none"><defs><linearGradient id="xp-el" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="400" y2="0"><stop offset="0" stop-color="#B36BFF"/><stop offset=".5" stop-color="#3A8AFF"/><stop offset="1" stop-color="#3FE0F0"/></linearGradient></defs>
+          <path d="M0 118 L400 6" fill="none" stroke="rgba(236,234,228,.45)" stroke-width="1.5" vector-effect="non-scaling-stroke" pathLength="1"/>
+          <path d="M0 104 H400" fill="none" stroke="url(#xp-el)" stroke-width="2" vector-effect="non-scaling-stroke" pathLength="1"/>
+        </svg>
+        <p class="xp-edge__key xs-mono"><span>pro Kopf</span><span>Festpreis</span></p>
+      </div>
+    </div>
+  </a>
+
+  <!-- ============ FRAGEN ============ -->
+  <section class="xs-faq" id="fragen" aria-labelledby="fragen-title" data-faq>
+    <div class="xs-faq__head">
+      <p class="xs-mono xs-label">04 / Fragen</p>
+      <h2 class="xs-faq__title" id="fragen-title">Häufige Fragen</h2>
+      <div class="xs-faq__out">
+        <p>Deine Frage ist nicht dabei? Der Xyntal-Assistent kennt die Tarife und antwortet sofort.</p>
+        <button type="button" class="xs-tlink" data-open-chat>Den Assistenten fragen</button>
+      </div>
+    </div>
+    <div class="xs-faq__list">
+      <details class="xs-q" id="frage-beta"><summary>Was kostet Xyntal in der Beta?<i aria-hidden="true"></i></summary>
+        <div class="xs-q__a"><p>Nichts. Wer in der Beta dabei ist, nutzt Xyntal kostenlos. Bezahlte Tarife sind für später gedacht – und für alle, die schon jetzt mehr Platz, KI oder Automationen brauchen.</p><a class="xs-q__link" href="#frage-beta">Link zu dieser Frage</a></div></details>
+      <details class="xs-q" id="frage-welcher"><summary>Welcher Tarif passt zu mir?<i aria-hidden="true"></i></summary>
+        <div class="xs-q__a"><p>Allein oder zu fünft ohne KI reicht Free. Mit KI in der App oder mehr als fünf Leuten pro Arbeitsbereich ist Plus der Einstieg, ab eigenen KI-Agenten oder Teams bis 25 Leute Pro. Bis 100 Leute passt Ultra, bis 300 Business. Unsicher? Frag unten rechts den Xyntal-Assistenten.</p><a class="xs-q__link" href="#frage-welcher">Link zu dieser Frage</a></div></details>
+      <details class="xs-q" id="frage-ki"><summary>Was heißt „KI-Anfragen inklusive“?<i aria-hidden="true"></i></summary>
+        <div class="xs-q__a"><p>Jeder bezahlte Tarif enthält jeden Monat ein Kontingent an Anfragen an die Xyntal KI in der App. Die Zahl ist ein Durchschnitt – lange Anfragen zählen mehr, kurze weniger. Ist es aufgebraucht, kannst du Guthaben aufladen. Im Free-Tarif gibt es keine KI – bis auf einmal das Profil per KI ausfüllen.</p><a class="xs-q__link" href="#frage-ki">Link zu dieser Frage</a></div></details>
+      <details class="xs-q" id="frage-wechseln"><summary>Kann ich jederzeit wechseln oder kündigen?<i aria-hidden="true"></i></summary>
+        <div class="xs-q__a"><p>Ja. Tarif wechseln und kündigen kannst du jederzeit in der App oder auf der Website unter Profil → Tarif.</p><a class="xs-q__link" href="#frage-wechseln">Link zu dieser Frage</a></div></details>
+      <details class="xs-q" id="frage-enterprise"><summary>Wer braucht Enterprise?<i aria-hidden="true"></i></summary>
+        <div class="xs-q__a"><p>Firmen ab 300 Leuten und alle, die einen Jahresvertrag auf Rechnung mit Bestellnummer brauchen. Das läuft nicht über die Kasse, sondern persönlich – mehr dazu unter <a href="/unternehmen">Xyntal für Firmen</a>.</p><a class="xs-q__link" href="#frage-enterprise">Link zu dieser Frage</a></div></details>
     </div>
   </section>
 </main>
@@ -175,7 +308,8 @@
 <script src="avatars.js?v=35"></script>
 <script src="notifications.js?v=35"></script>
 <script src="effects.js?v=40"></script>
-<script src="/pages/preise.js?v=3" defer></script>
+<script src="/pages/tarife-kit.js?v=1" defer></script>
+<script src="/pages/preise.js?v=4" defer></script>
 <script src="/account-menu.js?v=22" defer></script>
 <script src="/site-search.js?v=2" defer></script>
 <script src="/site-chat.js?v=6" defer></script>
