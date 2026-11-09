@@ -46,7 +46,8 @@
 .nav .nav-links a.nav-main[aria-current="page"]::after {
   content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: var(--nh-grad);
 }
-.nav .nav-links .nav-main:first-child { margin-left: auto; }
+/* :first-of-type statt :first-child: bei Angemeldeten steht die Glocke (notifications.js) davor */
+.nav .nav-links a.nav-main:first-of-type { margin-left: auto; }
 .nav .nav-links .nav-end { margin-right: auto; }
 /* Pillen-Knopf wie auf der Startseite: helle Fläche, das Farblicht liegt als Linie darunter */
 .nav .nav-links .nav-cta {
@@ -73,6 +74,17 @@
   .nav .nav-links .nav-main + .nav-main { margin-left: clamp(18px, 2.4vw, 40px); }
   .nav .nav-links .nav-cta { order: 7; margin-left: 22px; }
   .nav .wrap > .site-search.site-search { margin-left: 0; }
+  /* Glocke: rechts neben der Lupe und rund wie sie, nicht vorn am Logo */
+  .nav .nav-links .notifications { order: 6; flex: none; margin-left: 10px; }
+  .nav .nav-links .notifications summary {
+    position: relative; justify-content: center; gap: 0; width: 32px; height: 32px; padding: 0; box-sizing: border-box;
+    border-radius: 50%; background: rgba(236, 234, 228, .08); color: var(--nh-1); transition: background-color .3s ease;
+  }
+  .nav .nav-links .notifications summary:hover, .nav .nav-links .notifications[open] summary { background: rgba(236, 234, 228, .18); }
+  .nav .nav-links .notifications summary:focus-visible { outline: 2px solid #3FE0F0; outline-offset: 4px; }
+  .nav .nav-links .notifications summary svg { width: 18px; height: 18px; }
+  .nav .nav-links .notifications .badge { position: absolute; top: -5px; right: -7px; margin: 0; min-width: 16px; height: 16px; padding: 0 4px; font-size: 10px; }
+  .nav .nav-links .notification-panel { left: auto; right: 0; }
 }
 /* Login steckt im Konto-Symbol; als Text nur im ausgeklappten Menü */
 .nav .nav-links:not(.open) [data-account] { display: none; }
@@ -103,7 +115,7 @@
   .nav .nav-links.open a { margin: 0; padding: 14px 0; font-size: 17px; color: var(--nh-1); border-bottom: 1px solid var(--nh-line); }
   .nav .nav-links.open a.nav-main[aria-current="page"]::after { display: none; }
   .nav .nav-links.open .nav-main, .nav .nav-links.open .hide-sm { display: block; }
-  .nav .nav-links.open .nav-main:first-child, .nav .nav-links.open .nav-end { margin: 0; }
+  .nav .nav-links.open a.nav-main:first-of-type, .nav .nav-links.open .nav-end { margin: 0; }
   .nav .nav-links.open .nav-cta { margin: 20px 0 0; padding: 1em 1.4em; justify-content: center; border-bottom: 0; font-size: 15px; color: #151516 !important; }
 }
 @media (max-width: 640px) { .nav .nav-links:not(.open) .nav-cta { display: none; } }
