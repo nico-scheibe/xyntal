@@ -5,7 +5,7 @@
    schreiben nur transform/opacity (Ausnahmen sind im Code benannt).
 
    Inhalt:  1 Helfer · 2 Text zerlegen · 3 Intro · 4 Scrollen · 5 Szenen
-            6 Rechenbeispiel · 7 Cursor, Magnet, Lichtreflex · 8 Start
+            6 Rechenbeispiel · 7 Magnet, Lichtreflex · 8 Start
    ========================================================================== */
 (function () {
   'use strict';
@@ -151,28 +151,31 @@
     var steps = $$('[data-step]', pin), shots = $$('[data-shot]', pin), win = $('[data-win]', pin), cam = $('[data-cam]', pin);
     var focus = $('[data-focus]', pin), focusLabel = $('[data-focus-label]', pin), now = $('[data-pin-now]', pin), bar = $('[data-pin-bar]', pin);
     // Kamera je Schritt: Mittelpunkt (Anteil am Bild), Zoom, welches Bild, optionaler Rahmen (x, y, b, h als Anteil)
+    // Die Koordinaten gehören zu den Screens aus App-Version 0.2.19. Neue Screens: Werte hier nachziehen.
+    var RATIO = [1800 / 2880, 2800 / 2880];   // Höhe/Breite je Bild (Entdecken, Profil)
     var CAMS = {
       wide: [
         { shot: 0, cx: .50, cy: .50, s: 1.00 },
-        { shot: 0, cx: .29, cy: .70, s: 2.25, f: [.1775, .664, .1785, .0304], label: '88 % Passung' },
-        { shot: 1, cx: .56, cy: .42, s: 1.3, f: [.317, .478, .51, .128], label: 'Der Grund' },
-        { shot: 1, cx: .56, cy: .80, s: 1.38, f: [.317, .626, .51, .36], label: 'Jeder Bereich einzeln' }
+        { shot: 0, cx: .29, cy: .69, s: 2.25, f: [.175, .650, .185, .042], label: '82 % Passung' },
+        { shot: 1, cx: .575, cy: .56, s: 1.22, f: [.196, .460, .754, .215], label: 'Der Grund' },
+        { shot: 1, cx: .575, cy: .765, s: 1.22, f: [.196, .686, .754, .126], label: 'Jeder Bereich einzeln' }
       ],
       small: [
         { shot: 0, cx: .33, cy: .33, s: 2.5 },
-        { shot: 0, cx: .27, cy: .71, s: 3.3, f: [.1775, .664, .1785, .0304], label: '88 % Passung' },
-        { shot: 1, cx: .50, cy: .43, s: 2.5, f: [.317, .478, .51, .128], label: 'Der Grund' },
-        { shot: 1, cx: .49, cy: .80, s: 2.5, f: [.317, .626, .51, .36], label: 'Jeder Bereich einzeln' }
+        { shot: 0, cx: .27, cy: .70, s: 3.3, f: [.175, .650, .185, .042], label: '82 % Passung' },
+        { shot: 1, cx: .41, cy: .53, s: 2.5, f: [.196, .460, .754, .215], label: 'Der Grund' },
+        { shot: 1, cx: .385, cy: .755, s: 2.5, f: [.196, .686, .754, .126], label: 'Jeder Bereich einzeln' }
       ]
     };
-    var W = 1, H = 1, IH = 1, cur = null, step = -1, tilt = { x: 0, y: 0, tx: 0, ty: 0 };
-    function measure() { W = win.clientWidth; H = win.clientHeight; IH = W * 0.625; cur = null; }
+    var W = 1, H = 1, cur = null, step = -1, tilt = { x: 0, y: 0, tx: 0, ty: 0 };
+    function measure() { W = win.clientWidth; H = win.clientHeight; cur = null; }
     measure(); resizers.push(measure);
 
     function target(i, local) {
       var c = (mqSmall.matches ? CAMS.small : CAMS.wide)[i];
+      var IH = W * RATIO[c.shot];
       var s = Math.max(c.s * (1 + local * 0.035), H / IH);                 // kleine Fahrt innerhalb des Schritts
-      return { s: s, x: clamp(W / 2 - c.cx * W * s, W - W * s, 0), y: clamp(H / 2 - c.cy * IH * s, H - IH * s, 0), c: c };
+      return { ih: IH, s: s, x: clamp(W / 2 - c.cx * W * s, W - W * s, 0), y: clamp(H / 2 - c.cy * IH * s, H - IH * s, 0), c: c };
     }
     if (fine) pin.addEventListener('pointermove', function (e) { tilt.tx = e.clientX / vw - .5; tilt.ty = e.clientY / vh - .5; }, { passive: true });
 
@@ -195,9 +198,9 @@
       cur.s = lerp(cur.s, t.s, .085); cur.x = lerp(cur.x, t.x, .085); cur.y = lerp(cur.y, t.y, .085);
       cam.style.transform = 'translate3d(' + cur.x.toFixed(2) + 'px,' + cur.y.toFixed(2) + 'px,0) scale(' + cur.s.toFixed(4) + ')';
       if (t.c.f) {   // Rahmen folgt dem Bild (Breite/Höhe ändern das Layout nur dieses einen Elements)
-        var fx = cur.x + t.c.f[0] * W * cur.s, fy = cur.y + t.c.f[1] * IH * cur.s;
+        var fx = cur.x + t.c.f[0] * W * cur.s, fy = cur.y + t.c.f[1] * t.ih * cur.s;
         focus.style.transform = 'translate3d(' + fx.toFixed(1) + 'px,' + fy.toFixed(1) + 'px,0)';
-        focus.style.width = (t.c.f[2] * W * cur.s).toFixed(1) + 'px'; focus.style.height = (t.c.f[3] * IH * cur.s).toFixed(1) + 'px';
+        focus.style.width = (t.c.f[2] * W * cur.s).toFixed(1) + 'px'; focus.style.height = (t.c.f[3] * t.ih * cur.s).toFixed(1) + 'px';
       }
       if (fine && !mqSmall.matches) {   // Fenster neigt sich leicht zur Maus
         tilt.x = lerp(tilt.x, tilt.tx, .06); tilt.y = lerp(tilt.y, tilt.ty, .06);
@@ -336,7 +339,7 @@
       var id = 'dim-' + d[0];
       name.appendChild(el('i')); name.id = id + '-l';
       var input = el('input'); input.type = 'range'; input.min = 0; input.max = 100; input.step = 1; input.value = d[2]; input.id = id;
-      input.setAttribute('aria-labelledby', id + '-l'); input.setAttribute('data-cursor', 'drag');
+      input.setAttribute('aria-labelledby', id + '-l');
       input.style.setProperty('--p', d[2] + '%');
       input.addEventListener('input', function () { v.textContent = input.value; input.style.setProperty('--p', input.value + '%'); update(); });
       row.appendChild(name); row.appendChild(w); row.appendChild(input); row.appendChild(v);
@@ -372,33 +375,9 @@
     });
   })();
 
-  // ---------- 7 Cursor, Magnet, Lichtreflex (nur mit Maus) ----------
+  // ---------- 7 Magnet, Lichtreflex (nur mit Maus) ----------
   (function () {
     if (!fine || calm) return;
-    var cur = $('[data-cur]'), dot = $('.cur__dot', cur), ring = $('.cur__ring', cur), label = $('.cur__label', cur);
-    var mx = vw / 2, my = vh / 2, rx = mx, ry = my, rs = 1, ts = 1, seen = false;
-    root.classList.add('has-cur'); cur.classList.add('is-hidden');
-    window.addEventListener('pointermove', function (e) {
-      if (e.pointerType === 'touch') return;
-      mx = e.clientX; my = e.clientY;
-      if (!seen) { seen = true; rx = mx; ry = my; cur.classList.remove('is-hidden'); }
-      var t = e.target.closest ? e.target : null; if (!t) return;
-      var drag = t.closest('[data-cursor="drag"]'), link = !drag && t.closest('a, button, summary, label, .row'), light = !link && !drag && t.closest('[data-hero]');
-      cur.classList.toggle('is-drag', !!drag); cur.classList.toggle('is-link', !!link); cur.classList.toggle('is-light', !!light);
-      label.textContent = drag ? 'ziehen' : '';
-      ts = drag ? 1.9 : link ? 1.55 : light ? 3.4 : 1;
-    }, { passive: true });
-    window.addEventListener('pointerdown', function () { cur.classList.add('is-down'); });
-    window.addEventListener('pointerup', function () { cur.classList.remove('is-down'); });
-    document.addEventListener('mouseleave', function () { cur.classList.add('is-hidden'); });
-    document.addEventListener('mouseenter', function () { cur.classList.remove('is-hidden'); });
-    tickers.push(function () {
-      rx = lerp(rx, mx, .2); ry = lerp(ry, my, .2); rs = lerp(rs, ts, .16);
-      dot.style.transform = 'translate3d(' + mx + 'px,' + my + 'px,0)';
-      ring.style.transform = 'translate3d(' + rx.toFixed(1) + 'px,' + ry.toFixed(1) + 'px,0) scale(' + rs.toFixed(3) + ')';
-      label.style.transform = 'translate3d(' + rx.toFixed(1) + 'px,' + ry.toFixed(1) + 'px,0) translate(-50%,-50%)';
-    });
-
     // Magnet: der Knopf kommt der Maus ein Stück entgegen.
     $$('[data-magnet]').forEach(function (b) {
       b.addEventListener('pointermove', function (e) {
@@ -409,7 +388,7 @@
       b.addEventListener('pointerleave', function () { b.style.transition = 'transform .7s cubic-bezier(.2,.8,.2,1), background .3s'; b.style.transform = ''; });
     });
 
-    // Lichtreflex auf den App-Fenstern: der Cursor ist die Lichtquelle.
+    // Lichtreflex auf den App-Fenstern: die Maus ist die Lichtquelle.
     $$('.win').forEach(function (w) {
       var g = $('.win__glare', w); if (!g) return;
       w.addEventListener('pointermove', function (e) { var r = w.getBoundingClientRect(); g.style.transform = 'translate3d(' + (e.clientX - r.left).toFixed(0) + 'px,' + (e.clientY - r.top).toFixed(0) + 'px,0)'; w.classList.add('is-lit'); }, { passive: true });
