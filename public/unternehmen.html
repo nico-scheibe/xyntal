@@ -16,20 +16,23 @@
   <meta property="og:image:alt" content="Xyntal: Große Ideen beginnen mit den richtigen Menschen.">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="fonts/archivo-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/plexsans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="fonts/fonts.css?v=32">
   <link rel="stylesheet" href="style.css?v=38">
   <link rel="stylesheet" href="cosmos.css?v=43">
-  <script src="i18n-en.js?v=122" defer></script>
+  <script src="i18n-en.js?v=123" defer></script>
   <script src="i18n.js?v=31" defer></script>
   <script src="cosmos.js?v=40" defer></script>
   <link rel="stylesheet" href="/backdrop.css?v=7">
   <link rel="stylesheet" href="/site-footer.css?v=4">
   <link rel="stylesheet" href="/site-header.css?v=11">
   <link rel="stylesheet" href="/site-search.css?v=2">
-<link rel="stylesheet" href="/preise.css?v=3">
-<link rel="stylesheet" href="/unternehmen.css?v=3">
+  <link rel="stylesheet" href="/tarife.css?v=1">
+  <link rel="stylesheet" href="/unternehmen.css?v=4">
 </head>
 <body>
+<a class="xs-skip" href="#inhalt">Zum Inhalt springen</a>
 <div class="xy-bg" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i><span class="xy-grid"></span><span class="xy-stars"></span><span class="xy-stars"></span></div>
 
 <header class="nav">
@@ -49,180 +52,382 @@
   </div>
 </header>
 
-<main>
-  <section class="page-head" id="top">
-    <div class="wrap">
-      <div class="eyebrow"><b>xyntal</b> / für unternehmen</div>
-      <h1>Ein Werkzeug statt fünf. <em>Ein Festpreis</em> statt Kosten pro Kopf.</h1>
-      <p>Nachrichten, Projekte, Notizen, Dateien, Kalender, KI und Automationen in einer App – für die ganze Firma zu einem festen Preis, egal ob ihr 40 oder 400 seid. Neue Leute kosten nichts extra.</p>
-      <div class="un-head-act"><a class="btn" href="#anfrage">30 Tage kostenlos testen</a><a class="btn btn-ghost" href="#rechner">Ersparnis berechnen</a></div>
+<main class="xs xu" id="inhalt">
+
+  <!-- ============ EINSTIEG: fünf Werkzeuge werden eins ============ -->
+  <section class="xu-hero" id="top" aria-labelledby="hero-title">
+    <div class="xu-hero__text">
+      <p class="xs-mono xs-label"><span><b>xyntal</b> / für unternehmen</span></p>
+      <h1 class="xu-hero__h" id="hero-title">
+        <span class="xu-hero__a"><span>Ein Werkzeug</span> <span class="thin">statt fünf.</span></span>
+        <span class="xu-hero__b"><span>Ein Festpreis</span> <span class="thin">statt Kosten pro Kopf.</span></span>
+      </h1>
+      <p class="xu-hero__p">Nachrichten, Projekte, Notizen, Dateien, Kalender, KI und Automationen in einer App. Für die ganze Firma zu einem festen Preis, egal ob ihr 40 oder 400 seid. Neue Leute kosten nichts extra.</p>
+      <div class="xu-hero__cta"><a class="xs-pill" href="#anfrage">30 Tage kostenlos testen <i aria-hidden="true">→</i></a><a class="xs-tlink" href="#rechner">Ersparnis berechnen</a></div>
+    </div>
+
+    <figure class="xu-fold" data-fold>
+      <div class="xu-fold__stage">
+        <ol class="xu-fold__tools" aria-label="Heute: fünf Werkzeuge, jedes mit Preis pro Kopf">
+          <li data-tool="chat"><span>Chat</span><em class="xs-mono"><b data-tool-price data-no-i18n></b> pro Kopf</em></li>
+          <li data-tool="pm"><span>Projekte</span><em class="xs-mono"><b data-tool-price data-no-i18n></b> pro Kopf</em></li>
+          <li data-tool="wiki"><span>Wiki</span><em class="xs-mono"><b data-tool-price data-no-i18n></b> pro Kopf</em></li>
+          <li data-tool="ai"><span>KI</span><em class="xs-mono"><b data-tool-price data-no-i18n></b> pro Kopf</em></li>
+          <li data-tool="files"><span>Dateien</span><em class="xs-mono"><b data-tool-price data-no-i18n></b> pro Kopf</em></li>
+        </ol>
+        <div class="xu-fold__one" aria-label="Mit Xyntal: ein Arbeitsbereich zum Festpreis">
+          <p class="xu-fold__bar"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M3 3Q15.41 8.59 21 21" fill="none" stroke="url(#xm-b1)" stroke-width="4.6" stroke-linecap="round" mask="url(#xm-g1)"/><path d="M3 21Q8.59 8.59 21 3" fill="none" stroke="url(#xm-a1)" stroke-width="4.6" stroke-linecap="round"/></svg><span class="xs-mono">Xyntal · ein Arbeitsbereich</span></p>
+          <ul>
+            <li data-row="chat">Chat</li>
+            <li data-row="pm">Projekte</li>
+            <li data-row="wiki">Wiki</li>
+            <li data-row="ai">KI</li>
+            <li data-row="files">Dateien</li>
+          </ul>
+          <p class="xu-fold__fix"><span class="xs-mono">ein Festpreis</span><b class="xs-num" data-fold-price data-no-i18n></b></p>
+        </div>
+      </div>
+      <figcaption class="xu-fold__cap">
+        <div class="xs-seg" role="group" aria-label="Ansicht" data-fold-seg data-noprint>
+          <button type="button" data-value="today" aria-pressed="true">Heute</button>
+          <button type="button" data-value="xyntal" aria-pressed="false">Mit Xyntal</button>
+        </div>
+        <p class="xu-fold__sum"><span data-fold-today></span><span data-fold-xyntal></span></p>
+      </figcaption>
+    </figure>
+  </section>
+
+  <!-- ============ 01 · RECHNER ============ -->
+  <section class="xs-scene xu-calc" id="rechner" aria-labelledby="rechner-title" data-in>
+    <header class="xs-head">
+      <p class="xs-mono xs-label">01 / Rechner</p>
+      <h2 class="xs-h2" id="rechner-title">Was ihr sparen würdet</h2>
+      <p class="xs-lead">Zwei Angaben reichen: wie viele ihr seid und welche Tools ihr heute bezahlt. Die Preise sind übliche Listenpreise pro Kopf – passt sie an, wenn ihr eure echten kennt.</p>
+    </header>
+
+    <div class="xu-calc__grid">
+      <form class="xu-in" data-calc novalidate>
+        <div class="xu-in__step">
+          <label class="xs-mono" for="xu-people"><b>1</b> Wie viele seid ihr?</label>
+          <p class="xu-in__people"><input id="xu-people" class="xs-num" type="number" name="people" min="1" max="100000" step="1" value="120" inputmode="numeric" aria-label="Anzahl Personen"><span>Personen</span></p>
+          <input class="xs-range" type="range" name="peopleRange" min="10" max="1000" step="10" value="120" aria-label="Anzahl Personen">
+        </div>
+        <fieldset class="xu-in__step xu-tools">
+          <legend class="xs-mono"><b>2</b> Was bezahlt ihr heute?</legend>
+          <p class="xu-in__hint">Tippt an, was ihr heute habt. Der Preis gilt pro Person und Monat.</p>
+          <div class="xu-tool"><label><input type="checkbox" name="t-chat" checked><i aria-hidden="true"></i><span><b>Chat und Anrufe</b><small>z. B. Slack, Microsoft Teams</small></span></label><span class="xu-tool__price"><input class="xs-num" type="number" name="c-chat" min="0" max="100" step="0.5" value="7" inputmode="decimal" aria-label="Chat und Anrufe, Euro pro Person und Monat"><small>€ pro Kopf</small></span></div>
+          <div class="xu-tool"><label><input type="checkbox" name="t-pm" checked><i aria-hidden="true"></i><span><b>Projekte und Aufgaben</b><small>z. B. Asana, Jira, Monday</small></span></label><span class="xu-tool__price"><input class="xs-num" type="number" name="c-pm" min="0" max="100" step="0.5" value="10" inputmode="decimal" aria-label="Projekte und Aufgaben, Euro pro Person und Monat"><small>€ pro Kopf</small></span></div>
+          <div class="xu-tool"><label><input type="checkbox" name="t-wiki" checked><i aria-hidden="true"></i><span><b>Notizen und Wiki</b><small>z. B. Notion, Confluence</small></span></label><span class="xu-tool__price"><input class="xs-num" type="number" name="c-wiki" min="0" max="100" step="0.5" value="9" inputmode="decimal" aria-label="Notizen und Wiki, Euro pro Person und Monat"><small>€ pro Kopf</small></span></div>
+          <div class="xu-tool"><label><input type="checkbox" name="t-ai"><i aria-hidden="true"></i><span><b>KI-Abo</b><small>z. B. ChatGPT, Copilot</small></span></label><span class="xu-tool__price"><input class="xs-num" type="number" name="c-ai" min="0" max="100" step="0.5" value="20" inputmode="decimal" aria-label="KI-Abo, Euro pro Person und Monat"><small>€ pro Kopf</small></span></div>
+          <div class="xu-tool"><label><input type="checkbox" name="t-files"><i aria-hidden="true"></i><span><b>Dateien und Speicher</b><small>z. B. Dropbox, Box</small></span></label><span class="xu-tool__price"><input class="xs-num" type="number" name="c-files" min="0" max="100" step="0.5" value="5" inputmode="decimal" aria-label="Dateien und Speicher, Euro pro Person und Monat"><small>€ pro Kopf</small></span></div>
+          <p class="xu-in__warn" data-calc-warn role="status" hidden></p>
+        </fieldset>
+      </form>
+
+      <div class="xu-out">
+        <p class="sr-only" aria-live="polite" data-out-sr></p>
+        <p class="xs-mono">Ihr spart im Jahr etwa</p>
+        <p class="xu-out__save" aria-hidden="true"><b class="xs-num" data-out-save data-no-i18n>–</b></p>
+        <dl class="xu-bars">
+          <div class="xu-bar" data-bar="today">
+            <dt class="xs-mono">Heute</dt>
+            <dd><span class="xu-bar__track" aria-hidden="true"><i></i></span><b class="xs-num" data-out-today>–</b><small data-out-today-how></small></dd>
+          </div>
+          <div class="xu-bar" data-bar="xyntal">
+            <dt class="xs-mono">Mit Xyntal</dt>
+            <dd><span class="xu-bar__track" aria-hidden="true"><i></i></span><b class="xs-num" data-out-xyntal>–</b><small data-out-plan></small></dd>
+          </div>
+        </dl>
+        <p class="xu-out__note" data-out-note hidden></p>
+        <div class="xu-out__act" data-noprint>
+          <button type="button" class="xs-pill xs-pill--line xs-pill--sm" data-copy-result>Ergebnis kopieren</button>
+          <button type="button" class="xs-pill xs-pill--line xs-pill--sm" data-copy-link>Als Link teilen</button>
+        </div>
+      </div>
+    </div>
+
+    <figure class="xu-chart" data-chart>
+      <figcaption class="xu-chart__head">
+        <p class="xs-mono">Kosten im Monat nach Teamgröße</p>
+        <p class="xu-chart__key"><span class="is-today">Heute, pro Kopf</span><span class="is-xyntal">Xyntal, Festpreis je Tarif</span></p>
+      </figcaption>
+      <div class="xu-chart__plot" data-chart-plot><svg data-chart-svg role="img" aria-label="Kosten im Monat nach Teamgröße"></svg></div>
+      <p class="sr-only" data-chart-alt></p>
+    </figure>
+    <p class="xu-fine">Bei Xyntal zahlt ihr einen festen Preis für euer ganzes Team – egal, ob noch jemand dazukommt. Beim Jahrestarif sind zwei Monate geschenkt.</p>
+  </section>
+
+  <!-- ============ 02 · WAS XYNTAL ERSETZT ============ -->
+  <section class="xs-scene xu-net" aria-labelledby="ersetzt" data-in>
+    <header class="xs-head">
+      <p class="xs-mono xs-label">02 / Zusammenhang</p>
+      <h2 class="xs-h2" id="ersetzt">Was Xyntal bei euch ersetzt</h2>
+      <p class="xs-lead">Die meisten Firmen zahlen für jedes Thema ein eigenes Werkzeug – und für jedes davon pro Kopf. In Xyntal hängt alles zusammen.</p>
+    </header>
+    <div class="xu-net__map" data-net>
+      <svg class="xu-net__lines" data-net-svg aria-hidden="true"><defs><linearGradient id="xu-ng" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="400"><stop offset="0" stop-color="#B36BFF"/><stop offset=".5" stop-color="#3A8AFF"/><stop offset="1" stop-color="#3FE0F0"/></linearGradient></defs></svg>
+      <ul class="xu-net__col xu-net__col--a">
+        <li class="xu-node" data-node="chat"><b>Nachrichten und Anrufe</b><span>Gruppen, Threads, Sprachnachrichten, Anrufe mit Bildschirm teilen</span></li>
+        <li class="xu-node" data-node="pm"><b>Projekte und Aufgaben</b><span>Kanban, Meilensteine, offene Rollen, Zuständigkeiten</span></li>
+        <li class="xu-node" data-node="files"><b>Dateien</b><span>Versionen, Freigaben, Papierkorb zum Wiederherstellen</span></li>
+        <li class="xu-node" data-node="ai"><b>KI-Assistent und Agenten</b><span>Claude eingebaut, mit festem Budget pro Monat</span></li>
+      </ul>
+      <div class="xu-net__hub">
+        <div class="xu-net__mark" data-hub><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3Q15.41 8.59 21 21" fill="none" stroke="url(#xm-b1)" stroke-width="4.6" stroke-linecap="round" mask="url(#xm-g1)"/><path d="M3 21Q8.59 8.59 21 3" fill="none" stroke="url(#xm-a1)" stroke-width="4.6" stroke-linecap="round"/></svg></div>
+        <p class="xs-mono">ein Arbeitsbereich</p>
+        <ul class="xu-net__says">
+          <li><button type="button" data-link="pm-chat">Die Aufgabe kennt das Gespräch.</button></li>
+          <li><button type="button" data-link="files-pm">Die Datei kennt das Projekt.</button></li>
+          <li><button type="button" data-link="ai-pm ai-chat">Die KI kennt beides.</button></li>
+        </ul>
+      </div>
+      <ul class="xu-net__col xu-net__col--b">
+        <li class="xu-node" data-node="wiki"><b>Notizen und Wiki</b><span>Gemeinsam bearbeiten, Tabellen, Seitenverlauf</span></li>
+        <li class="xu-node" data-node="cal"><b>Kalender und Termine</b><span>Termine vorschlagen, freie Zeiten finden</span></li>
+        <li class="xu-node" data-node="auto"><b>Automationen</b><span>Mit Zeitplan, Freigaben und Rückgängig</span></li>
+        <li class="xu-node" data-node="match"><b>Die richtigen Leute finden</b><span>Matching nach Fähigkeiten, Zeit und Arbeitsweise</span></li>
+      </ul>
     </div>
   </section>
 
-  <section class="page-body">
-    <div class="wrap pr un">
-
-      <section class="un-section" aria-labelledby="ersetzt">
-        <h2 id="ersetzt">Was Xyntal bei euch ersetzt</h2>
-        <p class="un-lead">Die meisten Firmen zahlen für jedes Thema ein eigenes Werkzeug – und für jedes davon pro Kopf. In Xyntal hängt alles zusammen: Die Aufgabe kennt das Gespräch, die Datei kennt das Projekt, die KI kennt beides.</p>
-        <ul class="un-replace">
-          <li><b>Nachrichten und Anrufe</b><span>Gruppen, Threads, Sprachnachrichten, Anrufe mit Bildschirm teilen</span></li>
-          <li><b>Projekte und Aufgaben</b><span>Kanban, Meilensteine, offene Rollen, Zuständigkeiten</span></li>
-          <li><b>Notizen und Wiki</b><span>Gemeinsam bearbeiten, Tabellen, Seitenverlauf</span></li>
-          <li><b>Dateien</b><span>Versionen, Freigaben, Papierkorb zum Wiederherstellen</span></li>
-          <li><b>Kalender und Termine</b><span>Termine vorschlagen, freie Zeiten finden</span></li>
-          <li><b>KI-Assistent und Agenten</b><span>Claude eingebaut, mit festem Budget pro Monat</span></li>
-          <li><b>Automationen</b><span>Mit Zeitplan, Freigaben und Rückgängig</span></li>
-          <li><b>Die richtigen Leute finden</b><span>Matching nach Fähigkeiten, Zeit und Arbeitsweise</span></li>
-        </ul>
-      </section>
-
-      <section class="un-section un-calc" id="rechner" aria-labelledby="rechner-title">
-        <h2 id="rechner-title">Was ihr sparen würdet</h2>
-        <p class="un-lead">Zwei Angaben reichen: wie viele ihr seid und welche Tools ihr heute bezahlt. Die Preise sind übliche Listenpreise pro Kopf – passt sie an, wenn ihr eure echten kennt.</p>
-        <div class="un-calc-grid">
-          <form class="un-calc-in" data-calc onsubmit="return false">
-            <div class="un-step">
-              <p class="un-step-title"><span aria-hidden="true">1</span>Wie viele seid ihr?</p>
-              <label class="un-people"><input type="number" name="people" min="1" max="100000" step="1" value="120" inputmode="numeric" aria-label="Anzahl Personen"><span>Personen</span></label>
-              <input class="un-range" type="range" name="peopleRange" min="10" max="1000" step="10" value="120" aria-label="Anzahl Personen">
-            </div>
-            <fieldset class="un-step un-tools">
-              <legend class="un-step-title"><span aria-hidden="true">2</span>Was bezahlt ihr heute?</legend>
-              <p class="un-step-hint">Haken an für jedes Tool, das ihr heute habt. Der Preis gilt pro Person und Monat.</p>
-              <label><input type="checkbox" name="t-chat" checked><span><b>Chat und Anrufe</b><small>z. B. Slack, Microsoft Teams</small></span><span class="un-price"><input type="number" name="c-chat" min="0" max="100" step="0.5" value="7" aria-label="Chat und Anrufe, Euro pro Person und Monat"><small>€ pro Kopf</small></span></label>
-              <label><input type="checkbox" name="t-pm" checked><span><b>Projekte und Aufgaben</b><small>z. B. Asana, Jira, Monday</small></span><span class="un-price"><input type="number" name="c-pm" min="0" max="100" step="0.5" value="10" aria-label="Projekte und Aufgaben, Euro pro Person und Monat"><small>€ pro Kopf</small></span></label>
-              <label><input type="checkbox" name="t-wiki" checked><span><b>Notizen und Wiki</b><small>z. B. Notion, Confluence</small></span><span class="un-price"><input type="number" name="c-wiki" min="0" max="100" step="0.5" value="9" aria-label="Notizen und Wiki, Euro pro Person und Monat"><small>€ pro Kopf</small></span></label>
-              <label><input type="checkbox" name="t-ai"><span><b>KI-Abo</b><small>z. B. ChatGPT, Copilot</small></span><span class="un-price"><input type="number" name="c-ai" min="0" max="100" step="0.5" value="20" aria-label="KI-Abo, Euro pro Person und Monat"><small>€ pro Kopf</small></span></label>
-              <label><input type="checkbox" name="t-files"><span><b>Dateien und Speicher</b><small>z. B. Dropbox, Box</small></span><span class="un-price"><input type="number" name="c-files" min="0" max="100" step="0.5" value="5" aria-label="Dateien und Speicher, Euro pro Person und Monat"><small>€ pro Kopf</small></span></label>
-              <p class="un-calc-warn" data-calc-warn role="status" hidden></p>
-            </fieldset>
-          </form>
-          <div class="un-calc-out" aria-live="polite">
-            <p class="un-out-label">Ihr spart im Jahr etwa</p>
-            <b class="un-out-save" data-out-save>–</b>
-            <dl class="un-out-rows">
-              <div><dt>Heute</dt><dd><b data-out-today>–</b><small data-out-today-how></small></dd></div>
-              <div><dt>Mit Xyntal</dt><dd><b data-out-xyntal>–</b><small data-out-plan></small></dd></div>
-            </dl>
-            <p class="un-out-note" data-out-note hidden></p>
-          </div>
+  <!-- ============ 03 · SICHERHEIT: vier Schichten ============ -->
+  <section class="xs-scene xu-sec" id="sicherheit" aria-labelledby="sicherheit-title" data-in>
+    <header class="xs-head">
+      <p class="xs-mono xs-label">03 / Sicherheit</p>
+      <h2 class="xs-h2" id="sicherheit-title">Vier Schichten, von der Anmeldung bis zum Papierkorb</h2>
+      <p class="xs-lead">Jede Schicht hat ihre eigene Aufgabe. Tippt eine an und lest, was sie bei euch übernimmt.</p>
+    </header>
+    <div class="xu-sec__grid" data-layers>
+      <div class="xu-stack" aria-hidden="true">
+        <div class="xu-stack__iso">
+          <i data-plate="0"></i><i data-plate="1"></i><i data-plate="2"></i><i data-plate="3"></i>
         </div>
-        <p class="un-note">Bei Xyntal zahlt ihr einen festen Preis für euer ganzes Team – egal, ob noch jemand dazukommt. Beim Jahrestarif sind zwei Monate geschenkt.</p>
-      </section>
-
-      <section class="un-section" aria-labelledby="firmentarife">
-        <h2 id="firmentarife">Tarife für Firmen</h2>
-        <div class="pr-grid un-plans" data-plans aria-live="polite">
-          <p class="pr-loading" data-plans-status>Tarife werden geladen …</p>
+      </div>
+      <div class="xu-sec__tabs" role="tablist" aria-label="Schichten" aria-orientation="vertical">
+        <button type="button" role="tab" id="xu-tab-0" aria-controls="xu-pane-0" aria-selected="true"><span class="xs-mono">01</span><b>Single Sign-on</b><small>SAML 2.0, OpenID Connect</small></button>
+        <button type="button" role="tab" id="xu-tab-1" aria-controls="xu-pane-1" aria-selected="false" tabindex="-1"><span class="xs-mono">02</span><b>Rollen und Freigaben</b><small>Bis auf Projektebene</small></button>
+        <button type="button" role="tab" id="xu-tab-2" aria-controls="xu-pane-2" aria-selected="false" tabindex="-1"><span class="xs-mono">03</span><b>Audit-Log</b><small>Wer hat was wann geändert</small></button>
+        <button type="button" role="tab" id="xu-tab-3" aria-controls="xu-pane-3" aria-selected="false" tabindex="-1"><span class="xs-mono">04</span><b>Wiederherstellen</b><small>Versionen, Verlauf, Papierkorb</small></button>
+      </div>
+      <div class="xu-sec__panes">
+        <div class="xu-pane" role="tabpanel" id="xu-pane-0" aria-labelledby="xu-tab-0" tabindex="0">
+          <p>Eure Leute melden sich über euren Identity Provider an: Microsoft Entra ID, Okta, Google Workspace, Keycloak und alle anderen mit SAML 2.0 oder OpenID Connect. Für eure Domains lässt sich SSO zur Pflicht machen. Neue Leute bekommen bei der ersten Anmeldung ihr Konto und landen gleich in den richtigen Arbeitsbereichen und Rollen.</p>
+          <dl class="xu-facts">
+            <div><dt class="xs-mono">Protokolle</dt><dd>SAML 2.0 und OpenID Connect</dd></div>
+            <div><dt class="xs-mono">Einrichtung</dt><dd>Gemeinsam mit euch: Identity Provider verbinden, Domains bestätigen, Gruppen zuordnen</dd></div>
+            <div><dt class="xs-mono">Noch in Arbeit</dt><dd><span class="xu-wip" aria-hidden="true"></span>Benutzerverwaltung über SCIM und eine Organisationskonsole</dd></div>
+          </dl>
         </div>
-        <p class="un-note">Kleinere Teams finden Free, Plus und Pro auf der <a href="/preise">Preisseite</a>. Alle Preise in Euro; sie können sich bis zum Ende der Beta noch ändern.</p>
-      </section>
-
-      <section class="un-section" id="vergleich" aria-labelledby="vergleich-title">
-        <h2 id="vergleich-title">Alle Firmentarife im Vergleich</h2>
-        <div class="un-compare-wrap" tabindex="0" role="region" aria-labelledby="vergleich-title">
-          <table class="un-compare">
-            <thead>
-              <tr><th scope="col"><span class="sr-only">Leistung</span></th><th scope="col">Ultra</th><th scope="col">Business</th><th scope="col">Enterprise</th><th scope="col">Enterprise+</th></tr>
-            </thead>
-            <tbody>
-              <tr class="un-compare-group"><th scope="colgroup" colspan="5">Team und Speicher</th></tr>
-              <tr><th scope="row">Mitglieder je Arbeitsbereich</th><td>100</td><td>300</td><td>Unbegrenzt</td><td>Unbegrenzt</td></tr>
-              <tr><th scope="row">Dateispeicher</th><td>100 GB</td><td>500 GB</td><td>1 TB</td><td>10 TB</td></tr>
-              <tr><th scope="row">Größte Datei beim Hochladen</th><td>500 MB</td><td>1 GB</td><td>2 GB</td><td>8 GB</td></tr>
-              <tr><th scope="row">Unbegrenzt viele Ordner und Arbeitsbereiche</th><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td></tr>
-            </tbody>
-            <tbody>
-              <tr class="un-compare-group"><th scope="colgroup" colspan="5">KI und Automationen</th></tr>
-              <tr><th scope="row">KI-Budget pro Monat inklusive</th><td>40 €</td><td>80 €</td><td>150 €</td><td>300 €</td></tr>
-              <tr><th scope="row">Unbegrenzt viele KI-Agenten, stündlich</th><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td></tr>
-              <tr><th scope="row">Claude Sonnet für die Planung</th><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td></tr>
-              <tr><th scope="row">Geteilten Bildschirm von der KI erklären lassen</th><td>300× im Monat</td><td>Unbegrenzt</td><td>Unbegrenzt</td><td>Unbegrenzt</td></tr>
-              <tr><th scope="row">Aktive Automationen</th><td>100</td><td>100</td><td>100</td><td>100</td></tr>
-              <tr><th scope="row">Automations-Läufe im Monat</th><td>50.000</td><td>100.000</td><td>200.000</td><td>Unbegrenzt (Fair Use)</td></tr>
-            </tbody>
-            <tbody>
-              <tr class="un-compare-group"><th scope="colgroup" colspan="5">Sicherheit und Verlauf</th></tr>
-              <tr><th scope="row">Eigene Rollen, Freigaben und Rückgängig</th><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td></tr>
-              <tr><th scope="row">Audit-Log und Automations-Verlauf</th><td>3 Jahre</td><td>5 Jahre</td><td>5 Jahre</td><td>Unbegrenzt</td></tr>
-              <tr><th scope="row">Gelöschte Dateien wiederherstellen</th><td>1 Jahr</td><td>Unbegrenzt</td><td>Unbegrenzt</td><td>Unbegrenzt</td></tr>
-              <tr><th scope="row">Unbegrenzt viele Dateiversionen und Seitenverlauf</th><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td></tr>
-              <tr><th scope="row">Eigene Instanz auf Anfrage</th><td><span class="un-no" role="img" aria-label="Nicht enthalten"></span></td><td><span class="un-no" role="img" aria-label="Nicht enthalten"></span></td><td><span class="un-no" role="img" aria-label="Nicht enthalten"></span></td><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td></tr>
-            </tbody>
-            <tbody>
-              <tr class="un-compare-group"><th scope="colgroup" colspan="5">Vertrag und Betreuung</th></tr>
-              <tr><th scope="row">Abrechnung</th><td>Monat oder Jahr</td><td>Quartal oder Jahr</td><td>Jahresvertrag</td><td>Jahresvertrag</td></tr>
-              <tr><th scope="row">30 Tage kostenlos testen</th><td><span class="un-no" role="img" aria-label="Nicht enthalten"></span></td><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td><td><span class="un-no" role="img" aria-label="Nicht enthalten"></span></td></tr>
-              <tr><th scope="row">Bezahlen auf Rechnung</th><td><span class="un-no" role="img" aria-label="Nicht enthalten"></span></td><td>Jährlich</td><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td></tr>
-              <tr><th scope="row">Rechnung mit Bestellnummer</th><td><span class="un-no" role="img" aria-label="Nicht enthalten"></span></td><td><span class="un-no" role="img" aria-label="Nicht enthalten"></span></td><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td></tr>
-              <tr><th scope="row">Support in der Dringend-Warteschlange</th><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td></tr>
-              <tr><th scope="row">Persönliche Einführung fürs Team</th><td><span class="un-no" role="img" aria-label="Nicht enthalten"></span></td><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td></tr>
-              <tr><th scope="row">Einrichtung und Datenumzug gemeinsam mit euch</th><td><span class="un-no" role="img" aria-label="Nicht enthalten"></span></td><td><span class="un-no" role="img" aria-label="Nicht enthalten"></span></td><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td></tr>
-              <tr><th scope="row">Feste Ansprechperson, Antwort am selben Werktag</th><td><span class="un-no" role="img" aria-label="Nicht enthalten"></span></td><td><span class="un-no" role="img" aria-label="Nicht enthalten"></span></td><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td></tr>
-              <tr><th scope="row">Direkter Draht in die Roadmap</th><td><span class="un-no" role="img" aria-label="Nicht enthalten"></span></td><td><span class="un-no" role="img" aria-label="Nicht enthalten"></span></td><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td></tr>
-              <tr><th scope="row">Eigene Vertragsbedingungen</th><td><span class="un-no" role="img" aria-label="Nicht enthalten"></span></td><td><span class="un-no" role="img" aria-label="Nicht enthalten"></span></td><td><span class="un-no" role="img" aria-label="Nicht enthalten"></span></td><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td></tr>
-              <tr><th scope="row">Quartalsgespräch und Schulung fürs Team</th><td><span class="un-no" role="img" aria-label="Nicht enthalten"></span></td><td><span class="un-no" role="img" aria-label="Nicht enthalten"></span></td><td><span class="un-no" role="img" aria-label="Nicht enthalten"></span></td><td><span class="un-yes" role="img" aria-label="Enthalten"></span></td></tr>
-            </tbody>
-          </table>
+        <div class="xu-pane" role="tabpanel" id="xu-pane-1" aria-labelledby="xu-tab-1" tabindex="0" hidden>
+          <p>Ihr legt eigene Rollen an, bis hinunter auf einzelne Projekte. Heikle Schritte brauchen eine Freigabe. Automationen laufen mit Zeitplan und Freigaben, und was sie getan haben, lässt sich rückgängig machen.</p>
+          <dl class="xu-facts">
+            <div><dt class="xs-mono">Eigene Rollen</dt><dd>In allen vier Firmentarifen</dd></div>
+            <div><dt class="xs-mono">Freigaben</dt><dd>Für heikle Schritte und für Automationen</dd></div>
+          </dl>
         </div>
-      </section>
-
-
-      <section class="un-section" aria-labelledby="dabei">
-        <h2 id="dabei">Was Firmen zusätzlich bekommen</h2>
-        <dl class="un-perks">
-          <div><dt>Ein Preis für alle</dt><dd>Kein Lizenzen-Zählen, keine Nachkauf-Runde, wenn jemand Neues anfängt. Ihr wisst am Jahresanfang, was Xyntal kostet.</dd></div>
-          <div><dt>Persönliche Einführung</dt><dd>Wir richten mit euch Arbeitsbereiche, Rollen und Rechte ein, damit euer Team am ersten Tag loslegen kann.</dd></div>
-          <div><dt>Rollen, Rechte, Audit-Log</dt><dd>Eigene Rollen bis auf Projektebene, Freigaben für heikle Schritte und ein Audit-Log, das bis zu fünf Jahre zurückreicht.</dd></div>
-          <div><dt>KI ohne Überraschungsrechnung</dt><dd>Ein festes KI-Budget ist im Tarif enthalten. Ist es aufgebraucht, entscheidet ihr, ob ihr Guthaben aufladet – nichts läuft heimlich weiter.</dd></div>
-          <div><dt>Auf Rechnung</dt><dd>Business jährlich und Enterprise bezahlt ihr per Rechnung, auf Wunsch mit eurer Bestellnummer.</dd></div>
-          <div><dt>Single Sign-on</dt><dd>Anmeldung über euren Identity Provider – Microsoft Entra ID, Okta, Google Workspace, Keycloak und alle mit SAML 2.0 oder OpenID Connect. Für eure Domains lässt sich SSO zur Pflicht machen; neue Leute bekommen bei der ersten Anmeldung ihr Konto und landen gleich in den richtigen Arbeitsbereichen und Rollen. Richten wir gemeinsam mit euch ein.</dd></div>
-          <div><dt>Direkter Draht</dt><dd>Ihr schreibt nicht an eine Vertriebsabteilung, sondern direkt an die Person, die Xyntal baut. Was euch fehlt, landet auf der Roadmap.</dd></div>
-        </dl>
-      </section>
-
-      <section class="un-section un-ask" id="anfrage" aria-labelledby="anfrage-title">
-        <div class="un-ask-text">
-          <h2 id="anfrage-title">30 Tage testen – mit eurem ganzen Team</h2>
-          <p>Schreibt uns kurz, wer ihr seid und wie viele Leute mitmachen. Ich melde mich persönlich und schalte euch Business oder Enterprise für 30 Tage frei – ohne Zahlungsdaten und ohne Abo.</p>
-          <p>Danach entscheidet ihr. Wer nicht weitermacht, fällt auf den kostenlosen Tarif zurück; gelöscht wird dabei nichts.</p>
-          <p class="un-sign">– Nico, Gründer von Xyntal</p>
+        <div class="xu-pane" role="tabpanel" id="xu-pane-2" aria-labelledby="xu-tab-2" tabindex="0" hidden>
+          <p>Das Audit-Log hält fest, was in eurem Arbeitsbereich passiert ist. Der Verlauf eurer Automationen wird genauso lange aufbewahrt.</p>
+          <dl class="xu-facts">
+            <div><dt class="xs-mono" data-no-i18n>Ultra</dt><dd>3 Jahre</dd></div>
+            <div><dt class="xs-mono" data-no-i18n>Business</dt><dd>5 Jahre</dd></div>
+            <div><dt class="xs-mono" data-no-i18n>Enterprise</dt><dd>5 Jahre</dd></div>
+            <div><dt class="xs-mono" data-no-i18n>Enterprise+</dt><dd>Unbegrenzt</dd></div>
+          </dl>
         </div>
-        <form class="un-form" data-inquiry novalidate>
-          <label class="un-field"><span>Firma</span><input name="company" autocomplete="organization" required maxlength="120"></label>
-          <label class="un-field"><span>Dein Name</span><input name="name" autocomplete="name" required maxlength="120"></label>
-          <label class="un-field"><span>Geschäftliche E-Mail</span><input name="email" type="email" autocomplete="email" required maxlength="254"></label>
-          <label class="un-field"><span>Wie viele Leute?</span><input name="size" type="number" min="1" step="1" inputmode="numeric" required></label>
-          <label class="un-field un-wide"><span>Interesse an</span>
-            <select name="plan">
+        <div class="xu-pane" role="tabpanel" id="xu-pane-3" aria-labelledby="xu-tab-3" tabindex="0" hidden>
+          <p>Dateien behalten ihre Versionen, Seiten ihren Verlauf. Was jemand löscht, liegt im Papierkorb und lässt sich zurückholen.</p>
+          <dl class="xu-facts">
+            <div><dt class="xs-mono">Dateiversionen und Seitenverlauf</dt><dd>Unbegrenzt viele</dd></div>
+            <div><dt class="xs-mono">Gelöschte Dateien</dt><dd>Ultra: 1 Jahr. Ab Business: unbegrenzt</dd></div>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 04 · FIRMENTARIFE: ein Blatt ============ -->
+  <section class="xs-scene xu-plans" id="vergleich" aria-labelledby="firmentarife" data-in>
+    <header class="xs-head">
+      <p class="xs-mono xs-label">04 / Tarife</p>
+      <h2 class="xs-h2" id="firmentarife">Tarife für Firmen</h2>
+      <p class="xs-lead">Kleinere Teams finden Free, Plus und Pro auf der <a href="/preise">Preisseite</a>. Alle Preise in Euro; sie können sich bis zum Ende der Beta noch ändern.</p>
+    </header>
+    <div class="xu-plans__bar">
+      <p class="xu-rec" data-rec aria-live="polite"></p>
+      <button type="button" class="xs-tlink" data-print data-noprint>Vergleich drucken</button>
+    </div>
+    <div class="xs-cmp" data-cmp>
+      <div class="xs-cmp__jump" role="group" aria-label="Tarif zeigen" data-noprint></div>
+      <div class="xs-cmp__scroll">
+        <table class="xu-sheet" data-sheet>
+          <caption class="sr-only">Alle Firmentarife im Vergleich</caption>
+          <colgroup><col class="is-first"><col><col><col><col></colgroup>
+          <thead>
+            <tr><th scope="col"><span class="sr-only">Leistung</span></th><th scope="col" data-plan="Ultra" data-name="Ultra">Ultra</th><th scope="col" data-plan="Business" data-name="Business">Business</th><th scope="col" data-plan="Enterprise" data-name="Enterprise">Enterprise</th><th scope="col" data-plan="Enterprise+" data-name="Enterprise+">Enterprise+</th></tr>
+          </thead>
+          <tbody>
+            <tr class="is-group"><th scope="colgroup" colspan="5">Team und Speicher</th></tr>
+            <tr data-live="members"><th scope="row">Mitglieder je Arbeitsbereich</th><td>100</td><td>300</td><td>Unbegrenzt</td><td>Unbegrenzt</td></tr>
+            <tr data-live="storage"><th scope="row">Dateispeicher</th><td>100 GB</td><td>500 GB</td><td>1 TB</td><td>10 TB</td></tr>
+            <tr data-live="upload"><th scope="row">Größte Datei beim Hochladen</th><td>500 MB</td><td>1 GB</td><td>2 GB</td><td>8 GB</td></tr>
+            <tr><th scope="row">Unbegrenzt viele Ordner und Arbeitsbereiche</th><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td></tr>
+          </tbody>
+          <tbody>
+            <tr class="is-group"><th scope="colgroup" colspan="5">KI und Automationen</th></tr>
+            <tr data-live="ai"><th scope="row">KI-Budget pro Monat inklusive</th><td>40 €</td><td>80 €</td><td>150 €</td><td>300 €</td></tr>
+            <tr><th scope="row">Unbegrenzt viele KI-Agenten, stündlich</th><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td></tr>
+            <tr><th scope="row">Claude Sonnet für die Planung</th><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td></tr>
+            <tr><th scope="row">Geteilten Bildschirm von der KI erklären lassen</th><td>300× im Monat</td><td>Unbegrenzt</td><td>Unbegrenzt</td><td>Unbegrenzt</td></tr>
+            <tr data-live="automations"><th scope="row">Aktive Automationen</th><td>100</td><td>100</td><td>100</td><td>100</td></tr>
+            <tr data-live="runs"><th scope="row">Automations-Läufe im Monat</th><td>50.000</td><td>100.000</td><td>200.000</td><td>Unbegrenzt (Fair Use)</td></tr>
+          </tbody>
+          <tbody>
+            <tr class="is-group"><th scope="colgroup" colspan="5">Sicherheit und Verlauf</th></tr>
+            <tr><th scope="row">Eigene Rollen, Freigaben und Rückgängig</th><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td></tr>
+            <tr><th scope="row">Audit-Log und Automations-Verlauf</th><td>3 Jahre</td><td>5 Jahre</td><td>5 Jahre</td><td>Unbegrenzt</td></tr>
+            <tr><th scope="row">Gelöschte Dateien wiederherstellen</th><td>1 Jahr</td><td>Unbegrenzt</td><td>Unbegrenzt</td><td>Unbegrenzt</td></tr>
+            <tr><th scope="row">Unbegrenzt viele Dateiversionen und Seitenverlauf</th><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td></tr>
+            <tr><th scope="row">Eigene Instanz auf Anfrage</th><td><span class="xs-n" role="img" aria-label="Nicht enthalten"></span></td><td><span class="xs-n" role="img" aria-label="Nicht enthalten"></span></td><td><span class="xs-n" role="img" aria-label="Nicht enthalten"></span></td><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td></tr>
+          </tbody>
+          <tbody>
+            <tr class="is-group"><th scope="colgroup" colspan="5">Vertrag und Betreuung</th></tr>
+            <tr><th scope="row">Abrechnung</th><td>Monat oder Jahr</td><td>Quartal oder Jahr</td><td>Jahresvertrag</td><td>Jahresvertrag</td></tr>
+            <tr><th scope="row">30 Tage kostenlos testen</th><td><span class="xs-n" role="img" aria-label="Nicht enthalten"></span></td><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td><td><span class="xs-n" role="img" aria-label="Nicht enthalten"></span></td></tr>
+            <tr><th scope="row">Bezahlen auf Rechnung</th><td><span class="xs-n" role="img" aria-label="Nicht enthalten"></span></td><td>Jährlich</td><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td></tr>
+            <tr><th scope="row">Rechnung mit Bestellnummer</th><td><span class="xs-n" role="img" aria-label="Nicht enthalten"></span></td><td><span class="xs-n" role="img" aria-label="Nicht enthalten"></span></td><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td></tr>
+            <tr><th scope="row">Support in der Dringend-Warteschlange</th><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td></tr>
+            <tr><th scope="row">Persönliche Einführung fürs Team</th><td><span class="xs-n" role="img" aria-label="Nicht enthalten"></span></td><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td></tr>
+            <tr><th scope="row">Einrichtung und Datenumzug gemeinsam mit euch</th><td><span class="xs-n" role="img" aria-label="Nicht enthalten"></span></td><td><span class="xs-n" role="img" aria-label="Nicht enthalten"></span></td><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td></tr>
+            <tr><th scope="row">Feste Ansprechperson, Antwort am selben Werktag</th><td><span class="xs-n" role="img" aria-label="Nicht enthalten"></span></td><td><span class="xs-n" role="img" aria-label="Nicht enthalten"></span></td><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td></tr>
+            <tr><th scope="row">Direkter Draht in die Roadmap</th><td><span class="xs-n" role="img" aria-label="Nicht enthalten"></span></td><td><span class="xs-n" role="img" aria-label="Nicht enthalten"></span></td><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td></tr>
+            <tr><th scope="row">Eigene Vertragsbedingungen</th><td><span class="xs-n" role="img" aria-label="Nicht enthalten"></span></td><td><span class="xs-n" role="img" aria-label="Nicht enthalten"></span></td><td><span class="xs-n" role="img" aria-label="Nicht enthalten"></span></td><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td></tr>
+            <tr><th scope="row">Quartalsgespräch und Schulung fürs Team</th><td><span class="xs-n" role="img" aria-label="Nicht enthalten"></span></td><td><span class="xs-n" role="img" aria-label="Nicht enthalten"></span></td><td><span class="xs-n" role="img" aria-label="Nicht enthalten"></span></td><td><span class="xs-y" role="img" aria-label="Enthalten"></span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p class="xu-fine" data-plans-note hidden></p>
+
+    <dl class="xu-ledger">
+      <div><dt>Ein Preis für alle</dt><dd>Kein Lizenzen-Zählen, keine Nachkauf-Runde, wenn jemand Neues anfängt. Ihr wisst am Jahresanfang, was Xyntal kostet.</dd></div>
+      <div><dt>KI ohne Überraschungsrechnung</dt><dd>Ein festes KI-Budget ist im Tarif enthalten. Ist es aufgebraucht, entscheidet ihr, ob ihr Guthaben aufladet – nichts läuft heimlich weiter.</dd></div>
+      <div><dt>Auf Rechnung</dt><dd>Business jährlich und Enterprise bezahlt ihr per Rechnung, auf Wunsch mit eurer Bestellnummer.</dd></div>
+    </dl>
+  </section>
+
+  <!-- ============ 05 · 30 TAGE ============ -->
+  <section class="xs-scene xu-trial" aria-labelledby="test-title" data-in>
+    <header class="xs-head">
+      <p class="xs-mono xs-label">05 / Testen</p>
+      <h2 class="xs-h2" id="test-title">30 Tage testen – mit eurem ganzen Team</h2>
+      <p class="xs-lead">Ohne Zahlungsdaten und ohne Abo. So laufen die 30 Tage ab.</p>
+    </header>
+    <ol class="xu-days">
+      <li class="xu-day">
+        <p class="xs-mono xu-day__when">Vorher</p>
+        <h3>Anfrage</h3>
+        <p>Ihr schreibt kurz, wer ihr seid und wie viele Leute mitmachen. Zahlungsdaten braucht ihr dafür nicht.</p>
+      </li>
+      <li class="xu-day">
+        <p class="xs-mono xu-day__when">Tag 1</p>
+        <h3>Freischaltung und Einführung</h3>
+        <p>Ich melde mich per E-Mail und schalte Business oder Enterprise für euer Team frei. Wir richten mit euch Arbeitsbereiche, Rollen und Rechte ein.</p>
+      </li>
+      <li class="xu-day">
+        <p class="xs-mono xu-day__when">Tag 30</p>
+        <h3>Entscheidung</h3>
+        <p>Ihr habt Xyntal einen Monat im Alltag benutzt und entscheidet, ob ihr weitermacht.</p>
+      </li>
+      <li class="xu-day xu-day--fork">
+        <p class="xs-mono xu-day__when">Danach</p>
+        <div class="xu-fork">
+          <div class="xu-fork__a"><h3>Weiter mit Tarif</h3><p>Ihr bucht den Tarif, der zu eurer Größe passt, und arbeitet weiter.</p></div>
+          <div class="xu-fork__b"><h3>Zurück auf Free</h3><p>Ohne Verlängerung läuft das Konto auf Free weiter. Daten, Projekte und Dateien bleiben erhalten, gelöscht wird nichts.</p></div>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <!-- ============ 06 · DIREKTER DRAHT: Notiz von Nico und die Anfrage ============ -->
+  <section class="xs-scene xu-ask" id="anfrage" aria-labelledby="anfrage-title" data-in>
+    <header class="xs-head">
+      <p class="xs-mono xs-label">06 / Direkter Draht</p>
+      <h2 class="xs-h2" id="anfrage-title">Ihr schreibt mir, nicht einem Vertrieb</h2>
+    </header>
+    <div class="xu-ask__grid">
+      <article class="xu-note">
+        <p class="xs-mono xu-note__top"><span>Notiz</span><span>Von Nico, an euch</span></p>
+        <div class="xu-note__body">
+          <p>Hallo,</p>
+          <p>ich bin Nico, 19, und arbeite in der IT. Xyntal baue ich selbst. Wenn ihr hier schreibt, landet das nicht in einer Vertriebsabteilung, sondern bei mir.</p>
+          <p>Schreibt mir kurz, wer ihr seid und wie viele Leute mitmachen. Ich melde mich persönlich und schalte euch Business oder Enterprise für 30 Tage frei, ohne Zahlungsdaten und ohne Abo.</p>
+          <p>Danach entscheidet ihr. Wer nicht weitermacht, fällt auf den kostenlosen Tarif zurück; gelöscht wird dabei nichts. Und was euch in den 30 Tagen fehlt, landet auf der Roadmap.</p>
+        </div>
+        <p class="xu-note__sign"><span data-no-i18n>Nico</span><svg viewBox="0 0 120 14" preserveAspectRatio="none" aria-hidden="true"><path d="M2 9 C 22 3, 40 12, 60 7 S 98 4, 118 8" pathLength="1"/></svg></p>
+        <p class="xs-mono xu-note__ps"><a href="mailto:admin@xyntal.com" data-no-i18n>admin@xyntal.com</a></p>
+      </article>
+
+      <div class="xu-form-wrap">
+        <form class="xu-form" data-inquiry novalidate>
+          <div class="xu-field"><label for="xu-f-company">Firma</label><input id="xu-f-company" name="company" autocomplete="organization" required maxlength="120" aria-describedby="xu-e-company"><p class="xu-field__err" id="xu-e-company" data-err="company"></p></div>
+          <div class="xu-field"><label for="xu-f-name">Dein Name</label><input id="xu-f-name" name="name" autocomplete="name" required maxlength="120" aria-describedby="xu-e-name"><p class="xu-field__err" id="xu-e-name" data-err="name"></p></div>
+          <div class="xu-field"><label for="xu-f-email">Geschäftliche E-Mail</label><input id="xu-f-email" name="email" type="email" autocomplete="email" required maxlength="254" aria-describedby="xu-e-email"><p class="xu-field__err" id="xu-e-email" data-err="email"></p></div>
+          <div class="xu-field"><label for="xu-f-size">Wie viele Leute?</label><input id="xu-f-size" class="xs-num" name="size" type="number" min="1" step="1" inputmode="numeric" required aria-describedby="xu-e-size"><p class="xu-field__err" id="xu-e-size" data-err="size"></p></div>
+          <div class="xu-field xu-field--wide xu-field--select"><label for="xu-f-plan">Interesse an</label>
+            <select id="xu-f-plan" name="plan">
               <option value="">Weiß ich noch nicht</option>
               <option value="Business">Business (bis 300 Leute)</option>
               <option value="Enterprise">Enterprise (ab 300 Leuten)</option>
               <option value="Enterprise+">Enterprise+ (Firmengruppe, eigene Bedingungen)</option>
             </select>
-          </label>
-          <label class="un-field un-wide"><span>Was sollen wir wissen? (optional)</span><textarea name="message" rows="4" maxlength="2000" placeholder="Was nutzt ihr heute, was soll besser werden?"></textarea></label>
-          <label class="un-check un-wide"><input type="checkbox" name="pilot" checked><span>Wir möchten Xyntal 30 Tage kostenlos testen</span></label>
-          <label class="un-hp" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off"></label>
-          <p class="un-privacy un-wide">Wir nutzen deine Angaben nur, um dir zu antworten. Mehr dazu im <a href="/impressum#datenschutz">Datenschutz</a>.</p>
-          <div class="un-wide un-form-act"><button class="btn" type="submit">Anfrage senden</button><p class="un-status" data-inquiry-status role="status"></p></div>
+          </div>
+          <div class="xu-field xu-field--wide"><label for="xu-f-message">Was sollen wir wissen? (optional)</label><textarea id="xu-f-message" name="message" rows="3" maxlength="2000" placeholder="Was nutzt ihr heute, was soll besser werden?"></textarea></div>
+          <label class="xu-check xu-field--wide"><input type="checkbox" name="pilot" checked><i aria-hidden="true"></i><span>Wir möchten Xyntal 30 Tage kostenlos testen</span></label>
+          <label class="xu-hp" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off"></label>
+          <div class="xu-form__act xu-field--wide">
+            <button class="xs-pill" type="submit"><span data-submit-text>Anfrage senden</span> <i aria-hidden="true">→</i></button>
+            <p class="xu-form__status" data-inquiry-status role="status"></p>
+          </div>
+          <p class="xu-form__privacy xu-field--wide">Wir nutzen deine Angaben nur, um dir zu antworten. Mehr dazu im <a href="/impressum#datenschutz">Datenschutz</a>.</p>
         </form>
-      </section>
+        <div class="xu-done" data-inquiry-done tabindex="-1" hidden>
+          <p class="xs-mono xs-label">Angekommen</p>
+          <h3 class="xu-done__h">Danke. Deine Anfrage ist bei mir.</h3>
+          <p>Ich lese sie selbst und melde mich per E-Mail bei dir.</p>
+          <dl class="xu-facts" data-done-facts></dl>
+          <button type="button" class="xs-tlink" data-inquiry-again>Noch eine Anfrage schreiben</button>
+        </div>
+      </div>
+    </div>
+  </section>
 
-      <section class="pr-faq" id="fragen" aria-labelledby="fragen-title">
-        <h2 id="fragen-title">Häufige Fragen von Firmen</h2>
-        <dl>
-          <div><dt>Zahlen wir pro Person?</dt><dd>Nein. Der Tarif gehört zum Konto, dem der Arbeitsbereich gehört, und gilt für alle Mitglieder darin. Wer eingeladen wird, braucht kein eigenes Abo.</dd></div>
-          <div><dt>Welcher Tarif passt zu uns?</dt><dd>Bis 100 Leute reicht Ultra, bis 300 Business. Darüber, oder wenn ihr einen Jahresvertrag mit Rechnung und Bestellnummer braucht, ist Enterprise richtig. Enterprise kostet ab 9.900 € im Jahr für bis zu 750 Leute; für größere Firmen machen wir ein Angebot nach Größe.</dd></div>
-          <div><dt>Wie läuft die Testphase?</dt><dd>Ihr schickt die Anfrage oben, ich melde mich per E-Mail und schalte den Tarif für 30 Tage frei. Ihr braucht dafür keine Zahlungsdaten. Nach 30 Tagen läuft das Konto ohne Tarif auf Free weiter – Daten, Projekte und Dateien bleiben erhalten.</dd></div>
-          <div><dt>Können wir monatlich kündigen?</dt><dd>Business gibt es monatlich oder jährlich. Monatlich ist jederzeit zum Monatsende kündbar, jährlich spart ihr zwei Monatsbeiträge. Enterprise läuft als Jahresvertrag.</dd></div>
-          <div><dt>Gibt es Single Sign-on?</dt><dd>Ja, mit SAML 2.0 oder OpenID Connect. Wir verbinden euren Identity Provider, bestätigen eure Domains und ordnen eure Gruppen den Arbeitsbereichen und Rollen zu. Sagt in der Anfrage, welchen Anbieter ihr nutzt.</dd></div>
-          <div><dt>Was ist noch in Arbeit?</dt><dd>Benutzerverwaltung über SCIM (Konten und Gruppen direkt aus eurem Verzeichnis pflegen) und eine Organisationskonsole mit allen Arbeitsbereichen, Mitgliedern und Protokollen an einer Stelle. Wenn ihr das braucht, sagt es uns – wir sagen euch ehrlich, wann es kommt.</dd></div>
-          <div><dt>Wie sieht es mit Datenschutz aus?</dt><dd>Was wir verarbeiten und wofür, steht im <a href="/impressum#datenschutz">Datenschutz</a>. Einen Vertrag zur Auftragsverarbeitung und eure Fragebögen klären wir vor dem Vertragsabschluss mit euch.</dd></div>
-          <div><dt>Worauf läuft Xyntal?</dt><dd>Die App gibt es für macOS und Windows, vieles geht auch direkt auf der Website im Browser. Linux und Handy-Apps gibt es noch nicht.</dd></div>
-        </dl>
-      </section>
+  <!-- ============ FRAGEN ============ -->
+  <section class="xs-faq" id="fragen" aria-labelledby="fragen-title" data-faq>
+    <div class="xs-faq__head">
+      <p class="xs-mono xs-label">07 / Fragen</p>
+      <h2 class="xs-faq__title" id="fragen-title">Häufige Fragen von Firmen</h2>
+      <div class="xs-faq__out">
+        <p>Eure Frage ist nicht dabei? Der Xyntal-Assistent kennt die Tarife und antwortet sofort.</p>
+        <button type="button" class="xs-tlink" data-open-chat>Den Assistenten fragen</button>
+      </div>
+    </div>
+    <div class="xs-faq__list">
+      <details class="xs-q" id="frage-pro-person"><summary>Zahlen wir pro Person?<i aria-hidden="true"></i></summary>
+        <div class="xs-q__a"><p>Nein. Der Tarif gehört zum Konto, dem der Arbeitsbereich gehört, und gilt für alle Mitglieder darin. Wer eingeladen wird, braucht kein eigenes Abo.</p><a class="xs-q__link" href="#frage-pro-person">Link zu dieser Frage</a></div></details>
+      <details class="xs-q" id="frage-welcher"><summary>Welcher Tarif passt zu uns?<i aria-hidden="true"></i></summary>
+        <div class="xs-q__a"><p>Bis 100 Leute reicht Ultra, bis 300 Business. Darüber, oder wenn ihr einen Jahresvertrag mit Rechnung und Bestellnummer braucht, ist Enterprise richtig. Enterprise kostet ab 9.900 € im Jahr für bis zu 750 Leute; für größere Firmen machen wir ein Angebot nach Größe.</p><a class="xs-q__link" href="#frage-welcher">Link zu dieser Frage</a></div></details>
+      <details class="xs-q" id="frage-testphase"><summary>Wie läuft die Testphase?<i aria-hidden="true"></i></summary>
+        <div class="xs-q__a"><p>Ihr schickt die Anfrage oben, ich melde mich per E-Mail und schalte den Tarif für 30 Tage frei. Ihr braucht dafür keine Zahlungsdaten. Nach 30 Tagen läuft das Konto ohne Tarif auf Free weiter – Daten, Projekte und Dateien bleiben erhalten.</p><a class="xs-q__link" href="#frage-testphase">Link zu dieser Frage</a></div></details>
+      <details class="xs-q" id="frage-kuendigen"><summary>Können wir monatlich kündigen?<i aria-hidden="true"></i></summary>
+        <div class="xs-q__a"><p>Business gibt es monatlich oder jährlich. Monatlich ist jederzeit zum Monatsende kündbar, jährlich spart ihr zwei Monatsbeiträge. Enterprise läuft als Jahresvertrag.</p><a class="xs-q__link" href="#frage-kuendigen">Link zu dieser Frage</a></div></details>
+      <details class="xs-q" id="frage-sso"><summary>Gibt es Single Sign-on?<i aria-hidden="true"></i></summary>
+        <div class="xs-q__a"><p>Ja, mit SAML 2.0 oder OpenID Connect. Wir verbinden euren Identity Provider, bestätigen eure Domains und ordnen eure Gruppen den Arbeitsbereichen und Rollen zu. Sagt in der Anfrage, welchen Anbieter ihr nutzt.</p><a class="xs-q__link" href="#frage-sso">Link zu dieser Frage</a></div></details>
+      <details class="xs-q" id="frage-in-arbeit"><summary>Was ist noch in Arbeit?<i aria-hidden="true"></i></summary>
+        <div class="xs-q__a"><p>Benutzerverwaltung über SCIM (Konten und Gruppen direkt aus eurem Verzeichnis pflegen) und eine Organisationskonsole mit allen Arbeitsbereichen, Mitgliedern und Protokollen an einer Stelle. Wenn ihr das braucht, sagt es uns – wir sagen euch ehrlich, wann es kommt.</p><a class="xs-q__link" href="#frage-in-arbeit">Link zu dieser Frage</a></div></details>
+      <details class="xs-q" id="frage-datenschutz"><summary>Wie sieht es mit Datenschutz aus?<i aria-hidden="true"></i></summary>
+        <div class="xs-q__a"><p>Was wir verarbeiten und wofür, steht im <a href="/impressum#datenschutz">Datenschutz</a>. Einen Vertrag zur Auftragsverarbeitung und eure Fragebögen klären wir vor dem Vertragsabschluss mit euch.</p><a class="xs-q__link" href="#frage-datenschutz">Link zu dieser Frage</a></div></details>
+      <details class="xs-q" id="frage-plattformen"><summary>Worauf läuft Xyntal?<i aria-hidden="true"></i></summary>
+        <div class="xs-q__a"><p>Die App gibt es für macOS und Windows, vieles geht auch direkt auf der Website im Browser. Linux und Handy-Apps gibt es noch nicht.</p><a class="xs-q__link" href="#frage-plattformen">Link zu dieser Frage</a></div></details>
     </div>
   </section>
 </main>
@@ -297,7 +502,8 @@
 <script src="avatars.js?v=35"></script>
 <script src="notifications.js?v=35"></script>
 <script src="effects.js?v=40"></script>
-<script src="/pages/unternehmen.js?v=3" defer></script>
+<script src="/pages/tarife-kit.js?v=1" defer></script>
+<script src="/pages/unternehmen.js?v=4" defer></script>
 <script src="/account-menu.js?v=22" defer></script>
 <script src="/site-search.js?v=2" defer></script>
 <script src="/site-chat.js?v=6" defer></script>
