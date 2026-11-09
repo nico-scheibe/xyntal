@@ -20,7 +20,7 @@
   const S = {
     me: null, role: null, matrix: {}, staff: false,
     stats: null, flags: [],
-    users: { query: "", list: [], detail: null },
+    users: { detail: null, box: null, onChange: null, notify: null },
     workspaces: { list: [], members: new Map(), open: "" },
     projects: [], conversations: [],
     support: { tickets: [], filter: { status: "", mine: false, archived: false }, open: "", detail: null },
@@ -129,7 +129,18 @@
   const platformTabs = [...document.querySelectorAll("[data-tab][data-platform]")];
   const platformKeys = platformTabs.map((b) => b.dataset.tab);
   let readyResolve;
-  window.XyntalAdminPlatform = { ready: new Promise((r) => { readyResolve = r; }) };
+  // Für admin-people.js (Start + Nutzerliste): Rechte, Server-Aufrufe, Dialog und die App-Konto-Details
+  window.XyntalAdminPlatform = {
+    ready: new Promise((r) => { readyResolve = r; }),
+    can: (perm) => S.staff && can(perm),
+    api, ask, reason, roleLabel,
+    me: () => S.me,
+    stats: () => S.stats,
+    listUsers: async (query = "") => (await api("GET", `/admin/users${q({ q: query })}`)).users,
+    // App-Konto-Details (Sitzungen, Verwarnungen, Rolle, KI-Guthaben, Notizen …) in einen Kasten zeichnen
+    showUser: (id, box, { onChange, notify } = {}) => openUser(id, box, onChange, notify),
+    refreshCounts: () => loadCounts(),
+  };
 
   function gate(text) {
     for (const key of platformKeys) {
@@ -240,7 +251,7 @@
       const max = Math.max(1, ...countries.map((c) => c.count));
       const G = window.XyntalWorldGeo;
       p.innerHTML = `
-        ${head("PLATTFORM", "Übersicht", "Die Plattform auf einen Blick: Konten, Aktivität und Moderationslast.", `<button data-act="refresh">Aktualisieren</button>`)}
+        ${head("AUSWERTUNG", "Plattform-Zahlen", "Die App-Plattform auf einen Blick: Konten, Aktivität und Moderationslast.", `<button data-act="refresh">Aktualisieren</button>`)}
         <div class="xa-stats">
           ${stat("Nutzer", num(stats.users), `${num(stats.newUsers24h)} neu in 24 Std.`)}
           ${stat("Staff", num(stats.staff))}
@@ -277,58 +288,32 @@
         catch (err) { say("platform", reason(err), false); }
         finally { b.disabled = false; }
       }));
-    } catch (err) { p.innerHTML = head("PLATTFORM", "Übersicht", "") + empty(reason(err)); }
+    } catch (err) { p.innerHTML = head("AUSWERTUNG", "Plattform-Zahlen", "") + empty(reason(err)); }
   };
   document.addEventListener("click", (e) => {
     const b = e.target.closest("[data-goto]"); if (!b) return;
     document.querySelector(`[data-tab="${b.dataset.goto}"]`)?.click();
   });
 
-  // ---------- Nutzer ----------
-  loaders.users = async () => {
-    const p = panel("users");
-    if (!p.querySelector("[data-users-list]")) {
-      p.innerHTML = `${head("KONTEN", "Nutzer", "Konten suchen, Sitzungen und Verlauf prüfen und handeln. Jede Aktion landet im Audit-Log.")}
-        <div class="admin-filters"><label class="admin-search">Nutzer suchen<input type="search" data-users-search placeholder="Name, E-Mail oder @handle" value="${esc(S.users.query)}"></label></div>
-        <div data-users-list>${loading()}</div><div data-user-detail hidden></div>`;
-      let timer;
-      p.querySelector("[data-users-search]").addEventListener("input", (e) => { clearTimeout(timer); S.users.query = e.target.value; timer = setTimeout(loadUsers, 250); });
-      p.querySelector("[data-users-list]").addEventListener("click", (e) => { const row = e.target.closest("[data-user-id]"); if (row) openUser(row.dataset.userId); });
-      p.querySelector("[data-users-list]").addEventListener("keydown", (e) => { if (e.key !== "Enter" && e.key !== " ") return; const row = e.target.closest("[data-user-id]"); if (row) { e.preventDefault(); openUser(row.dataset.userId); } });
-      p.querySelector("[data-user-detail]").addEventListener("click", userDetailClick);
-      p.querySelector("[data-user-detail]").addEventListener("submit", userDetailSubmit);
+  // ---------- App-Konto-Details (eingebettet in die Nutzerliste von admin-people.js) ----------
+  async function openUser(id, box, onChange, notify) {
+    S.users.box = box; S.users.onChange = onChange || null; S.users.notify = notify || null;
+    if (!box.dataset.xaBound) {
+      box.dataset.xaBound = "1";
+      box.addEventListener("click", userDetailClick);
+      box.addEventListener("submit", userDetailSubmit);
     }
-    await loadUsers();
-  };
-  async function loadUsers() {
-    const list = $("[data-users-list]", panel("users"));
-    try {
-      const { users } = await api("GET", `/admin/users${q({ q: S.users.query })}`);
-      // Wie in der App zuerst das Team (Inhaber, Admin, Moderator, Support, Analyst), dann die Mitglieder.
-      const RANK = { owner: 5, admin: 4, moderator: 3, support: 2, analyst: 1 };
-      users.sort((x, y) => (RANK[y.staffRole] || 0) - (RANK[x.staffRole] || 0) || new Date(y.createdAt) - new Date(x.createdAt));
-      S.users.list = users;
-      list.innerHTML = users.length ? table(["Konto", "Rolle & Status", "Sitzungen", "Dabei seit"], users.map((u) => `
-        <tr data-user-id="${esc(u.id)}" tabindex="0" class="xa-clickable">
-          <td><div class="xa-person"><span class="admin-avatar">${esc(initials(u.displayName))}</span><div><b>${esc(u.displayName || "(ohne Namen)")}</b>${u.handle ? ` <small>@${esc(u.handle)}</small>` : ""}<br><small>${esc(u.email)}</small></div></div></td>
-          <td>${pill(roleLabel(u.staffRole), u.staffRole ? "accent" : "")} ${u.verified ? pill("Verifiziert", "ok") : ""} ${u.banned ? pill(u.bannedUntil ? `Gesperrt bis ${fmt(u.bannedUntil)}` : "Gesperrt", "danger") : ""} ${u.mutedUntil !== null && u.mutedUntil !== undefined ? pill(u.mutedUntil ? `Stumm bis ${fmt(u.mutedUntil)}` : "Stumm", "warn") : ""}</td>
-          <td>${num(u.activeSessions)}</td><td><small>${esc(day(u.createdAt))}</small></td></tr>`).join(""))
-        : empty(S.users.query ? "Kein Konto passt zu dieser Suche." : "Noch keine Konten.");
-    } catch (err) { list.innerHTML = empty(reason(err)); }
-  }
-  async function openUser(id) {
-    const box = $("[data-user-detail]", panel("users"));
-    box.hidden = false; box.innerHTML = loading("Konto wird geladen …"); box.scrollIntoView({ behavior: "smooth", block: "start" });
+    box.innerHTML = loading("App-Konto wird geladen …");
     try { S.users.detail = await api("GET", `/admin/users/${encodeURIComponent(id)}`); renderUser(); }
-    catch (err) { box.innerHTML = `<div class="xa-card">${empty(reason(err))}<button data-act="close">Schließen</button></div>`; }
+    catch (err) { box.innerHTML = empty(reason(err)); }
   }
+  const tell = (text, ok = true) => { if (S.users.notify) S.users.notify(text, ok); };
   function renderUser() {
-    const d = S.users.detail, u = d.user, box = $("[data-user-detail]", panel("users"));
+    const d = S.users.detail, u = d.user, box = S.users.box;
     const me = u.id === S.me.id;
     const roleOpts = [["none", "Mitglied (keine Staff-Rolle)"], ...Object.keys(ROLE_LABEL).map((r) => [r, ROLE_LABEL[r]])];
-    box.innerHTML = `<section class="xa-card xa-detail">
-      <div class="xa-card-head"><div class="xa-person"><span class="admin-avatar">${esc(initials(u.displayName))}</span><div><h3>${esc(u.displayName)}${u.handle ? ` <small>@${esc(u.handle)}</small>` : ""}</h3><small>${esc(u.email)} · dabei seit ${esc(day(u.createdAt))} · 2FA ${u.twoFactor ? "an" : "aus"}</small></div></div><button data-act="close">Schließen</button></div>
-      <div class="xa-badges">${pill(roleLabel(u.staffRole), u.staffRole ? "accent" : "")}${u.plan ? pill(u.subscribed ? `${u.plan} (Abo)` : u.planRenewsAt ? `${u.plan} bis ${day(u.planRenewsAt)}` : u.plan, u.plan !== "Free" && u.plan !== "Start" ? "ok" : "") : ""}${u.aiCreditCents ? pill(`KI-Guthaben ${euro(u.aiCreditCents)}`, "accent") : ""}${u.verified ? pill("Verifiziert", "ok") : ""}${u.banned ? pill(u.bannedUntil ? `Gesperrt bis ${fmt(u.bannedUntil)}` : "Gesperrt", "danger") : ""}${u.mutedUntil !== null && u.mutedUntil !== undefined ? pill(u.mutedUntil ? `Stumm bis ${fmt(u.mutedUntil)}` : "Stumm", "warn") : ""}</div>
+    box.innerHTML = `<section class="xa-detail">
+      <p class="hint">${esc(u.email)} · App-Konto seit ${esc(day(u.createdAt))} · Zwei-Faktor-Anmeldung ${u.twoFactor ? "an" : "aus"}${u.plan ? ` · Tarif ${esc(u.subscribed ? `${u.plan} (Abo)` : u.planRenewsAt ? `${u.plan} bis ${day(u.planRenewsAt)}` : u.plan)}` : ""}</p>
       ${u.headline || u.bio || u.location || u.website || u.github ? `<p class="xa-bio">${[u.headline, u.location, u.website, u.github].filter(Boolean).map(esc).join(" · ")}${u.bio ? `<br><span>${esc(u.bio)}</span>` : ""}</p>` : ""}
       <div class="xa-stats xa-stats-sm">
         ${stat("Arbeitsbereiche (Inhaber)", num(d.counts.workspacesOwned))}${stat("Mitgliedschaften", num(d.counts.memberships))}${stat("Tickets", num(d.counts.tickets))}
@@ -341,17 +326,13 @@
       </div>
       ${can("billing.manage") ? `<div class="row-actions xa-actions"><button data-act="credit">Guthaben gutschreiben</button>${u.aiCredit.removableCents > 0 ? `<button class="admin-danger" data-act="uncredit">Gutschrift entfernen</button>` : ""}</div>
       <p class="hint">Entfernen nimmt nur von Hand gutgeschriebenes, noch nicht verbrauchtes Guthaben zurück – Bezahltes bleibt immer.</p>` : ""}` : ""}
-      <h4>Aktionen</h4>
+      <h4>Weitere Aktionen</h4>
       <div class="row-actions xa-actions">
-        ${can("users.verify") ? `<button data-act="verify" data-on="${u.verified}">${u.verified ? "Verifizierung entfernen" : "Verifizieren"}</button>` : ""}
         ${can("users.ban") && !me ? `<button data-act="warn">Verwarnen</button>` : ""}
-        ${can("users.ban") && !me ? (u.banned ? `<button data-act="unban">Sperre aufheben</button>` : `<button class="admin-danger" data-act="ban">Sperren</button>`) : ""}
-        ${can("users.ban") && !me ? (u.mutedUntil !== null && u.mutedUntil !== undefined ? `<button data-act="unmute">Stummschaltung aufheben</button>` : `<button data-act="mute">Stummschalten</button>`) : ""}
         ${can("billing.manage") && u.plan && u.plan !== "Free" && u.plan !== "Start" && !u.subscribed ? `<button class="admin-danger" data-act="unplan">Tarif ${esc(u.plan)} entfernen</button>` : ""}
         ${can("users.reset2fa") ? `<button data-act="reset2fa">2FA zurücksetzen</button>` : ""}
-        ${can("users.ban") ? `<button data-act="kill">Alle Sitzungen beenden</button>` : ""}
+        ${can("users.ban") ? `<button data-act="kill">Überall abmelden</button>` : ""}
         ${can("users.ban") ? `<button data-act="alts">Verknüpfte Konten</button>` : ""}
-        ${can("users.delete") && !me && u.staffRole !== "owner" ? `<button class="admin-danger" data-act="delete">Konto löschen</button>` : ""}
       </div>
       ${can("staff.manage") && !me ? `<form class="xa-inline" data-form="role"><label>Staff-Rolle<select name="staffRole">${roleOpts.map(([v, l]) => `<option value="${v}" ${(u.staffRole || "none") === v ? "selected" : ""}>${esc(l)}</option>`).join("")}</select></label><label>Grund<input name="reason" maxlength="500" placeholder="optional"></label><button>Rolle setzen</button></form>` : ""}
       <div class="xa-cols">
@@ -366,8 +347,12 @@
       </div></section>`;
   }
   async function userAction(label, fn) {
-    try { await fn(); say("users", label); const id = S.users.detail && S.users.detail.user.id; await loadUsers(); if (id) await openUser(id); }
-    catch (err) { say("users", reason(err), false); }
+    try {
+      await fn(); tell(label);
+      const id = S.users.detail && S.users.detail.user.id;
+      if (S.users.onChange) await S.users.onChange();
+      if (id && S.users.box && S.users.box.isConnected) await openUser(id, S.users.box, S.users.onChange, S.users.notify);
+    } catch (err) { tell(reason(err), false); }
   }
   const DURATIONS = [["", "Unbefristet"], ["30", "30 Minuten"], ["720", "12 Stunden"], ["1440", "1 Tag"], ["10080", "7 Tage"], ["20160", "2 Wochen"], ["43200", "30 Tage"]];
   async function userDetailClick(e) {
@@ -375,7 +360,6 @@
     const d = S.users.detail; if (!d && b.dataset.act !== "close") return;
     const u = d && d.user, id = u && encodeURIComponent(u.id), name = u && u.displayName;
     switch (b.dataset.act) {
-      case "close": { const box = $("[data-user-detail]", panel("users")); box.hidden = true; box.innerHTML = ""; S.users.detail = null; return; }
       case "verify": { const next = b.dataset.on !== "true"; return userAction(next ? `${name} ist jetzt verifiziert.` : `Verifizierung von ${name} entfernt.`, () => api("POST", `/admin/users/${id}/verify`, { verified: next })); }
       case "warn": { const a = await ask({ title: `${name} verwarnen`, text: "Die Person sieht die Verwarnung sofort in der App.", fields: [{ name: "reason", label: "Grund", type: "textarea", required: true }], confirm: "Verwarnen" }); if (!a) return;
         return userAction(`${name} wurde verwarnt und benachrichtigt.`, () => api("POST", `/admin/users/${id}/warn`, { reason: a.reason })); }
@@ -397,26 +381,26 @@
           modal(`Verknüpfte Konten von ${name}`, `<p class="hint">Konten, die in den letzten 90 Tagen dasselbe Gerät genutzt haben oder innerhalb von 24 Stunden dasselbe Netzwerk. Ein geteiltes Netzwerk kann auch ein Büro oder Haushalt sein; ein geteiltes Gerät sagt mehr.</p>
             <p><small>Geräte: ${num(r.devices.length)} · Netzwerke: ${num(r.ips.length)}</small></p>
             ${r.accounts.length ? `<ul class="xa-list xa-list-plain">${r.accounts.map((a) => `<li><div><b>${esc(a.displayName || a.email)}</b><small>${esc(a.email)}${a.handle ? ` · @${esc(a.handle)}` : ""} · ${esc((a.via || []).map((v) => (v === "device" ? "gleiches Gerät" : "gleiches Netzwerk")).join(", "))}${(a.sharedIps || []).map((x) => `<br>Netzwerk ${esc(x.ip)} · ${esc(stamp(x.at))}`).join("")}</small></div></li>`).join("")}</ul>` : empty("Kein anderes Konto hat dasselbe Gerät oder Netzwerk genutzt.")}`);
-        } catch (err) { say("users", reason(err), false); }
+        } catch (err) { tell(reason(err), false); }
         return;
       }
       case "delete": { const a = await ask({ title: `Konto von ${name} löschen`, text: "Unwiderruflich: Sitzungen, Mitgliedschaften und Nachrichten werden mit entfernt. Bestätige mit deinem Passwort.", danger: true, confirm: "Endgültig löschen", fields: [{ name: "reason", label: "Grund", type: "textarea", required: true }, { name: "password", label: "Dein Passwort", type: "password", required: true }] }); if (!a) return;
-        try { await api("POST", `/admin/users/${id}/delete`, { reason: a.reason, password: a.password }); say("users", `Konto von ${name} gelöscht.`); $("[data-user-detail]", panel("users")).hidden = true; S.users.detail = null; await loadUsers(); loadCounts(); }
-        catch (err) { say("users", reason(err), false); }
+        try { await api("POST", `/admin/users/${id}/delete`, { reason: a.reason, password: a.password }); tell(`App-Konto von ${name} gelöscht.`); S.users.detail = null; if (S.users.onChange) await S.users.onChange(); loadCounts(); }
+        catch (err) { tell(reason(err), false); }
         return; }
       case "credit": { const a = await ask({ title: `KI-Guthaben für ${name}`, text: "Wird zusätzlich zum bezahlten Guthaben gutgeschrieben und lässt sich später wieder entfernen.", confirm: "Gutschreiben", fields: [{ name: "euros", label: "Betrag in Euro (z. B. 5 oder 2,50)", required: true }, { name: "reason", label: "Grund", type: "textarea", required: true }] }); if (!a) return;
         const cents = parseEuroCents(String(a.euros).trim());
-        if (cents === undefined || cents < 0) { say("users", "Der Betrag ist in Euro, höchstens zwei Nachkommastellen und höchstens 500: 5, 2,50.", false); return; }
+        if (cents === undefined || cents < 0) { tell("Der Betrag ist in Euro, höchstens zwei Nachkommastellen und höchstens 500: 5, 2,50.", false); return; }
         return userAction(`${euro(cents)} KI-Guthaben für ${name} gutgeschrieben.`, () => api("POST", `/admin/users/${id}/ai-credit`, { cents, reason: a.reason })); }
       case "uncredit": { const max = u.aiCredit.removableCents;
         const a = await ask({ title: `Gutschrift von ${name} entfernen`, text: `Von Hand gutgeschrieben und noch übrig: ${euro(max)}. Bezahltes Guthaben bleibt unberührt. Ohne Betrag wird alles davon entfernt.`, danger: true, confirm: "Entfernen", fields: [{ name: "euros", label: "Betrag in Euro (leer = alles)" }, { name: "reason", label: "Grund", type: "textarea", required: true }] }); if (!a) return;
         const raw = String(a.euros || "").trim(), cents = raw ? parseEuroCents(raw) : undefined;
-        if (raw && (cents === undefined || cents < 0)) { say("users", "Der Betrag ist in Euro, höchstens zwei Nachkommastellen: 5, 2,50.", false); return; }
+        if (raw && (cents === undefined || cents < 0)) { tell("Der Betrag ist in Euro, höchstens zwei Nachkommastellen: 5, 2,50.", false); return; }
         return userAction(`Gutschrift von ${name} entfernt.`, () => api("POST", `/admin/users/${id}/ai-credit/remove`, { cents, reason: a.reason })); }
       case "unwarn": { const w = d.warnings.find((x) => x.id === b.dataset.warning);
         const a = await ask({ title: `Verwarnung von ${name} zurücknehmen`, text: `„${w ? w.reason : ""}“ zählt danach nicht mehr, die Benachrichtigung verschwindet. Das Audit-Log behält beides.`, confirm: "Zurücknehmen", fields: [{ name: "reason", label: "Grund (optional)", type: "textarea" }] }); if (!a) return;
         return userAction(`Verwarnung von ${name} zurückgenommen.`, () => api("POST", `/admin/users/${id}/unwarn`, { warningId: b.dataset.warning, reason: a.reason })); }
-      case "unplan": { if (u.subscribed) { say("users", "Ein bezahltes Abo lässt sich hier nicht entfernen.", false); return; }
+      case "unplan": { if (u.subscribed) { tell("Ein bezahltes Abo lässt sich hier nicht entfernen.", false); return; }
         const a = await ask({ title: `Tarif von ${name} entfernen`, text: `${u.plan}${u.planRenewsAt ? ` (bis ${day(u.planRenewsAt)})` : ""} wurde von Hand vergeben. Das Konto ist danach sofort wieder im kostenlosen Tarif. Bezahlte Abos lassen sich hier nicht entfernen.`, danger: true, confirm: "Tarif entfernen", fields: [{ name: "reason", label: "Grund", type: "textarea", required: true }] }); if (!a) return;
         return userAction(`Tarif ${u.plan} von ${name} entfernt.`, () => api("POST", `/admin/users/${id}/plan/remove`, { reason: a.reason })); }
       case "note-delete": return userAction("Notiz gelöscht.", () => api("DELETE", `/admin/users/${id}/notes/${encodeURIComponent(b.dataset.note)}`));
@@ -1102,7 +1086,7 @@
             <div class="row-actions"><button data-goto-user="${esc(u.id)}">Konto unter „Nutzer“ öffnen</button></div>`;
         } catch (err) { box.innerHTML = empty(reason(err)); }
       });
-      p.querySelector("[data-sec-list]").addEventListener("click", (e) => { const b = e.target.closest("[data-goto-user]"); if (!b) return; document.querySelector('[data-tab="users"]')?.click(); setTimeout(() => openUser(b.dataset.gotoUser), 400); });
+      p.querySelector("[data-sec-list]").addEventListener("click", (e) => { const b = e.target.closest("[data-goto-user]"); if (!b) return; if (window.XyntalAdminPeople) window.XyntalAdminPeople.openApp(b.dataset.gotoUser); });
     } catch (err) { p.querySelector(".xa-loading").outerHTML = empty(reason(err)); }
   };
 
