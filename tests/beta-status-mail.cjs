@@ -14,6 +14,7 @@ const sent=[];let smtpOk=true;ctx.transport.send=async(m)=>{if(!smtpOk)throw new
  const post=(body,headers={})=>fetch(url,{method:'POST',headers:{'Content-Type':'application/json',Origin:'https://xyntal.de',Authorization:'Bearer '+admin,...headers},body:JSON.stringify(body)});
  assert.equal((await fetch(url)).status,405);
  assert.equal((await post({id:'7'},{Origin:'https://evil.example'})).status,403);
+ assert.equal((await post({id:'x'},{Origin:'https://admin.xyntal.de'})).status,400,'Admin-Adresse darf die Route aufrufen');
  assert.equal((await post({id:'7'},{Authorization:''})).status,401);
  assert.equal((await post({id:'x'})).status,400);
  assert.equal((await post({id:'7'},{Authorization:'Bearer '+'b'.repeat(40)})).status,403,'Nicht-Admin bekommt keine Bewerbung und keine Mail');

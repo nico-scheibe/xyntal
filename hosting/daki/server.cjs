@@ -339,7 +339,8 @@ const statusMailTransport = { send: smtpSend };
 const statusMailLimits = { count: 0, until: 0 };
 async function handleBetaStatusMail(req, res) {
   if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return feedbackJson(res, 405, { error: 'Nur POST.' }); }
-  if (req.headers.origin && !['https://xyntal.de', 'https://www.xyntal.de'].includes(req.headers.origin)) return feedbackJson(res, 403, { error: 'Diese Anfrage ist nicht erlaubt.' });
+  // Der Admin-Bereich läuft unter admin.xyntal.de (ADMIN_HOST, siehe unten) und ruft diese Route von dort auf.
+  if (req.headers.origin && !['https://xyntal.de', 'https://www.xyntal.de', 'https://' + (process.env.ADMIN_HOST || 'admin.xyntal.de').toLowerCase()].includes(req.headers.origin)) return feedbackJson(res, 403, { error: 'Diese Anfrage ist nicht erlaubt.' });
   const token = /^Bearer\s+([A-Za-z0-9._-]{20,4096})$/.exec(req.headers.authorization || '');
   if (!token) return feedbackJson(res, 401, { error: 'Bitte als Admin einloggen.' });
   if (!/^application\/json(?:\s*;|$)/i.test(req.headers['content-type'] || '')) return feedbackJson(res, 415, { error: 'Ungültiges Datenformat.' });
