@@ -38,6 +38,7 @@
   const num = (n) => Number(n || 0).toLocaleString("de-DE");
   const fmt = (iso) => { if (!iso) return "–"; const d = new Date(iso); return Number.isNaN(d.getTime()) ? "–" : d.toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" }); };
   const day = (iso) => { if (!iso) return "–"; const d = new Date(iso); return Number.isNaN(d.getTime()) ? "–" : d.toLocaleDateString("de-DE", { dateStyle: "medium" }); };
+  const stamp = (iso) => { const d = new Date(iso); return Number.isNaN(d.getTime()) ? "–" : d.toLocaleString("de-DE", { dateStyle: "medium", timeStyle: "short" }); };
   function ago(iso) {
     const ms = Date.now() - new Date(iso).getTime();
     if (!Number.isFinite(ms) || ms < 60000) return "gerade eben";
@@ -393,9 +394,9 @@
       case "alts": {
         try {
           const r = await api("GET", `/admin/users/${id}/linked`);
-          modal(`Verknüpfte Konten von ${name}`, `<p class="hint">Konten, die in den letzten 90 Tagen dasselbe Gerät oder Netzwerk genutzt haben. Ein geteiltes Netzwerk kann auch ein Büro oder Haushalt sein; ein geteiltes Gerät sagt mehr.</p>
+          modal(`Verknüpfte Konten von ${name}`, `<p class="hint">Konten, die in den letzten 90 Tagen dasselbe Gerät genutzt haben oder innerhalb von 24 Stunden dasselbe Netzwerk. Ein geteiltes Netzwerk kann auch ein Büro oder Haushalt sein; ein geteiltes Gerät sagt mehr.</p>
             <p><small>Geräte: ${num(r.devices.length)} · Netzwerke: ${num(r.ips.length)}</small></p>
-            ${r.accounts.length ? `<ul class="xa-list xa-list-plain">${r.accounts.map((a) => `<li><div><b>${esc(a.displayName || a.email)}</b><small>${esc(a.email)}${a.handle ? ` · @${esc(a.handle)}` : ""} · ${esc((a.via || []).map((v) => (v === "device" ? "gleiches Gerät" : "gleiches Netzwerk")).join(", "))}</small></div></li>`).join("")}</ul>` : empty("Kein anderes Konto hat dasselbe Gerät oder Netzwerk genutzt.")}`);
+            ${r.accounts.length ? `<ul class="xa-list xa-list-plain">${r.accounts.map((a) => `<li><div><b>${esc(a.displayName || a.email)}</b><small>${esc(a.email)}${a.handle ? ` · @${esc(a.handle)}` : ""} · ${esc((a.via || []).map((v) => (v === "device" ? "gleiches Gerät" : "gleiches Netzwerk")).join(", "))}${(a.sharedIps || []).map((x) => `<br>Netzwerk ${esc(x.ip)} · ${esc(stamp(x.at))}`).join("")}</small></div></li>`).join("")}</ul>` : empty("Kein anderes Konto hat dasselbe Gerät oder Netzwerk genutzt.")}`);
         } catch (err) { say("users", reason(err), false); }
         return;
       }
@@ -730,8 +731,11 @@
           print("info", `${u.displayName} nutzte (letzte 90 Tage): Geräte ${r.devices.length} · Netzwerke ${r.ips.length}`);
           if (!r.accounts.length) { print("ok", "Kein anderes Konto hat dasselbe Gerät oder Netzwerk genutzt."); return; }
           print("info", "Andere Konten auf demselben Gerät oder Netzwerk:");
-          for (const a of r.accounts) print("info", `  ${a.displayName || a.email} · ${a.email}${a.handle ? ` · @${a.handle}` : ""} · ${(a.via || []).map((v) => (v === "device" ? "Gerät" : "Netzwerk")).join(" + ")}${a.banned ? " · gesperrt" : ""}`);
-          print("info", "Ein geteiltes Netzwerk kann auch ein Büro oder Haushalt sein; ein geteiltes Gerät sagt mehr.");
+          for (const a of r.accounts) {
+            print("info", `  ${a.displayName || a.email} · ${a.email}${a.handle ? ` · @${a.handle}` : ""} · ${(a.via || []).map((v) => (v === "device" ? "Gerät" : "Netzwerk")).join(" + ")}${a.banned ? " · gesperrt" : ""}`);
+            for (const s of a.sharedIps || []) print("info", `      Netzwerk ${s.ip} · dort angemeldet ${stamp(s.at)}`);
+          }
+          print("info", "Netzwerk zählt nur, wenn beide es innerhalb von 24 Stunden genutzt haben. Auch dann kann es ein Büro oder Haushalt sein; ein geteiltes Gerät sagt mehr.");
           return; }
         case "reports": { const { reports } = await api("GET", "/admin/reports?status=open");
           if (!reports.length) { print("ok", "Keine offenen Meldungen."); return; }
