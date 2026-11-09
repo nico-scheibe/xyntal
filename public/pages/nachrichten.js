@@ -384,6 +384,10 @@
     ]);
     S.conversations = conversations;
     S.myRequests = mine.requests || [];
+    // Die Liste kann vor dem „gelesen“ des offenen Gesprächs geladen worden sein:
+    // was gerade auf dem Schirm ist, gilt als gelesen.
+    const shown = S.mode === "thread" && document.visibilityState === "visible" ? conv(S.active) : null;
+    if (shown && (shown.unread || shown.mentions)) markRead();
     renderList();
     const ids = [...new Set(conversations.map((c) => c.partnerId).filter(Boolean))];
     await Promise.all(ids.map(user));
@@ -530,16 +534,23 @@
       if (document.visibilityState === "visible") markRead();
     } catch { /* nächster Versuch beim nächsten Ereignis */ }
   }
-  let readBusy = false;
+  // Läuft schon ein Aufruf, wird danach noch einmal gelesen – sonst bliebe eine
+  // Nachricht, die währenddessen ankommt, für immer als ungelesen stehen.
+  let readBusy = false, readAgain = false;
   async function markRead() {
     const c = conv(S.active);
-    if (!c || readBusy || document.visibilityState !== "visible") return;
+    if (!c || document.visibilityState !== "visible") return;
+    if (readBusy) { readAgain = true; return; }
     readBusy = true;
     try {
       await X.api("POST", `/conversations/${encodeURIComponent(c.id)}/read`, {});
-      c.unread = 0; c.mentions = 0;
+      const now = conv(c.id);
+      if (now) { now.unread = 0; now.mentions = 0; }
       renderList();
-    } catch { /* später */ } finally { readBusy = false; }
+    } catch { /* später */ } finally {
+      readBusy = false;
+      if (readAgain) { readAgain = false; markRead(); }
+    }
   }
 
   // ---------- Verlauf zeichnen ----------
