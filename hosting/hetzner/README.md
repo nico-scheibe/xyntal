@@ -83,7 +83,10 @@ Rechte prüfen weiterhin Supabase (`is_admin` + 2FA) und der App-Server (Staff-R
 Cloudflare-Einstellungen:
 
 - DNS: `admin` als A-Record auf `91.98.171.233`, **Proxied** (orange Wolke) – anders als die übrigen Einträge.
-- Rules → Configuration Rules: Host `admin.xyntal.de` → SSL **Full** (Caddy nutzt `tls internal`, siehe `Caddyfile`).
+  Nur für das allererste Zertifikat auf „DNS only“ stellen (Cloudflare leitet HTTP auf HTTPS um, Let's Encrypt
+  käme sonst nicht durch), danach wieder Proxied. Verlängerungen klappen über den Proxy, weil Caddy
+  ACME-Challenges auch über HTTPS beantwortet und das alte Zertifikat dann noch gültig ist.
+- Rules → Configuration Rules: „admin.xyntal.de SSL Strict“ (Host `admin.xyntal.de` → SSL **Strict**).
 - Supabase → Authentication → URL Configuration → Redirect URLs: `https://admin.xyntal.de/**` (für Google/Apple-Login).
 - App-Server: `https://admin.xyntal.de` steht im Standard von `WEBSITE_ORIGINS`; ist die Variable in `api.env` gesetzt, dort ergänzen.
 

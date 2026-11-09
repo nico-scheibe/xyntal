@@ -10,12 +10,11 @@ xyntal.de, www.xyntal.de {
 	reverse_proxy website:4129
 }
 
-# Admin-Bereich: in Cloudflare „Proxied“ (orange Wolke) mit Cloudflare Access davor.
-# Cloudflare verbindet sich per SSL-Modus „Full“ (Configuration Rule nur für diesen Host),
-# deshalb reicht ein Zertifikat von Caddys interner CA – kein Let's Encrypt durch den Proxy.
+# Admin-Bereich: in Cloudflare „Proxied“ (orange Wolke) mit Cloudflare Access davor,
+# SSL-Modus „Strict“ (Configuration Rule nur für diesen Host). Das erste Zertifikat holt Caddy, während
+# der DNS-Eintrag kurz auf „DNS only“ steht; Verlängerungen laufen danach auch über den Proxy.
 # Die Website prüft zusätzlich das Access-Token (hosting/daki/server.cjs), direkte Aufrufe der IP bekommen 403.
 admin.xyntal.de {
-	tls internal
 	encode zstd gzip
 	reverse_proxy website:4129
 }
