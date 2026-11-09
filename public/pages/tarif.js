@@ -188,17 +188,23 @@
   // Upgrade-Karten nur für Free: bezahlte Tarife wechseln im Abo-Portal (der Server lehnt
   // einen zweiten Checkout ab). Beschreibung und Feature-Zeilen kommen vom Server schon
   // in der Seitensprache, daher data-no-i18n.
+  const quarterOnly = (p) => Array.isArray(p.intervals) && !p.intervals.includes("month") && p.intervals.includes("quarter");
   function plansPanel(d) {
     const free = d.plan === "Free" || d.plan === "Start";
     const plans = (d.plans || []).filter((p) => p.priceCents > 0 && p.contactSales !== true);
     if (!free || !plans.length) return "";
     const cards = plans.map((p) => {
-      const full = yearly ? p.yearlyPriceCents : p.priceCents;
-      const unit = t(yearly ? "/Jahr" : "/Monat");
+      // Business gibt es nur vierteljährlich oder jährlich: dort steht das Quartal statt des Monats.
+      const quarterly = !yearly && quarterOnly(p);
+      const full = yearly ? p.yearlyPriceCents : quarterly ? p.quarterlyPriceCents : p.priceCents;
+      const unit = t(yearly ? "/Jahr" : quarterly ? "/Quartal" : "/Monat");
+      const company = p.businessOnly
+        ? `<p class="xm-billing-text"><b>${esc(p.trialDays > 0 && !yearly ? t("Nur für Unternehmen · 30 Tage kostenlos") : t("Nur für Unternehmen"))}</b></p>`
+        : "";
       return `
         <article class="xm-person xm-plan">
           <div class="xm-billing-head"><h3 data-no-i18n>${esc(p.name)}</h3></div>
-          <p class="xm-plan-price"><b>${esc(price(full))}</b>${esc(unit)}</p>
+          <p class="xm-plan-price"><b>${esc(price(full))}</b>${esc(unit)}</p>${company}
           <p class="xm-billing-text" data-no-i18n>${esc(p.blurb)}</p>
           <ul class="xm-plan-features" data-no-i18n>${planFeatures(p, d).map((f) => `<li>${esc(f)}</li>`).join("")}</ul>
           <div class="xm-actions"><button class="btn btn-small" type="button" data-upgrade="${esc(p.id)}" ${d.configured ? "" : "disabled"}>${esc(t("{plan} wählen").replace("{plan}", p.name))}</button></div>
@@ -257,6 +263,7 @@
     if (!b) return;
     if (b.hasAttribute("data-retry")) { load(); return; }
     if (b.dataset.pack) { go("/billing/credits/checkout", { cents: Number(b.dataset.pack) }, b); return; }
+    // „month“ rechnet der Server bei Business vierteljährlich ab.
     if (b.dataset.upgrade) { go("/billing/checkout", { plan: b.dataset.upgrade, interval: yearly ? "year" : "month" }, b); return; }
     if (b.hasAttribute("data-portal")) { go("/billing/portal", {}, b); return; }
     if (b.dataset.interval) { yearly = b.dataset.interval === "year"; render(); }

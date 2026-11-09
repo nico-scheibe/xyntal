@@ -22,7 +22,7 @@
     { id: "Plus", name: "Plus", priceCents: 1200, yearlyPriceCents: 12000, limits: { membersPerWorkspace: 15 } },
     { id: "Pro", name: "Pro", priceCents: 2900, yearlyPriceCents: 29000, limits: { membersPerWorkspace: 25 } },
     { id: "Ultra", name: "Ultra", priceCents: 7900, yearlyPriceCents: 79000, blurb: "Für kleine Firmen, die auf Xyntal laufen.", features: [], limits: { membersPerWorkspace: 100 } },
-    { id: "Business", name: "Business", priceCents: 29900, yearlyPriceCents: 299000, blurb: "Für mittlere Firmen: das ganze Team an einem Ort.", features: [], limits: { membersPerWorkspace: 300 } },
+    { id: "Business", name: "Business", priceCents: 29900, quarterlyPriceCents: 89700, intervals: ["quarter", "year"], businessOnly: true, trialDays: 30, yearlyPriceCents: 299000, blurb: "Für mittlere Firmen: das ganze Team an einem Ort.", features: [], limits: { membersPerWorkspace: 300 } },
     { id: "Enterprise", name: "Enterprise", priceCents: 0, yearlyPriceCents: 990000, yearlyOnly: true, contactSales: true, blurb: "Für große Organisationen: ein Vertrag, alle Teams an Bord.", features: [], limits: { membersPerWorkspace: null } },
     { id: "Enterprise+", name: "Enterprise+", priceCents: 0, yearlyPriceCents: 2400000, yearlyOnly: true, contactSales: true, blurb: "Für Firmengruppen und eigene Vertragsbedingungen.", features: [], limits: { membersPerWorkspace: null } },
   ];
@@ -127,6 +127,9 @@
       ? `<em>${esc(T(`≈ ${euro(Math.round(p.yearlyPriceCents / 12 / n), 2)} pro Person und Monat bei ${n.toLocaleString(loc())} Leuten`, `≈ ${euro(Math.round(p.yearlyPriceCents / 12 / n), 2)} per person a month for ${n.toLocaleString(loc())} people`))}</em>`
       : `<em>${esc(T("Preis nach Umfang", "Priced by scope"))}</em>`;
     if (p.contactSales) return `<b>${T("ab ", "from ")}${euro(p.yearlyPriceCents)}</b><small>${T("pro Jahr · Jahresvertrag auf Rechnung", "per year · annual contract, by invoice")}</small>${perLine}`;
+    if (Array.isArray(p.intervals) && !p.intervals.includes("month") && p.quarterlyPriceCents > 0) {
+      return `<b>${euro(p.quarterlyPriceCents)}</b><small>${T(`pro Quartal · oder ${euro(p.yearlyPriceCents)} im Jahr${p.trialDays > 0 ? " · 30 Tage kostenlos" : ""}`, `per quarter · or ${euro(p.yearlyPriceCents)} a year${p.trialDays > 0 ? " · 30 days free" : ""}`)}</small>${perLine}`;
+    }
     return `<b>${euro(p.priceCents)}</b><small>${T(`pro Monat · oder ${euro(p.yearlyPriceCents)} im Jahr`, `per month · or ${euro(p.yearlyPriceCents)} a year`)}</small>${perLine}`;
   }
   function ctaHtml(p) {

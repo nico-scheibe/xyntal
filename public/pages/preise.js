@@ -37,6 +37,9 @@
     if (p.priceCents === 0 && p.yearlyPriceCents === 0) return `<b>0 €</b><small>${T("für immer", "forever")}</small>`;
     if (p.contactSales) return `<b>${T("ab ", "from ")}${euro(p.yearlyPriceCents)}</b><small>${T("pro Jahr · auf Anfrage", "per year · on request")}</small>`;
     if (p.yearlyOnly || cycle === "year") return `<b>${euro(p.yearlyPriceCents)}</b><small>${T("pro Jahr", "per year")}${!p.yearlyOnly && p.priceCents ? ` · ${T(`entspricht ${euro(Math.round(p.yearlyPriceCents / 12))} im Monat`, `equals ${euro(Math.round(p.yearlyPriceCents / 12))} a month`)}` : ""}</small>`;
+    if (Array.isArray(p.intervals) && !p.intervals.includes("month") && p.quarterlyPriceCents > 0) {
+      return `<b>${euro(p.quarterlyPriceCents)}</b><small>${T("pro Quartal · nur für Unternehmen", "per quarter · companies only")}${p.trialDays > 0 ? T(" · 30 Tage kostenlos", " · 30 days free") : ""}</small>`;
+    }
     return `<b>${euro(p.priceCents)}</b><small>${T("pro Monat", "per month")}</small>`;
   }
   function cta(p) {
