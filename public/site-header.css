@@ -1,7 +1,7 @@
 /* ---------- Gemeinsame Kopfzeile (alle Seiten) ----------
    Eigenständig, damit sie auf Seiten mit style.css und mit home.css gleich aussieht.
    Wird als letztes Stylesheet geladen. Verhalten: account-menu.js (Menü, aktive Seite),
-   effects.js (Suche), i18n.js (DE/EN), account-menu.js (Konto). */
+   site-search.js (Suche), i18n.js (DE/EN), account-menu.js (Konto). */
 .nav {
   --nh-bg: 28, 28, 28; --nh-1: #ECEAE4; --nh-2: #B9B7B0; --nh-3: #918F89;
   --nh-line: rgba(236, 234, 228, .10); --nh-line-2: rgba(236, 234, 228, .22);
@@ -100,43 +100,16 @@
 }
 @media (max-width: 640px) { .nav .nav-links:not(.open) .nav-cta { display: none; } }
 
-/* Suche (effects.js), Sprache (i18n.js), Konto (account-menu.js) */
-.nav .cmdk-trigger {
-  display: none; align-items: center; gap: 8px; flex: none; order: 6;
-  font: inherit; font-size: 13px; color: var(--nh-3); cursor: pointer;
-  background: transparent; border: 0; box-shadow: inset 0 0 0 1px var(--nh-line);
-  border-radius: 999px; padding: 7px 9px 7px 14px; margin: 0 0 0 22px !important; transition: color .25s, box-shadow .25s;
-}
-.nav .cmdk-trigger:hover { color: var(--nh-1); box-shadow: inset 0 0 0 1px var(--nh-line-2); }
-.nav .cmdk-trigger kbd { font: 500 11px/1 "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace; padding: 3px 5px; border-radius: 4px; background: rgba(236, 234, 228, .08); color: var(--nh-2); }
-@media (min-width: 1400px) { .nav .cmdk-trigger { display: inline-flex; } }
+/* Sprache (i18n.js), Konto (account-menu.js); die Suchleiste steht in site-search.css */
 .nav .lang-switch {
   display: inline-flex; align-items: center; flex: none; order: 7; height: 32px; padding: 3px;
   border-radius: 999px; background: transparent; border: 0; box-shadow: inset 0 0 0 1px var(--nh-line); margin: 0 0 0 22px;
 }
-.nav .cmdk-trigger + .lang-switch, .nav .cmdk-trigger ~ .lang-switch { margin-left: 22px; }
-@media (min-width: 1400px) { .nav .cmdk-trigger ~ .lang-switch { margin-left: 10px; } }
 .nav .lang-switch button { height: 26px; min-width: 34px; padding: 0 9px; border: 0; border-radius: 999px; background: transparent; color: var(--nh-3); font: 500 11.5px/1 "JetBrains Mono", ui-monospace, monospace; cursor: pointer; transition: color .2s, background .2s; }
 .nav .lang-switch button:hover { color: var(--nh-1); }
 .nav .lang-switch button[aria-pressed="true"] { background: rgba(236, 234, 228, .12); color: var(--nh-1); }
 .nav .wrap > .acct { order: 8; margin-left: 16px !important; }
 .nav .badge { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 4px; border-radius: 999px; background: var(--nh-1); color: #151516; font-size: 11px; font-weight: 700; }
-
-/* Befehlspalette (effects.js) – auch auf Seiten ohne style.css */
-.cmdk { position: fixed; inset: 0; z-index: 100; display: grid; justify-items: center; align-items: start; padding: 12vh 16px 16px; background: rgba(255, 255, 255, 0.5);  }
-.cmdk-box { width: min(620px, 100%); background: #242424; border: 1px solid #4A4A4A; border-radius: 2px; overflow: hidden; color: #ECEAE4; }
-.cmdk-input { display: flex; align-items: center; gap: 10px; padding: 0 16px; border-bottom: 1px solid rgba(0, 0, 0, 0.09); }
-.cmdk-input svg { width: 16px; height: 16px; color: #6E6E78; flex: none; }
-.cmdk-input input { flex: 1; border: 0; background: transparent; color: #F5F5F7; padding: 16px 0; font: inherit; font-size: 15px; outline: none; box-shadow: none !important; }
-.cmdk-list { max-height: min(56vh, 420px); overflow-y: auto; padding: 6px; }
-.cmdk-group { font: 11px ui-monospace, "SF Mono", Consolas, monospace; color: #6E6E78; padding: 10px 10px 4px; }
-.cmdk-item { display: grid; grid-template-columns: 22px 1fr auto; gap: 10px; align-items: center; width: 100%; text-align: left; font: inherit; font-size: 14px; color: #A1A1AA; background: transparent; border: 0; border-radius: 12px; padding: 9px 10px; cursor: pointer; }
-.cmdk-item .k, .cmdk-item .g { font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size: 11px; color: #6E6E78; }
-.cmdk-item .g { text-align: center; }
-.cmdk-item[aria-selected="true"] { background: #2A2A2A; color: #ECEAE4; }
-.cmdk-item[aria-selected="true"] .g, .cmdk-item mark { background: none; color: #ECEAE4; }
-.cmdk-foot { display: flex; gap: 16px; padding: 10px 16px; border-top: 1px solid rgba(0, 0, 0, 0.09); font-size: 12px; color: #6E6E78; }
-.cmdk-empty { padding: 28px; text-align: center; color: #6E6E78; font-size: 14px; }
 
 @media (prefers-reduced-motion: reduce) { .nav::before, .nav .nav-links a, .nav .nav-links .nav-cta, .nav .nav-links .nav-cta::after { transition: none; } }
 
