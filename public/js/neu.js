@@ -156,13 +156,13 @@
     var CAMS = {
       wide: [
         { shot: 0, cx: .50, cy: .50, s: 1.00 },
-        { shot: 0, cx: .29, cy: .69, s: 2.25, f: [.175, .650, .185, .042], label: '82 % Passung' },
+        { shot: 0, cx: .29, cy: .69, s: 2.25, f: [.175, .650, .185, .042], label: '89 % Passung' },
         { shot: 1, cx: .575, cy: .56, s: 1.22, f: [.196, .460, .754, .215], label: 'Der Grund' },
         { shot: 1, cx: .575, cy: .765, s: 1.22, f: [.196, .686, .754, .126], label: 'Jeder Bereich einzeln' }
       ],
       small: [
         { shot: 0, cx: .33, cy: .33, s: 2.5 },
-        { shot: 0, cx: .27, cy: .70, s: 3.3, f: [.175, .650, .185, .042], label: '82 % Passung' },
+        { shot: 0, cx: .27, cy: .70, s: 3.3, f: [.175, .650, .185, .042], label: '89 % Passung' },
         { shot: 1, cx: .41, cy: .53, s: 2.5, f: [.196, .460, .754, .215], label: 'Der Grund' },
         { shot: 1, cx: .385, cy: .755, s: 2.5, f: [.196, .686, .754, .126], label: 'Jeder Bereich einzeln' }
       ]
