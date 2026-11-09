@@ -251,3 +251,50 @@ body.front .site-footer a { text-decoration: none; }
   mark.key { color: Highlight; text-shadow: none; }
   .closer-facts li::before { background: Highlight; }
 }
+
+/* ---------- Was Xyntal ersetzt ---------- */
+.section-lead { max-width: 46rem; font: 400 clamp(1.2rem, 2vw, 1.45rem)/1.45 var(--f-serif); font-optical-sizing: auto; color: var(--text); text-wrap: pretty; }
+.swap, .diff { display: grid; gap: 32px; padding: clamp(40px, 6vw, 72px) 0; border-top: 1px solid var(--line); }
+.swap-list { display: grid; }
+.swap-list li { display: grid; gap: 10px; padding: 22px 0; border-top: 1px solid var(--line); }
+.swap-list li:first-child { border-top: 0; padding-top: 0; }
+.swap-old { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; font-size: 15px; color: var(--text-3); }
+.swap-tools { color: var(--text-2); text-decoration: line-through; text-decoration-color: var(--line-2); text-decoration-thickness: 1px; }
+.swap-label { font: 500 11px/1 var(--f-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3); }
+.swap-new { display: grid; gap: 6px; }
+.swap-new h3 { font: 400 clamp(1.3rem, 2.2vw, 1.6rem)/1.2 var(--f-serif); font-optical-sizing: auto; letter-spacing: -0.01em; }
+.swap-new p { color: var(--text-2); font-size: 15.5px; max-width: 52ch; }
+@media (min-width: 900px) {
+  .swap-list li { grid-template-columns: 5fr 7fr; gap: 48px; align-items: baseline; padding: 26px 0; }
+  .swap-list li:first-child { padding-top: 4px; }
+  .swap-new { position: relative; }
+  .swap-new::before { content: "→"; position: absolute; left: -34px; top: 0.1em; color: var(--key); font-size: 18px; }
+}
+
+/* ---------- Unterschied zu LinkedIn und Discord ---------- */
+.diff-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.diff-table { width: 100%; min-width: 0; border-collapse: collapse; font-size: 15px; }
+.diff-table th, .diff-table td { padding: 16px 14px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+.diff-table thead th { padding-top: 0; font: 500 12px/1.2 var(--f-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-2); border-bottom-color: var(--line-2); }
+.diff-table tbody th { font-weight: 500; color: var(--text); width: 40%; padding-left: 0; }
+.diff-table td { color: var(--text-2); width: 20%; }
+.diff-table tr:last-child > * { border-bottom: 0; }
+.diff-table thead .diff-us { color: var(--key); }
+.diff-table td.diff-us { background: var(--key-soft); color: var(--text); }
+.diff-yes, .diff-no, .diff-part { display: inline-flex; gap: 8px; align-items: baseline; }
+.diff-yes::before { content: "✓"; color: var(--key); font-weight: 600; }
+.diff-no::before { content: "–"; color: var(--text-3); }
+.diff-part::before { content: "~"; color: var(--text-3); }
+.diff-note { color: var(--text-2); font-size: 15.5px; max-width: 52ch; }
+@media (max-width: 640px) {
+  .diff-table { font-size: 13.5px; }
+  .diff-table thead { display: none; }
+  .diff-table, .diff-table tbody, .diff-table tr { display: block; }
+  .diff-table tr { padding: 16px 0; border-bottom: 1px solid var(--line); }
+  .diff-table tr:last-child { border-bottom: 0; }
+  .diff-table th, .diff-table td { display: block; width: auto; padding: 0; border: 0; }
+  .diff-table tbody th { width: auto; margin-bottom: 10px; font-size: 15px; }
+  .diff-table td { display: grid; grid-template-columns: 6.5rem 1fr; gap: 8px; padding: 6px 10px; }
+  .diff-table td::before { content: attr(data-label); font: 500 11px/1.6 var(--f-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); }
+  .diff-table td.diff-us::before { color: var(--key); }
+}
