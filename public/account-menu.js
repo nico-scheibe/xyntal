@@ -324,20 +324,23 @@
       } catch { /* kein Staff oder nicht erreichbar */ }
     }
 
-    // Eingeloggt: In der Kopfzeile „Für dich“ statt „Für die Beta bewerben“
+    // Eingeloggt: kein „Bewerben“-Knopf mehr in der Kopfzeile; an seiner Stelle steht die Glocke
+    // (notifications.js). „Für dich“ bleibt im Konto-Menü.
     function swapCta() {
       if (!state.session) return;
       const header = host.closest("header") || host;
-      header.querySelectorAll('a.btn[href$="#warteliste"], a.nav-cta[href="/beta"]').forEach((a) => {
-        a.href = "/fuer-dich";
-        a.textContent = "Für dich";
-      });
+      header.querySelectorAll('a.btn[href$="#warteliste"], a.nav-cta[href="/beta"]').forEach((a) => a.remove());
     }
 
     render();
     swapCta();
     loadProfile();
     claimInvite();
+    // Glocke auf Seiten, die notifications.js nicht selbst einbinden (Startseite, Demo, Brief …)
+    window.XyntalAccountClient = getClient;
+    if (state.session && !window.__xyntalBell && !document.querySelector('script[src*="notifications.js"]')) {
+      const sc = document.createElement("script"); sc.src = "/notifications.js?v=35"; sc.defer = true; document.head.append(sc);
+    }
     // Ankündigungen aus der App (Banner unter der Kopfzeile) – nur für angemeldete Mitglieder
     if (state.session && !document.querySelector('script[src^="/announcements.js"]')) {
       const sc = document.createElement("script"); sc.src = "/announcements.js?v=100"; sc.defer = true; document.head.append(sc);
