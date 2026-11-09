@@ -9,4 +9,11 @@
   try { seen = sessionStorage.getItem('xy-intro') === '1'; } catch (e) {}
   if (calm) d.classList.add('calm');
   if (!calm && !seen) d.classList.add('intro-on');
+  // Schon in der Beta oder beworben? Gemerkten Stand sofort anwenden, damit der
+  // „Bewerben“-Knopf gar nicht erst aufblitzt. Abgeglichen wird in neu-konto.js.
+  try {
+    var ses = JSON.parse(localStorage.getItem('sb-db-auth-token') || 'null');
+    var b = JSON.parse(localStorage.getItem('xy-beta') || 'null');
+    if (ses && ses.user && b && b.uid === ses.user.id && (b.s === 'in' || b.s === 'applied')) d.classList.add('beta-' + b.s);
+  } catch (e) {}
 })();

@@ -142,6 +142,14 @@ figcaption.mono b { color: var(--t-1); font-weight: 500; margin-right: 8px; }
 [data-strike].is-in { background-size: 100% 2px; }
 .no-js [data-strike] { background-size: 100% 2px; }
 
+/* Schon in der Beta oder beworben (Klasse von js/neu-boot.js und js/neu-konto.js):
+   „Bewerben“ verschwindet, der passende Ersatz erscheint. */
+[data-if] { display: none !important; }
+.beta-in [data-apply], .beta-applied [data-apply] { display: none !important; }
+.beta-in a.pill[data-if~="in"], .beta-applied a.pill[data-if~="applied"] { display: inline-flex !important; }
+.beta-in p[data-if~="in"], .beta-applied p[data-if~="applied"] { display: block !important; }
+.beta-in span[data-if~="in"], .beta-applied span[data-if~="applied"] { display: inline !important; }
+
 /* Intro */
 .intro { position: fixed; inset: 0; z-index: 200; display: none; place-items: center; background: var(--g-0); will-change: transform; }
 .intro-on .intro { display: grid; }
