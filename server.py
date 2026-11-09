@@ -65,8 +65,14 @@ class Handler(SimpleHTTPRequestHandler):
             return
         super().send_error(code, message, explain)
 
+    def list_directory(self, path):
+        # Keine Ordnerlisten ausliefern (z. B. /pages/, /fonts/, /vendor/).
+        self.send_error(404)
+        return None
+
     def end_headers(self):
         self.send_header("Cache-Control", "no-cache")
+        self.send_header("X-Content-Type-Options", "nosniff")
         super().end_headers()
 
 

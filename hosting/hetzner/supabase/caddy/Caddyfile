@@ -11,8 +11,18 @@ db.xyntal.de {
 		Strict-Transport-Security "max-age=31536000"
 		-Server
 	}
-	# Realtime (WebSockets) und große Uploads ungepuffert durchreichen.
-	reverse_proxy 127.0.0.1:8000 {
-		flush_interval -1
+	# Nach außen nur die Schnittstellen, die Website, App und Login brauchen.
+	# Das Dashboard (Studio) und /pg/ bleiben intern: nur Basic-Auth davor, ohne
+	# Sperre gegen Durchprobieren. Zugang per SSH-Tunnel:
+	#   ssh -L 8000:127.0.0.1:8000 root@db.xyntal.de  →  http://localhost:8000
+	@api path /auth/v1/* /rest/v1/* /realtime/v1/* /storage/v1/* /functions/v1/* /graphql/v1/*
+	handle @api {
+		# Realtime (WebSockets) und große Uploads ungepuffert durchreichen.
+		reverse_proxy 127.0.0.1:8000 {
+			flush_interval -1
+		}
+	}
+	handle {
+		respond 404
 	}
 }

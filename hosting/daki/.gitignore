@@ -2,3 +2,9 @@
 .cloudflared-token
 .tunnel-command
 cloudflared*
+
+# Geheimnisse, die server.cjs liest
+.brevo-*
+.ionos-*
+.smtp.env
+*.env

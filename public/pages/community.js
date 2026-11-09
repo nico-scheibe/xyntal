@@ -97,7 +97,7 @@ function reactionChips(commentId, rows) {
     byEmoji.set(r.emoji, list);
   }
   const chips = [...byEmoji.values()].map((x) =>
-    `<button type="button" class="c-react-chip${x.mine ? " is-mine" : ""}" data-act="toggle-react" data-emoji="${esc(x.emoji)}" aria-pressed="${x.mine}">${x.emoji} ${x.count}</button>`
+    `<button type="button" class="c-react-chip${x.mine ? " is-mine" : ""}" data-act="toggle-react" data-emoji="${esc(x.emoji)}" aria-pressed="${x.mine}">${esc(x.emoji)} ${Number(x.count) || 0}</button>`
   ).join("");
   const pick = COMMENT_EMOJIS.map((e) => `<button type="button" class="c-react-pick" data-act="toggle-react" data-emoji="${e}" aria-label="Reagieren mit ${e}">${e}</button>`).join("");
   return `<div class="c-react-row">${chips}<details class="c-react-more"><summary aria-label="Reagieren">＋</summary><div class="c-react-pop">${pick}</div></details></div>`;

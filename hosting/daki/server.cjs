@@ -359,7 +359,9 @@ async function handleBetaStatusMail(req, res) {
     if (!smtp.user || !smtp.pass || !config) return feedbackJson(res, 503, { error: 'Der Mailversand über IONOS ist auf dem Server noch nicht eingerichtet.' });
     const now = Date.now();
     if (statusMailLimits.until <= now) { statusMailLimits.count = 0; statusMailLimits.until = now + 3600000; }
-    if (++statusMailLimits.count > 60) return feedbackJson(res, 429, { error: 'Zu viele Status-Mails in der letzten Stunde.' });
+    // Nur geprüfte Admin-Anfragen zählen gegen die Grenze; sonst könnte jeder mit einem
+    // erfundenen Token die Status-Mails für eine Stunde blockieren.
+    if (statusMailLimits.count >= 60) return feedbackJson(res, 429, { error: 'Zu viele Status-Mails in der letzten Stunde.' });
     // Bewerbung mit den Rechten des Aufrufers lesen: Nicht-Admins bekommen hier nichts zurück.
     const headers = { apikey: config.key, Authorization: 'Bearer ' + token[1], Accept: 'application/json' };
     const lookup = await fetch(config.url + '/rest/v1/beta_applications?id=eq.' + data.id + '&select=id,name,email,status', { headers, signal: AbortSignal.timeout(10000) });
@@ -367,6 +369,7 @@ async function handleBetaStatusMail(req, res) {
     if (!lookup.ok) throw new Error('Supabase HTTP ' + lookup.status);
     const [application] = await lookup.json();
     if (!application) return feedbackJson(res, 403, { error: 'Bewerbung nicht gefunden oder keine Admin-Rechte.' });
+    statusMailLimits.count++;
     if (!STATUS_MAILS[application.status]) return feedbackJson(res, 200, { ok: true, skipped: true, reason: 'Für den Status „Neu“ gibt es keine Mail.' });
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(application.email) || /[\r\n<>]/.test(application.name || '')) return feedbackJson(res, 400, { error: 'Bewerberdaten unbrauchbar.' });
     const { subject, text, html } = statusMailText(application.name || 'du', application.status);
@@ -389,6 +392,7 @@ const types = { '.html':'text/html; charset=utf-8', '.css':'text/css; charset=ut
 const SECURITY_HEADERS = {
   'Strict-Transport-Security': 'max-age=31536000',
   'X-Frame-Options': 'SAMEORIGIN',
+  'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   // Mikrofon nur für die eigene Seite: Sprachnachrichten in /nachrichten
   'Permissions-Policy': 'camera=(), microphone=(self), geolocation=(), payment=()',
