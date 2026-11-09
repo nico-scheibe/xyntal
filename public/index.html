@@ -22,13 +22,13 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="stylesheet" href="fonts/fonts.css?v=33">
-  <script src="i18n-en.js?v=115" defer></script>
+  <script src="i18n-en.js?v=117" defer></script>
   <script src="i18n.js?v=31" defer></script>
   <link rel="stylesheet" href="/site-footer.css?v=4">
   <link rel="stylesheet" href="/site-header.css?v=7">
   <link rel="stylesheet" href="/xcard.css?v=104">
   <link rel="stylesheet" href="/banners.css?v=2">
-  <link rel="stylesheet" href="front.css?v=8">
+  <link rel="stylesheet" href="front.css?v=10">
   <link rel="stylesheet" href="story.css?v=3">
 </head>
 <body class="home front">
@@ -113,58 +113,76 @@
 
   <section class="swap reveal" aria-labelledby="swap-title">
     <h2 id="swap-title" class="chapter"><span class="chapter-no" aria-hidden="true" data-no-i18n>02</span>Was Xyntal ersetzt</h2>
-    <p class="section-lead">Heute verteilt sich die Suche nach Mitstreitern auf fünf Apps, und keine davon ist dafür gemacht. In Xyntal hängt es zusammen: Wer dich findet, sieht dein Vorhaben, und das Gespräch landet direkt beim Projekt.</p>
-    <ul class="swap-list">
-      <li>
-        <p class="swap-old"><span class="swap-label">Heute</span><span class="swap-tools"><span data-no-i18n>LinkedIn</span>, Gründer-Börsen, Freunde von Freunden</span></p>
-        <div class="swap-new"><h3>Leute finden</h3><p>Vorschläge unter <a href="/fuer-dich">Für dich</a>, nach Fähigkeiten, Zeit und Arbeitsweise, jeweils mit Begründung.</p></div>
-      </li>
-      <li>
-        <p class="swap-old"><span class="swap-label">Heute</span><span class="swap-tools"><span data-no-i18n>LinkedIn</span>-Profil, Lebenslauf, Linkliste</span></p>
-        <div class="swap-new"><h3>Dich vorstellen</h3><p>Deine Xyntal-Karte: was du kannst, wie viel Zeit du hast und wobei du einsteigen würdest. Du gestaltest sie selbst.</p></div>
-      </li>
-      <li>
-        <p class="swap-old"><span class="swap-label">Heute</span><span class="swap-tools"><span data-no-i18n>Discord</span>, <span data-no-i18n>WhatsApp</span>-Gruppen, <span data-no-i18n>Slack</span></span></p>
-        <div class="swap-new"><h3>Miteinander reden</h3><p>Nachrichten mit Gruppen und Bereichen, ohne dass du Telefonnummern oder Server-Einladungen tauschen musst.</p></div>
-      </li>
-      <li>
-        <p class="swap-old"><span class="swap-label">Heute</span><span class="swap-tools">Foren, <span data-no-i18n>Reddit</span>, große <span data-no-i18n>Discord</span>-Server</span></p>
-        <div class="swap-new"><h3>Sich austauschen</h3><p>Die Community: Fragen, Fortschritte und Gesuche von Leuten, die selbst etwas aufbauen.</p></div>
-      </li>
-      <li>
-        <p class="swap-old"><span class="swap-label">Heute</span><span class="swap-tools"><span data-no-i18n>Notion</span>, <span data-no-i18n>Trello</span>, eine Tabelle mit offenen Rollen</span></p>
-        <div class="swap-new"><h3>Das Projekt organisieren</h3><p>Projekte mit offenen Rollen und Bedingungen, Aufgaben, Notizen und Kalender in der App für Mac und Windows.</p></div>
-      </li>
-    </ul>
+    <div class="swap-body">
+      <p class="swap-intro">Wer heute Mitstreiter sucht, springt zwischen fünf Apps hin und her. <em>Keine davon ist dafür gebaut.</em></p>
+      <div class="ledger">
+        <p class="ledger-head" aria-hidden="true"><span>Heute</span><span>In Xyntal</span></p>
+        <ul>
+          <li><span class="ledger-old">Profile durchsuchen auf <span data-no-i18n>LinkedIn</span></span><span class="ledger-dots" aria-hidden="true"></span><span class="ledger-new"><a href="/fuer-dich">Für dich</a><small>Vorschläge mit Begründung</small></span></li>
+          <li><span class="ledger-old">Lebenslauf, Profil, Linkliste</span><span class="ledger-dots" aria-hidden="true"></span><span class="ledger-new">Deine Karte<small>mit Zeit und Bedingungen</small></span></li>
+          <li><span class="ledger-old"><span data-no-i18n>Discord</span>, <span data-no-i18n>WhatsApp</span>-Gruppe</span><span class="ledger-dots" aria-hidden="true"></span><span class="ledger-new">Nachrichten<small>Gruppen und Bereiche</small></span></li>
+          <li><span class="ledger-old"><span data-no-i18n>Reddit</span>, Foren</span><span class="ledger-dots" aria-hidden="true"></span><span class="ledger-new"><a href="/community">Community</a><small>nur Leute, die etwas bauen</small></span></li>
+          <li><span class="ledger-old"><span data-no-i18n>Notion</span>, <span data-no-i18n>Trello</span>, Tabelle mit Rollen</span><span class="ledger-dots" aria-hidden="true"></span><span class="ledger-new">Projekte<small>Rollen, Aufgaben, Notizen</small></span></li>
+        </ul>
+        <p class="ledger-sum"><span>Fünf Apps</span><span class="ledger-dots" aria-hidden="true"></span><span>eine</span></p>
+      </div>
+    </div>
   </section>
 
   <section class="diff reveal" aria-labelledby="diff-title">
     <h2 id="diff-title" class="chapter"><span class="chapter-no" aria-hidden="true" data-no-i18n>03</span>Der Unterschied zu LinkedIn und Discord</h2>
-    <p class="section-lead">LinkedIn ist zum Zeigen da, Discord zum Reden. Beides ist gut darin. Nur: Wer gerade Zeit hat, was er erwartet und zu welchen Bedingungen er einsteigen würde, steht dort nirgends. Genau dafür ist Xyntal da.</p>
-    <div class="diff-scroll">
-      <table class="diff-table">
-        <caption class="sr-only">Xyntal, LinkedIn und Discord im Vergleich</caption>
-        <thead>
-          <tr><th scope="col"><span class="sr-only">Frage</span></th><th scope="col" class="diff-us">Xyntal</th><th scope="col" data-no-i18n>LinkedIn</th><th scope="col" data-no-i18n>Discord</th></tr>
-        </thead>
-        <tbody>
-          <tr><th scope="row">Siehst du, wie viel Zeit jemand gerade hat?</th><td class="diff-us" data-label="Xyntal"><span class="diff-yes">Ja</span></td><td data-label="LinkedIn"><span class="diff-no">Nein</span></td><td data-label="Discord"><span class="diff-no">Nein</span></td></tr>
-          <tr><th scope="row">Stehen die Bedingungen vorher fest: Anteile, bezahlt oder Nebenprojekt?</th><td class="diff-us" data-label="Xyntal"><span class="diff-yes">Ja</span></td><td data-label="LinkedIn"><span class="diff-no">Nein</span></td><td data-label="Discord"><span class="diff-no">Nein</span></td></tr>
-          <tr><th scope="row">Bekommst du Vorschläge, wer zu deinem Vorhaben passt, und warum?</th><td class="diff-us" data-label="Xyntal"><span class="diff-yes">Ja, mit Begründung</span></td><td data-label="LinkedIn"><span class="diff-part">Vorschläge ohne Grund</span></td><td data-label="Discord"><span class="diff-no">Nein</span></td></tr>
-          <tr><th scope="row">Hat jeder hier ein Vorhaben oder will bei einem mitbauen?</th><td class="diff-us" data-label="Xyntal"><span class="diff-yes">Ja, Zugang per Bewerbung</span></td><td data-label="LinkedIn"><span class="diff-no">Nein, vor allem Jobsuche und Werbung</span></td><td data-label="Discord"><span class="diff-part">Je nach Server</span></td></tr>
-          <tr><th scope="row">Liegen Gespräch und Projekt am selben Ort?</th><td class="diff-us" data-label="Xyntal"><span class="diff-yes">Ja</span></td><td data-label="LinkedIn"><span class="diff-no">Nein</span></td><td data-label="Discord"><span class="diff-part">Nur das Gespräch</span></td></tr>
-        </tbody>
-      </table>
+    <div class="diff-head">
+      <p class="diff-title">Dieselbe Person, <em>drei Orte.</em></p>
+      <p class="diff-lead">Lea ist Backend-Entwicklerin und erfunden. So begegnest du ihr heute, und so auf Xyntal.</p>
     </div>
-    <p class="diff-note">Und wenn du jemanden gefunden hast, der passt, musst du nicht in die nächste App wechseln.</p>
+    <ol class="places">
+      <li class="place">
+        <p class="place-where"><span data-no-i18n>LinkedIn</span></p>
+        <div class="place-view">
+          <p class="pv-name" data-no-i18n>Lea Brandt</p>
+          <p class="pv-line">Backend-Entwicklerin bei einem Versicherer</p>
+          <p class="pv-meta">Köln · 500+ Kontakte</p>
+          <dl class="facts facts-empty">
+            <div><dt>Zeit</dt><dd><span aria-hidden="true">?</span><span class="sr-only">steht nicht da</span></dd></div>
+            <div><dt>Sucht</dt><dd><span aria-hidden="true">?</span><span class="sr-only">steht nicht da</span></dd></div>
+            <div><dt>Arbeitet</dt><dd><span aria-hidden="true">?</span><span class="sr-only">steht nicht da</span></dd></div>
+          </dl>
+        </div>
+        <p class="place-says">Du siehst, was sie kann. Ob sie Zeit hat oder überhaupt etwas Neues will, steht nirgends.</p>
+      </li>
+      <li class="place">
+        <p class="place-where"><span data-no-i18n>Discord</span></p>
+        <div class="place-view pv-chat">
+          <p><b>du</b>sucht hier jemand ein Backend-Projekt?</p>
+          <p><b data-no-i18n>lea_dev</b>kommt drauf an, was ist es?</p>
+          <p class="pv-gap">zwei Wochen und einen Call später</p>
+          <p><b data-no-i18n>lea_dev</b>sorry, hab gerade doch keine Zeit</p>
+        </div>
+        <p class="place-says">Ihr findet es heraus. Aber erst nach dem Gespräch.</p>
+      </li>
+      <li class="place place-us">
+        <p class="place-where">Xyntal</p>
+        <div class="place-view">
+          <p class="pv-name" data-no-i18n>Lea Brandt</p>
+          <p class="pv-line">Backend · Go, Postgres</p>
+          <dl class="facts">
+            <div><dt>Zeit</dt><dd>etwa 10 Std. pro Woche, ab März</dd></div>
+            <div><dt>Sucht</dt><dd>Mitgründung, gegen Anteile</dd></div>
+            <div><dt>Arbeitet</dt><dd>remote, ein Call pro Woche</dd></div>
+          </dl>
+          <p class="pv-why">Passt, weil du Backend suchst und ihr ähnlich viel Zeit habt.</p>
+        </div>
+        <p class="place-says">Bevor du schreibst, weißt du, ob es passen kann.</p>
+      </li>
+    </ol>
   </section>
 
   <section class="kinds reveal" aria-labelledby="kinds-title">
     <h2 id="kinds-title" class="chapter"><span class="chapter-no" aria-hidden="true" data-no-i18n>04</span>Wen du hier findest</h2>
     <ul class="kinds-list">
-      <li><h3>Mitgründer:innen</h3><p>Die mit dir eine Firma aufbauen und das Risiko teilen.</p></li>
-      <li><h3>Projektpartner</h3><p>Die ein bestimmtes Stück mit dir bauen: die App, das Design, den ersten Vertrieb. Zeitlich begrenzt, bezahlt oder gegen Anteile.</p></li>
-      <li><h3>Leute, die schon weiter sind</h3><p>Und dir in einem Gespräch ersparen, was sie vor einem Jahr selbst erst lernen mussten.</p></li>
+      <li><h3>Mitgründer:innen</h3><p>Die mit dir eine Firma aufbauen und das Risiko teilen.</p><dl class="facts"><div><dt>Rahmen</dt><dd>Anteile, gemeinsames Risiko</dd></div><div><dt>Dauer</dt><dd>auf Jahre angelegt</dd></div></dl></li>
+      <li><h3>Projektpartner</h3><p>Die ein bestimmtes Stück mit dir bauen: die App, das Design, den ersten Vertrieb.</p><dl class="facts"><div><dt>Rahmen</dt><dd>bezahlt oder gegen Anteile</dd></div><div><dt>Dauer</dt><dd>zeitlich begrenzt</dd></div></dl></li>
+      <li><h3>Leute, die schon weiter sind</h3><p>Und dir in einem Gespräch ersparen, was sie vor einem Jahr selbst erst lernen mussten.</p><dl class="facts"><div><dt>Rahmen</dt><dd>ein Gespräch, Erfahrung teilen</dd></div><div><dt>Dauer</dt><dd>eine Stunde, manchmal mehr</dd></div></dl></li>
     </ul>
   </section>
 
@@ -178,19 +196,19 @@
     <dl>
       <div>
         <dt>Für wen ist das?</dt>
-        <dd>Für Leute mit einem <mark class="key">konkreten Vorhaben</mark>, meist ein digitales Produkt, die dafür jemanden suchen. Und für Leute, die bei so etwas mitbauen wollen: als <mark class="key">Mitgründer:in</mark>, <mark class="key">bezahlt für eine klare Aufgabe</mark>, oder als <mark class="key">Nebenprojekt</mark> mit abgesprochenen Stunden.</dd>
+        <dd>Für Leute mit einem konkreten Vorhaben, meist ein digitales Produkt, die dafür jemanden suchen. Und für Leute, die bei so etwas mitbauen wollen: als Mitgründer:in, bezahlt für eine klare Aufgabe, oder als Nebenprojekt mit abgesprochenen Stunden.</dd>
       </div>
       <div>
         <dt>Worauf läuft es?</dt>
-        <dd>Auf dem Rechner, als App für <mark class="key">Mac und Windows</mark>. Diese Website ist der Eingang: Profil anlegen, bewerben, Mitglieder kennenlernen. <mark class="key">Die Arbeit passiert in der App</mark>. Linux und Handy gibt es noch nicht.</dd>
+        <dd>Auf dem Rechner, als App für Mac und Windows. Diese Website ist der Eingang: Profil anlegen, bewerben, Mitglieder kennenlernen. Die Arbeit passiert in der App. Linux und Handy gibt es noch nicht.</dd>
       </div>
       <div>
         <dt>Was funktioniert schon, was nicht?</dt>
-        <dd><mark class="key">Profile, Mitglieder, Community und Nachrichten</mark> funktionieren auf der Website, <mark class="key">Vorschläge mit Begründung</mark> findest du unter <a href="/fuer-dich">Für dich</a>, <mark class="key">Projekte mit offenen Rollen</mark> laufen in der App. Die gemeinsamen Arbeitsbereiche sind <mark class="key">noch im Bau</mark>. <a href="/demo">Die Demo</a> zeigt die Oberfläche mit Beispieldaten.</dd>
+        <dd>Profile, Mitglieder, Community und Nachrichten funktionieren auf der Website, Vorschläge mit Begründung findest du unter <a href="/fuer-dich">Für dich</a>, Projekte mit offenen Rollen laufen in der App. Die gemeinsamen Arbeitsbereiche sind noch im Bau. <a href="/demo">Die Demo</a> zeigt die Oberfläche mit Beispieldaten.</dd>
       </div>
       <div>
         <dt>Wie komme ich rein?</dt>
-        <dd><mark class="key">Per Bewerbung</mark>: Konto anlegen, <mark class="key">drei Fragen</mark> beantworten (was baust du, wen suchst du, wie viel Zeit hast du). Ich lese jede selbst und antworte per E-Mail. In der Beta <mark class="key">kostet Xyntal nichts</mark>.</dd>
+        <dd>Per Bewerbung: Konto anlegen, drei Fragen beantworten (was baust du, wen suchst du, wie viel Zeit hast du). Ich lese jede selbst und antworte per E-Mail. In der Beta kostet Xyntal nichts.</dd>
       </div>
     </dl>
   </section>
@@ -200,11 +218,7 @@
     <div class="closer-body">
       <p class="closer-title">Die Beta läuft. <em>Zugang per Bewerbung.</em></p>
       <div class="closer-side">
-        <ul class="closer-facts">
-          <li>Drei Fragen, etwa drei Minuten</li>
-          <li>Antwort per E-Mail, von Nico persönlich</li>
-          <li>In der Beta kostenlos</li>
-        </ul>
+        <dl class="facts facts-lg"><div><dt>Dauer</dt><dd>drei Fragen, etwa drei Minuten</dd></div><div><dt>Antwort</dt><dd>per E-Mail, von Nico persönlich</dd></div><div><dt>Kosten</dt><dd>in der Beta keine</dd></div></dl>
         <p><a class="button" href="/beta">Für die Beta bewerben</a></p>
       </div>
     </div>
