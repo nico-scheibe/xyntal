@@ -337,3 +337,18 @@ body.front .site-footer a { text-decoration: none; }
 @media (min-width: 900px) { .opener-card { padding-right: 44px; } }
 @media (max-width: 899px) { .opener-card { justify-self: center; padding-inline: 32px; } }
 @media (max-width: 480px) { .opener-card { padding-inline: 20px; } }
+
+/* ---------- Feinschliff nach dritter Prüfung ----------
+   Kapitel-Labels ohne Nummern und ohne Mono-Versalien; Einstieg ohne kursive
+   zweite Zeile; Zitat über die ganze Breite; Chat-Knopf auf dem Handy nur als
+   Symbol, damit er keinen Inhalt verdeckt. */
+.chapter { font: 500 14px/1.2 var(--f-sans); letter-spacing: 0; text-transform: none; color: var(--text-2); }
+.chapter::after { content: none; }
+.story-kicker { font-family: var(--f-sans) !important; text-transform: none !important; letter-spacing: 0 !important; font-size: 13.5px !important; }
+.opener-title-2 { color: var(--text-2); }
+.voice { display: block !important; }
+.voice p { max-width: 38ch; font-size: clamp(1.3rem, 2.2vw, 1.65rem); line-height: 1.5; }
+@media (max-width: 600px) {
+  body.front { padding-bottom: 72px; }
+  body.front .sc-open { width: 44px; padding: 0; gap: 0; justify-content: center; font-size: 0; }
+}
