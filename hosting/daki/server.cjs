@@ -402,6 +402,16 @@ const SECURITY_HEADERS = {
   // Vorschaubilder kommen als blob: vom App-Server (img-src blob:).
   'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://db.xyntal.de https://media.giphy.com https://media0.giphy.com https://media1.giphy.com https://media2.giphy.com https://media3.giphy.com https://media4.giphy.com https://i.giphy.com; media-src 'self' blob:; font-src 'self'; connect-src 'self' https://api.xyntal.de https://db.xyntal.de wss://db.xyntal.de https://*.sibforms.com; frame-src 'self' https://www.youtube-nocookie.com https://www.tiktok.com https://www.instagram.com https://player.vimeo.com https://open.spotify.com; form-action 'self' https://*.sibforms.com; frame-ancestors 'self'; base-uri 'self'; object-src 'none'",
 };
+// Admin-Bereich nur unter admin.xyntal.de. Davor steht Cloudflare Access (nur freigegebene
+// E-Mail-Adressen laden die Seite überhaupt). Auf xyntal.de gibt es Admin-Seite und Admin-Skripte nicht
+// mehr (404); die Rechte prüfen Supabase (is_admin + 2FA) und der App-Server (Staff-Rolle) wie bisher.
+const ADMIN_HOST = (process.env.ADMIN_HOST || 'admin.xyntal.de').toLowerCase();
+const ADMIN_ONLY_FILES = new Set(['admin.html', 'admin.css', 'admin-contracts.css', 'world-geo.js',
+  'pages/admin.js', 'pages/admin-platform.js', 'pages/admin-contracts.js', 'pages/admin-people.js']);
+// Seiten, die auf admin.xyntal.de bleiben (Anmeldung samt 2FA); alle anderen Seiten leiten auf xyntal.de um.
+const ADMIN_HOST_PAGES = new Set(['admin.html', 'login.html', 'passwort-neu.html', '404.html']);
+const MAIN_SITE = (process.env.MAIN_SITE_URL || 'https://xyntal.de').replace(/\/+$/, '');
+const requestHost = (req) => String(req.headers.host || '').toLowerCase().replace(/:\d+$/, '');
 const httpServer = http.createServer((req,res) => {
   for (const [name, value] of Object.entries(SECURITY_HEADERS)) res.setHeader(name, value);
   let pathname;
@@ -430,8 +440,22 @@ const httpServer = http.createServer((req,res) => {
   const currentRoot = root;
   let file = path.resolve(currentRoot, '.' + pathname);
   if (file !== currentRoot && !file.startsWith(currentRoot + path.sep)) { res.writeHead(403); return res.end(); }
+  const onAdminHost = requestHost(req) === ADMIN_HOST;
   if (file === currentRoot || pathname.endsWith('/')) file = path.join(file, 'index.html');
   if (!path.extname(file) && fs.existsSync(file + '.html')) file += '.html';
+  if (onAdminHost && (pathname === '/' || pathname === '/admin' || pathname === '/admin/')) file = path.join(currentRoot, 'admin.html');
+  const relative = path.relative(currentRoot, file).split(path.sep).join('/');
+  if (onAdminHost) {
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+    // Normale Seiten (und Kurzlinks) gehören zu xyntal.de, nicht in den Admin-Bereich.
+    if (!ADMIN_HOST_PAGES.has(relative) && (relative.endsWith('.html') || !path.extname(relative))) {
+      res.writeHead(308, { Location: MAIN_SITE + new URL(req.url, 'http://localhost').pathname + new URL(req.url, 'http://localhost').search });
+      return res.end();
+    }
+  } else if (ADMIN_ONLY_FILES.has(relative)) {
+    res.writeHead(404, {'Content-Type':'text/html; charset=utf-8'});
+    return res.end(req.method === 'HEAD' ? undefined : fs.readFileSync(path.join(currentRoot,'404.html')));
+  }
   // Project short links use the project page and its existing access checks.
   if ((!fs.existsSync(file) || !fs.statSync(file).isFile()) && /^\/[a-z0-9][a-z0-9_-]{0,19}-[a-z0-9][a-z0-9_-]{0,118}\/?$/.test(pathname)) file = path.join(currentRoot, 'projekte.html');
   // xyntal.de/name/invite: Einladungsseite (Promo-Code = Link-Name, führt zur Registrierung)

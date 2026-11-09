@@ -5,6 +5,8 @@
   const URL_ = "https://db.xyntal.de";
   const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzk0MTc3MzEwLCJleHAiOjE5NTE4NTczMTB9.1H1nAG_eqZLMIsCvkNDqdCGDluTM0p3zhdx5aWLvToQ";
   const TOKEN = "sb-db-auth-token";
+  // Admin-Bereich liegt auf eigener Adresse (Cloudflare Access davor); lokal weiter unter /admin.
+  const ADMIN_URL = /^(xyntal\.de|www\.xyntal\.de|admin\.xyntal\.de)$/.test(location.hostname) ? "https://admin.xyntal.de/" : "/admin";
 
   // Rückkehr von Google & Co. auf einer Seite ohne Supabase (z. B. Startseite):
   // weiter zum Login, der die Sitzung aus der Adresse übernimmt bzw. den Fehler zeigt.
@@ -201,7 +203,7 @@
           <a href="/fuer-dich" role="menuitem">${ICONS.match}${t("Für dich")}</a>
           <a href="/meine-karte" role="menuitem">${ICONS.karte}${t("Meine Karte")}</a>
           <a href="/nachrichten" role="menuitem">${ICONS.nachrichten}${t("Nachrichten")}</a>
-          ${state.admin ? `<a href="/admin" role="menuitem">${ICONS.admin}${t("Admin-Bereich")}</a>` : ""}
+          ${state.admin ? `<a href="${ADMIN_URL}" role="menuitem">${ICONS.admin}${t("Admin-Bereich")}</a>` : ""}
           <div class="acct-sep"></div>
           <button class="acct-item acct-out" type="button" role="menuitem" data-acct-logout>${ICONS.logout}${t("Abmelden")}</button>`;
       } else {

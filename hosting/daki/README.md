@@ -57,6 +57,23 @@ Cloudflare Always Use HTTPS is enabled. MX, SPF, DMARC, autodiscover and both
 IONOS DKIM selectors are preserved as DNS-only records. IONOS email stays in use.
 Initial Cloudflare activation and certificate issuance can take time after the nameserver change.
 
+## Admin-Bereich (admin.xyntal.de)
+
+Der Admin-Bereich wird nur für den Host `admin.xyntal.de` ausgeliefert (`ADMIN_HOST` ändert ihn).
+Dort zeigt `/` die Admin-Seite; Login und Passwort-Zurücksetzen bleiben, alle anderen Seiten leiten auf
+`https://xyntal.de` um. Auf xyntal.de antworten `admin.html`, `admin*.css`, `world-geo.js` und
+`pages/admin*.js` mit 404. Einrichtung:
+
+1. Cloudflare → Zero Trust → Networks → Tunnels → `xyntal-daki` → Public Hostname
+   `admin.xyntal.de` → `http://localhost:4129` (legt den DNS-Eintrag selbst an).
+2. Zero Trust → Access → Applications → Self-hosted `admin.xyntal.de`, Policy „Allow“ nur für die
+   eigenen E-Mail-Adressen (Login per Einmal-Code).
+3. Supabase → Authentication → URL Configuration → Redirect URLs: `https://admin.xyntal.de/**`.
+4. App-Server: `https://admin.xyntal.de` ist in `WEBSITE_ORIGINS` (Standard); falls die Variable gesetzt ist, ergänzen.
+5. Daki neu starten (neuer Server-Code).
+
+Das ist eine zusätzliche Schicht: Rechte prüfen weiterhin Supabase (`is_admin` + 2FA) und der App-Server (Staff-Rolle).
+
 ## Zähler der Warteliste
 
 `/api/waitlist-count` liefert die Anzahl der bestätigten Kontakte der Brevo-Warteliste
