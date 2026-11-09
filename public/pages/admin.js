@@ -1,6 +1,10 @@
 const loginView = document.getElementById("login-view");
 const adminView = document.getElementById("admin-view");
 let lastData = null;
+// Für admin-people.js (Start + Nutzerliste): meldet, ob die Website-Daten da sind; "xa:site-data" nach jedem Laden
+let siteReadyResolve;
+window.XyntalAdminSite = { ready: new Promise((r) => { siteReadyResolve = r; }), reload: () => load() };
+const siteChanged = () => document.dispatchEvent(new CustomEvent("xa:site-data"));
 const PROVIDER_LABELS = { google: "Google", apple: "Apple", linkedin_oidc: "LinkedIn", phone: "Handynummer" };
 const fmt = (ts) => new Date(ts).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" });
 const statusLabel = { pending: "Wartet", approved: "Freigeschaltet", rejected: "Abgelehnt" };
@@ -19,8 +23,10 @@ async function load() {
       document.querySelectorAll("[data-tab][data-site], .admin-tabs-group[data-group='site']").forEach((el) => { el.hidden = true; });
       loginView.hidden = true;
       adminView.hidden = false;
+      siteReadyResolve({ admin: false });
       return;
     }
+    siteReadyResolve({ admin: false });
     document.getElementById("login-msg").textContent = me
       ? "Dein Konto hat weder Admin-Rechte für die Website noch eine Staff-Rolle auf dem App-Server."
       : "Bitte melde dich mit deinem Admin-Konto an.";
@@ -61,44 +67,18 @@ async function load() {
     data = { members, signups, newsletter, beta, cards, invites };
     lastData = data;
   } catch (err) {
-    document.querySelector('[data-panel="members"]').innerHTML = `<p class="empty">${esc(err.message)}</p>`;
+    document.querySelector('[data-panel="cards"]').innerHTML = `<p class="empty">${esc(err.message)}</p>`;
     loginView.hidden = true;
     adminView.hidden = false;
+    siteReadyResolve({ admin: false, error: err.message });
     return;
   }
   loginView.hidden = true;
   adminView.hidden = false;
 
-  const pending = data.members.filter((m) => m.status === "pending").length;
-  document.getElementById("c-members").textContent = `(${data.members.length}${pending ? `, ${pending} neu` : ""})`;
   document.getElementById("c-signups").textContent = `(${data.signups.length})`;
   document.getElementById("c-newsletter").textContent = `(${data.newsletter.length})`;
-  renderOverview(data);
-  renderBeta(data.beta);
   renderCards(data.cards);
-
-  const waiting = data.members.filter((m) => m.status === "pending");
-  document.querySelector('[data-panel="members"]').innerHTML = data.members.length ? `
-    ${waiting.length ? `<div class="bulk-bar"><span>${waiting.length} ${waiting.length === 1 ? "Mitglied wartet" : "Mitglieder warten"} auf Freischaltung</span><button data-act="approve-all">Alle ${waiting.length} freischalten</button></div>` : ""}
-    <div class="table-wrap"><table>
-      <thead><tr><th>Name</th><th>Vorhaben</th><th>Status</th><th>Badges</th><th>Aktionen</th></tr></thead>
-      <tbody>${data.members.map((m) => `
-        <tr>
-          <td>${esc(m.name || "(noch kein Name)")}<br><small>${esc(m.email || m.phone || "")}${m.provider && m.provider !== "email" ? ` · via ${esc(PROVIDER_LABELS[m.provider] || m.provider)}` : ""}</small><br><small>${fmt(m.created_at)}${m.is_public ? " · öffentlich" : ""}</small></td>
-          <td>${esc(m.headline)}<br><small>${esc([PHASES[m.phase], m.category].filter(Boolean).join(" · "))}</small></td>
-          <td><span class="status-pill status-${m.status}">${statusLabel[m.status]}</span>${m.banned ? `<br><span class="status-pill status-rejected">Gesperrt${m.banned_until ? ` bis ${fmt(m.banned_until)}` : ""}</span>` : ""}</td>
-          <td><button class="verified-admin-toggle${m.is_verified ? " is-on" : ""}" data-act="verified" data-id="${m.id}" aria-pressed="${m.is_verified}" aria-label="Verified-Badge für ${esc(m.name || "Mitglied")} ${m.is_verified ? "entfernen" : "vergeben"}">${m.is_verified ? "✓ Verified" : "+ Verified"}</button><br><button class="beta-admin-toggle${m.is_beta_tester ? " is-on" : ""}" data-act="beta-tester" data-id="${m.id}" aria-pressed="${m.is_beta_tester}" aria-label="Beta-Tester-Badge für ${esc(m.name || "Mitglied")} ${m.is_beta_tester ? "entfernen" : "vergeben"}">${m.is_beta_tester ? "✦ Beta-Tester" : "+ Beta-Tester"}</button></td>
-          <td><div class="row-actions">
-            ${m.status !== "approved" ? `<button data-act="approve" data-id="${m.id}">Freischalten</button>` : ""}
-            ${m.status !== "rejected" && !m.is_admin ? `<button data-act="reject" data-id="${m.id}">Ablehnen</button>` : ""}
-            ${m.email ? `<a class="admin-link" href="mailto:${esc(m.email)}?subject=${encodeURIComponent("Dein Xyntal-Konto")}">E-Mail</a>` : ""}
-            ${m.is_admin ? "" : m.banned
-              ? `<button data-act="unban" data-id="${m.id}">Entsperren</button>`
-              : `<select data-ban-duration="${m.id}" aria-label="Dauer der Sperre für ${esc(m.name || "Mitglied")}"><option value="1">1 Tag</option><option value="7" selected>7 Tage</option><option value="30">30 Tage</option><option value="">Unbefristet</option></select><button class="admin-danger" data-act="ban" data-id="${m.id}">Sperren</button>`}
-            ${m.is_admin ? "" : `<button data-act="delete" data-id="${m.id}">Löschen</button>`}
-          </div></td>
-        </tr>`).join("")}
-      </tbody></table></div>` : `<p class="empty">Noch keine Mitglieder.</p>`;
 
   document.querySelector('[data-panel="signups"]').innerHTML = `
     <p class="hint">Archiv der früheren Anmeldung ohne festen Termin. Neue Zusagen stehen beim jeweiligen Treffen.</p><p><a class="text-link" href="#" data-csv="signups">Als CSV herunterladen</a></p>
@@ -117,7 +97,10 @@ async function load() {
       </tbody></table></div></details>` : `<p class="empty">Keine früheren lokalen Einträge.</p>`}`;
 
 
-  ['members','cards','signups','newsletter'].forEach(enhanceTablePanel);
+  ['cards','signups','newsletter'].forEach(enhanceTablePanel);
+  siteReadyResolve({ admin: true });
+  siteChanged();
+  refreshConfirmedCount();
 }
 
 let summaryRequest = false;
@@ -135,44 +118,6 @@ async function refreshConfirmedCount() {
   } catch { document.getElementById("overview-updated").textContent = "Brevo derzeit nicht erreichbar. Die letzte Zahl bleibt stehen."; }
   finally { summaryRequest = false; }
 }
-function renderOverview(data) {
-  const cards = Array.isArray(data.cards) ? data.cards : [];
-  const beta = Array.isArray(data.beta) ? data.beta : [];
-  const roles = new Map();
-  for (const card of cards) roles.set(card.role || "Ohne Bereich", (roles.get(card.role || "Ohne Bereich") || 0) + 1);
-  const recent = [
-    ...cards.map(c => ({ type: "Karte", name: c.name, detail: c.role, created_at: c.created_at })),
-    ...beta.map(b => ({ type: "Beta-Bewerbung", name: b.name, detail: BETA_STATUS[b.status] || b.status, created_at: b.created_at })),
-  ].sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).slice(0,8);
-  document.querySelector('[data-panel="overview"]').innerHTML = `
-    <div class="admin-summary">
-      <article><b id="overview-confirmed">–</b><span>Bestätigte Warteliste</span><small>Aktuelle Gesamtzahl aus Brevo</small></article>
-      <article><b>${data.cards.error ? "–" : cards.length}</b><span>Mitgeschickte Karten</span><small>${data.cards.error ? "Daten nicht verfügbar" : `${cards.filter(c=>c.status === "neu").length} noch unbearbeitet`}</small></article>
-      <article><b>${data.beta.error ? "–" : beta.length}</b><span>Beta-Bewerbungen</span><small>${data.beta.error ? "Daten nicht verfügbar" : `${beta.filter(b=>b.status === "neu").length} noch zu prüfen`}</small></article>
-    </div>
-    <p class="hint" id="overview-updated" role="status">Brevo-Zahl wird geladen …</p>
-    ${(() => {
-      const refs = data.invites && Array.isArray(data.invites.referrals) ? data.invites.referrals : [];
-      const todo = [
-        [Array.isArray(data.members) ? data.members.filter((m) => m.status === "pending").length : 0, "Mitglieder warten auf Freischaltung", "members"],
-        [cards.filter((c) => c.status === "neu").length, "Karten noch nicht bearbeitet", "cards"],
-        [beta.filter((b) => b.status === "neu").length, "Beta-Bewerbungen noch zu prüfen", "beta"],
-        [refs.filter((r) => "credited_at" in r && !r.credited_at).length, "Einladungen noch nicht gutgeschrieben", "cards"],
-      ].filter(([n]) => n > 0);
-      return `<h2 style="margin:32px 0 12px">Zu erledigen</h2>${todo.length
-        ? `<div class="todo-list">${todo.map(([n, label, tab]) => `<button data-goto="${tab}"><b>${n}</b><span>${label}</span><i aria-hidden="true">→</i></button>`).join("")}</div>`
-        : '<p class="hint">Alles erledigt. Neue Aufgaben erscheinen hier.</p>'}`;
-    })()}
-    <p class="hint">Verantwortlich: nico.scheibe18@gmail.com. Die Karten werden getrennt von Brevo gespeichert; eine mitgeschickte Karte beweist noch keine bestätigte E-Mail.</p>
-    <div class="row-actions"><button id="overview-refresh">Alle Daten aktualisieren</button><a class="text-link" href="https://app.brevo.com/contact/list-listing/id/3" target="_blank" rel="noopener">Bestätigte Kontakte in Brevo</a><a class="text-link" href="beta#testen">Beta-Testablauf & Feedback</a></div>
-    <h2 style="margin:32px 0 12px">Bereiche der mitgeschickten Karten</h2>
-    <div class="card-filters">${roles.size ? [...roles].sort((a,b)=>b[1]-a[1]).map(([role,n])=>`<span class="skill-tag">${esc(role)} · ${n}</span>`).join(" ") : '<p class="hint">Noch keine auswertbaren Karten.</p>'}</div>
-    <h2 style="margin:32px 0 12px">Zuletzt eingegangen</h2>
-    ${recent.length ? `<div class="table-wrap"><table><thead><tr><th>Typ</th><th>Name</th><th>Bereich / Stand</th><th>Eingegangen</th></tr></thead><tbody>${recent.map(r=>`<tr><td>${esc(r.type)}</td><td>${esc(r.name)}</td><td>${esc(r.detail)}</td><td>${fmt(r.created_at)}</td></tr>`).join("")}</tbody></table></div>` : '<p class="empty">Neue Karten und Beta-Bewerbungen erscheinen hier.</p>'}`;
-  document.querySelectorAll("[data-goto]").forEach((b) => b.addEventListener("click", () => document.querySelector(`[data-tab="${b.dataset.goto}"]`)?.click()));
-  document.getElementById("overview-refresh").addEventListener("click", async e => { e.currentTarget.disabled = true; try { await load(); } finally { const b = document.getElementById("overview-refresh"); if(b) b.disabled = false; } });
-  refreshConfirmedCount();
-}
 setInterval(refreshConfirmedCount, 15000);
 document.addEventListener("visibilitychange", refreshConfirmedCount);
 
@@ -183,7 +128,7 @@ function enhanceTablePanel(key) {
   if (!table) return;
   panel.querySelector('[data-table-tools]')?.remove();
   const tools = document.createElement('div');tools.className='admin-filters';tools.dataset.tableTools=key;
-  tools.innerHTML=`<label class="admin-search">${key==='members'?'Mitglieder':key==='cards'?'Karten':'Einträge'} durchsuchen<input type="search" data-panel-search="${key}" placeholder="Name, E-Mail oder Inhalt" value="${esc(panelSearch[key]||'')}"></label>${key==='members'?'<label>Status<select data-member-filter><option value="">Alle Status</option><option value="Wartet">Wartet</option><option value="Freigeschaltet">Freigeschaltet</option><option value="Abgelehnt">Abgelehnt</option></select></label>':''}<span class="hint" data-table-count></span>`;
+  tools.innerHTML=`<label class="admin-search">${key==='cards'?'Karten':'Einträge'} durchsuchen<input type="search" data-panel-search="${key}" placeholder="Name, E-Mail oder Inhalt" value="${esc(panelSearch[key]||'')}"></label><span class="hint" data-table-count></span>`;
   table.closest('.table-wrap').before(tools); filterTablePanel(key);
 }
 function filterTablePanel(key) {
@@ -193,7 +138,6 @@ function filterTablePanel(key) {
   const info=panel.querySelector('[data-table-count]');if(info)info.textContent=`${count} von ${rows.length} sichtbar`;
 }
 adminView.addEventListener('input',e=>{if(e.target.matches('[data-panel-search]')){const key=e.target.dataset.panelSearch;panelSearch[key]=e.target.value;filterTablePanel(key);}});
-adminView.addEventListener('change',e=>{if(e.target.matches('[data-member-filter]'))filterTablePanel('members');});
 
 // Karten von der Warteliste – zum Matchen von Hand
 const CARD_STATUS = { neu: "Neu", kontaktiert: "Kontaktiert", gematcht: "Gematcht" };
@@ -316,7 +260,7 @@ async function setCardStatus(ids, status, notes = {}) {
     if (row) Object.assign(row, changed[0]);
   }
 }
-function rerenderCards(msg) { renderCards(lastData.cards); enhanceTablePanel("cards"); renderOverview(lastData); cardMsg(msg || ""); }
+function rerenderCards(msg) { renderCards(lastData.cards); enhanceTablePanel("cards"); siteChanged(); cardMsg(msg || ""); }
 
 const cardsPanel = document.querySelector('[data-panel="cards"]');
 cardsPanel.addEventListener("click", async (e) => {
@@ -505,132 +449,57 @@ async function sendStatusMail(id){
   if(row&&!result.skipped){ row.mailed_status=result.status; row.mailed_at=new Date().toISOString(); }
   return result;
 }
-const betaDraftNotes = new Map();
-let betaState = { search: '', status: '', focus: '', sort: 'newest', page: 1 };
-function filteredBeta() {
-  const rows = Array.isArray(lastData?.beta) ? lastData.beta : [];
-  const query = betaState.search.trim().toLocaleLowerCase('de');
-  return rows.filter(b => (!betaState.status || b.status === betaState.status) && (!betaState.focus || b.focus === betaState.focus) && (!query || [b.name,b.email,b.project,b.why,b.admin_note].join(' ').toLocaleLowerCase('de').includes(query)))
-    .sort((a,b) => betaState.sort === 'name' ? a.name.localeCompare(b.name,'de') : (new Date(a.created_at)-new Date(b.created_at)) * (betaState.sort === 'oldest' ? 1 : -1));
+// Automatische Prüfung (20261108120000_auto_review_beta.sql): angenommen ohne Status-Mail = noch zu mailen
+const autoAccepted = b => b.status==='angenommen' && !!b.auto_accepted_at;
+const autoUnmailed = rows => rows.filter(b => autoAccepted(b) && b.mailed_status!=='angenommen');
+// Status einer Bewerbung setzen; außer „Neu“ geht danach eine Status-Mail raus (mail:false lässt sie weg).
+// „Angenommen“ setzt per Trigger den Beta-Tester-Badge am verknüpften Konto, ein anderer Status nimmt ihn weg.
+async function setBetaStatus(id, status, { mail = true } = {}) {
+  const row = lastData.beta.find(b => String(b.id) === String(id));
+  if (!row) throw Error('Bewerbung nicht mehr vorhanden.');
+  const old = row.status;
+  const changed = unwrap(await sb.from('beta_applications').update({ status }).eq('id', id).select('id,status,updated_at'));
+  if (!changed.length) throw Error('Keine Berechtigung oder Bewerbung nicht mehr vorhanden.');
+  Object.assign(row, changed[0]);
+  const member = row.user_id && lastData.members.find(m => m.id === row.user_id);
+  if (member && (status === 'angenommen' || old === 'angenommen')) member.is_beta_tester = status === 'angenommen';
+  let text = member && status === 'angenommen' ? 'Status gespeichert, Beta ist freigeschaltet.' : 'Status gespeichert.';
+  if (mail && STATUS_MAILABLE.has(status)) {
+    try { await sendStatusMail(id); text += ` Status-Mail an ${row.email} gesendet.`; }
+    catch (err) { text += ` Status-Mail NICHT gesendet: ${err.message}`; }
+  }
+  return text;
 }
-function renderBeta(beta) {
-  const panel = document.querySelector('[data-panel="beta"]');
-  if (!Array.isArray(beta)) { panel.innerHTML = `<div class="notice">Beta-Bewerbungen konnten nicht geladen werden: ${esc(beta.error || 'Unbekannter Fehler')} <button data-reload>Erneut versuchen</button></div>`; return; }
-  const fresh = beta.filter(b=>b.status==='neu').length;
-  document.getElementById('c-beta').textContent = `(${beta.length}${fresh ? `, ${fresh} neu` : ''})`;
-  panel.innerHTML = `<div class="panel-heading"><div><p class="admin-kicker">TESTER FINDEN</p><h2>Beta-Bewerbungen</h2><p class="hint">Prüfen, kennenlernen und die erste Testrunde zusammenstellen.</p></div><a class="admin-link" href="beta#testen" target="_blank" rel="noopener">Testablauf ansehen ↗</a></div>
-    <div class="beta-metrics">${Object.entries(BETA_STATUS).map(([key,label])=>`<button data-beta-shortcut="${key}" aria-pressed="${betaState.status===key}"><b>${beta.filter(b=>b.status===key).length}</b>${esc(label)}</button>`).join('')}</div>
-    <div class="admin-filters"><label class="admin-search">Bewerbungen durchsuchen<input type="search" data-beta-search placeholder="Name, E-Mail, Projekt oder Notiz" value="${esc(betaState.search)}"></label><label>Status<select data-beta-filter="status"><option value="">Alle Status</option>${Object.entries(BETA_STATUS).map(([key,label])=>`<option value="${key}" ${betaState.status===key?'selected':''}>${esc(label)}</option>`).join('')}</select></label><label>Bereich<select data-beta-filter="focus"><option value="">Alle Bereiche</option>${Object.entries(BETA_FOCUS).map(([key,label])=>`<option value="${key}" ${betaState.focus===key?'selected':''}>${esc(label)}</option>`).join('')}</select></label><label>Sortierung<select data-beta-filter="sort"><option value="newest" ${betaState.sort==='newest'?'selected':''}>Neueste zuerst</option><option value="oldest" ${betaState.sort==='oldest'?'selected':''}>Älteste zuerst</option><option value="name" ${betaState.sort==='name'?'selected':''}>Name A–Z</option></select></label></div>
-    <div class="admin-listbar"><p data-beta-total role="status"></p><a class="text-link" href="#" data-csv="beta">Gefilterte Liste als CSV</a></div>
-    <p class="hint">Jeder Statuswechsel außer „Neu“ schickt dem Bewerber eine Status-Mail über IONOS. „Angenommen“ setzt den Beta-Tester-Badge am verknüpften Konto und schaltet damit die Desktop-Downloads frei; ein anderer Status nimmt ihn wieder weg.</p><div data-beta-results></div><div class="admin-pagination" data-beta-pagination></div><p class="admin-message" data-beta-message role="status" aria-live="polite"></p>`;
-  renderBetaResults();
-}
-function renderBetaResults() {
-  const rows=filteredBeta(),pages=Math.max(1,Math.ceil(rows.length/15)); betaState.page=Math.min(betaState.page,pages);
-  document.querySelector('[data-beta-total]').textContent = `${rows.length} von ${lastData.beta.length} Bewerbungen`;
-  document.querySelector('[data-beta-results]').innerHTML = rows.length ? `<div class="beta-applications">${rows.slice((betaState.page-1)*15,betaState.page*15).map(b=>{
-    const link=/^https?:\/\//i.test(b.link||'')?b.link:'';
-    const reply=`mailto:${encodeURIComponent(b.email)}?subject=${encodeURIComponent('Deine Xyntal-Beta-Bewerbung')}&body=${encodeURIComponent(`Hallo ${b.name},\n\nvielen Dank für deine Bewerbung bei Xyntal.\n\n\nViele Grüße\nNico`)}`;
-    return `<article class="beta-application"><div class="beta-application-top"><div><span class="admin-avatar" aria-hidden="true">${esc((b.name||'?').slice(0,1).toUpperCase())}</span><h3>${esc(b.name)}</h3><a class="text-link" href="${reply}">${esc(b.email)}</a><p class="hint">${esc(BETA_FOCUS[b.focus]||b.focus)} · ${esc(BETA_HOURS[b.hours]||b.hours)}${b.user_id?` · <a class="text-link" href="nachrichten?an=${esc(b.user_id)}">Konto · Nachricht</a>`:' · ohne Konto (alt)'}</p></div><span class="beta-status beta-status-${esc(b.status)}">${esc(BETA_STATUS[b.status]||b.status)}</span></div><p class="beta-project">${esc(b.project||'Noch kein konkretes Projekt genannt.')}</p><details><summary>Bewerbung & interne Notiz</summary><div class="beta-detail"><h4>Motivation</h4><p class="beta-why-text">${esc(b.why)}</p>${link?`<a class="text-link" href="${esc(link)}" target="_blank" rel="noopener noreferrer nofollow">Projekt / Profil öffnen ↗</a>`:''}<label>Interne Notiz<textarea data-beta-note="${b.id}" maxlength="2000" rows="3" placeholder="Gespräch, nächste Schritte oder Rückfragen …">${esc(betaDraftNotes.get(String(b.id)) ?? b.admin_note ?? '')}</textarea></label><button data-beta-save="${b.id}">Notiz speichern</button><small>Eingegangen: ${fmt(b.created_at)}${b.updated_at?` · Zuletzt geändert: ${fmt(b.updated_at)}`:''}${b.mailed_status?` · Status-Mail „${esc(BETA_STATUS[b.mailed_status]||b.mailed_status)}“ am ${fmt(b.mailed_at)}`:' · Noch keine Status-Mail'}</small><button class="admin-danger" data-beta-delete="${b.id}">Bewerbung endgültig löschen</button></div></details><div class="beta-application-actions"><label>Status<select data-beta-status="${b.id}" aria-label="Status für ${esc(b.name)}">${Object.entries(BETA_STATUS).map(([key,label])=>`<option value="${key}" ${b.status===key?'selected':''}>${esc(label)}</option>`).join('')}</select></label>${STATUS_MAILABLE.has(b.status)?`<button data-beta-mail="${b.id}">Status-Mail ${b.mailed_status===b.status?'erneut ':''}senden</button>`:''}</div></article>`;
-  }).join('')}</div>` : `<div class="admin-empty"><span aria-hidden="true">◇</span><h3>${lastData.beta.length?'Keine passenden Bewerbungen':'Deine erste Testrunde beginnt hier.'}</h3><p>${lastData.beta.length?'Ändere die Suche oder Filter, um weitere Bewerbungen zu sehen.':'Sobald jemand das Beta-Formular ausfüllt, erscheint die Bewerbung hier.'}</p><a class="text-link" href="beta#bewerben" target="_blank" rel="noopener">Bewerbungsformular öffnen ↗</a></div>`;
-  document.querySelector('[data-beta-pagination]').innerHTML=`<button data-beta-page="${betaState.page-1}" ${betaState.page<=1?'disabled':''}>← Zurück</button><span>Seite ${betaState.page} von ${pages}</span><button data-beta-page="${betaState.page+1}" ${betaState.page>=pages?'disabled':''}>Weiter →</button>`;
-}
-const betaPanel=document.querySelector('[data-panel="beta"]');
-betaPanel.addEventListener('input',e=>{if(e.target.matches('[data-beta-note]'))betaDraftNotes.set(e.target.dataset.betaNote,e.target.value);if(e.target.matches('[data-beta-search]')){betaState.search=e.target.value;betaState.page=1;renderBetaResults();}});
-betaPanel.addEventListener('change',async e=>{
-  if(e.target.matches('[data-beta-filter]')){betaState[e.target.dataset.betaFilter]=e.target.value;betaState.page=1;renderBetaResults();return;}
-  if(!e.target.matches('[data-beta-status]'))return;
-  const select=e.target,id=select.dataset.betaStatus,row=lastData.beta.find(b=>String(b.id)===id),old=row.status;
-  select.disabled=true;
-  try{ const changed=unwrap(await sb.from('beta_applications').update({status:select.value}).eq('id',id).select('id,status,updated_at')); if(!changed.length)throw Error('Keine Berechtigung oder Bewerbung nicht mehr vorhanden.'); Object.assign(row,changed[0]); const member=row.user_id&&lastData.members.find(m=>m.id===row.user_id); if(member&&(row.status==='angenommen'||old==='angenommen')){member.is_beta_tester=row.status==='angenommen';} renderBeta(lastData.beta);renderOverview(lastData);const saved=member&&row.status==='angenommen'?'Status gespeichert, Beta-Tester-Badge gesetzt.':'Status gespeichert.'; const msg=document.querySelector('[data-beta-message]'); if(STATUS_MAILABLE.has(row.status)){ msg.textContent=saved+' Status-Mail wird gesendet …'; try{ await sendStatusMail(id); renderBetaResults(); msg.textContent=saved+' Status-Mail an '+row.email+' gesendet.'; }catch(err){ msg.textContent=saved+' Status-Mail NICHT gesendet: '+err.message; } } else msg.textContent=saved+' Für „Neu“ gibt es keine Mail.'; }
-  catch(err){select.value=old;document.querySelector('[data-beta-message]').textContent=`Nicht gespeichert: ${err.message}`;}finally{select.disabled=false;}
-});
-betaPanel.addEventListener('click',async e=>{
-  const quick=e.target.closest('[data-beta-shortcut]');if(quick){betaState.status=betaState.status===quick.dataset.betaShortcut?'':quick.dataset.betaShortcut;betaState.page=1;renderBeta(lastData.beta);return;}
-  const page=e.target.closest('[data-beta-page]');if(page){betaState.page=Number(page.dataset.betaPage);renderBetaResults();return;}
-  const mail=e.target.closest('[data-beta-mail]');if(mail){mail.disabled=true;const msg=document.querySelector('[data-beta-message]');msg.textContent='Status-Mail wird gesendet …';try{const r=await sendStatusMail(mail.dataset.betaMail);renderBetaResults();msg.textContent=r.skipped?r.reason:'Status-Mail gesendet.';}catch(err){msg.textContent='Status-Mail NICHT gesendet: '+err.message;mail.disabled=false;}return;}
-  const save=e.target.closest('[data-beta-save]'),del=e.target.closest('[data-beta-delete]');if(!save&&!del)return;
-  const btn=save||del,id=save?save.dataset.betaSave:del.dataset.betaDelete;
-  if(del&&!del.dataset.armed){del.dataset.armed='1';del.textContent='Unwiderruflich löschen? Erneut klicken';return;}
-  btn.disabled=true;
-  try{
-    if(save){const area=betaPanel.querySelector(`[data-beta-note="${id}"]`);const changed=unwrap(await sb.from('beta_applications').update({admin_note:area.value}).eq('id',id).select('id,admin_note,updated_at'));if(!changed.length)throw Error('Bewerbung nicht mehr vorhanden oder keine Berechtigung.');Object.assign(lastData.beta.find(b=>String(b.id)===id),changed[0]);betaDraftNotes.delete(id);document.querySelector('[data-beta-message]').textContent='Interne Notiz gespeichert.';}
-    else{const changed=unwrap(await sb.from('beta_applications').delete().eq('id',id).select('id'));if(!changed.length)throw Error('Bewerbung nicht mehr vorhanden oder keine Berechtigung.');lastData.beta=lastData.beta.filter(b=>String(b.id)!==id);betaDraftNotes.delete(id);renderBeta(lastData.beta);renderOverview(lastData);document.querySelector('[data-beta-message]').textContent='Bewerbung gelöscht.';}
-  }catch(err){document.querySelector('[data-beta-message]').textContent=`Nicht gespeichert: ${err.message}`;}finally{btn.disabled=false;}
-});
 
-// Tabs
-document.querySelectorAll("[data-tab]").forEach((btn) => btn.addEventListener("click", () => {
-  document.querySelectorAll("[data-tab]").forEach((b) => { b.setAttribute("aria-selected", b === btn); b.tabIndex = b === btn ? 0 : -1; });
+// Navigation wie in der App: links eine Liste in 4 Gruppen (data-group), jede Seite direkt anklickbar.
+// Seiten ohne Recht blendet admin-platform.js/load() per hidden aus; eine Gruppe ohne sichtbare Seite verschwindet samt Überschrift.
+const allTabs = [...document.querySelectorAll("[data-tab]")];
+const groupTitles = [...document.querySelectorAll("[data-group-title]")];
+const OLD_HASH = { users: "people", members: "people", beta: "people", overview: "start" };
+function syncSections() {
+  for (const g of groupTitles) g.hidden = !allTabs.some((t) => t.dataset.group === g.dataset.groupTitle && !t.hidden);
+}
+function selectTab(btn) {
+  allTabs.forEach((b) => { b.setAttribute("aria-selected", b === btn); b.tabIndex = b === btn ? 0 : -1; });
   history.replaceState(null, "", `#${btn.dataset.tab}`);
   document.querySelectorAll("[data-panel]").forEach((p) => { p.hidden = p.dataset.panel !== btn.dataset.tab; });
-}));
-
-document.querySelector('.admin-tabs').addEventListener('keydown',e=>{
-  const tabs=[...document.querySelectorAll('[data-tab]')].filter(t=>!t.hidden),index=tabs.indexOf(document.activeElement);if(index<0)return;
-  const next=e.key==='ArrowRight'?(index+1)%tabs.length:e.key==='ArrowLeft'?(index-1+tabs.length)%tabs.length:e.key==='Home'?0:e.key==='End'?tabs.length-1:null;
+  if (matchMedia("(max-width:1000px)").matches) btn.scrollIntoView({ block: "nearest", inline: "center" });
+}
+allTabs.forEach((btn) => btn.addEventListener("click", () => { selectTab(btn); window.scrollTo({ top: 0 }); }));
+new MutationObserver(syncSections).observe(document.querySelector(".xa-nav"), { subtree: true, attributes: true, attributeFilter: ["hidden"] });
+document.querySelector('.xa-nav').addEventListener('keydown',e=>{
+  const tabs=allTabs.filter(t=>!t.hidden),index=tabs.indexOf(document.activeElement);if(index<0)return;
+  const fwd=e.key==='ArrowDown'||e.key==='ArrowRight',back=e.key==='ArrowUp'||e.key==='ArrowLeft';
+  const next=fwd?(index+1)%tabs.length:back?(index-1+tabs.length)%tabs.length:e.key==='Home'?0:e.key==='End'?tabs.length-1:null;
   if(next!==null){e.preventDefault();tabs[next].click();tabs[next].focus();}
 });
-document.querySelectorAll('[data-tab]').forEach((tab,i)=>{tab.tabIndex=i===0?0:-1; const panel=document.querySelector(`[data-panel="${tab.dataset.tab}"]`);tab.id=`tab-${tab.dataset.tab}`;panel.id=`panel-${tab.dataset.tab}`;tab.setAttribute('aria-controls',panel.id);panel.setAttribute('role','tabpanel');panel.setAttribute('aria-labelledby',tab.id);});
-const selectedView=location.hash.slice(1);document.querySelectorAll('[data-tab]').forEach(tab=>{if(tab.dataset.tab===selectedView)tab.click();});
+allTabs.forEach((tab,i)=>{tab.tabIndex=i===0?0:-1; const panel=document.querySelector(`[data-panel="${tab.dataset.tab}"]`);tab.id=`tab-${tab.dataset.tab}`;panel.id=`panel-${tab.dataset.tab}`;tab.setAttribute('aria-controls',panel.id);panel.setAttribute('role','tabpanel');panel.setAttribute('aria-labelledby',tab.id);});
+{ const h = location.hash.slice(1), wanted = OLD_HASH[h] || h; const tab = allTabs.find((t) => t.dataset.tab === wanted); selectTab(tab || allTabs[0]); syncSections(); }
 adminView.addEventListener('click',e=>{if(e.target.closest('[data-reload]'))load();});
-// Mitglieder-Aktionen
-document.querySelector('[data-panel="members"]').addEventListener("click", async (e) => {
-  const btn = e.target.closest("button[data-act]");
-  if (!btn) return;
-  const { act, id } = btn.dataset;
-  try {
-    if (act === "approve-all") {
-      if (!btn.dataset.armed) { btn.dataset.armed = "1"; btn.textContent = "Wirklich alle freischalten?"; return; }
-      btn.disabled = true;
-      for (const m of lastData.members.filter((x) => x.status === "pending")) unwrap(await sb.rpc("admin_set_status", { p_id: m.id, p_status: "approved" }));
-    } else if (act === "verified") {
-      btn.disabled = true;
-      const member = lastData.members.find((row) => row.id === id);
-      if (!member) throw Error("Mitglied nicht mehr vorhanden.");
-      unwrap(await sb.rpc("admin_set_verified", { p_id: id, p_is_verified: !member.is_verified }));
-    } else if (act === "beta-tester") {
-      btn.disabled = true;
-      const member = lastData.members.find((row) => row.id === id);
-      if (!member) throw Error("Mitglied nicht mehr vorhanden.");
-      unwrap(await sb.rpc("admin_set_beta_tester", { p_id: id, p_is_beta_tester: !member.is_beta_tester }));
-    } else if (act === "ban") {
-      // Zweistufig: erst Dauer wählen, dann bestätigen. Profil und Karte bleiben erhalten, sind aber eingefroren und unsichtbar.
-      if (!btn.dataset.armed) { btn.dataset.armed = "1"; btn.textContent = "Wirklich sperren?"; return; }
-      btn.disabled = true;
-      const days = document.querySelector(`[data-ban-duration="${id}"]`)?.value ?? "";
-      const until = days ? new Date(Date.now() + Number(days) * 86400000).toISOString() : null;
-      unwrap(await sb.rpc("admin_set_ban", { p_id: id, p_banned: true, p_until: until }));
-    } else if (act === "unban") {
-      btn.disabled = true;
-      unwrap(await sb.rpc("admin_set_ban", { p_id: id, p_banned: false, p_until: null }));
-    } else if (act === "delete") {
-      // Zweistufig statt Browser-Dialog
-      if (!btn.dataset.armed) {
-        btn.dataset.armed = "1";
-        btn.textContent = "Sicher? Nochmal klicken";
-        return;
-      }
-      await deleteMemberAvatars(id);
-      unwrap(await sb.rpc("admin_delete_member", { p_id: id }));
-    } else {
-      unwrap(await sb.rpc("admin_set_status", { p_id: id, p_status: act === "approve" ? "approved" : "rejected" }));
-    }
-  } catch (err) {
-    alertBox(err.message);
-  }
-  load();
-});
-
 document.getElementById("admin-logout").addEventListener("click", async () => {
   await sb.auth.signOut();
   location.href = "./";
 });
-
-function alertBox(text) {
-  const panel = document.querySelector('[data-panel="members"]');
-  panel.insertAdjacentHTML("afterbegin", `<div class="notice">${esc(text)}</div>`);
-}
 
 function downloadCsv(filename, header, rows) {
   const cell = (v) => { const text = String(v ?? ""); return `"${(/^[=+@\-\t\r]/.test(text) ? "'" : "") + text.replace(/"/g, '""')}"`; };
@@ -649,9 +518,6 @@ adminView.addEventListener("click", (e) => {
   if (link.dataset.csv === "cards") {
     downloadCsv("xyntal-karten.csv", ["Name", "Wunsch-Link", "Öffentlich", "E-Mail", "Bereich", "Erfahrung", "Skills", "Std./Woche", "Stadt", "Arbeitsweise", "Sucht", "Satz", "Link", "Stand", "Notiz", "Sprache", "Eingegangen"],
       lastData.cards.map((c) => [c.name, c.handle ? `xyntal.de/${c.handle}` : "", c.is_public ? "ja" : "nein", c.email, c.role, c.level || "", (c.skills || []).join(", "), c.hours, c.city || "", c.mode || "", c.looking, c.pitch, c.link || "", CARD_STATUS[c.status], c.note, c.lang, fmt(c.created_at)]));
-  } else if (link.dataset.csv === "beta") {
-    downloadCsv("xyntal-beta-bewerbungen.csv", ["Name", "E-Mail", "Schwerpunkt", "Zeit", "Arbeitet an", "Warum", "Link", "Stand", "Interne Notiz", "Eingegangen"],
-      filteredBeta().map((b) => [b.name, b.email, BETA_FOCUS[b.focus] || b.focus, BETA_HOURS[b.hours] || b.hours, b.project, b.why, b.link, BETA_STATUS[b.status], b.admin_note || "", fmt(b.created_at)]));
   } else if (link.dataset.csv === "signups") {
     downloadCsv("xyntal-anmeldungen.csv", ["Name", "E-Mail", "Projekt", "Angemeldet"],
       lastData.signups.map((s) => [s.name, s.email, s.project, fmt(s.created_at)]));
