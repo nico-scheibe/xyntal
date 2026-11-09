@@ -4,7 +4,6 @@ const done = document.getElementById("beta-done");
 const confirmBox = document.getElementById("beta-confirm");
 const why = form.elements.why;
 const whyCount = document.getElementById("why-count");
-const botBox = form.querySelector("[data-turnstile]");
 const MIN_WHY = 80;
 const DRAFT_KEY = "xyntal-beta-draft";
 const APPLICATION_FIELDS = ["focus", "project", "why", "hours", "link"];
@@ -52,8 +51,6 @@ async function submitApplication(d) {
   if (!session) {
     form.querySelector("[data-beta-account]").hidden = false;
     form.querySelector("[data-beta-sub]").hidden = false;
-    // Bot-Prüfung schon jetzt starten, damit das Token beim Abschicken bereitliegt
-    if (window.XyntalTurnstile && window.XyntalTurnstile.enabled) window.XyntalTurnstile.mount(botBox);
     const draft = readDraft();
     if (draft) for (const k of APPLICATION_FIELDS) if (form.elements[k] && !form.elements[k].value) form.elements[k].value = draft[k] || "";
     updateCount();
@@ -119,20 +116,13 @@ form.addEventListener("submit", (e) => {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)) throw new Error("Bitte gib eine gültige E-Mail-Adresse an.");
       if (d.password.length < 8) throw new Error("Dein Passwort braucht mindestens 8 Zeichen.");
       saveDraft(d);
-      // „Kein Bot“-Token; der Server-Hook before-user-created lehnt Registrierungen ohne gültiges Token ab
-      const turnstile = window.XyntalTurnstile ? await window.XyntalTurnstile.token(botBox) : "";
-      let result;
-      try {
-        result = unwrap(await sb.auth.signUp({
-          email: d.email.trim(), password: d.password,
-          options: {
-            data: { ...profileFrom({ name: d.name.trim(), headline: (d.project || d.why).trim().slice(0, 120) }), ...(turnstile ? { turnstile } : {}) },
-            emailRedirectTo: new URL("beta", location.href).href,
-          },
-        }));
-      } finally {
-        if (window.XyntalTurnstile) window.XyntalTurnstile.reset(botBox); // jedes Token gilt nur einmal
-      }
+      const result = unwrap(await sb.auth.signUp({
+        email: d.email.trim(), password: d.password,
+        options: {
+          data: profileFrom({ name: d.name.trim(), headline: (d.project || d.why).trim().slice(0, 120) }),
+          emailRedirectTo: new URL("beta", location.href).href,
+        },
+      }));
       // Supabase meldet bei schon vorhandener E-Mail keinen Fehler, sondern ein Konto ohne Identitäten
       if (result.user && result.user.identities && result.user.identities.length === 0) {
         throw new Error("Mit dieser E-Mail gibt es schon ein Konto. Logg dich ein, dann füllst du nur noch die Bewerbung aus.");
