@@ -134,6 +134,12 @@
   }
   function ctaHtml(p) {
     if (p.contactSales) return `<a class="btn" href="#anfrage" data-ask="${esc(p.id)}">${T("Angebot anfragen", "Request a quote")}</a>`;
+    // Ultra lässt sich nicht kostenlos testen – nur direkt buchen.
+    if (p.id === "Ultra") {
+      return signedIn
+        ? `<a class="btn" href="/tarif">${T(`${p.name} buchen`, `Get ${p.name}`)}</a>`
+        : `<a class="btn" href="/beta">${T("Erst für die Beta bewerben", "Apply for the beta first")}</a>`;
+    }
     const buy = signedIn ? `<a class="btn btn-ghost" href="/tarif">${T(`${p.name} buchen`, `Get ${p.name}`)}</a>` : "";
     return `<a class="btn" href="#anfrage" data-ask="${esc(p.id)}">${T("30 Tage kostenlos testen", "Try free for 30 days")}</a>${buy}`;
   }
