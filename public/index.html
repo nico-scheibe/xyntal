@@ -27,7 +27,7 @@
   <link rel="preload" href="fonts/plexsans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/neu.css">
 
-  <!-- Vor dem ersten Zeichnen: JS-Klasse setzen und entscheiden, ob das Intro läuft (eigene Datei wegen CSP). -->
+  <!-- Vor dem ersten Zeichnen: JS-Klasse setzen (eigene Datei wegen CSP). -->
   <script src="js/neu-boot.js"></script>
 </head>
 <body>
@@ -52,18 +52,6 @@
   </defs>
 </svg>
 
-<!-- Intro: die zwei Linien zeichnen sich, dann öffnet sich die Seite. Höchstens 1,2 s, Klick oder Taste überspringt. -->
-<div class="intro" data-intro aria-hidden="true">
-  <svg class="intro__mark" viewBox="100 100 312 312" width="96" height="96">
-    <g fill="none" stroke-linecap="round" stroke-width="60">
-      <path class="intro__b" pathLength="1" d="M140 140 Q 300 212 372 372" stroke="url(#xb)"/>
-      <path class="intro__a" pathLength="1" d="M140 372 Q 212 212 372 140" stroke="url(#xa)"/>
-    </g>
-  </svg>
-  <span class="intro__skip mono">Klick überspringt</span>
-</div>
-
-
 <header class="top" data-top>
   <a class="top__logo" href="/" aria-label="Xyntal Startseite">
     <svg width="22" height="22" aria-hidden="true"><use href="#mark"/></svg><span>xyntal</span>
@@ -77,7 +65,7 @@
   </nav>
   <div class="top__right topbar-inner">
     <a class="top__login" href="/login" data-account>Login</a>
-    <a class="pill pill--sm" href="/beta" data-magnet data-apply>Bewerben</a>
+    <a class="pill pill--sm" href="/beta" data-apply>Bewerben</a>
   </div>
 </header>
 
@@ -89,12 +77,6 @@
     <!-- Ersatz, falls WebGL fehlt: das Logo als SVG -->
     <svg class="hero__fallback" aria-hidden="true"><use href="#mark"/></svg>
 
-    <div class="hero__meta mono">
-      <span>Beta läuft</span>
-      <span>App für Mac und Windows</span>
-      <span class="hero__hint" data-hero-hint>Beweg die Maus durchs Logo</span>
-    </div>
-
     <h1 class="hero__h" id="hero-title" aria-label="Du hast die Idee. Dir fehlt jemand, der sie mit dir baut.">
       <span class="hero__l hero__l--a" data-split>Du hast die Idee.</span>
       <span class="hero__l hero__l--b" data-split>Dir fehlt</span>
@@ -103,16 +85,15 @@
     </h1>
 
     <div class="hero__foot">
-      <p class="hero__p">Xyntal zeigt dir, mit wem du etwas aufbauen kannst. Du beschreibst, was du vorhast. Die App sagt dir, wer passt, und warum.</p>
+      <p class="hero__p">Du beschreibst, was du vorhast, und Xyntal zeigt dir, wer dazu passt und warum.</p>
       <div class="hero__cta">
-        <a class="pill" href="/beta" data-magnet data-apply>Für die Beta bewerben <span class="pill__arr" aria-hidden="true">→</span></a>
+        <a class="pill" href="/beta" data-apply>Für die Beta bewerben <span class="pill__arr" aria-hidden="true">→</span></a>
         <!-- Stattdessen, wenn jemand schon dabei ist oder sich beworben hat (js/neu-konto.js) -->
-        <a class="pill" href="/fuer-dich" data-magnet data-if="in">Passende Leute ansehen <span class="pill__arr" aria-hidden="true">→</span></a>
-        <a class="pill" href="/beta" data-magnet data-if="applied">Stand deiner Bewerbung <span class="pill__arr" aria-hidden="true">→</span></a>
+        <a class="pill" href="/fuer-dich" data-if="in">Passende Leute ansehen <span class="pill__arr" aria-hidden="true">→</span></a>
+        <a class="pill" href="/beta" data-if="applied">Stand deiner Bewerbung <span class="pill__arr" aria-hidden="true">→</span></a>
         <a class="tlink" href="/brief"><span data-apply>Oder erst den Brief lesen</span><span data-if="in applied">Den Brief lesen</span></a>
       </div>
     </div>
-    <div class="hero__scroll mono" aria-hidden="true"><i></i>Scrollen</div>
   </section>
 
   <!-- Laufband: sagt, wen man hier suchen kann. Läuft mit dem Scrolltempo. -->
@@ -124,8 +105,7 @@
 
   <!-- ============ SZENE 1 · WARUM ============ -->
   <section class="say" data-say aria-label="Warum es Xyntal gibt">
-    <p class="say__label mono">00 / Warum</p>
-    <p class="say__text" data-say-text>Auf LinkedIn steht, was jemand kann. Da steht nicht, ob er gerade Zeit hat. Nicht, was er erwartet. Und nicht, zu welchen Bedingungen er einsteigen würde. Genau das wollte ich wissen, bevor ich jemandem schreibe.</p>
+    <p class="say__text" data-say-text>Auf LinkedIn steht, was jemand kann. Ob er gerade Zeit hat, was er erwartet und zu welchen Bedingungen er einsteigen würde, steht da nicht. Das wollte ich aber wissen, bevor ich jemandem schreibe.</p>
     <p class="say__sign mono">Nico, 19, arbeitet in der IT</p>
   </section>
 
@@ -133,26 +113,26 @@
   <section class="pin" id="matching" data-pin aria-labelledby="pin-title">
     <div class="pin__stick">
       <header class="pin__head">
-        <p class="mono label">01 / Matching</p>
-        <h2 class="pin__title" id="pin-title">Wer passt.<br><span class="thin">Und warum.</span></h2>
+        <p class="mono label">Matching</p>
+        <h2 class="pin__title" id="pin-title">Wer zu dir passt<br><span class="thin">und warum.</span></h2>
       </header>
 
       <div class="pin__steps">
         <article class="step is-on" data-step>
           <h3>Erst mal: Wer ist überhaupt da?</h3>
-          <p>Unter „Entdecken“ siehst du Leute, Projekte und Communities. Sortiert danach, wie gut sie zu dir passen. Nicht danach, wer am lautesten ist.</p>
+          <p>Unter „Entdecken“ siehst du Leute, Projekte und Communities, sortiert danach, wie gut sie zu dir passen.</p>
         </article>
         <article class="step" data-step>
           <h3>Eine Zahl, die für alle gleich gerechnet wird.</h3>
-          <p>Hinter der Passung stecken zehn Bereiche, gewichtet zusammengezählt. Dieselben Angaben ergeben immer dieselbe Zahl. Es gibt keinen Zufall und keine bezahlte Platzierung.</p>
+          <p>Hinter der Passung stecken zehn Bereiche, gewichtet zusammengezählt. Dieselben Angaben ergeben immer dieselbe Zahl, und eine bessere Platzierung kann niemand kaufen.</p>
         </article>
         <article class="step" data-step>
-          <h3>Dann der Grund.</h3>
-          <p>Zu jedem Vorschlag steht, warum. Was die Person mitbringt, was deinem Profil fehlt und was der nächste Schritt wäre.</p>
+          <h3>Dazu steht der Grund.</h3>
+          <p>Bei jedem Vorschlag liest du, was die Person mitbringt, was deinem Profil fehlt und was der nächste Schritt wäre.</p>
         </article>
         <article class="step" data-step>
-          <h3>Und die Rechnung dahinter.</h3>
-          <p>Jeder Bereich einzeln, mit Punkten. Wenn dich eine Zahl wundert, schaust du nach, woher sie kommt.</p>
+          <h3>Die Rechnung kannst du einsehen.</h3>
+          <p>Jeder Bereich steht einzeln da, mit Punkten. Wenn dich eine Zahl wundert, schaust du nach, woher sie kommt.</p>
         </article>
         <div class="pin__count mono" aria-hidden="true"><b data-pin-now>01</b><i><u data-pin-bar></u></i><span>04</span></div>
       </div>
@@ -180,7 +160,6 @@
   <!-- ============ SZENE 3 · SELBST RECHNEN ============ -->
   <section class="calc" id="rechnen" data-calc aria-labelledby="calc-title">
     <header class="calc__head">
-      <p class="mono label">02 / Nachrechnen</p>
       <h2 class="calc__title" id="calc-title" data-stretch>Rechne selbst.</h2>
       <p class="calc__lead">Das sind die echten Gewichte aus dem Matching. Schieb die Regler, wechsle die Art der Zusammenarbeit und schau, was mit der Zahl passiert.</p>
     </header>
@@ -252,40 +231,34 @@
           </svg>
 
           <div class="way__panel way__panel--title">
-            <p class="mono label">03 / Der Weg</p>
-            <h2 class="way__title" id="way-title">Vom ersten Klick<br><span class="thin">bis zum ersten Call.</span></h2>
+            <p class="mono label">Der Weg</p>
+            <h2 class="way__title" id="way-title">Von der Bewerbung<br><span class="thin">bis zum Projekt.</span></h2>
             <p class="way__hint mono"><span class="way__hint-d">Weiterscrollen</span><span class="way__hint-m">Wischen</span> →</p>
           </div>
 
           <article class="way__panel">
             <header><span class="way__n">1</span><h3>Bewerben</h3></header>
             <p>Konto anlegen, drei Fragen beantworten: Was baust du? Wen suchst du? Wie viel Zeit hast du? Ich lese jede Bewerbung selbst und antworte per Mail.</p>
-            <span class="way__fact mono">3 Fragen · Antwort per Mail</span>
           </article>
           <article class="way__panel">
             <header><span class="way__n">2</span><h3>Profil</h3></header>
             <p>Skills, Tech-Stack, Ziele, Sprachen, Stunden pro Woche. Und unter welchen Bedingungen du einsteigst: als Mitgründer:in, bezahlt oder als Nebenprojekt.</p>
-            <span class="way__fact mono">Zeit, Erwartung, Bedingungen</span>
           </article>
           <article class="way__panel">
             <header><span class="way__n">3</span><h3>Arbeitsstil</h3></header>
             <p>28 Blöcke. Jedes Mal wählst du, was am meisten und was am wenigsten zu dir passt. Zwei, die beide nur antreiben, sind nicht automatisch das beste Team.</p>
-            <span class="way__fact mono">28 Blöcke</span>
           </article>
           <article class="way__panel way__panel--x">
             <header><span class="way__n">4</span><h3>Vorschlag</h3></header>
-            <p>Ab 65 Punkten taucht jemand bei dir auf. Mit Zahl, Begründung und den zehn Bereichen einzeln. Hier kreuzen sich die Linien.</p>
-            <span class="way__fact mono">ab 65 Punkten</span>
+            <p>Ab 65 Punkten taucht jemand bei dir auf, mit Zahl, Begründung und den zehn Bereichen einzeln.</p>
           </article>
           <article class="way__panel">
             <header><span class="way__n">5</span><h3>Nachricht</h3></header>
             <p>Du schreibst direkt. Damit das kein Spam-Kanal wird, gibt es Grenzen: höchstens drei neue Gespräche pro Stunde.</p>
-            <span class="way__fact mono">max. 3 neue Gespräche pro Stunde</span>
           </article>
           <article class="way__panel">
             <header><span class="way__n">6</span><h3>Projekt</h3></header>
-            <p>Projekt anlegen, offene Rollen eintragen. Wer mitmachen will, meldet sich mit „Ich wäre dabei“. Ab da baut ihr zu zweit. Oder zu fünft.</p>
-            <span class="way__fact mono">„Ich wäre dabei“</span>
+            <p>Projekt anlegen, offene Rollen eintragen. Wer mitmachen will, meldet sich mit „Ich wäre dabei“.</p>
           </article>
           <div class="way__panel way__panel--end" aria-hidden="true"></div>
         </div>
@@ -296,7 +269,7 @@
   <!-- ============ SZENE 5 · DIE APP ============ -->
   <section class="app" id="app" aria-labelledby="app-title">
     <header class="app__head">
-      <p class="mono label">04 / Die App</p>
+      <p class="mono label">Die App</p>
       <h2 class="app__title" id="app-title">Die Website ist nur der Eingang.</h2>
       <p class="app__lead">Gearbeitet wird in der App für Mac und Windows. Vorschläge, Projekte und Nachrichten an einem Ort. Die Bilder sind aus der echten App, mit Beispieldaten.</p>
     </header>
@@ -310,7 +283,7 @@
           </picture>
           <i class="win__glare" aria-hidden="true"></i>
         </div>
-        <figcaption class="mono"><b>A</b> Start. Was heute ansteht.</figcaption>
+        <figcaption class="mono"><b>Start</b> Was heute ansteht</figcaption>
       </figure>
       <figure class="shot shot--b" data-par="0.10">
         <div class="win" data-glare>
@@ -320,7 +293,7 @@
           </picture>
           <i class="win__glare" aria-hidden="true"></i>
         </div>
-        <figcaption class="mono"><b>B</b> Nachrichten. Privat und im Team.</figcaption>
+        <figcaption class="mono"><b>Nachrichten</b> Privat und im Team</figcaption>
       </figure>
       <figure class="shot shot--c" data-par="-0.14">
         <div class="win" data-glare>
@@ -330,14 +303,14 @@
           </picture>
           <i class="win__glare" aria-hidden="true"></i>
         </div>
-        <figcaption class="mono"><b>C</b> Projekte. Wer macht was.</figcaption>
+        <figcaption class="mono"><b>Projekte</b> Wer was macht</figcaption>
       </figure>
     </div>
 
     <div class="stand">
       <div class="stand__say">
         <p class="mono label">Stand heute</p>
-        <p class="stand__h">Ich zeige dir lieber, wo ich stehe, als mehr zu versprechen.</p>
+        <p class="stand__h">Was schon läuft und was noch fehlt.</p>
       </div>
       <ul class="stand__list">
         <li><span>Profile, Mitglieder, Community, Nachrichten</span><em class="mono st st--on">läuft</em></li>
@@ -352,42 +325,36 @@
   <!-- ============ SZENE 6 · STATT ============ -->
   <section class="swap" id="statt" aria-labelledby="swap-title">
     <header class="swap__head">
-      <p class="mono label">05 / Statt</p>
-      <h2 class="swap__title" id="swap-title">Sechs Umwege,<br><span class="thin">die du dir sparst.</span></h2>
+      <p class="mono label">Statt</p>
+      <h2 class="swap__title" id="swap-title">Wo man sonst sucht,<br><span class="thin">und was dort fehlt.</span></h2>
     </header>
     <ol class="swap__list">
       <li class="row" tabindex="0">
-        <span class="row__n mono">a</span>
         <h3 class="row__old"><span data-strike>LinkedIn</span></h3>
         <p class="row__why">Du siehst Titel und Fähigkeiten. Ob jemand gerade Zeit hat oder überhaupt mitmachen will, siehst du nicht.</p>
         <p class="row__new">Profile enthalten Zeit, Erwartungen und die Bedingungen, zu denen jemand einsteigt.</p>
       </li>
       <li class="row" tabindex="0">
-        <span class="row__n mono">b</span>
         <h3 class="row__old"><span data-strike>Discord-Server</span></h3>
         <p class="row__why">Viele Leute, kein Filter. Du fragst in die Runde und hoffst, dass sich jemand Passendes meldet.</p>
-        <p class="row__new">Du beschreibst, wen du suchst. Es taucht nur auf, wer wirklich passen kann.</p>
+        <p class="row__new">Du beschreibst, wen du suchst. Vorgeschlagen wird dir nur, wer mindestens 65 Punkte erreicht.</p>
       </li>
       <li class="row" tabindex="0">
-        <span class="row__n mono">c</span>
         <h3 class="row__old"><span data-strike>Freunde von Freunden</span></h3>
         <p class="row__why">Ob du jemanden findest, hängt davon ab, wen dein Umfeld zufällig kennt.</p>
-        <p class="row__new">Du erreichst auch Leute außerhalb deines Kreises. Gezielt statt zufällig.</p>
+        <p class="row__new">Du erreichst auch Leute, die in deinem Umfeld niemand kennt.</p>
       </li>
       <li class="row" tabindex="0">
-        <span class="row__n mono">d</span>
         <h3 class="row__old"><span data-strike>Freelancer-Plattformen</span></h3>
         <p class="row__why">Dort gibt es bezahlte Aufträge. Mitgründung oder ein Nebenprojekt kommt nicht vor.</p>
         <p class="row__new">Mitgründung, bezahlte Aufgabe und Nebenprojekt sind gleichwertige Wege.</p>
       </li>
       <li class="row" tabindex="0">
-        <span class="row__n mono">e</span>
         <h3 class="row__old"><span data-strike>Drei Calls zum Aussortieren</span></h3>
         <p class="row__why">Erst nach dem dritten Gespräch stellt sich heraus: keine Zeit, andere Erwartung.</p>
-        <p class="row__new">Was nicht passt, fällt raus, bevor ihr euch schreibt.</p>
+        <p class="row__new">Zeit und Erwartung stehen im Profil, bevor ihr euch schreibt.</p>
       </li>
       <li class="row" tabindex="0">
-        <span class="row__n mono">f</span>
         <h3 class="row__old"><span data-strike>Gruppenchats</span></h3>
         <p class="row__why">Wer wollte mitmachen? Steht irgendwo zwischen zweihundert anderen Nachrichten.</p>
         <p class="row__new">Ein Projekt, offene Rollen und alle Meldungen an einem Ort.</p>
@@ -397,9 +364,9 @@
 
   <!-- ============ SZENE 7 · WER DAS BAUT ============ -->
   <section class="me" id="nico" aria-labelledby="me-title">
-    <p class="mono label">06 / Wer das baut</p>
+    <p class="mono label">Wer das baut</p>
     <blockquote class="me__quote" id="me-title" data-reveal-lines>
-      <p>Die richtigen Leute findet man nicht durch Zufall. Also baue ich das Werkzeug, das mir gefehlt hat.</p>
+      <p>Ich wollte etwas Eigenes aufbauen und hatte niemanden, mit dem ich es hätte tun können. Also baue ich das Werkzeug, das mir gefehlt hat.</p>
     </blockquote>
     <div class="me__body">
       <p>Ich bin Nico, 19, und arbeite in der IT. Xyntal ist mein Projekt. Jede Bewerbung lese ich selbst, und ich antworte per Mail.</p>
@@ -411,17 +378,16 @@
   <!-- ============ FRAGEN ============ -->
   <section class="faq" id="fragen" aria-labelledby="faq-title">
     <div class="faq__head">
-      <p class="mono label">07 / Fragen</p>
       <h2 class="faq__title" id="faq-title">Kurz gefragt.</h2>
     </div>
     <dl class="faq__list">
-      <div class="qa"><dt><span class="mono">a</span>Für wen ist das?</dt>
+      <div class="qa"><dt>Für wen ist das?</dt>
         <dd>Für Leute mit einem konkreten Vorhaben, meist ein digitales Produkt, die dafür jemanden suchen. Und für Leute, die mitbauen wollen: als Mitgründer:in, bezahlt für eine klare Aufgabe oder als Nebenprojekt mit abgesprochenen Stunden.</dd></div>
-      <div class="qa"><dt><span class="mono">b</span>Worauf läuft es?</dt>
-        <dd>Als App für Mac und Windows. Die Website ist der Eingang: Profil anlegen, bewerben, Mitglieder kennenlernen. Linux und Handy gibt es noch nicht.</dd></div>
-      <div class="qa"><dt><span class="mono">c</span>Wie komme ich rein?</dt>
-        <dd>Per Bewerbung. Konto anlegen und drei Fragen beantworten: Was baust du, wen suchst du, wie viel Zeit hast du. Ich lese jede selbst und antworte per Mail.</dd></div>
-      <div class="qa"><dt><span class="mono">d</span>Was kostet das?</dt>
+      <div class="qa"><dt>Worauf läuft es?</dt>
+        <dd>Als App für Mac und Windows. Profil anlegen und bewerben kannst du hier auf der Website. Linux und Handy gibt es noch nicht.</dd></div>
+      <div class="qa"><dt>Wie komme ich rein?</dt>
+        <dd>Per Bewerbung: Konto anlegen und drei Fragen beantworten. Die Antwort kommt per Mail.</dd></div>
+      <div class="qa"><dt>Was kostet das?</dt>
         <dd>In der Beta nichts. Was danach kommt, steht offen unter <a href="/preise">Preise</a>.</dd></div>
     </dl>
   </section>
@@ -435,17 +401,17 @@
       <span data-flex-line>dazu.</span>
     </h2>
     <div class="end__foot">
-      <a class="pill pill--lg" href="/beta" data-magnet data-apply>Für die Beta bewerben <span class="pill__arr" aria-hidden="true">→</span></a>
-      <p data-apply>In der Beta kostet Xyntal nichts. Ich lese jede Bewerbung selbst.</p>
-      <a class="pill pill--lg" href="/fuer-dich" data-magnet data-if="in">Passende Leute ansehen <span class="pill__arr" aria-hidden="true">→</span></a>
+      <a class="pill pill--lg" href="/beta" data-apply>Für die Beta bewerben <span class="pill__arr" aria-hidden="true">→</span></a>
+      <p data-apply>In der Beta kostet Xyntal nichts.</p>
+      <a class="pill pill--lg" href="/fuer-dich" data-if="in">Passende Leute ansehen <span class="pill__arr" aria-hidden="true">→</span></a>
       <p data-if="in">Du bist schon dabei. Schön, dass du da bist.</p>
-      <a class="pill pill--lg" href="/beta" data-magnet data-if="applied">Stand deiner Bewerbung <span class="pill__arr" aria-hidden="true">→</span></a>
+      <a class="pill pill--lg" href="/beta" data-if="applied">Stand deiner Bewerbung <span class="pill__arr" aria-hidden="true">→</span></a>
       <p data-if="applied">Deine Bewerbung ist da. Ich lese sie selbst und antworte per Mail.</p>
     </div>
 
     <!-- Newsletter: dasselbe Formular wie bisher (landing.js, Brevo, Double-Opt-in) -->
     <div class="news" id="warteliste" role="group" aria-labelledby="news-title" data-apply>
-      <p id="news-title">Noch nichts Konkretes vor? Dann sag ich dir Bescheid, wenn Xyntal für alle offen ist. Keine Werbung, nur Mails, wenn es wirklich etwas Neues gibt.</p>
+      <p id="news-title">Noch nichts Konkretes vor? Dann sag ich dir Bescheid, wenn Xyntal für alle offen ist. Ich schreibe nur, wenn es etwas Neues gibt.</p>
       <form class="waitlist-form" data-waitlist novalidate>
         <div class="waitlist-row">
           <label class="sr-only" for="wl-email">E-Mail-Adresse</label>
