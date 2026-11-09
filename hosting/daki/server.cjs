@@ -402,8 +402,44 @@ const SECURITY_HEADERS = {
   // Vorschaubilder kommen als blob: vom App-Server (img-src blob:).
   'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://db.xyntal.de https://media.giphy.com https://media0.giphy.com https://media1.giphy.com https://media2.giphy.com https://media3.giphy.com https://media4.giphy.com https://i.giphy.com; media-src 'self' blob:; font-src 'self'; connect-src 'self' https://api.xyntal.de https://db.xyntal.de wss://db.xyntal.de https://*.sibforms.com; frame-src 'self' https://www.youtube-nocookie.com https://www.tiktok.com https://www.instagram.com https://player.vimeo.com https://open.spotify.com; form-action 'self' https://*.sibforms.com; frame-ancestors 'self'; base-uri 'self'; object-src 'none'",
 };
+// Bot-Schutz: höchstens so viele Anfragen pro IP und Minute. Eine Seite lädt rund 30 Dateien,
+// 600 reichen also für etwa 20 Seiten pro Minute; Profilseiten (fragen Supabase) und
+// Schnittstellen sind enger begrenzt. Zahlen per Umgebung änderbar, 0 schaltet ab.
+const LIMITS = {
+  all: Number(process.env.SITE_RATE_LIMIT ?? 600),
+  heavy: Number(process.env.SITE_RATE_LIMIT_HEAVY ?? 60),
+};
+const hits = new Map();
+let hitsWindow = 0;
+function clientIp(req) {
+  const remote = req.socket.remoteAddress || 'unknown';
+  const local = ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(remote);
+  const forwarded = process.env.TRUST_PROXY === '1' ? String(req.headers['x-forwarded-for'] || '').split(',').pop().trim() : '';
+  return { ip: forwarded || (local && req.headers['cf-connecting-ip'] ? String(req.headers['cf-connecting-ip']) : remote), local: local && !forwarded };
+}
+// true = zu viele Anfragen (Antwort 429 ist dann schon geschrieben)
+function overLimit(req, res, kind) {
+  const { ip, local } = clientIp(req);
+  if (local) return false; // Container-interne Abfragen (Deploy-Prüfung)
+  const now = Date.now(), win = Math.floor(now / 60000);
+  if (win !== hitsWindow || hits.size > 100000) { hits.clear(); hitsWindow = win; }
+  const count = (key) => { const n = (hits.get(key) || 0) + 1; hits.set(key, n); return n; };
+  const tooMany = (LIMITS.all > 0 && count('a:' + ip) > LIMITS.all) || (kind === 'heavy' && LIMITS.heavy > 0 && count('h:' + ip) > LIMITS.heavy);
+  if (!tooMany) return false;
+  const retry = String(60 - Math.floor((now % 60000) / 1000));
+  res.writeHead(429, { 'Content-Type': 'text/plain; charset=utf-8', 'Retry-After': retry, 'Cache-Control': 'no-store' });
+  res.end('Zu viele Anfragen. Bitte warte kurz und lade die Seite dann neu.');
+  return true;
+}
+const HEAVY_PATH = /^\/(api\/|[a-z0-9][a-z0-9_-]{2,19}(\/invite)?\/?$)/i;
+
 const httpServer = http.createServer((req,res) => {
   for (const [name, value] of Object.entries(SECURITY_HEADERS)) res.setHeader(name, value);
+  {
+    let p = '/';
+    try { p = new URL(req.url, 'http://localhost').pathname; } catch {}
+    if (overLimit(req, res, HEAVY_PATH.test(p) ? 'heavy' : 'all')) return;
+  }
   let pathname;
   try { pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname); }
   catch { res.writeHead(400); return res.end(); }
@@ -462,5 +498,8 @@ const httpServer = http.createServer((req,res) => {
 }).listen(Number(process.env.SERVER_PORT || process.env.PORT || 4129), '0.0.0.0', () => console.log('Xyntal Daki server ready'));
 // Große Uploads (Videos der freien Seite) dürfen länger als die Standard-5-Minuten dauern
 httpServer.requestTimeout = 0;
+// …aber wer nur Verbindungen offen hält (langsame Kopfzeilen, kein Datenfluss), fliegt raus.
+httpServer.headersTimeout = 20000;
+httpServer.timeout = 120000;
 update();
 setInterval(update, 30000);

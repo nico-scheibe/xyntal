@@ -106,3 +106,19 @@ nur https annimmt; die Funktion prüft jede Anfrage per Signatur.
 
 Website-Änderungen (`public/`) brauchen kein Deploy, sie sind nach spätestens 30 s online.
 Backups zusätzlich regelmäßig auf einen zweiten Ort kopieren (z. B. Hetzner Storage Box).
+
+## Bot-Schutz
+
+- **Website (`hosting/daki/server.cjs`):** höchstens 600 Anfragen pro IP und Minute,
+  60 für Profilseiten (`xyntal.de/name`) und `/api/*`. Darüber antwortet sie mit 429.
+  Ändern lässt sich das mit `SITE_RATE_LIMIT` und `SITE_RATE_LIMIT_HEAVY` in
+  `website.env` (0 = aus). Verbindungen ohne Kopfzeilen nach 20 s und ohne Datenfluss
+  nach 2 Minuten werden getrennt.
+- **App-Server:** 200 Anfragen pro Minute (`RATE_LIMIT_MAX`), Login und Registrierung
+  10 pro Minute, und höchstens 5 neue Konten pro IP bzw. 3 pro Gerät in 24 Stunden
+  (`SIGNUP_DAILY_PER_IP`, `SIGNUP_DAILY_PER_DEVICE` in `api.env`).
+- **Gegen echte Überlastung (DDoS)** hilft nur ein vorgeschalteter Schutz: in Cloudflare
+  bei `xyntal.de`, `www`, `api` und `db` die Wolke auf orange („Proxied“) stellen,
+  SSL/TLS auf „Full (strict)“ und unter Security → Bots „Bot Fight Mode“ einschalten.
+  Caddy holt seine Zertifikate dann weiter, weil Cloudflare `/.well-known/acme-challenge`
+  durchreicht.
