@@ -252,49 +252,70 @@ body.front .site-footer a { text-decoration: none; }
   .closer-facts li::before { background: Highlight; }
 }
 
-/* ---------- Was Xyntal ersetzt ---------- */
-.section-lead { max-width: 46rem; font: 400 clamp(1.2rem, 2vw, 1.45rem)/1.45 var(--f-serif); font-optical-sizing: auto; color: var(--text); text-wrap: pretty; }
-.swap, .diff { display: grid; gap: 32px; padding: clamp(40px, 6vw, 72px) 0; border-top: 1px solid var(--line); }
-.swap-list { display: grid; }
-.swap-list li { display: grid; gap: 10px; padding: 22px 0; border-top: 1px solid var(--line); }
-.swap-list li:first-child { border-top: 0; padding-top: 0; }
-.swap-old { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; font-size: 15px; color: var(--text-3); }
-.swap-tools { color: var(--text-2); text-decoration: line-through; text-decoration-color: var(--line-2); text-decoration-thickness: 1px; }
-.swap-label { font: 500 11px/1 var(--f-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3); }
-.swap-new { display: grid; gap: 6px; }
-.swap-new h3 { font: 400 clamp(1.3rem, 2.2vw, 1.6rem)/1.2 var(--f-serif); font-optical-sizing: auto; letter-spacing: -0.01em; }
-.swap-new p { color: var(--text-2); font-size: 15.5px; max-width: 52ch; }
+
+/* ---------- 02 Was Xyntal ersetzt: eine Quittung ---------- */
+.swap, .diff { display: grid; gap: 36px; padding: clamp(40px, 6vw, 72px) 0; border-top: 1px solid var(--line); }
+.swap-body { display: grid; gap: 36px; }
+.swap-intro { font: 400 clamp(1.7rem, 3.4vw, 2.6rem)/1.15 var(--f-serif); font-optical-sizing: auto; letter-spacing: -0.015em; max-width: 16ch; text-wrap: balance; }
+.swap-intro em { font-style: italic; color: var(--text-2); }
+.ledger { font-size: 15.5px; }
+.ledger-head, .ledger li, .ledger-sum { display: flex; align-items: baseline; gap: 12px; }
+.ledger-head { justify-content: space-between; padding-bottom: 12px; border-bottom: 1px solid var(--line-2); font: 500 11px/1 var(--f-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3); }
+.ledger li { padding: 16px 0; border-bottom: 1px solid var(--line); }
+.ledger-old { color: var(--text-2); max-width: 58%; }
+.ledger-dots { flex: 1 1 24px; min-width: 24px; border-bottom: 1px dotted var(--line-2); transform: translateY(-4px); }
+.ledger-new { display: grid; justify-items: end; gap: 2px; text-align: right; color: var(--text); font-weight: 500; }
+.ledger-new a { text-decoration-color: var(--key); }
+.ledger-new small { font: 400 13px/1.35 var(--f-sans); color: var(--text-3); }
+.ledger-sum { padding-top: 18px; border-top: 3px double var(--line-2); margin-top: -1px; font: 400 clamp(1.3rem, 2.2vw, 1.6rem)/1.2 var(--f-serif); }
+.ledger-sum > span:first-child { color: var(--text-2); }
+.ledger-sum > span:last-child { color: var(--key); font-style: italic; }
 @media (min-width: 900px) {
-  .swap-list li { grid-template-columns: 5fr 7fr; gap: 48px; align-items: baseline; padding: 26px 0; }
-  .swap-list li:first-child { padding-top: 4px; }
-  .swap-new { position: relative; }
-  .swap-new::before { content: "→"; position: absolute; left: -34px; top: 0.1em; color: var(--key); font-size: 18px; }
+  .swap-body { grid-template-columns: 5fr 7fr; column-gap: 56px; align-items: start; }
+  .swap-intro { position: sticky; top: 104px; }
+}
+@media (max-width: 480px) {
+  .ledger { font-size: 15px; }
+  .ledger li { padding: 14px 0; }
+  .ledger-old { max-width: 62%; }
+  .ledger-dots { min-width: 16px; }
+  .ledger-new small { display: none; }
 }
 
-/* ---------- Unterschied zu LinkedIn und Discord ---------- */
-.diff-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-.diff-table { width: 100%; min-width: 0; border-collapse: collapse; font-size: 15px; }
-.diff-table th, .diff-table td { padding: 16px 14px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
-.diff-table thead th { padding-top: 0; font: 500 12px/1.2 var(--f-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-2); border-bottom-color: var(--line-2); }
-.diff-table tbody th { font-weight: 500; color: var(--text); width: 40%; padding-left: 0; }
-.diff-table td { color: var(--text-2); width: 20%; }
-.diff-table tr:last-child > * { border-bottom: 0; }
-.diff-table thead .diff-us { color: var(--key); }
-.diff-table td.diff-us { background: var(--key-soft); color: var(--text); }
-.diff-yes, .diff-no, .diff-part { display: inline-flex; gap: 8px; align-items: baseline; }
-.diff-yes::before { content: "✓"; color: var(--key); font-weight: 600; }
-.diff-no::before { content: "–"; color: var(--text-3); }
-.diff-part::before { content: "~"; color: var(--text-3); }
-.diff-note { color: var(--text-2); font-size: 15.5px; max-width: 52ch; }
-@media (max-width: 640px) {
-  .diff-table { font-size: 13.5px; }
-  .diff-table thead { display: none; }
-  .diff-table, .diff-table tbody, .diff-table tr { display: block; }
-  .diff-table tr { padding: 16px 0; border-bottom: 1px solid var(--line); }
-  .diff-table tr:last-child { border-bottom: 0; }
-  .diff-table th, .diff-table td { display: block; width: auto; padding: 0; border: 0; }
-  .diff-table tbody th { width: auto; margin-bottom: 10px; font-size: 15px; }
-  .diff-table td { display: grid; grid-template-columns: 6.5rem 1fr; gap: 8px; padding: 6px 10px; }
-  .diff-table td::before { content: attr(data-label); font: 500 11px/1.6 var(--f-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); }
-  .diff-table td.diff-us::before { color: var(--key); }
+/* ---------- 03 Dieselbe Person, drei Orte ---------- */
+.diff-head { display: grid; gap: 14px; }
+.diff-title { font: 400 clamp(2rem, 4.4vw, 3.4rem)/1.08 var(--f-serif); font-optical-sizing: auto; letter-spacing: -0.02em; }
+.diff-title em { font-style: italic; color: var(--text-2); }
+.diff-lead { color: var(--text-2); max-width: 48ch; }
+.places { display: grid; gap: 40px; padding: 0; margin: 0; list-style: none; }
+.place { display: grid; grid-template-rows: auto 1fr auto; gap: 14px; }
+.place-where { font: 500 11.5px/1 var(--f-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3); }
+.place-view { display: grid; align-content: start; gap: 6px; padding: 20px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 2px; font-size: 15px; }
+.pv-name { font: 500 17px/1.3 var(--f-sans); }
+.pv-line { color: var(--text-2); }
+.pv-meta { color: var(--text-3); font-size: 13.5px; }
+.pv-chat { gap: 10px; }
+.pv-chat p { color: var(--text-2); }
+.pv-chat b { display: block; margin-bottom: 1px; font: 500 12px/1.4 var(--f-mono); color: var(--text-3); }
+.pv-gap { display: flex; align-items: center; gap: 10px; font: italic 400 13px/1.4 var(--f-serif); color: var(--text-3) !important; }
+.pv-gap::before, .pv-gap::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.pv-facts { display: grid; gap: 6px; margin: 10px 0 4px; padding-top: 12px; border-top: 1px solid var(--line); }
+.pv-facts div { display: grid; grid-template-columns: 5.5rem 1fr; gap: 10px; }
+.pv-facts dt { font: 500 11px/1.9 var(--f-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); }
+.pv-facts dd { margin: 0; color: var(--text); }
+.pv-why { margin-top: 6px; padding-left: 12px; border-left: 2px solid var(--key); color: var(--text-2); font-size: 14px; }
+.place-says { font: italic 400 1.1rem/1.4 var(--f-serif); color: var(--text-2); max-width: 30ch; }
+.place-us .place-where { color: var(--key); }
+.place-us .place-view { border-color: rgba(143, 184, 255, 0.45); }
+.place-us .place-says { color: var(--text); }
+@media (min-width: 900px) {
+  .places { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; }
+  .place { padding: 0 28px; border-left: 1px solid var(--line); }
+  .place:first-child { padding-left: 0; border-left: 0; }
+  .place:last-child { padding-right: 0; }
 }
+@media (forced-colors: active) {
+  .pv-why { border-left-color: Highlight; }
+  .place-us .place-view { border-color: Highlight; }
+}
+.pv-empty dd { color: var(--text-3); font-family: var(--f-mono); }
