@@ -489,6 +489,45 @@ figcaption.mono b { color: var(--t-1); font-weight: 500; margin-right: 8px; }
 .end__alt { font-size: .94rem; color: var(--t-3); }
 @media (max-width: 760px) { .end__foot { grid-template-columns: 1fr; justify-items: start; } .end__foot .pill { grid-row: auto; margin-bottom: 12px; } .end__h span[data-flex-line]:nth-child(2) { margin-left: 0; } }
 
+/* Newsletter (Markup und Klassen wie bisher, damit landing.js und invite.js unverändert greifen) */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.news { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--s-3) var(--gap); margin-top: var(--s-6); padding-top: var(--s-4); border-top: 1px solid var(--line); color: var(--t-2); font-size: .97rem; }
+.news > p { grid-column: 1 / span 5; max-width: 40ch; }
+.waitlist-form { grid-column: 7 / -1; display: grid; gap: 14px; justify-items: start; }
+.waitlist-row { display: flex; width: 100%; max-width: 32rem; padding: 5px; border-radius: 999px; box-shadow: inset 0 0 0 1px var(--line-2); transition: box-shadow .25s; }
+.waitlist-row:focus-within { box-shadow: inset 0 0 0 1px var(--t-2); }
+.waitlist-row input { flex: 1; min-width: 0; height: 46px; padding: 0 18px; border: 0; background: transparent; color: var(--t-1); font: 400 1rem var(--f-text); border-radius: 999px; }
+.waitlist-row input::placeholder { color: var(--t-3); }
+.waitlist-row input:focus-visible { outline: none; }
+.waitlist-row input[aria-invalid="true"] { box-shadow: inset 0 -2px 0 #E0705F; }
+.waitlist-row .button { flex: none; height: 46px; padding: 0 22px; border: 0; border-radius: 999px; background: var(--t-1); color: var(--g-0); font: 500 .97rem var(--f-text); cursor: pointer; transition: background .25s; }
+.waitlist-row .button:hover { background: #fff; }
+.waitlist-row .button:disabled { opacity: .6; cursor: default; }
+.waitlist-check { display: grid; grid-template-columns: 18px 1fr; gap: 10px; max-width: 32rem; font-size: .84rem; line-height: 1.5; color: var(--t-3); cursor: pointer; }
+.waitlist-check a { color: var(--t-2); text-decoration: underline; text-underline-offset: 3px; }
+.waitlist-check input { appearance: none; -webkit-appearance: none; width: 18px; height: 18px; margin: 1px 0 0; border-radius: 5px; box-shadow: inset 0 0 0 1px var(--line-2); background: transparent; cursor: pointer; display: grid; place-items: center; }
+.waitlist-check input:checked { background: var(--t-1); box-shadow: none; }
+.waitlist-check input:checked::before { content: ""; width: 8px; height: 5px; border-left: 2px solid var(--g-0); border-bottom: 2px solid var(--g-0); transform: translateY(-1px) rotate(-45deg); }
+.waitlist-hp { position: absolute; left: -9999px; }
+.waitlist-status { font-size: .9rem; line-height: 1.5; max-width: 32rem; }
+.waitlist-status:empty { display: none; }
+.waitlist-status.is-ok { color: var(--t-1); }
+.waitlist-status.is-error { color: #E8907F; }
+.waitlist-status span + span { display: block; margin-top: 4px; }
+.invite { display: grid; gap: 10px; max-width: 32rem; padding: 16px; border-radius: 12px; box-shadow: inset 0 0 0 1px var(--line-2); font-size: .9rem; }
+.invite[hidden] { display: none; }
+.invite .lp-icon { display: none; }
+.invite-head { font-weight: 600; color: var(--t-1); }
+.invite-row { display: grid; grid-template-columns: 1fr auto; box-shadow: inset 0 0 0 1px var(--line-2); border-radius: 8px; overflow: hidden; }
+.invite-row input { min-width: 0; height: 40px; padding: 0 12px; border: 0; background: transparent; color: var(--t-1); font: 500 .8rem var(--f-mono); }
+.invite-row .btn { min-height: 40px; padding: 0 14px; border: 0; background: var(--t-1); color: var(--g-0); font: 500 .88rem var(--f-text); cursor: pointer; }
+.invite-count, .invite-list { font-size: .82rem; color: var(--t-3); }
+.invite-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+@media (max-width: 860px) { .news > p, .waitlist-form { grid-column: 1 / -1; } }
+
+/* Konto-Knopf aus account-menu.js sitzt rechts neben „Bewerben“ */
+.top__right .acct { margin-left: 0; }
+
 /* Fußzeile: zwei Zeilen, keine Spaltenwand */
 .foot { padding: 0 var(--pad) 28px; }
 .foot__row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 14px 28px; padding: 22px 0; border-top: 1px solid var(--line); }

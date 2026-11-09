@@ -1,27 +1,29 @@
 /* ==========================================================================
-   Xyntal · Einstieg: das Logo aus Lichtpunkten (WebGL, ohne Bibliothek)
+   Xyntal · Einstieg: das Logo aus Lichtpunkten
 
    Jeder Punkt hat einen festen Platz auf einer der zwei Logo-Linien.
    Am Anfang liegen alle verstreut und finden zusammen. Die Maus (oder der
    Finger) schiebt sie auseinander, danach suchen sie ihren Platz wieder.
 
-   Die Physik läuft auf der CPU (ein paar tausend Punkte, je eine Feder),
-   gezeichnet wird in einem einzigen Draw-Call als GL_POINTS.
-   Schnittstelle: window.XyHero = { start(), spread(0..1), ok }
+   Die Physik läuft auf der CPU (ein paar tausend Punkte, je eine Feder).
+   Gezeichnet wird mit WebGL (ein Draw-Call, GL_POINTS). Gibt es kein WebGL
+   (abgeschaltet, Treiber gesperrt, Kontext verloren), zeichnet dieselbe
+   Animation auf einem normalen 2D-Canvas mit weniger Punkten. Erst wenn auch
+   das nicht geht, bleibt das Logo als SVG stehen (Klasse „no-gl“).
+   Schnittstelle: window.XyHero = { start(), spread(0..1), ok, mode }
    ========================================================================== */
 (function () {
   'use strict';
 
   var canvas = document.querySelector('[data-hero-gl]');
   var hero = document.querySelector('[data-hero]');
-  var api = (window.XyHero = { ok: false, start: function () {}, spread: function () {} });
+  var api = (window.XyHero = { ok: false, mode: 'none', start: function () {}, spread: function () {}, settle: function () {} });
   if (!canvas || !hero) return;
 
   var calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var gl = canvas.getContext('webgl', { alpha: true, antialias: false, premultipliedAlpha: true, powerPreference: 'low-power' });
-  if (!gl) { document.documentElement.classList.add('no-gl'); return; }
+  var small = window.matchMedia('(max-width: 760px)').matches;
 
-  // ---------- Shader ----------
+  // ---------- Zeichner 1: WebGL ----------
   var VS = [
     'attribute vec3 aPos;',      // x, y in CSS-Pixeln, z = Energie (0..1)
     'attribute vec3 aCol;',
@@ -49,23 +51,46 @@
     '}'
   ].join('\n');
 
-  function compile(type, src) {
-    var s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
-    return gl.getShaderParameter(s, gl.COMPILE_STATUS) ? s : null;
+  var gl = null, loc = null, bPos = null, ctx = null;
+  function initGL() {
+    try {
+      var g = canvas.getContext('webgl', { alpha: true, antialias: false, premultipliedAlpha: true }) ||
+              canvas.getContext('experimental-webgl', { alpha: true, antialias: false, premultipliedAlpha: true });
+      if (!g) return false;
+      var sh = function (type, src) { var s = g.createShader(type); g.shaderSource(s, src); g.compileShader(s); return g.getShaderParameter(s, g.COMPILE_STATUS) ? s : null; };
+      var vs = sh(g.VERTEX_SHADER, VS), fs = sh(g.FRAGMENT_SHADER, FS);
+      if (!vs || !fs) return false;
+      var prog = g.createProgram();
+      g.attachShader(prog, vs); g.attachShader(prog, fs); g.linkProgram(prog);
+      if (!g.getProgramParameter(prog, g.LINK_STATUS)) return false;
+      g.useProgram(prog);
+      loc = {
+        pos: g.getAttribLocation(prog, 'aPos'), col: g.getAttribLocation(prog, 'aCol'), meta: g.getAttribLocation(prog, 'aMeta'),
+        res: g.getUniformLocation(prog, 'uRes'), center: g.getUniformLocation(prog, 'uCenter'), dpr: g.getUniformLocation(prog, 'uDpr'),
+        spread: g.getUniformLocation(prog, 'uSpread'), fade: g.getUniformLocation(prog, 'uFade')
+      };
+      g.enable(g.BLEND); g.blendFunc(g.ONE, g.ONE);   // Licht addiert sich
+      g.disable(g.DEPTH_TEST);
+      gl = g;
+      return true;
+    } catch (e) { return false; }
   }
-  var vs = compile(gl.VERTEX_SHADER, VS), fs = compile(gl.FRAGMENT_SHADER, FS);
-  var prog = gl.createProgram();
-  if (!vs || !fs) { document.documentElement.classList.add('no-gl'); return; }
-  gl.attachShader(prog, vs); gl.attachShader(prog, fs); gl.linkProgram(prog);
-  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) { document.documentElement.classList.add('no-gl'); return; }
-  gl.useProgram(prog);
-  var loc = {
-    pos: gl.getAttribLocation(prog, 'aPos'), col: gl.getAttribLocation(prog, 'aCol'), meta: gl.getAttribLocation(prog, 'aMeta'),
-    res: gl.getUniformLocation(prog, 'uRes'), center: gl.getUniformLocation(prog, 'uCenter'), dpr: gl.getUniformLocation(prog, 'uDpr'),
-    spread: gl.getUniformLocation(prog, 'uSpread'), fade: gl.getUniformLocation(prog, 'uFade')
-  };
-  gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE);   // Licht addiert sich
-  gl.disable(gl.DEPTH_TEST);
+  // ---------- Zeichner 2: 2D-Canvas (Ersatz) ----------
+  // Ein Canvas, das schon einen WebGL-Kontext hatte, gibt keinen 2D-Kontext mehr her: deshalb ein neues Element.
+  function init2D() {
+    try {
+      var fresh = canvas.cloneNode(false);
+      canvas.parentNode.replaceChild(fresh, canvas);
+      canvas = fresh;
+      ctx = canvas.getContext('2d');
+      gl = null;
+      return !!ctx;
+    } catch (e) { return false; }
+  }
+
+  var force2d = /[?&]hero=2d\b/.test(location.search);   // zum Prüfen des Ersatzes: /?hero=2d
+  var mode = (!force2d && initGL()) ? 'gl' : (init2D() ? '2d' : 'none');
+  if (mode === 'none') { document.documentElement.classList.add('no-gl'); return; }
 
   // ---------- Logo-Geometrie (aus assets/brand/xyntal-mark.svg, viewBox 512) ----------
   // Linie B: lila → blau (liegt oben).  Linie A: blau → cyan (hat die Lücke, wo B kreuzt).
@@ -88,17 +113,18 @@
   function gauss() { return (Math.random() + Math.random() + Math.random() - 1.5) / 1.5; }
 
   // ---------- Punkte ----------
-  var small = window.matchMedia('(max-width: 760px)').matches;
-  var N_MARK = small ? 4200 : 11000, N_DUST = small ? 90 : 220, N = N_MARK + N_DUST;
+  // Der 2D-Ersatz bekommt weniger Punkte, dafür etwas größere: so bleibt er flüssig und das Logo gleich dicht.
+  var N_MARK = mode === 'gl' ? (small ? 4200 : 11000) : (small ? 2600 : 5200);
+  var N_DUST = small ? 90 : 220, N = N_MARK + N_DUST;
   var unit = new Float32Array(N * 2);   // Platz im Logo-Raum (-0.5..0.5) bzw. Staub im Bild (0..1)
   var home = new Float32Array(N * 2), pos = new Float32Array(N * 3), vel = new Float32Array(N * 2);
   var col = new Float32Array(N * 3), meta = new Float32Array(N * 2), phase = new Float32Array(N);
+  var css = new Array(N);               // Farbe als CSS-Text, nur für den 2D-Zeichner
 
   (function build() {
     var i = 0;
     while (i < N_MARK) {
       var onB = Math.random() < 0.5, c = onB ? CURVE_B : CURVE_A;
-      // t leicht über die Enden hinaus, das ergibt die runden Kappen
       var t = Math.random();
       var p = bez(c, t), n = bezN(c, t);
       var halo = Math.random() < 0.14;                    // ein Teil streut als Lichthof
@@ -124,21 +150,24 @@
       meta[i * 2] = 1 + Math.random() * 1.1; meta[i * 2 + 1] = Math.random() * 0.2;
       phase[i] = Math.random() * 6.283;
     }
+    for (i = 0; i < N; i++) css[i] = 'rgb(' + Math.round(col[i * 3] * 255) + ',' + Math.round(col[i * 3 + 1] * 255) + ',' + Math.round(col[i * 3 + 2] * 255) + ')';
   })();
 
-  function buf(data, usage) { var b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, data, usage); return b; }
-  var bCol = buf(col, gl.STATIC_DRAW); gl.enableVertexAttribArray(loc.col); gl.vertexAttribPointer(loc.col, 3, gl.FLOAT, false, 0, 0);
-  var bMeta = buf(meta, gl.STATIC_DRAW); gl.enableVertexAttribArray(loc.meta); gl.vertexAttribPointer(loc.meta, 2, gl.FLOAT, false, 0, 0);
-  var bPos = buf(pos, gl.DYNAMIC_DRAW); gl.enableVertexAttribArray(loc.pos); gl.vertexAttribPointer(loc.pos, 3, gl.FLOAT, false, 0, 0);
+  function uploadGL() {
+    var buf = function (data, usage, l, size) { var b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, data, usage); gl.enableVertexAttribArray(l); gl.vertexAttribPointer(l, size, gl.FLOAT, false, 0, 0); return b; };
+    buf(col, gl.STATIC_DRAW, loc.col, 3);
+    buf(meta, gl.STATIC_DRAW, loc.meta, 2);
+    bPos = buf(pos, gl.DYNAMIC_DRAW, loc.pos, 3);
+  }
+  if (mode === 'gl') uploadGL();
 
   // ---------- Größe und Platz des Logos ----------
   var W = 0, H = 0, dpr = 1, cx = 0, cy = 0, size = 0, placed = false;
   function layout() {
     var r = hero.getBoundingClientRect();
     W = Math.max(1, r.width); H = Math.max(1, r.height);
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    dpr = Math.min(window.devicePixelRatio || 1, mode === 'gl' ? 2 : 1.5);
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
-    gl.viewport(0, 0, canvas.width, canvas.height);
     small = W <= 760;
     if (small) { size = Math.min(W * 0.92, H * 0.46); cx = W * 0.56; cy = 84 + size * 0.52; }
     else { size = Math.min(H * 0.84, W * 0.5); cx = W * 0.74; cy = H * 0.47; }
@@ -155,7 +184,10 @@
       }
     }
     placed = true;
-    gl.uniform2f(loc.res, W, H); gl.uniform2f(loc.center, cx, cy); gl.uniform1f(loc.dpr, dpr);
+    if (mode === 'gl') {
+      gl.viewport(0, 0, canvas.width, canvas.height);
+      gl.uniform2f(loc.res, W, H); gl.uniform2f(loc.center, cx, cy); gl.uniform1f(loc.dpr, dpr);
+    }
   }
 
   // ---------- Zeiger ----------
@@ -168,14 +200,33 @@
   hero.addEventListener('pointerdown', onMove, { passive: true });
   hero.addEventListener('pointerleave', function () { ptr.on = false; });
 
-  // ---------- Schleife ----------
+  // ---------- Zeichnen ----------
   var running = false, started = false, visible = true, fade = 0, spread = 0, raf = 0, t0 = 0;
-  function draw() {
+  function drawGL() {
     gl.uniform1f(loc.spread, spread); gl.uniform1f(loc.fade, fade);
     gl.bindBuffer(gl.ARRAY_BUFFER, bPos); gl.bufferSubData(gl.ARRAY_BUFFER, 0, pos);
     gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
     gl.drawArrays(gl.POINTS, 0, N);
   }
+  function draw2D() {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.clearRect(0, 0, W, H);
+    ctx.globalCompositeOperation = 'lighter';              // Licht addiert sich, wie in der WebGL-Fassung
+    var dim = fade * (1 - spread * 0.85);
+    if (dim <= 0.004) return;
+    for (var i = 0; i < N; i++) {
+      var j = i * 3, m = i * 2, rnd = meta[m + 1], e = pos[j + 2];
+      var k = 1 + spread * (0.25 + rnd * 2.2);
+      var s = meta[m] * (1 + e * 1.6) * 0.95;
+      ctx.globalAlpha = Math.min(1, dim * (0.5 + 0.6 * rnd) * (1 + e));
+      ctx.fillStyle = e > 0.45 ? '#fff' : css[i];
+      ctx.fillRect(cx + (pos[j] - cx) * k - s / 2, cy + (pos[j + 1] - cy) * k - s / 2, s, s);
+    }
+    ctx.globalAlpha = 1;
+  }
+  function draw() { if (mode === 'gl') drawGL(); else draw2D(); }
+
   function frame(now) {
     raf = 0;
     if (!running) return;
@@ -214,9 +265,15 @@
   var rz; window.addEventListener('resize', function () { clearTimeout(rz); rz = setTimeout(function () { layout(); if (calm) { fade = 1; draw(); } }, 120); });
   if ('IntersectionObserver' in window) new IntersectionObserver(function (en) { visible = en[0].isIntersecting; visible ? play() : stop(); }).observe(hero);
   document.addEventListener('visibilitychange', function () { document.hidden ? stop() : play(); });
-  canvas.addEventListener('webglcontextlost', function (e) { e.preventDefault(); stop(); document.documentElement.classList.add('no-gl'); });
 
-  api.ok = true;
+  // Geht der WebGL-Kontext verloren (Treiber, Energiesparen), läuft die Animation auf 2D weiter.
+  if (mode === 'gl') canvas.addEventListener('webglcontextlost', function (e) {
+    e.preventDefault(); stop();
+    if (init2D()) { mode = api.mode = '2d'; layout(); if (calm) { fade = 1; draw(); } else play(); }
+    else { api.ok = false; document.documentElement.classList.add('no-gl'); }
+  });
+
+  api.ok = true; api.mode = mode;
   api.start = function () { if (started) return; started = true; t0 = performance.now(); if (calm) { fade = 1; draw(); } else play(); };
   api.spread = function (p) { spread = p; };
   // Nur zum Prüfen: rechnet n Schritte am Stück (z. B. wenn der Tab im Hintergrund gedrosselt ist).
