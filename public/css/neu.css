@@ -222,12 +222,12 @@ figcaption.mono b { color: var(--t-1); font-weight: 500; margin-right: 8px; }
 @media (max-width: 760px) { .say__text, .say__sign { grid-column: 1 / -1; } }
 
 /* 5.2 Matching: bleibt stehen */
-.pin { position: relative; height: 480vh; }
+.pin { position: relative; height: 380vh; }
 .pin__stick { position: sticky; top: 0; height: 100svh; display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); grid-template-rows: auto 1fr; gap: 0 clamp(24px, 4vw, 72px); padding: 92px 0 36px var(--pad); overflow: hidden; }
 .pin__title .thin { white-space: nowrap; }
 .pin__title { font: 800 clamp(2.2rem, 5vw, 6rem)/.9 var(--f-display); font-stretch: 62%; letter-spacing: -.01em; margin-top: 18px; }
 .pin__steps { position: relative; grid-column: 1; grid-row: 2; align-self: end; min-height: 15.5rem; }
-.step { position: absolute; left: 0; right: 0; bottom: 56px; opacity: 0; transform: translateY(26px); transition: opacity .45s var(--ease), transform .6s var(--ease); pointer-events: none; }
+.step { position: absolute; left: 0; right: 0; bottom: 56px; opacity: 0; transform: translateY(26px); transition: opacity .35s var(--ease), transform .45s var(--ease); pointer-events: none; }
 .step.is-on { opacity: 1; transform: none; pointer-events: auto; }
 .step.is-past { transform: translateY(-26px); }
 .step h3 { font: 600 clamp(1.3rem, 2vw, 1.9rem)/1.12 var(--f-display); font-stretch: 92%; letter-spacing: -.01em; margin-bottom: 12px; max-width: 20ch; }
@@ -241,7 +241,7 @@ figcaption.mono b { color: var(--t-1); font-weight: 500; margin-right: 8px; }
 .win__cam { position: absolute; left: 0; top: 0; width: 100%; transform-origin: 0 0; will-change: transform; }
 .win__cam picture { display: block; }
 .win__cam picture + picture { position: absolute; left: 0; top: 0; width: 100%; }   /* zweites Bild ist höher als das erste */
-.win__cam .win__img { height: auto; opacity: 0; transition: opacity .6s var(--ease); }
+.win__cam .win__img { height: auto; opacity: 0; transition: opacity .4s var(--ease); }
 .win__cam .win__img.is-on { opacity: 1; }
 .win__focus { position: absolute; left: 0; top: 0; z-index: 2; border: 1px solid rgba(var(--t-rgb), .9); border-radius: 10px; opacity: 0; transition: opacity .4s; will-change: transform; box-shadow: 0 0 0 4000px rgba(8, 9, 14, .42); }
 .win__focus.is-on { opacity: 1; }
@@ -251,7 +251,7 @@ figcaption.mono b { color: var(--t-1); font-weight: 500; margin-right: 8px; }
 .no-js .step { position: static; opacity: 1; transform: none; margin-bottom: 28px; }
 
 @media (max-width: 860px) {
-  .pin { height: 420vh; }
+  .pin { height: 340vh; }
   .pin__stick { grid-template-columns: 1fr; grid-template-rows: auto auto 1fr; padding: 76px var(--pad) 22px; gap: 14px; }
   .pin__title { font-size: clamp(2rem, 9.5vw, 3.2rem); margin-top: 10px; }
   .pin__title br { display: none; }

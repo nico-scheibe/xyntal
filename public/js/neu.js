@@ -81,7 +81,7 @@
   // Lenis nur mit Maus/Trackpad. Auf Touch bleibt das Scrollen des Systems, das fühlt sich dort besser an.
   var lenis = null;
   if (!calm && fine && window.Lenis) {
-    lenis = new window.Lenis({ lerp: 0.115, wheelMultiplier: 1, smoothWheel: true });
+    lenis = new window.Lenis({ lerp: 0.14, wheelMultiplier: 1, smoothWheel: true });
   }
 
   // ---------- 5 Szenen ----------
@@ -178,7 +178,7 @@
       bar.style.transform = 'scaleX(' + p.toFixed(4) + ')';
       var t = target(i, local);
       if (!cur) cur = { s: t.s, x: t.x, y: t.y };
-      cur.s = lerp(cur.s, t.s, .085); cur.x = lerp(cur.x, t.x, .085); cur.y = lerp(cur.y, t.y, .085);
+      cur.s = lerp(cur.s, t.s, .13); cur.x = lerp(cur.x, t.x, .13); cur.y = lerp(cur.y, t.y, .13);
       cam.style.transform = 'translate3d(' + cur.x.toFixed(2) + 'px,' + cur.y.toFixed(2) + 'px,0) scale(' + cur.s.toFixed(4) + ')';
       if (t.c.f) {   // Rahmen folgt dem Bild (Breite/Höhe ändern das Layout nur dieses einen Elements)
         var fx = cur.x + t.c.f[0] * W * cur.s, fy = cur.y + t.c.f[1] * t.ih * cur.s;
@@ -228,7 +228,7 @@
       var r = way.getBoundingClientRect();
       if (r.bottom < -100 || r.top > vh + 100) return;
       var p = clamp(-r.top / (r.height - vh), 0, 1), tx = p * (TW - vw);
-      x = lerp(x, tx, .14); if (Math.abs(x - tx) < .1) x = tx;
+      x = lerp(x, tx, .18); if (Math.abs(x - tx) < .1) x = tx;
       track.style.transform = 'translate3d(' + (-x).toFixed(2) + 'px,0,0)';
       setLines(x);
     });
