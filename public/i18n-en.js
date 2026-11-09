@@ -3,6 +3,7 @@
 window.XYNTAL_EN = {
   // Suchleiste in der Kopfzeile (site-search.js)
   "Website durchsuchen": "Search the website",
+  "Suche öffnen": "Open search",
   "Treffer": "Results",
   "Konto & Rechtliches": "Account & legal",
   "Nichts gefunden": "Nothing found",
