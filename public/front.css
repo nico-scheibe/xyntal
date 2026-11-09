@@ -124,8 +124,8 @@ html.js .reveal.is-visible { opacity: 1; transform: none; animation: none; }
 .card-fan .mc-site { pointer-events: none; }
 .opener-card figcaption { font-size: 13px; line-height: 1.5; color: var(--text-3); text-align: center; max-width: 36ch; }
 @media (max-width: 480px) {
-  .card-fan > [data-pos="1"] { transform: translate(16px, -18px) rotate(4deg) scale(0.95); }
-  .card-fan > [data-pos="2"] { transform: translate(-16px, -30px) rotate(-5deg) scale(0.9); }
+  .card-fan > [data-pos="1"] { transform: translate(8px, -18px) rotate(3deg) scale(0.95); }
+  .card-fan > [data-pos="2"] { transform: translate(-8px, -30px) rotate(-4deg) scale(0.9); }
 }
 
 
@@ -335,3 +335,5 @@ body.front .site-footer a { text-decoration: none; }
 /* Die hintere Karte im Fächer ist um 28px nach rechts versetzt und gedreht: Platz dafür lassen,
    sonst ragt sie bei ~1024 px über den Fensterrand und die Seite scrollt seitlich. */
 @media (min-width: 900px) { .opener-card { padding-right: 44px; } }
+@media (max-width: 899px) { .opener-card { justify-self: center; padding-inline: 32px; } }
+@media (max-width: 480px) { .opener-card { padding-inline: 20px; } }
