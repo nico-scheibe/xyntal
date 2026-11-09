@@ -227,6 +227,7 @@
 .story-step { display: grid; align-content: start; gap: 12px; min-height: 60vh; padding: 32px 0 40px; opacity: 0.35; transition: opacity 400ms ease; }
 .story-step.is-active { opacity: 1; }
 .story-step:last-child { min-height: 52vh; }
+@media (max-width: 899px) { .story-step { min-height: 46vh; } .story-step:last-child { min-height: 40vh; } }
 .story-kicker { font: 500 12px/1 var(--f-mono); letter-spacing: 0.04em; color: var(--text-3); }
 .story-step[data-phase="xyntal"] .story-kicker { color: var(--key); }
 .story-step h3 { margin: 0; font: 400 clamp(1.45rem, 2.6vw, 2.05rem)/1.2 var(--f-serif); font-optical-sizing: auto; letter-spacing: -0.01em; max-width: 24ch; }
