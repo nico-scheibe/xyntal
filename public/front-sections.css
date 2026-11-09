@@ -1,0 +1,218 @@
+/* =====================================================================
+   Startseite unter dem Einstieg: dieselbe Sprache wie die Karten oben.
+   Gleiches Grau, gleiche Schriften. Neu sind nur abgerundete Flächen (wie
+   die Xyntal-Karten) und der Logo-Verlauf als sparsamer Akzent: an dem,
+   was Xyntal anders macht, nie als Hintergrund ganzer Abschnitte.
+   Wird nach front.css und story.css geladen.
+   ===================================================================== */
+:root {
+  --brand: linear-gradient(115deg, #B36BFF 0%, #3A8AFF 55%, #3FE0F0 100%);
+  --brand-soft: radial-gradient(80% 120% at 100% 0%, rgba(179, 107, 255, 0.13), transparent 60%),
+                radial-gradient(70% 100% at 0% 100%, rgba(58, 138, 255, 0.10), transparent 60%);
+  --panel: #232323;
+  --panel-2: #292929;
+  --r: 16px;
+  --r-sm: 10px;
+}
+
+/* Verlauf als Schrift und als Rahmen */
+.grad-text, .story-step[data-phase="xyntal"] .story-kicker, .place-us .place-where {
+  background: var(--brand); -webkit-background-clip: text; background-clip: text; color: transparent !important;
+}
+.grad-frame {
+  border: 1px solid transparent !important;
+  background: linear-gradient(var(--panel), var(--panel)) padding-box, var(--brand) border-box !important;
+}
+
+/* ---------- Abschnitts-Label: kleiner Punkt im Verlauf statt grauer Zeile ---------- */
+.chapter {
+  display: inline-flex; align-items: center; gap: 10px; width: max-content;
+  font: 500 13px/1 var(--f-sans); color: var(--text-2); letter-spacing: 0.01em;
+}
+.chapter::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--brand); box-shadow: 0 0 12px rgba(179, 107, 255, 0.6); }
+.chapter::after { content: none; }
+
+/* Abschnitte: Luft statt Linien */
+.story, .swap, .diff, .voice, .qa { border-top: 0 !important; }
+.swap, .diff { padding-block: clamp(56px, 8vw, 112px); }
+
+/* =====================================================================
+   Geschichte (story.js): größer, lesbarer, die Bühne als Fenster
+   ===================================================================== */
+.story { padding-top: clamp(48px, 6vw, 88px); }
+.story-step { opacity: 0.38; }
+.story-step.is-active { opacity: 1; }
+.story-kicker { font: 600 13px/1 var(--f-sans) !important; letter-spacing: 0.02em !important; color: var(--text-3); }
+.story-step h3 { text-wrap: balance; }
+.story-step p:not(.story-kicker) { color: var(--text-2); }
+.story-note {
+  margin-top: 6px; padding: 14px 16px; border-radius: var(--r-sm);
+  background: var(--panel); border: 1px solid var(--line); color: var(--text-2);
+}
+.story-note a { text-decoration-color: #B36BFF; color: var(--text); }
+
+.story-stage { background: #1F1F1F; }
+@media (min-width: 900px) {
+  .story-stage {
+    border-radius: 20px; border: 1px solid var(--line) !important;
+    background: var(--brand-soft), #202020 !important;
+    box-shadow: 0 30px 80px -40px rgba(0, 0, 0, 0.8);
+  }
+}
+@media (max-width: 899px) {
+  .story-stage { background: var(--brand-soft), var(--bg); }
+}
+.story-dots span { width: 7px; height: 7px; }
+.story-dots span.is-on { background: var(--text); }
+.story-dots span:nth-child(n+3).is-on { background: #B36BFF; box-shadow: 0 0 10px rgba(179, 107, 255, 0.7); }
+
+/* Profilkarten auf der Bühne */
+.sp { border-radius: var(--r-sm); background: var(--panel-2); border: 1px solid rgba(255, 255, 255, 0.05); }
+.sp.is-scan { background: #2E2E2E; border-color: var(--text-3); }
+.sp.is-focus { border-color: var(--text-2); }
+.sp.is-out { border-color: transparent; background: #242424; }
+.sp.is-failed { border-color: rgba(224, 112, 95, 0.45); }
+.sp.is-match {
+  border: 1px solid transparent;
+  background: linear-gradient(#2A2A2A, #2A2A2A) padding-box, var(--brand) border-box;
+  box-shadow: 0 10px 30px -14px rgba(120, 110, 255, 0.55);
+}
+.st-av { border-radius: 50%; background: #3A3A3A; color: var(--text); font-family: var(--f-sans); }
+.st-av-me { border-radius: 999px; }
+.sp.is-match .st-av { background: var(--brand); color: #fff; }
+.sp-a.is-ok { color: #A9C6FF; }
+.sp-q::after { border-radius: 999px; }
+.st-hint-bar { border-radius: 999px; }
+.st-brief { border-radius: var(--r-sm); background: #1C1C1C; border-color: var(--line-2); }
+.st-brief-v { border-radius: 999px; }
+.st-bubble { border-radius: 14px; }
+.st-bubble.is-me { background: var(--brand); border-color: transparent; color: #fff; border-bottom-right-radius: 4px; }
+.st-bubble.is-them { border-bottom-left-radius: 4px; background: var(--panel-2); border-color: var(--line-2); }
+.story-stage[data-step="5"] .st-time-bar > i { background: var(--brand); }
+.st-mark-good { background: #B36BFF; border-color: #B36BFF; }
+.st-count-k { color: #B9A4FF; }
+
+/* =====================================================================
+   Was Xyntal ersetzt: Kacheln statt Quittung
+   ===================================================================== */
+.swap-intro { font-size: clamp(1.9rem, 3.6vw, 2.9rem); line-height: 1.12; }
+.ledger-head { display: none !important; }
+.ledger ul { display: grid; gap: 10px; }
+.ledger li {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 16px;
+  padding: 18px 20px; border: 1px solid var(--line); border-radius: var(--r);
+  background: var(--panel);
+  transition: border-color 200ms ease, transform 200ms var(--ease), background-color 200ms ease;
+}
+@media (hover: hover) {
+  .ledger li:hover { border-color: var(--line-2); background: #262626; transform: translateY(-2px); }
+}
+.ledger-old { max-width: none; color: var(--text-3); font-size: 15px; text-decoration: line-through; text-decoration-color: rgba(255, 255, 255, 0.18); text-decoration-thickness: 1px; }
+.ledger-old * { text-decoration: inherit; }
+.ledger-dots {
+  flex: none; min-width: 0; width: 30px; height: 30px; border: 0; transform: none;
+  display: grid; place-items: center; border-radius: 50%; background: #2C2C2C;
+}
+.ledger-dots::before {
+  content: ""; width: 14px; height: 14px; background: var(--brand);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14M13 6l6 6-6 6'/%3E%3C/svg%3E") center / contain no-repeat;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14M13 6l6 6-6 6'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.ledger-new { justify-items: start; text-align: left; font-size: 16.5px; font-weight: 600; }
+.ledger-new a { text-decoration-color: #B36BFF; }
+.ledger-new small { font-size: 13.5px; font-weight: 400; color: var(--text-2); }
+@media (max-width: 560px) {
+  .ledger li { grid-template-columns: 1fr; gap: 8px; padding: 16px 18px; }
+  .ledger-dots { display: none; }
+  .ledger-new small { display: block; }
+  .ledger-old { font-size: 14px; }
+}
+
+/* =====================================================================
+   Ein Beispiel: drei Orte als Fenster, Xyntal hervorgehoben
+   ===================================================================== */
+.diff-head { gap: 16px; }
+.diff-title { font-size: clamp(2.1rem, 4.6vw, 3.6rem); }
+.places { align-items: stretch; }
+@media (min-width: 900px) {
+  .places { gap: 20px; }
+  .place, .place:first-child, .place:last-child { padding: 0; border-left: 0; }
+}
+.place { gap: 16px; }
+.place-where {
+  display: inline-flex; align-items: center; gap: 8px; width: max-content;
+  padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line-2);
+  font: 600 12.5px/1 var(--f-sans); letter-spacing: 0.02em; text-transform: none; color: var(--text-2);
+}
+.place-us .place-where { border-color: rgba(179, 107, 255, 0.5); }
+.place-view { padding: 22px; border-radius: var(--r); background: var(--panel); border: 1px solid var(--line); }
+.place:not(.place-us) .place-view { opacity: 0.82; }
+.place-us .place-view {
+  border: 1px solid transparent;
+  background: linear-gradient(#262626, #262626) padding-box, var(--brand) border-box;
+  box-shadow: 0 24px 60px -28px rgba(130, 100, 255, 0.55);
+}
+.pv-name { font-size: 18px; }
+.pv-chat p { padding: 8px 12px; border-radius: 12px; background: var(--panel-2); color: var(--text); }
+.pv-chat p.pv-gap { padding: 0; background: none; }
+.pv-chat b { color: var(--text-3); }
+.pv-why { border-left: 0; padding: 10px 12px; border-radius: var(--r-sm); background: rgba(179, 107, 255, 0.10); color: var(--text); }
+.facts-empty dd { color: var(--text-3); }
+.place-says { font-size: 1.15rem; }
+
+/* =====================================================================
+   Zitat: groß, mit Verlaufs-Linie
+   ===================================================================== */
+.voice {
+  position: relative; display: grid !important; gap: 22px;
+  margin-block: clamp(24px, 4vw, 48px); padding: clamp(32px, 5vw, 64px) !important;
+  border-radius: 24px; background: var(--brand-soft), var(--panel);
+  border: 1px solid var(--line) !important; overflow: hidden;
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+.voice p, .voice footer { grid-column: 1 !important; }
+.voice::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--brand); }
+.voice p { max-width: 34ch; font: 400 clamp(1.5rem, 2.8vw, 2.2rem)/1.35 var(--f-serif) !important; letter-spacing: -0.01em; color: var(--text); }
+.voice footer { margin-top: 0; }
+.voice footer::before { background: var(--brand); width: 32px; height: 2px; }
+
+/* =====================================================================
+   Fragen: drei Felder
+   ===================================================================== */
+.qa { padding-block: clamp(40px, 6vw, 72px) !important; }
+.qa dl { gap: 16px; }
+.qa dl > div, .qa dl > div:last-child {
+  padding: 24px !important; border: 1px solid var(--line) !important; border-radius: var(--r);
+  background: var(--panel); align-content: start;
+}
+.qa dt { font-size: clamp(1.25rem, 1.8vw, 1.4rem); }
+.qa dd::before { content: none !important; }
+@media (min-width: 900px) { .qa dl { column-gap: 16px; } }
+
+/* =====================================================================
+   Zugang: die Fläche mit dem Verlaufs-Rahmen
+   ===================================================================== */
+.closer { padding-top: clamp(16px, 3vw, 32px); }
+.closer-body {
+  position: relative; padding: clamp(28px, 5vw, 64px); border-radius: 24px;
+  border: 1px solid transparent;
+  background:
+    radial-gradient(70% 140% at 100% 0%, rgba(179, 107, 255, 0.20), transparent 60%) padding-box,
+    radial-gradient(60% 120% at 0% 100%, rgba(63, 224, 240, 0.10), transparent 60%) padding-box,
+    linear-gradient(#222, #222) padding-box,
+    var(--brand) border-box;
+  box-shadow: 0 40px 100px -50px rgba(140, 100, 255, 0.6);
+}
+.closer-title { font-size: clamp(2rem, 4vw, 3.3rem); }
+.closer .facts { border-top-color: rgba(255, 255, 255, 0.10); }
+
+/* Newsletter: ruhig darunter */
+.news { margin-top: clamp(40px, 6vw, 72px); padding-top: 0; border-top: 0; }
+.waitlist-row { border-radius: var(--r-sm); overflow: hidden; }
+.waitlist-check input { border-radius: 5px; }
+
+@media (prefers-reduced-motion: reduce) { .ledger li { transition: none; } }
+@media (forced-colors: active) {
+  .grad-text, .story-step[data-phase="xyntal"] .story-kicker, .place-us .place-where { color: CanvasText !important; background: none; }
+  .closer-body, .place-us .place-view, .sp.is-match { border: 1px solid Highlight; }
+}
