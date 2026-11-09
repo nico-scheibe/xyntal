@@ -412,7 +412,52 @@ const ADMIN_ONLY_FILES = new Set(['admin.html', 'admin.css', 'admin-contracts.cs
 const ADMIN_HOST_PAGES = new Set(['admin.html', 'login.html', 'passwort-neu.html', '404.html']);
 const MAIN_SITE = (process.env.MAIN_SITE_URL || 'https://xyntal.de').replace(/\/+$/, '');
 const requestHost = (req) => String(req.headers.host || '').toLowerCase().replace(/:\d+$/, '');
+// Cloudflare Access: admin.xyntal.de wird nur ausgeliefert, wenn die Anfrage ein gültiges Access-Token trägt
+// (Header Cf-Access-Jwt-Assertion, RS256, Schlüssel vom Team, passende AUD). So hilft es nichts, Cloudflare
+// zu umgehen und die Server-IP direkt mit Host: admin.xyntal.de anzusprechen.
+const ACCESS_TEAM = (process.env.ACCESS_TEAM_DOMAIN || 'https://morning-star-6e71.cloudflareaccess.com').replace(/\/+$/, '');
+const ACCESS_AUD = process.env.ACCESS_AUD || 'f9b85c2db9a059c6b91e49223ffa7e979815ad4bab173b5b47e8b2a1bc9d52bc';
+const accessKeys = { at: 0, keys: new Map(), loading: null };
+async function accessKey(kid) {
+  if (!accessKeys.keys.has(kid) && Date.now() - accessKeys.at > 60000) {
+    accessKeys.loading = accessKeys.loading || (async () => {
+      try {
+        const res = await fetch(ACCESS_TEAM + '/cdn-cgi/access/certs', { signal: AbortSignal.timeout(5000) });
+        const { keys } = await res.json();
+        const next = new Map();
+        for (const jwk of keys || []) if (jwk.kid && jwk.kty === 'RSA') next.set(jwk.kid, require('node:crypto').createPublicKey({ key: jwk, format: 'jwk' }));
+        if (next.size) accessKeys.keys = next;
+      } catch (error) { console.error('[access] Schlüssel nicht geladen:', error.message); }
+      finally { accessKeys.at = Date.now(); accessKeys.loading = null; }
+    })();
+    await accessKeys.loading;
+  }
+  return accessKeys.keys.get(kid) || null;
+}
+async function accessAllowed(req) {
+  const token = String(req.headers['cf-access-jwt-assertion'] || '');
+  const parts = token.split('.');
+  if (parts.length !== 3) return false;
+  try {
+    const header = JSON.parse(Buffer.from(parts[0], 'base64url'));
+    const claims = JSON.parse(Buffer.from(parts[1], 'base64url'));
+    if (header.alg !== 'RS256' || typeof header.kid !== 'string') return false;
+    const key = await accessKey(header.kid);
+    if (!key || !require('node:crypto').verify('RSA-SHA256', Buffer.from(parts[0] + '.' + parts[1]), key, Buffer.from(parts[2], 'base64url'))) return false;
+    const now = Date.now() / 1000;
+    const aud = Array.isArray(claims.aud) ? claims.aud : [claims.aud];
+    return aud.includes(ACCESS_AUD) && claims.iss === ACCESS_TEAM && typeof claims.exp === 'number' && claims.exp > now && !(claims.nbf > now + 60);
+  } catch { return false; }
+}
 const httpServer = http.createServer((req,res) => {
+  if (requestHost(req) !== ADMIN_HOST) return serve(req, res);
+  accessAllowed(req).then((ok) => {
+    if (ok) return serve(req, res);
+    res.writeHead(403, {'Content-Type':'text/plain; charset=utf-8','Cache-Control':'no-store','X-Robots-Tag':'noindex, nofollow'});
+    res.end('Forbidden');
+  }, () => { if (!res.headersSent) { res.writeHead(403); res.end(); } });
+}).listen(Number(process.env.SERVER_PORT || process.env.PORT || 4129), '0.0.0.0', () => console.log('Xyntal Daki server ready'));
+function serve(req, res) {
   for (const [name, value] of Object.entries(SECURITY_HEADERS)) res.setHeader(name, value);
   let pathname;
   try { pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname); }
@@ -483,7 +528,7 @@ const httpServer = http.createServer((req,res) => {
   const stream = fs.createReadStream(file);
   stream.on('error', () => res.destroy());
   stream.pipe(res);
-}).listen(Number(process.env.SERVER_PORT || process.env.PORT || 4129), '0.0.0.0', () => console.log('Xyntal Daki server ready'));
+}
 // Große Uploads (Videos der freien Seite) dürfen länger als die Standard-5-Minuten dauern
 httpServer.requestTimeout = 0;
 update();

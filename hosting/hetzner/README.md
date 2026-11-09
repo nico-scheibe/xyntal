@@ -62,6 +62,34 @@ Danach auf dem Server `chown -R 1000:1000 /opt/xyntal/data/api`.
 MX-, SPF-, DKIM- und DMARC-Einträge für IONOS-Mail bleiben unverändert.
 Den Tunnel `xyntal-daki` erst löschen, wenn alles auf dem neuen Server läuft.
 
+## Admin-Bereich (admin.xyntal.de)
+
+Der Admin-Bereich wird nur für den Host `admin.xyntal.de` ausgeliefert (`hosting/daki/server.cjs`,
+Test `tests/admin-host.cjs`). Dort zeigt `/` die Admin-Seite; Login und Passwort-Zurücksetzen bleiben,
+alle anderen Seiten leiten auf `https://xyntal.de` um. Auf xyntal.de antworten `admin.html`, `admin*.css`,
+`world-geo.js` und `pages/admin*.js` mit 404.
+
+Schutz in zwei Schichten:
+
+1. **Cloudflare Access** (Zero Trust → Access controls → Applications → „Xyntal Admin“, Policy „Nur Nico“):
+   nur freigegebene E-Mail-Adressen laden die Seite überhaupt (Einmal-Code per Mail).
+2. **Token-Prüfung im Server:** jede Anfrage an admin.xyntal.de braucht ein gültiges `Cf-Access-Jwt-Assertion`
+   (RS256, Schlüssel von `https://morning-star-6e71.cloudflareaccess.com/cdn-cgi/access/certs`, AUD der
+   Anwendung). Ohne Token 403 – auch wer die Server-IP direkt mit `Host: admin.xyntal.de` anspricht.
+   Andere Werte über `ACCESS_TEAM_DOMAIN` / `ACCESS_AUD` in `website.env`.
+
+Rechte prüfen weiterhin Supabase (`is_admin` + 2FA) und der App-Server (Staff-Rolle).
+
+Cloudflare-Einstellungen:
+
+- DNS: `admin` als A-Record auf `91.98.171.233`, **Proxied** (orange Wolke) – anders als die übrigen Einträge.
+- Rules → Configuration Rules: Host `admin.xyntal.de` → SSL **Full** (Caddy nutzt `tls internal`, siehe `Caddyfile`).
+- Supabase → Authentication → URL Configuration → Redirect URLs: `https://admin.xyntal.de/**` (für Google/Apple-Login).
+- App-Server: `https://admin.xyntal.de` steht im Standard von `WEBSITE_ORIGINS`; ist die Variable in `api.env` gesetzt, dort ergänzen.
+
+`deploy.sh` startet Caddy neu, wenn sich das `Caddyfile` geändert hat (die Datei ist eingebunden; ein
+geänderter Inhalt kommt sonst nicht im Container an).
+
 ## Uploads der freien Seite (Bilder, Hintergrund-Videos)
 
 Admins laden im Seiten-Editor (xyntal.de/name#gestalten) nicht zu Supabase hoch (dort höchstens 50 MB je Datei),

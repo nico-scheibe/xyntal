@@ -26,5 +26,11 @@ echo "App-Backend: $(git -C "$ROOT/app" log -1 --format='%h %s')"
 cd "$ROOT/site/hosting/hetzner"
 docker compose build --pull --quiet
 docker compose up -d --remove-orphans
+# Caddyfile ist als Datei eingebunden: nach einer Änderung sieht Caddy sie erst in einem neuen Container.
+CADDY_SUM=$(sha256sum Caddyfile | cut -d' ' -f1)
+if [ "$CADDY_SUM" != "$(cat "$ROOT/state/caddyfile.sha256" 2>/dev/null)" ]; then
+  docker compose up -d --force-recreate --no-deps caddy
+  mkdir -p "$ROOT/state" && echo "$CADDY_SUM" > "$ROOT/state/caddyfile.sha256"
+fi
 docker image prune -f >/dev/null
 docker compose ps
