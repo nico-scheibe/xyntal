@@ -25,26 +25,41 @@
 
   // ---------- Daten ----------
   // Gesucht: Backend · etwa 10 Std. · Mitgründung
+  // Die gesuchte Fähigkeit wählt man oben im Einstieg („Wen suchst du?“, front.js).
+  // Karten mit skill: null bekommen genau diese Fähigkeit; die übrigen behalten ihre
+  // eigene, außer sie wäre zufällig die gesuchte – dann werden sie zu Backend.
   const WANT = { skill: "Backend", goal: "Mitgründen" };
+  const FOR = { Backend: "fürs Backend", Frontend: "fürs Frontend", Design: "fürs Design", Marketing: "fürs Marketing", Vertrieb: "für den Vertrieb" };
   const okTime = (h) => h >= 8 && h <= 16;
   const PEOPLE = [
-    { n: "Lena", src: "Discord", skill: "Backend", h: 12, goal: "Mitgründen" },
-    { n: "Jonas", src: "LinkedIn", skill: "Backend", h: 2, goal: "Mitgründen", fail: "time" },
+    { n: "Lena", src: "Discord", skill: null, h: 12, goal: "Mitgründen" },
+    { n: "Jonas", src: "LinkedIn", skill: null, h: 2, goal: "Mitgründen", fail: "time" },
     { n: "Mira", src: "Freunde", skill: "Design", h: 6, goal: "Nebenbei" },
-    { n: "Can", src: "LinkedIn", skill: "Backend", h: 15, goal: "nur bezahlt", fail: "goal" },
+    { n: "Can", src: "LinkedIn", skill: null, h: 15, goal: "nur bezahlt", fail: "goal" },
     { n: "Tom", src: "Discord", skill: "Marketing", h: 10, goal: "Mitgründen" },
-    { n: "Aylin", src: "Freunde", skill: "Backend", h: 8, goal: "Mitgründen" },
-    { n: "Sara", src: "Discord", skill: "Backend", h: 10, goal: "eigene Idee", fail: "goal" },
-    { n: "Noah", src: "LinkedIn", skill: "Backend", h: 10, goal: "Mitgründen" },
+    { n: "Aylin", src: "Freunde", skill: null, h: 8, goal: "Mitgründen" },
+    { n: "Sara", src: "Discord", skill: null, h: 10, goal: "eigene Idee", fail: "goal" },
+    { n: "Noah", src: "LinkedIn", skill: null, h: 10, goal: "Mitgründen" },
     { n: "Felix", src: "Discord", skill: "Frontend", h: 4, goal: "Nebenbei" },
     { n: "Ben", src: "LinkedIn", skill: "Daten", h: 20, goal: "nur bezahlt" },
     { n: "Emma", src: "Freunde", skill: "Design", h: 12, goal: "Mitgründen" },
     { n: "Paul", src: "Discord", skill: "Vertrieb", h: 5, goal: "nur bezahlt" },
-  ].map((p, i) => ({
-    ...p, i,
-    ok: { skill: p.skill === WANT.skill, time: okTime(p.h), goal: p.goal === WANT.goal },
-  }));
-  PEOPLE.forEach((p) => { p.match = p.ok.skill && p.ok.time && p.ok.goal; });
+  ].map((p, i) => ({ ...p, i, own: p.skill }));
+  function setWant(skill) {
+    WANT.skill = FOR[skill] ? skill : "Backend";
+    PEOPLE.forEach((p) => {
+      p.skill = p.own == null ? WANT.skill : p.own === WANT.skill ? "Backend" : p.own;
+      p.ok = { skill: p.skill === WANT.skill, time: okTime(p.h), goal: p.goal === WANT.goal };
+      p.match = p.ok.skill && p.ok.time && p.ok.goal;
+    });
+  }
+  setWant("Backend");
+  // Was im Vorschlag als Begründung steht – ein Satz, wie ihn die App aus dem Profil zieht
+  const WHY = {
+    Lena: "Hat schon zwei Produkte mit aufgebaut · will ab März fest einsteigen",
+    Aylin: "Sucht ein Projekt mit echten Nutzern · abends und am Wochenende",
+    Noah: "Hat zwei Jahre im Start-up gearbeitet · lieber Anteile als Gehalt",
+  };
   // Die drei Calls von „Heute · 2“: Woche, Person, woran es scheitert
   const CALLS = [
     { wk: 2, who: 1, why: "keine Zeit" },
@@ -69,7 +84,7 @@
 
   const brief = el("div", "st-brief");
   brief.innerHTML = `<span class="st-av st-av-me">Du</span><span class="st-brief-l">Du suchst</span>`;
-  const briefVals = ["Backend", "8–16 h/Woche", "Mitgründen"].map((t) => {
+  const briefVals = [WANT.skill, "8–16 h/Woche", "Mitgründen"].map((t) => {
     const s = el("span", "st-brief-v", t); brief.append(s); return s;
   });
 
@@ -88,10 +103,11 @@
     };
     p.a = {
       skill: attr("skill", p.skill),
-      time: attr("time", `${p.h} h/Woche`, "Zeit ?"),
-      goal: attr("goal", p.goal, "Ziel ?"),
+      time: attr("time", `${p.h} h/Woche`, "Zeit"),
+      goal: attr("goal", p.goal, "Ziel"),
     };
     c.append(head, attrs);
+    if (WHY[p.n]) c.append(el("p", "sp-why", WHY[p.n]));
     p.el = c;
     return c;
   });
@@ -101,7 +117,8 @@
   const timeFill = el("i");
   timeBar.append(timeFill);
   for (let w = 0; w <= WEEKS; w++) { const t = el("b"); t.style.left = `${(w / WEEKS) * 100}%`; timeBar.append(t); }
-  const timeHint = el("span", "st-time-l st-hint", "? = weißt du erst nach dem Gespräch");
+  const timeHint = el("span", "st-time-l st-hint");
+  timeHint.append(el("i", "st-hint-bar"), el("span", "", "erfährst du erst im Gespräch"));
   const timeBad = el("span", "st-time-l st-bad", "Woche 9 · 3 Calls · noch niemand gefunden");
   const timeGood = el("span", "st-time-l st-good", "Woche 1 · Call ausgemacht");
   const timeEnd = el("span", "st-time-wk st-wkN", `Woche ${WEEKS}`);
@@ -123,7 +140,7 @@
 
   const chat = el("div", "st-chat");
   const bubbles = [
-    ["me", "Hi Lena, du suchst auch eine Mitgründung fürs Backend. Lust auf einen Call?"],
+    ["me", `Hi Lena, du suchst auch eine Mitgründung ${FOR[WANT.skill]}. Lust auf einen Call?`],
     ["them", "Klingt spannend! Donnerstag, 18 Uhr?"],
     ["me", "Passt. Bis Donnerstag!"],
   ].map(([who, text]) => { const b = el("p", `st-bubble is-${who}`, text); chat.append(b); return b; });
@@ -152,14 +169,14 @@
     const tlH = compact ? 62 : 74;
     const briefH = compact ? 40 : 50;
     const cw = (W - 2 * pad - (cols - 1) * gap) / cols;
-    const ch = Math.max(64, Math.min(compact ? 92 : 124,
+    const ch = Math.max(64, Math.min(compact ? 92 : 108,
       (H - top - tlH - 2 * gap) / 3,
       (H - top - briefH - gap - 40 - 2 * gap) / 3));
     const gridY2 = top + briefH + gap + 4;
     // Zeitleiste direkt unter das Raster, nicht ganz unten an den Rand
     const tlY = Math.min(H - tlH, top + 3 * ch + 2 * gap + (compact ? 20 : 34));
     G = { W, H, compact, cols, pad, gap, top, tlH, tlY, briefH, cw, ch, gridY2,
-      rowH: compact ? 58 : 66, indent: compact ? 18 : 26 };
+      rowH: compact ? 86 : 84, indent: compact ? 18 : 26 };
     stage.classList.toggle("is-compact", compact);
     stage.style.setProperty("--cw", cw + "px");
     stage.style.setProperty("--ch", ch + "px");
@@ -186,7 +203,29 @@
   const matches = PEOPLE.filter((p) => p.match);
   const visible = () => PEOPLE.slice(0, G.cols * 3);
 
+  // Unterkante des Inhalts je Schritt (bezogen auf G.top), damit er mittig auf der Bühne sitzt
+  function blockFor(step) {
+    const B = G;
+    const rows = B.top + B.briefH + B.gap + 6;
+    const chatY = rows + B.rowH + B.gap * 2;
+    const chatH = B.compact ? 146 : 150;
+    if (step === 0) return { bottom: B.tlY + 20, tlY: B.tlY };   // nur die Legende unter dem Raster
+    if (step === 1) return { bottom: B.tlY + B.tlH, tlY: B.tlY };
+    if (step <= 3) return { bottom: B.gridY2 + 3 * B.ch + 2 * B.gap + (B.compact ? 44 : 56), tlY: B.tlY };
+    if (step === 4) return { bottom: rows + 3 * (B.rowH + B.gap) + (B.compact ? 30 : 40), tlY: B.tlY };
+    const tl = chatY + chatH + (B.compact ? 16 : 28);
+    return { bottom: tl + B.tlH, tlY: tl };
+  }
+
   function apply(step, instant) {
+    const base = G;
+    const blk = blockFor(step);
+    const oy = Math.max(0, Math.round((base.H - (blk.bottom - base.top)) / 2 - base.top));
+    G = { ...base, top: base.top + oy, gridY2: base.gridY2 + oy, tlY: blk.tlY + oy, oy };
+    try { applyAt(step, instant); } finally { G = base; }
+  }
+
+  function applyAt(step, instant) {
     clearTimers();
     stage.dataset.step = step;
     stage.classList.toggle("is-instant", !!instant || reduce);
@@ -275,7 +314,7 @@
     }
     if (step === 3) {
       shown.forEach((p, k) => {
-        const delay = 150 + k * 70;
+        const delay = 150 + k * 40;
         Object.entries(p.ok).forEach(([key, ok], j) => {
           p.a[key].style.setProperty("--d", `${delay + j * 60}ms`);
           p.a[key].classList.add(ok ? "is-ok" : "is-no");
@@ -307,6 +346,7 @@
       const ends = (step === 4 ? matches : matches.slice(0, 1)).map((_, j) => y0 + j * (G.rowH + G.gap) + G.rowH / 2);
       linesRail.setAttribute("d", ends.map((ey) => `M${rx},${ry} V${ey - 6} Q${rx},${ey} ${rx + 6},${ey} H${x0}`).join(" "));
       linesLink.setAttribute("d", `M${rx},${ry} V${ends[0] - 6} Q${rx},${ends[0]} ${rx + 6},${ends[0]} H${x0}`);
+      place(count, x0, y0 + 3 * (G.rowH + G.gap) + (G.compact ? 4 : 8));
     }
 
     // --- 5: Nachricht ---
@@ -317,6 +357,9 @@
       later(3000, () => bubbles[2].classList.add("is-on"));
       later(400, () => { timeFill.style.width = `${(1 / WEEKS) * 100}%`; });
     }
+
+    const lg = svg.querySelector("#st-grad");
+    lg.setAttribute("y1", G.top); lg.setAttribute("y2", G.top + G.briefH + G.rowH + 40);
 
     // Phase oben links, Punkte oben rechts
     const ph = steps[step].dataset.phase;
@@ -332,7 +375,7 @@
     const sr = stage.getBoundingClientRect();
     const wide = innerWidth >= 900;
     const below = Math.max(sr.bottom, 0);
-    const line = wide ? innerHeight * 0.55 : below + (innerHeight - below) * 0.4;
+    const line = wide ? sr.top + sr.height / 2 : below + (innerHeight - below) * 0.4;
     let s = 0;
     steps.forEach((e, i) => { if (e.getBoundingClientRect().top < line) s = i; });
     if (s !== step || force) { const first = step < 0; step = s; apply(step, first || force === "instant"); }
@@ -351,11 +394,52 @@
     measure(); pickStep("instant");
   }).observe(stage);
 
+  // Nach einer Auswahl oben: die geänderten Werte leuchten kurz auf –
+  // aber erst, wenn man die Bühne auch sieht
+  let pendingFlash = false;
+  function flash() {
+    if (!pendingFlash || reduce) { pendingFlash = false; return; }
+    pendingFlash = false;
+    const hits = [briefVals[0], ...PEOPLE.filter((p) => p.skill === WANT.skill).map((p) => p.a.skill)];
+    setTimeout(() => hits.forEach((h) => { h.classList.remove("is-flash"); void h.offsetWidth; h.classList.add("is-flash"); }), 350);
+  }
+
   // Animationen erst starten, wenn die Bühne im Bild ist, damit man den Anfang sieht
   new IntersectionObserver(([e]) => {
-    if (e.isIntersecting) pickStep(true);
+    if (e.isIntersecting) { pickStep(true); flash(); }
     else clearTimers();
   }, { threshold: 0.35 }).observe(stage);
+
+  // Auswahl oben ändert die Suche: Karten, Vorhaben und erste Nachricht ziehen mit
+  addEventListener("xyntal:seek", (e) => {
+    const next = e.detail?.skill;
+    if (!FOR[next] || next === WANT.skill) return;
+    setWant(next);
+    PEOPLE.forEach((p) => { p.a.skill.querySelector(".sp-v").textContent = p.skill; });
+    briefVals[0].textContent = WANT.skill;
+    pendingFlash = true;
+    bubbles[0].textContent = `Hi Lena, du suchst auch eine Mitgründung ${FOR[WANT.skill]}. Lust auf einen Call?`;
+    // Außer Sicht (z. B. beim Laden mit gemerkter Wahl) ohne Bewegung umbauen
+    const r = stage.getBoundingClientRect();
+    const seen = r.bottom > 0 && r.top < innerHeight;
+    if (step >= 0) apply(step, !seen);
+    if (seen) flash();
+  });
+
+  // Punkte oben rechts: Klick springt zum Schritt
+  dotsEl.addEventListener("click", (e) => {
+    const i = [...dotsEl.children].indexOf(e.target);
+    if (i < 0) return;
+    const wide = innerWidth >= 900;
+    const sr = stage.getBoundingClientRect();
+    // Ziel: Schritt-Text mittig neben der Bühne (Desktop) bzw. knapp unter ihr (Handy)
+    const er = steps[i].getBoundingClientRect();
+    // Die Bühne klebt auf dem Desktop bei top: 96px (story.css)
+    const y = wide
+      ? scrollY + er.top + er.height / 2 - (96 + sr.height / 2)
+      : scrollY + er.top - (sr.bottom + (innerHeight - sr.bottom) * 0.4) + 24;
+    scrollTo({ top: y, behavior: reduce ? "auto" : "smooth" });
+  });
 
   measure();
   pickStep("instant");
