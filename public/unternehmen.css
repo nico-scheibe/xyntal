@@ -92,3 +92,27 @@
   .un-form { grid-template-columns: minmax(0, 1fr); }
   .un-tools label { grid-template-columns: auto minmax(0, 1fr) 72px auto; gap: 8px; font-size: 14px; }
 }
+
+/* Vergleichstabelle: grüner Haken = enthalten, rotes X = nicht enthalten. Auf dem Handy scrollt
+   nur die Tabelle seitlich, die erste Spalte bleibt stehen. */
+.un-compare-wrap { overflow-x: auto; border: 1px solid var(--border); background: var(--panel); }
+.un-compare-wrap:focus-visible { outline: 2px solid var(--text-2); outline-offset: 2px; }
+.un-compare { width: 100%; min-width: 640px; border-collapse: collapse; font-size: 14px; }
+.un-compare th, .un-compare td { padding: 12px 14px; border-bottom: 1px solid var(--border); text-align: center; vertical-align: middle; line-height: 1.4; }
+.un-compare tbody tr:last-child > * { border-bottom: 0; }
+.un-compare tbody + tbody .un-compare-group th { border-top: 1px solid var(--border); }
+.un-compare thead th { font: 600 18px/1.2 var(--f); text-transform: none; letter-spacing: normal; color: var(--text); border-bottom: 1px solid var(--border-2); }
+.un-compare th[scope="row"], .un-compare thead th:first-child { text-align: left; font: 400 14px/1.4 var(--f-text); text-transform: none; letter-spacing: normal; color: var(--text-2); }
+.un-compare th[scope="row"], .un-compare thead th:first-child { position: sticky; left: 0; z-index: 1; background: var(--panel); min-width: 210px; }
+.un-compare td { color: var(--text); white-space: nowrap; }
+.un-compare-group th { padding-top: 20px; text-align: left; font: 500 11px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+.un-compare tbody tr:not(.un-compare-group):hover > * { background: var(--panel-2); }
+.un-yes, .un-no { display: inline-block; position: relative; width: 18px; height: 18px; vertical-align: middle; }
+.un-yes::before { content: ""; position: absolute; left: 3px; top: 3px; width: 11px; height: 6px; border: solid #34D399; border-width: 0 0 2.5px 2.5px; transform: rotate(-45deg); }
+.un-no::before, .un-no::after { content: ""; position: absolute; left: 8px; top: 2px; width: 2.5px; height: 14px; border-radius: 1px; background: #E0705F; }
+.un-no::before { transform: rotate(45deg); }
+.un-no::after { transform: rotate(-45deg); }
+@media (max-width: 560px) {
+  .un-compare th, .un-compare td { padding: 10px; }
+  .un-compare th[scope="row"], .un-compare thead th:first-child { min-width: 150px; }
+}
