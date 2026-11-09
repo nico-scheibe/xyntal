@@ -86,8 +86,25 @@
     pin: '<path d="M9 4h6l-1 5 3 3H7l3-3zM12 12v8"/>',
     logout: '<path d="M14 4h5v16h-5M10 8l-4 4 4 4M6 12h10"/>',
     inbox: '<path d="M4 13h4l1.5 2.5h5L16 13h4"/><path d="M5.5 5h13L20 13v6H4v-6z"/>',
+    gauge: '<path d="M4 15a8 8 0 1 1 16 0"/><path d="m12 15 4-5"/><path d="M4 19h16"/>',
+    map: '<path d="m3 6 6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/>',
+    book: '<path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v15H5.5A1.5 1.5 0 0 0 4 20.5zM20 5.5A1.5 1.5 0 0 0 18.5 4H13v15h5.5a1.5 1.5 0 0 1 1.5 1.5z"/>',
+    clip: '<rect x="5" y="4.5" width="14" height="16" rx="2"/><path d="M9 4.5V3h6v1.5M9 13l2 2 4-4"/>',
+    alert: '<path d="M12 4 21 19.5H3z"/><path d="M12 10v4.5M12 17h.01"/>',
+    receipt: '<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9.5 8h5M9.5 12h5"/>',
+    pulse: '<path d="M3 12h4l2.5-6 4 12 2.5-6h5"/>',
+    chart: '<path d="M4 20h16M7 20v-7M12 20V6M17 20v-10"/>',
+    bulb: '<path d="M9 17h6M10 20.5h4"/><path d="M8.5 14a6 6 0 1 1 7 0c-.6.5-1 1.2-1 2v1h-5v-1c0-.8-.4-1.5-1-2z"/>',
+    swap: '<path d="m8 9 4-4 4 4M8 15l4 4 4-4"/>',
+    mappin: '<path d="M12 21s6.5-5.6 6.5-10.5a6.5 6.5 0 1 0-13 0C5.5 15.400 12 21 12 21z"/><circle cx="12" cy="10.5" r="2.3"/>',
+    mic: '<rect x="9" y="3.5" width="6" height="10.5" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3"/>',
+    smile: '<circle cx="12" cy="12" r="9"/><path d="M8.5 14a4.2 4.2 0 0 0 7 0M9 9.5h.01M15 9.5h.01"/>',
+    edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/>',
+    eye: '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/>',
     help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.7M12 17h.01"/>',
   };
+  // Xyntal-KI-Zeichen der App: Sechseck mit „Auge“
+  const AI_MARK = '<svg class="xa-i xa-aimark" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8 20 7.4v9.2l-8 4.6-8-4.6V7.4z"/><circle cx="12" cy="12" r="2.6" fill="currentColor" stroke="none"/></svg>';
   const icon = (n, cls = "") => `<svg class="xa-i ${cls}" viewBox="0 0 24 24" aria-hidden="true">${P[n] || ""}</svg>`;
   const ring = (pct, size = 40, stroke = 4, label = true) => {
     const r = (size - stroke) / 2, c = 2 * Math.PI * r;
@@ -109,7 +126,6 @@
     { id: "home", icon: "home", label: ["Start", "Home"] },
     { id: "focus", icon: "target", label: ["Fokus", "Focus"] },
     { id: "workspaces", icon: "grid", label: ["Arbeitsbereiche", "Workspaces"] },
-    { id: "projects", icon: "kanban", label: ["Projekte", "Projects"] },
     { id: "messages", icon: "message", label: ["Nachrichten", "Messages"] },
     { id: "discover", icon: "compass", label: ["Entdecken", "Discover"] },
     { id: "communities", icon: "users", label: ["Communities", "Communities"] },
@@ -127,7 +143,7 @@
   const seed = () => ({
     route: { area: "home" }, back: [], fwd: [],
     collapsed: false, notifOpen: false, acctOpen: false, searchOpen: false, status: "online",
-    taskFilter: "all", wsFilter: "all", wsQuery: "", projScope: "all", projQuery: "", projView: "board",
+    taskFilter: "all", taskScope: "mine", wsFilter: "all", wsQuery: "", wsSort: "name", discSort: "best", decFilter: "all", riskFilter: "active", projScope: "all", projQuery: "", projView: "board",
     favs: { loopr: true }, projStars: { app: true }, requested: {},
     openWs: [
       { id: "synth", code: "SL", name: "Synth Lab", hue: "#8B6CFF", desc: ["Open-Source-Plugins für Musikproduktion.", "Open-source plugins for music production."], members: 6, score: 88, mode: "join" },
@@ -135,9 +151,9 @@
     ],
     matchSaved: {}, matchHidden: {},
     workspaces: [
-      { id: "loopr", code: "LS", name: "Loopr Studio", hue: "#007AFF", desc: ["KI-App: Du summst, sie macht den Song.", "AI app: you hum, it makes the song."], owner: true, role: "owner", members: ["LV", "JW", "AK", "MS"], milestone: ["Closed Beta · 7. Nov.", "Closed beta · 7 Nov"], online: 3 },
-      { id: "kiez", code: "KK", name: "Kiezkiste", hue: "#3FE0F0", desc: ["Tauschbörse für die Nachbarschaft.", "A swap market for your neighbourhood."], owner: false, role: "admin", members: ["LV", "TB", "SR"], milestone: ["MVP-Demo · 20. Nov.", "MVP demo · 20 Nov"], online: 1 },
-      { id: "zirkel", code: "FZ", name: "Founder-Zirkel", hue: "#D9A54E", desc: ["Monatlicher Austausch unter Solo-Foundern.", "Monthly exchange between solo founders."], owner: false, role: "member", members: ["SR", "MS", "LV"], milestone: ["Demo Day · 28. Nov.", "Demo day · 28 Nov"], online: 0 },
+      { id: "loopr", code: "LS", name: "Loopr Studio", hue: "#007AFF", desc: ["KI-App: Du summst, sie macht den Song.", "AI app: you hum, it makes the song."], owner: true, role: "owner", plan: "PRO", tpl: "STARTUP", slug: "loopr-studio", members: ["LV", "JW", "AK", "MS"], milestone: ["Closed Beta · 7. Nov.", "Closed beta · 7 Nov"], online: 3 },
+      { id: "kiez", code: "KK", name: "Kiezkiste", hue: "#3FE0F0", desc: ["Tauschbörse für die Nachbarschaft.", "A swap market for your neighbourhood."], owner: false, role: "admin", plan: "FREE", tpl: "BLANK", slug: "kiezkiste", members: ["TB", "LV", "SR"], milestone: ["MVP-Demo · 20. Nov.", "MVP demo · 20 Nov"], online: 1 },
+      { id: "zirkel", code: "FZ", name: "Founder-Zirkel", hue: "#D9A54E", desc: ["Monatlicher Austausch unter Solo-Foundern.", "Monthly exchange between solo founders."], owner: false, role: "member", plan: "FREE", tpl: "BLANK", slug: "founder-zirkel", members: ["SR", "MS", "LV"], milestone: ["Demo Day · 28. Nov.", "Demo day · 28 Nov"], online: 0 },
     ],
     projects: [
       { id: "app", ws: "loopr", code: "AP", name: ["App-Prototyp", "App prototype"], hue: "#007AFF", desc: ["Summen aufnehmen, Melodie erkennen, Song erzeugen.", "Record humming, detect the melody, generate a song."], tasks: [
@@ -186,6 +202,8 @@
       { id: "jonas", name: "Jonas Weber", with: "JW", unread: 0, msgs: [
         { from: "LV", at: ["Gestern", "Yesterday"], text: ["Kannst du dir die Fehlermeldung beim Login anschauen?", "Could you take a look at the login error?"] },
         { from: "JW", at: ["Gestern", "Yesterday"], text: ["Ist behoben, lag am Token-Refresh. 👍", "Fixed, it was the token refresh. 👍"] },
+        { from: "JW", kind: "call", dur: "12 Min", at: ["Gestern", "Yesterday"], text: ["Anruf", "Call"] },
+        { from: "LV", kind: "meet", when: ["Di., 3. Nov. · 14:00–14:30", "Tue, 3 Nov · 14:00–14:30"], at: ["Gestern", "Yesterday"], text: ["Anruf gebucht", "Call booked"] },
       ], reply: { from: "JW", text: ["Klingt gut, ich schaue es mir heute Abend an.", "Sounds good, I'll look at it tonight."] } },
       { id: "kiez", group: true, name: "Kiezkiste-Team", members: ["LV", "TB", "SR"], unread: 0, msgs: [
         { from: "TB", at: ["Fr", "Fri"], text: ["Das Inserat-Formular ist zu 80 % fertig.", "The listing form is 80% done."] },
@@ -278,6 +296,50 @@
         { id: "e13", day: 5, s: 9, e: 10, kind: "milestone", title: ["Closed Beta startet", "Closed beta starts"] },
       ],
     },
+    projTab: "overview", okrFilter: "active", insRange: "8", briefBusy: null, briefOpen: "b1", chatMore: false, inboxFilter: "all", inboxDone: {},
+    wsd: {
+      _: { okrs: [], decisions: [], risks: [], briefs: [], memory: [], activity: [], journal: [], funding: [] },
+      loopr: {
+        okrs: [
+          { id: "k1", state: "on", owner: "LV", due: ["fällig in 5 Tagen", "due in 5 days"], title: ["Closed Beta mit 50 Testern starten", "Start the closed beta with 50 testers"], desc: ["Die ersten echten Nutzer summen ihren ersten Song.", "The first real users hum their first song."], krs: [{ t: ["Tester auf der Warteliste bestätigt", "Testers confirmed on the waitlist"], cur: 34, target: 50, unit: ["Tester", "testers"] }, { t: ["TestFlight-Build freigegeben", "TestFlight build approved"], cur: 0, target: 1, unit: ["Build", "build"] }] },
+          { id: "k2", state: "risk", owner: "JW", due: ["fällig in 19 Tagen", "due in 19 days"], title: ["Melodie-Erkennung über 90 % Trefferquote", "Melody detection above 90% accuracy"], desc: ["Gemessen an 40 Testaufnahmen auf dem Handy.", "Measured on 40 test recordings on the phone."], krs: [{ t: ["Trefferquote Tonhöhe", "Pitch accuracy"], cur: 88, target: 90, unit: ["%", "%"] }, { t: ["Latenz unter 200 ms", "Latency below 200 ms"], cur: 180, target: 200, unit: ["ms", "ms"] }] },
+          { id: "k3", state: "on", owner: "MS", due: ["fällig in 40 Tagen", "due in 40 days"], title: ["Marke steht vor dem Public Launch", "Brand ready before the public launch"], desc: ["Logo, Farben und Tonalität sind abgestimmt.", "Logo, colours and tone are agreed."], krs: [{ t: ["Bausteine abgenommen", "Building blocks approved"], cur: 1, target: 3, unit: ["Teile", "parts"] }] },
+        ],
+        decisions: [
+          { id: "d1", state: "accepted", owner: "JW", at: ["30. Okt.", "30 Oct"], tags: ["modell", "audio"], title: ["Modell B für Summen-zu-MIDI", "Model B for hum-to-MIDI"], dec: ["Wir gehen mit Modell B in die Closed Beta.", "We go into the closed beta with model B."], why: ["Fast so genau wie A, aber auf älteren Geräten flüssig.", "Almost as accurate as A, but smooth on older devices."] },
+          { id: "d2", state: "proposed", owner: "MS", at: ["Heute", "Today"], tags: ["beta", "preis"], title: ["Beta bleibt kostenlos", "The beta stays free"], dec: ["Tester zahlen nichts, dafür gibt es ein Feedback-Gespräch.", "Testers pay nothing; in return there is a feedback call."], why: ["Uns ist ehrliches Feedback gerade mehr wert als Umsatz.", "Honest feedback is worth more to us right now than revenue."] },
+          { id: "d3", state: "superseded", owner: "LV", at: ["12. Okt.", "12 Oct"], tags: ["plattform"], title: ["Zuerst nur iOS", "iOS only at first"], dec: ["Android kommt erst nach der Closed Beta.", "Android only comes after the closed beta."], why: ["Abgelöst: Der Audio-Upload läuft auf Android schon stabil.", "Superseded: audio upload already runs reliably on Android."] },
+        ],
+        risks: [
+          { id: "r1", state: "progress", imp: 4, lik: 4, owner: "JW", due: ["Fr", "Fri"], title: ["TestFlight-Build wird nicht rechtzeitig fertig", "TestFlight build isn't ready in time"], desc: ["Der Build hängt am Audio-Upload-Test auf Android.", "The build depends on the audio upload test on Android."], mit: ["Test bis Mittwoch, sonst Beta nur mit iOS starten.", "Test by Wednesday, otherwise start the beta on iOS only."] },
+          { id: "r2", state: "open", imp: 3, lik: 3, owner: "AK", due: ["10. Nov.", "10 Nov"], title: ["Aylin hat drei Aufgaben gleichzeitig", "Aylin has three tasks at once"], desc: ["Onboarding, Logo und Farbpalette liegen bei einer Person.", "Onboarding, logo and colour palette sit with one person."], mit: ["Lea Hoffmann aus Entdecken ansprechen (89 % Passung).", "Reach out to Lea Hoffmann from Discover (89% match)."] },
+          { id: "r3", state: "open", imp: 2, lik: 2, owner: "MS", due: ["14. Nov.", "14 Nov"], title: ["Zu wenig Rücklauf auf die Warteliste-Mail", "Too little response to the waitlist email"], desc: ["Unter 50 Zusagen verzögern den Start.", "Fewer than 50 confirmations delay the start."], mit: ["Zweite Mail und Aufruf in der Community.", "Second email and a call in the community."] },
+          { id: "r4", state: "closed", imp: 3, lik: 2, owner: "JW", due: ["28. Okt.", "28 Oct"], title: ["Login-Fehler beim Token-Refresh", "Login error on token refresh"], desc: ["Nutzer flogen nach einer Stunde raus.", "Users were logged out after an hour."], mit: ["Behoben.", "Fixed."] },
+        ],
+        briefs: [{ id: "b1", title: ["Wochenbericht", "Weekly report"], at: ["Fr, 16:00", "Fri, 16:00"], body: briefBody("weekly") }, { id: "b2", title: ["Risiko-Check", "Risk check"], at: ["Mi, 09:10", "Wed, 09:10"], body: briefBody("risk") }],
+        memory: [
+          { cat: "rule", pin: true, used: 14, text: ["Team-Updates gehen freitags um 16 Uhr an #team-loopr.", "Team updates go to #team-loopr on Fridays at 4 pm."] },
+          { cat: "goal", used: 9, text: ["Die Closed Beta startet am 7. November mit 50 Testern.", "The closed beta starts on 7 November with 50 testers."] },
+          { cat: "pref", used: 4, text: ["Lena arbeitet vormittags in Fokusblöcken – Termine lieber ab 13 Uhr.", "Lena works in focus blocks in the morning – meetings preferably from 1 pm."] },
+          { cat: "decision", sug: true, used: 0, text: ["Für die Beta wird Modell B verwendet.", "Model B is used for the beta."] },
+        ],
+        activity: [
+          { icon: "image", badge: "File uploaded", who: "AK", text: ["Onboarding-Screens.fig hochgeladen", "uploaded Onboarding-Screens.fig"], at: ["09:16", "09:16"] },
+          { icon: "check", badge: "Task completed", who: "JW", text: ["API-Schnittstelle festlegen erledigt", "completed Define the API contract"], at: ["Gestern", "Yesterday"] },
+          { icon: "flag", badge: "Milestone created", who: "MS", text: ["Meilenstein Closed Beta angelegt", "created the milestone Closed beta"], at: ["Fr", "Fri"] },
+          { icon: "grid", badge: "Module added", who: "LV", text: ["Modul Ziele hinzugefügt", "added the Goals module"], at: ["Do", "Thu"] },
+          { icon: "users", badge: "Member invited", who: "LV", text: ["Mara Schulz eingeladen", "invited Mara Schulz"], at: ["20. Okt.", "20 Oct"] },
+        ],
+        journal: [{ at: ["Freitag, 30. Oktober", "Friday, 30 October"], text: ["Aufnahme-Screen fertig. Zum ersten Mal einen ganzen Song aus zehn Sekunden Summen gehört – Gänsehaut.", "Recording screen done. Heard a full song from ten seconds of humming for the first time – goosebumps."] }, { at: ["Montag, 26. Oktober", "Monday, 26 October"], text: ["Modellvergleich gestartet. A ist genauer, B fühlt sich besser an.", "Started the model comparison. A is more accurate, B feels better."] }],
+        funding: [{ name: ["Gründungsstipendium", "Founder grant"], source: ["EXIST", "EXIST"], at: ["Sept. 2026", "Sept 2026"], amount: 30000 }, { name: ["Preisgeld Audio-Hackathon", "Audio hackathon prize"], source: ["Music Tech Fest", "Music Tech Fest"], at: ["Juni 2026", "June 2026"], amount: 5000 }],
+      },
+      kiez: {
+        okrs: [{ id: "k4", state: "on", owner: "TB", due: ["fällig in 18 Tagen", "due in 18 days"], title: ["MVP-Demo am 20. November", "MVP demo on 20 November"], desc: ["Inserieren, schreiben, abholen – einmal komplett.", "List, chat, pick up – once end to end."], krs: [{ t: ["Kernabläufe fertig", "Core flows done"], cur: 1, target: 3, unit: ["Abläufe", "flows"] }] }],
+        decisions: [], risks: [{ id: "r5", state: "open", imp: 3, lik: 2, owner: "SR", due: ["13. Nov.", "13 Nov"], title: ["Abholpunkte springen ab", "Pick-up points drop out"], desc: ["Ohne Läden im Kiez fehlt die Übergabe.", "Without local shops there is no hand-over."], mit: ["Zwei Ersatzläden anfragen.", "Ask two backup shops."] }],
+        briefs: [], memory: [], journal: [], funding: [],
+        activity: [{ icon: "check", badge: "Task completed", who: "TB", text: ["Datenmodell entwerfen erledigt", "completed Design the data model"], at: ["Do", "Thu"] }, { icon: "file", badge: "File shared", who: "SR", text: ["Nutzerinterviews.docx geteilt", "shared Nutzerinterviews.docx"], at: ["Mi", "Wed"] }],
+      },
+    },
     focus: { running: false, left: 3000, total: 3000, spent: 0, task: null, blocks: { slack: true, msgs: true, pings: true, cal: false }, done: 0 },
   });
 
@@ -321,7 +383,7 @@
     const ft = focusTask(s);
     const focusList = tasks.filter((x) => x.t.who === "LV" && (x.t.status !== "done" || x.t.focusDone)).slice(0, 4);
     const fDone = focusList.filter((x) => x.t.status === "done").length;
-    const mine = tasks.filter((x) => x.t.who === "LV" && x.t.status !== "done" && (s.taskFilter === "all" || x.t.prio === s.taskFilter));
+    const mine = tasks.filter((x) => (s.taskScope === "all" || x.t.who === "LV") && x.t.status !== "done" && (s.taskFilter === "all" || x.t.prio === s.taskFilter));
     const matches = s.builders.filter((b) => !s.matchHidden[b.id]).slice(0, 2);
     const doneAll = tasks.filter((x) => x.t.status === "done").length;
     const pd = (p) => p.tasks.length - openOf(p);
@@ -329,7 +391,7 @@
     const pillDot = { high: "var(--xa-warn)", mid: "var(--xa-mid)", low: "var(--xa-faint)" };
     const card = (title, body, right = "") => `<section class="xa-w"><header class="xa-w-head"><h4 class="xa-mono">${title}</h4>${right}</header>${body}</section>`;
     const ws = (p) => s.workspaces.find((w) => w.id === p.ws).name;
-    return `${homeHead("START", s, `${sqBtn(T("ANPASSEN", "CUSTOMISE"), 'data-act="app-only" data-v="customize" data-k="h-custom"')}${sqBtn(`${T("MELDUNGEN", "NOTIFICATIONS")}${s.formeSeen ? "" : `<i class="xa-sq-badge">3</i>`}`, 'data-act="go" data-area="forme" data-k="h-notes"')}${sqBtn(`+ ${T("NEUER TASK", "NEW TASK")}`, 'data-act="newtask" data-k="h-new"', "is-primary")}`)}
+    return `${homeHead("START", s, `${sqBtn(T("ANPASSEN", "CUSTOMISE"), 'data-act="app-only" data-v="customize" data-k="h-custom"')}${sqBtn(`${T("MELDUNGEN", "NOTIFICATIONS")}${s.formeSeen ? "" : `<i class="xa-sq-badge">${inboxItems(s).length}</i>`}`, 'data-act="go" data-area="forme" data-k="h-notes"')}${sqBtn(`+ ${T("NEUER TASK", "NEW TASK")}`, 'data-act="newtask" data-k="h-new"', "is-primary")}`)}
     <h3 class="xa-hero" tabindex="-1" data-k="title">${T("GUTEN MORGEN, LENA.", "GOOD MORNING, LENA.")}</h3>
     <div class="xa-kpis">${kpi(open.length, T("OFFENE TASKS", "OPEN TASKS"))}${kpi(high.length, T("HOHE PRIORITÄT", "HIGH PRIORITY"))}${kpi(today.length, T("HEUTE FÄLLIG", "DUE TODAY"))}${kpi(0, T("ÜBERFÄLLIG", "OVERDUE"), "is-warn")}</div>
     <div class="xa-board">
@@ -339,8 +401,8 @@
           ${ft ? `<div class="xa-w-foot"><button type="button" class="xa-pillbtn" data-act="focus-start" data-k="h-focus">${icon("play")}${T("50 Min Fokus starten", "Start 50 min focus")}</button></div>` : ""}`,
           `<span class="xa-w-meta">${T(`${fDone} von ${focusList.length} erledigt`, `${fDone} of ${focusList.length} done`)}</span>`)}
         ${card(T("MEINE TASKS", "MY TASKS"), `<ul class="xa-trows">${mine.slice(0, 5).map((x) => `<li class="xa-trow"><span class="xa-pdot" style="background:${pillDot[x.t.prio]}"></span><span class="xa-grow"><b>${esc(L(x.t.title))}</b><small>${esc(ws(x.p))} · ${x.t.status === "doing" ? T("In Arbeit", "In progress") : x.t.status === "review" ? T("In Prüfung", "In review") : T("Offen", "Open")}</small></span><span class="xa-pword">${L(PRIO[x.t.prio])}</span><button type="button" class="xa-tcheck" data-act="task-done" data-id="${x.t.id}" data-k="td-${x.t.id}" aria-label="${T(`${L(x.t.title)} erledigen`, `Complete ${L(x.t.title)}`)}">${icon("check")}</button></li>`).join("") || `<li class="xa-empty">${T("Keine Tasks mit dieser Priorität.", "No tasks with this priority.")}</li>`}</ul>
-          <button type="button" class="xa-acclink" data-act="go" data-area="projects" data-k="h-alltasks">${T(`Alle ${open.length} Tasks ansehen →`, `View all ${open.length} tasks →`)}</button>`,
-          `<div class="xa-pgroup" role="group" aria-label="${T("Nach Priorität filtern", "Filter by priority")}">${[["all", T("Alle", "All")], ["high", T("Hoch", "High")], ["mid", T("Mittel", "Medium")], ["low", T("Niedrig", "Low")]].map(([id, l]) => `<button type="button" data-act="taskfilter" data-v="${id}" data-k="taskfilter-${id}" aria-pressed="${s.taskFilter === id}">${l}</button>`).join("")}</div>`)}
+          <button type="button" class="xa-acclink" data-act="ws-sub" data-id="loopr" data-v="projects" data-k="h-alltasks">${T(`Alle ${open.length} Tasks ansehen →`, `View all ${open.length} tasks →`)}</button>`,
+          `<div class="xa-pgroup" role="group" aria-label="${T("Meine oder alle", "Mine or all")}">${[["mine", T("Meine", "Mine")], ["all", T("Alle", "All")]].map(([id, l]) => `<button type="button" data-act="taskscope" data-v="${id}" data-k="taskscope-${id}" aria-pressed="${s.taskScope === id}">${l}</button>`).join("")}</div><div class="xa-pgroup" role="group" aria-label="${T("Nach Priorität filtern", "Filter by priority")}">${[["all", T("Alle", "All")], ["high", T("Hoch", "High")], ["mid", T("Mittel", "Medium")], ["low", T("Niedrig", "Low")]].map(([id, l]) => `<button type="button" data-act="taskfilter" data-v="${id}" data-k="taskfilter-${id}" aria-pressed="${s.taskFilter === id}">${l}</button>`).join("")}</div>`)}
         ${card(T("WOCHENRÜCKBLICK", "WEEKLY REVIEW"), `<div class="xa-wtiles"><div><b>${doneAll}</b><small>${T("Erledigt", "Done")}</small></div><div><b>0</b><small>${T("Überfällig", "Overdue")}</small></div><div><b>${open.filter((x) => x.t.due).length}</b><small>${T("In 7 Tagen fällig", "Due in 7 days")}</small></div></div>
           <div class="xa-wsec"><h5 class="xa-mono">${T("ERLEDIGT", "DONE")}</h5><p>${tasks.filter((x) => x.t.status === "done").slice(0, 3).map((x) => esc(L(x.t.title))).join(" · ") || "–"}</p></div>
           <div class="xa-wsec"><h5 class="xa-mono">${T("HÄNGT", "STUCK")}</h5><p>${esc(L(proj(s, "app").tasks.find((t) => t.id === "t2").title))} – ${T("blockiert den TestFlight-Build", "blocks the TestFlight build")}</p></div>
@@ -358,16 +420,33 @@
     </div>`;
   }
 
+  // „Für mich“ wie in der App: eine Liste mit allem, was auf dich wartet – erledigen (E) oder später (S)
+  const inboxItems = (s) => {
+    const tasks = allTasks(s).filter((x) => x.t.who === "LV" && x.t.status !== "done" && x.t.due).slice(0, 3);
+    const reqs = s.convos.filter((c) => c.request);
+    return [
+      { id: "i-aylin", kind: "mention", icon: "message", head: T("Aylin Kaya hat dich erwähnt", "Aylin Kaya mentioned you"), detail: T("Hast du kurz Zeit für das Design-Review? 15 Minuten reichen.", "Do you have a moment for the design review? 15 minutes is enough."), at: "10:02", place: T("Direktnachricht", "Direct message"), act: 'data-act="convo" data-id="aylin"', g: 0 },
+      { id: "i-appr", kind: "approval", icon: "zap", head: T("„Team-Update an #team-loopr senden“ freigeben", "Approve “Send team update to #team-loopr”"), detail: T("Wöchentliches Team-Update per KI", "Weekly AI team update"), at: "09:41", place: T("Automationen", "Automations"), act: 'data-act="autotab-go" data-v="approvals"', g: 0 },
+      ...tasks.map((x) => ({ id: "i-" + x.t.id, kind: "task", icon: "check", urgent: /Heute|Today/.test(L(x.t.due)), head: esc(L(x.t.title)), detail: `${esc(L(x.p.name))} · ${/Heute|Today/.test(L(x.t.due)) ? T("Heute fällig", "Due today") : T(`Fällig: ${L(x.t.due)}`, `Due: ${L(x.t.due)}`)}`, at: "", place: "Loopr Studio", act: `data-act="task-open" data-id="${x.p.id}"`, task: x.t.id, g: 0 })),
+      { id: "i-call", kind: "call", icon: "phone", head: T("Jonas Weber schlägt einen 30-minütigen Anruf vor", "Jonas Weber suggests a 30-minute call"), detail: T("Di., 3. Nov. · 14:00–14:30", "Tue, 3 Nov · 14:00–14:30"), at: T("Gestern", "Yesterday"), place: T("Direktnachricht", "Direct message"), act: 'data-act="convo" data-id="jonas"', g: 1 },
+      ...reqs.map((c) => ({ id: "i-" + c.id, kind: "thread", icon: "users", head: T(`${esc(c.name)} möchte dir schreiben`, `${esc(c.name)} wants to message you`), detail: esc(L(c.msgs[0].text)), at: T("Gestern", "Yesterday"), place: T("Anfrage", "Request"), act: `data-act="convo-req" data-id="${c.id}"`, g: 1 })),
+      { id: "i-review", kind: "review", icon: "clip", head: T("„Onboarding-Screens.fig“ prüfen", "Review “Onboarding-Screens.fig”"), detail: T("Aylin Kaya bittet um Freigabe · Version 3", "Aylin Kaya asks for approval · version 3"), at: T("Fr", "Fri"), place: T("Dateien", "Files"), act: 'data-act="file" data-id="screens"', g: 1 },
+    ].filter((x) => !s.inboxDone[x.id]);
+  };
   function viewForMe(s) {
     s.formeSeen = true;
-    const n = NOTIFS();
-    const reqs = s.convos.filter((c) => c.request);
-    return `${homeHead(T("FÜR MICH", "FOR ME"), s)}
-    <h3 class="xa-hero xa-hero-sm" tabindex="-1" data-k="title">${T("FÜR MICH", "FOR ME")}</h3>
-    <div class="xa-board xa-board-1"><div class="xa-board-main">
-      <section class="xa-w"><header class="xa-w-head"><h4 class="xa-mono">${T("MELDUNGEN", "NOTIFICATIONS")}</h4></header><ul class="xa-srows">${n.map((x) => `<li><button type="button" class="xa-plain" data-act="${x.act}" data-id="${x.id || ""}" data-area="${x.area || ""}" data-k="fm-${x.id || x.area}"><span class="xa-qic">${icon(x.icon)}</span><span class="xa-grow"><b>${x.text}</b><small>${x.at}</small></span></button></li>`).join("")}</ul></section>
-      <section class="xa-w"><header class="xa-w-head"><h4 class="xa-mono">${T("KONTAKTANFRAGEN", "CONTACT REQUESTS")}</h4></header>${reqs.length ? `<ul class="xa-srows">${reqs.map((c) => `<li><button type="button" class="xa-plain" data-act="convo-req" data-id="${c.id}" data-k="fr-${c.id}">${avatar(c.with)}<span class="xa-grow"><b>${esc(c.name)}</b><small>${esc(L(c.msgs[0].text)).slice(0, 80)} …</small></span></button></li>`).join("")}</ul>` : `<p class="xa-muted">${T("Keine offenen Anfragen.", "No open requests.")}</p>`}</section>
-    </div></div>`;
+    const all = inboxItems(s);
+    const kinds = [["all", T("Alle", "All")], ["mention", T("Erwähnungen", "Mentions")], ["task", T("Aufgaben", "Tasks")], ["approval", T("Freigaben", "Approvals")], ["review", T("Prüfungen", "Reviews")], ["thread", "Threads"], ["call", T("Anrufe", "Calls")]];
+    const cnt = (k) => (k === "all" ? all.length : all.filter((x) => x.kind === k).length);
+    const list = all.filter((x) => s.inboxFilter === "all" || x.kind === s.inboxFilter);
+    const later = Object.values(s.inboxDone).filter((v) => v === "later").length;
+    const row = (x) => `<li class="xa-ib${x.urgent ? " is-urgent" : ""}"><button type="button" class="xa-plain xa-ib-main" ${x.act} data-k="ib-${x.id}"><span class="xa-ib-ic">${icon(x.icon)}</span><span class="xa-grow"><b>${x.head}</b><small>${x.detail}</small></span><span class="xa-ib-r"><small>${x.at}</small><small>${x.place}</small></span></button>
+      <span class="xa-ib-act"><button type="button" class="xa-iconbtn" data-act="inbox-done" data-id="${x.id}" data-v="${x.task || ""}" data-k="ibd-${x.id}" aria-label="${T("Erledigt (E)", "Done (E)")}" title="${T("Erledigt (E)", "Done (E)")}">${icon("check")}</button><button type="button" class="xa-iconbtn" data-act="inbox-later" data-id="${x.id}" data-k="ibl-${x.id}" aria-label="${T("Später (S)", "Later (S)")}" title="${T("Später (S)", "Later (S)")}">${icon("clock")}</button></span></li>`;
+    const group = (g, label) => { const items = list.filter((x) => x.g === g); return items.length ? `<p class="xa-ib-g">${label}</p><ul class="xa-ibs">${items.map(row).join("")}</ul>` : ""; };
+    return `<div class="xa-inbox"><header class="xa-ib-head"><h3 class="xa-ib-title" tabindex="-1" data-k="title">${T("Für mich", "For me")}</h3><span class="xa-faint">${T(`${all.length} warten · ${later} zurückgestellt`, `${all.length} waiting · ${later} snoozed`)}</span><span class="xa-grow"></span><button type="button" class="xa-iconbtn" data-act="inbox-reset" data-k="ib-refresh" aria-label="${T("Aktualisieren", "Refresh")}">${icon("reset")}</button></header>
+      <p class="xa-ib-hint">${T("J / K zum Wechseln · Leertaste Aufgabe aufklappen · E erledigt · S später · Enter zum Öffnen", "J / K to move · Space expands a task · E done · S later · Enter to open")}</p>
+      ${all.length ? `<div class="xa-ib-chips" role="group" aria-label="${T("Filtern", "Filter")}">${kinds.filter(([k]) => cnt(k)).map(([k, l]) => `<button type="button" data-act="inboxfilter" data-v="${k}" data-k="ibf-${k}" aria-pressed="${s.inboxFilter === k}">${l} <span>${cnt(k)}</span></button>`).join("")}</div>${group(0, T("Heute", "Today"))}${group(1, T("Früher", "Earlier"))}`
+        : `<div class="xa-ib-empty"><span class="xa-icon-tile xa-lg">${icon("check")}</span><b>${T("Du bist auf dem neuesten Stand", "You're all caught up")}</b><p>${T("Gerade braucht dich nichts. Erwähnungen, Aufgaben, Freigaben und Antworten landen hier.", "Nothing needs you right now. Mentions, tasks, approvals and replies land here.")}</p></div>`}</div>`;
   }
 
   function viewFocus(s) {
@@ -432,119 +511,352 @@
   let uid = 0;
   const sw = (act, id, on, labelledby) => `<button type="button" class="xa-switch" role="switch" aria-checked="${!!on}" aria-labelledby="${labelledby}" data-act="${act}" data-id="${id}" data-k="sw-${act}-${id}"><i></i></button>`;
 
+  /* ---------- Arbeitsbereiche (Stand App 0.2.19): Liste, Arbeitsbereich mit eigener Seitenleiste, Projekte darin ---------- */
+  const WS_NAV = [
+    { items: [{ id: "overview", icon: "gauge", label: ["Übersicht", "Overview"] }] },
+    { label: ["Plan", "Plan"], items: [{ id: "projects", icon: "kanban", label: ["Projekte", "Projects"] }, { id: "milestones", icon: "flag", label: ["Meilensteine", "Milestones"] }, { id: "roadmap", icon: "map", label: ["Roadmap", "Roadmap"] }, { id: "calendar", icon: "calendar", label: ["Kalender", "Calendar"] }] },
+    { label: ["Personen", "People"], items: [{ id: "team", icon: "users", label: ["Team", "Team"] }, { id: "roles", icon: "shield", label: ["Rollen & Zugriff", "Roles & access"] }] },
+    { label: ["Wissen", "Knowledge"], items: [{ id: "files", icon: "folder", label: ["Dateien", "Files"] }, { id: "notes", icon: "file", label: ["Notizen", "Notes"] }, { id: "journal", icon: "book", label: ["Journal", "Journal"] }] },
+    { label: ["Wachstum", "Growth"], items: [{ id: "okrs", icon: "target", label: ["Ziele & OKRs", "Goals & OKRs"] }, { id: "decisions", icon: "clip", label: ["Entscheidungen", "Decisions"] }, { id: "risks", icon: "alert", label: ["Risiken", "Risks"] }, { id: "funding", icon: "receipt", label: ["Funding", "Funding"] }] },
+    { label: ["System", "System"], items: [{ id: "insights", icon: "pulse", label: ["Insights", "Insights"] }, { id: "analytics", icon: "chart", label: ["Analysen", "Analytics"] }, { id: "ai", icon: "sparkle", label: ["Xyntal KI", "Xyntal AI"] }, { id: "briefs", icon: "zap", label: ["KI-Briefings", "AI briefings"] }, { id: "memory", icon: "bulb", label: ["Team-Gedächtnis", "Team memory"] }, { id: "activity", icon: "pulse", label: ["Aktivität", "Activity"] }] },
+  ];
+  const ROLE = { owner: ["Inhaber", "Owner"], admin: ["Admin", "Admin"], member: ["Mitglied", "Member"] };
+  const WS_SORT = { name: ["Sortierung: Name", "Sort: Name"], members: ["Sortierung: Mitglieder", "Sort: Members"], type: ["Sortierung: Typ", "Sort: Type"] };
+  const wsStats = (s, w) => {
+    const ps = s.projects.filter((p) => p.ws === w.id);
+    const tasks = ps.flatMap((p) => p.tasks);
+    const done = tasks.filter((t) => t.status === "done").length;
+    return { ps, tasks, done, open: tasks.length - done, pc: tasks.length ? Math.round((done / tasks.length) * 100) : 0 };
+  };
+  const pStatus = (p) => { const pc = pct(p); return pc === 100 ? ["done", T("Abgeschlossen", "Completed")] : p.tasks.some((t) => t.status === "doing" || t.status === "review") ? ["active", T("Aktiv", "Active")] : ["planned", T("Geplant", "Planned")]; };
+
   function viewWorkspaces(s) {
     const q = s.wsQuery.trim().toLowerCase();
     const list = s.workspaces.filter((w) => (s.wsFilter === "all" || (s.wsFilter === "fav" && s.favs[w.id]) || w.role === s.wsFilter) && (!q || w.name.toLowerCase().includes(q)));
     const n = (role) => s.workspaces.filter((w) => w.role === role).length;
-    const sorted = [...list].sort((a, b) => (s.favs[b.id] ? 1 : 0) - (s.favs[a.id] ? 1 : 0));
-    return `${pageHead(T("Arbeit", "Work"), T(`${s.workspaces.length} Arbeitsbereiche · ${n("owner")} eigener`, `${s.workspaces.length} workspaces · ${n("owner")} owned`), `<button type="button" class="xa-btn xa-primary" data-act="app-only" data-v="workspace" data-k="w-new">${icon("plus")}${T("Neuer Arbeitsbereich", "New workspace")}</button>`)}
-    <div class="xa-toolbar"><label class="xa-sr" for="xa-wq-${uid}">${T("Arbeitsbereiche suchen", "Search workspaces")}</label><input id="xa-wq-${uid}" class="xa-input" type="search" data-input="wsquery" data-k="wq" value="${esc(s.wsQuery)}" placeholder="${T("Arbeitsbereiche suchen …", "Search workspaces …")}" autocomplete="off"><span class="xa-sort">${T("Sortiert: Favoriten zuerst", "Sorted: favourites first")}</span></div>
-    ${chips("wsfilter", [["all", T("Alle", "All"), s.workspaces.length], ["fav", T("Favoriten", "Favourites"), s.workspaces.filter((w) => s.favs[w.id]).length], ["owner", T("Inhaber", "Owner"), n("owner")], ["admin", "Admin", n("admin")], ["member", T("Mitglied", "Member"), n("member")]], s.wsFilter, T("Arbeitsbereiche filtern", "Filter workspaces"))}
-    <div class="xa-wslist">${sorted.map((w) => {
-      const ps = s.projects.filter((p) => p.ws === w.id);
-      const tasks = ps.flatMap((p) => p.tasks);
-      const done = tasks.filter((t) => t.status === "done").length;
-      const pc = tasks.length ? Math.round((done / tasks.length) * 100) : 0;
-      return `<article class="xa-card xa-ws">
-        <div class="xa-ws-top"><span class="xa-code" style="--h:${w.hue}">${w.code}</span><h4>${esc(w.name)}</h4>
-          <button type="button" class="xa-iconbtn xa-star" data-act="fav" data-id="${w.id}" data-k="fav-${w.id}" aria-pressed="${!!s.favs[w.id]}" aria-label="${T(`${w.name} als Favorit markieren`, `Mark ${w.name} as favourite`)}">${icon("star")}</button></div>
-        <p class="xa-ws-tags"><span class="xa-tag">${{ owner: T("Inhaber", "Owner"), admin: "Admin", member: T("Mitglied", "Member") }[w.role]}</span><span class="xa-tag">${T("Privat", "Private")}</span></p>
-        <p class="xa-muted">${esc(L(w.desc))}</p>
-        <div class="xa-ws-stats"><div><b>${ps.length}</b><small>${T("Projekte", "Projects")}</small></div><div><b>${tasks.length - done}</b><small>${T("Offene Aufgaben", "Open tasks")}</small></div><div><b>${w.members.length}</b><small>${T("Mitglieder", "Members")}</small></div><div class="xa-stack">${w.members.map((m) => avatar(m, "xa-av-sm")).join("")}</div></div>
-        <div class="xa-progress"><i style="width:${pc}%"></i></div><p class="xa-mono xa-right">${pc}%</p>
-        <div class="xa-ws-foot"><span class="xa-muted">${icon("flag")} ${esc(L(w.milestone))} · ${T(`${w.online} von ${w.members.length} online`, `${w.online} of ${w.members.length} online`)}</span><button type="button" class="xa-link" data-act="ws" data-id="${w.id}" data-k="ws-${w.id}">${T("Öffnen", "Open")} ${icon("arrowR")}</button></div>
+    const by = { name: (a, b) => a.name.localeCompare(b.name), members: (a, b) => b.members.length - a.members.length, type: (a, b) => a.role.localeCompare(b.role) }[s.wsSort];
+    const sorted = [...list].sort(by);
+    const filters = [["all", T("ALLE", "ALL"), s.workspaces.length], ["fav", T("Favoriten", "Favourites"), s.workspaces.filter((w) => s.favs[w.id]).length], ["owner", T("Inhaber", "Owner"), n("owner")], ["admin", "Admin", n("admin")], ["member", T("Mitglied", "Member"), n("member")]].filter((f) => f[2]);
+    return `${pageHead(T("Arbeit", "Work"), T(`${s.workspaces.length} Arbeitsbereiche · ${n("owner")} eigener`, `${s.workspaces.length} workspaces · ${n("owner")} owned`), `<button type="button" class="xa-plusbtn" data-act="app-only" data-v="workspace" data-k="w-new" aria-label="${T("Neuer Arbeitsbereich", "New workspace")}">${icon("plus")}</button>`)}
+    <div class="xa-toolbar xa-ws-bar"><label class="xa-sr" for="xa-wq-${uid}">${T("Arbeitsbereiche suchen", "Search workspaces")}</label><input id="xa-wq-${uid}" class="xa-input" type="search" data-input="wsquery" data-k="wq" value="${esc(s.wsQuery)}" placeholder="${T("Arbeitsbereiche suchen", "Search workspaces")}" autocomplete="off">
+      <div class="xa-mchips" role="group" aria-label="${T("Arbeitsbereiche filtern", "Filter workspaces")}">${filters.map(([id, text, count]) => `<button type="button" data-act="wsfilter" data-v="${id}" data-k="wsfilter-${id}" aria-pressed="${s.wsFilter === id}">${text} <span>${count}</span></button>`).join("")}</div>
+      <span class="xa-grow"></span><button type="button" class="xa-select" data-act="wssort" data-k="wssort">${L(WS_SORT[s.wsSort])}<i aria-hidden="true"></i></button></div>
+    <div class="xa-wsgrid">${sorted.map((w) => {
+      const st = wsStats(s, w);
+      return `<article class="xa-wscard${w.id === "loopr" ? " is-current" : ""}">
+        <div class="xa-ws-top"><span class="xa-code" style="--h:${w.hue}">${w.code}</span><h4><button type="button" class="xa-plain" data-act="ws" data-id="${w.id}" data-k="ws-${w.id}">${esc(w.name)}</button>${w.id === "loopr" ? `<span class="xa-now-tag">${T("Aktuell", "Current")}</span>` : ""}</h4>
+          <button type="button" class="xa-iconbtn xa-star" data-act="fav" data-id="${w.id}" data-k="fav-${w.id}" aria-pressed="${!!s.favs[w.id]}" aria-label="${T(`${w.name} als Favorit markieren`, `Mark ${w.name} as favourite`)}">${icon("star")}</button><button type="button" class="xa-iconbtn" data-act="app-only" data-v="wsmenu" data-k="wm-${w.id}" aria-label="${T("Arbeitsbereich-Aktionen", "Workspace actions")}">${icon("more")}</button></div>
+        <p class="xa-ws-meta"><span class="xa-mtag">${w.tpl}</span><span>${icon("shield")}${L(ROLE[w.role])}</span><span>${T("Privat", "Private")}</span></p>
+        <p class="xa-ws-desc">${esc(L(w.desc))}</p>
+        <div class="xa-ws-stats"><div><b>${st.ps.length}</b><small>${T("Projekte", "Projects")}</small></div><div><b>${st.open}</b><small>${T("Offene Aufgaben", "Open tasks")}</small></div><div><b>${w.members.length}</b><small>${T("Mitglieder", "Members")}</small></div><div class="xa-stack">${w.members.map((m) => avatar(m, "xa-av-sm")).join("")}</div></div>
+        <div class="xa-ws-prog"><div class="xa-progress"><i style="width:${st.pc}%"></i></div><span>${st.pc}%</span></div>
+        <div class="xa-ws-foot"><span>${T(`${w.online} von ${w.members.length} online`, `${w.online} of ${w.members.length} online`)}</span><button type="button" class="xa-acc-link" data-act="ws" data-id="${w.id}" data-k="wso-${w.id}">${T("Öffnen", "Open")} →</button></div>
       </article>`;
-    }).join("") || `<p class="xa-empty">${T("Keine Arbeitsbereiche in diesem Filter.", "No workspaces in this filter.")}</p>`}</div>
-    <h4 class="xa-kicker xa-mt">${T("Für dich offen", "Open to you")}</h4>
-    <div class="xa-wslist">${s.openWs.map((w) => `<article class="xa-card xa-ws xa-ws-open">
-        <div class="xa-ws-top"><span class="xa-code" style="--h:${w.hue}">${w.code}</span><div class="xa-grow"><h4>${esc(w.name)}</h4><small class="xa-muted">${T(`${w.members} Mitglieder`, `${w.members} members`)}</small></div><span class="xa-score-pill">${w.score}%</span></div>
-        <p class="xa-muted">${esc(L(w.desc))}</p>
-        <div class="xa-row"><button type="button" class="xa-btn ${s.requested[w.id] ? "is-sent" : "xa-primary"}" data-act="ws-join" data-id="${w.id}" data-k="wj-${w.id}" aria-pressed="${!!s.requested[w.id]}">${s.requested[w.id] ? icon("check") + (w.mode === "join" ? T("Beigetreten", "Joined") : T("Angefragt", "Requested")) : w.mode === "join" ? T("Beitreten", "Join") : T("Zugang anfragen", "Request access")}</button><button type="button" class="xa-btn" data-act="app-only" data-v="contact" data-k="wc-${w.id}">${icon("message")}${T("Inhaber kontaktieren", "Contact owner")}</button></div>
+    }).join("") || `<p class="xa-empty">${T("Keine Arbeitsbereiche passen zu diesen Filtern", "No workspaces match these filters")}</p>`}</div>
+    <h4 class="xa-seclabel xa-sec-gap">${T("FÜR DICH OFFEN", "OPEN TO YOU")}</h4>
+    <div class="xa-wsgrid">${s.openWs.map((w) => `<article class="xa-wscard xa-ws-open">
+        <div class="xa-ws-top"><span class="xa-code" style="--h:${w.hue}">${w.code}</span><h4>${esc(w.name)}</h4><span class="xa-score-pill">${w.score}%</span></div>
+        <p class="xa-ws-meta"><span>${T(`${w.members} Mitglieder`, `${w.members} members`)}</span><span>${w.mode === "join" ? T("Jeder kann beitreten", "Anyone can join") : T("Offen auf Anfrage", "Open on request")}</span></p>
+        <p class="xa-ws-desc">${esc(L(w.desc))}</p>
+        <div class="xa-row"><button type="button" class="xa-btn ${s.requested[w.id] ? "is-sent" : "xa-primary"}" data-act="ws-join" data-id="${w.id}" data-k="wj-${w.id}" aria-pressed="${!!s.requested[w.id]}">${s.requested[w.id] ? icon("check") + (w.mode === "join" ? T("Beigetreten", "Joined") : T("Angefragt", "Requested")) : w.mode === "join" ? T("Beitreten", "Join") : T("Zugang anfragen", "Request access")}</button><button type="button" class="xa-btn" data-act="app-only" data-v="contact" data-k="wc-${w.id}">${T("Inhaber kontaktieren", "Contact owner")}</button></div>
       </article>`).join("")}</div>`;
   }
 
-  function viewWorkspace(s, id) {
-    const w = s.workspaces.find((x) => x.id === id) || s.workspaces[0];
-    const ps = s.projects.filter((p) => p.ws === w.id);
-    const feed = w.id === "loopr"
-      ? [["AK", T("hat „Onboarding-Screens.fig“ hochgeladen", "uploaded “Onboarding-Screens.fig”"), T("vor 2 Std.", "2 h ago")], ["JW", T("hat „API-Schnittstelle festlegen“ erledigt", "completed “Define the API contract”"), T("Gestern", "Yesterday")], ["MS", T("hat den Meilenstein „Closed Beta“ angelegt", "created the milestone “Closed beta”"), T("Fr", "Fri")]]
-      : [["TB", T("hat „Datenmodell entwerfen“ erledigt", "completed “Design the data model”"), T("Do", "Thu")], ["SR", T("hat „Nutzerinterviews.docx“ geteilt", "shared “Nutzerinterviews.docx”"), T("Mi", "Wed")]];
-    return `${pageHead(`<span class="xa-code" style="--h:${w.hue}">${w.code}</span> ${esc(w.name)}`, esc(L(w.desc)),
-      `<button type="button" class="xa-btn" data-act="go" data-area="workspaces" data-k="ws-back">${icon("chevL")}${T("Alle Arbeitsbereiche", "All workspaces")}</button><button type="button" class="xa-btn" data-act="convo" data-id="${w.id === "loopr" ? "team" : "kiez"}" data-k="ws-chat">${icon("message")}${T("Team-Chat", "Team chat")}</button>`)}
-    <div class="xa-grid xa-g-wide">
-      <div class="xa-card"><h4 class="xa-kicker">${T("Projekte", "Projects")}</h4>
-        <ul class="xa-rows">${ps.map((p) => `<li><button type="button" class="xa-rowbtn" data-act="project" data-id="${p.id}" data-k="wsp-${p.id}">${ring(pct(p))}<span class="xa-grow"><b>${esc(L(p.name))}</b><small>${esc(L(p.desc))}</small></span><span class="xa-muted xa-nowrap">${T(`${openOf(p)} offen`, `${openOf(p)} open`)}</span>${icon("chevR")}</button></li>`).join("")}</ul>
-        <h4 class="xa-kicker xa-mt">${T("Offene Aufgaben", "Open tasks")}</h4>
-        <ul class="xa-tasks">${ps.flatMap((p) => p.tasks.filter((t) => t.status !== "done").map((t) => taskRow(t, p))).join("") || `<li class="xa-empty">${T("Alles erledigt.", "All done.")}</li>`}</ul>
-      </div>
-      <div class="xa-col">
-        <div class="xa-card"><h4 class="xa-kicker">${T("Mitglieder", "Members")}</h4>
-          <ul class="xa-people">${w.members.map((m) => `<li>${avatar(m)}<span class="xa-grow"><b>${esc(PEOPLE[m].name)}${m === "LV" ? T(" (du)", " (you)") : ""}</b><small>${esc(L(PEOPLE[m].role))}</small></span></li>`).join("")}</ul>
-        </div>
-        <div class="xa-card"><h4 class="xa-kicker">${T("Verlauf", "Activity")}</h4>
-          <ul class="xa-feed">${feed.map(([who, what, when]) => `<li>${avatar(who, "xa-av-sm")}<span><b>${esc(PEOPLE[who].name.split(" ")[0])}</b> ${esc(what)}<small>${esc(when)}</small></span></li>`).join("")}</ul>
-        </div>
-      </div>
-    </div>`;
+  // Arbeitsbereich: links die Module, rechts Kopf und die gewählte Seite
+  function viewWorkspace(s, r) {
+    const w = s.workspaces.find((x) => x.id === r.id) || s.workspaces[0];
+    const st = wsStats(s, w);
+    const sub = r.sub || "overview";
+    const counts = { projects: st.ps.length, team: w.members.length, notes: NOTES.filter((n) => n.ws === w.id).length };
+    const canEdit = w.role !== "member";
+    const nav = `<nav class="xa-wsnav" aria-label="${T(`Module von ${w.name}`, `${w.name} modules`)}">
+      <button type="button" class="xa-wsswitch" data-act="ws-switch" data-k="ws-switch" aria-label="${T(`${w.name} – Arbeitsbereich wechseln`, `${w.name} – switch workspace`)}"><span class="xa-code" style="--h:${w.hue}">${w.code}</span><span class="xa-grow"><b>${esc(w.name)}</b><small><span class="xa-mtag">${w.plan}</span>${T(`${w.members.length} Mitglieder`, `${w.members.length} members`)}</small></span>${icon("swap")}</button>
+      ${WS_NAV.map((g) => `${g.label ? `<p class="xa-wsnav-h">${L(g.label)}</p>` : ""}${g.items.map((m) => `<button type="button" class="xa-wsnav-i" data-act="ws-sub" data-id="${w.id}" data-v="${m.id}" data-k="wn-${m.id}"${sub === m.id ? ' aria-current="page"' : ""}>${icon(m.icon)}<span class="xa-grow">${L(m.label)}</span>${counts[m.id] ? `<small>${counts[m.id]}</small>` : ""}</button>`).join("")}`).join("")}
+    </nav>`;
+    const head = `<header class="xa-wshead"><div class="xa-wshead-l"><span class="xa-code" style="--h:${w.hue}">${w.code}</span><h3 class="xa-wsname" tabindex="-1" data-k="title">${esc(w.name)}</h3><span class="xa-otag">${w.tpl[0] + w.tpl.slice(1).toLowerCase()}</span><span class="xa-otag">Private</span><span class="xa-otag">${L(ROLE[w.role])}</span><span class="xa-wsurl">xyntal://${w.slug}</span><span class="xa-stack">${w.members.slice(0, 4).map((m) => avatar(m, "xa-av-sm")).join("")}</span></div>
+      <div class="xa-wshead-r"><button type="button" class="xa-hbtn xa-hbtn-ai" data-act="ws-ask" data-id="${w.id}" data-k="wh-ask">${AI_MARK}${T("Xyntal fragen", "Ask Xyntal")}</button><button type="button" class="xa-hbtn" data-act="app-only" data-v="customize-ws" data-k="wh-custom">${icon("settings")}${T("Anpassen", "Customise")}</button>${canEdit ? `<button type="button" class="xa-hbtn" data-act="app-only" data-v="invite" data-k="wh-invite">+ ${T("Einladen", "Invite")}</button><button type="button" class="xa-hbtn is-primary" data-act="app-only" data-v="project" data-k="wh-new">+ ${T("Neues Projekt", "New project")}</button>` : ""}<button type="button" class="xa-iconbtn" data-act="app-only" data-v="wsmenu" data-k="wh-more" aria-label="${T("Weitere Aktionen", "More actions")}">${icon("more")}</button></div>
+      <p class="xa-wsdesc">${esc(L(w.desc))}</p></header>`;
+    const pnav = r.proj ? `<nav class="xa-wsnav" aria-label="${T("Abschnitte des Projekts", "Project sections")}"><button type="button" class="xa-wsnav-back" data-act="ws-sub" data-id="${w.id}" data-v="projects" data-k="pn-back">${icon("chevL")}${esc(w.name)}</button><p class="xa-wsnav-h">${T("Projekt", "Project")}</p>${P_NAV.map(([id, ic, label]) => `<button type="button" class="xa-wsnav-i" data-act="${id === "overview" || id === "work" ? "projtab" : "app-only"}" data-v="${id === "overview" || id === "work" ? id : "tab"}" data-k="pn-${id}"${(s.projTab === "work" ? "work" : "overview") === id ? ' aria-current="page"' : ""}>${icon(ic)}<span class="xa-grow">${L(label)}</span></button>`).join("")}</nav>` : "";
+    if (r.proj) return `<div class="xa-wsd">${pnav}<div class="xa-wsmain" data-scroll="wsmain">${wsProject(s, w, r.proj)}</div></div>`;
+    const page = r.proj ? wsProject(s, w, r.proj) : r.note ? wsNote(s, w, r.note) : (WS_PAGES[sub] || WS_PAGES.overview)(s, w, st);
+    return `<div class="xa-wsd">${nav}<div class="xa-wsmain" data-scroll="wsmain">${head}${page}</div></div>`;
   }
+  const secHead = (title, sub = "", actions = "") => `<div class="xa-sechead"><div><h4 class="xa-seclabel">${title}</h4>${sub ? `<p>${sub}</p>` : ""}</div>${actions ? `<div class="xa-sechead-act">${actions}</div>` : ""}</div>`;
+  const wsStat = (label, value, sub = "", extra = "", tone = "") => `<div class="xa-wstat${tone ? " is-" + tone : ""}"><small>${label}</small><b>${value}</b>${extra}${sub ? `<span>${sub}</span>` : ""}</div>`;
+  const oStat = (label, value, sub = "", bar = null) => `<div class="xa-ostat"><small>${label}</small><b>${value}</b>${bar !== null ? `<div class="xa-progress"><i style="width:${bar}%"></i></div>` : ""}${sub ? `<span>${sub}</span>` : ""}</div>`;
+  const wchips = (act, items, current) => `<div class="xa-wchips" role="group">${items.map(([id, text, tone]) => `<button type="button" class="${tone ? "is-" + tone : ""}" data-act="${act}" data-v="${id}" data-k="${act}-${id}" aria-pressed="${current === id}">${text}</button>`).join("")}</div>`;
+  const wsd = (s, w) => s.wsd[w.id] || s.wsd._;
+  const OKR_STATE = { on: ["Im Plan", "On track", "ok"], risk: ["Gefährdet", "At risk", "gold"], crit: ["Kritisch", "Critical", "bad"] };
+  const DEC_STATE = { proposed: ["Vorgeschlagen", "Proposed", "gold"], accepted: ["Angenommen", "Accepted", "ok"], rejected: ["Abgelehnt", "Rejected", "bad"], superseded: ["Abgelöst", "Superseded", "faint"] };
+  const MEM_CAT = { rule: ["Richtlinie", "Guideline", "acc"], decision: ["Entscheidung", "Decision", "ok"], pref: ["Vorliebe", "Preference", "violet"], goal: ["Ziel", "Goal", "gold"], fact: ["Fakt", "Fact", "faint"] };
+  const BRIEF_KINDS = [["exec", ["Management-Zusammenfassung", "Executive summary"], ["Stand in fünf Sätzen", "Status in five sentences"], "file"], ["weekly", ["Wochenbericht", "Weekly report"], ["Was diese Woche geschah", "What happened this week"], "calendar"], ["standup", ["Stand-up", "Stand-up"], ["Gestern, heute, Blocker", "Yesterday, today, blockers"], "users"], ["risk", ["Risiko-Check", "Risk check"], ["Was den Plan gefährdet", "What threatens the plan"], "alert"], ["dec", ["Entscheidungsüberblick", "Decision overview"], ["Was entschieden ist und was offen", "What is decided and what is open"], "clip"], ["next", ["Nächste Schritte", "Next steps"], ["Die drei wichtigsten Dinge", "The three most important things"], "arrowR"]];
+  const briefBody = (kind) => (s, w) => {
+    const st = wsStats(s, w); const open = st.ps.flatMap((p) => p.tasks.filter((t) => t.status !== "done").map((t) => ({ t, p }))); const high = open.filter((x) => x.t.prio === "high");
+    const li = (a) => `<ul>${a.map((x) => `<li>${x}</li>`).join("")}</ul>`;
+    if (kind === "risk") return `<p>${T("Das gefährdet den Plan gerade am meisten:", "This threatens the plan most right now:")}</p>${li(wsd(s, w).risks.filter((r) => r.state !== "closed").slice(0, 3).map((r) => `<b>${esc(L(r.title))}</b> – ${esc(L(r.mit))}`))}`;
+    if (kind === "next" || kind === "standup") return `<p>${T("Die wichtigsten nächsten Schritte:", "The most important next steps:")}</p>${li(high.slice(0, 3).map((x) => `<b>${esc(L(x.t.title))}</b> · ${esc(PEOPLE[x.t.who].name.split(" ")[0])} · ${esc(L(x.p.name))}`))}`;
+    if (kind === "dec") return `<p>${T("Entscheidungen in diesem Arbeitsbereich:", "Decisions in this workspace:")}</p>${li(wsd(s, w).decisions.map((d) => `<b>${esc(L(d.title))}</b> – ${L(DEC_STATE[d.state])}`))}`;
+    return `<p>${T(`${esc(w.name)} steht bei ${st.pc} %: ${st.done} von ${st.tasks.length} Aufgaben sind erledigt, ${high.length} offene haben hohe Priorität.`, `${esc(w.name)} is at ${st.pc}%: ${st.done} of ${st.tasks.length} tasks are done, ${high.length} open ones are high priority.`)}</p>${li(st.ps.map((p) => `<b>${esc(L(p.name))}</b>: ${pct(p)} % · ${T(`${openOf(p)} offen`, `${openOf(p)} open`)}`))}<p>${T("Nichts ist überfällig. Der nächste Meilenstein ist die Closed Beta.", "Nothing is overdue. The next milestone is the closed beta.")}</p>`;
+  };
+  const NOTES = [
+    { id: "n1", ws: "loopr", em: "🚀", title: ["Beta-Plan Closed Beta", "Closed beta plan"], at: ["Heute, 09:20", "Today, 09:20"], by: "LV", blocks: [["h", ["Ziel", "Goal"]], ["p", ["50 Tester in zwei Wochen, davon mindestens 30, die einen ganzen Song erzeugen.", "50 testers in two weeks, at least 30 of whom generate a full song."]], ["callout", ["Start ist der 7. November – wenn der TestFlight-Build bis Freitag durch ist.", "Start is 7 November – if the TestFlight build is through by Friday."]], ["h", ["Vor dem Start", "Before the start"]], ["todo", ["Warteliste-Mail schreiben", "Write the waitlist email"], "t7"], ["todo", ["Feedback-Formular einrichten", "Set up the feedback form"], "t8"], ["todo", ["20 Beta-Tester einladen", "Invite 20 beta testers"], "t9"], ["h", ["Ablauf", "Schedule"]], ["table", [[["Woche", "Week"], ["Was", "What"], ["Wer", "Who"]], [["1", "1"], ["Onboarding und erstes Summen", "Onboarding and first hum"], ["Aylin", "Aylin"]], [["2", "2"], ["Songs teilen, Abschluss-Call", "Share songs, wrap-up call"], ["Mara", "Mara"]]]]] },
+    { id: "n2", ws: "loopr", em: "🎙️", title: ["Modellvergleich Summen-zu-MIDI", "Hum-to-MIDI model comparison"], at: ["Gestern", "Yesterday"], by: "JW", blocks: [["p", ["Drei Modelle auf 40 Aufnahmen getestet. Bewertet nach Trefferquote der Tonhöhe und Latenz auf dem Handy.", "Three models tested on 40 recordings. Rated by pitch accuracy and latency on the phone."]], ["table", [[["Modell", "Model"], ["Tonhöhe", "Pitch"], ["Latenz", "Latency"]], [["A", "A"], ["91 %", "91%"], ["420 ms", "420 ms"]], [["B", "B"], ["88 %", "88%"], ["180 ms", "180 ms"]], [["C", "C"], ["79 %", "79%"], ["90 ms", "90 ms"]]]], ["callout", ["Empfehlung: Modell B – fast so genau wie A, aber auf älteren Geräten flüssig.", "Recommendation: model B – almost as accurate as A, but smooth on older devices."]]] },
+    { id: "n3", ws: "loopr", em: "📝", title: ["Team-Update KW 44", "Team update week 44"], at: ["30.10.26", "30/10/26"], by: "MS", blocks: [["p", ["Aufnahme-Screen ist fertig, die API-Schnittstelle liegt zur Prüfung bei Jonas. Fokus bis Freitag: TestFlight-Build.", "The recording screen is done, the API contract is with Jonas for review. Focus until Friday: the TestFlight build."]]] },
+    { id: "n4", ws: "kiez", em: "🗺️", title: ["Abholpunkte im Kiez", "Pick-up points in the neighbourhood"], at: ["29.10.26", "29/10/26"], by: "SR", blocks: [["p", ["Drei Läden haben zugesagt: Späti Ecke Weserstraße, Buchladen am Platz, Fahrradwerkstatt.", "Three shops have agreed: the corner shop on Weserstraße, the bookshop on the square, the bike workshop."]]] },
+  ];
+  const OPENINGS = [
+    { id: "o1", ws: "loopr", project: "app", title: ["iOS-Entwickler:in für die Aufnahme-Engine", "iOS developer for the recording engine"], facts: ["Teilzeit · 10 Std./Woche · Remote · Anteile · Langfristig", "Part-time · 10 h/week · Remote · Equity · Long-term"], sum: ["Du baust mit Jonas die Aufnahme und das Zusammenspiel mit dem Summen-zu-MIDI-Modell – von Core Audio bis TestFlight.", "With Jonas you build recording and the hand-off to the hum-to-MIDI model – from Core Audio to TestFlight."], must: ["Swift", "Core Audio", "SwiftUI"], score: 0, apps: 2 },
+    { id: "o2", ws: "synth", project: null, by: "Synth Lab", title: ["Produkt-Gründer:in für Podcast-Schnitt mit KI", "Product founder for AI podcast editing"], facts: ["Teilzeit · 8 Std./Woche · Remote · Anteile", "Part-time · 8 h/week · Remote · Equity"], sum: ["Wir haben das Audio-Modell, uns fehlt jemand, der daraus ein Produkt macht und die ersten 20 Nutzer holt.", "We have the audio model; we need someone who turns it into a product and brings in the first 20 users."], must: ["Produkt", "Audio", "Growth"], have: [0, 1], score: 87 },
+    { id: "o3", ws: "green", project: null, by: "Greenroute", title: ["Design für einen Routenplaner für Lastenräder", "Design for a cargo-bike route planner"], facts: ["Projektweise · 5 Std./Woche · Hybrid · Honorar", "Per project · 5 h/week · Hybrid · Fee"], sum: ["Karte, Routenvorschläge und ein Onboarding, das auch auf dem Lenker funktioniert.", "Map, route suggestions and an onboarding that works on the handlebars too."], must: ["Figma", "Karten-UI", "UX-Research"], have: [0], score: 74 },
+  ];
+  const band = (v) => v >= 80 ? [T("Starkes Match", "Strong match"), "ok"] : v >= 60 ? [T("Gutes Match", "Good match"), "acc"] : v >= 40 ? [T("Solides Match", "Solid match"), "warn"] : [T("Wachsendes Match", "Growing match"), "faint"];
+  const openingCard = (s, own = true) => (o) => `<li class="xa-opening"><div class="xa-okr-head"><span class="xa-grow"><b>${esc(L(o.title))}</b><small>${o.project ? `${esc(L(proj(s, o.project).name))} · Loopr Studio` : esc(o.by)}</small></span>${own ? "" : `<span class="xa-fit">${ring(o.score, 48, 4)}<small>${T("passt", "fits")}</small></span>`}</div>
+      <p class="xa-op-facts">${esc(L(o.facts))}</p><p class="xa-op-sum">${esc(L(o.sum))}</p>
+      <p class="xa-ws-tags">${o.must.map((k, i) => `<span class="xa-tag${!own && (o.have || []).includes(i) ? " is-have" : ""}">${!own && (o.have || []).includes(i) ? "✓ " : ""}${esc(k)}</span>`).join("")}</p>
+      ${own ? `<div class="xa-op-foot"><small>${T(`${o.apps} Bewerbungen`, `${o.apps} applications`)}</small><span class="xa-grow"></span>${hbtn(T("Passende Builder", "Matching builders"), 'data-act="go" data-area="discover" data-k="op-match-' + o.id + '"')}${hbtn(T("Bearbeiten", "Edit"), 'data-act="app-only" data-v="opening" data-k="op-edit-' + o.id + '"')}</div>`
+        : `<p class="xa-op-checks">✓ ${T("Muss-Skills", "Must-have skills")}   ◐ ${T("Zeit", "Time")}   ✓ ${T("Sprache", "Language")}</p><div class="xa-op-foot">${hbtn("Details", 'data-act="app-only" data-v="opening" data-k="op-d-' + o.id + '"')}<span class="xa-grow"></span><button type="button" class="xa-ghost" data-act="app-only" data-v="opening" data-k="op-n-${o.id}">${T("Nicht für mich", "Not for me")}</button><button type="button" class="xa-hbtn is-primary${s.requested[o.id] ? " is-sent" : ""}" data-act="disc-req" data-id="${o.id}" data-k="op-a-${o.id}" aria-pressed="${!!s.requested[o.id]}">${s.requested[o.id] ? T("Beworben", "Applied") : T("Bewerben", "Apply")}</button></div>`}</li>`;
 
-  function viewProjects(s) {
-    const tasks = allTasks(s);
-    const open = tasks.filter((x) => x.t.status !== "done");
-    const avg = Math.round(s.projects.reduce((n, p) => n + pct(p), 0) / s.projects.length);
-    const q = s.projQuery.trim().toLowerCase();
-    const mineP = (p) => p.tasks.some((t) => t.who === "LV");
-    const inScope = (p) => s.projScope === "all" || (s.projScope === "mine" && mineP(p)) || (s.projScope === "starred" && s.projStars[p.id]);
-    const list = s.projScope === "archived" ? [] : s.projects.filter((p) => inScope(p) && (!q || L(p.name).toLowerCase().includes(q)));
-    const stat = (ic, cls, n, label) => `<div class="xa-card xa-stat"><span class="xa-icon-tile ${cls}">${icon(ic)}</span><div><b>${n}</b><small>${label}</small></div></div>`;
-    return `${pageHead(T("Deine Projekte", "Your projects"), T(`${s.projects.length} Projekte`, `${s.projects.length} projects`), `<button type="button" class="xa-btn xa-primary" data-act="app-only" data-v="project" data-k="p-new">${icon("plus")}${T("Neues Projekt", "New project")}</button>`)}
-    <div class="xa-stats4">${stat("kanban", "", s.projects.length, T("Aktive Projekte", "Active projects"))}${stat("clock", "xa-t-ok", avg + "%", T("Ø Fortschritt", "Avg. progress"))}${stat("check", "xa-t-violet", open.length, T("Offene Aufgaben", "Open tasks"))}${stat("flag", "xa-t-warn", open.filter((x) => x.t.prio === "high").length, T("Dringend", "Urgent"))}</div>
-    <div class="xa-toolbar">${chips("projscope", [["all", T("Alle", "All"), s.projects.length], ["mine", T("Meine Projekte", "My projects"), s.projects.filter(mineP).length], ["starred", T("Markiert", "Starred"), s.projects.filter((p) => s.projStars[p.id]).length], ["archived", T("Archiviert", "Archived"), 0]], s.projScope, T("Projekte filtern", "Filter projects"))}<label class="xa-sr" for="xa-pq-${uid}">${T("Projekte suchen", "Search projects")}</label><input id="xa-pq-${uid}" class="xa-input" type="search" data-input="projquery" data-k="pq" value="${esc(s.projQuery)}" placeholder="${T("Projekte suchen …", "Search projects …")}" autocomplete="off"></div>
-    <div class="xa-pgrid">${list.map((p) => {
-      const pc = pct(p);
-      const ws = s.workspaces.find((w) => w.id === p.ws);
-      const urgent = p.tasks.some((t) => t.prio === "high" && t.status !== "done");
-      return `<article class="xa-card xa-pcard" style="--h:${p.hue}">
-        <div class="xa-ws-top"><span class="xa-code">${p.code}</span><div class="xa-grow"><h4><button type="button" class="xa-plain" data-act="project" data-id="${p.id}" data-k="pc-${p.id}">${esc(L(p.name))}</button></h4><small class="xa-muted">${esc(ws.name)}</small></div><button type="button" class="xa-iconbtn xa-star" data-act="pstar" data-id="${p.id}" data-k="ps-${p.id}" aria-pressed="${!!s.projStars[p.id]}" aria-label="${T(`${L(p.name)} markieren`, `Star ${L(p.name)}`)}">${icon("star")}</button></div>
-        <p class="xa-muted">${esc(L(p.desc))}</p>
-        <div class="xa-pc-prog"><span>${T(`${p.tasks.length - openOf(p)} von ${p.tasks.length} Aufgaben erledigt`, `${p.tasks.length - openOf(p)} of ${p.tasks.length} tasks done`)}</span><span class="xa-mono">${pc}%</span></div>
-        <div class="xa-progress"><i style="width:${pc}%;background:${p.hue}"></i></div>
-        <div class="xa-ws-foot"><span class="xa-status ${pc === 100 ? "is-ok" : urgent ? "is-warn" : ""}">${pc === 100 ? T("Abgeschlossen", "Completed") : urgent ? T("Dringende Aufgaben", "Urgent tasks") : T("Läuft", "On track")}</span><span class="xa-stack">${[...new Set(p.tasks.map((t) => t.who))].map((m) => avatar(m, "xa-av-sm")).join("")}</span></div>
-      </article>`;
-    }).join("") || `<p class="xa-empty">${s.projScope === "archived" ? T("Keine archivierten Projekte.", "No archived projects.") : T("Keine Projekte gefunden.", "No projects found.")}</p>`}</div>`;
-  }
-
-  function viewProject(s, id) {
+  // Projekt im Arbeitsbereich: Die Modulleiste zeigt dann die Abschnitte des Projekts
+  const P_NAV = [["overview", "gauge", ["Übersicht", "Overview"]], ["work", "kanban", ["Arbeit", "Work"]], ["social", "message", ["Social", "Social"]], ["team", "users", ["Team", "Team"]], ["files", "folder", ["Dateien", "Files"]], ["notes", "file", ["Notizen", "Notes"]], ["insights", "pulse", ["Insights", "Insights"]], ["settings", "settings", ["Einstellungen", "Settings"]]];
+  const COLS = () => [["todo", T("Zu erledigen", "To do")], ["doing", T("In Arbeit", "In progress")], ["review", T("In Prüfung", "In review")], ["done", T("Erledigt", "Done")]];
+  function wsProject(s, w, id) {
     const p = proj(s, id) || s.projects[0];
-    const ws = s.workspaces.find((w) => w.id === p.ws);
-    const cols = [["todo", T("Zu erledigen", "To do")], ["doing", T("In Arbeit", "In progress")], ["review", T("In Prüfung", "In review")], ["done", T("Erledigt", "Done")]];
+    const cols = COLS();
     const next = { todo: "doing", doing: "review", review: "done", done: "todo" };
     const moveLabel = { todo: T("Starten", "Start"), doing: T("Zur Prüfung", "To review"), review: T("Freigeben", "Approve"), done: T("Wieder öffnen", "Reopen") };
-    const views = [["board", T("Board", "Board"), "kanban"], ["list", T("Liste", "List"), "list"], ["milestones", T("Meilensteine", "Milestones"), "flag"]];
-    const viewBar = `<div class="xa-seg" role="group" aria-label="${T("Ansicht", "View")}">${views.map(([id, label, ic]) => `<button type="button" data-act="projview" data-v="${id}" data-k="pv-${id}" aria-pressed="${s.projView === id}">${icon(ic)}${label}</button>`).join("")}</div>`;
-    const colOf = Object.fromEntries(cols);
-    if (s.projView !== "board") {
-      const ms = s.milestones.filter((m) => m.project === p.id);
-      return `${pageHead(`<span class="xa-code" style="--h:${p.hue}">${p.code}</span> ${esc(L(p.name))}`, `${esc(ws.name)} · ${esc(L(p.desc))}`, `<button type="button" class="xa-btn" data-act="go" data-area="projects" data-k="pd-back">${icon("chevL")}${T("Alle Projekte", "All projects")}</button>`)}
-      <div class="xa-pd-bar">${viewBar}<div class="xa-progress"><i style="width:${pct(p)}%;background:${p.hue}"></i></div><span class="xa-mono">${pct(p)}%</span></div>
-      ${s.projView === "list" ? `<div class="xa-card"><ul class="xa-tasks">${p.tasks.map((t) => taskRow(t, p, { noProject: true }).replace('<span class="xa-task-meta">', `<span class="xa-task-meta"><span class="xa-tag">${colOf[t.status]}</span>`)).join("")}</ul></div>`
-        : `<div class="xa-card">${ms.length ? `<ul class="xa-rows">${ms.map((m) => `<li><div class="xa-rowbtn xa-static">${ring(pct(p))}<span class="xa-grow"><b>${esc(L(m.name))}</b><small>${T(`${openOf(p)} offene Aufgaben`, `${openOf(p)} open tasks`)}</small></span><span class="xa-pill ${m.soon ? "xa-warn" : ""}">${esc(L(m.when))}</span></div></li>`).join("")}</ul>` : `<p class="xa-empty">${T("Für dieses Projekt ist noch kein Meilenstein geplant.", "No milestone planned for this project yet.")}</p>`}</div>`}`;
+    const ms = s.milestones.filter((m) => m.project === p.id);
+    const head = `<div class="xa-phead"><div class="xa-phead-top"><h3 class="xa-pname" tabindex="-1" data-k="title">${esc(L(p.name))}</h3><div class="xa-sechead-act">${hbtn(`+ ${T("Neuer Task", "New task")}`, 'data-act="newtask-here" data-k="pd-new"', "is-soft")}${hbtn(T("Bearbeiten", "Edit"), 'data-act="app-only" data-v="project-edit" data-k="pd-edit"')}<button type="button" class="xa-iconbtn" data-act="app-only" data-v="project-edit" data-k="pd-more" aria-label="${T("Weitere Aktionen", "More actions")}">${icon("more")}</button></div></div>
+      <p class="xa-pmeta"><button type="button" class="xa-ppill" data-act="ws" data-id="${w.id}" data-k="pd-ws">${icon("grid")}${esc(w.name)}</button><span class="xa-ppill is-st"><i></i>${pStatus(p)[0] === "active" ? T("In Arbeit", "In progress") : pStatus(p)[1]}</span><span class="xa-faint">${T(`${p.tasks.length} Aufgaben`, `${p.tasks.length} tasks`)}</span></p>
+      <p class="xa-pdesc">${esc(L(p.desc))}</p></div>`;
+    if (s.projTab !== "work") {
+      const ops = OPENINGS.filter((o) => o.project === p.id);
+      return `${head}
+        <div class="xa-ostats">${oStat(T("FORTSCHRITT", "PROGRESS"), pct(p) + "%", T(`${p.tasks.length - openOf(p)} von ${p.tasks.length} erledigt`, `${p.tasks.length - openOf(p)} of ${p.tasks.length} done`), pct(p))}${oStat(T("OFFENE TASKS", "OPEN TASKS"), openOf(p), T("Nichts überfällig", "Nothing overdue"))}${oStat(T("NÄCHSTER MEILENSTEIN", "NEXT MILESTONE"), ms[0] ? esc(L(ms[0].name)) : "—", ms[0] ? esc(L(ms[0].when)) : "")}${oStat("MOMENTUM", pct(p) >= 20 ? T("Stabil", "Steady") : T("Anlauf", "Warming up"), T("3 Tasks in 7 Tagen", "3 tasks in 7 days"))}</div>
+        <section class="xa-wcard xa-pai"><span class="xa-pai-ic">✦</span><span class="xa-grow"><b>Xyntal KI</b><small>${T("Live-Lesen der echten Daten dieses Projekts", "Reads this project's real data live")}</small></span><button type="button" class="xa-hbtn xa-hbtn-ai" data-act="go" data-area="ai-center" data-k="pa-ask">${AI_MARK}${T("Xyntal fragen", "Ask Xyntal")}</button>
+          <div class="xa-pai-act">${hbtn(T("Zusammenfassen", "Summarise"), 'data-act="ai" data-v="summary" data-k="pa-sum"', "is-primary")}${hbtn(T("Analysieren", "Analyse"), 'data-act="ai" data-v="risks" data-k="pa-an"')}${hbtn(T("Tasks erzeugen", "Generate tasks"), 'data-act="app-only" data-v="ai-tasks" data-k="pa-t"')}${hbtn(T("Roadmap erzeugen", "Generate roadmap"), 'data-act="app-only" data-v="ai-tasks" data-k="pa-r"')}${hbtn(T("Risiken finden", "Find risks"), 'data-act="ai" data-v="risks" data-k="pa-risk"')}</div></section>
+        <section class="xa-wcard"><header><h4>${T("Ausschreibungen", "Openings")}</h4><span class="xa-sechead-act">${hbtn(`✦ ${T("Mit Xyntal AI schreiben", "Write with Xyntal AI")}`, 'data-act="app-only" data-v="opening" data-k="po-ai"')}${hbtn(T("Neue Ausschreibung", "New opening"), 'data-act="app-only" data-v="opening" data-k="po-new"')}</span></header>
+          <ul class="xa-openings">${ops.map(openingCard(s)).join("") || `<li class="xa-muted">${T("Noch keine Ausschreibung für dieses Projekt.", "No opening for this project yet.")}</li>`}</ul></section>`;
     }
-    return `${pageHead(`<span class="xa-code" style="--h:${p.hue}">${p.code}</span> ${esc(L(p.name))}`, `${esc(ws.name)} · ${esc(L(p.desc))}`,
-      `<button type="button" class="xa-btn" data-act="go" data-area="projects" data-k="pd-back">${icon("chevL")}${T("Alle Projekte", "All projects")}</button>`)}
-    <div class="xa-pd-bar">${viewBar}<div class="xa-progress"><i style="width:${pct(p)}%;background:${p.hue}"></i></div><span class="xa-mono">${pct(p)}% · ${T(`${p.tasks.length - openOf(p)} von ${p.tasks.length} erledigt`, `${p.tasks.length - openOf(p)} of ${p.tasks.length} done`)}</span></div>
-    <div class="xa-kanban">${cols.map(([st, label]) => {
+    const views = [["board", "Board"], ["list", T("Liste", "List")], ["timeline", T("Zeitachse", "Timeline")], ["milestones", T("Meilensteine", "Milestones")]];
+    const bar = `<div class="xa-toolbar xa-workbar"><div class="xa-seg" role="group" aria-label="${T("Ansicht", "View")}">${views.map(([v, label]) => `<button type="button" data-act="${v === "timeline" ? "app-only" : "projview"}" data-v="${v}" data-k="pv-${v}" aria-pressed="${s.projView === v}">${label}</button>`).join("")}</div><span class="xa-grow"></span><span class="xa-fakeinput">${T("Aufgaben suchen …  /", "Search tasks …  /")}</span>${hbtn("Filter", 'data-act="app-only" data-v="filter" data-k="pw-filter"')}${hbtn(T("Sortierung: Manuell", "Sort: Manual"), 'data-act="app-only" data-v="filter" data-k="pw-sort"')}${hbtn(`+ ${T("Aufgabe", "Task")}`, 'data-act="newtask-here" data-k="pw-new"', "is-primary")}</div>`;
+    const dueCls = (t) => /Heute|Today/.test(L(t.due || "")) ? "is-today" : "";
+    if (s.projView === "list") return `${head}${bar}<div class="xa-ttable xa-tlist" role="table" aria-label="${T("Aufgaben", "Tasks")}"><div class="xa-tt-h" role="row"><span role="columnheader">STATUS</span><span role="columnheader">${T("PRIORITÄT", "PRIORITY")}</span><span role="columnheader">${T("AUFGABE", "TASK")}</span><span role="columnheader">${T("ZUSTÄNDIG", "ASSIGNEE")}</span><span role="columnheader">${T("FÄLLIG", "DUE")}</span></div>
+      ${p.tasks.map((t) => `<div class="xa-tt-r${t.status === "done" ? " is-done" : ""}" role="row"><span role="cell"><button type="button" class="xa-stbtn is-${t.status}" data-act="move" data-id="${t.id}" data-to="${next[t.status]}" data-k="mv-${t.id}"><i></i>${Object.fromEntries(cols)[t.status]}</button></span><span role="cell"><i class="xa-pbar is-${t.prio}"></i>${L(PRIO[t.prio])}</span><span role="cell"><b>${esc(L(t.title))}</b></span><span role="cell">${avatar(t.who, "xa-av-sm")}${esc(PEOPLE[t.who].name.split(" ")[0])}</span><span role="cell" class="xa-mono">${t.due && t.status !== "done" ? esc(L(t.due)) : "—"}</span></div>`).join("")}</div>`;
+    if (s.projView === "milestones") return `${head}${bar}${ms.length ? `<ul class="xa-mrows2">${ms.map((m) => `<li><div><i class="xa-dot" style="--h:var(--xa-acc)"></i><span class="xa-grow"><b>${esc(L(m.name))}</b><small>${T(`${openOf(p)} offene Aufgaben`, `${openOf(p)} open tasks`)}</small></span><em class="${m.soon ? "is-warn" : ""}">${esc(L(m.when))}</em></div></li>`).join("")}</ul>` : wsEmpty("flag", T("Noch keine Meilensteine", "No milestones yet"), T("Für dieses Projekt ist noch kein Meilenstein geplant.", "No milestone planned for this project yet."))}`;
+    return `${head}${bar}
+    <div class="xa-kanban xa-kb2">${cols.map(([st, label]) => {
       const ts = p.tasks.filter((t) => t.status === st);
-      return `<div class="xa-col-k" role="region" aria-label="${esc(label)}"><h4 class="xa-kicker">${label} <span>${ts.length}</span></h4>
-        ${st === "todo" ? `<form class="xa-addtask" data-form="addtask" data-id="${p.id}"><label class="xa-sr" for="xa-add-${uid}">${T("Neue Aufgabe", "New task")}</label><input id="xa-add-${uid}" name="title" maxlength="80" autocomplete="off" placeholder="${T("Neue Aufgabe …", "New task …")}" data-k="addtask"><button type="submit" class="xa-iconbtn xa-primary" aria-label="${T("Aufgabe hinzufügen", "Add task")}">${icon("plus")}</button></form>` : ""}
-        <ul class="xa-kcards">${ts.map((t) => `<li class="xa-kcard${st === "done" ? " is-done" : ""}">
-          <label class="xa-check"><input type="checkbox" data-act="task" data-id="${t.id}" data-k="task-${t.id}"${st === "done" ? " checked" : ""}><span class="xa-box" aria-hidden="true">${icon("check")}</span><span class="xa-task-t">${esc(L(t.title))}</span></label>
-          <div class="xa-kmeta"><span class="xa-prio xa-prio-${t.prio}">${L(PRIO[t.prio])}</span>${t.due && st !== "done" ? `<span class="xa-due">${esc(L(t.due))}</span>` : ""}<span class="xa-grow"></span>${avatar(t.who, "xa-av-sm")}<button type="button" class="xa-mini" data-act="move" data-id="${t.id}" data-to="${next[st]}" data-k="mv-${t.id}">${moveLabel[st]}</button></div>
-        </li>`).join("") || `<li class="xa-empty">${T("Nichts hier.", "Nothing here.")}</li>`}</ul>
+      return `<div class="xa-kcol is-${st}" role="region" aria-label="${esc(label)}"><h4><i></i>${label}<span>${ts.length}</span></h4>
+        <ul class="xa-kcards">${ts.map((t) => `<li class="xa-kc is-${t.prio}${st === "done" ? " is-done" : ""}"><b>${esc(L(t.title))}</b>
+          <div class="xa-kc-foot">${t.due && st !== "done" ? `<span class="xa-kc-due ${dueCls(t)}">${icon("calendar")}${esc(L(t.due))}</span>` : ""}<span class="xa-grow"></span><span class="xa-at">@${esc(PEOPLE[t.who].name.split(" ")[0])}</span></div>
+          <button type="button" class="xa-kc-move" data-act="move" data-id="${t.id}" data-to="${next[st]}" data-k="mv-${t.id}">${moveLabel[st]} →</button></li>`).join("") || `<li class="xa-kdrop">${T("Aufgaben hierher ziehen", "Drag tasks here")}</li>`}</ul>
+        ${st === "todo" ? `<form class="xa-addtask xa-kadd" data-form="addtask" data-id="${p.id}"><label class="xa-sr" for="xa-add-${uid}">${T("Neue Aufgabe", "New task")}</label><input id="xa-add-${uid}" name="title" maxlength="80" autocomplete="off" placeholder="+ ${T("Aufgabe hinzufügen", "Add task")}" data-k="addtask"></form>` : ""}
       </div>`;
     }).join("")}</div>`;
   }
+  function wsNote(s, w, id) {
+    const n = NOTES.find((x) => x.id === id) || NOTES[0];
+    const block = ([kind, a, b]) => kind === "h" ? `<h4>${esc(L(a))}</h4>` : kind === "callout" ? `<p class="xa-callout"><span aria-hidden="true">💡</span>${esc(L(a))}</p>` : kind === "todo" ? (() => { const x = allTasks(s).find((y) => y.t.id === b); const d = x && x.t.status === "done"; return `<label class="xa-check xa-ntodo${d ? " is-done" : ""}"><input type="checkbox" data-act="task" data-id="${b}" data-k="task-${b}"${d ? " checked" : ""}><span class="xa-box" aria-hidden="true">${icon("check")}</span><span class="xa-task-t">${esc(L(a))}</span></label>`; })() : kind === "table" ? `<div class="xa-ntable" role="table">${a.map((row, i) => `<div role="row">${row.map((c) => `<span role="${i ? "cell" : "columnheader"}">${esc(L(c))}</span>`).join("")}</div>`).join("")}</div>` : `<p>${esc(L(a))}</p>`;
+    return `<article class="xa-notepage"><div class="xa-note-bar"><button type="button" class="xa-ghost" data-act="ws-sub" data-id="${w.id}" data-v="notes" data-k="np-back">← ${T("Alle Seiten", "All pages")}</button><span class="xa-grow"></span><span class="xa-stack">${avatar(n.by, "xa-av-sm")}${n.by === "LV" ? "" : avatar("LV", "xa-av-sm")}</span>${hbtn(T("Teilen", "Share"), 'data-act="app-only" data-v="note" data-k="np-share"')}<button type="button" class="xa-hbtn xa-hbtn-ai" data-act="app-only" data-v="note-ai" data-k="np-ai">${AI_MARK}Xyntal KI</button></div>
+      <span class="xa-note-icon" aria-hidden="true">${n.em}</span><h3 class="xa-note-title" tabindex="-1" data-k="title">${esc(L(n.title))}</h3><p class="xa-note-meta">${esc(PEOPLE[n.by].name)} · ${esc(L(n.at))}</p>
+      <div class="xa-note-body">${n.blocks.map(block).join("")}<p class="xa-note-hint">${T("„/“ für Blöcke – Tabellen, Checklisten, Datenbanken und KI gibt es in der echten App.", "“/” for blocks – tables, checklists, databases and AI are in the real app.")}</p></div></article>`;
+  }
 
+  const hbtn = (label, attrs, cls = "") => `<button type="button" class="xa-hbtn ${cls}" ${attrs}>${label}</button>`;
+  const wsEmpty = (ic, title, text) => `<div class="xa-wsempty"><span class="xa-icon-tile">${icon(ic)}</span><b>${title}</b><p>${text}</p></div>`;
+
+  const WS_PAGES = {
+    overview(s, w, st) {
+      const ms = s.milestones.filter((m) => st.ps.some((p) => p.id === m.project));
+      const d = wsd(s, w);
+      const pulse = (ic, cls, label, value, sub, to) => `<button type="button" class="xa-pulse" data-act="ws-sub" data-id="${w.id}" data-v="${to}" data-k="pu-${to}"><span class="xa-pulse-ic ${cls}">${icon(ic)}</span><span><small>${label}</small><b>${value}</b><span>${sub}</span></span></button>`;
+      const okrOn = d.okrs.filter((o) => o.state === "on").length;
+      const crit = d.risks.filter((x) => x.sev === "crit").length;
+      const openDec = d.decisions.filter((x) => x.state === "proposed").length;
+      return `<div class="xa-wstats">${wsStat(T("GESAMTFORTSCHRITT", "OVERALL PROGRESS"), st.pc + "%", "", `<div class="xa-progress"><i style="width:${st.pc}%"></i></div>`)}${wsStat(T("OFFENE TASKS", "OPEN TASKS"), st.open, T("Nichts überfällig", "Nothing overdue"))}${wsStat(T("NÄCHSTER MEILENSTEIN", "NEXT MILESTONE"), ms[0] ? esc(L(ms[0].name)) : "—", ms[0] ? esc(L(ms[0].when)) : T("Keine offenen Meilensteine", "No open milestones"))}${wsStat("TEAM ONLINE", `${w.online} / ${w.members.length}`, T("Gerade online", "Online right now"))}</div>
+        <p class="xa-wsline">${T(`${st.ps.length} Projekte · ${st.open} offene Aufgaben, ${st.pc} % erledigt`, `${st.ps.length} projects · ${st.open} open tasks, ${st.pc}% done`)}</p>
+        <div class="xa-pulses">${pulse("pulse", "is-ok", T("LIEFERUNG", "DELIVERY"), st.pc + "%", T("nichts überfällig", "nothing overdue"), "insights")}${pulse("target", "", T("ZIELE", "GOALS"), d.okrs.length ? T(`${okrOn} von ${d.okrs.length}`, `${okrOn} of ${d.okrs.length}`) : "—", d.okrs.length ? T("auf Kurs", "on track") : T("setz dein erstes OKR", "set your first OKR"), "okrs")}${pulse("alert", "is-warn", T("RISIKEN", "RISKS"), d.risks.length, crit ? T(`${crit} kritisch`, `${crit} critical`) : T("keins kritisch", "none critical"), "risks")}${pulse("clip", "is-gold", T("ENTSCHEIDUNGEN", "DECISIONS"), openDec, openDec ? T("warten auf Entscheidung", "awaiting a decision") : T("alles entschieden", "all decided"), "decisions")}${pulse("sparkle", "", T("LETZTES BRIEFING", "LATEST BRIEFING"), d.briefs.length ? esc(L(d.briefs[0].at)) : T("Noch keins", "None yet"), T("ein Klick zum Statusbericht", "one click to a status report"), "briefs")}</div>
+        <div class="xa-wscols">
+          <section class="xa-wcard"><header><h4 class="xa-seclabel">${T("AKTIVE PROJEKTE", "ACTIVE PROJECTS")}</h4><button type="button" class="xa-acc-link" data-act="ws-sub" data-id="${w.id}" data-v="projects" data-k="ov-allp">${T(`Alle ${st.ps.length}`, `All ${st.ps.length}`)} →</button></header>
+            <ul class="xa-aprows">${st.ps.map((p) => `<li><button type="button" class="xa-plain" data-act="project" data-id="${p.id}" data-k="ovp-${p.id}"><i class="xa-dot" style="--h:${p.hue}"></i><b>${esc(L(p.name))}</b><span class="xa-mtag xa-st-${pStatus(p)[0]}">${pStatus(p)[1]}</span><span class="xa-progress"><i style="width:${pct(p)}%"></i></span><small>${pct(p)}%</small></button></li>`).join("") || `<li class="xa-empty">${T("Noch keine Projekte.", "No projects yet.")}</li>`}</ul></section>
+          <div class="xa-col">
+            <section class="xa-wcard"><header><h4>Team</h4><button type="button" class="xa-acc-link" data-act="ws-sub" data-id="${w.id}" data-v="roles" data-k="ov-roles">${T("Rollen", "Roles")} →</button></header>
+              <ul class="xa-people">${w.members.map((m, i) => `<li>${avatar(m, "xa-av-sm")}<span class="xa-grow">${esc(PEOPLE[m].name)}</span><small class="xa-muted">${i === 0 ? T("Inhaber", "Owner") : esc(L(PEOPLE[m].role))}</small></li>`).join("")}</ul></section>
+            <section class="xa-wcard"><header><h4 class="xa-seclabel">${T("LETZTE AKTIVITÄT", "RECENT ACTIVITY")}</h4></header>
+              <ul class="xa-actrows">${d.activity.slice(0, 4).map((a) => `<li><span class="xa-act-ic">${icon(a.icon)}</span><span class="xa-grow"><b>${esc(L(a.text))}</b><small>${esc(PEOPLE[a.who].name)}</small></span><time>${esc(L(a.at))}</time></li>`).join("") || `<li class="xa-empty">${T("Noch keine Aktivität.", "No activity yet.")}</li>`}</ul></section>
+          </div>
+        </div>
+        <section class="xa-wcard"><header><h4>${T("Meilensteine", "Milestones")}</h4><span class="xa-mono">${T(`0 erledigt · ${ms.length} offen`, `0 done · ${ms.length} open`)}</span></header>
+          ${ms.length ? `<ul class="xa-aprows">${ms.map((m) => `<li><div><i class="xa-dot" style="--h:${proj(s, m.project).hue}"></i><b>${esc(L(m.name))}</b><span class="xa-muted">${esc(L(proj(s, m.project).name))}</span><span class="xa-grow"></span><span class="xa-spill${m.soon ? " is-warn" : ""}">${esc(L(m.when))}</span></div></li>`).join("")}</ul>` : `<p class="xa-muted">${T("Keine offenen Meilensteine.", "No open milestones.")}</p>`}</section>
+        <div class="xa-sechead xa-mt"><h4 class="xa-modh">${T("Module", "Modules")}</h4>${hbtn(`+ ${T("Modul hinzufügen", "Add module")}`, 'data-act="app-only" data-v="module" data-k="ov-mod"')}</div>
+        <ul class="xa-mods">${[["D", T("Dateien", "Files")], ["P", T("Projekte", "Projects")], ["M", T("Meilensteine", "Milestones")], ["K", T("Kalender", "Calendar")], ["R", "Roadmap"], ["N", T("Notizen", "Notes")], ["Z", T("Ziele", "Goals")]].map(([l, name]) => `<li><span class="xa-mod-l">${l}</span><span><b>${name}</b><small><i></i>${T("Aktiviert", "Enabled")}</small></span></li>`).join("")}</ul>`;
+    },
+    projects(s, w, st) {
+      const active = st.ps.filter((p) => pStatus(p)[0] === "active").length;
+      const fin = st.ps.filter((p) => pStatus(p)[0] === "done").length;
+      return `${secHead(T("PROJEKTE", "PROJECTS"), T("Alles, was sich in diesem Arbeitsbereich bewegt", "Everything moving in this workspace"), hbtn(`+ ${T("Projekt hinzufügen", "Add project")}`, 'data-act="app-only" data-v="project" data-k="pj-add"', "is-primary"))}
+        <div class="xa-wstats">${wsStat(T("Projekte", "Projects"), st.ps.length, T("in diesem Arbeitsbereich", "in this workspace"))}${wsStat(T("In Arbeit", "In progress"), active, T("gerade im Aufbau", "being built right now"))}${wsStat(T("ABGESCHLOSSEN", "COMPLETED"), fin, T("geliefert", "delivered"))}${wsStat(T("TASK-ABSCHLUSS", "TASK COMPLETION"), st.pc + "%", "", `<div class="xa-progress"><i style="width:${st.pc}%"></i></div>`)}</div>
+        <ul class="xa-pjgrid">${st.ps.map((p) => `<li class="xa-pj" style="--h:${p.hue}"><button type="button" class="xa-plain xa-pj-open" data-act="project" data-id="${p.id}" data-k="pc-${p.id}"><span class="xa-code">${p.code}</span><span class="xa-grow"><b>${esc(L(p.name))}</b><small>${pStatus(p)[1]}</small></span></button><button type="button" class="xa-iconbtn xa-star" data-act="pstar" data-id="${p.id}" data-k="ps-${p.id}" aria-pressed="${!!s.projStars[p.id]}" aria-label="${T(`${L(p.name)} markieren`, `Star ${L(p.name)}`)}">${icon("star")}</button>
+          <p class="xa-pj-desc">${esc(L(p.desc))}</p>
+          <div class="xa-pj-prog"><small>${T("AUFGABENFORTSCHRITT", "TASK PROGRESS")}</small><span>${p.tasks.length - openOf(p)}/${p.tasks.length} <b>${pct(p)}%</b></span></div>
+          <div class="xa-progress"><i style="width:${pct(p)}%"></i></div>
+          <div class="xa-pj-foot"><span>${openOf(p) ? T(`${openOf(p)} offene Aufgaben`, `${openOf(p)} open tasks`) : p.tasks.length ? T("Alles erledigt", "All done") : T("Noch keine Aufgaben", "No tasks yet")}</span><span class="xa-stack">${[...new Set(p.tasks.map((t) => t.who))].slice(0, 3).map((m) => avatar(m, "xa-av-sm")).join("")}</span></div></li>`).join("") || `<li class="xa-empty">${T("Noch keine Projekte.", "No projects yet.")}</li>`}</ul>`;
+    },
+    milestones(s, w, st) {
+      const ms = s.milestones.filter((m) => st.ps.some((p) => p.id === m.project));
+      return `${secHead(T("MEILENSTEINE", "MILESTONES"))}
+        <div class="xa-ostats">${oStat(T("GESAMT", "TOTAL"), ms.length, T("über alle Projekte", "across all projects"))}${oStat(T("ÜBERFÄLLIG", "OVERDUE"), 0, T("alles im Plan", "all on track"))}${oStat(T("BEVORSTEHEND", "UPCOMING"), ms.length, T("fällig in den nächsten 30 Tagen", "due in the next 30 days"))}${oStat(T("NÄCHSTE FÄLLIGKEIT", "NEXT DUE"), ms[0] ? esc(L(ms[0].when)) : "—", ms[0] ? esc(L(ms[0].name)) : "")}</div>
+        ${ms.length ? `<ul class="xa-mrows2">${ms.map((m) => `<li><button type="button" class="xa-plain" data-act="project" data-id="${m.project}" data-k="ms-${m.project}"><i class="xa-dot" style="--h:var(--xa-acc)"></i><span class="xa-grow"><b>${esc(L(m.name))}</b><small>${esc(L(proj(s, m.project).name))}</small></span><em class="${m.soon ? "is-warn" : ""}">${esc(L(m.when))}</em></button></li>`).join("")}</ul>` : wsEmpty("flag", T("Noch keine Meilensteine", "No milestones yet"), T("Lege in einem Projekt einen Meilenstein an, um Fristen und Fortschritt hier zu sehen.", "Add a milestone in a project to see deadlines and progress here."))}`;
+    },
+    roadmap(s, w, st) {
+      const ms = s.milestones.filter((m) => st.ps.some((p) => p.id === m.project));
+      const buckets = [[T("Diesen Monat", "This month"), ms.filter((m) => !/Dez|Dec/.test(L(m.when)))], [T("Nächster Monat", "Next month"), ms.filter((m) => /Dez|Dec/.test(L(m.when)))], [T("Später", "Later"), []]].filter((b) => b[1].length);
+      return `${secHead("ROADMAP")}${buckets.map(([label, items]) => `<p class="xa-rm-h"><span class="xa-seclabel">${label}</span><span class="xa-mono">${items.length}</span></p><ul class="xa-rm">${items.map((m) => `<li><i></i><button type="button" class="xa-plain" data-act="project" data-id="${m.project}" data-k="rm-${m.project}"><span class="xa-grow"><b>${esc(L(m.name))}</b><small>${esc(L(proj(s, m.project).name))}</small></span><em>${esc(L(m.when))}</em></button></li>`).join("")}</ul>`).join("") || wsEmpty("map", T("Noch nichts auf der Roadmap", "Nothing on the roadmap yet"), T("Meilensteine mit Datum erscheinen hier nach Monaten sortiert.", "Milestones with a date appear here sorted by month."))}`;
+    },
+    calendar(s, w) {
+      const kind = w.id === "loopr" ? ["work", "milestone", "focus"] : ["work"];
+      const ev = s.cal.events.filter((e) => kind.includes(e.kind)).sort((a, b) => a.day - b.day || a.s - b.s).slice(0, w.id === "loopr" ? 9 : 2);
+      return `${secHead(T("KALENDER", "CALENDAR"), T("Termine, Fristen und Fokusblöcke dieses Arbeitsbereichs", "Events, deadlines and focus blocks of this workspace"), hbtn(T("Im Kalender öffnen", "Open in calendar"), 'data-act="go" data-area="calendar" data-k="wc-open"'))}
+        <ul class="xa-mrows2">${ev.map((e) => `<li><div><i class="xa-dot" style="--h:${KINDS[e.kind][3]}"></i><span class="xa-grow"><b>${esc(L(e.title))}</b><small>${en() ? KINDS[e.kind][1] : KINDS[e.kind][0]}</small></span><em>${L(DAYS[e.day])} · ${fmtH(e.s)}–${fmtH(e.e)}</em></div></li>`).join("")}</ul>`;
+    },
+    team(s, w) {
+      const online = (i) => i < w.online;
+      return `<div class="xa-sechead"><div><h4 class="xa-modh">Team</h4><p>${T(`${w.members.length} Mitglieder · ${w.online} online`, `${w.members.length} members · ${w.online} online`)}</p></div><div class="xa-sechead-act"><span class="xa-fakeinput">${T("Filtern …", "Filter …")}</span>${hbtn(T("Einladen", "Invite"), 'data-act="app-only" data-v="invite" data-k="tm-inv"', "is-primary")}</div></div>
+        <div class="xa-ttable" role="table" aria-label="Team"><div class="xa-tt-h" role="row"><span role="columnheader">${T("Mitglied", "Member")}</span><span role="columnheader">${T("Rollen", "Roles")}</span><span role="columnheader">${T("Aktivität", "Activity")}</span><span role="columnheader"></span></div>
+          ${w.members.map((m, i) => `<div class="xa-tt-r" role="row"><span role="cell">${avatar(m)}<span><b>${esc(PEOPLE[m].name)}${m === "LV" ? `<i class="xa-you">${T("du", "you")}</i>` : ""}</b><small>${m.toLowerCase()}@${w.slug.split("-")[0]}.studio</small></span></span><span role="cell"><span class="xa-rolepill${i === 0 ? " is-owner" : ""}">${i === 0 ? T("Inhaber", "Owner") : esc(L(PEOPLE[m].role))}</span></span><span role="cell"><span class="xa-actpill${online(i) ? " is-on" : ""}">${online(i) ? "Online" : T("vor 3 Std.", "3 h ago")}</span></span><span role="cell" class="xa-tt-act">${m === "LV" ? "" : `<button type="button" data-act="app-only" data-v="roles" data-k="tr-${m}">${T("Rollen", "Roles")}</button><button type="button" data-act="app-only" data-v="contact-m" data-k="tn-${m}">${T("Nachricht", "Message")}</button>`}</span></div>`).join("")}</div>
+        ${secHead(T("AUSSCHREIBUNGEN", "OPENINGS"), T("Offene Rollen in diesem Arbeitsbereich – mit Matching und Xyntal KI", "Open roles in this workspace – with matching and Xyntal AI"), hbtn(`+ ${T("Ausschreibung", "Opening")}`, 'data-act="app-only" data-v="opening" data-k="tm-open"'))}
+        <ul class="xa-openings">${OPENINGS.filter((o) => o.ws === w.id).map(openingCard(s)).join("") || `<li class="xa-empty">${T("Noch keine Ausschreibung.", "No openings yet.")}</li>`}</ul>`;
+    },
+    roles(s, w) {
+      const rows = [[T("Inhaber", "Owner"), T("Alles, inklusive Abrechnung und Löschen", "Everything, including billing and deletion"), 1, [1, 1, 1, 1, 1]], ["Admin", T("Mitglieder, Rollen und Module verwalten", "Manage members, roles and modules"), w.id === "kiez" ? 1 : 0, [1, 1, 1, 1, 0]], [T("Mitglied", "Member"), T("Projekte, Aufgaben, Dateien und Notizen bearbeiten", "Edit projects, tasks, files and notes"), Math.max(0, w.members.length - 1), [1, 1, 1, 0, 0]], [T("Gast", "Guest"), T("Nur lesen, nur freigegebene Projekte", "Read only, shared projects only"), 0, [1, 0, 0, 0, 0]]];
+      const cols = [T("Lesen", "Read"), T("Aufgaben", "Tasks"), T("Dateien", "Files"), T("Mitglieder", "Members"), T("Abrechnung", "Billing")];
+      return `${secHead(T("ROLLEN & ZUGRIFF", "ROLES & ACCESS"), T("Wer was sehen und ändern darf", "Who may see and change what"), hbtn(`+ ${T("Rolle", "Role")}`, 'data-act="app-only" data-v="roles" data-k="rl-new"'))}
+        <div class="xa-ttable xa-perm" role="table" aria-label="${T("Rechte", "Permissions")}"><div class="xa-tt-h" role="row"><span role="columnheader">${T("Rolle", "Role")}</span>${cols.map((c) => `<span role="columnheader">${c}</span>`).join("")}</div>
+          ${rows.map(([name, desc, n, perms]) => `<div class="xa-tt-r" role="row"><span role="cell"><span><b>${name} <i class="xa-mono">${n}</i></b><small>${desc}</small></span></span>${perms.map((v) => `<span role="cell" class="${v ? "is-yes" : "is-no"}">${v ? icon("check") : "–"}</span>`).join("")}</div>`).join("")}</div>`;
+    },
+    files(s, w) {
+      const list = s.files.filter((f) => f.ws === w.name);
+      return `${secHead(T("DATEIEN", "FILES"), "", hbtn(T("Hochladen", "Upload"), 'data-act="upload" data-k="wf-up"', "is-primary"))}
+        ${list.length ? `<ul class="xa-notes">${list.map((f) => `<li><button type="button" class="xa-plain" data-act="file" data-id="${f.id}" data-k="wf-${f.id}">${icon(f.type === "doc" ? "file" : f.type)}<span class="xa-grow">${esc(f.name)}</span><span class="xa-mono">${f.size} · ${esc(L(f.at))}</span></button></li>`).join("")}</ul>` : wsEmpty("folder", T("Noch keine Dateien hier", "No files here yet"), T("Dateien irgendwo ablegen oder die erste hochladen.", "Drop files anywhere or upload the first one."))}`;
+    },
+    notes(s, w) {
+      const list = NOTES.filter((n) => n.ws === w.id);
+      return `${secHead(T("NOTIZEN", "NOTES"), "", `${hbtn(T("Vorlagen", "Templates"), 'data-act="app-only" data-v="note-tpl" data-k="nt-tpl"')}${hbtn(`+ ${T("Neue Seite", "New page")}`, 'data-act="app-only" data-v="note" data-k="nt-new"', "is-primary")}`)}
+        ${list.length ? `<ul class="xa-notes">${list.map((n) => `<li><button type="button" class="xa-plain" data-act="note" data-id="${n.id}" data-k="nt-${n.id}"><span class="xa-note-em" aria-hidden="true">${n.em}</span><span class="xa-grow">${esc(L(n.title))}</span><span class="xa-mono">${esc(L(n.at))}</span></button></li>`).join("")}</ul>` : wsEmpty("file", T("Noch keine Seiten", "No pages yet"), T("Schreib die erste Seite – mit Tabellen, Checklisten und KI.", "Write the first page – with tables, checklists and AI."))}`;
+    },
+    journal(s, w) {
+      const d = wsd(s, w);
+      return `${secHead("JOURNAL")}
+        <form class="xa-journal-form" data-form="journal" data-id="${w.id}"><label class="xa-sr" for="xa-j-${uid}">${T("Tagebucheintrag", "Journal entry")}</label><input id="xa-j-${uid}" name="text" maxlength="300" autocomplete="off" placeholder="${T("Tagebucheintrag schreiben …", "Write a journal entry …")}" data-k="journal-input"><button type="submit" class="xa-hbtn is-primary">${T("Eintrag hinzufügen", "Add entry")}</button></form>
+        <ul class="xa-journal">${d.journal.map((j) => `<li><small>${esc(L(j.at))}</small><p>${esc(L(j.text))}</p></li>`).join("") || `<li class="xa-empty">${T("Noch keine Einträge.", "No entries yet.")}</li>`}</ul>`;
+    },
+    okrs(s, w) {
+      const d = wsd(s, w);
+      const kp = (k) => Math.min(100, Math.round((k.cur / k.target) * 100));
+      const op = (o) => (o.krs.length ? Math.round(o.krs.reduce((n, k) => n + kp(k), 0) / o.krs.length) : 0);
+      const total = d.okrs.length ? Math.round(d.okrs.reduce((n, o) => n + op(o), 0) / d.okrs.length) : 0;
+      const n = (st) => d.okrs.filter((o) => o.state === st).length;
+      const done = d.okrs.filter((o) => op(o) >= 100).length;
+      const list = d.okrs.filter((o) => s.okrFilter === "all" || (s.okrFilter === "done" ? op(o) >= 100 : op(o) < 100));
+      return `${secHead(T("ZIELE & OKRS", "GOALS & OKRS"))}
+        <div class="xa-okr-top"><span class="xa-okr-ring">${ring(total, 96, 8, false)}<span><b>${total}%</b><small>${T("gesamt", "overall")}</small></span></span>
+          <div class="xa-wstats xa-wstats-sm">${wsStat(T("IM PLAN", "ON TRACK"), n("on"), "", "", "ok")}${wsStat(T("GEFÄHRDET", "AT RISK"), n("risk"), "", "", "gold")}${wsStat(T("KRITISCH", "CRITICAL"), n("crit"), "", "", "bad")}${wsStat(T("ERREICHT", "ACHIEVED"), `${done} / ${d.okrs.length}`)}</div></div>
+        <div class="xa-toolbar"><span class="xa-fakeinput xa-grow">${T("Neues Ziel – z. B. „Partnerportal in Q1 starten“", "New goal – e.g. “Launch partner portal in Q1”")}</span>${hbtn(`+ ${T("Ziel hinzufügen", "Add goal")}`, 'data-act="app-only" data-v="goal" data-k="ok-add"', "is-primary")}${hbtn(T("Ausführlich …", "Detailed …"), 'data-act="app-only" data-v="goal" data-k="ok-add2"')}</div>
+        <div class="xa-toolbar">${wchips("okrfilter", [["active", T("Aktiv", "Active")], ["done", T("Erreicht", "Achieved")], ["all", T("Alle", "All")]], s.okrFilter)}<span class="xa-grow"></span><button type="button" class="xa-ghost" data-act="ws-ask" data-id="${w.id}" data-v="okrs" data-k="ok-ai">${icon("sparkle")}${T("OKRs mit KI vorschlagen", "Suggest OKRs with AI")}</button></div>
+        ${list.map((o) => { const stt = OKR_STATE[o.state]; return `<article class="xa-wcard xa-okr"><div class="xa-okr-head"><span class="xa-grow"><b>${esc(L(o.title))}</b><small>${esc(L(o.desc))}</small><span class="xa-meta"><button type="button" class="xa-spill2 is-${stt[2]}" data-act="okr-state" data-id="${o.id}" data-k="os-${o.id}">${L(stt)}</button><span>◉ ${esc(PEOPLE[o.owner].name)}</span><span>${esc(L(o.due))}</span></span></span><strong>${op(o)}%</strong></div>
+          <div class="xa-progress is-${stt[2]}"><i style="width:${op(o)}%"></i></div>
+          <ul class="xa-krs">${o.krs.map((k, i) => `<li><span class="xa-mono">KR${i + 1}</span><span class="xa-grow">${esc(L(k.t))}</span><span class="xa-progress${kp(k) >= 100 ? " is-ok" : ""}"><i style="width:${kp(k)}%"></i></span><button type="button" class="xa-kr-b" data-act="kr" data-id="${o.id}" data-v="${i}" data-to="-1" data-k="kr-${o.id}-${i}-m" aria-label="${T("Weniger", "Less")}">−</button><b>${k.cur} / ${k.target} ${esc(L(k.unit))}</b><button type="button" class="xa-kr-b" data-act="kr" data-id="${o.id}" data-v="${i}" data-to="1" data-k="kr-${o.id}-${i}-p" aria-label="${T("Mehr", "More")}">+</button></li>`).join("")}</ul></article>`; }).join("") || wsEmpty("target", T("Noch keine Ziele", "No goals yet"), T("Setz dein erstes OKR und miss den Fortschritt an Schlüsselergebnissen.", "Set your first OKR and measure progress with key results."))}`;
+    },
+    decisions(s, w) {
+      const d = wsd(s, w);
+      const n = (st) => d.decisions.filter((x) => x.state === st).length;
+      const list = d.decisions.filter((x) => s.decFilter === "all" || x.state === s.decFilter);
+      return `${secHead(T("ENTSCHEIDUNGSLOG", "DECISION LOG"))}
+        <div class="xa-toolbar"><span class="xa-fakeinput xa-grow">${T("Entscheidungen, Gründe, Personen, Tags durchsuchen …", "Search decisions, reasons, people, tags …")}</span>${hbtn(`+ ${T("Entscheidung festhalten", "Record decision")}`, 'data-act="app-only" data-v="decision" data-k="dc-add"', "is-primary")}${hbtn(`${icon("sparkle")}${T("Mit KI zusammenfassen", "Summarise with AI")}`, `data-act="ws-ask" data-id="${w.id}" data-v="decisions" data-k="dc-ai"`)}</div>
+        <div class="xa-toolbar">${wchips("decfilter", [["all", T(`Alle · ${d.decisions.length}`, `All · ${d.decisions.length}`)], ...Object.entries(DEC_STATE).map(([id, v]) => [id, `${L(v)} · ${n(id)}`, v[2]])], s.decFilter)}</div>
+        ${list.map((x) => { const stt = DEC_STATE[x.state]; return `<article class="xa-wcard xa-dec is-${stt[2]}"><div class="xa-okr-head"><b class="xa-grow">${esc(L(x.title))}</b><span class="xa-spill2 is-${stt[2]}">${L(stt)}</span></div><p><b>${T("Entscheidung:", "Decision:")}</b> ${esc(L(x.dec))}</p><p class="xa-muted"><b>${T("Warum:", "Why:")}</b> ${esc(L(x.why))}</p><span class="xa-meta"><span>◉ ${esc(PEOPLE[x.owner].name)}</span><span>◷ ${esc(L(x.at))}</span>${x.tags.map((t) => `<span class="xa-htag">#${t}</span>`).join("")}</span></article>`; }).join("") || wsEmpty("clip", T("Noch keine Entscheidungen festgehalten", "No decisions recorded yet"), T("Halte fest, was ihr entscheidet und warum. Neue Teammitglieder sind in Minuten im Bild, und Xyntal KI bleibt in jeder Antwort dabei.", "Record what you decide and why. New teammates are up to speed in minutes, and Xyntal AI keeps it in every answer."))}`;
+    },
+    risks(s, w) {
+      const d = wsd(s, w);
+      const score = (x) => x.imp * x.lik;
+      const lvl = (v) => v >= 15 ? ["crit", T("Kritisch", "Critical")] : v >= 8 ? ["high", T("Hoch", "High")] : v >= 4 ? ["mid", T("Mittel", "Medium")] : ["low", T("Niedrig", "Low")];
+      const act = d.risks.filter((x) => x.state !== "closed");
+      const list = [...d.risks].filter((x) => s.riskFilter === "all" || (s.riskFilter === "closed" ? x.state === "closed" : x.state !== "closed")).sort((a, b) => score(b) - score(a));
+      let heat = "";
+      for (let imp = 5; imp >= 1; imp--) for (let lik = 1; lik <= 5; lik++) { const c = act.filter((x) => x.imp === imp && x.lik === lik).length; heat += `<i class="is-${lvl(imp * lik)[0]}${c ? " has" : ""}">${c || ""}</i>`; }
+      const stn = { open: [T("Offen", "Open"), ""], progress: [T("In Bearbeitung", "In progress"), "gold"], closed: [T("Geschlossen", "Closed"), "ok"] };
+      return `${secHead(T("RISIKOREGISTER", "RISK REGISTER"))}
+        <div class="xa-risk-top"><div class="xa-heatwrap"><span class="xa-heat-y">${T("Auswirkung", "Impact")}</span><div class="xa-heat5" role="img" aria-label="${T("Risikomatrix", "Risk matrix")}">${heat}</div><span class="xa-heat-x">${T("Wahrscheinlichkeit", "Likelihood")} →</span></div>
+          <div class="xa-wstats xa-wstats-2">${wsStat(T("KRITISCH", "CRITICAL"), act.filter((x) => score(x) >= 15).length, T("Wert 15–25", "Score 15–25"), "", "bad")}${wsStat(T("HOCH", "HIGH"), act.filter((x) => score(x) >= 8 && score(x) < 15).length, T("Wert 8–14", "Score 8–14"), "", "warn")}${wsStat(T("OFFEN", "OPEN"), act.length, T(`${act.filter((x) => x.state === "progress").length} in Bearbeitung`, `${act.filter((x) => x.state === "progress").length} in progress`))}${wsStat(T("GESCHLOSSEN", "CLOSED"), d.risks.length - act.length, T("gelöste Risiken", "resolved risks"), "", "ok")}</div></div>
+        <div class="xa-toolbar">${wchips("riskfilter", [["active", T("Aktiv", "Active")], ["closed", T("Geschlossen", "Closed")], ["all", T("Alle", "All")]], s.riskFilter)}<span class="xa-grow"></span>${hbtn(`${icon("sparkle")}${T("Risiken mit KI finden", "Find risks with AI")}`, 'data-act="ai" data-v="risks" data-k="rk-ai"')}${hbtn(`+ ${T("Risiko hinzufügen", "Add risk")}`, 'data-act="app-only" data-v="risk" data-k="rk-add"', "is-primary")}</div>
+        ${list.map((x) => `<article class="xa-wcard xa-risk"><span class="xa-risk-score is-${lvl(score(x))[0]}"><b>${score(x)}</b><small>${lvl(score(x))[1]}</small></span><span class="xa-grow"><b>${esc(L(x.title))}</b><small>${esc(L(x.desc))}</small><small class="xa-mit">↳ ${esc(L(x.mit))}</small><span class="xa-meta"><span>${T(`Auswirkung ${x.imp} · Wahrscheinlichkeit ${x.lik}`, `Impact ${x.imp} · Likelihood ${x.lik}`)}</span><span>◉ ${esc(PEOPLE[x.owner].name)}</span><span>◷ ${esc(L(x.due))}</span></span></span><button type="button" class="xa-spill2 is-${stn[x.state][1]}" data-act="risk-state" data-id="${x.id}" data-k="rs-${x.id}">${stn[x.state][0]}</button></article>`).join("") || wsEmpty("alert", T("Keine Risiken in diesem Filter", "No risks in this filter"), T("Halte fest, was schiefgehen kann – mit Auswirkung, Wahrscheinlichkeit und Gegenmaßnahme.", "Record what could go wrong – with impact, likelihood and mitigation."))}`;
+    },
+    funding(s, w) {
+      const d = wsd(s, w);
+      const sum = d.funding.reduce((n, f) => n + f.amount, 0);
+      const eur = (v) => `${v.toLocaleString(en() ? "en-GB" : "de-DE")} €`;
+      const big = [...d.funding].sort((a, b) => b.amount - a.amount)[0];
+      return `${secHead("FUNDING", "", hbtn(`+ ${T("Runde hinzufügen", "Add round")}`, 'data-act="app-only" data-v="funding" data-k="fd-add"', "is-primary"))}
+        <div class="xa-ostats">${oStat(T("GESAMT EINGESAMMELT", "TOTAL RAISED"), eur(sum), T("über alle Runden", "across all rounds"))}${oStat(T("RUNDEN", "ROUNDS"), d.funding.length, T("bisher protokolliert", "logged so far"))}${oStat(T("GRÖSSTE", "LARGEST"), big ? eur(big.amount) : "—", big ? esc(L(big.name)) : "")}${oStat(T("DURCHSCHNITT", "AVERAGE"), d.funding.length ? eur(Math.round(sum / d.funding.length)) : "—", T("pro Runde", "per round"))}</div>
+        ${d.funding.length ? `<ul class="xa-mrows2">${d.funding.map((f) => `<li><div><span class="xa-grow"><b>${esc(L(f.name))}</b><small>${esc(L(f.source))} · ${esc(L(f.at))}</small></span><em class="is-ok">${eur(f.amount)}</em></div></li>`).join("")}</ul>` : wsEmpty("receipt", T("Noch keine Runde protokolliert", "No round logged yet"), T("Fördermittel, Preisgelder und Investments an einem Ort.", "Grants, prize money and investments in one place."))}`;
+    },
+    insights(s, w, st) {
+      const by = (f) => st.tasks.filter(f).length;
+      const weeks = [[3, 1], [4, 2], [2, 3], [5, 2], [3, 4], [4, 3], [2, 2], [3, Math.max(1, st.done - 2)]];
+      const mx = Math.max(...weeks.flat());
+      const donut = (parts, center, sub) => { const tot = Math.max(1, parts.reduce((n, p) => n + p[1], 0)); let off = 0; const C = 2 * Math.PI * 34; return `<div class="xa-donut"><span><svg viewBox="0 0 84 84" aria-hidden="true"><circle cx="42" cy="42" r="34" class="xa-ring-bg" stroke-width="9" fill="none"/>${parts.map(([, v, col]) => { const len = (v / tot) * C; const seg = `<circle cx="42" cy="42" r="34" fill="none" stroke="${col}" stroke-width="9" stroke-dasharray="${len.toFixed(1)} ${(C - len).toFixed(1)}" stroke-dashoffset="${(-off).toFixed(1)}" transform="rotate(-90 42 42)"/>`; off += len; return seg; }).join("")}</svg><b>${center}</b><small>${sub}</small></span><ul>${parts.map(([l, v, col]) => `<li><i style="background:${col}"></i><span class="xa-grow">${l}</span><b>${v}</b></li>`).join("")}</ul></div>`; };
+      const stack = (rows) => `<ul class="xa-stackrows">${rows.map(([l, a, b, c, sub]) => { const t = Math.max(1, a + b + c); return `<li><span>${l}</span><span class="xa-stackbar"><i style="width:${(a / t) * 100}%;background:var(--xa-ok)"></i><i style="width:${(b / t) * 100}%;background:var(--xa-acc)"></i><i style="width:${(c / t) * 100}%;background:var(--xa-warn)"></i></span><small>${sub}</small></li>`; }).join("")}</ul>`;
+      const people = [...new Set(st.tasks.map((t) => t.who))];
+      const chart = (title, sub, body) => `<section class="xa-wcard xa-chart"><header><span><h4>${title}</h4><small>${sub}</small></span></header>${body}</section>`;
+      return `<div class="xa-sechead"><div><h4 class="xa-modh">Insights</h4><p>${T(`Live-Zahlen aus ${st.ps.length} Projekten in diesem Workspace`, `Live numbers from ${st.ps.length} projects in this workspace`)}</p></div><div class="xa-sechead-act">${wchips("insrange", [["4", T("4 Wo.", "4 wk")], ["8", T("8 Wo.", "8 wk")], ["12", T("12 Wo.", "12 wk")], ["26", T("6 Mon.", "6 mo")]], s.insRange)}${hbtn(T("Als CSV kopieren", "Copy as CSV"), 'data-act="app-only" data-v="csv" data-k="in-csv"')}${hbtn(`${icon("sparkle")}${T("Mit KI erklären", "Explain with AI")}`, `data-act="ws-ask" data-id="${w.id}" data-v="insights" data-k="in-ai"`, "is-primary")}</div></div>
+        <div class="xa-wstats xa-wstats-6">${wsStat(T("ERLEDIGT", "DONE"), st.pc + "%", T(`${st.done} von ${st.tasks.length} Aufgaben`, `${st.done} of ${st.tasks.length} tasks`), "", "ok")}${wsStat(T("OFFENE ARBEIT", "OPEN WORK"), st.open, T("Aufgaben nicht erledigt", "tasks not done"))}${wsStat(T("ÜBERFÄLLIG", "OVERDUE"), 0, T("alles im Zeitplan", "all on schedule"), "", "ok")}${wsStat(T("FÄLLIG IN 7 TAGEN", "DUE IN 7 DAYS"), by((t) => t.due && t.status !== "done"), T("stehen an", "coming up"), "", "gold")}${wsStat(T("DURCHSATZ", "THROUGHPUT"), "2,4", T("▲ 12% ggü. 4 Wo. davor", "▲ 12% vs. prior 4 wk"), "", "ok")}${wsStat(T("PROGNOSE", "FORECAST"), st.open ? T("28. Nov.", "28 Nov") : T("Frei", "Clear"), st.open ? T(`≈ ${Math.max(1, Math.round(st.open / 2.4))} Wochen beim aktuellen Tempo`, `≈ ${Math.max(1, Math.round(st.open / 2.4))} weeks at the current pace`) : T("keine offene Arbeit", "no open work"))}</div>
+        <div class="xa-charts">
+          ${chart(T("Wöchentlicher Durchsatz", "Weekly throughput"), T("Erstellt und abgeschlossen pro Woche", "Created and completed per week"), `<div class="xa-gbars" role="img" aria-label="${T("Balken: erstellt und abgeschlossen", "Bars: created and completed")}">${weeks.map(([a, b], i) => `<span><i style="height:${(a / mx) * 100}%"></i><i class="is-ok" style="height:${(b / mx) * 100}%"></i><small>KW${38 + i}</small></span>`).join("")}</div><p class="xa-legend"><i style="background:var(--xa-acc);opacity:.5"></i>${T("Erstellt", "Created")}<i style="background:var(--xa-ok)"></i>${T("Abgeschlossen", "Completed")}</p>`)}
+          ${chart("Burn-up", T("Umfang gegen erledigte Arbeit", "Scope against completed work"), `<svg class="xa-burn" viewBox="0 0 300 120" preserveAspectRatio="none" role="img" aria-label="Burn-up"><path d="M0 70 L43 62 L86 55 L129 44 L171 40 L214 30 L257 26 L300 22 L300 120 L0 120z" fill="rgba(76,141,255,.10)"/><path d="M0 70 L43 62 L86 55 L129 44 L171 40 L214 30 L257 26 L300 22" fill="none" stroke="var(--xa-acc)" stroke-width="2" vector-effect="non-scaling-stroke"/><path d="M0 116 L43 110 L86 104 L129 92 L171 86 L214 74 L257 66 L300 ${Math.max(24, 96 - st.pc)}" fill="none" stroke="var(--xa-ok)" stroke-width="2" vector-effect="non-scaling-stroke"/></svg><p class="xa-legend"><i style="background:var(--xa-acc)"></i>Scope<i style="background:var(--xa-ok)"></i>${T("Erledigt", "Done")}</p>`)}
+          ${chart("Status", T("Wo die Arbeit gerade steht", "Where the work stands"), donut([[T("Zu erledigen", "To do"), by((t) => t.status === "todo"), "var(--xa-faint)"], [T("In Arbeit", "In progress"), by((t) => t.status === "doing"), "var(--xa-acc)"], ["In Review", by((t) => t.status === "review"), "var(--xa-gold)"], [T("Erledigt", "Done"), st.done, "var(--xa-ok)"]], st.tasks.length, T("Aufgaben", "tasks")))}
+          ${chart(T("Prioritäten", "Priorities"), T("Offene Aufgaben nach Priorität", "Open tasks by priority"), donut([[T("Hoch", "High"), by((t) => t.prio === "high" && t.status !== "done"), "#FF4D5E"], [T("Mittel", "Medium"), by((t) => t.prio === "mid" && t.status !== "done"), "var(--xa-mid)"], [T("Niedrig", "Low"), by((t) => t.prio === "low" && t.status !== "done"), "var(--xa-ok)"]], by((t) => t.prio === "high" && t.status !== "done"), T("hoch", "high")))}
+          ${chart(T("Auslastung", "Workload"), T("Aufgaben pro Person", "Tasks per person"), stack(people.map((m) => { const mine = st.tasks.filter((t) => t.who === m); const dn = mine.filter((t) => t.status === "done").length; return [esc(PEOPLE[m].name.split(" ")[0]), dn, mine.length - dn, 0, T(`${mine.length - dn} offen`, `${mine.length - dn} open`)]; })))}
+          ${chart(T("Projektzustand", "Project health"), T("Erledigt, offen und überfällig je Projekt", "Done, open and overdue per project"), stack(st.ps.map((p) => [esc(L(p.name)), p.tasks.length - openOf(p), openOf(p), 0, pct(p) + "%"])))}
+        </div>`;
+    },
+    analytics(s, w, st) {
+      const ms = s.milestones.filter((m) => st.ps.some((p) => p.id === m.project));
+      const fin = st.ps.filter((p) => pct(p) === 100).length;
+      return `${secHead(T("ANALYSEN", "ANALYTICS"))}
+        <div class="xa-ostats">${oStat(T("Projekte", "Projects"), st.ps.length, T(`${st.ps.filter((p) => pStatus(p)[0] === "active").length} in Arbeit`, `${st.ps.filter((p) => pStatus(p)[0] === "active").length} in progress`))}${oStat(T("ABGESCHLOSSEN", "COMPLETED"), fin, T(`${st.ps.length ? Math.round((fin / st.ps.length) * 100) : 0}% der Projekte`, `${st.ps.length ? Math.round((fin / st.ps.length) * 100) : 0}% of projects`))}${oStat(T("TASK-ABSCHLUSS", "TASK COMPLETION"), st.pc + "%", "", st.pc)}${oStat(T("OFFENE TASKS", "OPEN TASKS"), st.open, T(`${st.done} erledigt`, `${st.done} done`))}${oStat(T("Meilensteine", "Milestones"), ms.length, T("über alle Projekte", "across all projects"))}${oStat(T("ÜBERFÄLLIG", "OVERDUE"), 0, T("alles im Plan", "all on track"))}${oStat(T("BEVORSTEHEND", "UPCOMING"), ms.length, T("in den nächsten 30 Tagen", "in the next 30 days"))}${oStat("Team", w.members.length, T(`${w.online} gerade online`, `${w.online} online right now`))}</div>
+        <section class="xa-wcard xa-byproj"><header><h4 class="xa-seclabel">${T("NACH PROJEKT", "BY PROJECT")}</h4></header><ul class="xa-aprows">${st.ps.map((p) => `<li><button type="button" class="xa-plain" data-act="project" data-id="${p.id}" data-k="an-${p.id}"><i class="xa-dot" style="--h:${p.hue}"></i><b>${esc(L(p.name))}</b><span class="xa-progress"><i style="width:${pct(p)}%"></i></span><small>${pct(p)}%</small></button></li>`).join("")}</ul></section>`;
+    },
+    ai(s, w) {
+      return `${secHead("XYNTAL KI", T("Kennt Projekte, Aufgaben, Notizen und Entscheidungen dieses Arbeitsbereichs", "Knows this workspace's projects, tasks, notes and decisions"))}
+        <div class="xa-briefgrid">${AI_ACTIONS.map(([id, label]) => `<button type="button" data-act="ai" data-v="${id}" data-k="wa-${id}"><span class="xa-rc-ic">${icon("sparkle")}</span><span><b>${L(label)}</b><small>${T("Antwort im KI-Center", "Answer in the AI Center")}</small></span></button>`).join("")}</div>
+        <form class="xa-journal-form" data-form="ai"><label class="xa-sr" for="xa-wai-${uid}">${T("Frage an Xyntal KI", "Question for Xyntal AI")}</label><input id="xa-wai-${uid}" name="q" maxlength="300" autocomplete="off" placeholder="${T("Frag etwas zu diesem Workspace – z. B. „Was blockiert den Launch?“", "Ask about this workspace – e.g. “What is blocking the launch?”")}" data-k="wai-input"><button type="submit" class="xa-hbtn is-primary">${icon("sparkle")}${T("Fragen", "Ask")}</button></form>`;
+    },
+    briefs(s, w) {
+      const d = wsd(s, w);
+      return `${secHead(T("KI-BRIEFINGS", "AI BRIEFINGS"))}
+        <div class="xa-briefgrid">${BRIEF_KINDS.map(([id, label, hint, ic]) => `<button type="button" data-act="brief" data-id="${w.id}" data-v="${id}" data-k="bf-${id}"${s.briefBusy === id ? ' class="is-busy"' : ""}><span class="xa-rc-ic">${icon(ic)}</span><span><b>${L(label)}</b><small>${s.briefBusy === id ? T("Xyntal KI schreibt …", "Xyntal AI is writing …") : L(hint)}</small></span></button>`).join("")}</div>
+        <form class="xa-journal-form" data-form="ai"><label class="xa-sr" for="xa-bq-${uid}">${T("Frage an Xyntal KI", "Question for Xyntal AI")}</label><input id="xa-bq-${uid}" name="q" maxlength="300" autocomplete="off" placeholder="${T("Frag etwas zu diesem Workspace – z. B. „Was blockiert den Launch?“ oder „Wer ist überlastet?“", "Ask about this workspace – e.g. “What is blocking the launch?” or “Who is overloaded?”")}" data-k="bq-input"><button type="submit" class="xa-hbtn is-primary">${icon("sparkle")}${T("Fragen", "Ask")}</button></form>
+        <p class="xa-seclabel xa-sec-gap">${T("BRIEFING-VERLAUF", "BRIEFING HISTORY")}</p>
+        <ul class="xa-briefs">${d.briefs.map((b) => `<li class="${s.briefOpen === b.id ? "is-open" : ""}"><button type="button" class="xa-plain" data-act="brief-open" data-id="${b.id}" data-k="bo-${b.id}" aria-expanded="${s.briefOpen === b.id}">${icon("sparkle")}<b class="xa-grow">${esc(L(b.title))}</b><small>${esc(L(b.at))}</small><span aria-hidden="true">${s.briefOpen === b.id ? "▴" : "▾"}</span></button>${s.briefOpen === b.id ? `<div class="xa-brief-body">${b.body(s, w)}</div>` : ""}</li>`).join("") || `<li class="xa-empty">${T("Noch kein Briefing – ein Klick oben genügt.", "No briefing yet – one click above is enough.")}</li>`}</ul>`;
+    },
+    memory(s, w) {
+      const d = wsd(s, w);
+      const wait = d.memory.filter((m) => m.sug).length;
+      return `${secHead(T("TEAM-GEDÄCHTNIS", "TEAM MEMORY"))}
+        <section class="xa-wcard"><header><span><h4>${T("Was Xyntal KI über diesen Workspace immer wissen soll", "What Xyntal AI should always know about this workspace")}</h4><small>${T("Für alle Mitglieder sichtbar. Angeheftete Einträge zählen zuerst; bis zu 8 passende Einträge fließen in jede Antwort. Nichts verlässt diesen Workspace.", "Visible to all members. Pinned entries count first; up to 8 matching entries flow into every answer. Nothing leaves this workspace.")}</small></span></header>
+          <form class="xa-journal-form" data-form="memory" data-id="${w.id}"><label class="xa-sr" for="xa-mem-${uid}">${T("Neuer Eintrag", "New entry")}</label><input id="xa-mem-${uid}" name="text" maxlength="200" autocomplete="off" placeholder="${T("z. B. „Texte an Kunden siezen.“", "e.g. “Address customers formally.”")}" data-k="mem-input"><button type="submit" class="xa-hbtn is-primary">${T("Merken", "Remember")}</button></form></section>
+        ${wait ? `<p class="xa-gold-line">${T(`${wait} Vorschläge aus Gesprächen warten auf Prüfung`, `${wait} suggestions from conversations await review`)}</p>` : ""}
+        <ul class="xa-memory">${d.memory.map((m, i) => `<li class="${m.sug ? "is-sug" : m.pin ? "is-pin" : ""}"><span class="xa-meta"><span class="xa-spill2 is-${MEM_CAT[m.cat][2]}">${L(MEM_CAT[m.cat])}</span>${m.pin ? `<span class="xa-acc-t2">${T("Angeheftet", "Pinned")}</span>` : ""}${m.sug ? `<span class="xa-gold-t">${T("Von Xyntal KI vorgeschlagen", "Suggested by Xyntal AI")}</span>` : `<span>${T(`${m.used}× genutzt`, `used ${m.used}×`)}</span>`}<span class="xa-grow"></span>${m.sug ? `<button type="button" class="xa-hbtn is-primary is-sm" data-act="mem-ok" data-id="${w.id}" data-v="${i}" data-k="mo-${i}">${T("Bestätigen", "Confirm")}</button>` : ""}</span><p>${esc(L(m.text))}</p></li>`).join("") || `<li class="xa-empty">${T("Noch nichts gemerkt.", "Nothing remembered yet.")}</li>`}</ul>`;
+    },
+    activity(s, w) {
+      const d = wsd(s, w);
+      return `<section class="xa-wcard xa-audit"><header><span><h4 class="xa-modh">Audit-Log</h4><small>${T("Jede sicherheitsrelevante Änderung in diesem Arbeitsbereich – nur anhängen.", "Every security-relevant change in this workspace – append only.")}</small></span></header>
+        <ul>${d.activity.map((a) => `<li><span class="xa-spill2 is-${a.tone || "acc"}">${esc(a.badge)}</span>${avatar(a.who, "xa-av-sm")}<b>${esc(PEOPLE[a.who].name)}</b><span class="xa-muted xa-grow">· ${esc(L(a.text))}</span><time>${esc(L(a.at))}</time></li>`).join("") || `<li class="xa-empty">${T("Noch keine Einträge.", "No entries yet.")}</li>`}</ul>
+        <button type="button" class="xa-hbtn" data-act="app-only" data-v="audit" data-k="au-more">${T("Ältere Einträge laden", "Load older entries")}</button></section>`;
+    },
+  };
+
+  const FIT = { aylin: [82, ["Aylin passt gut zu dir, weil ihr ähnlich kommuniziert: kurze Abstimmungen, klare Zusagen. Sie ergänzt dich im Design.", "Aylin fits you well because you communicate alike: short check-ins, clear commitments. She complements you in design."]], jonas: [77, ["Jonas arbeitet gern asynchron und gründlich. Gib ihm früh Kontext, dann liefert er verlässlich.", "Jonas likes to work asynchronously and thoroughly. Give him context early and he delivers reliably."]], noah: [94, ["Noah hat zwei Audio-Apps veröffentlicht – genau die Lücke im Loopr-Team.", "Noah has shipped two audio apps – exactly the gap in the Loopr team."]] };
   function viewMessages(s) {
     const reqs = s.convos.filter((x) => x.request);
     const list = s.chatFilter === "archived" ? [] : s.convos.filter((c) => (s.chatFilter === "requests" ? c.request : !c.request) && (s.chatFilter !== "unread" || c.unread) && (s.chatFilter !== "groups" || c.group));
@@ -553,70 +865,104 @@
     const together = c.group ? s.projects.filter((p) => p.ws === (c.id === "team" ? "loopr" : "kiez")) : s.projects.filter((p) => p.tasks.some((t) => t.who === c.with));
     const files = s.files.filter((f) => members.includes(f.owner) && f.owner !== "LV" || (c.group && f.ws === (c.id === "team" ? "Loopr Studio" : "Kiezkiste"))).slice(0, 3);
     const last = (x) => x.msgs[x.msgs.length - 1];
+    const snippet = (m) => m.kind === "call" ? `📞 ${T("Anruf", "Call")}` : m.kind === "meet" ? `📞 ${T("Anrufvorschlag", "Call proposal")}` : esc(L(m.text));
+    const nUnread = s.convos.filter((x) => x.unread && !x.request).length;
+    const tabs = [["all", T("Alle", "All")], ["unread", nUnread ? T(`Ungelesen · ${nUnread}`, `Unread · ${nUnread}`) : T("Ungelesen", "Unread")], ["groups", T("Gruppen", "Groups")]];
+    const hb = (ic, label, v = "tab") => `<button type="button" class="xa-iconbtn" data-act="app-only" data-v="${v}" data-k="ch-${ic}" aria-label="${label}" title="${label}">${icon(ic)}</button>`;
+    const fit = !c.group && FIT[c.id];
+    const msg = (m) => {
+      if (m.kind === "call") return `<li class="xa-m xa-m-card${m.from === "LV" ? " is-me" : ""}"><div class="xa-callcard">${icon("phone")}<span><b>${T("Anruf beendet", "Call ended")}</b><small>${T(`Dauerte ${m.dur}`, `Lasted ${m.dur}`)}</small><small>${T(`Mit ${PEOPLE[c.with] ? PEOPLE[c.with].name.split(" ")[0] : c.name}`, `With ${PEOPLE[c.with] ? PEOPLE[c.with].name.split(" ")[0] : c.name}`)}</small></span></div></li>`;
+      if (m.kind === "meet") return `<li class="xa-m xa-m-card${m.from === "LV" ? " is-me" : ""}"><div class="xa-callcard xa-meet"><span class="xa-meet-ic">${icon("calendar")}</span><span class="xa-grow"><b>${T("Anruf gebucht", "Call booked")}</b><small>${esc(L(m.when))}</small></span><div class="xa-meet-foot"><button type="button" class="xa-hbtn" data-act="app-only" data-v="call" data-k="meet-join" title="${T("Öffnet zehn Minuten vor Beginn", "Opens ten minutes before the start")}">${T("Anruf beitreten", "Join call")}</button><button type="button" class="xa-ghost" data-act="go" data-area="calendar" data-k="meet-cal">${T("In beiden Kalendern", "In both calendars")}</button></div></div></li>`;
+      return m.from === "LV" ? `<li class="xa-m is-me"><div class="xa-bubble"><p${m.mine ? " data-own" : ""}>${esc(L(m.text))}</p><small>${esc(L(m.at))}</small></div></li>`
+        : `<li class="xa-m">${avatar(m.from, "xa-av-sm")}<div class="xa-bubble"><span class="xa-m-head"><b>${esc(PEOPLE[m.from].name)}</b><small>${esc(L(m.at))}</small></span><p>${esc(L(m.text))}</p></div></li>`;
+    };
     return `<div class="xa-msg">
       <div class="xa-msg-list">
         <h3 class="xa-title" tabindex="-1" data-k="title">${T("Nachrichten", "Messages")}</h3><p class="xa-sub">${T("Direktnachrichten und Team-Chats", "Direct messages and team chats")}</p>
-        <button type="button" class="xa-btn xa-primary xa-full xa-newmsg" data-act="app-only" data-v="tab" data-k="m-new">${icon("plus")}${T("Neue Nachricht", "New message")}</button>
-        ${chips("chatfilter", [["all", T("Alle", "All")], ["unread", T("Ungelesen", "Unread")], ["groups", T("Gruppen", "Groups")], ["requests", T("Anfragen", "Requests"), reqs.length], ["archived", T("Archiviert", "Archived")]], s.chatFilter, T("Gespräche filtern", "Filter conversations"))}
-        <ul class="xa-convos">${list.map((x) => `<li><button type="button" class="xa-convo" data-act="convo" data-id="${x.id}" data-k="cv-${x.id}" aria-current="${x.id === c.id}">
-          ${x.group ? `<span class="xa-av xa-av-group" aria-hidden="true">${esc(x.name[0])}</span>` : avatar(x.with)}
-          <span class="xa-grow"><b>${esc(x.name)}</b><small>${esc(L(last(x).text))}</small></span>
+        <div class="xa-msg-tabs" role="group" aria-label="${T("Gespräche filtern", "Filter conversations")}">${tabs.map(([id, l]) => `<button type="button" data-act="chatfilter" data-v="${id}" data-k="chatfilter-${id}" aria-pressed="${s.chatFilter === id}">${l}</button>`).join("")}<button type="button" data-act="chatmore" data-k="chatmore" aria-expanded="${s.chatMore}" aria-pressed="${["requests", "archived"].includes(s.chatFilter)}">${T("Mehr", "More")} ▾</button></div>
+        ${s.chatMore ? `<div class="xa-msg-more"><button type="button" data-act="chatfilter" data-v="requests" data-k="chatfilter-requests" aria-pressed="${s.chatFilter === "requests"}">${T("Anfragen", "Requests")}${reqs.length ? ` · ${reqs.length}` : ""}</button><button type="button" data-act="chatfilter" data-v="archived" data-k="chatfilter-archived" aria-pressed="${s.chatFilter === "archived"}">${T("Archiviert (0)", "Archived (0)")}</button></div>` : ""}
+        <div class="xa-msg-search"><span class="xa-fakeinput xa-grow">${T("Gespräche suchen", "Search conversations")}</span><button type="button" class="xa-iconbtn xa-sqbtn" data-act="app-only" data-v="group" data-k="m-group" aria-label="${T("Neue Gruppe", "New group")}" title="${T("Neue Gruppe", "New group")}">${icon("users")}</button><button type="button" class="xa-iconbtn xa-sqbtn is-acc" data-act="app-only" data-v="newmsg" data-k="m-new" aria-label="${T("Neue Nachricht", "New message")}" title="${T("Neue Nachricht", "New message")}">${icon("edit")}</button></div>
+        <ul class="xa-convos">${list.map((x) => `<li><button type="button" class="xa-convo${x.unread ? " is-unread" : ""}" data-act="convo" data-id="${x.id}" data-k="cv-${x.id}" aria-current="${x.id === c.id}">
+          ${x.group ? `<span class="xa-av xa-av-group" aria-hidden="true">${esc(x.name[0])}</span>` : `<span class="xa-av-wrap">${avatar(x.with)}<i class="${["AK", "JW"].includes(x.with) ? "is-on" : ""}"></i></span>`}
+          <span class="xa-grow"><b>${esc(x.name)}</b><small>${snippet(last(x))}</small></span>
           <span class="xa-convo-r"><small>${esc(L(last(x).at))}</small>${x.unread ? `<span class="xa-count" aria-label="${T(`${x.unread} ungelesen`, `${x.unread} unread`)}">${x.unread}</span>` : ""}</span>
         </button></li>`).join("") || `<li class="xa-empty">${s.chatFilter === "archived" ? T("Nichts archiviert.", "Nothing archived.") : T("Keine Gespräche in diesem Filter.", "No conversations in this filter.")}</li>`}</ul>
       </div>
       <div class="xa-chat" role="region" aria-label="${T(`Gespräch: ${c.name}`, `Conversation: ${c.name}`)}">
-        <header class="xa-chat-head">${c.group ? `<span class="xa-av xa-av-group" aria-hidden="true">#</span>` : avatar(c.with)}<div class="xa-grow"><b>${esc(c.name)}</b><small>${c.group ? T(`Gruppe · ${c.members.length} Mitglieder`, `Group · ${c.members.length} members`) : esc(L(PEOPLE[c.with].role)) + " · online"}</small></div>
-          <button type="button" class="xa-iconbtn" data-act="app-only" data-v="call" data-k="chat-call" aria-label="${T("Anrufen", "Call")}">${icon("phone")}</button>
-          <button type="button" class="xa-btn xa-ask" data-act="ask-chat" data-k="chat-ask">${icon("sparkle")}${T("KI fragen", "Ask AI")}</button></header>
-        <ol class="xa-thread" data-scroll="thread">${c.msgs.map((m) => `<li class="xa-m${m.from === "LV" ? " is-me" : ""}">${m.from === "LV" ? "" : avatar(m.from, "xa-av-sm")}<div class="xa-bubble"><span class="xa-m-head"><b style="color:${PEOPLE[m.from].hue}">${m.from === "LV" ? T("Du", "You") : esc(PEOPLE[m.from].name)}</b><small>${esc(L(m.at))}</small></span><p${m.mine ? " data-own" : ""}>${esc(L(m.text))}</p></div></li>`).join("")}
+        <header class="xa-chat-head">${c.group ? `<span class="xa-av xa-av-group" aria-hidden="true">${esc(c.name[0])}</span>` : avatar(c.with)}<div class="xa-grow"><b>${esc(c.name)}</b><small>${c.group ? T(`${c.members.length} Mitglieder`, `${c.members.length} members`) : c.request ? T("Direktnachricht", "Direct message") : `<span class="xa-on-t">Online</span>`}</small></div>
+          <button type="button" class="xa-hbtn xa-hbtn-ai" data-act="ask-chat" data-k="chat-ask" title="${T("KI zu diesem Gespräch fragen", "Ask AI about this conversation")}">${AI_MARK}${T("Xyntal fragen", "Ask Xyntal")}</button>
+          ${hb("phone", T("Sprachanruf starten", "Start voice call"), "call")}${hb("video", T("Videoanruf starten", "Start video call"), "call")}${hb("search", T("Im Gespräch suchen", "Search in conversation"))}${hb("bell", T("Benachrichtigungen an", "Notifications on"))}${hb("shield", T("Privatsphäre — wer dieses Gespräch lesen darf", "Privacy — who may read this conversation"))}${hb("more", T("Weitere Aktionen", "More actions"))}</header>
+        ${fit && !s.fitHidden ? `<div class="xa-fitbar">${ring(fit[0], 40, 4)}<span class="xa-grow"><b>${T("Einblick zur Zusammenarbeit", "Collaboration insight")}</b><small>${esc(L(fit[1]))}</small></span><button type="button" class="xa-acc-link" data-act="app-only" data-v="profile-other" data-k="fit-profile">${T("Profil ansehen", "View profile")} →</button><button type="button" class="xa-iconbtn" data-act="fit-hide" data-k="fit-x" aria-label="${T("Einblick ausblenden", "Hide insight")}">${icon("x")}</button></div>` : ""}
+        <ol class="xa-thread" data-scroll="thread">${c.msgs.map(msg).join("")}
           ${s.typing === c.id ? `<li class="xa-m xa-typing">${avatar(c.reply.from, "xa-av-sm")}<div class="xa-bubble"><span class="xa-dots" aria-label="${T("schreibt …", "typing …")}"><i></i><i></i><i></i></span></div></li>` : ""}</ol>
-        ${c.request ? `<div class="xa-request"><p>${T(`${esc(c.name)} möchte dir schreiben. Wenn du annimmst, landet das Gespräch bei deinen Nachrichten.`, `${esc(c.name)} wants to message you. Accept to move the conversation to your messages.`)}</p><div class="xa-row"><button type="button" class="xa-btn xa-primary" data-act="req-accept" data-k="req-ok">${icon("check")}${T("Annehmen", "Accept")}</button><button type="button" class="xa-btn" data-act="req-decline" data-k="req-no">${T("Ablehnen", "Decline")}</button></div></div>` : `<form class="xa-composer" data-form="chat"><label class="xa-sr" for="xa-chat-${uid}">${T(`Nachricht an ${c.name}`, `Message to ${c.name}`)}</label><input id="xa-chat-${uid}" name="text" maxlength="400" autocomplete="off" placeholder="${T("Nachricht … (@ zum Erwähnen)", "Message … (@ to mention)")}" data-k="chat-input"><button type="submit" class="xa-iconbtn xa-primary" aria-label="${T("Senden", "Send")}">${icon("send")}</button></form>`}
+        ${c.request ? `<div class="xa-request"><p>${T(`${esc(c.name)} möchte dir schreiben. Wenn du annimmst, landet das Gespräch bei deinen Nachrichten.`, `${esc(c.name)} wants to message you. Accept to move the conversation to your messages.`)}</p><div class="xa-row"><button type="button" class="xa-btn xa-primary" data-act="req-accept" data-k="req-ok">${icon("check")}${T("Annehmen", "Accept")}</button><button type="button" class="xa-btn" data-act="req-decline" data-k="req-no">${T("Ablehnen", "Decline")}</button></div></div>` : `<form class="xa-composer" data-form="chat"><span class="xa-comp-ic" aria-hidden="true">${icon("plus")}${icon("smile")}<b>GIF</b></span><label class="xa-sr" for="xa-chat-${uid}">${T(`Nachricht an ${c.name}`, `Message to ${c.name}`)}</label><input id="xa-chat-${uid}" name="text" maxlength="400" autocomplete="off" placeholder="${T("Nachricht …", "Message …")}" data-k="chat-input"><span class="xa-comp-ic" aria-hidden="true">${icon("mic")}</span><button type="submit" class="xa-iconbtn xa-send" aria-label="${T("Senden", "Send")}">${icon("arrowR", "xa-up")}</button></form>`}
       </div>
       <aside class="xa-msg-info" aria-label="${T("Details zum Gespräch", "Conversation details")}">
         ${c.group ? `<span class="xa-av xa-av-xl xa-av-group" aria-hidden="true">${esc(c.name[0])}</span>` : avatar(c.with, "xa-av-xl")}
-        <b>${esc(c.name)}</b><small class="xa-muted">${c.group ? T("Gruppengespräch", "Group conversation") : esc(L(PEOPLE[c.with].role))}</small>
-        <h4 class="xa-kicker xa-mt">${c.group ? T("Mitglieder", "Members") : T("Gemeinsame Kontakte", "Mutuals")}</h4>
-        <ul class="xa-people">${(c.group ? members : c.request ? [] : ["JW", "AK"].filter((m) => m !== c.with)).map((m) => `<li>${avatar(m, "xa-av-sm")}<span class="xa-grow">${esc(PEOPLE[m].name)}</span></li>`).join("") || `<li class="xa-muted">${T("Noch keine.", "None yet.")}</li>`}</ul>
+        <b>${esc(c.name)}</b><small class="xa-muted">${c.group ? T(`Gruppe · ${c.members.length} Mitglieder`, `Group · ${c.members.length} members`) : `${esc(L(PEOPLE[c.with].role))} · ${T("sucht ein Team für eine Idee", "looking for a team for an idea")}`}</small>${c.group ? "" : `<small class="xa-on-t"><i></i>Online</small>`}
+        ${c.group ? `<h4 class="xa-kicker xa-mt">${T("Mitglieder", "Members")} · ${members.length}<button type="button" class="xa-acc-link" data-act="app-only" data-v="group" data-k="mi-manage">${T("Verwalten", "Manage")}</button></h4><ul class="xa-people">${members.map((m, i) => `<li>${avatar(m, "xa-av-sm")}<span class="xa-grow">${esc(PEOPLE[m].name)}${m === "LV" ? T(" (du)", " (you)") : ""}</span>${i === 0 ? `<span class="xa-mtag">${T("Inhaber", "Owner")}</span>` : ""}</li>`).join("")}</ul>`
+          : `<h4 class="xa-kicker xa-mt">${T("Über", "About")}</h4><p class="xa-mi-bio">${esc(L(MBIO[c.with] || MBIO._))}</p>
+        <h4 class="xa-kicker xa-mt">${T("Gemeinsame Kontakte", "Mutuals")}</h4><p class="xa-mi-bio xa-muted">${c.request ? T("Noch keine gemeinsamen Verbindungen", "No mutual connections yet") : T("2 gemeinsame Verbindungen · 1 gemeinsamer Arbeitsbereich · 1 gemeinsame Community", "2 mutual connections · 1 shared workspace · 1 shared community")}</p>`}
+        <h4 class="xa-kicker xa-mt">${T("Letzte Dateien", "Recent files")}</h4>
+        <ul class="xa-people xa-mi-files">${files.map((f) => `<li><button type="button" class="xa-plain xa-grow" data-act="file" data-id="${f.id}" data-k="mf-${f.id}">${icon(f.type === "doc" ? "file" : f.type)}${esc(f.name)}</button></li>`).join("") || `<li class="xa-muted">${T("Noch keine.", "None yet.")}</li>`}</ul>
         <h4 class="xa-kicker xa-mt">${T("Gemeinsame Projekte", "Projects together")}</h4>
         <ul class="xa-people">${together.map((p) => `<li><span class="xa-dot" style="--h:${p.hue}"></span><button type="button" class="xa-plain xa-grow" data-act="project" data-id="${p.id}" data-k="mp-${p.id}">${esc(L(p.name))}</button></li>`).join("") || `<li class="xa-muted">${T("Noch keine.", "None yet.")}</li>`}</ul>
-        <h4 class="xa-kicker xa-mt">${T("Letzte Dateien", "Recent files")}</h4>
-        <ul class="xa-people">${files.map((f) => `<li>${icon(f.type === "doc" ? "file" : f.type)}<button type="button" class="xa-plain xa-grow" data-act="file" data-id="${f.id}" data-k="mf-${f.id}">${esc(f.name)}</button></li>`).join("") || `<li class="xa-muted">${T("Noch keine.", "None yet.")}</li>`}</ul>
       </aside>
     </div>`;
   }
+  const MBIO = { AK: ["Ich gestalte Apps, die man ohne Anleitung versteht. Gerade: Onboarding für Loopr.", "I design apps you understand without a manual. Right now: onboarding for Loopr."], JW: ["Backend, APIs und alles, was nachts nicht ausfallen darf.", "Backend, APIs and everything that must not fail at night."], NB: ["iOS-Entwickler mit zwei veröffentlichten Audio-Apps. Suche ein Nebenprojekt mit Musik.", "iOS developer with two shipped audio apps. Looking for a music side project."], _: ["Builder auf Xyntal.", "Builder on Xyntal."] };
 
   // Entdecken wie in der App: Personen als Xyntal-Karte mit Passung, andere Bereiche als Karten mit Ring
   const OTHER_PROJECTS = [
-    { id: "op1", name: ["Podcast-Schnitt mit KI", "AI podcast editing"], by: "Synth Lab", role: ["Sucht: Audio-Entwickler·in", "Looking for: audio developer"], score: 87, hue: "#8B6CFF" },
-    { id: "op2", name: ["Lernkarten-App für Azubis", "Flashcard app for apprentices"], by: "Kiezkiste", role: ["Sucht: Product Design", "Looking for: product design"], score: 81, hue: "#3FE0F0" },
-    { id: "op3", name: ["Bandprobe-Planer", "Band rehearsal planner"], by: "Founder-Zirkel", role: ["Sucht: Mitgründer·in", "Looking for: co-founder"], score: 76, hue: "#D9A54E" },
+    { id: "op1", lead: "Finn", tags: ["Audio", "Python", "Produkt"], why: ["Du hast Audio-Erfahrung, die hier fehlt.", "You have the audio experience that is missing here."], name: ["Podcast-Schnitt mit KI", "AI podcast editing"], by: "Synth Lab", role: ["Sucht: Audio-Entwickler·in", "Looking for: audio developer"], score: 87, hue: "#8B6CFF" },
+    { id: "op2", lead: "Tim", tags: ["Design", "React Native"], why: ["Ihr arbeitet schon in einem gemeinsamen Arbeitsbereich.", "You already share a workspace."], name: ["Lernkarten-App für Azubis", "Flashcard app for apprentices"], by: "Kiezkiste", role: ["Sucht: Product Design", "Looking for: product design"], score: 81, hue: "#3FE0F0" },
+    { id: "op3", lead: "Sophie", tags: ["Produkt", "Musik"], why: ["Musik und Produkt – beides steht in deinem Profil.", "Music and product – both are on your profile."], name: ["Bandprobe-Planer", "Band rehearsal planner"], by: "Founder-Zirkel", role: ["Sucht: Mitgründer·in", "Looking for: co-founder"], score: 76, hue: "#D9A54E" },
   ];
+  // Personenkarten in Entdecken sehen aus wie die Xyntal-Karte: Banner, Abzeichen, Bild, Passung, Kurztext
+  const BCARD = {
+    noah: { hue: ["#3A8AFF", "#7B5BFF"], badges: [["Früher Zugang", "Early access"], ["Beta-Tester", "Beta tester"]], focus: ["Entwicklung", "Engineering"], lvl: ["Fortgeschritten", "Advanced"], n: 2, bio: ["Ich baue iOS-Apps mit Audio und suche ein Nebenprojekt mit Musik.", "I build iOS apps with audio and want a music side project."], seek: ["ein Projekt zum Mitbauen", "a project to help build"] },
+    emre: { hue: ["#45C99B", "#3FE0F0"], badges: [["Beta-Tester", "Beta tester"]], focus: ["Entwicklung", "Engineering"], lvl: ["Profi", "Expert"], n: 3, bio: ["Ich forsche an Melodie-Erkennung und will sie in ein echtes Produkt bringen.", "I research melody detection and want to ship it in a real product."], seek: ["Mitgründer:in", "a co-founder"] },
+    lea: { hue: ["#B36BFF", "#FF7AB8"], badges: [["Früher Zugang", "Early access"]], focus: ["Design", "Design"], lvl: ["Profi", "Expert"], n: 3, bio: ["Ich baue Design-Systeme und mag frühe Produkte, bei denen noch alles offen ist.", "I build design systems and like early products where everything is still open."], seek: ["ein Team für frühe Produkte", "a team for early products"] },
+    mia: { hue: ["#E05E6D", "#D9A54E"], badges: [["Beta-Tester", "Beta tester"]], focus: ["Musik", "Music"], lvl: ["Fortgeschritten", "Advanced"], n: 2, bio: ["Ich produziere für Indie-Künstler und höre sofort, ob ein Song trägt.", "I produce for indie artists and hear at once whether a song works."], seek: ["ein Projekt zum Mitbauen", "a project to help build"] },
+    clara: { hue: ["#D9A54E", "#FF6A3D"], badges: [["Früher Zugang", "Early access"]], focus: ["Wachstum", "Growth"], lvl: ["Fortgeschritten", "Advanced"], n: 2, bio: ["Ich habe eine Musik-Community mit 12.000 Mitgliedern aufgebaut.", "I grew a music community to 12,000 members."], seek: ["ein Team für meine Idee", "a team for my idea"] },
+    paul: { hue: ["#8A8EA4", "#4C8DFF"], badges: [["Beta-Tester", "Beta tester"]], focus: ["Entwicklung", "Engineering"], lvl: ["Einsteiger", "Beginner"], n: 1, bio: ["Ich baue APIs in Go und habe gerade viel Zeit für ein neues Projekt.", "I build APIs in Go and have lots of time for a new project right now."], seek: ["ein Projekt zum Mitbauen", "a project to help build"] },
+  };
   const COMM_SCORE = { indie: 84, audio: 93, design: 79, ai: 88, nocode: 64 };
   function viewDiscover(s) {
-    const scopes = [["people", T("Personen", "People"), "users"], ["projects", T("Projekte", "Projects"), "kanban"], ["workspaces", T("Arbeitsbereiche", "Workspaces"), "grid"], ["communities", "Communities", "users"]];
-    const roles = [["all", T("Alle", "All")], ["dev", T("Entwicklung", "Engineering")], ["design", T("Design", "Design")], ["music", T("Musik", "Music")], ["growth", T("Wachstum", "Growth")]];
+    const scopes = [["people", T("Personen", "People")], ["projects", T("Projekte", "Projects")], ["workspaces", T("Arbeitsbereiche", "Workspaces")], ["communities", "Communities"], ["openings", T("Ausschreibungen", "Openings")]];
     const b = s.builders.find((x) => x.id === s.builder);
     const fl = [T("Skills ergänzen sich", "Complementary skills"), T("Zeitbudget", "Time budget"), T("Gemeinsame Ziele", "Shared goals"), T("Arbeitsstil", "Working style"), T("Standort & Zeitzone", "Location & time zone")];
     const connectBtn = (x, k, cls = "") => `<button type="button" class="xa-btn ${s.connected[x.id] ? "is-sent" : "xa-primary"} ${cls}" data-act="connect" data-id="${x.id}" data-k="${k}" aria-pressed="${!!s.connected[x.id]}">${s.connected[x.id] ? icon("check") + T("Anfrage gesendet", "Request sent") : T("Vernetzen", "Connect")}</button>`;
-    const entity = (id, hue, letter, title, sub, desc, score, action) => `<li class="xa-card xa-entity"><div class="xa-b-top"><span class="xa-letter" style="--h:${hue}" aria-hidden="true">${letter}</span><div class="xa-grow"><h4>${title}</h4><small class="xa-muted">${sub}</small></div><span class="xa-score">${ring(score, 46, 4)}</span></div><p class="xa-muted">${desc}</p>${action}</li>`;
+    const entity = (id, hue, letter, title, kind, sub, desc, why, tags, score, action) => `<li class="xa-ent"><span class="xa-letter" style="--h:${hue}" aria-hidden="true">${letter}</span><div class="xa-grow"><h4>${title}<span class="xa-mtag">${kind}</span></h4><small class="xa-muted">${sub}</small><p>${desc}</p><p class="xa-ent-why">✨ ${why}</p><p class="xa-ws-tags">${tags.map((t) => `<span class="xa-tag">${esc(L(t))}</span>`).join("")}</p></div><div class="xa-ent-r"><span class="xa-fit">${ring(score, 44, 4, false)}<b class="is-${band(score)[1]}">${score}%</b><small class="is-${band(score)[1]}">${band(score)[0]}</small></span>${action}</div></li>`;
+    const entHead = (t, n) => `<p class="xa-disc-count">${t} <span>${n}</span></p>`;
+    const dabei = (act, id, k, on, onLabel) => `<button type="button" class="xa-hbtn is-primary${on ? " is-sent" : ""}" data-act="${act}" data-id="${id}" data-k="${k}" aria-pressed="${!!on}">${on ? onLabel : T("Ich wäre dabei", "I'd be in")}</button>`;
     let body;
     if (s.discScope === "people") {
-      const list = s.builders.filter((x) => (s.role === "all" || x.kind === s.role) && !s.matchHidden[x.id]);
-      body = `${chips("role", roles, s.role, T("Nach Rolle filtern", "Filter by role"))}
-        <ul class="xa-bgrid">${list.map((x) => `<li class="xa-xcard${b && x.id === b.id ? " is-sel" : ""}" style="--h:${KIND_HUE[x.kind]}">
-          <div class="xa-xc-band"><span class="xa-xc-brand">xyntal</span><span class="xa-score-pill">${x.score}% ${T("Passung", "match")}</span></div>
-          <div class="xa-xc-body"><span class="xa-av xa-av-lg" style="--h:${KIND_HUE[x.kind]}" aria-hidden="true">${esc(initials(x.name))}</span>
-            <h4>${esc(x.name)}</h4><small class="xa-muted">${esc(L(x.role))} · ${esc(x.city)}</small>
-            <p class="xa-ws-tags">${x.skills.map((k) => `<span class="xa-tag">${esc(L(k))}</span>`).join("")}</p>
-            <div class="xa-xc-facts"><span><small>${T("Verfügbar", "Available")}</small><b>${T(`${x.hours} Std./Woche`, `${x.hours} h/week`)}</b></span><span><small>${T("Arbeitsweise", "Works")}</small><b>${x.kind === "growth" ? T("Asynchron", "Async") : T("Remote", "Remote")}</b></span></div>
-            <div class="xa-row"><button type="button" class="xa-btn" data-act="builder" data-id="${x.id}" data-k="bw-${x.id}" aria-pressed="${!!(b && x.id === b.id)}">${T("Profil ansehen", "View profile")}</button>${connectBtn(x, `bc-${x.id}`)}</div></div>
-        </li>`).join("") || `<li class="xa-empty">${T("Keine Vorschläge in diesem Filter.", "No suggestions in this filter.")}</li>`}</ul>`;
+      const list = s.builders.filter((x) => !s.matchHidden[x.id]).sort((p, q) => (s.discSort === "new" ? 0 : q.score - p.score));
+      body = `<p class="xa-disc-count">${T("Personen", "People")} <span>${list.length}</span></p>
+        <ul class="xa-pcgrid">${list.map((x) => { const c = BCARD[x.id]; return `<li class="xa-pc${b && x.id === b.id ? " is-sel" : ""}" style="--h:${c.hue[0]};--h2:${c.hue[1]}">
+          <div class="xa-pc-banner"><span class="xa-pc-badges">${c.badges.map((t, i) => `<span class="${i ? "" : "is-first"}">${L(t)}</span>`).join("")}</span></div>
+          <button type="button" class="xa-plain xa-pc-open" data-act="builder" data-id="${x.id}" data-k="bw-${x.id}" aria-pressed="${!!(b && x.id === b.id)}"><span class="xa-pc-av" aria-hidden="true">${esc(x.name[0])}</span><b>${esc(x.name.split(" ")[0])}</b></button>
+          <small class="xa-pc-role">${esc(L(c.focus))} · ${esc(L(c.lvl))}</small>
+          <span class="xa-pc-match">${x.score >= 89 ? `<i>+ ${T("Für dich empfohlen", "Recommended for you")}</i>` : ""}${T(`${x.score} % Passung`, `${x.score}% match`)}</span>
+          <small class="xa-pc-loc">${icon("mappin")}${esc(x.city)} · ${x.kind === "growth" ? T("Hybrid", "Hybrid") : "Remote"}</small>
+          <p class="xa-pc-bio">${esc(L(c.bio))}</p>
+          <div class="xa-pc-facts"><span><small>${T("Zeit", "Time")}</small><b>${T(`${x.hours} Std./Woche`, `${x.hours} h/week`)}</b><i style="--v:${Math.min(100, x.hours * 5)}%"></i></span><span><small>${T("Erfahrung", "Experience")}</small><b>${esc(L(c.lvl))}</b><i class="xa-pc-seg" data-n="${c.n}"><u></u><u></u><u></u></i></span></div>
+          <span class="xa-pc-seek">${T("Sucht", "Looking for")} <b>${esc(L(c.seek))}</b></span>
+          <small class="xa-pc-note">${T("Gemeinsame Sprache: Deutsch, Englisch · Gleiche Zeitzone", "Shared language: German, English · Same time zone")}</small>
+          <div class="xa-pc-act"><button type="button" class="xa-pc-yes${s.connected[x.id] ? " is-sent" : ""}" data-act="connect" data-id="${x.id}" data-k="bc-${x.id}" aria-pressed="${!!s.connected[x.id]}">${s.connected[x.id] ? icon("check") + T("Du bist dabei", "You're in") : T("Ich wäre dabei", "I'd be in")}</button><button type="button" class="xa-pc-no" data-act="match-hide" data-id="${x.id}" data-k="bn-${x.id}">${T("Nicht relevant", "Not relevant")}</button></div>
+          <small class="xa-pc-url">xyntal.de/${x.id}</small>
+        </li>`; }).join("") || `<li class="xa-empty">${T("Gerade keine weiteren Vorschläge.", "No more suggestions right now.")}</li>`}</ul>`;
     } else if (s.discScope === "projects") {
-      body = `<ul class="xa-cgrid">${OTHER_PROJECTS.map((p) => entity(p.id, p.hue, L(p.name)[0], esc(L(p.name)), esc(p.by), esc(L(p.role)), p.score, `<button type="button" class="xa-btn xa-full ${s.requested[p.id] ? "is-sent" : "xa-primary"}" data-act="disc-req" data-id="${p.id}" data-k="dp-${p.id}" aria-pressed="${!!s.requested[p.id]}">${s.requested[p.id] ? icon("check") + T("Beworben", "Applied") : T("Für Rolle bewerben", "Apply for role")}</button>`)).join("")}</ul>`;
+      body = `${entHead(T("Projekte, die zu dir passen", "Projects that fit you"), OTHER_PROJECTS.length)}<ul class="xa-ents">${OTHER_PROJECTS.map((p) => entity(p.id, p.hue, L(p.name)[0], esc(L(p.name)), T("Im Aufbau", "Building"), T(`in ${p.by} · geleitet von ${p.lead}`, `in ${p.by} · led by ${p.lead}`), esc(L(p.role)), esc(L(p.why)), p.tags, p.score, `${dabei("disc-req", p.id, `dp-${p.id}`, s.requested[p.id], T("Angefragt", "Requested"))}<button type="button" class="xa-ghost" data-act="app-only" data-v="contact" data-k="dpc-${p.id}">${T("Inhaber kontaktieren", "Contact owner")}</button>`)).join("")}</ul>`;
     } else if (s.discScope === "workspaces") {
-      body = `<ul class="xa-cgrid">${s.openWs.map((w) => entity(w.id, w.hue, w.code[0], esc(w.name), T(`${w.members} Mitglieder`, `${w.members} members`), esc(L(w.desc)), w.score, `<button type="button" class="xa-btn xa-full ${s.requested[w.id] ? "is-sent" : "xa-primary"}" data-act="ws-join" data-id="${w.id}" data-k="dw-${w.id}" aria-pressed="${!!s.requested[w.id]}">${s.requested[w.id] ? icon("check") + (w.mode === "join" ? T("Beigetreten", "Joined") : T("Angefragt", "Requested")) : w.mode === "join" ? T("Beitreten", "Join") : T("Zugang anfragen", "Request access")}</button>`)).join("")}</ul>`;
+      body = `${entHead(T("Arbeitsbereiche, die zu dir passen", "Workspaces that fit you"), s.openWs.length)}<ul class="xa-ents">${s.openWs.map((w) => entity(w.id, w.hue, w.code[0], esc(w.name), w.mode === "join" ? T("Offen", "Open") : T("Auf Anfrage", "On request"), T(`${w.members} Mitglieder`, `${w.members} members`), esc(L(w.desc)), T("Deine Skills in Audio und Produkt werden hier gesucht.", "Your skills in audio and product are wanted here."), w.id === "synth" ? ["Audio", "DSP", "Open Source"] : ["Karten", "Mobilität"], w.score, `${dabei("ws-join", w.id, `dw-${w.id}`, s.requested[w.id], w.mode === "join" ? T("Beigetreten", "Joined") : T("Angefragt", "Requested"))}<button type="button" class="xa-ghost" data-act="app-only" data-v="contact" data-k="dwc-${w.id}">${T("Inhaber kontaktieren", "Contact owner")}</button>`)).join("")}</ul>`;
+    } else if (s.discScope === "openings") {
+      const ops = OPENINGS.filter((o) => !o.project);
+      body = `${entHead(T("Ausschreibungen, die zu dir passen", "Openings that fit you"), ops.length)}<p class="xa-muted xa-disc-intro">${T("Abgeglichen mit deinen Skills, deiner Zeit und dem, was du suchst.", "Matched against your skills, your time and what you are looking for.")}</p><ul class="xa-openings xa-openings-2">${ops.map(openingCard(s, false)).join("")}</ul><p class="xa-muted xa-disc-intro">${T("4 weitere offene Ausschreibungen passen gerade nicht zu deinem Profil", "4 more open openings don't fit your profile right now")} · <button type="button" class="xa-acc-link" data-act="app-only" data-v="profile" data-k="op-prof">${T("Profil ergänzen", "Complete profile")}</button></p>`;
     } else {
-      body = `<ul class="xa-cgrid">${s.communities.filter((c) => !c.joined).map((c) => entity(c.id, c.hue, c.letter, esc(L(c.name)), T(`${c.members.toLocaleString("de-DE")} Mitglieder`, `${c.members.toLocaleString("en-GB")} members`), esc(L(c.desc)), COMM_SCORE[c.id], `<button type="button" class="xa-btn xa-full xa-primary" data-act="join" data-id="${c.id}" data-k="dc-${c.id}" aria-pressed="false">${T("Beitreten", "Join")}</button>`)).join("") || `<li class="xa-empty">${T("Du bist schon überall dabei.", "You've joined them all.")}</li>`}</ul>`;
+      const cs = s.communities.filter((c) => !c.joined);
+      body = `${entHead(T("Communities, die zu dir passen", "Communities that fit you"), cs.length)}<ul class="xa-ents">${cs.map((c) => entity(c.id, c.hue, c.letter, esc(L(c.name)), esc(L(c.tags[0])), T(`${c.members.toLocaleString("de-DE")} Mitglieder`, `${c.members.toLocaleString("en-GB")} members`), esc(L(c.desc)), T("Passt zu deinen Interessen an Musik und KI.", "Fits your interests in music and AI."), c.tags, COMM_SCORE[c.id], `${dabei("join", c.id, `dc-${c.id}`, false, "")}<small class="xa-faint">${c.priv ? T("auf Anfrage", "on request") : T("offen", "open")}</small>`)).join("") || `<li class="xa-empty">${T("Du bist schon überall dabei.", "You've joined them all.")}</li>`}</ul>`;
     }
     const aside = b && s.discScope === "people"
       ? `<aside class="xa-card xa-explain" aria-label="${T(`Profil von ${b.name}`, `${b.name}'s profile`)}" data-explain>
@@ -629,15 +975,17 @@
         ${connectBtn(b, "ex-connect", "xa-full")}
         <p class="xa-small xa-muted">${T("Ein Match entsteht erst, wenn beide Ja sagen.", "A match only happens when you both say yes.")}</p>
       </aside>`
-      : `<aside class="xa-col xa-aside">
-        <div class="xa-card"><h4>${T("Gefragte Skills", "Trending skills")}</h4><p class="xa-ws-tags">${["Swift", "Audio-ML", "Figma", "Growth", "Rust", "Supabase"].map((t) => `<span class="xa-tag">${t}</span>`).join("")}</p></div>
-        <div class="xa-card"><h4>${T("Beliebte Kategorien", "Popular categories")}</h4><ul class="xa-people">${[[T("KI-Produkte", "AI products"), 128], [T("Musik & Audio", "Music & audio"), 46], ["Climate Tech", 39], ["Creator Tools", 31]].map(([n, c]) => `<li><span class="xa-grow">${n}</span><span class="xa-mono">${c}</span></li>`).join("")}</ul></div>
-        <div class="xa-card"><h4>${T("Kommende Events", "Upcoming events")}</h4><ul class="xa-events">${s.events.map((e) => `<li><span class="xa-grow"><b>${esc(L(e.title))}</b><small>${esc(L(e.when))}</small></span><button type="button" class="xa-mini ${e.going ? "is-on" : ""}" data-act="rsvp" data-id="${e.id}" data-k="drsvp-${e.id}" aria-pressed="${e.going}">${e.going ? T("Zugesagt", "Going") : T("Zusagen", "Attend")}</button></li>`).join("")}</ul></div>
+      : `<aside class="xa-col xa-aside xa-disc-rail">
+        <div class="xa-rcard"><h4><span class="xa-rc-ic">${icon("zap")}</span>${T("Gefragte Skills", "Skills in demand")}</h4><p class="xa-ws-tags">${["Swift", "Audio-ML", "Figma", "Growth", "Rust", "Supabase"].map((t) => `<span class="xa-tag">${t}</span>`).join("")}</p>${hbtn(T("Profil vervollständigen", "Complete profile"), 'data-act="app-only" data-v="profile" data-k="dr-profile"')}</div>
+        <div class="xa-rcard"><h4><span class="xa-rc-ic">${icon("compass")}</span>${T("Beliebte Kategorien", "Popular categories")}</h4><ul class="xa-people">${[[T("KI-Produkte", "AI products"), 128], [T("Musik & Audio", "Music & audio"), 46], ["Climate Tech", 39], ["Creator Tools", 31]].map(([n, c]) => `<li><span class="xa-grow">${n}</span><span class="xa-mono">${c}</span></li>`).join("")}</ul>${hbtn(T("Communities durchsuchen", "Browse communities"), 'data-act="go" data-area="communities" data-k="dr-comm"')}</div>
+        <div class="xa-rcard"><h4><span class="xa-rc-ic">${icon("calendar")}</span>${T("Kommende Events", "Upcoming events")}</h4><ul class="xa-events">${s.events.map((e) => `<li><span class="xa-grow"><b>${esc(L(e.title))}</b><small>${esc(L(e.when))}</small></span><button type="button" class="xa-mini ${e.going ? "is-on" : ""}" data-act="rsvp" data-id="${e.id}" data-k="drsvp-${e.id}" aria-pressed="${e.going}">${e.going ? T("Zugesagt", "Going") : T("Zusagen", "Attend")}</button></li>`).join("")}</ul></div>
       </aside>`;
     return `<div class="xa-split">
       <div class="xa-split-main">
-        ${pageHead(T("Entdecken", "Discover"), T("Leute, Projekte und Räume, die zu Loopr Studio passen – mit Begründung statt Endlos-Feed.", "People, projects and spaces that fit Loopr Studio – with reasons instead of an endless feed."))}
-        <div class="xa-seg xa-scopes" role="group" aria-label="${T("Bereich", "Scope")}">${scopes.map(([id, label, ic]) => `<button type="button" data-act="discscope" data-v="${id}" data-k="ds-${id}" aria-pressed="${s.discScope === id}">${icon(ic)}${label}</button>`).join("")}</div>
+        ${pageHead(T("Finde deine Leute.", "Find your people."), T("Entdecke Builder, Projekte, Arbeitsbereiche und Communities — für dich gerankt.", "Discover builders, projects, workspaces and communities — ranked for you."))}
+        <div class="xa-disc-search" aria-hidden="true">${icon("search")}<span>${T("Builder, Skills, Projekte, Arbeitsbereiche oder Interessen suchen …", "Search builders, skills, projects, workspaces or interests …")}</span><span class="xa-keys"><kbd>Ctrl</kbd><kbd>K</kbd></span></div>
+        <div class="xa-disc-bar"><div class="xa-seg xa-scopes" role="group" aria-label="${T("Bereich", "Scope")}">${scopes.map(([id, label]) => `<button type="button" data-act="discscope" data-v="${id}" data-k="ds-${id}" aria-pressed="${s.discScope === id}">${label}</button>`).join("")}</div><span class="xa-grow"></span>
+          <button type="button" class="xa-select" data-act="discsort" data-k="discsort">${s.discSort === "new" ? T("Neueste", "Newest") : T("Beste Passung", "Best match")}<i aria-hidden="true"></i></button><button type="button" class="xa-hbtn" data-act="app-only" data-v="filter" data-k="discfilter">Filter</button></div>
         ${body}
       </div>
       ${aside}
@@ -698,22 +1046,27 @@
   }
 
   function viewFiles(s) {
-    const types = [["all", T("Alle Typen", "All types"), "file"], ["doc", T("Dokumente", "Documents"), "file"], ["image", T("Bilder", "Images"), "image"], ["video", T("Videos", "Videos"), "video"], ["audio", "Audio", "audio"]];
-    const views = [["all", T("Alle Dateien", "All files"), "folder"], ["recent", T("Zuletzt", "Recent"), "clock"], ["shared", T("Geteilt", "Shared"), "users"], ["starred", T("Markiert", "Starred"), "star"], ["mine", T("Meine Dateien", "My files"), "user"], ["trash", T("Papierkorb", "Trash"), "trash"]];
+    const types = [["all", T("Alle Typen", "All types"), "file"], ["doc", T("Dokumente", "Documents"), "file"], ["image", T("Bilder", "Images"), "image"], ["video", T("Videos", "Videos"), "video"], ["audio", "Audio", "audio"], ["archive", T("Archive", "Archives"), "folder"]];
+    const views = [["all", T("Alle Dateien", "All files"), "folder"], ["recent", T("Zuletzt", "Recent"), "clock"], ["shared", T("Geteilt", "Shared"), "users"], ["starred", T("Markiert", "Starred"), "star"], ["trash", T("Papierkorb", "Trash"), "trash"]];
     const STAT = { review: [T("In Prüfung", "In review"), "is-warn"], changes: [T("Änderungen nötig", "Changes requested"), "is-bad"], approved: [T("Freigegeben", "Approved"), "is-ok"], released: [T("Veröffentlicht", "Released"), "is-acc"] };
     const q = s.fileQuery.trim().toLowerCase();
-    const list = s.files.filter((f) => (s.fileType === "all" || f.type === s.fileType) && (s.fileView === "all" || (s.fileView === "recent" && f.recent) || (s.fileView === "shared" && f.shared) || (s.fileView === "starred" && s.fileStars[f.id]) || (s.fileView === "mine" && f.owner === "LV")) && (s.fileStatus === "all" || f.status === s.fileStatus) && (!q || f.name.toLowerCase().includes(q) || f.ws.toLowerCase().includes(q)));
+    const list = s.files.filter((f) => (s.fileType === "all" || f.type === s.fileType) && (s.fileView === "all" || (s.fileView === "recent" && f.recent) || (s.fileView === "shared" && f.shared) || (s.fileView === "starred" && s.fileStars[f.id])) && (!s.fileWs || f.ws === s.fileWs) && (s.fileStatus === "all" || f.status === s.fileStatus) && (!q || f.name.toLowerCase().includes(q) || f.ws.toLowerCase().includes(q)));
     const sel = s.files.find((f) => f.id === s.fileSel);
     const ic = (t) => (t === "doc" ? "file" : t);
     return `<div class="xa-files">
       <nav class="xa-subnav" aria-label="${T("Dateiansichten", "File views")}"><h4 class="xa-subnav-h">${T("Dateien", "Files")}</h4>
         ${views.map(([id, label, i]) => `<button type="button" data-act="fileview" data-v="${id}" data-k="fv-${id}" aria-pressed="${s.fileView === id}">${icon(i)}${label}</button>`).join("")}
+        <h4 class="xa-subnav-h xa-mt">${T("Arbeitsbereiche", "Workspaces")}</h4>
+        <button type="button" class="xa-select xa-select-full" data-act="filews" data-k="filews">${s.fileWs ? esc(s.fileWs) : T("Alle Arbeitsbereiche", "All workspaces")}<i aria-hidden="true"></i></button>
+        <button type="button" class="xa-subnav-add" data-act="app-only" data-v="folder" data-k="f-folder">+ ${T("Neuer Ordner", "New folder")}</button>
         <h4 class="xa-subnav-h xa-mt">${T("Typ", "Type")}</h4>
         ${types.map(([id, label, i]) => `<button type="button" data-act="filetype" data-v="${id}" data-k="ft-${id}" aria-pressed="${s.fileType === id}">${icon(i)}${label}</button>`).join("")}
       </nav>
       <div class="xa-files-main">
-        ${pageHead(T("Dein gesamtes Wissen an einem Ort.", "All your knowledge in one place."), T("2,1 GB von 10 GB belegt · Plan Start", "2.1 GB of 10 GB used · Start plan"))}
-        <div class="xa-toolbar"><label class="xa-sr" for="xa-fq-${uid}">${T("Dateien suchen", "Search files")}</label><input id="xa-fq-${uid}" class="xa-input" type="search" data-input="filequery" data-k="fq" value="${esc(s.fileQuery)}" placeholder="${T("Dateien suchen …", "Search files …")}" autocomplete="off"><button type="button" class="xa-btn xa-primary" data-act="upload" data-k="upload">${icon("download", "xa-flip")}${T("Hochladen", "Upload")}</button></div>
+        ${pageHead(T("Dein gesamtes Wissen an einem Ort.", "All your knowledge in one place."), "")}
+        <div class="xa-toolbar xa-files-bar"><button type="button" class="xa-hbtn xa-hbtn-ai" data-act="ask-files" data-k="f-ask">${AI_MARK}${T("Xyntal fragen", "Ask Xyntal")}</button><label class="xa-sr" for="xa-fq-${uid}">${T("Dateien suchen", "Search files")}</label><input id="xa-fq-${uid}" class="xa-input" type="search" data-input="filequery" data-k="fq" value="${esc(s.fileQuery)}" placeholder="${T("Dateien suchen …", "Search files …")}" autocomplete="off"><span class="xa-viewtog" aria-hidden="true"><i class="is-on">${icon("list")}</i><i>${icon("grid")}</i></span><button type="button" class="xa-btn xa-primary" data-act="upload" data-k="upload">${T("Hochladen", "Upload")}</button></div>
+        <p class="xa-files-path">${icon("folder")}<span class="xa-grow">${T("Dein gesamtes Wissen an einem Ort", "All your knowledge in one place")}</span><span class="xa-mono">${T(`${list.length} Dateien`, `${list.length} files`)}</span></p>
+        <p class="xa-files-plan">${T("Plan Start · 2,1 GB von 10 GB belegt · Upload bis 250 MB je Datei", "Start plan · 2.1 GB of 10 GB used · uploads up to 250 MB per file")}</p>
         ${chips("filestatus", [["all", T("Alle Status", "All statuses")], ...Object.entries(STAT).map(([id, [label]]) => [id, label, s.files.filter((f) => f.status === id).length])], s.fileStatus, T("Nach Prüfstatus filtern", "Filter by review status"))}
         <div class="xa-table" role="table" aria-label="${T("Dateien", "Files")}">
           <div class="xa-tr xa-th" role="row"><span role="columnheader">Name</span><span role="columnheader">${T("Arbeitsbereich", "Workspace")}</span><span role="columnheader">${T("Inhaber", "Owner")}</span><span role="columnheader">Ver</span><span role="columnheader">${T("Größe", "Size")}</span><span role="columnheader">${T("Geändert", "Modified")}</span><span role="columnheader"><span class="xa-sr">${T("Markieren", "Star")}</span></span></div>
@@ -728,7 +1081,7 @@
     ["plan", ["Meinen Tag planen", "Plan my day"]],
     ["summary", ["Arbeit zusammenfassen", "Summarise my work"]],
     ["risks", ["Risiken finden", "Find risks"]],
-    ["update", ["Team-Update entwerfen", "Draft a team update"]],
+    ["update", ["Update entwerfen", "Draft an update"]],
   ];
   function aiAnswer(s, kind, q) {
     const open = allTasks(s).filter((x) => x.t.status !== "done");
@@ -760,9 +1113,10 @@
       const p = proj(s, "launch");
       return `<p>${T("Entwurf für das Team-Update:", "Draft for the team update:")}</p><blockquote>${T(`Hallo Team! Diese Woche haben wir ${done.length} Aufgaben abgeschlossen. Der Beta-Launch steht bei ${pct(p)} %. Fokus bis Freitag: ${high.slice(0, 2).map((x) => esc(L(x.t.title))).join(" und ") || "Feinschliff"}. Danke euch! – Lena`, `Hi team! This week we closed ${done.length} tasks. The beta launch is at ${pct(p)}%. Focus until Friday: ${high.slice(0, 2).map((x) => esc(L(x.t.title))).join(" and ") || "polish"}. Thank you! – Lena`)}</blockquote><p class="xa-muted">${T("In der App kannst du den Entwurf direkt in den Team-Chat schicken.", "In the app you can send the draft straight to the team chat.")}</p>`;
     }
+    if (kind === "decisions") return `<p>${T("Das habt ihr in Loopr Studio entschieden:", "This is what you decided in Loopr Studio:")}</p>${li(s.wsd.loopr.decisions.map((d) => `<b>${esc(L(d.title))}</b> (${L(DEC_STATE[d.state])}): ${esc(L(d.why))}`))}`;
     if (kind === "chat") {
       const c = s.convos.find((x) => x.id === s.convo);
-      return `<p>${T(`Zusammenfassung von „${esc(c.name)}“:`, `Summary of “${esc(c.name)}”:`)}</p>${li(c.msgs.slice(-3).map((m) => `<b>${m.from === "LV" ? T("Du", "You") : esc(PEOPLE[m.from].name.split(" ")[0])}:</b> ${esc(L(m.text))}`))}`;
+      return `<p>${T(`Zusammenfassung von „${esc(c.name)}“:`, `Summary of “${esc(c.name)}”:`)}</p>${li(c.msgs.filter((m) => !m.kind).slice(-3).map((m) => `<b>${m.from === "LV" ? T("Du", "You") : esc(PEOPLE[m.from].name.split(" ")[0])}:</b> ${esc(L(m.text))}`))}`;
     }
     if (kind && kind.startsWith("file:")) {
       const f = s.files.find((x) => x.id === kind.slice(5));
@@ -788,12 +1142,12 @@
     const sugg = AI_ACTIONS.map(([id, label]) => `<button type="button" class="xa-chip" data-act="ai" data-v="${id}" data-k="ais-${id}"${s.aiBusy ? " disabled" : ""}>${icon("sparkle")}${L(label)}</button>`).join("");
     return `<div class="xa-ai">
       <aside class="xa-ai-list"><button type="button" class="xa-btn xa-primary xa-full" data-act="ai-new" data-k="ai-new">${icon("plus")}${T("Neues Gespräch", "New conversation")}</button>
-        <label class="xa-sr" for="xa-aq-${uid}">${T("Gespräche suchen", "Search conversations")}</label><input id="xa-aq-${uid}" class="xa-input xa-mt" type="search" data-input="aiquery" data-k="aq" value="${esc(s.aiQuery)}" placeholder="${T("Gespräche suchen …", "Search conversations …")}" autocomplete="off">
+        <label class="xa-sr" for="xa-aq-${uid}">${T("Gespräche suchen", "Search conversations")}</label><input id="xa-aq-${uid}" class="xa-input xa-mt" type="search" data-input="aiquery" data-k="aq" value="${esc(s.aiQuery)}" placeholder="${T("Chats suchen …", "Search chats …")}" autocomplete="off">
         ${(() => { const q = s.aiQuery.trim().toLowerCase(); const m = (t) => !q || t.toLowerCase().includes(q); const pinned = [T("Beta-Plan Closed Beta", "Closed beta plan")].filter(m); const recent = [s.ai.length ? T("Aktuelles Gespräch", "Current conversation") : "", T("Pitch-Deck überarbeiten", "Revise the pitch deck"), T("Fragen für Nutzerinterviews", "Questions for user interviews")].filter((t) => t && m(t));
-          return `<h4 class="xa-kicker xa-mt">${T("Angepinnt", "Pinned")}</h4><ul class="xa-recent">${pinned.map((t) => `<li>${icon("pin")}${esc(t)}</li>`).join("") || `<li class="xa-muted">–</li>`}</ul><h4 class="xa-kicker xa-mt">${T("Zuletzt", "Recent")}</h4><ul class="xa-recent">${recent.map((t, i) => `<li class="${i || !s.ai.length ? "xa-muted" : ""}">${esc(t)}</li>`).join("") || `<li class="xa-muted">${T("Nichts gefunden.", "Nothing found.")}</li>`}</ul>`; })()}</aside>
+          return `<h4 class="xa-kicker xa-mt">${T("Zuletzt", "Recent")}</h4><ul class="xa-recent">${[...recent, ...pinned, T("Meinen Mittwoch entzerren", "Untangle my Wednesday"), T("Erkläre mein 94-%-Match mit Noah", "Explain my 94% match with Noah")].filter(m).map((t, i) => `<li class="${i || !s.ai.length ? "xa-muted" : ""}">${icon("message")}${esc(t)}</li>`).join("") || `<li class="xa-muted">${T("Nichts gefunden.", "Nothing found.")}</li>`}</ul>`; })()}</aside>
       <div class="xa-ai-main" role="region" aria-label="Xyntal KI">
-        <header class="xa-ai-head"><h3 class="xa-title" tabindex="-1" data-k="title">Xyntal KI</h3><span class="xa-grow"></span><span class="xa-tag">${T("Kontext: Loopr Studio", "Context: Loopr Studio")}</span></header>
-        <div class="xa-seg xa-ai-tabs" role="group" aria-label="${T("Bereiche des KI-Centers", "AI Center sections")}">${[["chat", "Chat"], ["agents", T("Agenten", "Agents")], ["templates", T("Vorlagen", "Templates")], ["automation", T("Automationen", "Automations")], ["memory", T("Gedächtnis", "Memory")], ["settings", T("Einstellungen", "Settings")]].map(([id, label]) => `<button type="button" data-act="aitab" data-v="${id}" data-k="aitab-${id}" aria-pressed="${s.aiTab === id}">${label}</button>`).join("")}</div>
+        <header class="xa-ai-head"><h3 class="xa-title" tabindex="-1" data-k="title">Xyntal KI</h3><span class="xa-grow"></span>${hbtn(T("Neuer Chat", "New chat"), 'data-act="ai-new" data-k="ai-new2"')}</header>
+        <div class="xa-seg xa-ai-tabs" role="group" aria-label="${T("Bereiche des KI-Centers", "AI Center sections")}">${[["chat", "Chat"], ["agents", T("Agenten", "Agents")], ["templates", T("Vorlagen", "Templates")], ["automation", T("Automationen", "Automations")], ["memory", T("Speicher", "Memory")], ["settings", T("Einstellungen", "Settings")]].map(([id, label]) => `<button type="button" data-act="aitab" data-v="${id}" data-k="aitab-${id}" aria-pressed="${s.aiTab === id}">${label}</button>`).join("")}</div>
         ${s.aiTab === "agents" ? `<ul class="xa-alist xa-ai-pane">${s.agents.map((a) => `<li class="xa-card xa-auto${a.on ? "" : " is-off"}"><span class="xa-icon-tile">${icon("bot")}</span><div class="xa-grow"><b id="xa-ag-${a.id}-${uid}">${esc(L(a.name))}</b><small class="xa-muted">${esc(L(a.desc))}</small></div>${sw("agent", a.id, a.on, `xa-ag-${a.id}-${uid}`)}</li>`).join("")}</ul>`
         : s.aiTab === "templates" ? `<ul class="xa-alist xa-ai-pane">${[["plan", T("Tagesplan aus Kalender und Aufgaben", "Day plan from calendar and tasks")], ["risks", T("Risiken vor einem Meilenstein finden", "Find risks before a milestone")], ["update", T("Team-Update aus der Woche", "Team update from the week")], ["summary", T("Stand aller Projekte", "Status of all projects")]].map(([id, d]) => `<li class="xa-card xa-auto"><span class="xa-icon-tile">${icon("copy")}</span><div class="xa-grow"><b>${L(AI_ACTIONS.find((x) => x[0] === id)[1])}</b><small class="xa-muted">${d}</small></div><button type="button" class="xa-btn xa-primary" data-act="ai-tpl" data-v="${id}" data-k="ait-${id}">${T("Verwenden", "Use")}</button></li>`).join("")}</ul>`
         : s.aiTab === "memory" ? `<ul class="xa-alist xa-ai-pane xa-log">${[T("Lena arbeitet am liebsten vormittags in Fokusblöcken.", "Lena prefers focus blocks in the morning."), T("Loopr Studio plant die Closed Beta für den 7. November.", "Loopr Studio plans the closed beta for 7 November."), T("Team-Updates gehen freitags an #team-loopr.", "Team updates go to #team-loopr on Fridays.")].map((m) => `<li><span class="xa-dot" style="--h:#8B6CFF"></span><span class="xa-grow">${m}</span></li>`).join("")}</ul><p class="xa-hint xa-ai-pane">${T("Du entscheidest, was die KI sich merkt – jeder Eintrag lässt sich in der App löschen.", "You decide what the AI remembers – every entry can be deleted in the app.")}</p>`
@@ -802,13 +1156,14 @@
           ${s.aiBusy ? `<li class="xa-a"><span class="xa-ai-badge" aria-hidden="true">${icon("sparkle")}</span><span class="xa-dots" aria-label="${T("Xyntal KI denkt nach …", "Xyntal AI is thinking …")}"><i></i><i></i><i></i></span></li>` : ""}
         </ol>
         ${s.ai.length ? `<div class="xa-chips xa-ai-sugg">${sugg}</div>` : ""}`}
-        <form class="xa-composer" data-form="ai"><label class="xa-sr" for="xa-ai-${uid}">${T("Frage an Xyntal KI", "Question for Xyntal AI")}</label><input id="xa-ai-${uid}" name="q" maxlength="300" autocomplete="off" placeholder="${T("Xyntal KI fragen …", "Ask Xyntal AI …")}" data-k="ai-input"${s.aiBusy ? " disabled" : ""}><button type="submit" class="xa-btn xa-primary"${s.aiBusy ? " disabled" : ""}>${T("Senden", "Send")}</button></form>
+        <form class="xa-composer" data-form="ai"><label class="xa-sr" for="xa-ai-${uid}">${T("Frage an Xyntal KI", "Question for Xyntal AI")}</label><input id="xa-ai-${uid}" name="q" maxlength="300" autocomplete="off" placeholder="${T("Xyntal AI schreiben …", "Message Xyntal AI …")}" data-k="ai-input"${s.aiBusy ? " disabled" : ""}><button type="submit" class="xa-btn xa-primary"${s.aiBusy ? " disabled" : ""}>${T("Senden", "Send")}</button></form>
       </div>
       <aside class="xa-ai-side">
-        <h4 class="xa-kicker">${T("Arbeitsbereich-Kontext", "Workspace context")}</h4><p class="xa-boxed">Loopr Studio</p>
+        <h4 class="xa-kicker">${T("Arbeitsbereich-Kontext", "Workspace context")}</h4><button type="button" class="xa-select xa-select-full" data-act="app-only" data-v="context" data-k="ai-ctx">Loopr Studio<i aria-hidden="true"></i></button>
         <h4 class="xa-kicker">${T("Relevante Dateien", "Relevant files")}</h4>
         <ul class="xa-flist">${["plan", "deck", "screens"].map((id) => { const f = s.files.find((x) => x.id === id); return `<li><button type="button" class="xa-plain" data-act="file-ai" data-id="${id}" data-k="aif-${id}">${icon(f.type === "doc" ? "file" : f.type)}${esc(f.name)}</button></li>`; }).join("")}</ul>
         <h4 class="xa-kicker">${T("KI-Agenten", "AI agents")}</h4>
+        <button type="button" class="xa-agentbox" data-act="aitab" data-v="agents" data-k="ai-agbox"><i></i><span><b>${T(`${s.approvals.length} warten auf Prüfung`, `${s.approvals.length} awaiting review`)}</b><small>${T(`${s.agents.length} Agenten eingerichtet`, `${s.agents.length} agents set up`)}</small></span></button>
         <ul class="xa-flist">${s.agents.map((a) => `<li><button type="button" class="xa-plain" data-act="aitab" data-v="agents" data-k="aia-${a.id}"><span class="xa-dot" style="--h:${a.on ? "#45C99B" : "#8A8EA4"}"></span>${esc(L(a.name))}</button></li>`).join("")}</ul>
         <h4 class="xa-kicker">${T("Schnellaktionen", "Quick actions")}</h4>
         <div class="xa-qgrid">${AI_ACTIONS.map(([id, label]) => `<button type="button" data-act="ai" data-v="${id}" data-k="aiq-${id}"${s.aiBusy ? " disabled" : ""}>${L(label)}</button>`).join("")}</div>
@@ -834,12 +1189,13 @@
     } else if (s.autoTab === "log") {
       body = `<ul class="xa-alist xa-log">${s.autoLog.map((l) => `<li><span class="xa-dot" style="--h:${l.ok ? "#45C99B" : "#E05E6D"}"></span><span class="xa-grow">${esc(L(l.name))}</span><span class="xa-status is-ok">${T("Erfolgreich", "Succeeded")}</span><span class="xa-mono xa-muted">${esc(L(l.at))}</span></li>`).join("")}</ul>`;
     } else {
-      body = `<ul class="xa-alist">${s.autos.map((a) => `<li class="xa-card xa-auto${a.on ? "" : " is-off"}"><span class="xa-icon-tile">${icon("zap")}</span><div class="xa-grow"><b id="xa-an-${a.id}-${uid}">${esc(L(a.name))}</b><small class="xa-muted">${esc(L(a.when))} · ${T(`${a.runs} Läufe`, `${a.runs} runs`)}</small></div><button type="button" class="xa-mini" data-act="run" data-id="${a.id}" data-k="run-${a.id}"${a.on ? "" : " disabled"}>${icon("play")}${T("Jetzt ausführen", "Run now")}</button>${sw("auto", a.id, a.on, `xa-an-${a.id}-${uid}`)}</li>`).join("")}</ul>`;
+      body = `<ul class="xa-alist">${s.autos.map((a) => `<li class="xa-card xa-auto${a.on ? "" : " is-off"}"><span class="xa-icon-tile">${icon("zap")}</span><div class="xa-grow"><b id="xa-an-${a.id}-${uid}">${esc(L(a.name))}</b><small class="xa-muted">${esc(L(a.when))} · ${T(`${a.runs} Läufe`, `${a.runs} runs`)}</small></div><button type="button" class="xa-mini" data-act="run" data-id="${a.id}" data-k="run-${a.id}"${a.on ? "" : " disabled"}>${icon("play")}${T("Jetzt ausführen", "Run now")}</button>${sw("auto", a.id, a.on, `xa-an-${a.id}-${uid}`)}</li>`).join("")}</ul>
+        ${s.templates.length ? `<h4 class="xa-seclabel xa-sec-gap">${T("SCHNELLSTART", "QUICK START")}</h4><ul class="xa-qstart">${s.templates.map((t, i) => `<li><span class="xa-qs-top"><span class="xa-rc-ic">${icon(["flag", "shield", "chart"][i % 3])}</span><span class="xa-mtag">${i ? T("KI", "AI") : T("Planung", "Planning")}</span></span><b>${esc(L(t.name))}</b><p>${esc(L(t.when))}</p><span class="xa-qs-foot"><small>${T(`spart ~${t.saves} Min. pro Lauf`, `saves ~${t.saves} min per run`)}</small><button type="button" class="xa-acc-link" data-act="use-tpl" data-id="${t.id}" data-k="qs-${t.id}">${T("Verwenden", "Use")} →</button></span></li>`).join("")}</ul>` : ""}`;
     }
     return `<div class="xa-files">
       <nav class="xa-subnav" aria-label="${T("Automation", "Automation")}"><h4 class="xa-subnav-h">Automation</h4>${tabs.map(([id, label, i, n]) => `<button type="button" data-act="autotab" data-v="${id}" data-k="at-${id}" aria-pressed="${s.autoTab === id}">${icon(i)}<span class="xa-grow">${label}</span>${n ? `<span class="xa-count">${n}</span>` : ""}</button>`).join("")}</nav>
       <div class="xa-files-main">
-        ${pageHead(T("Automationen", "Automations"), T("Lass Xyntal die Routine erledigen.", "Let Xyntal handle the routine."), `<button type="button" class="xa-btn xa-primary" data-act="autotab" data-v="templates" data-k="a-new">${icon("plus")}${T("Neue Automation", "New automation")}</button>`)}
+        ${pageHead(T("Automationen", "Automations"), T("Wenn etwas passiert, kümmert sich Xyntal um den nächsten Schritt — automatisch.", "When something happens, Xyntal takes care of the next step — automatically."), `<button type="button" class="xa-btn xa-primary" data-act="autotab" data-v="templates" data-k="a-new">${icon("plus")}${T("Neue Automation", "New automation")}</button>`)}
         <div class="xa-stats4">
           <div class="xa-card xa-stat"><div><b>${active} / ${s.autos.length}</b><small>${T("Aktive Automationen", "Active automations")}</small></div></div>
           <div class="xa-card xa-stat"><div><b>${runs}</b><small>${T("Läufe (30 Tage)", "Runs (30 days)")}</small></div></div>
@@ -860,22 +1216,30 @@
     const dayEvents = visible.filter((e) => e.day === c.day).sort((a, b) => a.s - b.s);
     const planned = dayEvents.reduce((n, e) => n + (e.e - e.s), 0);
     const dates = [2, 3, 4, 5, 6, 7, 8];
+    const unplanned = allTasks(s).filter((x) => x.t.status !== "done" && x.t.prio !== "low" && !c.events.some((e) => L(e.title).includes(L(x.t.title)))).slice(0, 3);
+    const loadOf = (i) => visible.filter((e) => e.day === i).reduce((n, e) => n + (e.e - e.s), 0);
+    const loadWord = (h) => h === 0 ? T("Frei", "Free") : h < 2 ? T("Ruhig", "Quiet") : h < 4.5 ? T("Normal", "Normal") : T("Voll", "Busy");
     const month = [];
     for (let d = -5; d <= 36; d++) month.push(d); // Oktober-Ende bis Dezember-Anfang, Montag zuerst
     return `<div class="xa-cal">
       <aside class="xa-cal-side">
-        <div class="xa-mini-cal"><b>${T("November 2026", "November 2026")}</b>
+        <div class="xa-mini-cal"><b>${T("November 2026", "November 2026")}<span aria-hidden="true">${icon("chevL")}${icon("chevR")}</span></b>
           <div class="xa-mc-grid" aria-hidden="true">${DAYS.map((d) => `<span class="xa-mc-h">${L(d)[0]}</span>`).join("")}${month.map((d) => { const inMonth = d >= 1 && d <= 30; const n = d < 1 ? 31 + d : d > 30 ? d - 30 : d; const wk = d >= 2 && d <= 8; return `<span class="${inMonth ? "" : "is-out"}${wk ? " is-week" : ""}${d === 2 + c.day ? " is-sel" : ""}">${n}</span>`; }).join("")}</div></div>
         <h4 class="xa-kicker xa-mt">${T("Gespeicherte Ansichten", "Saved views")}</h4>
-        <ul class="xa-switches">${[["week", T("Meine Woche", "My week")], ["focus", T("Deep Work", "Deep work")], ["agenda", T("Termine & Fristen", "Meetings & deadlines")]].map(([v, label]) => `<li><button type="button" class="xa-plain xa-grow" data-act="calsaved" data-v="${v}" data-k="csv-${v}">${label}</button></li>`).join("")}</ul>
+        <ul class="xa-switches">${[["week", T("Meine Woche", "My week")], ["agenda", T("Besprechungen und Fristen", "Meetings and deadlines")], ["focus", T("Deep Work", "Deep work")], ["unplanned", T("Ungeplante Arbeit", "Unscheduled work")]].map(([v, label]) => `<li><button type="button" class="xa-plain xa-grow" data-act="calsaved" data-v="${v}" data-k="csv-${v}">${label}</button></li>`).join("")}</ul>
         <h4 class="xa-kicker xa-mt">${T("Quellen", "Sources")}</h4>
-        <ul class="xa-switches">${Object.entries(KINDS).map(([k, v]) => `<li><span class="xa-dot" style="--h:${v[3]}"></span><span class="xa-grow" id="xa-k-${k}-${uid}">${en() ? v[1] : v[0]}</span>${sw("kind", k, !c.hidden[k], `xa-k-${k}-${uid}`)}</li>`).join("")}</ul>
+        <ul class="xa-switches">${Object.entries(KINDS).map(([k, v]) => `<li><span class="xa-src-ic" style="--h:${v[3]}">${icon(v[2])}</span><span class="xa-grow" id="xa-k-${k}-${uid}">${en() ? v[1] : v[0]}</span>${sw("kind", k, !c.hidden[k], `xa-k-${k}-${uid}`)}</li>`).join("")}</ul>
+        <h4 class="xa-kicker xa-mt">${T("Arbeitszeiten", "Working hours")}</h4>
+        <p class="xa-cal-hours">${icon("clock")}<span><b>${T("Mo.–Fr. · 09:00–18:00", "Mon–Fri · 09:00–18:00")}</b><small>Europe/Berlin</small></span></p>
+        <h4 class="xa-kicker xa-mt">${T("Ungeplante Arbeit", "Unscheduled work")}</h4>
+        <ul class="xa-unplanned">${unplanned.map((x) => `<li><button type="button" class="xa-plain" data-act="cal-plan" data-id="${x.t.id}" data-k="up-${x.t.id}"><b>${esc(L(x.t.title))}</b><small>${esc(L(x.p.name))} · ${L(PRIO[x.t.prio])}</small></button></li>`).join("") || `<li class="xa-muted">${T("Alles eingeplant.", "Everything is scheduled.")}</li>`}</ul>
+        <button type="button" class="xa-acc-link" data-act="app-only" data-v="planning" data-k="cal-planning">${T("Planung öffnen", "Open planning")} →</button>
       </aside>
       <div class="xa-cal-main" role="region" aria-label="${T("Wochenansicht", "Week view")}">
-        <header class="xa-cal-head"><h3 class="xa-title" tabindex="-1" data-k="title">${icon("calendar")}${T("Kalender", "Calendar")}</h3><span class="xa-muted">${T("2. – 8. Nov. 2026", "2 – 8 Nov 2026")}</span><span class="xa-grow"></span>
-          <div class="xa-seg" role="group" aria-label="${T("Ansicht", "View")}"><button type="button" data-act="calview" data-v="day" data-k="cv-day" aria-pressed="${c.view === "day"}">${T("Tag", "Day")}</button><button type="button" data-act="calview" data-v="week" data-k="cv-week" aria-pressed="${c.view === "week"}">${T("Woche", "Week")}</button><button type="button" data-act="calview" data-v="agenda" data-k="cv-agenda" aria-pressed="${c.view === "agenda"}">${T("Agenda", "Agenda")}</button></div>
-          <button type="button" class="xa-btn xa-primary" data-act="cal-add" data-k="cal-add">${icon("plus")}${T("Fokusblock", "Focus block")}</button></header>
-        <div class="xa-days" role="group" aria-label="${T("Tag wählen", "Pick a day")}">${DAYS.map((d, i) => { const ms = visible.some((e) => e.day === i && e.kind === "milestone"); return `<button type="button" data-act="calday" data-v="${i}" data-k="cd-${i}" aria-pressed="${c.day === i}"><small>${L(d)}</small><b>${dates[i]}</b>${ms ? `<i class="xa-ms-dot" aria-label="${T("Meilenstein", "Milestone")}"></i>` : ""}</button>`; }).join("")}</div>
+        <header class="xa-cal-head"><h3 class="xa-title" tabindex="-1" data-k="title">${icon("grid")}${T("Kalender", "Calendar")}</h3>${hbtn(T("Heute", "Today"), 'data-act="calday" data-v="0" data-k="cal-today"')}<span class="xa-cal-arrows" aria-hidden="true">${icon("chevL")}${icon("chevR")}</span><span class="xa-muted">${T("2. Nov. – 8. Nov.", "Nov 2 – Nov 8")}</span><span class="xa-grow"></span>
+          <div class="xa-seg" role="group" aria-label="${T("Ansicht", "View")}"><button type="button" data-act="calview" data-v="day" data-k="cv-day" aria-pressed="${c.view === "day"}">${T("Tag", "Day")}</button><button type="button" data-act="calview" data-v="week" data-k="cv-week" aria-pressed="${c.view === "week"}">${T("Woche", "Week")}</button><button type="button" data-act="app-only" data-v="month" data-k="cv-month" aria-pressed="false">${T("Monat", "Month")}</button><button type="button" data-act="calview" data-v="agenda" data-k="cv-agenda" aria-pressed="${c.view === "agenda"}">${T("Agenda", "Agenda")}</button><button type="button" data-act="app-only" data-v="planning" data-k="cv-plan" aria-pressed="false">${T("Planung", "Planning")}</button></div><span class="xa-grow"></span>
+          <button type="button" class="xa-btn xa-primary" data-act="cal-add" data-k="cal-add">${icon("plus")}${T("Erstellen", "Create")}</button></header>
+        <div class="xa-days" role="group" aria-label="${T("Tag wählen", "Pick a day")}">${DAYS.map((d, i) => { const ms = visible.some((e) => e.day === i && e.kind === "milestone"); return `<button type="button" data-act="calday" data-v="${i}" data-k="cd-${i}" aria-pressed="${c.day === i}"><small>${L(d)}</small><b>${dates[i]}</b><em class="xa-day-load"><i style="--v:${Math.min(100, loadOf(i) * 14)}%"></i>${loadWord(loadOf(i))}</em>${ms ? `<i class="xa-ms-dot" aria-label="${T("Meilenstein", "Milestone")}"></i>` : ""}</button>`; }).join("")}</div>
         <div class="xa-week" data-view="${c.view}" data-scroll="week">
           <div class="xa-wgrid" style="--rows:${H1 - H0}">
             <div class="xa-hours" aria-hidden="true">${Array.from({ length: H1 - H0 }, (_, i) => `<span>${String(H0 + i).padStart(2, "0")}:00</span>`).join("")}</div>
@@ -883,22 +1247,29 @@
           </div>
         </div>
         <ul class="xa-agenda" data-view="${c.view}">${dayEvents.map((e) => `<li><button type="button" class="xa-ag xa-ev-${e.kind}${e.id === c.sel ? " is-sel" : ""}" data-act="ev" data-id="${e.id}" data-k="ag-${e.id}" aria-pressed="${e.id === c.sel}"><span class="xa-mono">${fmtH(e.s)}–${fmtH(e.e)}</span><b>${esc(L(e.title))}</b></button></li>`).join("") || `<li class="xa-empty">${T("Frei. Tipp: Lege einen Fokusblock an.", "Free. Tip: add a focus block.")}</li>`}</ul>
-        <p class="xa-cal-foot xa-muted">${T("Klick auf eine freie Stelle legt einen Fokusblock an.", "Click an empty slot to add a focus block.")}</p>
+        <p class="xa-cal-foot xa-muted"><span>${T("Freie Stelle klicken · zum Verschieben ziehen (auch über Tage) · untere Kante zieht die Dauer", "Click an empty slot · drag to move (across days too) · drag the lower edge for duration")}</span><span>${T("Persönliche Änderungen werden mit deinem Konto synchronisiert", "Personal changes sync with your account")}</span></p>
       </div>
       <aside class="xa-cal-brief" aria-label="${T("Tagesbriefing", "Daily briefing")}">
-        <h4>${T("Tagesbriefing", "Daily briefing")}</h4><p class="xa-muted">${L(DAYS[c.day])}, ${dates[c.day]}. Nov · ${T(`${planned} Std. verplant`, `${planned} h planned`)}</p>
+        <h4 class="xa-brief-h">${T("Tagesbriefing", "Daily briefing")}</h4><p class="xa-muted">${c.day === 0 ? T("Heute", "Today") : `${L(DAYS[c.day])}, ${dates[c.day]}. Nov`} · ${loadWord(planned)}</p>
         ${sel ? `<div class="xa-card xa-evcard xa-ev-${sel.kind}"><span class="xa-kicker">${en() ? KINDS[sel.kind][1] : KINDS[sel.kind][0]}</span><b>${esc(L(sel.title))}</b><small class="xa-muted">${L(DAYS[sel.day])} · ${fmtH(sel.s)}–${fmtH(sel.e)}</small>
           <div class="xa-row">${sel.kind === "focus" ? `<button type="button" class="xa-btn xa-primary" data-act="focus-start" data-k="ev-focus">${icon("play")}${T("Fokus starten", "Start focus")}</button>` : ""}${sel.user || sel.kind === "focus" ? `<button type="button" class="xa-btn" data-act="ev-del" data-id="${sel.id}" data-k="ev-del">${icon("trash")}${T("Entfernen", "Remove")}</button>` : ""}</div></div>` : ""}
+        <h4 class="xa-kicker xa-mt">${T("Auslastung", "Load")}</h4>
+        <div class="xa-progress"><i style="width:${Math.min(100, Math.round((planned / 9) * 100))}%"></i></div>
+        <p class="xa-brief-t">${planned ? T(`${planned} Std. verplant – ${Math.max(0, 9 - planned)} h frei für Fokusarbeit.`, `${planned} h planned – ${Math.max(0, 9 - planned)} h free for focus work.`) : T("Freier Tag – 9 h frei für Fokusarbeit.", "Free day – 9 h free for focus work.")}</p>
+        <div class="xa-loadtiles">${DAYS.slice(0, 5).map((d, i) => `<button type="button" data-act="calday" data-v="${i}" data-k="lt-${i}" aria-pressed="${c.day === i}"><i><u style="height:${Math.min(100, loadOf(i) * 14)}%"></u></i><b>${L(d).toUpperCase()}</b><small>${String(loadOf(i)).replace(".", ",")} h</small></button>`).join("")}</div>
+        <h4 class="xa-kicker xa-mt">${T("Terminvorschläge", "Scheduling suggestions")}</h4>
+        ${unplanned.length ? `<ul class="xa-suggest">${unplanned.map((x, i) => `<li><i class="xa-dot" style="--h:var(--xa-acc)"></i><span class="xa-grow"><b>${esc(L(x.t.title))}</b><small>${T("Morgen", "Tomorrow")} · ${fmtH(9.5 + i)}–${fmtH(10.5 + i)} · ${L(PRIO[x.t.prio])}</small></span><button type="button" class="xa-hbtn" data-act="cal-plan" data-id="${x.t.id}" data-k="sg-${x.t.id}">${T("Einplanen", "Schedule")}</button></li>`).join("")}</ul>` : `<p class="xa-muted">${T("Alles eingeplant.", "Everything is scheduled.")}</p>`}
+        <button type="button" class="xa-acc-link" data-act="ai" data-v="plan" data-k="cal-ai">${T("Mit Xyntal KI planen", "Plan with Xyntal AI")} →</button>
         <h4 class="xa-kicker xa-mt">${T("Zeitplan", "Schedule")}</h4>
-        ${dayEvents.length ? `<ul class="xa-brief">${dayEvents.map((e) => `<li><span class="xa-dot" style="--h:${KINDS[e.kind][3]}"></span><span class="xa-mono">${fmtH(e.s)}</span>${esc(L(e.title))}</li>`).join("")}</ul>` : `<p class="xa-muted">${T("An diesem Tag ist noch nichts geplant.", "Nothing planned for this day yet.")}</p>`}
-        <h4 class="xa-kicker xa-mt">${T("Konflikte", "Conflicts")}</h4><p class="xa-muted">${(() => { const k = dayEvents.find((e, i) => dayEvents.slice(i + 1).some((o) => o.s < e.e)); return k ? T(`„${esc(L(k.title))}“ überschneidet sich mit einem anderen Termin.`, `“${esc(L(k.title))}” overlaps with another event.`) : T("Keine Überschneidungen.", "No overlaps."); })()}</p>
-        <h4 class="xa-kicker xa-mt">${T("Ungeplante Arbeit", "Unscheduled work")}</h4><ul class="xa-brief">${allTasks(s).filter((x) => x.t.status !== "done" && x.t.prio === "high" && !c.events.some((e) => L(e.title).includes(L(x.t.title)))).slice(0, 3).map((x) => `<li><span class="xa-dot" style="--h:${x.p.hue}"></span>${esc(L(x.t.title))}</li>`).join("") || `<li class="xa-muted">${T("Alles eingeplant.", "Everything is scheduled.")}</li>`}</ul>
-        <h4 class="xa-kicker xa-mt">${T("Freie Fokuszeit", "Free focus time")}</h4><p class="xa-muted">${T(`Du hast ${Math.max(0, 9 - planned)} Stunden ohne Termine zwischen 09:00 und 18:00.`, `You have ${Math.max(0, 9 - planned)} hours without meetings between 09:00 and 18:00.`)}</p>
+        ${dayEvents.length ? `<ul class="xa-brief">${dayEvents.map((e) => `<li><span class="xa-dot" style="--h:${KINDS[e.kind][3]}"></span><span class="xa-mono">${fmtH(e.s)}</span>${esc(L(e.title))}</li>`).join("")}</ul>` : `<p class="xa-muted">${T("An diesem Tag ist noch nichts. Klick auf eine freie Stelle, um das zu ändern.", "Nothing on this day yet. Click an empty slot to change that.")}</p>`}
+        <h4 class="xa-kicker xa-mt">${T("Freie Fokuszeit", "Free focus time")}</h4><p class="xa-muted">${T(`Du hast ${Math.max(0, 9 - planned)} Stunden ohne Unterbrechung zwischen 09:00 und 18:00.`, `You have ${Math.max(0, 9 - planned)} uninterrupted hours between 09:00 and 18:00.`)}</p>
+        <button type="button" class="xa-acc-link" data-act="focus-start" data-k="cal-focus">${T("Fokusblock starten", "Start focus block")} →</button>
+        <h4 class="xa-kicker xa-mt">${T("Konflikte", "Conflicts")}</h4><p class="xa-muted">${(() => { const k = dayEvents.find((e, i) => dayEvents.slice(i + 1).some((o) => o.s < e.e)); return k ? T(`„${esc(L(k.title))}“ überschneidet sich mit einem anderen Termin.`, `“${esc(L(k.title))}” overlaps with another event.`) : T("Keine Konflikte an diesem Tag.", "No conflicts on this day."); })()}</p>
       </aside>
     </div>`;
   }
 
-  const VIEWS = { forme: viewForMe, home: viewHome, focus: viewFocus, workspaces: viewWorkspaces, projects: viewProjects, messages: viewMessages, discover: viewDiscover, communities: viewCommunities, files: viewFiles, "ai-center": viewAi, automation: viewAutomations, calendar: viewCalendar };
+  const VIEWS = { forme: viewForMe, home: viewHome, focus: viewFocus, workspaces: viewWorkspaces, messages: viewMessages, discover: viewDiscover, communities: viewCommunities, files: viewFiles, "ai-center": viewAi, automation: viewAutomations, calendar: viewCalendar };
   // Download nur für angemeldete Beta-Tester; alle anderen sehen den Weg ins Beta-Programm.
   const ctaLinks = (primary, secondary) => betaTester
     ? `<a class="${primary}" href="/profil">${icon("download")}${T("App herunterladen", "Download the app")}</a><a class="${secondary}" href="/beta">${T("Zum Beta-Programm", "Beta programme")}</a>`
@@ -916,9 +1287,17 @@
   function crumbs(s) {
     const a = AREAS.find((x) => x.id === s.route.area);
     let c = esc(L(a.label));
-    if (s.route.area === "workspaces" && s.route.id) c += ` <span>/</span> ${esc(s.workspaces.find((w) => w.id === s.route.id)?.name || "")}`;
+    if (s.route.area === "workspaces" && s.route.id) {
+      const r = s.route, w = s.workspaces.find((x) => x.id === r.id) || s.workspaces[0];
+      const mod = WS_NAV.flatMap((g) => g.items).find((m) => m.id === r.sub);
+      const link = (label, attrs) => `<button type="button" class="xa-crumb-l" ${attrs}>${label}</button>`;
+      const deep = r.sub && r.sub !== "overview";
+      c = `${link(esc(L(a.label)), 'data-act="go" data-area="workspaces" data-k="cr-ws"')} <span>/</span> ${deep ? link(esc(w.name), `data-act="ws" data-id="${w.id}" data-k="cr-w"`) : esc(w.name)}`;
+      if (deep && mod) c += ` <span>/</span> ${r.proj || r.note ? link(esc(L(mod.label)), `data-act="ws-sub" data-id="${w.id}" data-v="${r.sub}" data-k="cr-m"`) : esc(L(mod.label))}`;
+      if (r.proj) c += ` <span>/</span> ${esc(L(proj(s, r.proj)?.name || ""))}`;
+      if (r.note) c += ` <span>/</span> ${esc(L(NOTES.find((n) => n.id === r.note)?.title || ""))}`;
+    }
     if (s.route.area === "communities" && s.route.id) c += ` <span>/</span> ${esc(L(s.communities.find((x) => x.id === s.route.id)?.name || ""))}`;
-    if (s.route.area === "projects" && s.route.id) c += ` <span>/</span> ${esc(L(proj(s, s.route.id)?.name || ""))}`;
     return c;
   }
   function frame(s) {
@@ -932,7 +1311,7 @@
         <div class="xa-search"><label class="xa-sr" for="xa-q-${uid}">${T("Suchen oder springen", "Search or jump to")}</label>${icon("search")}<input id="xa-q-${uid}" type="search" autocomplete="off" data-input="search" data-k="search" placeholder="${T("Suchen oder springen …", "Search or jump to …")}" aria-controls="xa-res-${uid}" aria-expanded="false"><span class="xa-keys" aria-hidden="true"><kbd>Ctrl</kbd><kbd>K</kbd></span><div class="xa-results" id="xa-res-${uid}" hidden></div></div>
         <span class="xa-grow"></span>
         ${s.focus.running ? `<button type="button" class="xa-focus-pill" data-act="go" data-area="focus" data-k="tb-focus">${icon("target")}<span data-tb-timer>${Math.floor(s.focus.left / 60)}:${String(s.focus.left % 60).padStart(2, "0")}</span></button>` : ""}
-        <button type="button" class="xa-ask-btn" data-act="go" data-area="ai-center" data-k="tb-ask" aria-label="${T("Xyntal fragen", "Ask Xyntal")}">${icon("sparkle")}<span>${T("Xyntal fragen", "Ask Xyntal")}</span></button>
+        <button type="button" class="xa-ask-btn" data-act="go" data-area="ai-center" data-k="tb-ask" aria-label="${T("Xyntal fragen", "Ask Xyntal")}">${AI_MARK}<span>${T("Xyntal fragen", "Ask Xyntal")}</span></button>
         <span class="xa-demo-pill" title="${T("Alle Inhalte sind Beispieldaten", "All content is sample data")}"><i></i>DEMO</span>
         <div class="xa-bell-wrap"><button type="button" class="xa-iconbtn xa-bell" data-act="notif" data-k="tb-bell" aria-expanded="${s.notifOpen}" aria-label="${T("Benachrichtigungen", "Notifications")}">${icon("bell")}<i></i></button>
           ${s.notifOpen ? `<div class="xa-pop" role="dialog" aria-label="${T("Benachrichtigungen", "Notifications")}"><b>${T("Benachrichtigungen", "Notifications")}</b><ul>${notifs.map((n) => `<li><button type="button" data-act="${n.act}" data-id="${n.id || ""}" data-area="${n.area || ""}" data-k="nt-${n.id || n.area}">${icon(n.icon)}<span class="xa-grow">${n.text}</span><small>${n.at}</small></button></li>`).join("")}</ul></div>` : ""}</div>
@@ -945,8 +1324,9 @@
       <div class="xa-body${s.collapsed ? " is-collapsed" : ""}">
         <nav class="xa-side" aria-label="${T("Bereiche der App", "App areas")}">
           <div class="xa-side-top"><span class="xa-brand">${LOGO()}<b>Xyntal</b></span>
-          <ul>${AREAS.map((a) => `<li><button type="button" class="xa-nav" data-act="go" data-area="${a.id}" data-k="nav-${a.id}"${s.route.area === a.id ? ' aria-current="page"' : ""}>${icon(a.icon)}<span>${L(a.label)}</span>${a.id === "forme" && !s.formeSeen ? `<span class="xa-badge" aria-label="${T("3 neu", "3 new")}">3</span>` : ""}${a.id === "messages" && u ? `<span class="xa-badge" aria-label="${T(`${u} ungelesen`, `${u} unread`)}">${u}</span>` : ""}</button></li>`).join("")}</ul></div>
-          <div class="xa-side-foot"><button type="button" class="xa-nav xa-upgrade" data-act="upgrade" data-k="nav-upgrade">${icon("upgrade")}<span>${T("Upgrade", "Upgrade")}</span></button><button type="button" class="xa-nav" data-act="app-only" data-v="profile" data-k="nav-profile">${icon("user")}<span>${T("Profil", "Profile")}</span></button><button type="button" class="xa-nav" data-act="app-only" data-v="settings" data-k="nav-settings">${icon("settings")}<span>${T("Einstellungen", "Settings")}</span></button>
+          <ul>${AREAS.map((a) => `<li><button type="button" class="xa-nav" data-act="go" data-area="${a.id}" data-k="nav-${a.id}"${s.route.area === a.id ? ' aria-current="page"' : ""}>${icon(a.icon)}<span>${L(a.label)}</span>${a.id === "forme" && !s.formeSeen ? `<span class="xa-badge" aria-label="${T(`${inboxItems(s).length} neu`, `${inboxItems(s).length} new`)}">${inboxItems(s).length}</span>` : ""}${a.id === "messages" && u ? `<span class="xa-badge" aria-label="${T(`${u} ungelesen`, `${u} unread`)}">${u}</span>` : ""}</button></li>`).join("")}</ul></div>
+          <div class="xa-side-foot"><button type="button" class="xa-nav xa-upgrade" data-act="upgrade" data-k="nav-upgrade">${icon("upgrade")}<span>${T("Upgrade", "Upgrade")}</span></button>
+            <div class="xa-user"><button type="button" class="xa-user-main" data-act="app-only" data-v="profile" data-k="nav-profile" aria-label="${T("Profil von Lena Vogt", "Lena Vogt's profile")}"><span class="xa-av xa-user-av" aria-hidden="true">LV<i style="--h:${STATUS.find((x) => x[0] === s.status)[2]}"></i></span><span class="xa-user-t"><b>Lena</b><small>${L(STATUS.find((x) => x[0] === s.status)[1])}</small></span></button><button type="button" class="xa-iconbtn xa-user-gear" data-act="app-only" data-v="settings" data-k="nav-settings" aria-label="${T("Einstellungen", "Settings")}">${icon("settings")}</button></div>
             <button type="button" class="xa-nav xa-collapse" data-act="collapse" data-k="collapse" aria-expanded="${!s.collapsed}">${icon(s.collapsed ? "chevR" : "chevL")}<span>${s.collapsed ? T("Seitenleiste ausklappen", "Expand sidebar") : T("Seitenleiste einklappen", "Collapse sidebar")}</span></button></div>
         </nav>
         <div class="xa-content" data-scroll="content" data-sub="${s.route.id ? "detail" : ""}" data-area="${s.route.area}">${area(s)}</div>
@@ -954,8 +1334,7 @@
   }
   const area = (s) => {
     const r = s.route;
-    if (r.area === "workspaces" && r.id) return viewWorkspace(s, r.id);
-    if (r.area === "projects" && r.id) return viewProject(s, r.id);
+    if (r.area === "workspaces" && r.id) return viewWorkspace(s, r);
     return VIEWS[r.area](s);
   };
   let logoN = 0;
@@ -1023,7 +1402,7 @@
     const later = (fn, ms) => { const id = setTimeout(() => { pending = pending.filter((x) => x !== id); fn(); }, calm ? Math.min(ms, 300) : ms); pending.push(id); };
 
     const go = (route, push = true) => {
-      if (push && (route.area !== s.route.area || route.id !== s.route.id)) { s.back.push(s.route); s.fwd = []; }
+      if (push && (route.area !== s.route.area || route.id !== s.route.id || route.sub !== s.route.sub || route.proj !== s.route.proj || route.note !== s.route.note)) { s.back.push(s.route); s.fwd = []; }
       s.route = route;
       s.notifOpen = false; s.acctOpen = false;
       if (route.area === "messages") { const c = s.convos.find((x) => x.id === s.convo); if (c) c.unread = 0; }
@@ -1033,6 +1412,7 @@
     };
     const announce = (msg) => { toastEl.textContent = ""; toastEl.classList.remove("is-on"); setTimeout(() => { toastEl.textContent = msg; }, 30); };
     const findTask = (id) => allTasks(s).find((x) => x.t.id === id);
+    const projRoute = (id) => ({ area: "workspaces", id: (proj(s, id) || s.projects[0]).ws, sub: "projects", proj: id });
 
     const tick = () => {
       const f = s.focus;
@@ -1085,15 +1465,50 @@
       upgrade() { s.acctOpen = false; render(); toast(T("Tarife: Free (kostenlos), Plus 12 €, Pro 29 €, Ultra 79 € im Monat, dazu Enterprise – Upgrade unter Mein Profil → Tarif & Rechnungen.", "Plans: Free, Plus €12, Pro €29, Ultra €79 a month, plus Enterprise – upgrade under My profile → Plan & invoices.")); },
       "app-only"(el) {
         s.acctOpen = false; render();
-        const what = { profile: T("Profil", "Profile"), settings: T("Einstellungen", "Settings"), support: T("Hilfe & Support", "Help & support"), logout: T("Abmelden", "Sign out"), customize: T("Startseite anpassen", "Customise home"), project: T("Neues Projekt", "New project"), workspace: T("Neuer Arbeitsbereich", "New workspace"), community: T("Community erstellen", "Create community"), call: T("Anrufe", "Calls"), contact: T("Inhaber kontaktieren", "Contacting the owner"), tab: T("Dieser Bereich", "This section") }[el.dataset.v] || "";
+        const what = { profile: T("Profil", "Profile"), settings: T("Einstellungen", "Settings"), support: T("Hilfe & Support", "Help & support"), logout: T("Abmelden", "Sign out"), customize: T("Startseite anpassen", "Customise home"), project: T("Neues Projekt", "New project"), workspace: T("Neuer Arbeitsbereich", "New workspace"), community: T("Community erstellen", "Create community"), call: T("Anrufe", "Calls"), contact: T("Inhaber kontaktieren", "Contacting the owner"), tab: T("Dieser Bereich", "This section"), month: T("Die Monatsansicht", "The month view"), planning: T("Die Planung", "Planning"), invite: T("Einladen", "Inviting"), group: T("Gruppen", "Groups"), newmsg: T("Neue Nachricht", "New message"), opening: T("Ausschreibungen bearbeiten", "Editing openings"), note: T("Der Seiten-Editor", "The page editor"), "note-ai": T("Xyntal KI in Notizen", "Xyntal AI in notes"), filter: T("Filter und Sortierung", "Filters and sorting"), folder: T("Ordner", "Folders") }[el.dataset.v] || T("Das", "This");
         toast(T(`${what} gibt es in der echten App – die Demo zeigt nur Beispieldaten.`, `${what} is in the real app – the demo only shows sample data.`));
       },
       "builder-open": (el) => { s.builder = el.dataset.id; s.discScope = "people"; s.role = "all"; go({ area: "discover" }); },
-      ws: (el) => go({ area: "workspaces", id: el.dataset.id }),
-      project: (el) => go({ area: "projects", id: el.dataset.id }),
+      ws: (el) => go({ area: "workspaces", id: el.dataset.id, sub: "overview" }),
+      project: (el) => { s.projTab = "overview"; go(projRoute(el.dataset.id)); },
+      "ws-sub": (el) => go({ area: "workspaces", id: el.dataset.id || s.route.id, sub: el.dataset.v }),
       fav(el) { s.favs[el.dataset.id] = !s.favs[el.dataset.id]; render(); },
-      newtask() { go({ area: "projects", id: "app" }); render({ focus: "[data-k=addtask]" }); },
+      newtask() { s.projTab = "work"; s.projView = "board"; go(projRoute("app")); render({ focus: "[data-k=addtask]" }); },
       taskfilter(el) { s.taskFilter = el.dataset.v; render(); },
+      taskscope(el) { s.taskScope = el.dataset.v; render(); },
+      wssort() { const o = Object.keys(WS_SORT); s.wsSort = o[(o.indexOf(s.wsSort) + 1) % o.length]; render(); },
+      discsort() { s.discSort = s.discSort === "best" ? "new" : "best"; render(); },
+      "ws-switch"() { const i = s.workspaces.findIndex((w) => w.id === s.route.id); const w = s.workspaces[(i + 1) % s.workspaces.length]; go({ area: "workspaces", id: w.id, sub: "overview" }); toast(T(`Gewechselt zu ${w.name}.`, `Switched to ${w.name}.`)); },
+      "ws-ask"(el) { askAi(el.dataset.v === "decisions" ? "decisions" : "summary", null, { okrs: T("Schlag OKRs für diesen Arbeitsbereich vor.", "Suggest OKRs for this workspace."), decisions: T("Fasse unsere Entscheidungen zusammen.", "Summarise our decisions."), insights: T("Erkläre mir die Zahlen dieses Arbeitsbereichs.", "Explain this workspace's numbers.") }[el.dataset.v] || T("Wie steht dieser Arbeitsbereich?", "How is this workspace doing?")); },
+      projtab(el) { s.projTab = el.dataset.v; render({ focus: `[data-k="pn-${el.dataset.v}"]` }); },
+      "newtask-here"() { s.projTab = "work"; s.projView = "board"; render({ focus: "[data-k=addtask]" }); },
+      "task-open"(el) { s.projTab = "work"; s.projView = "board"; go(projRoute(el.dataset.id)); },
+      note: (el) => go({ area: "workspaces", id: s.route.id, sub: "notes", note: el.dataset.id }),
+      okrfilter(el) { s.okrFilter = el.dataset.v; render(); },
+      decfilter(el) { s.decFilter = el.dataset.v; render(); },
+      riskfilter(el) { s.riskFilter = el.dataset.v; render(); },
+      insrange(el) { s.insRange = el.dataset.v; render(); },
+      "okr-state"(el) { const o = Object.values(s.wsd).flatMap((d) => d.okrs).find((x) => x.id === el.dataset.id); const k = Object.keys(OKR_STATE); o.state = k[(k.indexOf(o.state) + 1) % k.length]; render(); },
+      kr(el) { const o = Object.values(s.wsd).flatMap((d) => d.okrs).find((x) => x.id === el.dataset.id); const k = o.krs[Number(el.dataset.v)]; const step = k.target >= 50 ? Math.round(k.target / 25) : 1; k.cur = Math.max(0, Math.min(k.target, k.cur + Number(el.dataset.to) * step)); render(); if (k.cur === k.target) toast(T("Schlüsselergebnis erreicht.", "Key result reached.")); },
+      "risk-state"(el) { const r = Object.values(s.wsd).flatMap((d) => d.risks).find((x) => x.id === el.dataset.id); const k = ["open", "progress", "closed"]; r.state = k[(k.indexOf(r.state) + 1) % 3]; render(); },
+      brief(el) {
+        if (s.briefBusy) return;
+        const kind = BRIEF_KINDS.find((b) => b[0] === el.dataset.v); const wid = el.dataset.id;
+        s.briefBusy = kind[0]; render();
+        later(() => { const id = "b" + Date.now(); s.briefBusy = null; s.wsd[wid] = s.wsd[wid] || JSON.parse(JSON.stringify(s.wsd._)); s.wsd[wid].briefs.unshift({ id, title: kind[1], at: [`${T("Heute", "Today")}, ${nowTime()}`, `Today, ${nowTime()}`], body: briefBody(kind[0]) }); s.briefOpen = id; if (s.route.sub === "briefs") render(); toast(T("Briefing fertig und im Verlauf gespeichert.", "Briefing ready and saved to the history.")); }, 1200);
+      },
+      "brief-open"(el) { s.briefOpen = s.briefOpen === el.dataset.id ? null : el.dataset.id; render(); },
+      "mem-ok"(el) { const m = s.wsd[el.dataset.id].memory[Number(el.dataset.v)]; m.sug = false; render(); toast(T("Bestätigt – Xyntal KI nutzt den Eintrag ab jetzt.", "Confirmed – Xyntal AI uses the entry from now on.")); },
+      inboxfilter(el) { s.inboxFilter = el.dataset.v; render(); },
+      "inbox-done"(el) { s.inboxDone[el.dataset.id] = "done"; s.inboxFilter = "all"; if (el.dataset.v) { const x = findTask(el.dataset.v); if (x) x.t.status = "done"; } render(); toast(T("Erledigt.", "Done.")); },
+      "inbox-later"(el) { s.inboxDone[el.dataset.id] = "later"; s.inboxFilter = "all"; render(); toast(T("Zurückgestellt – kommt morgen früh wieder.", "Snoozed – back tomorrow morning.")); },
+      "inbox-reset"() { s.inboxDone = {}; render(); },
+      "autotab-go"(el) { s.autoTab = el.dataset.v; go({ area: "automation" }); },
+      chatmore() { s.chatMore = !s.chatMore; render({ focus: "[data-k=chatmore]" }); },
+      "fit-hide"() { s.fitHidden = true; render(); },
+      filews() { const o = [null, "Loopr Studio", "Kiezkiste"]; s.fileWs = o[(o.indexOf(s.fileWs || null) + 1) % o.length]; render({ focus: "[data-k=filews]" }); },
+      "ask-files"() { askAi("free", "Dateien", T("Welche Dateien sind gerade wichtig?", "Which files matter right now?")); },
+      "cal-plan"(el) { const x = findTask(el.dataset.id); if (!x) return; s.focus.task = x.t.id; addBlock(1, null); },
       wsfilter(el) { s.wsFilter = el.dataset.v; render(); },
       "ws-join"(el) { const w = s.openWs.find((x) => x.id === el.dataset.id); s.requested[w.id] = !s.requested[w.id]; render(); if (s.requested[w.id]) toast(w.mode === "join" ? T(`Willkommen bei ${w.name}!`, `Welcome to ${w.name}!`) : T(`Anfrage an ${w.name} gesendet.`, `Request sent to ${w.name}.`)); },
       projscope(el) { s.projScope = el.dataset.v; render(); },
@@ -1255,11 +1670,11 @@
     // Suche in der Titelleiste: springt zu Bereichen, Projekten, Leuten und Dateien.
     const searchItems = () => [
       ...AREAS.map((a) => ({ label: L(a.label), kind: T("Bereich", "Area"), run: () => go({ area: a.id }) })),
-      ...s.projects.map((p) => ({ label: L(p.name), kind: T("Projekt", "Project"), run: () => go({ area: "projects", id: p.id }) })),
-      ...s.workspaces.map((w) => ({ label: w.name, kind: T("Arbeitsbereich", "Workspace"), run: () => go({ area: "workspaces", id: w.id }) })),
+      ...s.projects.map((p) => ({ label: L(p.name), kind: T("Projekt", "Project"), run: () => go(projRoute(p.id)) })),
+      ...s.workspaces.map((w) => ({ label: w.name, kind: T("Arbeitsbereich", "Workspace"), run: () => go({ area: "workspaces", id: w.id, sub: "overview" }) })),
       ...s.builders.map((b) => ({ label: b.name, kind: T("Builder", "Builder"), run: () => { s.builder = b.id; s.discScope = "people"; s.role = "all"; go({ area: "discover" }); } })),
       ...s.files.map((f) => ({ label: f.name, kind: T("Datei", "File"), run: () => { s.fileSel = f.id; s.fileType = "all"; s.fileView = "all"; s.fileQuery = ""; go({ area: "files" }); } })),
-      ...allTasks(s).map((x) => ({ label: L(x.t.title), kind: T("Aufgabe", "Task"), run: () => go({ area: "projects", id: x.p.id }) })),
+      ...allTasks(s).map((x) => ({ label: L(x.t.title), kind: T("Aufgabe", "Task"), run: () => { s.projTab = "work"; s.projView = "board"; go(projRoute(x.p.id)); } })),
     ];
     let hits = [];
     const showResults = (input) => {
@@ -1354,6 +1769,11 @@
         const c = s.route.id; const chans = CHANNELS[c] || [["allgemein", ""]]; const ch = chans.find((x) => x[0] === s.commChannel) ? s.commChannel : chans[0][0];
         s.commPosts = s.commPosts || {}; (s.commPosts[`${c}/${ch}`] = s.commPosts[`${c}/${ch}`] || []).push({ at: nowTime(), by: "Lena Vogt", text: [text, text] });
         render({ focus: "[data-k=post-input]" }); toast(T("Beitrag veröffentlicht.", "Post published."));
+      } else if (form.dataset.form === "journal" || form.dataset.form === "memory") {
+        const wid = form.dataset.id; s.wsd[wid] = s.wsd[wid] || JSON.parse(JSON.stringify(s.wsd._));
+        if (form.dataset.form === "journal") s.wsd[wid].journal.unshift({ at: [`Heute, ${nowTime()}`, `Today, ${nowTime()}`], text: [text, text] });
+        else s.wsd[wid].memory.unshift({ cat: "fact", used: 0, text: [text, text] });
+        render({ focus: form.dataset.form === "journal" ? "[data-k=journal-input]" : "[data-k=mem-input]" }); toast(form.dataset.form === "journal" ? T("Eintrag hinzugefügt.", "Entry added.") : T("Gemerkt.", "Remembered."));
       } else if (form.dataset.form === "ai") {
         askAi("free", text);
       }
