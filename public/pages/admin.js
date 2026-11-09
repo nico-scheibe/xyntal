@@ -139,9 +139,9 @@ function filterTablePanel(key) {
 }
 adminView.addEventListener('input',e=>{if(e.target.matches('[data-panel-search]')){const key=e.target.dataset.panelSearch;panelSearch[key]=e.target.value;filterTablePanel(key);}});
 
-// Karten von der Warteliste – zum Matchen von Hand
-const CARD_STATUS = { neu: "Neu", kontaktiert: "Kontaktiert", gematcht: "Gematcht" };
-let cardFilter = "", cardStatus = "";
+// Karten der Mitglieder – zum Ansehen und Vorstellen. Einen Bearbeitungs-Stand gibt es nicht mehr:
+// wer neu dazukommt, zeigt „Aufgaben & Überblick“ als Info. Wunsch-Links gehen auch unter „Nutzer“.
+let cardFilter = "";
 const cardSel = new Set();
 const HANDLE_RE = /^[a-z0-9][a-z0-9_-]{2,19}$/;
 const mailto = (to, subject, body, bcc) => `mailto:${to.map(encodeURIComponent).join(",")}?${new URLSearchParams({ ...(bcc ? { bcc: bcc.join(",") } : {}), subject, body }).toString().replace(/\+/g, "%20")}`;
@@ -183,12 +183,10 @@ function renderCardsList(cards) {
     return;
   }
   for (const id of [...cardSel]) if (!cards.some((c) => String(c.id) === id)) cardSel.delete(id);
-  const fresh = cards.filter((c) => c.status === "neu").length;
-  document.getElementById("c-cards").textContent = `(${cards.length}${fresh ? `, ${fresh} neu` : ""})`;
+  document.getElementById("c-cards").textContent = cards.length ? String(cards.length) : "";
   const roles = [...new Set(cards.map((c) => c.role))];
-  const shown = cards.filter((c) => (!cardFilter || c.role === cardFilter || c.looking === cardFilter) && (!cardStatus || c.status === cardStatus));
+  const shown = cards.filter((c) => !cardFilter || c.role === cardFilter || c.looking === cardFilter);
   const count = (k) => cards.filter((c) => c.role === k).length;
-  const scount = (k) => cards.filter((c) => c.status === k).length;
   panel.innerHTML = `
     <div class="panel-heading"><div><p class="admin-kicker">LEUTE ZUSAMMENBRINGEN</p><h2>Karten</h2>
       <p class="hint">Karten aus dem Karten-Builder, mitgeschickt beim Eintrag in die Warteliste. Unter „Passende Leute“ schlägt Xyntal vor, wer zusammenpasst – mit „Vorstellen“ öffnet sich eine fertige Mail an beide.</p></div></div>
@@ -198,13 +196,8 @@ function renderCardsList(cards) {
         <button data-cfilter="ein Team für meine Idee" aria-pressed="${cardFilter === "ein Team für meine Idee"}">Haben eine Idee</button>
         <button data-cfilter="ein Projekt zum Mitbauen" aria-pressed="${cardFilter === "ein Projekt zum Mitbauen"}">Wollen mitbauen</button>
       </div>
-      <div class="card-filters" aria-label="Nach Stand filtern">
-        <button data-cstatus="" aria-pressed="${!cardStatus}">Jeder Stand</button>
-        ${Object.entries(CARD_STATUS).map(([k, l]) => `<button data-cstatus="${k}" aria-pressed="${cardStatus === k}">${l} (${scount(k)})</button>`).join("")}
-      </div>
       <div class="bulk-bar" data-bulk-bar>
         <span data-bulk-count>${cardSel.size} ausgewählt</span>
-        <label>Stand<select data-bulk-status><option value="">setzen …</option>${Object.entries(CARD_STATUS).map(([k, l]) => `<option value="${k}">${l}</option>`).join("")}</select></label>
         <button data-bulk="mail">E-Mail an Auswahl</button>
         <button data-bulk="csv">Auswahl als CSV</button>
         <button class="admin-danger" data-bulk="delete">Auswahl löschen</button>
@@ -213,7 +206,7 @@ function renderCardsList(cards) {
       </div>
       <p class="admin-message" data-cards-message role="status" aria-live="polite"></p>
       <div class="table-wrap"><table>
-      <thead><tr><th><input type="checkbox" data-sel-all aria-label="Alle sichtbaren auswählen"></th><th>Person</th><th>Skills & Satz</th><th>Sucht</th><th>Stand & Notiz</th><th>Aktionen</th></tr></thead>
+      <thead><tr><th><input type="checkbox" data-sel-all aria-label="Alle sichtbaren auswählen"></th><th>Person</th><th>Skills & Satz</th><th>Sucht</th><th>Notiz</th><th>Aktionen</th></tr></thead>
       <tbody>${shown.map((c) => {
         const sug = suggestionsFor(c, cards);
         return `
@@ -222,8 +215,7 @@ function renderCardsList(cards) {
           <td><b>${esc(c.name)}</b>${c.handle ? ` <small>· <a class="text-link" href="/${esc(c.handle)}" target="_blank" rel="noopener">xyntal.de/${esc(c.handle)}</a>${c.is_public ? " · öffentlich" : ""}</small>` : ""}<br><small>${esc(c.role)}${c.level ? ` · ${esc(c.level)}` : ""} · ${c.hours} Std./Woche</small><br>${c.city || c.mode ? `<small>${esc([c.city, c.mode].filter(Boolean).join(" · "))}</small><br>` : ""}${/^https?:\/\//.test(c.link || "") ? `<small><a class="text-link" href="${esc(c.link)}" target="_blank" rel="noopener noreferrer nofollow">${esc(c.link.replace(/^https?:\/\/(www\.)?/, "").slice(0, 40))}</a></small><br>` : ""}<small><a class="text-link" href="mailto:${esc(c.email)}">${esc(c.email)}</a></small><br><small>${fmt(c.created_at)}${c.lang === "en" ? " · EN" : ""}</small></td>
           <td>${(c.skills || []).map((x) => `<span class="skill-tag">${esc(x)}</span>`).join(" ")}${c.pitch ? `<p class="beta-why-text">${esc(c.pitch)}</p>` : ""}</td>
           <td><small>${esc(c.looking)}</small></td>
-          <td><label class="sr-only" for="cs-${c.id}">Stand</label><select id="cs-${c.id}" data-card-status="${c.id}">${Object.entries(CARD_STATUS).map(([k, l]) => `<option value="${k}" ${c.status === k ? "selected" : ""}>${l}</option>`).join("")}</select>
-            <textarea class="card-note" data-note="${c.id}" rows="2" maxlength="500" placeholder="Notiz, z. B. passt zu …">${esc(c.note || "")}</textarea></td>
+          <td><textarea class="card-note" data-note="${c.id}" rows="2" maxlength="500" placeholder="Notiz, z. B. passt zu …">${esc(c.note || "")}</textarea></td>
           <td><div class="row-actions">
             <a class="admin-link" href="${esc(mailto([c.email], "Deine Xyntal-Karte", `Hallo ${c.name},\n\n\n\nViele Grüße\nNico`))}">E-Mail</a>
             <button class="admin-danger" data-card="delete" data-id="${c.id}">Löschen</button>
@@ -250,12 +242,12 @@ function updateBulk() {
   if (all) { all.checked = visible.length > 0 && visible.every((id) => cardSel.has(id)); all.indeterminate = !all.checked && visible.some((id) => cardSel.has(id)); }
 }
 const selectedCards = () => lastData.cards.filter((c) => cardSel.has(String(c.id)));
-async function setCardStatus(ids, status, notes = {}) {
-  for (const id of ids) {
+// Vorstellen hält nur in der Notiz fest, wer wem vorgestellt wurde
+async function addCardNotes(notes) {
+  for (const [id, line] of Object.entries(notes)) {
     const row = lastData.cards.find((c) => String(c.id) === String(id));
-    const patch = { status };
-    if (notes[id]) patch.note = [row?.note, notes[id]].filter(Boolean).join("\n").slice(0, 500);
-    const changed = unwrap(await sb.from("waitlist_cards").update(patch).eq("id", id).select("id,status,note"));
+    const note = [row?.note, line].filter(Boolean).join("\n").slice(0, 500);
+    const changed = unwrap(await sb.from("waitlist_cards").update({ note }).eq("id", id).select("id,note"));
     if (!changed.length) throw Error("Karte nicht mehr vorhanden oder keine Berechtigung.");
     if (row) Object.assign(row, changed[0]);
   }
@@ -266,8 +258,6 @@ const cardsPanel = document.querySelector('[data-panel="cards"]');
 cardsPanel.addEventListener("click", async (e) => {
   const f = e.target.closest("[data-cfilter]");
   if (f) { cardFilter = f.dataset.cfilter; rerenderCards(); return; }
-  const st = e.target.closest("[data-cstatus]");
-  if (st) { cardStatus = st.dataset.cstatus; rerenderCards(); return; }
   const intro = e.target.closest("[data-intro]");
   if (intro) {
     const [ida, idb] = intro.dataset.intro.split(":");
@@ -276,8 +266,8 @@ cardsPanel.addEventListener("click", async (e) => {
     openMail(introHref(a, b));
     intro.disabled = true;
     const day = new Date().toLocaleDateString("de-DE");
-    try { await setCardStatus([a.id, b.id], "gematcht", { [a.id]: `Vorgestellt mit ${b.name} (${day})`, [b.id]: `Vorgestellt mit ${a.name} (${day})` }); rerenderCards(`${a.name} und ${b.name} sind jetzt als gematcht markiert. Die Mail öffnet sich in deinem Mailprogramm.`); }
-    catch (err) { cardMsg(`Mail geöffnet, aber Stand nicht gespeichert: ${err.message}`); intro.disabled = false; }
+    try { await addCardNotes({ [a.id]: `Vorgestellt mit ${b.name} (${day})`, [b.id]: `Vorgestellt mit ${a.name} (${day})` }); rerenderCards(`Die Mail an ${a.name} und ${b.name} öffnet sich in deinem Mailprogramm. In beiden Notizen steht jetzt, dass du sie vorgestellt hast.`); }
+    catch (err) { cardMsg(`Mail geöffnet, aber Notiz nicht gespeichert: ${err.message}`); intro.disabled = false; }
     return;
   }
   const hp = e.target.closest("[data-hide-public]");
@@ -321,8 +311,8 @@ cardsPanel.addEventListener("click", async (e) => {
       return;
     }
     if (bulk.dataset.bulk === "csv") {
-      downloadCsv("xyntal-karten-auswahl.csv", ["Name", "Wunsch-Link", "E-Mail", "Bereich", "Erfahrung", "Skills", "Std./Woche", "Stadt", "Arbeitsweise", "Sucht", "Satz", "Link", "Stand", "Notiz"],
-        list.map((c) => [c.name, c.handle ? `xyntal.de/${c.handle}` : "", c.email, c.role, c.level || "", (c.skills || []).join(", "), c.hours, c.city || "", c.mode || "", c.looking, c.pitch, c.link || "", CARD_STATUS[c.status], c.note]));
+      downloadCsv("xyntal-karten-auswahl.csv", ["Name", "Wunsch-Link", "E-Mail", "Bereich", "Erfahrung", "Skills", "Std./Woche", "Stadt", "Arbeitsweise", "Sucht", "Satz", "Link", "Notiz"],
+        list.map((c) => [c.name, c.handle ? `xyntal.de/${c.handle}` : "", c.email, c.role, c.level || "", (c.skills || []).join(", "), c.hours, c.city || "", c.mode || "", c.looking, c.pitch, c.link || "", c.note]));
       return;
     }
     if (bulk.dataset.bulk === "delete") {
@@ -356,20 +346,6 @@ cardsPanel.addEventListener("change", async (e) => {
     visible.forEach((id) => (e.target.checked ? cardSel.add(id) : cardSel.delete(id)));
     cardsPanel.querySelectorAll("[data-sel]").forEach((b) => { b.checked = cardSel.has(b.dataset.sel); });
     updateBulk(); return;
-  }
-  if (e.target.matches("[data-bulk-status]")) {
-    const status = e.target.value; if (!status) return;
-    e.target.disabled = true;
-    try { const ids = [...cardSel]; await setCardStatus(ids, status); rerenderCards(`${ids.length} Karten auf „${CARD_STATUS[status]}“ gesetzt.`); }
-    catch (err) { cardMsg(`Nicht gespeichert: ${err.message}`); e.target.disabled = false; }
-    return;
-  }
-  if (e.target.matches("[data-card-status]")) {
-    const sel = e.target, row = lastData.cards.find((c) => String(c.id) === sel.dataset.cardStatus), old = row.status;
-    sel.disabled = true;
-    try { await setCardStatus([row.id], sel.value); rerenderCards(`${row.name}: Stand „${CARD_STATUS[sel.value]}“ gespeichert.`); }
-    catch (err) { sel.value = old; sel.disabled = false; cardMsg(`Nicht gespeichert: ${err.message}`); }
-    return;
   }
   // Notizen speichern, sobald man das Feld verlässt
   const area = e.target.closest("[data-note]");
@@ -516,8 +492,8 @@ adminView.addEventListener("click", (e) => {
   if (!link || !lastData) return;
   e.preventDefault();
   if (link.dataset.csv === "cards") {
-    downloadCsv("xyntal-karten.csv", ["Name", "Wunsch-Link", "Öffentlich", "E-Mail", "Bereich", "Erfahrung", "Skills", "Std./Woche", "Stadt", "Arbeitsweise", "Sucht", "Satz", "Link", "Stand", "Notiz", "Sprache", "Eingegangen"],
-      lastData.cards.map((c) => [c.name, c.handle ? `xyntal.de/${c.handle}` : "", c.is_public ? "ja" : "nein", c.email, c.role, c.level || "", (c.skills || []).join(", "), c.hours, c.city || "", c.mode || "", c.looking, c.pitch, c.link || "", CARD_STATUS[c.status], c.note, c.lang, fmt(c.created_at)]));
+    downloadCsv("xyntal-karten.csv", ["Name", "Wunsch-Link", "Öffentlich", "E-Mail", "Bereich", "Erfahrung", "Skills", "Std./Woche", "Stadt", "Arbeitsweise", "Sucht", "Satz", "Link", "Notiz", "Sprache", "Eingegangen"],
+      lastData.cards.map((c) => [c.name, c.handle ? `xyntal.de/${c.handle}` : "", c.is_public ? "ja" : "nein", c.email, c.role, c.level || "", (c.skills || []).join(", "), c.hours, c.city || "", c.mode || "", c.looking, c.pitch, c.link || "", c.note, c.lang, fmt(c.created_at)]));
   } else if (link.dataset.csv === "signups") {
     downloadCsv("xyntal-anmeldungen.csv", ["Name", "E-Mail", "Projekt", "Angemeldet"],
       lastData.signups.map((s) => [s.name, s.email, s.project, fmt(s.created_at)]));
