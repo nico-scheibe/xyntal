@@ -43,7 +43,7 @@
     const dockEl = $(".pe-dock"), dockH = () => document.documentElement.style.setProperty("--pe-dock", `${dockEl.offsetHeight}px`);
     dockH(); if (typeof ResizeObserver === "function") new ResizeObserver(dockH).observe(dockEl);
     if (!window.supabase || !cfg) { loading.textContent = t("Der Editor konnte nicht geladen werden."); return; }
-    const sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey);
+    const sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey, window.XyntalSession ? window.XyntalSession.clientOptions : undefined);
 
     let page = C.normalize(null), links = [], sel = null, dirty = false, busy = false, uid = "", handle = "", paid = false, hasSaved = false;
     // Entwurf: speichert automatisch (save_my_page_draft, Migration 20261108210000), öffentlich wird erst „Veröffentlichen“
