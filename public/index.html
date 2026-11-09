@@ -22,16 +22,16 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="stylesheet" href="fonts/fonts.css?v=33">
-  <script src="i18n-en.js?v=119" defer></script>
+  <script src="i18n-en.js?v=120" defer></script>
   <script src="i18n.js?v=31" defer></script>
   <link rel="stylesheet" href="/site-footer.css?v=4">
   <link rel="stylesheet" href="/site-header.css?v=7">
   <link rel="stylesheet" href="/xcard.css?v=104">
   <link rel="stylesheet" href="/banners.css?v=2">
-  <link rel="stylesheet" href="front.css?v=20">
-  <link rel="stylesheet" href="story.css?v=5">
+  <link rel="stylesheet" href="front.css?v=22">
+  <link rel="stylesheet" href="story.css?v=7">
 </head>
-<body class="home front">
+<body class="home front hero-cta-visible">
 <a class="skip" href="#inhalt">Zum Inhalt springen</a>
 
 <header class="nav">
@@ -58,12 +58,23 @@
     <h1 id="opener-title" class="opener-title">Du hast eine Idee.<br><span class="opener-title-2">Dir fehlt jemand, der sie mit dir baut.</span></h1>
     <div class="opener-side">
       <p>Du schreibst auf, was du baust und wie viel Zeit du hast. Andere auch. Xyntal zeigt dir, bei wem beides zusammenpasst, und schreibt dazu, warum.</p>
-      <p class="opener-actions"><a class="button" href="/beta">Für die Beta bewerben</a> <a class="arrowlink" href="/brief">Oder erst den Brief lesen, warum es Xyntal gibt<span aria-hidden="true">→</span></a></p>
+      <p class="opener-actions"><a class="button" href="/beta" data-hero-cta>Für die Beta bewerben</a> <a class="arrowlink" href="/brief">Oder erst den Brief lesen, warum es Xyntal gibt<span aria-hidden="true">→</span></a></p>
     </div>
     <figure class="opener-card" aria-label="Beispiel-Karten: So stellen sich Mitglieder auf Xyntal vor">
       <div class="card-fan" data-sample-cards role="button" tabindex="0" aria-label="Nächste Beispiel-Karte nach vorn holen"></div>
       <figcaption>Drei erfundene Mitglieder, echte Xyntal-Karten. Jedes Mitglied gestaltet seine Karte selbst.</figcaption>
     </figure>
+    <fieldset class="seek" data-seek>
+      <legend>Wen suchst du?</legend>
+      <div class="seek-opts">
+        <label><input type="radio" name="seek" value="Backend" checked><span>Backend</span></label>
+        <label><input type="radio" name="seek" value="Frontend"><span>Frontend</span></label>
+        <label><input type="radio" name="seek" value="Design"><span>Design</span></label>
+        <label><input type="radio" name="seek" value="Marketing"><span>Marketing</span></label>
+        <label><input type="radio" name="seek" value="Vertrieb"><span>Vertrieb</span></label>
+      </div>
+      <a class="seek-go" href="#story-title"><span class="seek-go-l">Unten durchgespielt:</span> <b class="seek-go-v">Backend</b> <span class="seek-go-arrow" aria-hidden="true">↓</span></a>
+    </fieldset>
   </section>
 
   <section class="story" data-story aria-labelledby="story-title">
@@ -283,7 +294,8 @@
 
 <script src="/banners.js?v=5" defer></script>
 <script src="/xcard.js?v=15" defer></script>
-<script src="story.js?v=4" defer></script>
+<script src="story.js?v=5" defer></script>
+<script src="front.js?v=1" defer></script>
 <script src="landing.js?v=swipe-58" defer></script>
 <script src="invite.js?v=4" defer></script>
 <script src="home-nav.js?v=8" defer></script>
