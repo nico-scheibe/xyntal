@@ -71,6 +71,14 @@
 .sf-badges { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .sf-badges li { padding: 4px 10px; border: 1px solid var(--sf-line); border-radius: 2px; }
 .sf-top { display: inline-flex; align-items: center; gap: 6px; }
+/* Sprache (i18n.js) */
+.site-footer .lang-switch {
+  display: inline-flex; align-items: center; flex: none; height: 32px; padding: 3px; margin: 0;
+  border: 0; border-radius: 999px; background: transparent; box-shadow: inset 0 0 0 1px var(--sf-line);
+}
+.site-footer .lang-switch button { height: 26px; min-width: 34px; padding: 0 9px; border: 0; border-radius: 999px; background: transparent; color: var(--sf-text-2); font: 500 11.5px/1 "JetBrains Mono", ui-monospace, monospace; cursor: pointer; transition: color .2s, background .2s; }
+.site-footer .lang-switch button:hover { color: var(--sf-text); }
+.site-footer .lang-switch button[aria-pressed="true"] { background: rgba(236, 234, 228, .12); color: var(--sf-text); }
 
 @media (min-width: 760px) {
   .sf-cta { grid-template-columns: 1fr auto; align-items: center; }

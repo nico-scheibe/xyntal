@@ -92,17 +92,18 @@
     return lang === "en" ? translate(de) : de;
   }
 
-  /* ---------- Umschalter in der Kopfzeile ---------- */
+  /* ---------- Umschalter: unten in der Fußzeile, damit die Kopfzeile überall wie auf der Startseite aussieht.
+     Seiten ohne Fußzeile behalten ihn in der Kopfzeile. ---------- */
   function mountSwitch() {
-    const host = document.querySelector(".topbar-inner, .nav .wrap");
-    if (!host || host.querySelector(".lang-switch")) return;
+    const host = document.querySelector(".site-footer .sf-bottom") || document.querySelector(".topbar-inner, .nav .wrap");
+    if (!host || document.querySelector(".lang-switch")) return;
     const sw = document.createElement("div");
     sw.className = "lang-switch";
     sw.setAttribute("role", "group");
     sw.setAttribute("data-no-i18n", "");
     sw.setAttribute("aria-label", "Sprache / Language");
     sw.innerHTML = '<button type="button" data-lang="de" lang="de" aria-label="Deutsch">DE</button><button type="button" data-lang="en" lang="en" aria-label="English">EN</button>';
-    const before = host.querySelector(".menu-toggle, .nav-toggle");
+    const before = host.querySelector(".menu-toggle, .nav-toggle, .sf-top");
     host.insertBefore(sw, before || null);
     sw.addEventListener("click", (e) => { const b = e.target.closest("[data-lang]"); if (b) set(b.dataset.lang); });
     syncSwitch();
