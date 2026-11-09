@@ -77,7 +77,7 @@
   </nav>
   <div class="top__right topbar-inner">
     <a class="top__login" href="/login" data-account>Login</a>
-    <a class="pill pill--sm" href="/beta" data-magnet>Bewerben</a>
+    <a class="pill pill--sm" href="/beta" data-magnet data-apply>Bewerben</a>
   </div>
 </header>
 
@@ -105,8 +105,11 @@
     <div class="hero__foot">
       <p class="hero__p">Xyntal zeigt dir, mit wem du etwas aufbauen kannst. Du beschreibst, was du vorhast. Die App sagt dir, wer passt, und warum.</p>
       <div class="hero__cta">
-        <a class="pill" href="/beta" data-magnet>Für die Beta bewerben <span class="pill__arr" aria-hidden="true">→</span></a>
-        <a class="tlink" href="/brief">Oder erst den Brief lesen</a>
+        <a class="pill" href="/beta" data-magnet data-apply>Für die Beta bewerben <span class="pill__arr" aria-hidden="true">→</span></a>
+        <!-- Stattdessen, wenn jemand schon dabei ist oder sich beworben hat (js/neu-konto.js) -->
+        <a class="pill" href="/fuer-dich" data-magnet data-if="in">Passende Leute ansehen <span class="pill__arr" aria-hidden="true">→</span></a>
+        <a class="pill" href="/beta" data-magnet data-if="applied">Stand deiner Bewerbung <span class="pill__arr" aria-hidden="true">→</span></a>
+        <a class="tlink" href="/brief"><span data-apply>Oder erst den Brief lesen</span><span data-if="in applied">Den Brief lesen</span></a>
       </div>
     </div>
     <div class="hero__scroll mono" aria-hidden="true"><i></i>Scrollen</div>
@@ -432,12 +435,16 @@
       <span data-flex-line>dazu.</span>
     </h2>
     <div class="end__foot">
-      <a class="pill pill--lg" href="/beta" data-magnet>Für die Beta bewerben <span class="pill__arr" aria-hidden="true">→</span></a>
-      <p>In der Beta kostet Xyntal nichts. Ich lese jede Bewerbung selbst.</p>
+      <a class="pill pill--lg" href="/beta" data-magnet data-apply>Für die Beta bewerben <span class="pill__arr" aria-hidden="true">→</span></a>
+      <p data-apply>In der Beta kostet Xyntal nichts. Ich lese jede Bewerbung selbst.</p>
+      <a class="pill pill--lg" href="/fuer-dich" data-magnet data-if="in">Passende Leute ansehen <span class="pill__arr" aria-hidden="true">→</span></a>
+      <p data-if="in">Du bist schon dabei. Schön, dass du da bist.</p>
+      <a class="pill pill--lg" href="/beta" data-magnet data-if="applied">Stand deiner Bewerbung <span class="pill__arr" aria-hidden="true">→</span></a>
+      <p data-if="applied">Deine Bewerbung ist da. Ich lese sie selbst und antworte per Mail.</p>
     </div>
 
     <!-- Newsletter: dasselbe Formular wie bisher (landing.js, Brevo, Double-Opt-in) -->
-    <div class="news" id="warteliste" role="group" aria-labelledby="news-title">
+    <div class="news" id="warteliste" role="group" aria-labelledby="news-title" data-apply>
       <p id="news-title">Noch nichts Konkretes vor? Dann sag ich dir Bescheid, wenn Xyntal für alle offen ist. Keine Werbung, nur Mails, wenn es wirklich etwas Neues gibt.</p>
       <form class="waitlist-form" data-waitlist novalidate>
         <div class="waitlist-row">
@@ -479,5 +486,6 @@
 <script src="landing.js?v=swipe-58" defer></script>
 <script src="invite.js?v=4" defer></script>
 <script src="/account-menu.js?v=20" defer></script>
+<script src="js/neu-konto.js" defer></script>
 </body>
 </html>
