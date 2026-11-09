@@ -352,3 +352,5 @@ body.front .site-footer a { text-decoration: none; }
   body.front { padding-bottom: 72px; }
   body.front .sc-open { width: 44px; padding: 0; gap: 0; justify-content: center; font-size: 0; }
 }
+/* Desktop: Einstieg etwas höher, damit der Chat-Knopf unten rechts nicht über der Bildunterschrift der Karten liegt */
+@media (min-width: 900px) { .opener { padding-top: clamp(32px, 4vw, 52px); } }
