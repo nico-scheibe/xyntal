@@ -83,6 +83,22 @@
     line.textContent = text;
   }
 
+  // Strafkatalog (xyntal.de/community-richtlinien#strafkatalog): Grad und Regel einer Verwarnung.
+  // Der App-Server zählt die Punkte und sperrt ab 3 / 6 / 9 Punkten von selbst (admin/strikes.ts).
+  const RULES = ["Respekt", "Kein Spam", "Sei echt", "Ideen sind Vertrauenssache", "Ein Match ist kein Vertrag", "Fair zusammenarbeiten", "Aufbauen statt abzocken", "Gesetz", "Keine Technik-Tricks", "Melden"];
+  const STRIKE_FIELDS = [
+    { name: "grade", label: "Schweregrad", type: "select", value: "A", options: [["A", "A – leicht (1 Punkt)"], ["B", "B – mittel (3 Punkte)"], ["C", "C – schwer (sofortige Sperre)"]] },
+    { name: "rule", label: "Regel", type: "select", value: "", options: [["", "keine Angabe"], ...RULES.map((r, i) => [String(i + 1), `${i + 1}. ${r}`])] },
+    { name: "hint", label: "Nur Hinweis (Stufe 0): Vermerk ohne Punkte, nur bei Grad A", type: "checkbox" },
+    { name: "mild", label: "Grad C ohne Vorsatz: 30 Tage statt dauerhaft", type: "checkbox" },
+  ];
+  const strikeBody = (a) => ({ grade: a.grade, rule: a.rule ? Number(a.rule) : null, hint: a.hint, mild: a.mild });
+  const strikeResult = (name, r) => {
+    const s = r && r.sanction;
+    const what = !s ? "" : s.kind === "mute" ? ` Folge: eingeschränkt${s.until ? ` bis ${fmt(s.until)}` : ""}.` : s.until ? ` Folge: gesperrt bis ${fmt(s.until)}.` : " Folge: dauerhaft gesperrt.";
+    return `${name} wurde verwarnt (Grad ${r && r.grade ? r.grade : "A"}), jetzt ${r && typeof r.points === "number" ? r.points : "?"} Punkte.${what}`;
+  };
+
   // Dialog mit Feldern (Grund, Dauer, Passwort …). Löst mit den Werten auf, null bei Abbruch.
   function ask({ title, text = "", fields = [], confirm = "Bestätigen", danger = false }) {
     return new Promise((resolve) => {
@@ -338,7 +354,7 @@
       <div class="xa-cols">
         <section><h4>Sitzungen (${d.sessions.length})</h4>${d.sessions.length ? `<ul class="xa-list xa-list-plain">${d.sessions.map((s) => `<li><div><b>${esc(s.deviceName || "Gerät")}</b><small>${esc(s.ip || "")} · zuletzt ${esc(ago(s.lastSeenAt || s.createdAt))}</small></div></li>`).join("")}</ul>` : empty("Keine aktiven Sitzungen.")}</section>
         <section><h4>Letzte Anmeldungen</h4>${d.authEvents.length ? `<ul class="xa-list xa-list-plain">${d.authEvents.map((e) => `<li><div><b>${esc(e.type)}</b><small>${esc([e.ip, e.device].filter(Boolean).join(" · "))} · ${esc(fmt(e.createdAt))}</small></div></li>`).join("")}</ul>` : empty("Keine Ereignisse.")}</section>
-        <section><h4>Verwarnungen (${d.warnings.length})</h4>${d.warnings.length ? `<ul class="xa-list xa-list-plain">${d.warnings.map((w) => `<li><div><b>${esc(w.reason)}</b><small>${esc(w.actor || "Staff")} · ${esc(fmt(w.createdAt))}</small></div>${can("users.ban") && w.id ? `<button data-act="unwarn" data-warning="${esc(w.id)}">Zurücknehmen</button>` : ""}</li>`).join("")}</ul>` : empty("Keine Verwarnungen.")}</section>
+        <section><h4>Verwarnungen (${d.warnings.length}) · ${d.points || 0} Punkte</h4>${d.warnings.length ? `<ul class="xa-list xa-list-plain">${d.warnings.map((w) => `<li><div><b>${esc(w.reason)}</b><small>Grad ${esc(w.grade || "A")} · ${w.points ? `${w.points} P.` : "Hinweis"}${w.rule ? ` · Regel ${w.rule}` : ""} · ${esc(w.actor || "Staff")} · ${esc(fmt(w.createdAt))}</small></div>${can("users.ban") && w.id ? `<button data-act="unwarn" data-warning="${esc(w.id)}">Zurücknehmen</button>` : ""}</li>`).join("")}</ul>` : empty("Keine Verwarnungen.")}</section>
         <section><h4>Offene Meldungen (${d.openReports.length})</h4>${d.openReports.length ? `<ul class="xa-list xa-list-plain">${d.openReports.map((r) => `<li><div><b>${esc(r.reason)}</b><small>von ${esc(r.reporter || "?")} · ${esc(fmt(r.createdAt))}</small></div></li>`).join("")}</ul>` : empty("Keine offenen Meldungen.")}</section>
         <section><h4>Arbeitsbereiche (${d.memberships.length})</h4>${d.memberships.length ? `<ul class="xa-list xa-list-plain">${d.memberships.map((m) => `<li><div><b>${esc(m.name)}</b><small>${esc(m.role)}${m.slug ? ` · ${esc(m.slug)}` : ""}</small></div></li>`).join("")}</ul>` : empty("In keinem Arbeitsbereich.")}</section>
         ${Array.isArray(d.notes) ? `<section><h4>Staff-Notizen (${d.notes.length})</h4><p class="hint">Nur Staff sieht diese Notizen.</p>
@@ -348,7 +364,7 @@
   }
   async function userAction(label, fn) {
     try {
-      await fn(); tell(label);
+      await fn(); tell(typeof label === "function" ? label() : label);
       const id = S.users.detail && S.users.detail.user.id;
       if (S.users.onChange) await S.users.onChange();
       if (id && S.users.box && S.users.box.isConnected) await openUser(id, S.users.box, S.users.onChange, S.users.notify);
@@ -361,8 +377,10 @@
     const u = d && d.user, id = u && encodeURIComponent(u.id), name = u && u.displayName;
     switch (b.dataset.act) {
       case "verify": { const next = b.dataset.on !== "true"; return userAction(next ? `${name} ist jetzt verifiziert.` : `Verifizierung von ${name} entfernt.`, () => api("POST", `/admin/users/${id}/verify`, { verified: next })); }
-      case "warn": { const a = await ask({ title: `${name} verwarnen`, text: "Die Person sieht die Verwarnung sofort in der App.", fields: [{ name: "reason", label: "Grund", type: "textarea", required: true }], confirm: "Verwarnen" }); if (!a) return;
-        return userAction(`${name} wurde verwarnt und benachrichtigt.`, () => api("POST", `/admin/users/${id}/warn`, { reason: a.reason })); }
+      case "warn": { const a = await ask({ title: `${name} verwarnen`, text: `Die Person sieht die Verwarnung sofort in der App. Stand: ${d.points || 0} Punkte in 12 Monaten; ab 3 / 6 / 9 Punkten wird automatisch eingeschränkt bzw. gesperrt.`, fields: [{ name: "reason", label: "Grund", type: "textarea", required: true }, ...STRIKE_FIELDS], confirm: "Verwarnen" }); if (!a) return;
+        if (a.grade === "C" && !a.mild && !confirm(`${name} wird dauerhaft gesperrt. Fortfahren?`)) return;
+        let res = null;
+        return userAction(() => strikeResult(name, res), async () => { res = await api("POST", `/admin/users/${id}/warn`, { reason: a.reason, ...strikeBody(a) }); return res; }); }
       case "ban": { const a = await ask({ title: `${name} sperren`, text: "Alle Sitzungen werden beendet. Ein Grund ist Pflicht.", danger: true, confirm: "Sperren", fields: [
           { name: "reason", label: "Grund", type: "textarea", required: true }, { name: "duration", label: "Dauer", type: "select", options: DURATIONS },
           { name: "banDevice", label: "Auch die Geräte des Kontos blockieren", type: "checkbox" }, { name: "banIp", label: "Auch die Netzwerke des Kontos blockieren", type: "checkbox" }] }); if (!a) return;
@@ -960,7 +978,7 @@
   }
 
   // ---------- Meldungen ----------
-  const R_TYPE = { user: "Konto", message: "Nachricht", project: "Projekt", community: "Community", workspace: "Arbeitsbereich" };
+  const R_TYPE = { user: "Konto", message: "Nachricht", project: "Projekt", community: "Community", workspace: "Arbeitsbereich", website: "Website-Formular" };
   loaders.reports = async () => {
     const p = panel("reports");
     p.innerHTML = `${head("MODERATION", "Meldungen", "Von Mitgliedern eingereichte Meldungen. Offene erledigen – der Grund landet im Audit-Log.")}
@@ -976,22 +994,25 @@
         } catch (err) { say("reports", reason(err), false); }
         return;
       }
-      const L = { dismiss: ["Meldung verwerfen", "Verwerfen", false], warn: ["Konto verwarnen", "Verwarnen", false], ban: ["Konto sperren", "Sperren", true], remove: ["Inhalt entfernen", "Entfernen", true] };
-      const [title, confirm, danger] = L[b.dataset.act];
-      const a = await ask({ title, text: `${R_TYPE[r.targetType] || r.targetType}: ${r.targetLabel || r.targetId} · gemeldet wegen „${r.reason}“`, danger, confirm, fields: [{ name: "reason", label: "Begründung", type: "textarea", required: b.dataset.act !== "dismiss" }] }); if (!a) return;
-      try { await api("POST", `/admin/reports/${encodeURIComponent(r.id)}/resolve`, { action: b.dataset.act, reason: a.reason }); say("reports", `Meldung erledigt: ${confirm.toLowerCase()}.`); await loaders.reports(); loadCounts(); }
+      const L = { dismiss: ["Meldung verwerfen", "Verwerfen", false], done: ["Meldung erledigen", "Erledigt", false], warn: ["Konto verwarnen", "Verwarnen", false], ban: ["Konto sperren", "Sperren", true], remove: ["Inhalt entfernen", "Entfernen", true] };
+      const [title, confirmLabel, danger] = L[b.dataset.act];
+      const warn = b.dataset.act === "warn";
+      const a = await ask({ title, text: `${R_TYPE[r.targetType] || r.targetType}: ${r.targetLabel || r.targetId} · gemeldet wegen „${r.reason}“`, danger, confirm: confirmLabel,
+        fields: [{ name: "reason", label: warn ? "Grund (geht an die Person)" : "Begründung", type: "textarea", required: b.dataset.act !== "dismiss" }, ...(warn ? STRIKE_FIELDS : [])] }); if (!a) return;
+      if (warn && a.grade === "C" && !a.mild && !confirm(`${r.targetLabel || "Das Konto"} wird dauerhaft gesperrt. Fortfahren?`)) return;
+      try { const res = await api("POST", `/admin/reports/${encodeURIComponent(r.id)}/resolve`, { action: b.dataset.act, reason: a.reason, ...(warn ? strikeBody(a) : {}) }); say("reports", warn ? strikeResult(r.targetLabel || "Das Konto", res) : `Meldung erledigt: ${confirmLabel.toLowerCase()}.`); await loaders.reports(); loadCounts(); }
       catch (err) { say("reports", reason(err), false); }
     });
     try {
       S.reports.list = (await api("GET", `/admin/reports?status=${S.reports.status}`)).reports;
       const L = S.reports.list;
       p.querySelector("[data-list]").innerHTML = L.length ? `<div class="xa-reports">${L.map((r) => `<article class="xa-card xa-report">
-        <div class="xa-card-head"><div><b>${esc(R_TYPE[r.targetType] || r.targetType)}: ${esc(r.targetLabel || r.targetId)}</b><br><small>gemeldet von ${esc(r.reporter || "?")} (${esc(r.reporterEmail || "")}) · ${esc(fmt(r.createdAt))}</small></div>${r.status === "open" ? pill("Offen", "warn") : r.status === "resolved" ? pill(`Erledigt: ${r.resolution || ""}`, "ok") : pill("Verworfen")}</div>
+        <div class="xa-card-head"><div><b>${esc(R_TYPE[r.targetType] || r.targetType)}: ${esc(r.targetLabel || r.targetId)}</b><br><small>${r.targetType === "website" ? "über das Formular in den Community-Richtlinien" : `gemeldet von ${esc(r.reporter || "?")} (${esc(r.reporterEmail || "")})`} · ${esc(fmt(r.createdAt))}</small></div>${r.status === "open" ? pill("Offen", "warn") : r.status === "resolved" ? pill(`Erledigt: ${r.resolution || ""}`, "ok") : pill("Verworfen")}</div>
         <p><b>${esc(r.reason)}</b>${r.details ? `<br><span class="xa-pre">${esc(r.details)}</span>` : ""}</p>
         ${r.resolver ? `<small>Bearbeitet von ${esc(r.resolver)} · ${esc(fmt(r.resolvedAt))}</small>` : ""}
         <div class="row-actions">
           ${r.targetType === "message" && can("view_reported_messages") ? `<button data-act="context" data-id="${esc(r.id)}">Im Zusammenhang ansehen</button>` : ""}
-          ${r.status === "open" && can("reports.handle") ? `<button data-act="dismiss" data-id="${esc(r.id)}">Verwerfen</button>${r.targetType === "user" ? `<button data-act="warn" data-id="${esc(r.id)}">Verwarnen</button><button class="admin-danger" data-act="ban" data-id="${esc(r.id)}">Konto sperren</button>` : `<button class="admin-danger" data-act="remove" data-id="${esc(r.id)}">Inhalt entfernen</button>`}` : ""}
+          ${r.status === "open" && can("reports.handle") ? `<button data-act="dismiss" data-id="${esc(r.id)}">Verwerfen</button>${r.targetType === "user" ? `<button data-act="warn" data-id="${esc(r.id)}">Verwarnen</button><button class="admin-danger" data-act="ban" data-id="${esc(r.id)}">Konto sperren</button>` : r.targetType === "website" ? `<button data-act="done" data-id="${esc(r.id)}">Erledigt</button>` : `<button class="admin-danger" data-act="remove" data-id="${esc(r.id)}">Inhalt entfernen</button>`}` : ""}
         </div></article>`).join("")}</div>`
         : empty({ open: "Keine offenen Meldungen. Die Warteschlange ist leer.", resolved: "Keine erledigten Meldungen.", dismissed: "Keine verworfenen Meldungen.", all: "Noch keine Meldungen." }[S.reports.status]);
     } catch (err) { p.querySelector("[data-list]").innerHTML = empty(reason(err)); }

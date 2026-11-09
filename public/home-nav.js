@@ -51,7 +51,7 @@
       const sc = document.createElement("script"); sc.src = "/vendor/supabase.js?v=31"; sc.onload = res; sc.onerror = rej; document.head.append(sc);
     }));
       await load("config.js?v=31");
-      await load("app.js?v=36");
+      await load("app.js?v=42");
       await load("notifications.js?v=32");
     } catch { /* ohne Netz bleibt die normale Startseite */ }
   })();

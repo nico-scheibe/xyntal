@@ -28,10 +28,22 @@
     if (busy || !form.reportValidity()) return;
     busy = true; submit.disabled = true; status.textContent = t(form.dataset.sending || 'Feedback wird gesendet …'); status.className = 'form-status';
     try {
+      const fields = Object.fromEntries(new FormData(form));
+      // Meldungen landen zusätzlich in der Meldungsliste des Admin-Bereichs (App-Server, POST /site/reports).
+      // Klappt einer der beiden Wege, ist die Meldung angekommen.
+      const queued = fields.kind === 'report'
+        ? fetch(`${(window.XYNTAL_CONFIG && window.XYNTAL_CONFIG.appApiUrl) || 'https://api.xyntal.de'}/site/reports`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept-Language': document.documentElement.lang || 'de' },
+            body: JSON.stringify({ name: fields.name, email: fields.email, where: fields.where, message: fields.message, website: fields.website }),
+            signal: AbortSignal.timeout(25000) }).then(r => r.ok, () => false)
+        : Promise.resolve(false);
       const response = await fetch('/api/beta-feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...Object.fromEntries(new FormData(form)), requestId }), signal: AbortSignal.timeout(25000) });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok || data.ok !== true) throw new Error(data.error || 'Das Feedback konnte nicht gesendet werden. Bitte versuche es erneut.');
+        body: JSON.stringify({ ...fields, requestId }), signal: AbortSignal.timeout(25000) }).catch(error => ({ ok: false, error }));
+      const data = response.json ? await response.json().catch(() => ({})) : {};
+      if ((!response.ok || data.ok !== true) && !(await queued)) {
+        if (response.error) throw response.error;
+        throw new Error(data.error || 'Das Feedback konnte nicht gesendet werden. Bitte versuche es erneut.');
+      }
       form.hidden = true;
       dialog.querySelector('[data-feedback-success]').hidden = false;
       dialog.querySelector('[data-feedback-success] button').focus();
