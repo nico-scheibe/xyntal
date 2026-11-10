@@ -308,6 +308,13 @@
       ['trust', 'Vertrauen', 65], ['comm', 'Kommunikation', 70], ['avail', 'Verfügbarkeit', 75], ['need', 'Projektbedarf', 50],
       ['person', 'Persönlichkeit', 60], ['long', 'Langfristiges Potenzial', 70]
     ];
+    // Englische Fassung der Seite (/en, vom Server übersetzt): die Texte, die dieses Skript selbst einsetzt
+    var EN = document.documentElement.lang === 'en';
+    if (EN) {
+      var EN_DIMS = { vision: 'Vision', skills: 'Complementary skills', execution: 'Execution', intent: 'Intent', trust: 'Trust',
+        comm: 'Communication', avail: 'Availability', need: 'Project need', person: 'Personality', long: 'Long-term potential' };
+      DIMS.forEach(function (d) { d[1] = EN_DIMS[d[0]]; });
+    }
     var WEIGHTS = {
       allgemein:    { vision: 15, skills: 15, execution: 15, intent: 10, trust: 10, comm: 10, avail: 8,  need: 7, person: 5, long: 5 },
       mitgruendung: { vision: 20, skills: 15, execution: 14, intent: 12, trust: 10, comm: 6,  avail: 5,  need: 0, person: 8, long: 10 },
@@ -342,7 +349,11 @@
       goal = clamp(Math.round(sum / total + mod), 0, 100);
       dot.style.setProperty('--x', goal + '%');
       scoreBox.classList.toggle('is-low', goal < 65);
-      say.innerHTML = goal >= 85 ? '<b>Sehr hohe Passung.</b> So jemand steht bei dir weit oben.'
+      say.innerHTML = EN
+        ? (goal >= 85 ? '<b>Very high fit.</b> Someone like this is near the top of your list.'
+          : goal >= 65 ? '<b>Gets suggested to you.</b> Suggestions start at 65 points.'
+          : '<b>Below 65.</b> Usually doesn\'t show up in your suggestions.')
+        : goal >= 85 ? '<b>Sehr hohe Passung.</b> So jemand steht bei dir weit oben.'
         : goal >= 65 ? '<b>Wird dir vorgeschlagen.</b> Vorschläge gibt es ab 65 Punkten.'
         : '<b>Unter 65.</b> Taucht in deinen Vorschlägen in der Regel nicht auf.';
       if (calm) { shown = goal; scoreEl.textContent = goal; }
