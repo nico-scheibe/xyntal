@@ -237,14 +237,17 @@ const metaCache = new Map();
 async function profileMeta(handle) {
   const hit = metaCache.get(handle);
   if (hit && hit.until > Date.now()) return hit.meta;
-  let meta = null;
+  // null = diese Karte gibt es nicht (oder sie ist nicht öffentlich); undefined = die Abfrage hat
+  // nicht geklappt, dann bleibt die Seite wie bisher bei 200 statt fälschlich „nicht gefunden“ zu melden.
+  let meta;
   const config = supabaseConfig();
   if (config) {
     try {
       const response = await fetch(config.url + '/rest/v1/rpc/get_public_card', {
         method: 'POST', headers: { apikey: config.key, Authorization: 'Bearer ' + config.key, 'Content-Type': 'application/json' },
         body: JSON.stringify({ p_handle: handle }), signal: AbortSignal.timeout(2500) });
-      const card = response.ok ? await response.json() : null;
+      const card = response.ok ? await response.json() : undefined;
+      if (response.ok) meta = null;
       if (card && card.name) {
         const p = card.profile || {};
         const clip = (v, n) => { const t = String(v || '').replace(/\s+/g, ' ').trim(); return t.length > n ? t.slice(0, n - 1) + '…' : t; };
@@ -528,7 +531,9 @@ function serve(req, res) {
     profileMeta(handleMatch[1].toLowerCase()).then((meta) => {
       let html = fs.readFileSync(file, 'utf8');
       if (meta) html = withProfileMeta(html, meta, handleMatch[1].toLowerCase());
-      res.writeHead(200, {'Content-Type':'text/html; charset=utf-8', 'Cache-Control':'no-cache', 'X-Content-Type-Options':'nosniff', 'X-Xyntal-Commit':commit});
+      // Keine öffentliche Karte unter diesem Namen: dieselbe Seite (sie zeigt „gibt es nicht“ bzw. „reserviert“
+      // und lässt die Besitzerin oder den Besitzer weiter an die eigene Seite), aber als 404.
+      res.writeHead(meta === null ? 404 : 200, {'Content-Type':'text/html; charset=utf-8', 'Cache-Control':'no-cache', 'X-Content-Type-Options':'nosniff', 'X-Xyntal-Commit':commit});
       res.end(html);
     }).catch(() => { if (!res.headersSent) { res.writeHead(500); res.end(); } });
     return;

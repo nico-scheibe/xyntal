@@ -11,7 +11,7 @@ const root = path.resolve(__dirname, '../public');
   const source = fs.readFileSync(path.resolve(__dirname, '../hosting/daki/server.cjs'), 'utf8');
   const serving = source.slice(source.indexOf('const types =')).replace(/\.listen\(Number\(process.env.SERVER_PORT \|\| process.env.PORT \|\| 4129\), '0.0.0.0'[^)]*\)\)/, ".listen(0, '127.0.0.1')");
   vm.runInNewContext(serving, { require, Buffer, AbortSignal, fetch: async () => { throw new Error('kein fetch erwartet'); }, http: { createServer: fn => (server = http.createServer(fn)) }, fs, path, root, URL, process: { env: {} }, console,
-    commit: 'test', updating: false, update() {}, setInterval() {}, mediaHandler: () => false, profileMeta: async () => null, withProfileMeta: (h) => h });
+    commit: 'test', updating: false, update() {}, setInterval() {}, mediaHandler: () => false, profileMeta: async (handle) => handle === 'nico' ? { title: 'Nico · xyntal.de/nico', description: 'Baut Xyntal.' } : handle === 'stoerung' ? undefined : null, withProfileMeta: (h) => h });
   if (!server.listening) await new Promise(resolve => server.once('listening', resolve));
   const port = server.address().port;
   const get = (host, url, method = 'GET') => new Promise((resolve, reject) => {
@@ -43,7 +43,13 @@ const root = path.resolve(__dirname, '../public');
       assert.equal(r.headers.location, to, host + url);
     }
     // Dateien und Wunsch-Links bleiben, wo sie sind
-    for (const url of ['/preise', '/robots.txt', '/sitemap.xml', '/css/neu.css', '/irgendwer', '/irgendwer/']) assert.equal((await get('xyntal.de', url)).status, 200, url);
+    for (const url of ['/preise', '/robots.txt', '/sitemap.xml', '/css/neu.css', '/nico', '/nico/', '/stoerung']) assert.equal((await get('xyntal.de', url)).status, 200, url);
+    // Wunsch-Link ohne öffentliche Karte: 404, aber mit der Kartenseite als Inhalt (sie zeigt „gibt es nicht“ / „reserviert“)
+    {
+      const r = await get('xyntal.de', '/irgendwer');
+      assert.equal(r.status, 404);
+      assert.match(r.body, /u\.js/);
+    }
     // Unveränderte Dateien kommen beim zweiten Mal als 304 ohne Inhalt
     {
       const first = await get('xyntal.de', '/css/neu.css');
