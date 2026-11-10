@@ -1,6 +1,22 @@
 // Xyntal – englische Texte. Schlüssel = deutscher Originaltext (Leerzeichen zusammengefasst).
 // Neue deutsche Texte auf der Website hier ergänzen, sonst bleiben sie auf Englisch deutsch.
 window.XYNTAL_EN = {
+  // Titel und Beschreibungen für Suchmaschinen (SEO-Überarbeitung)
+  "Co-Founder-Matching: So wird die Passung berechnet – Xyntal": "Co-founder matching: how the fit is calculated – Xyntal",
+  "So berechnet Xyntal, wer als Mitgründer oder Projektpartner zu dir passt: zehn Bereiche, Gewichte, Plus- und Minuspunkte – ohne bezahlte Platzierung.": "How Xyntal calculates who fits you as a co-founder or project partner: ten areas, weights, plus and minus points – no paid placement.",
+  "Xyntal-App-Demo: Projekte, Chat und KI zum Durchklicken": "Xyntal app demo: click through projects, chat and AI",
+  "Klick dich durch die Xyntal-App: Arbeitsbereiche, Aufgaben, Nachrichten, passende Leute, Kalender und KI-Center – mit Beispieldaten und ohne Konto.": "Click through the Xyntal app: workspaces, tasks, messages, matching people, calendar and AI center – with sample data and no account.",
+  "Xyntal Preise: Tarife von Free bis Enterprise": "Xyntal pricing: plans from Free to Enterprise",
+  "Was kostet Xyntal? Alle Tarife von Free bis Enterprise mit Grenzen, KI-Guthaben und Vergleich. In der Beta ist Xyntal kostenlos.": "What does Xyntal cost? All plans from Free to Enterprise with limits, AI credit and a comparison. Xyntal is free during the beta.",
+  "Team-Software zum Festpreis statt pro Kopf – Xyntal": "Team software at a flat price instead of per seat – Xyntal",
+  "Chat, Projekte, Wiki, Dateien, Kalender und KI in einer App – zum Festpreis für die ganze Firma statt Kosten pro Kopf. 30 Tage kostenlos testen.": "Chat, projects, wiki, files, calendar and AI in one app – at a flat price for the whole company instead of per-seat costs. Try it free for 30 days.",
+  "Xyntal Beta: Jetzt kostenlos bewerben": "Xyntal beta: apply now for free",
+  "Warum ich Xyntal baue – ein Brief von Nico": "Why I'm building Xyntal – a letter from Nico",
+  "Ein Brief von Nico: Warum ich Xyntal baue": "A letter from Nico: why I'm building Xyntal",
+  "Nico schreibt, warum er Xyntal baut: Mitgründer und Projektpartner gibt es, man findet sie nur nicht. Und was die App für Mac und Windows anders macht.": "Nico writes about why he is building Xyntal: co-founders and project partners exist, you just can't find them. And what the app for Mac and Windows does differently.",
+  "Community für Gründer und Selbstständige – Xyntal": "Community for founders and freelancers – Xyntal",
+  "Xyntal-Mitglieder: Wer hier etwas aufbaut": "Xyntal members: who is building something here",
+  "Die Mitglieder von Xyntal: Gründer, Selbstständige und Macher – mit Profil und dem, woran sie gerade arbeiten.": "The members of Xyntal: founders, freelancers and makers – with their profile and what they are working on right now.",
   // Preisseite und Firmen-Seite, neue Fassung (preise.html, unternehmen.html, tarife.css)
   "/ preise": "/ pricing",
   "Fang kostenlos an.": "Start for free.",

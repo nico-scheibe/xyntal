@@ -32,6 +32,29 @@ const root = path.resolve(__dirname, '../public');
     assert.equal((await get('xyntal.de', '/login')).status, 200);
     assert.equal((await get('xyntal.de', '/')).status, 200);
 
+    // Eine Adresse pro Seite: .html, /index.html, Schrägstrich am Ende und www leiten dauerhaft um
+    for (const [host, url, to] of [
+      ['xyntal.de', '/preise.html', '/preise'], ['xyntal.de', '/preise.html?jahr=1', '/preise?jahr=1'], ['xyntal.de', '/index.html', '/'],
+      ['xyntal.de', '/index', '/'], ['xyntal.de', '/preise/', '/preise'],
+      ['www.xyntal.de', '/', 'https://xyntal.de/'], ['www.xyntal.de', '/preise?jahr=1', 'https://xyntal.de/preise?jahr=1'], ['www.xyntal.de', '/beta.html', 'https://xyntal.de/beta'],
+    ]) {
+      const r = await get(host, url);
+      assert.equal(r.status, 301, host + url);
+      assert.equal(r.headers.location, to, host + url);
+    }
+    // Dateien und Wunsch-Links bleiben, wo sie sind
+    for (const url of ['/preise', '/robots.txt', '/sitemap.xml', '/css/neu.css', '/irgendwer', '/irgendwer/']) assert.equal((await get('xyntal.de', url)).status, 200, url);
+    // Unveränderte Dateien kommen beim zweiten Mal als 304 ohne Inhalt
+    {
+      const first = await get('xyntal.de', '/css/neu.css');
+      assert.match(first.headers.etag, /^W\/"[0-9a-f]+-[0-9a-f]+"$/);
+      assert.equal(first.headers['cache-control'], 'no-cache');
+      const again = await new Promise((resolve, reject) => http.request({ host: '127.0.0.1', port, path: '/css/neu.css', headers: { host: 'xyntal.de', 'if-none-match': first.headers.etag } }, (res) => { let body = ''; res.on('data', c => body += c); res.on('end', () => resolve({ status: res.statusCode, body })); }).on('error', reject).end());
+      assert.equal(again.status, 304);
+      assert.equal(again.body, '');
+      assert.equal((await get('xyntal.de', '/fonts/archivo-latin.woff2')).headers['cache-control'], 'public, max-age=2592000');
+    }
+
     // Ohne Cloudflare Access: admin.xyntal.de lädt direkt, die Anmeldung samt 2FA schützt den Inhalt
     for (const url of ['/', '/admin', '/admin/']) {
       const r = await get('admin.xyntal.de', url);
