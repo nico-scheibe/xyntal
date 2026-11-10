@@ -237,14 +237,17 @@ const metaCache = new Map();
 async function profileMeta(handle) {
   const hit = metaCache.get(handle);
   if (hit && hit.until > Date.now()) return hit.meta;
-  let meta = null;
+  // null = diese Karte gibt es nicht (oder sie ist nicht öffentlich); undefined = die Abfrage hat
+  // nicht geklappt, dann bleibt die Seite wie bisher bei 200 statt fälschlich „nicht gefunden“ zu melden.
+  let meta;
   const config = supabaseConfig();
   if (config) {
     try {
       const response = await fetch(config.url + '/rest/v1/rpc/get_public_card', {
         method: 'POST', headers: { apikey: config.key, Authorization: 'Bearer ' + config.key, 'Content-Type': 'application/json' },
         body: JSON.stringify({ p_handle: handle }), signal: AbortSignal.timeout(2500) });
-      const card = response.ok ? await response.json() : null;
+      const card = response.ok ? await response.json() : undefined;
+      if (response.ok) meta = null;
       if (card && card.name) {
         const p = card.profile || {};
         const clip = (v, n) => { const t = String(v || '').replace(/\s+/g, ' ').trim(); return t.length > n ? t.slice(0, n - 1) + '…' : t; };
@@ -493,6 +496,25 @@ function serve(req, res) {
     res.writeHead(404, {'Content-Type':'text/html; charset=utf-8'});
     return res.end(req.method === 'HEAD' ? undefined : fs.readFileSync(path.join(currentRoot,'404.html')));
   }
+  // Eine Adresse pro Seite (für Suchmaschinen und geteilte Links): www.xyntal.de, /seite.html,
+  // /index.html und /seite/ leiten dauerhaft auf https://xyntal.de/seite um. Suchteil bleibt erhalten,
+  // den Teil nach # reicht der Browser selbst weiter. Der Admin-Bereich bleibt, wie er ist.
+  if (!onAdminHost) {
+    const search = new URL(req.url, 'http://localhost').search;
+    // Bestätigungsdateien von Suchmaschinen (google….html, yandex_….html) müssen genau unter ihrer Adresse antworten
+    const isPage = (name) => /^[a-z0-9][a-z0-9_-]*$/i.test(name) && !/^(google|yandex_)[0-9a-f]+$/i.test(name) && fs.existsSync(path.join(currentRoot, name + '.html'));
+    let clean = null;
+    const html = /^\/([^/]+)\.html$/.exec(pathname);
+    const slash = /^\/([^/]+)\/$/.exec(pathname);
+    if (html && isPage(html[1])) clean = html[1] === 'index' ? '/' : '/' + html[1];
+    else if (slash && isPage(slash[1])) clean = '/' + slash[1];
+    else if (pathname === '/index') clean = '/';
+    const www = requestHost(req) === 'www.' + new URL(MAIN_SITE).hostname;
+    if (clean !== null || www) {
+      res.writeHead(301, { Location: (www ? MAIN_SITE : '') + encodeURI(clean ?? pathname) + search, 'Cache-Control': 'public, max-age=3600' });
+      return res.end();
+    }
+  }
   // Project short links use the project page and its existing access checks.
   if ((!fs.existsSync(file) || !fs.statSync(file).isFile()) && /^\/[a-z0-9][a-z0-9_-]{0,19}-[a-z0-9][a-z0-9_-]{0,118}\/?$/.test(pathname)) file = path.join(currentRoot, 'projekte.html');
   // xyntal.de/name/invite: Einladungsseite (Promo-Code = Link-Name, führt zur Registrierung)
@@ -510,12 +532,20 @@ function serve(req, res) {
     profileMeta(handleMatch[1].toLowerCase()).then((meta) => {
       let html = fs.readFileSync(file, 'utf8');
       if (meta) html = withProfileMeta(html, meta, handleMatch[1].toLowerCase());
-      res.writeHead(200, {'Content-Type':'text/html; charset=utf-8', 'Cache-Control':'no-cache', 'X-Content-Type-Options':'nosniff', 'X-Xyntal-Commit':commit});
+      // Keine öffentliche Karte unter diesem Namen: dieselbe Seite (sie zeigt „gibt es nicht“ bzw. „reserviert“
+      // und lässt die Besitzerin oder den Besitzer weiter an die eigene Seite), aber als 404.
+      res.writeHead(meta === null ? 404 : 200, {'Content-Type':'text/html; charset=utf-8', 'Cache-Control':'no-cache', 'X-Content-Type-Options':'nosniff', 'X-Xyntal-Commit':commit});
       res.end(html);
     }).catch(() => { if (!res.headersSent) { res.writeHead(500); res.end(); } });
     return;
   }
-  res.writeHead(200, {'Content-Type':types[path.extname(file)] || 'application/octet-stream', 'Cache-Control':'no-cache', 'X-Content-Type-Options':'nosniff', 'X-Xyntal-Commit':commit});
+  // ETag: der Browser fragt weiter jedes Mal nach (no-cache), lädt eine unveränderte Datei aber nicht
+  // noch einmal (304). Schriften ändern sich praktisch nie und dürfen 30 Tage ohne Nachfrage bleiben.
+  const stat = fs.statSync(file);
+  const etag = 'W/"' + stat.size.toString(16) + '-' + Math.floor(stat.mtimeMs).toString(16) + '"';
+  const headers = {'Content-Type':types[path.extname(file)] || 'application/octet-stream', 'Cache-Control': /\.woff2?$/.test(file) ? 'public, max-age=2592000' : 'no-cache', 'ETag': etag, 'X-Content-Type-Options':'nosniff', 'X-Xyntal-Commit':commit};
+  if (String(req.headers['if-none-match'] || '').split(',').some((tag) => tag.trim() === etag)) { res.writeHead(304, headers); return res.end(); }
+  res.writeHead(200, headers);
   if (req.method === 'HEAD') return res.end();
   const stream = fs.createReadStream(file);
   stream.on('error', () => res.destroy());
