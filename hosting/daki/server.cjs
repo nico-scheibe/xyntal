@@ -501,7 +501,8 @@ function serve(req, res) {
   // den Teil nach # reicht der Browser selbst weiter. Der Admin-Bereich bleibt, wie er ist.
   if (!onAdminHost) {
     const search = new URL(req.url, 'http://localhost').search;
-    const isPage = (name) => /^[a-z0-9][a-z0-9_-]*$/i.test(name) && fs.existsSync(path.join(currentRoot, name + '.html'));
+    // Bestätigungsdateien von Suchmaschinen (google….html, yandex_….html) müssen genau unter ihrer Adresse antworten
+    const isPage = (name) => /^[a-z0-9][a-z0-9_-]*$/i.test(name) && !/^(google|yandex_)[0-9a-f]+$/i.test(name) && fs.existsSync(path.join(currentRoot, name + '.html'));
     let clean = null;
     const html = /^\/([^/]+)\.html$/.exec(pathname);
     const slash = /^\/([^/]+)\/$/.exec(pathname);
