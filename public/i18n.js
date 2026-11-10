@@ -11,6 +11,10 @@
 
   let lang = "de";
   try { lang = localStorage.getItem(KEY) === "en" ? "en" : "de"; } catch { /* ohne Speicher: Deutsch */ }
+  // Seiten unter /en/ kommen schon englisch vom Server (eigene Adresse für Suchmaschinen). Dort gilt
+  // immer Englisch – auch für Texte, die Skripte später einfügen –, und „DE“ führt zur deutschen Adresse.
+  const EN_URL = /^\/en(\/|$)/.test(location.pathname);
+  if (EN_URL) lang = "en";
   document.documentElement.lang = lang;
 
   const origText = new WeakMap();   // Textknoten -> deutscher Originaltext
@@ -115,6 +119,11 @@
   function set(next) {
     next = next === "en" ? "en" : "de";
     if (next === lang) return;
+    if (EN_URL) {
+      try { localStorage.setItem(KEY, next); } catch { /* egal */ }
+      location.href = (location.pathname.replace(/^\/en\/?/, "/") || "/") + location.search + location.hash;
+      return;
+    }
     lang = next;
     try { localStorage.setItem(KEY, lang); } catch { /* egal */ }
     document.documentElement.lang = lang;

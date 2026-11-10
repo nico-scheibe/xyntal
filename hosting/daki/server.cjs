@@ -420,6 +420,135 @@ async function handleBetaStatusMail(req, res) {
 }
 
 const types = { '.html':'text/html; charset=utf-8', '.css':'text/css; charset=utf-8', '.js':'text/javascript; charset=utf-8', '.json':'application/json', '.png':'image/png', '.jpg':'image/jpeg', '.svg':'image/svg+xml', '.webp':'image/webp', '.woff2':'font/woff2', '.woff':'font/woff', '.ico':'image/x-icon', '.txt':'text/plain; charset=utf-8', '.xml':'application/xml; charset=utf-8' };
+// ---------- Englische Seiten unter /en/… ----------
+// Dieselben Dateien wie die deutschen Seiten, auf dem Server mit dem Wörterbuch aus public/i18n-en.js
+// (plus demo-i18n.js, beta-i18n.js) übersetzt – damit Suchmaschinen und Vorschauen englischen Text unter einer
+// eigenen Adresse bekommen, ohne dass es zwei Fassungen jeder Seite zu pflegen gibt. Was im Wörterbuch fehlt,
+// bleibt deutsch stehen. AGB und Widerruf gibt es bewusst nur auf Deutsch (nicht übersetzt).
+const EN_PAGES = new Set(['index', 'matching', 'demo', 'preise', 'unternehmen', 'beta', 'brief', 'community', 'mitglieder', 'community-richtlinien', 'kuendigen']);
+const enCache = new Map(); // "commit:seite" -> HTML
+let enDict = { commit: null, dict: {}, patterns: [] };
+function englishDict(currentRoot) {
+  if (enDict.commit === commit) return enDict;
+  const win = {};
+  const box = require('node:vm').createContext({ window: win });
+  for (const name of ['i18n-en.js', 'demo-i18n.js', 'beta-i18n.js']) {
+    try { require('node:vm').runInContext(fs.readFileSync(path.join(currentRoot, name), 'utf8'), box, { timeout: 2000 }); } catch {}
+  }
+  enDict = { commit, dict: win.XYNTAL_EN || {}, patterns: win.XYNTAL_EN_PATTERNS || [] };
+  return enDict;
+}
+const EN_ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', '#39': "'", nbsp: ' ', shy: '­' };
+const enDecode = (s) => s.replace(/&(amp|lt|gt|quot|#39|nbsp|shy);/g, (m, n) => EN_ENTITIES[n]).replace(/&#(\d+);/g, (m, n) => String.fromCodePoint(Number(n))).replace(/&#x([0-9a-f]+);/gi, (m, n) => String.fromCodePoint(parseInt(n, 16)));
+const enText = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/ /g, '&nbsp;').replace(/­/g, '&shy;');
+const enAttr = (s) => enText(s).replace(/"/g, '&quot;');
+// Wie translate() in public/i18n.js: Schlüssel = Text mit zusammengefassten Leerzeichen; undefined = kein Eintrag
+function englishText(de, { dict, patterns }) {
+  const key = de.replace(/\s+/g, ' ').trim();
+  if (!key) return undefined;
+  let en = Object.prototype.hasOwnProperty.call(dict, key) ? dict[key] : undefined;
+  if (en === undefined) {
+    for (const [re, rep] of patterns) {
+      const m = key.match(re);
+      if (m) { try { en = typeof rep === 'function' ? rep(...m) : key.replace(re, rep); } catch {} break; }
+    }
+  }
+  if (typeof en !== 'string') return undefined;
+  return de.match(/^\s*/)[0] + en + de.match(/\s*$/)[0];
+}
+const EN_VOID = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr']);
+const EN_SKIP = new Set(['script', 'style', 'noscript', 'textarea', 'code']);
+// Übersetzt Textknoten und die Attribute placeholder, aria-label, title, alt – dieselben Regeln wie im Browser
+// (nichts in script/style/noscript/textarea/code und nichts unter data-no-i18n).
+function englishHtml(html, words) {
+  const out = [], stack = [];
+  let blocked = 0;
+  const re = /<!--[\s\S]*?-->|<!doctype[^>]*>|<\/([a-zA-Z][^\s>]*)\s*>|<([a-zA-Z][^\s>\/]*)((?:[^>"']|"[^"]*"|'[^']*')*)>|[^<]+|</gi;
+  let m;
+  while ((m = re.exec(html))) {
+    const tok = m[0];
+    if (m[1]) {
+      const name = m[1].toLowerCase();
+      for (let i = stack.length - 1; i >= 0; i--) {
+        if (stack[i].name === name) { while (stack.length > i) { if (stack.pop().blocks) blocked--; } break; }
+      }
+      out.push(tok);
+    } else if (m[2]) {
+      const name = m[2].toLowerCase();
+      let attrs = m[3] || '';
+      const blocks = EN_SKIP.has(name) || /\sdata-no-i18n(?=[\s=\/]|$)/.test(attrs) || /\scontenteditable="true"/.test(attrs);
+      if (!blocked && (!blocks || name === 'textarea')) {
+        attrs = attrs.replace(/(\s(?:placeholder|aria-label|title|alt)=")([^"]*)(")/g, (all, a, value, z) => {
+          const en = englishText(enDecode(value), words);
+          return en === undefined ? all : a + enAttr(en) + z;
+        });
+      }
+      out.push('<' + m[2] + attrs + '>');
+      if (!EN_VOID.has(name) && !/\/\s*$/.test(attrs)) {
+        stack.push({ name, blocks });
+        if (blocks) blocked++;
+        if (name === 'script' || name === 'style') { // Inhalt unverändert bis zum Ende-Tag
+          const end = html.toLowerCase().indexOf('</' + name, re.lastIndex);
+          out.push(html.slice(re.lastIndex, end < 0 ? html.length : end));
+          re.lastIndex = end < 0 ? html.length : end;
+        }
+      }
+    } else if (tok[0] === '<' || blocked || !tok.trim()) {
+      out.push(tok);
+    } else {
+      const en = englishText(enDecode(tok), words);
+      out.push(en === undefined ? tok : enText(en));
+    }
+  }
+  return out.join('');
+}
+const enPath = (name) => (name === 'index' ? '/en' : '/en/' + name);
+// Eine deutsche Seite als englische Fassung: Text, Kopfzeilen, Adressen und strukturierte Daten.
+function englishPage(currentRoot, name) {
+  const cacheKey = commit + ':' + name;
+  if (enCache.has(cacheKey)) return enCache.get(cacheKey);
+  const words = englishDict(currentRoot);
+  const say = (de) => englishText(de, words);
+  let html = englishHtml(fs.readFileSync(path.join(currentRoot, name + '.html'), 'utf8'), words);
+  const site = 'https://xyntal.de';
+  const here = site + enPath(name);
+  html = html
+    .replace(/<html lang="de"/, '<html lang="en"')
+    .replace(/(<meta (?:name="description"|property="og:(?:title|description|image:alt)") content=")([^"]*)/g, (all, a, value) => { const en = say(enDecode(value)); return en === undefined ? all : a + enAttr(en); })
+    .replace(/(<meta property="og:locale" content=")de_DE/, '$1en_US')
+    .replace(/(<link rel="canonical" href=")[^"]*/, () => '<link rel="canonical" href="' + here)
+    .replace(/(<meta property="og:url" content=")[^"]*/, () => '<meta property="og:url" content="' + here)
+    // Strukturierte Daten: Adressen der Seite auf /en, deutsche Fragen-Liste weglassen (die Antworten sind
+    // aus mehreren Textstücken zusammengesetzt und stehen so nicht im Wörterbuch)
+    .replace(/(<script type="application\/ld\+json">)([\s\S]*?)(<\/script>)/g, (all, a, body, z) => {
+      try {
+        const data = JSON.parse(body);
+        data['@graph'] = (data['@graph'] || []).filter((node) => node['@type'] !== 'FAQPage').map((node) => {
+          if (node.inLanguage) node.inLanguage = 'en';
+          if (node['@type'] === 'BreadcrumbList') for (const item of node.itemListElement || []) {
+            const page = String(item.item || '').replace(site, '').replace(/^\//, '') || 'index';
+            if (EN_PAGES.has(page)) item.item = site + enPath(page);
+            item.name = say(String(item.name)) ?? item.name;
+          }
+          for (const holder of [node, node.offers || {}]) {
+            if (typeof holder.description !== 'string') continue;
+            const en = say(holder.description);
+            if (en === undefined) delete holder.description; else holder.description = en;
+          }
+          return node;
+        });
+        return a + JSON.stringify(data).replace(/</g, '\\u003c') + z;
+      } catch { return ''; }
+    })
+    // Dateien liegen nur einmal: Pfade ohne Schrägstrich am Anfang (css/neu.css) gelten ab der Wurzel
+    .replace(/(\s(?:href|src|poster|action)=")(?![a-z][a-z0-9+.-]*:|\/|#|\?)(?:\.\/)?([^"]+)/gi, '$1/$2')
+    .replace(/(\ssrcset=")([^"]*)/gi, (all, a, list) => a + list.split(',').map((part) => part.replace(/^(\s*)(?![a-z][a-z0-9+.-]*:|\/)(?:\.\/)?/i, '$1/')).join(','))
+    // Links auf Seiten, die es englisch gibt, bleiben im Englischen
+    .replace(/(<a(?:\s(?:[^>"']|"[^"]*"|'[^']*')*?)?\shref=")\/([a-z0-9-]*)(?=["#?])/gi, (all, a, page) => (EN_PAGES.has(page || 'index') ? a + enPath(page || 'index') : all));
+  if (enCache.size > 64) enCache.clear();
+  enCache.set(cacheKey, html);
+  return html;
+}
 // Sicherheits-Header für alle Antworten. Skripte nur aus eigenen Dateien (keine Inline-Skripte);
 // Inline-Styles bleiben erlaubt, weil Seiten style-Attribute setzen.
 const SECURITY_HEADERS = {
@@ -515,6 +644,37 @@ function serve(req, res) {
   }
   if (!root) { res.writeHead(503, {'Retry-After':'10'}); return res.end('Website is starting'); }
   const currentRoot = root;
+  // Englische Seiten: /en und /en/seite. Alles andere unter /en/ ist dieselbe Datei wie ohne /en
+  // (Skripte laden manches relativ zur Seite); deutsche Seiten ohne englische Fassung leiten weiter.
+  if ((pathname === '/en' || pathname.startsWith('/en/')) && requestHost(req) !== ADMIN_HOST) {
+    const search = new URL(req.url, 'http://localhost').search;
+    const rest = pathname.slice(4);
+    const clean = rest.replace(/\/$/, '').replace(/\.html$/, '');
+    const name = clean === '' ? 'index' : clean;
+    const www = requestHost(req) === 'www.' + new URL(MAIN_SITE).hostname;
+    if (EN_PAGES.has(name)) {
+      if (www || pathname !== enPath(name)) {
+        res.writeHead(301, { Location: (www ? MAIN_SITE : '') + enPath(name) + search, 'Cache-Control': 'public, max-age=3600' });
+        return res.end();
+      }
+      let html;
+      try { html = englishPage(currentRoot, name); } catch (error) { console.error('Englische Seite ' + name + ':', error.message); }
+      if (html) {
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Content-Language': 'en', 'Cache-Control': 'no-cache', 'X-Content-Type-Options': 'nosniff', 'X-Xyntal-Commit': commit });
+        return res.end(req.method === 'HEAD' ? undefined : html);
+      }
+    }
+    if (/^[a-z0-9][a-z0-9_-]*$/i.test(name) && fs.existsSync(path.join(currentRoot, name + '.html'))) {
+      res.writeHead(302, { Location: (name === 'index' ? '/' : '/' + name) + search, 'Cache-Control': 'no-store' });
+      return res.end();
+    }
+    // Dateien (css, js, Bilder …) gibt es nur einmal; alles andere unter /en/ existiert nicht
+    if (!path.extname(rest)) {
+      res.writeHead(404, {'Content-Type':'text/html; charset=utf-8'});
+      return res.end(req.method === 'HEAD' ? undefined : fs.readFileSync(path.join(currentRoot,'404.html')));
+    }
+    pathname = '/' + rest;
+  }
   let file = path.resolve(currentRoot, '.' + pathname);
   if (file !== currentRoot && !file.startsWith(currentRoot + path.sep)) { res.writeHead(403); return res.end(); }
   const onAdminHost = requestHost(req) === ADMIN_HOST;
