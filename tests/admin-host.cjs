@@ -50,6 +50,12 @@ const root = path.resolve(__dirname, '../public');
       assert.equal(r.status, 404);
       assert.match(r.body, /u\.js/);
     }
+    // Bestätigungsdatei der Google Search Console: genau diese Adresse, ohne Weiterleitung
+    {
+      const r = await get('xyntal.de', '/google9117876a08b467ff.html');
+      assert.equal(r.status, 200);
+      assert.equal(r.body.trim(), 'google-site-verification: google9117876a08b467ff.html');
+    }
     // Unveränderte Dateien kommen beim zweiten Mal als 304 ohne Inhalt
     {
       const first = await get('xyntal.de', '/css/neu.css');
