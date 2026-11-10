@@ -222,6 +222,28 @@ function statusMailText(name, status) {
   return { subject: mail.subject, text, html };
 }
 // Supabase-Adresse und öffentlicher Schlüssel kommen aus der veröffentlichten config.js, damit nichts doppelt gepflegt wird.
+// Sitemap der öffentlichen Karten (xyntal.de/name), damit Suchmaschinen sie finden, ohne dass eine Seite
+// sie alle verlinkt. Liste aus get_member_cards (nur öffentliche Karten nicht gesperrter Konten), 10 Minuten gemerkt.
+// null = Abfrage hat nicht geklappt.
+let cardSitemap = { xml: null, until: 0 };
+async function cardSitemapXml() {
+  if (cardSitemap.xml && cardSitemap.until > Date.now()) return cardSitemap.xml;
+  const config = supabaseConfig();
+  if (!config) return null;
+  try {
+    const response = await fetch(config.url + '/rest/v1/rpc/get_member_cards', {
+      method: 'POST', headers: { apikey: config.key, Authorization: 'Bearer ' + config.key, 'Content-Type': 'application/json' },
+      body: '{}', signal: AbortSignal.timeout(4000) });
+    if (!response.ok) return null;
+    const cards = await response.json();
+    if (!Array.isArray(cards)) return null;
+    const handles = [...new Set(cards.map((c) => String(c && c.handle || '').toLowerCase()).filter((h) => /^[a-z0-9][a-z0-9_-]{2,19}$/.test(h)))].sort().slice(0, 45000);
+    const xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+      + handles.map((h) => '  <url><loc>https://xyntal.de/' + h + '</loc></url>\n').join('') + '</urlset>\n';
+    cardSitemap = { xml, until: Date.now() + 600000 };
+    return xml;
+  } catch { return null; }
+}
 function supabaseConfig() {
   if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) return { url: process.env.SUPABASE_URL, key: process.env.SUPABASE_ANON_KEY };
   try {
@@ -252,7 +274,7 @@ async function profileMeta(handle) {
         const p = card.profile || {};
         const clip = (v, n) => { const t = String(v || '').replace(/\s+/g, ' ').trim(); return t.length > n ? t.slice(0, n - 1) + '…' : t; };
         const desc = clip(p.headline || card.pitch || p.about || [card.role, card.city].filter(Boolean).join(' · '), 180);
-        meta = { title: clip(card.name, 60) + ' · xyntal.de/' + card.handle, description: desc || 'Die Seite von ' + clip(card.name, 60) + ' auf Xyntal.' };
+        meta = { name: clip(card.name, 60), title: clip(card.name, 60) + ' · xyntal.de/' + card.handle, description: desc || 'Die Seite von ' + clip(card.name, 60) + ' auf Xyntal.' };
       }
     } catch {}
   }
@@ -262,8 +284,15 @@ async function profileMeta(handle) {
 }
 function withProfileMeta(html, meta, handle) {
   const e = escapeHtml;
+  const url = 'https://xyntal.de/' + handle;
+  // Öffentliche Karten dürfen in Suchmaschinen erscheinen: statt „noindex“ (das für freie, reservierte
+  // und nicht öffentliche Namen stehen bleibt) bekommt die Seite ihre feste Adresse und eine maschinenlesbare
+  // Kurzfassung. Nur Angaben, die auf der öffentlichen Seite ohnehin stehen.
+  const ld = JSON.stringify({ '@context': 'https://schema.org', '@type': 'ProfilePage', url, inLanguage: 'de',
+    mainEntity: { '@type': 'Person', name: meta.name || meta.title, description: meta.description, url } }).replace(/</g, '\\u003c');
   // Ersetzungen als Funktion, damit „$“ im Text nicht als Platzhalter gelesen wird
   return html
+    .replace(/<meta name="robots" content="noindex">/, () => '<link rel="canonical" href="' + e(url) + '">\n  <script type="application/ld+json">' + ld + '</script>')
     .replace(/<title>[^<]*<\/title>/, () => '<title>' + e(meta.title) + '</title>')
     .replace(/(<meta name="description" content=")[^"]*/, (m, a) => a + e(meta.description))
     .replace(/(<meta property="og:title" content=")[^"]*/, (m, a) => a + e(meta.title))
@@ -473,6 +502,14 @@ function serve(req, res) {
     waitlistCount().then((count) => {
       res.writeHead(count === null ? 404 : 200, {'Content-Type':'application/json','Cache-Control':'no-store'});
       res.end(req.method === 'HEAD' ? undefined : JSON.stringify(count === null ? {error:'not configured'} : {count}));
+    });
+    return;
+  }
+  if (pathname === '/sitemap-karten.xml' && requestHost(req) !== ADMIN_HOST) {
+    cardSitemapXml().then((xml) => {
+      if (xml === null) { res.writeHead(503, {'Retry-After':'600', 'Cache-Control':'no-store'}); return res.end(); }
+      res.writeHead(200, {'Content-Type':'application/xml; charset=utf-8', 'Cache-Control':'public, max-age=600'});
+      res.end(req.method === 'HEAD' ? undefined : xml);
     });
     return;
   }

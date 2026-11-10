@@ -6,3 +6,4 @@ Disallow: /nachrichten
 Disallow: /passwort-neu
 
 Sitemap: https://xyntal.de/sitemap.xml
+Sitemap: https://xyntal.de/sitemap-karten.xml
