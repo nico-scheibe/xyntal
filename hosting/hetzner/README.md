@@ -36,6 +36,8 @@ und den Cloudflare-Tunnel. Darauf laufen mit Docker Compose:
 2. GitHub-Token (fine-grained, nur `xyntal-app-windows`, „Contents: Read“; derselbe wie
    `.app-github-token` auf Daki) nach `/opt/xyntal/secrets/github-token`, `chmod 600`.
 3. `/opt/xyntal/secrets/api.env`: Inhalt von `.app-backend.env` auf Daki (ohne `HOST`, `PORT`, `DB_PATH`).
+   Für In-App-Anrufe zusätzlich `CALLS_MEDIA_ADDRESS=<öffentliche IPv4 des Servers>` eintragen. Port 44400 UDP und TCP
+   muss von außen erreichbar sein (Hetzner-Cloud-Firewall), sonst zeigt die App keine Anruf-Buttons.
 4. `/opt/xyntal/secrets/website.env`: die Website-Geheimnisse von Daki als `KEY=VALUE`:
    `BREVO_API_KEY` (= `.brevo-key`), `BREVO_LIST_ID` (= `.brevo-list`),
    `BREVO_SENDER_EMAIL` (= `.brevo-sender`) und die Zeilen aus `.smtp.env`.

@@ -54,6 +54,10 @@ services:
       TRUST_PROXY: '1'
     volumes:
       - /opt/xyntal/data/api:/app/data
+    # Medien der In-App-Anrufe gehen direkt an den API-Container, an Caddy vorbei.
+    # CALLS_MEDIA_ADDRESS (öffentliche IP des Servers) steht in /opt/xyntal/secrets/api.env;
+    # ohne die Variable sind Anrufe aus. Port auch in der Hetzner-Firewall für UDP und TCP öffnen.
+    ports: ['44400:44400/udp', '44400:44400/tcp']
     # Beim Stoppen bekommen offene Long-Polls noch eine saubere Antwort.
     stop_grace_period: 20s
     logging: *logs
