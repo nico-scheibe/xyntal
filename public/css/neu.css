@@ -456,17 +456,29 @@ figcaption.mono b { color: var(--t-1); font-weight: 500; margin-right: 8px; }
 /* Konto-Knopf aus account-menu.js sitzt rechts neben „Bewerben“ */
 .top__right .acct { margin-left: 0; }
 
-/* Fußzeile: zwei Zeilen, keine Spaltenwand */
+/* Fußzeile: links Marke und Kontakt, rechts drei beschriftete Spalten, darunter eine schmale Schlusszeile */
 .foot { padding: 0 var(--pad) 28px; }
-.foot__row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 14px 28px; padding: 22px 0; border-top: 1px solid var(--line); }
-.foot nav { display: flex; flex-wrap: wrap; gap: 6px 26px; color: var(--t-2); font-size: .94rem; }
-.foot__row--legal nav { font-size: inherit; color: var(--t-3); gap: 6px 22px; }
-.foot__row--legal a { text-transform: none; letter-spacing: .02em; }
+.foot__main { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--s-4) var(--gap); padding: var(--s-4) 0 var(--s-5); border-top: 1px solid var(--line); }
+.foot__brand { display: grid; gap: 18px; align-content: start; justify-items: start; }
+.foot__contact { display: grid; justify-items: start; color: var(--t-2); font-size: .94rem; }
+.foot__contact a { padding: 5px 0; transition: color .25s; }
+.foot__contact a:hover { color: var(--t-1); }
+.foot__cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-4) var(--gap); }
+.foot nav { display: grid; align-content: start; justify-items: start; color: var(--t-2); font-size: .94rem; }
+.foot nav a { padding: 5px 0; }
+.foot__h { margin-bottom: 10px; }
+.foot__base { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px 28px; padding-top: 20px; border-top: 1px solid var(--line); }
+.foot__cancel { padding: 8px 14px; border: 1px solid var(--line-2); border-radius: 999px; color: var(--t-2); transition: color .25s, border-color .25s; }
+.foot__cancel:hover { color: var(--t-1); border-color: var(--t-3); }
+@media (max-width: 760px) {
+  .foot__main { grid-template-columns: 1fr; padding-bottom: var(--s-4); }
+  .foot__cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 
 /* Handy: einzeln stehende Links bekommen eine Tippfläche von mindestens 44 px (sichtbar bleibt alles gleich). */
 @media (pointer: coarse), (max-width: 760px) {
-  .foot nav { row-gap: 0; }
-  .foot nav a, .foot__row--legal a { display: inline-flex; align-items: center; min-height: 44px; }
+  .foot nav a, .foot__contact a { display: inline-flex; align-items: center; gap: .3em; min-height: 44px; padding-block: 0; }
+  .foot__cancel { display: inline-flex; align-items: center; min-height: 44px; padding-block: 0; }
   .tlink { padding-block: 12px 15px; margin-block: -12px; background-position: 0 calc(100% - 12px); }
   .tlink::after { bottom: 12px; }
 }
