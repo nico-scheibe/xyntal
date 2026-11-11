@@ -275,11 +275,12 @@ figcaption.mono b { color: var(--t-1); font-weight: 500; margin-right: 8px; }
 .never ul { margin-top: var(--s-3); border-top: 1px solid var(--line-2); }
 .never li { display: flex; align-items: baseline; gap: clamp(12px, 2vw, 28px); padding: clamp(10px, 1.4vw, 18px) 0; border-bottom: 1px solid var(--line); font: 600 clamp(1.35rem, 3.6vw, 3.8rem)/1.05 var(--f-display); font-stretch: 68%; color: var(--t-2); }
 .never li i { flex: 1; min-width: 20px; height: 1px; background: var(--line); align-self: center; }
-.never li b { color: var(--t-3); font-weight: 400; font-size: .8rem; }
-.never li:nth-child(2) span { margin-left: 8.33%; } .never li:nth-child(3) span { margin-left: 16.66%; } .never li:nth-child(4) span { margin-left: 4%; }
+.never li > span { min-width: 0; }   /* äußere Hülle fürs Layout; die Linie sitzt am inneren Inline-Text, damit sie bei Umbruch jede Zeile trifft */
+.never li b { flex: none; white-space: nowrap; color: var(--t-3); font-weight: 400; font-size: .8rem; }
+.never li:nth-child(2) > span { margin-left: 8.33%; } .never li:nth-child(3) > span { margin-left: 16.66%; } .never li:nth-child(4) > span { margin-left: 4%; }
 
 @media (max-width: 860px) {
-  .never li span { margin-left: 0 !important; }
+  .never li > span { margin-left: 0 !important; }
 }
 
 /* 5.4 Der Weg: läuft quer */
