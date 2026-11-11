@@ -224,10 +224,55 @@
       </div>`;
   }
 
+  // Gutschein einlösen (POST /billing/vouchers/redeem): Tage in einem Tarif oder KI-Guthaben.
+  // Die Codes legt das Team im Admin-Bereich an (pages/admin-vouchers.js).
+  function voucherPanel() {
+    return `
+      <form class="xm-person xm-voucher" data-voucher>
+        <div class="xm-billing-head"><h2>${esc(t("Gutschein einlösen"))}</h2></div>
+        <p class="xm-billing-text">${esc(t("Du hast einen Code für Tarif-Tage oder KI-Guthaben? Gib ihn hier ein."))}</p>
+        <div class="xm-voucher-row">
+          <input name="code" maxlength="60" autocomplete="off" autocapitalize="characters" spellcheck="false" required aria-label="${esc(t("Gutscheincode"))}" placeholder="${esc(t("Gutscheincode"))}">
+          <button class="btn btn-small" type="submit">${esc(t("Einlösen"))}</button>
+        </div>
+      </form>`;
+  }
+
   function render() {
     if (!data) return;
-    box.innerHTML = `<div class="xm-billing-grid">${planPanel(data)}${aiPanel(data)}</div>${limitsPanel(data)}${plansPanel(data)}`;
+    // Ein angefangener Code übersteht das Neuzeichnen (die Seite lädt sich jede Minute neu).
+    const typed = (box.querySelector("[data-voucher] input") || {}).value || "";
+    box.innerHTML = `<div class="xm-billing-grid">${planPanel(data)}${aiPanel(data)}</div>${voucherPanel()}${limitsPanel(data)}${plansPanel(data)}`;
+    if (typed) box.querySelector("[data-voucher] input").value = typed;
   }
+
+  async function redeem(form) {
+    const code = form.code.value.trim();
+    if (busy || !code) return;
+    busy = true;
+    const button = form.querySelector("button");
+    button.disabled = true; button.textContent = t("Wird geprüft …");
+    try {
+      const { redeemed } = await X.api("POST", "/billing/vouchers/redeem", { code });
+      form.code.value = "";
+      say(redeemed.kind === "plan"
+        ? t("Code eingelöst: {plan} ist bis {date} aktiv.").replace("{plan}", redeemed.plan).replace("{date}", day(redeemed.renewsAt))
+        : t("Code eingelöst: {amount} KI-Guthaben gutgeschrieben.").replace("{amount}", euro(redeemed.cents)), "ok");
+      busy = false;
+      await load();
+      return;
+    } catch (err) {
+      say(fail(err), "error");
+    }
+    busy = false;
+    button.disabled = false; button.textContent = t("Einlösen");
+  }
+  box.addEventListener("submit", (e) => {
+    const form = e.target.closest("[data-voucher]");
+    if (!form) return;
+    e.preventDefault();
+    redeem(form);
+  });
 
   // ---------- Laden ----------
   async function load() {

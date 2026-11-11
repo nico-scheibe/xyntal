@@ -362,5 +362,12 @@ Mitgliederseite nach `/beta?pflicht=1`, wo nur noch die Bewerbung auszufüllen i
 Konten, die ab dem 3. 11. 2026 18:00 UTC angelegt wurden; ältere Konten bleiben unberührt. Alte
 Bewerbungen ohne Konto zählen über die E-Mail-Adresse.
 
+**Gutscheine** (`public/pages/admin-vouchers.js`, Reiter „Gutscheine“, Recht `billing.manage`): Codes für
+Tage in einem bezahlten Tarif oder für KI-Guthaben anlegen, begrenzen (wie oft einlösbar, gültig ab/bis),
+pausieren und löschen; die Liste zeigt, wie oft und von wem ein Code eingelöst wurde. Die Daten liegen auf dem
+App-Server (`server/src/billing/vouchers.ts`, Migration `115_vouchers.sql` im App-Repository), derselbe Bereich
+steht in der App unter Admin → Gutscheine. Eingelöst wird auf `/tarif` („Gutschein einlösen“) oder in der App
+unter Einstellungen → Tarif. Test: `node tests/admin-vouchers.cjs`.
+
 UI-Logik prüfen: `node tests/admin-ui.cjs` (Beispieldaten, keine Live-Datenbank).
 Öffentlicher Testablauf und Feedback: `/beta#testen`.

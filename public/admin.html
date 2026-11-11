@@ -35,7 +35,7 @@
     .card-note { width: 100%; min-width: 160px; margin-top: 8px; padding: 6px 8px; border-radius: 10px; border: 1px solid var(--border); background: rgba(0, 0, 0, 0.04); color: var(--text); font: 13px/1.4 var(--f-text); resize: vertical; }
     .card-note.is-saved { border-color: #34D399; }
   </style>
-  <link rel="stylesheet" href="admin.css?v=15">
+  <link rel="stylesheet" href="admin.css?v=16">
   <link rel="stylesheet" href="admin-support.css?v=1">
   <link rel="stylesheet" href="admin-contracts.css?v=1">
   <link rel="stylesheet" href="/backdrop.css?v=7">
@@ -86,6 +86,7 @@
         <button role="tab" data-tab="workspaces" data-group="content" data-platform data-perm="oversight.view" aria-selected="false"><i class="xa-ico" data-ico="grid"></i><span>Arbeitsbereiche</span> <em id="c-workspaces"></em></button>
         <button role="tab" data-tab="announcements" data-group="content" data-platform data-perm="announcements.manage" aria-selected="false"><i class="xa-ico" data-ico="megaphone"></i><span>Ankündigungen</span> <em id="c-announcements"></em></button>
         <button role="tab" data-tab="contracts" data-group="content" data-site aria-selected="false"><i class="xa-ico" data-ico="file"></i><span>Firmenverträge</span></button>
+        <button role="tab" data-tab="vouchers" data-group="content" data-platform data-perm="billing.manage" aria-selected="false"><i class="xa-ico" data-ico="ticket"></i><span>Gutscheine</span> <em id="c-vouchers"></em></button>
         <p class="xa-group" data-group-title="insights">Auswertung</p>
         <button role="tab" data-tab="platform" data-group="insights" data-platform aria-selected="false"><i class="xa-ico" data-ico="gauge"></i><span>Plattform-Zahlen</span></button>
         <button role="tab" data-tab="feedback" data-group="insights" data-platform data-perm="users.view" aria-selected="false"><i class="xa-ico" data-ico="activity"></i><span>Feedback &amp; Herkunft</span> <em id="c-feedback"></em></button>
@@ -122,6 +123,7 @@
       <div data-panel="matching" data-no-i18n hidden></div>
       <div data-panel="health" data-no-i18n hidden></div>
       <div data-panel="announcements" data-no-i18n hidden></div>
+      <div data-panel="vouchers" data-no-i18n hidden></div>
       <div data-panel="feedback" data-no-i18n hidden></div>
       <div data-panel="audit" data-no-i18n hidden></div>
 
@@ -147,6 +149,7 @@
 <script src="/pages/admin-platform.js?v=10"></script>
 <script src="/pages/admin-support.js?v=1"></script>
 <script src="/pages/admin-contracts.js?v=1"></script>
+<script src="/pages/admin-vouchers.js?v=1"></script>
 <script src="/pages/admin.js?v=11"></script>
 <script src="/pages/admin-people.js?v=3"></script>
 <script src="/account-menu.js?v=22" defer></script>

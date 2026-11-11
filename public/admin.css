@@ -114,6 +114,7 @@
 .xa-ico[data-ico="target"] { --ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.8'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Ccircle cx='12' cy='12' r='4.5'/%3E%3Ccircle cx='12' cy='12' r='1'/%3E%3C/svg%3E"); }
 .xa-ico[data-ico="activity"] { --ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 12h4l2.5-6 4 12 2.5-6H21'/%3E%3C/svg%3E"); }
 .xa-ico[data-ico="megaphone"] { --ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.8' stroke-linejoin='round'%3E%3Cpath d='M4 10v4h3l8 4V6L7 10zM15 9.5a3 3 0 0 1 0 5M7 14l1 5h3l-.8-5'/%3E%3C/svg%3E"); }
+.xa-ico[data-ico="ticket"] { --ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.8' stroke-linejoin='round'%3E%3Cpath d='M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4zM14 6v2.5M14 11v2M14 15.5V18'/%3E%3C/svg%3E"); }
 .xa-ico[data-ico="file"] { --ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.8' stroke-linejoin='round'%3E%3Cpath d='M7 3.5h7l4 4v13H7z M14 3.5v4h4M9.5 12h5M9.5 15.5h5'/%3E%3C/svg%3E"); }
 .xa-ico[data-ico="home"] { --ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.8' stroke-linejoin='round'%3E%3Cpath d='M4 11l8-7 8 7v9h-5v-6H9v6H4z'/%3E%3C/svg%3E"); }
 .xa-ico[data-ico="card"] { --ico:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.8'%3E%3Crect x='3.5' y='5.5' width='17' height='13' rx='2.5'/%3E%3Ccircle cx='9' cy='11' r='2'/%3E%3Cpath d='M6.5 15.5c.5-1.3 1.4-2 2.5-2s2 .7 2.5 2M14 10h4M14 13.5h3'/%3E%3C/svg%3E"); }
@@ -405,3 +406,19 @@ body.xp-locked { overflow:hidden; }
 .xp-alts { margin:14px 0 0; }
 .xp-alts summary { cursor:pointer; color:#E8B86B; font-size:13px; }
 .xp-alts .hint { margin:8px 0 0; }
+
+/* Gutscheine (pages/admin-vouchers.js) */
+.xv-form h3 { margin-bottom:4px; }
+.xv-form [hidden] { display:none; }
+.xv-listbar { display:flex; flex-wrap:wrap; gap:12px; justify-content:space-between; align-items:end; margin-top:28px; }
+.xv-listbar .xa-h3 { margin:0; }
+.xv-listbar .admin-search { flex:0 1 280px; display:grid; gap:5px; min-width:min(280px,100%); font-size:11px; color:#AAA7B8; }
+.xv-listbar input { min-height:38px; padding:8px 12px; border:1px solid var(--admin-line); border-radius: 2px; background:#0B0B12; color:#ECEAE4; font:400 13px/1.4 var(--f-text); }
+.xv-table td { vertical-align:top; }
+.xv-code { display:inline-block; padding:3px 7px; border:1px solid var(--admin-line); border-radius: 2px; background:#0B0B12; color:#ECEAE4; font:500 12.5px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing:.04em; white-space:nowrap; user-select:all; }
+.xv-note { display:block; margin-top:5px; max-width:260px; color:#8D89A0; font-size:11.5px; }
+#admin-view .xv-table button { white-space:nowrap; }
+#admin-view .xv-table .xv-link { font-variant-numeric:tabular-nums; }
+.xv-table td:nth-child(2) { white-space:nowrap; }
+.xv-table .row-actions { flex-wrap:nowrap; }
+@media(max-width:900px) { .xv-table .row-actions { flex-wrap:wrap; } }

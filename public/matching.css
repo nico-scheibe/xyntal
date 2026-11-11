@@ -240,3 +240,10 @@
 .xm-warn-text, .xm-bad { color: var(--xm-low); }
 .xm-good { color: var(--xm-high); }
 .xm-pill.xm-warn { color: var(--xm-low); border-color: var(--xm-low); }
+
+/* /tarif – Gutschein einlösen (pages/tarif.js) */
+.xm-voucher { display: grid; gap: 10px; margin-top: 18px; }
+.xm-voucher-row { display: flex; flex-wrap: wrap; gap: 10px; }
+.xm-voucher-row input { flex: 1 1 220px; max-width: 340px; min-height: 40px; padding: 8px 12px; border: 1px solid var(--xm-line); border-radius: 2px; background: transparent; color: inherit; font: 500 14px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .04em; text-transform: uppercase; }
+.xm-voucher-row input::placeholder { font-family: var(--f-text); letter-spacing: 0; text-transform: none; }
+.xm-voucher-row input:focus-visible { outline: 2px solid var(--xm-accent); outline-offset: 2px; }
