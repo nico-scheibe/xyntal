@@ -240,7 +240,7 @@ figcaption.mono b { color: var(--t-1); font-weight: 500; margin-right: 8px; }
 .pin__count i { width: 120px; height: 1px; background: var(--line-2); }
 .pin__count u { display: block; height: 1px; background: var(--grad); transform-origin: 0 50%; transform: scaleX(0); }
 .pin__stage { grid-column: 2; grid-row: 1 / span 2; align-self: center; margin-right: -3vw; perspective: 1800px; }
-.pin__stage .win { transform: rotateY(-7deg) rotateX(2deg); transform-origin: 0 50%; will-change: transform; }
+.pin__stage .win { transform: rotateY(6deg) rotateX(2deg); transform-origin: 0 50%; will-change: transform; }
 .win__cam { position: absolute; left: 0; top: 0; width: 100%; transform-origin: 0 0; will-change: transform; }
 .win__cam picture { display: block; }
 .win__cam picture + picture { position: absolute; left: 0; top: 0; width: 100%; }   /* zweites Bild ist höher als das erste */

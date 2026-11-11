@@ -187,7 +187,7 @@
       }
       if (fine && !mqSmall.matches) {   // Fenster neigt sich leicht zur Maus
         tilt.x = lerp(tilt.x, tilt.tx, .06); tilt.y = lerp(tilt.y, tilt.ty, .06);
-        win.style.transform = 'rotateY(' + (-7 + tilt.x * 5).toFixed(2) + 'deg) rotateX(' + (2 - tilt.y * 4).toFixed(2) + 'deg)';
+        win.style.transform = 'rotateY(' + (6 + tilt.x * 5).toFixed(2) + 'deg) rotateX(' + (2 - tilt.y * 4).toFixed(2) + 'deg)';
       }
     });
   })();
