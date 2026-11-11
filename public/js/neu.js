@@ -151,7 +151,15 @@
       ]
     };
     var W = 1, H = 1, cur = null, step = -1, tilt = { x: 0, y: 0, tx: 0, ty: 0 };
-    function measure() { W = win.clientWidth; H = win.clientHeight; cur = null; }
+    var pose = null;   // laufende Pose des Fensters, pro Frame zur Zielpose gezogen
+    var POSE = [{ ry: 6, rx: 2, z: 0 }, { ry: 3, rx: 1, z: 40 }, { ry: 8, rx: 3, z: 0 }, { ry: 4.5, rx: -1, z: 20 }];   // Grundpose je Kameraschritt
+    var wasSmall = false;
+    function measure() {
+      W = win.clientWidth; H = win.clientHeight; cur = null;
+      if (mqSmall.matches || wasSmall) pose = null;   // mobil oder zurück von mobil: direkt setzen, sonst weich nachziehen
+      wasSmall = mqSmall.matches;
+      if (mqSmall.matches) win.style.transform = '';   // mobil: CSS (transform: none) gilt, kein altes inline-Stück
+    }
     measure(); resizers.push(measure);
 
     function target(i, local) {
@@ -165,7 +173,7 @@
     tickers.push(function () {
       var r = pin.getBoundingClientRect();
       if (r.bottom < 0 || r.top > vh) return;
-      var p = clamp(-r.top / (r.height - vh), 0, 1), f = Math.min(3.999, p * 4), i = Math.floor(f), local = f - i;
+      var p = clamp(-r.top / Math.max(1, r.height - vh), 0, 1), f = Math.min(3.999, p * 4), i = Math.floor(f), local = f - i;
       if (i !== step) {
         step = i;
         steps.forEach(function (s, k) { s.classList.toggle('is-on', k === i); s.classList.toggle('is-past', k < i); });
@@ -185,9 +193,22 @@
         focus.style.transform = 'translate3d(' + fx.toFixed(1) + 'px,' + fy.toFixed(1) + 'px,0)';
         focus.style.width = (t.c.f[2] * W * cur.s).toFixed(1) + 'px'; focus.style.height = (t.c.f[3] * t.ih * cur.s).toFixed(1) + 'px';
       }
-      if (fine && !mqSmall.matches) {   // Fenster neigt sich leicht zur Maus
-        tilt.x = lerp(tilt.x, tilt.tx, .06); tilt.y = lerp(tilt.y, tilt.ty, .06);
-        win.style.transform = 'rotateY(' + (6 + tilt.x * 5).toFixed(2) + 'deg) rotateX(' + (2 - tilt.y * 4).toFixed(2) + 'deg)';
+      if (!mqSmall.matches) {   // Fenster: Einfahrt, Schritt-Pose, Ausfahrt, Trägheit, Scroll-Kipp, Maus
+        var en = clamp(1 - r.top / vh, 0, 1), ex = clamp(1 - r.bottom / vh, 0, 1);   // Einfahrt von unten, Ausfahrt nach oben
+        var e2 = clamp((en - .25) / .75, 0, 1), a = e2 * e2 * (3 - 2 * e2), g = POSE[i];   // Einfahrt erst ab sichtbarem Teil, smoothstep (weicher Anfang und Ende)
+        var ry = g.ry + (local - .5) * 1.5, rx = g.rx, z = g.z, s = 1, px = 0, py = 0;
+        ry = lerp(24, ry, a); rx = lerp(10, rx, a); z = lerp(-260, z, a); s = lerp(.9, s, a); px = lerp(W * .06, px, a); py = lerp(70, py, a);
+        ry = lerp(ry, 0, ex); rx = lerp(rx, 0, ex); z = lerp(z, 0, ex); s = lerp(s, .96, ex); py = lerp(py, -24, ex);
+        rx += clamp(velocity * .04, -1.5, 1.5);                                       // Scrolltempo: kleiner Kipp in rotateX
+        var goal = { ry: ry, rx: rx, z: z, s: s, x: px, y: py };
+        if (!pose) pose = goal;                                                       // erster Frame / nach measure(): direkt setzen
+        else for (var k in goal) pose[k] = lerp(pose[k], goal[k], .08);             // sonst weich nachziehen
+        var mxr = 0, myr = 0;
+        if (fine) {   // Fenster neigt sich leicht zur Maus
+          tilt.x = lerp(tilt.x, tilt.tx, .06); tilt.y = lerp(tilt.y, tilt.ty, .06);
+          mxr = tilt.x * 5; myr = tilt.y * 4;
+        }
+        win.style.transform = 'translate3d(' + pose.x.toFixed(2) + 'px,' + pose.y.toFixed(2) + 'px,' + pose.z.toFixed(2) + 'px) rotateY(' + (pose.ry + mxr).toFixed(3) + 'deg) rotateX(' + (pose.rx - myr).toFixed(3) + 'deg) scale(' + pose.s.toFixed(4) + ')';
       }
     });
   })();
