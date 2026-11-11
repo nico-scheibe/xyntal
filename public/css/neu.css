@@ -457,7 +457,7 @@ figcaption.mono b { color: var(--t-1); font-weight: 500; margin-right: 8px; }
 .top__right .acct { margin-left: 0; }
 
 /* Fußzeile: links Marke und Kontakt, rechts drei beschriftete Spalten, darunter eine schmale Schlusszeile */
-.foot { padding: 0 var(--pad) 28px; }
+.foot { padding: 0 var(--pad); container-type: inline-size; overflow: hidden; }
 .foot__main { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--s-4) var(--gap); padding: var(--s-4) 0 var(--s-5); border-top: 1px solid var(--line); }
 .foot__brand { display: grid; gap: 18px; align-content: start; justify-items: start; }
 .foot__contact { display: grid; justify-items: start; color: var(--t-2); font-size: .94rem; }
@@ -475,9 +475,14 @@ figcaption.mono b { color: var(--t-1); font-weight: 500; margin-right: 8px; }
 .foot__base { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px 28px; padding-top: 20px; border-top: 1px solid var(--line); }
 .foot__cancel { padding: 8px 14px; border: 1px solid var(--line-2); border-radius: 999px; color: var(--t-2); transition: color .25s, border-color .25s; }
 .foot__cancel:hover { color: var(--t-1); border-color: var(--t-3); }
+/* Großer Schriftzug als Abschluss: Kontur, unten angeschnitten; beim Überfahren läuft der Farbverlauf hinein */
+.foot__mark { margin: var(--s-4) 0 0; padding-bottom: .1em; font: 800 25.6cqw/.9 var(--f-display); font-stretch: 125%; letter-spacing: 0; text-align: center; white-space: nowrap; color: transparent; -webkit-text-stroke: 1px rgba(var(--t-rgb), .2); background: var(--grad) no-repeat 0 0 / 0% 100%; -webkit-background-clip: text; background-clip: text; transition: background-size 1.1s var(--ease), -webkit-text-stroke-color .6s; user-select: none; }
+@media (hover: hover) { .foot__mark:hover { background-size: 100% 100%; -webkit-text-stroke-color: transparent; } }
 @media (max-width: 760px) {
   .foot__main { grid-template-columns: 1fr; padding-bottom: var(--s-4); }
   .foot__cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .foot__legal { grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: var(--gap); }
+  .foot__legal .foot__h { grid-column: 1 / -1; }
 }
 
 /* Handy: einzeln stehende Links bekommen eine Tippfläche von mindestens 44 px (sichtbar bleibt alles gleich). */
