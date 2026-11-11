@@ -837,6 +837,7 @@ window.XYNTAL_EN = {
   "Name": "Name",
   "E-Mail": "Email",
   "E-Mail:": "Email:",
+  "Telefon:": "Phone:",
   "E-Mail-Adresse": "Email address",
   "Passwort": "Password",
   "Abbrechen": "Cancel",
