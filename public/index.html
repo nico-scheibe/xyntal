@@ -112,7 +112,7 @@
 
   <!-- ============ SZENE 1 · WARUM ============ -->
   <section class="say" data-say aria-label="Warum es Xyntal gibt">
-    <p class="say__text" data-say-text>Auf LinkedIn steht, was jemand kann. Ob er gerade Zeit hat, was er erwartet und zu welchen Bedingungen er einsteigen würde, steht da nicht. Das wollte ich aber wissen, bevor ich jemandem schreibe.</p>
+    <p class="say__text" data-say-text>Auf LinkedIn steht, was jemand kann. Ob die Person gerade Zeit hat, was sie erwartet und zu welchen Bedingungen sie einsteigen würde, steht da nicht. Das wollte ich aber wissen, bevor ich jemandem schreibe.</p>
     <p class="say__sign mono">Nico, 19, arbeitet in der IT</p>
   </section>
 
@@ -164,53 +164,8 @@
     </div>
   </section>
 
-  <!-- ============ SZENE 3 · SELBST RECHNEN ============ -->
-  <section class="calc" id="rechnen" data-calc aria-labelledby="calc-title">
-    <header class="calc__head">
-      <h2 class="calc__title" id="calc-title" data-stretch>Rechne selbst.</h2>
-      <p class="calc__lead">Das sind die echten Gewichte aus dem Matching. Schieb die Regler, wechsle die Art der Zusammenarbeit und schau, was mit der Zahl passiert.</p>
-    </header>
-
-    <div class="calc__board">
-      <div class="calc__left">
-        <fieldset class="seg">
-          <legend class="mono">Was sucht ihr beide?</legend>
-          <label><input type="radio" name="mt" value="allgemein" checked><span>Allgemein</span></label>
-          <label><input type="radio" name="mt" value="mitgruendung"><span>Mitgründung</span></label>
-          <label><input type="radio" name="mt" value="mentoring"><span>Mentoring</span></label>
-          <label><input type="radio" name="mt" value="umsetzung"><span>Umsetzung</span></label>
-        </fieldset>
-
-        <div class="dims" data-dims><!-- zehn Bereiche, von js/neu.js aufgebaut --></div>
-        <noscript><p class="calc__noscript">Für das Rechenbeispiel braucht es JavaScript. Die ganze Rechnung steht auf <a href="/matching">/matching</a>.</p></noscript>
-      </div>
-
-      <div class="calc__right">
-        <div class="score" aria-live="polite">
-          <p class="mono">Passung</p>
-          <p class="score__n"><span data-score>0</span><small>%</small></p>
-          <!-- Messlatte: 0 bis 100, Strich bei 65 -->
-          <div class="rule" aria-hidden="true">
-            <div class="rule__ticks"></div>
-            <i class="rule__gate"><span class="mono">65</span></i>
-            <i class="rule__dot" data-score-dot></i>
-          </div>
-          <p class="score__say" data-score-say>…</p>
-        </div>
-
-        <fieldset class="mods">
-          <legend class="mono">Plus und Minus</legend>
-          <label><input type="checkbox" value="4"><span><b>+4</b> Ähnliche langfristige Ziele</span></label>
-          <label><input type="checkbox" value="4"><span><b>+4</b> Stark ergänzende Rollen</span></label>
-          <label><input type="checkbox" value="3" checked><span><b>+3</b> In den letzten 7 Tagen aktiv</span></label>
-          <label><input type="checkbox" value="-6"><span><b>−6</b> Eure verfügbare Zeit passt nicht</span></label>
-          <label><input type="checkbox" value="-5"><span><b>−5</b> Unterschiedliche Absicht</span></label>
-          <label><input type="checkbox" value="-10"><span><b>−10</b> Sehr dünnes Profil</span></label>
-        </fieldset>
-        <p class="calc__note">Vereinfacht: Risiko und Aussagekraft lasse ich hier weg. <a class="tlink" href="/matching">Die ganze Rechnung</a></p>
-      </div>
-    </div>
-
+  <!-- ============ SZENE 3 · WAS NIE ZÄHLT ============ -->
+  <section class="calc calc--never" id="zaehlt-nie" aria-label="Was beim Matching nie zählt">
     <div class="never">
       <p class="mono label">Zählt nie</p>
       <ul>
@@ -285,7 +240,7 @@
       <figure class="shot shot--a" data-par="-0.06">
         <div class="win" data-glare>
           <picture>
-            <img src="assets/img/home-1920.webp" srcset="assets/img/home-960.webp 960w, assets/img/home-1920.webp 1920w" sizes="(min-width: 860px) 62vw, 92vw" width="1920" height="1200" loading="lazy" decoding="async"
+            <img src="assets/img/home-1920.webp" srcset="assets/img/home-960.webp 960w, assets/img/home-1920.webp 1920w" sizes="(min-width: 860px) 62vw, 165vw" width="1920" height="1200" loading="lazy" decoding="async"
                  alt="Xyntal-App, Startseite: Begrüßung, offene Tasks, Fokus für heute, Meilensteine und Projektstand.">
           </picture>
           <i class="win__glare" aria-hidden="true"></i>
@@ -305,7 +260,7 @@
       <figure class="shot shot--c" data-par="-0.14">
         <div class="win" data-glare>
           <picture>
-            <img src="assets/img/projects-1920.webp" srcset="assets/img/projects-960.webp 960w, assets/img/projects-1920.webp 1920w" sizes="(min-width: 860px) 38vw, 92vw" width="1920" height="1200" loading="lazy" decoding="async"
+            <img src="assets/img/projects-1920.webp" srcset="assets/img/projects-960.webp 960w, assets/img/projects-1920.webp 1920w" sizes="(min-width: 860px) 38vw, 215vw" width="1920" height="1200" loading="lazy" decoding="async"
                  alt="Xyntal-App, Projekte: drei Projekte mit Fortschritt, offenen Aufgaben und den Leuten, die daran arbeiten.">
           </picture>
           <i class="win__glare" aria-hidden="true"></i>
@@ -377,7 +332,7 @@
     </blockquote>
     <div class="me__body">
       <p>Ich bin Nico, 19, und arbeite in der IT. Xyntal ist mein Projekt. Jede Bewerbung lese ich selbst, und ich antworte per Mail.</p>
-      <p>Ich würde mich freuen, wenn du meinem Projekt eine Chance gibst.</p>
+      <p>Wenn du etwas vorhast, bewirb dich. Ich bin gespannt, was du baust.</p>
       <a class="tlink" href="/brief">Der ganze Brief</a>
     </div>
   </section>
@@ -427,7 +382,7 @@
         </div>
         <label class="waitlist-check">
           <input type="checkbox" name="OPT_IN" value="1" required>
-          <span>Ich möchte E-Mails zum Xyntal-Start, zur Beta und zur Entwicklung von Xyntal erhalten. Abmeldung jederzeit. <a href="/impressum#datenschutz">Datenschutz</a></span>
+          <span>Ich möchte E-Mails zum Xyntal-Start, zur Beta und zur Entwicklung von Xyntal erhalten. Abmeldung jederzeit. <a href="/datenschutz">Datenschutz</a></span>
         </label>
         <div class="waitlist-hp" aria-hidden="true"><input type="text" name="email_address_check" tabindex="-1" autocomplete="off"></div>
         <p class="waitlist-status" role="status" aria-live="polite"></p>
@@ -447,7 +402,7 @@
   <div class="foot__row foot__row--legal mono">
     <span>© 2026 Xyntal · <a href="mailto:admin@xyntal.com">admin@xyntal.com</a></span>
     <nav aria-label="Rechtliches">
-      <a href="/impressum">Impressum</a><a href="/impressum#datenschutz">Datenschutz</a><a href="/agb">AGB</a><a href="/widerruf">Widerruf</a><a href="/community-richtlinien">Richtlinien</a><a href="/kuendigen">Verträge hier kündigen</a>
+      <a href="/impressum">Impressum</a><a href="/datenschutz">Datenschutz</a><a href="/agb">AGB</a><a href="/widerruf">Widerruf</a><a href="/community-richtlinien">Richtlinien</a><a href="/kuendigen">Verträge hier kündigen</a>
     </nav>
   </div>
 </footer>

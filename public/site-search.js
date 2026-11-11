@@ -29,7 +29,8 @@
     { label: "Mein Profil", href: "/profil", keys: "konto account" },
   ];
   const LEGAL = [
-    { label: "Impressum & Datenschutz", href: "/impressum", keys: "rechtliches datenschutz kontakt" },
+    { label: "Impressum", href: "/impressum", keys: "rechtliches kontakt anbieter" },
+    { label: "Datenschutz", href: "/datenschutz", keys: "datenschutzerklärung dsgvo daten privatsphäre rechte" },
     { label: "AGB", href: "/agb", keys: "geschäftsbedingungen nutzungsbedingungen rechtliches" },
     { label: "Widerruf", href: "/widerruf", keys: "widerrufsbelehrung widerrufsrecht rechtliches" },
     { label: "Community-Richtlinien", href: "/community-richtlinien", keys: "regeln verhalten melden" },

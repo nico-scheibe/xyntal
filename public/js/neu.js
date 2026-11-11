@@ -5,7 +5,7 @@
    schreiben nur transform/opacity (Ausnahmen sind im Code benannt).
 
    Inhalt:  1 Helfer · 2 Text zerlegen · 3 Start · 4 Scrollen · 5 Szenen
-            6 Rechenbeispiel · 7 Lichtreflex · 8 Schleife
+            7 Lichtreflex · 8 Schleife
    ========================================================================== */
 (function () {
   'use strict';
@@ -296,77 +296,6 @@
       else if (acc > 60) top.classList.add('is-away');
     });
     top.addEventListener('focusin', function () { top.classList.remove('is-away'); acc = 0; });
-  })();
-
-  // ---------- 6 Rechenbeispiel ----------
-  // Gewichte wie in server/src/matching/scoring.ts (DIMENSION_WEIGHTS) und auf /matching.
-  // Vereinfacht: gewichteter Schnitt der Bereiche plus/minus feste Punkte. Risiko und Aussagekraft fehlen.
-  (function () {
-    var box = $('[data-dims]'); if (!box) return;
-    var DIMS = [
-      ['vision', 'Vision', 80], ['skills', 'Ergänzende Fähigkeiten', 72], ['execution', 'Umsetzung', 60], ['intent', 'Absicht', 85],
-      ['trust', 'Vertrauen', 65], ['comm', 'Kommunikation', 70], ['avail', 'Verfügbarkeit', 75], ['need', 'Projektbedarf', 50],
-      ['person', 'Persönlichkeit', 60], ['long', 'Langfristiges Potenzial', 70]
-    ];
-    // Englische Fassung der Seite (/en, vom Server übersetzt): die Texte, die dieses Skript selbst einsetzt
-    var EN = document.documentElement.lang === 'en';
-    if (EN) {
-      var EN_DIMS = { vision: 'Vision', skills: 'Complementary skills', execution: 'Execution', intent: 'Intent', trust: 'Trust',
-        comm: 'Communication', avail: 'Availability', need: 'Project need', person: 'Personality', long: 'Long-term potential' };
-      DIMS.forEach(function (d) { d[1] = EN_DIMS[d[0]]; });
-    }
-    var WEIGHTS = {
-      allgemein:    { vision: 15, skills: 15, execution: 15, intent: 10, trust: 10, comm: 10, avail: 8,  need: 7, person: 5, long: 5 },
-      mitgruendung: { vision: 20, skills: 15, execution: 14, intent: 12, trust: 10, comm: 6,  avail: 5,  need: 0, person: 8, long: 10 },
-      mentoring:    { vision: 10, skills: 20, execution: 8,  intent: 12, trust: 15, comm: 15, avail: 10, need: 0, person: 5, long: 5 },
-      umsetzung:    { vision: 8,  skills: 15, execution: 25, intent: 10, trust: 10, comm: 10, avail: 12, need: 0, person: 5, long: 5 }
-    };
-    var rows = {}, type = 'allgemein', shown = 0, goal = 0;
-    var scoreEl = $('[data-score]'), dot = $('[data-score-dot]'), say = $('[data-score-say]'), scoreBox = $('.score');
-
-    DIMS.forEach(function (d, i) {
-      var row = el('div', 'dim'), name = el('span', 'dim__name', d[1]), w = el('span', 'dim__w'), v = el('output', 'dim__v', d[2]);
-      var id = 'dim-' + d[0];
-      name.appendChild(el('i')); name.id = id + '-l';
-      var input = el('input'); input.type = 'range'; input.min = 0; input.max = 100; input.step = 1; input.value = d[2]; input.id = id;
-      input.setAttribute('aria-labelledby', id + '-l');
-      input.style.setProperty('--p', d[2] + '%');
-      input.addEventListener('input', function () { v.textContent = input.value; input.style.setProperty('--p', input.value + '%'); update(); });
-      row.appendChild(name); row.appendChild(w); row.appendChild(input); row.appendChild(v);
-      box.appendChild(row); rows[d[0]] = { row: row, w: w, input: input, name: name };
-    });
-
-    function update() {
-      var W = WEIGHTS[type], sum = 0, total = 0;
-      DIMS.forEach(function (d) {
-        var r = rows[d[0]], w = W[d[0]];
-        r.w.textContent = w ? w + ' %' : '–';
-        r.name.style.setProperty('--w', (w / 25).toFixed(3));
-        r.row.classList.toggle('is-off', !w); r.input.disabled = !w;
-        sum += w * Number(r.input.value); total += w;
-      });
-      var mod = 0; $$('.mods input:checked').forEach(function (c) { mod += Number(c.value); });
-      goal = clamp(Math.round(sum / total + mod), 0, 100);
-      dot.style.setProperty('--x', goal + '%');
-      scoreBox.classList.toggle('is-low', goal < 65);
-      say.innerHTML = EN
-        ? (goal >= 85 ? '<b>Very high fit.</b> Someone like this is near the top of your list.'
-          : goal >= 65 ? '<b>Gets suggested to you.</b> Suggestions start at 65 points.'
-          : '<b>Below 65.</b> Usually doesn\'t show up in your suggestions.')
-        : goal >= 85 ? '<b>Sehr hohe Passung.</b> So jemand steht bei dir weit oben.'
-        : goal >= 65 ? '<b>Wird dir vorgeschlagen.</b> Vorschläge gibt es ab 65 Punkten.'
-        : '<b>Unter 65.</b> Taucht in deinen Vorschlägen in der Regel nicht auf.';
-      if (calm) { shown = goal; scoreEl.textContent = goal; }
-    }
-    $$('input[name=mt]').forEach(function (r) { r.addEventListener('change', function () { type = r.value; update(); }); });
-    $$('.mods input').forEach(function (c) { c.addEventListener('change', update); });
-    update();
-    // Die Zahl zählt weich zum neuen Wert.
-    tickers.push(function () {
-      if (Math.round(shown) === goal) return;
-      shown = lerp(shown, goal, .16); if (Math.abs(shown - goal) < .6) shown = goal;
-      scoreEl.textContent = Math.round(shown);
-    });
   })();
 
   // ---------- 7 Lichtreflex (nur mit Maus) ----------
