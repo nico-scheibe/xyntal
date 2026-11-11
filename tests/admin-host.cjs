@@ -20,7 +20,7 @@ const root = path.resolve(__dirname, '../public');
     }).on('error', reject).end();
   });
   try {
-    for (const url of ['/admin', '/admin.html', '/admin/', '/admin.css', '/admin-contracts.css', '/world-geo.js', '/pages/admin.js', '/pages/admin-platform.js', '/pages/admin-contracts.js', '/pages/admin-people.js', '/pages/../pages/admin.js']) {
+    for (const url of ['/admin', '/admin.html', '/admin/', '/admin.css', '/admin-contracts.css', '/world-geo.js', '/pages/admin.js', '/pages/admin-platform.js', '/pages/admin-contracts.js', '/pages/admin-people.js', '/pages/admin-support.js', '/admin-support.css', '/pages/../pages/admin.js']) {
       for (const host of ['xyntal.de', 'www.xyntal.de', 'localhost:4129']) {
         const r = await get(host, url);
         // /admin/ fällt wie jeder Wunsch-Link auf die öffentliche Kartenseite – ohne Admin-Inhalt

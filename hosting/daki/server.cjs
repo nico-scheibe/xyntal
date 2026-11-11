@@ -598,8 +598,8 @@ const HEAVY_PATH = /^\/(api\/|[a-z0-9][a-z0-9_-]{2,19}(\/invite)?\/?$)/i;
 // Admin-Bereich nur unter admin.xyntal.de. Auf xyntal.de gibt es Admin-Seite und Admin-Skripte nicht
 // (404); die Rechte prüfen Supabase (is_admin + 2FA) und der App-Server (Staff-Rolle).
 const ADMIN_HOST = (process.env.ADMIN_HOST || 'admin.xyntal.de').toLowerCase();
-const ADMIN_ONLY_FILES = new Set(['admin.html', 'admin.css', 'admin-contracts.css', 'world-geo.js',
-  'pages/admin.js', 'pages/admin-platform.js', 'pages/admin-contracts.js', 'pages/admin-people.js']);
+const ADMIN_ONLY_FILES = new Set(['admin.html', 'admin.css', 'admin-contracts.css', 'admin-support.css', 'world-geo.js',
+  'pages/admin.js', 'pages/admin-platform.js', 'pages/admin-contracts.js', 'pages/admin-people.js', 'pages/admin-support.js']);
 // Seiten, die auf admin.xyntal.de bleiben (Anmeldung samt 2FA); alle anderen Seiten leiten auf xyntal.de um.
 const ADMIN_HOST_PAGES = new Set(['admin.html', 'login.html', 'passwort-neu.html', '404.html']);
 const MAIN_SITE = (process.env.MAIN_SITE_URL || 'https://xyntal.de').replace(/\/+$/, '');

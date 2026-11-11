@@ -23,7 +23,6 @@
     users: { detail: null, box: null, onChange: null, notify: null },
     workspaces: { list: [], members: new Map(), open: "" },
     projects: [], conversations: [],
-    support: { tickets: [], filter: { status: "", mine: false, archived: false }, open: "", detail: null },
     reports: { status: "open", list: [] },
     access: { scope: "active", grants: [] },
     audit: { action: "", query: "", entries: [] },
@@ -145,6 +144,7 @@
   const platformTabs = [...document.querySelectorAll("[data-tab][data-platform]")];
   const platformKeys = platformTabs.map((b) => b.dataset.tab);
   let readyResolve;
+  const loaders = {};
   // Für admin-people.js (Start + Nutzerliste): Rechte, Server-Aufrufe, Dialog und die App-Konto-Details
   window.XyntalAdminPlatform = {
     ready: new Promise((r) => { readyResolve = r; }),
@@ -156,6 +156,10 @@
     // App-Konto-Details (Sitzungen, Verwarnungen, Rolle, KI-Guthaben, Notizen …) in einen Kasten zeichnen
     showUser: (id, box, { onChange, notify } = {}) => openUser(id, box, onChange, notify),
     refreshCounts: () => loadCounts(),
+    // Eigene Module (admin-support.js) hängen ihren Bereich hier ein
+    register: (key, loader) => { loaders[key] = loader; },
+    openThread: (conversationId) => openThread(conversationId),
+    emergencyAccess: (conversationId, after, notify) => emergencyAccess(conversationId, after, notify),
   };
 
   function gate(text) {
@@ -195,7 +199,6 @@
     } catch { /* Zahlen sind Beiwerk */ }
   }
 
-  const loaders = {};
   function open(key) {
     if (!S.staff || !loaders[key]) return;
     const b = platformTabs.find((t) => t.dataset.tab === key);
@@ -878,103 +881,17 @@
   }
 
   // ---------- Support ----------
-  const T_STATUS = { Open: "Offen", "In Progress": "In Arbeit", Waiting: "Wartet", Resolved: "Gelöst", Closed: "Geschlossen" };
-  const T_PRIO = { Low: "Niedrig", Normal: "Normal", High: "Hoch", Urgent: "Dringend" };
-  const prioTone = (p) => (p === "Urgent" ? "danger" : p === "High" ? "warn" : "");
-  loaders.support = async () => {
-    const p = panel("support");
-    if (!p.querySelector("[data-queue]")) {
-      p.innerHTML = `${head("SUPPORT", "Support", "Die ganze Warteschlange: antworten, interne Notizen, Status und Priorität setzen, Tickets dir zuweisen.")}
-        <div class="card-filters" data-support-filters>
-          <button data-sf="status" data-v="" aria-pressed="true">Warteschlange</button>${Object.entries(T_STATUS).filter(([k]) => k !== "Closed").map(([k, l]) => `<button data-sf="status" data-v="${k}" aria-pressed="false">${esc(l)}</button>`).join("")}
-          <button data-sf="archived" aria-pressed="false">Geschlossen</button><button data-sf="mine" aria-pressed="false">Mir zugewiesen</button>
-        </div>
-        <div class="xa-split"><div data-queue>${loading()}</div><div data-ticket><p class="xa-empty">Wähle ein Ticket, um das Gespräch zu sehen.</p></div></div>`;
-      p.querySelector("[data-support-filters]").addEventListener("click", (e) => {
-        const b = e.target.closest("[data-sf]"); if (!b) return;
-        const f = S.support.filter;
-        if (b.dataset.sf === "status") { f.status = b.dataset.v; f.archived = false; } else if (b.dataset.sf === "archived") { f.archived = !f.archived; f.status = ""; } else f.mine = !f.mine;
-        p.querySelectorAll("[data-sf]").forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.sf === "status" ? (!f.archived && f.status === x.dataset.v) : x.dataset.sf === "archived" ? f.archived : f.mine)));
-        loadTickets();
-      });
-      p.querySelector("[data-queue]").addEventListener("click", (e) => { const row = e.target.closest("[data-ticket-id]"); if (row) openTicket(row.dataset.ticketId); });
-      p.querySelector("[data-ticket]").addEventListener("click", ticketClick);
-      p.querySelector("[data-ticket]").addEventListener("submit", ticketSubmit);
-      p.querySelector("[data-ticket]").addEventListener("change", ticketChange);
-    }
-    await loadTickets();
-    if (S.support.open) openTicket(S.support.open);
-  };
-  async function loadTickets() {
-    const box = $("[data-queue]", panel("support"));
-    const f = S.support.filter;
-    try {
-      const { tickets } = await api("GET", `/admin/support/tickets${q({ status: f.status, mine: f.mine ? "1" : "", archived: f.archived ? "1" : "" })}`);
-      S.support.tickets = tickets;
-      box.innerHTML = tickets.length ? `<ul class="xa-tickets">${tickets.map((t) => `<li><button data-ticket-id="${esc(t.id)}" aria-pressed="${S.support.open === t.id}"><b>${esc(t.subject)}</b><span>${esc(t.requester)} · ${esc(t.category || "")}</span><span>${pill(T_STATUS[t.status] || t.status)} ${pill(T_PRIO[t.priority] || t.priority, prioTone(t.priority))} ${t.assignee ? pill(`→ ${t.assignee}`, "accent") : pill("Nicht zugewiesen")}</span><small>${esc(ago(t.updatedAt))} · ${num(t.messageCount)} Nachrichten</small></button></li>`).join("")}</ul>` : empty(f.archived ? "Keine geschlossenen Tickets." : "Keine Tickets in der Warteschlange.");
-    } catch (err) { box.innerHTML = empty(reason(err)); }
-  }
-  async function openTicket(id) {
-    const box = $("[data-ticket]", panel("support"));
-    S.support.open = id;
-    $("[data-queue]", panel("support")).querySelectorAll("[data-ticket-id]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.ticketId === id)));
-    box.innerHTML = loading("Ticket wird geladen …");
-    try { S.support.detail = await api("GET", `/support/tickets/${encodeURIComponent(id)}`); renderTicket(); }
-    catch (err) { box.innerHTML = empty(reason(err)); }
-  }
-  function renderTicket() {
-    const { ticket: t, messages } = S.support.detail, box = $("[data-ticket]", panel("support"));
-    const mine = t.assigneeId === S.me.id;
-    box.innerHTML = `<section class="xa-card">
-      <div class="xa-card-head"><div><h3>${esc(t.subject)}</h3><small>von ${esc(t.requester)} (${esc(t.requesterEmail)}) · ${esc(t.category || "")} · erstellt ${esc(fmt(t.createdAt))}</small></div></div>
-      <div class="xa-inline xa-ticket-controls">
-        <label>Status<select data-ticket-status>${Object.entries(T_STATUS).map(([k, l]) => `<option value="${k}" ${t.status === k ? "selected" : ""}>${esc(l)}</option>`).join("")}</select></label>
-        <label>Priorität<select data-ticket-priority>${Object.entries(T_PRIO).map(([k, l]) => `<option value="${k}" ${t.priority === k ? "selected" : ""}>${esc(l)}</option>`).join("")}</select></label>
-        <span class="hint">${t.assignee ? `Zugewiesen an ${esc(t.assignee)}` : "Nicht zugewiesen"}</span>
-        ${mine ? `<button data-act="unassign">Zuweisung aufheben</button>` : `<button data-act="assign">Mir zuweisen</button>`}
-        ${t.status === "Closed" ? `<button data-act="reopen">Wieder öffnen</button>` : ""}
-      </div>
-      ${t.conversationId ? `<p class="hint">Verknüpftes Gespräch: ${esc(t.conversationTitle || t.conversationId)} – ${t.threadAccessActive ? `vom Mitglied geteilt; jeder Aufruf wird im Audit-Log festgehalten. <button data-act="thread" data-conv="${esc(t.conversationId)}">Gespräch öffnen</button>` : "nicht mehr geteilt (zurückgezogen oder Ticket geschlossen). Bitte die Person, es erneut zu teilen."}${can("emergency_message_access") ? ` <button data-act="emergency" data-conv="${esc(t.conversationId)}">Notfallzugriff …</button>` : ""}</p>` : ""}
-      ${messages.length ? `<ol class="xa-thread">${messages.map((m) => `<li class="${m.isStaff ? "is-staff" : ""} ${m.isInternal ? "is-internal" : ""}"><b>${esc(m.author)}${m.isStaff ? ` ${pill("Staff", "accent")}` : ""}${m.isInternal ? ` ${pill("Interne Notiz", "warn")}` : ""}</b><small>${esc(fmt(m.createdAt))}</small><p>${esc(m.body)}</p></li>`).join("")}</ol>` : empty("Noch keine Nachrichten in diesem Ticket.")}
-      <form class="xa-inline xa-reply" data-form="reply"><textarea name="body" maxlength="8000" required placeholder="Antwort schreiben oder interne Notiz nur für Staff …"></textarea><div class="row-actions"><button value="reply">Antworten</button><button value="internal" class="btn-ghost" data-internal>Interne Notiz</button></div></form>
-    </section>`;
-  }
-  async function ticketAct(label, fn) {
-    try { await fn(); say("support", label); await loadTickets(); if (S.support.open) await openTicket(S.support.open); loadCounts(); }
-    catch (err) { say("support", reason(err), false); }
-  }
-  async function ticketClick(e) {
-    const b = e.target.closest("button[data-act]"); if (!b) return;
-    const t = S.support.detail && S.support.detail.ticket; if (!t) return;
-    const id = encodeURIComponent(t.id);
-    if (b.dataset.act === "assign") return ticketAct("Ticket dir zugewiesen.", () => api("POST", `/support/tickets/${id}/assign`, { assigneeId: "me" }));
-    if (b.dataset.act === "unassign") return ticketAct("Zuweisung aufgehoben.", () => api("POST", `/support/tickets/${id}/assign`, { assigneeId: "" }));
-    if (b.dataset.act === "reopen") return ticketAct("Ticket wieder geöffnet.", () => api("POST", `/support/tickets/${id}/status`, { status: "Open" }));
-    if (b.dataset.act === "thread") return openThread(b.dataset.conv);
-    if (b.dataset.act === "emergency") return emergencyAccess(b.dataset.conv, () => openTicket(t.id));
-  }
-  async function ticketChange(e) {
-    const t = S.support.detail && S.support.detail.ticket; if (!t) return;
-    const id = encodeURIComponent(t.id);
-    if (e.target.matches("[data-ticket-status]")) return ticketAct(`Status: ${T_STATUS[e.target.value] || e.target.value}.`, () => api("POST", `/support/tickets/${id}/status`, { status: e.target.value }));
-    if (e.target.matches("[data-ticket-priority]")) return ticketAct(`Priorität: ${T_PRIO[e.target.value] || e.target.value}.`, () => api("POST", `/support/tickets/${id}/priority`, { priority: e.target.value }));
-  }
-  async function ticketSubmit(e) {
-    const form = e.target.closest("form[data-form='reply']"); if (!form) return;
-    e.preventDefault();
-    const t = S.support.detail.ticket, internal = e.submitter && e.submitter.hasAttribute("data-internal");
-    const body = form.body.value.trim(); if (!body) return;
-    return ticketAct(internal ? "Interne Notiz gespeichert." : "Antwort gesendet.", () => api("POST", `/support/tickets/${encodeURIComponent(t.id)}/messages`, { body, internal }));
-  }
-  async function emergencyAccess(conversationId, after) {
+  // Die Ticket-Warteschlange liegt in admin-support.js (meldet sich über register() an).
+  async function emergencyAccess(conversationId, after, notify) {
+    const tell = notify || ((text, ok = true) => { say("support", text, ok); if (!ok) say("access", text, false); });
     const a = await ask({ title: "Notfallzugriff auf ein privates Gespräch", text: "Nur für den Ernstfall: Der Zugriff ist zeitlich begrenzt, braucht einen Grund, wird allen Mitgliedern des Gesprächs angezeigt und vollständig protokolliert.", danger: true, confirm: "Zugriff gewähren",
       fields: [{ name: "reason", label: "Grund (mindestens 10 Zeichen)", type: "textarea", required: true }, { name: "durationMinutes", label: "Dauer", type: "select", options: [["30", "30 Minuten"], ["60", "1 Stunde"], ["240", "4 Stunden"], ["1440", "24 Stunden"]] }] });
     if (!a) return;
     try {
       const r = await api("POST", `/admin/conversations/${encodeURIComponent(conversationId)}/emergency-access`, { reason: a.reason, durationMinutes: Number(a.durationMinutes) });
-      say("support", r.grant.alreadyActive ? `Du hast bereits Zugriff bis ${fmt(r.grant.expiresAt)}.` : `Notfallzugriff gewährt bis ${fmt(r.grant.expiresAt)}.`);
+      tell(r.grant.alreadyActive ? `Du hast bereits Zugriff bis ${fmt(r.grant.expiresAt)}.` : `Notfallzugriff gewährt bis ${fmt(r.grant.expiresAt)}.`);
       if (after) after();
-    } catch (err) { say("support", reason(err), false); say("access", reason(err), false); }
+    } catch (err) { tell(reason(err), false); }
   }
 
   // ---------- Meldungen ----------
