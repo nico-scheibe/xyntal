@@ -463,6 +463,11 @@ figcaption.mono b { color: var(--t-1); font-weight: 500; margin-right: 8px; }
 .foot__contact { display: grid; justify-items: start; color: var(--t-2); font-size: .94rem; }
 .foot__contact a { padding: 5px 0; transition: color .25s; }
 .foot__contact a:hover { color: var(--t-1); }
+.foot__social { display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.soc { position: relative; display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid var(--line-2); border-radius: 50%; color: var(--t-2); transition: color .25s, background .25s, border-color .25s, transform .35s var(--ease); }
+.soc::after { content: ""; position: absolute; left: 12px; right: 12px; bottom: -7px; height: 2px; border-radius: 2px; background: var(--grad); opacity: 0; transform: scaleX(.4); transition: opacity .25s, transform .35s var(--ease); }
+.soc:hover, .soc:focus-visible { background: var(--t-1); border-color: var(--t-1); color: var(--g-2); transform: translateY(-3px); }
+.soc:hover::after, .soc:focus-visible::after { opacity: 1; transform: none; }
 .foot__cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-4) var(--gap); }
 .foot nav { display: grid; align-content: start; justify-items: start; color: var(--t-2); font-size: .94rem; }
 .foot nav a { padding: 5px 0; }
