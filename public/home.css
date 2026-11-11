@@ -755,6 +755,32 @@ html { scrollbar-color: #2A2A33 transparent; }
 .mc-badges .mc-badge-beta-tester { margin-left: 0; }
 .mc-badge-egg { display: inline-flex; align-items: center; gap: 5px; padding: 6px 11px 6px 7px; border: 1px solid rgba(255, 236, 200, .55); background: linear-gradient(120deg, #F3DEC0, #D9B98F); color: #3A2410; box-shadow: none; letter-spacing: .015em; }
 .mc-badge-egg img { width: 19px; height: 30px; margin: -14px 0 -6px; object-fit: contain; display: block; filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, .35)); }
+.mc-badge-snowman { display: inline-flex; align-items: center; gap: 5px; padding: 6px 11px 6px 7px; border: 1px solid rgba(255, 255, 255, .8); background: linear-gradient(120deg, #EAF6FF, #BFE3FA); color: #0E2A3D; box-shadow: none; letter-spacing: .015em; }
+.mc-badge-snowman img { width: 28px; height: 30px; margin: -14px 0 -6px; object-fit: contain; display: block; filter: drop-shadow(0 1px 1.5px rgba(14, 42, 61, .35)); }
+/* Schnee-Look nur für die Schneemann-Karte (Klasse mc-snow, xcard.js). Flocken auf ::before, Wehe auf ::after
+   des Covers; die Banner-Vorlagen (banners.css) werden dafür überschrieben, ein eigenes Bild bleibt sichtbar. */
+.my-card.mc-snow[data-surface] .mc-cover { position: relative; isolation: isolate; overflow: hidden; }
+.my-card.mc-snow[data-surface]:not([data-banner="image"]) .mc-cover { background: linear-gradient(180deg, #0E2A3D, #BFE3FA); }
+.my-card.mc-snow[data-banner] .mc-cover > .mc-badge, .my-card.mc-snow[data-banner] .mc-badges { position: relative; z-index: 3; }
+.my-card.mc-snow[data-banner] .mc-cover::before {
+  content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; width: auto; height: auto; z-index: 1;
+  pointer-events: none; opacity: 1; filter: none; transform: none; mix-blend-mode: normal; box-shadow: none;
+  background: radial-gradient(circle at 20% 30%, #fff 1.4px, transparent 2px) 0 0 / 34px 34px repeat,
+              radial-gradient(circle at 70% 60%, rgba(255, 255, 255, .92) 1.9px, transparent 2.5px) 0 0 / 56px 56px repeat,
+              radial-gradient(circle at 45% 80%, #fff 1.1px, transparent 1.7px) 0 0 / 83px 83px repeat;
+  animation: mc-snowfall 12s linear infinite;
+}
+.my-card.mc-snow[data-banner] .mc-cover::after {
+  content: ""; position: absolute; top: auto; right: -12%; bottom: -1px; left: -12%; width: auto; height: 20px; z-index: 2;
+  pointer-events: none; opacity: 1; filter: drop-shadow(0 -1px 2px rgba(14, 42, 61, .25)); transform: none; mix-blend-mode: normal; animation: none;
+  background: radial-gradient(ellipse 24px 14px at 50% 100%, #F4FBFF 90%, transparent 100%) 0 0 / 46px 20px repeat-x;
+  box-shadow: none;
+}
+/* Flocken fallen: je Ebene um ein Vielfaches ihrer Kachel verschoben, so ist die Schleife nahtlos */
+@keyframes mc-snowfall { to { background-position: 0 136px, 0 112px, 0 166px; } }
+.my-card.mc-snow[data-surface] { box-shadow: 0 40px 80px -40px rgba(0, 0, 0, .9), 0 0 0 1px rgba(191, 227, 250, .4), 0 0 70px -24px rgba(191, 227, 250, .55); }
+.my-card.mc-snow[data-surface="light"] { box-shadow: 0 40px 80px -40px rgba(14, 42, 61, .35), 0 0 0 1px rgba(14, 42, 61, .16), 0 0 70px -24px rgba(127, 196, 238, .6); }
+@media (prefers-reduced-motion: reduce) { .my-card.mc-snow[data-banner] .mc-cover::before { animation: none; } }
 .mc-head { display: flex; margin-top: -54px; }
 .mc-blocks { display: grid; gap: 14px; }
 .mc-blocks > [hidden] { display: none; }

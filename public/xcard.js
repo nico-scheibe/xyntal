@@ -11,6 +11,8 @@
   // card identifier/handle here; never ship the account email to visitors.
   const FIRST_USER_ID = "be172112-15cd-49de-af85-e7f71dfeac47";
   const FIRST_USER_HANDLE = "maxim";
+  const SNOWMAN_HANDLE = "schneemann";
+  const SNOWMAN_USER_ID = "0b842a42-ac01-4e81-9815-208108a8eb03";
   const isHex = (s) => typeof s === "string" && /^#[0-9a-f]{6}$/i.test(s);
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -33,6 +35,7 @@
     const banner = B ? B.effective(d.banner, c.is_premium === true, !!bannerPath) : "theme";
     const firstUser = opts.firstUser === true || c.user_id === FIRST_USER_ID
       || String(c.handle || "").toLowerCase() === FIRST_USER_HANDLE;
+    const snowman = c.user_id === SNOWMAN_USER_ID || String(c.handle || "").toLowerCase() === SNOWMAN_HANDLE;
     const level = LEVELS.includes(c.level) ? c.level : "";
     const place = [c.city, c.mode ? t(c.mode) : ""].filter(Boolean).join(" · ");
     const link = /^https?:\/\//.test(c.link || "") ? c.link : "";
@@ -47,10 +50,11 @@
       stats: `<div class="mc-stats"><div><span>${esc(t("Zeit"))}</span><b>${esc(t(`${Number(c.hours) || 0} Std./Woche`))}</b><i class="mc-bar"><i style="width:${Math.min(100, ((Number(c.hours) || 0) / 20) * 100)}%"></i></i></div>${level ? `<div><span>${esc(t("Erfahrung"))}</span><b>${esc(t(level))}</b><i class="mc-dots">${[0, 1, 2].map((k) => `<i class="${k <= lv ? "on" : ""}"></i>`).join("")}</i></div>` : ""}</div>`,
     };
     const message = typeof opts.messageUrl === "string" && opts.messageUrl ? `<a class="mc-message mc-link-button" href="${esc(opts.messageUrl)}">Nachricht schreiben</a>` : "";
-    return `<article class="my-card${firstUser ? " is-first-user" : ""}" data-first-user="${firstUser ? "true" : "false"}" data-theme="${theme}" data-surface="${surface}" data-shape="${shape}" data-layout="${layout}" data-fx="${fx}" data-banner="${banner}" style="--tg:${grad};--t1:${cols[0]}">
+    return `<article class="my-card${firstUser ? " is-first-user" : ""}${snowman ? " mc-snow" : ""}" data-first-user="${firstUser ? "true" : "false"}" data-theme="${theme}" data-surface="${surface}" data-shape="${shape}" data-layout="${layout}" data-fx="${fx}" data-banner="${banner}" style="--tg:${grad};--t1:${cols[0]}">
           <div class="mc-cover" aria-hidden="true"${banner === "image" ? ` data-banner-path="${esc(bannerPath)}"` : ""}>
             ${c.is_admin === true ? `<span class="mc-badge mc-badge-admin"><svg viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="xa-g" x1="4" y1="3" x2="20" y2="21" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#8FD0FF"/><stop offset=".55" stop-color="#6D7BFF"/><stop offset="1" stop-color="#B07CFF"/></linearGradient></defs><path d="M12 2.6 4.6 5.5v5.9c0 4.5 3.1 8.3 7.4 9.9 4.3-1.6 7.4-5.4 7.4-9.9V5.5z" fill="url(#xa-g)"/><path d="m8.6 12.1 2.4 2.4 4.6-4.8" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>${esc(t("Admin"))}</span>` : ""}
             <span class="mc-badges">
+            ${snowman ? `<span class="mc-badge mc-badge-snowman" title="Snowman"><img src="/badges/snowman.png" alt="" width="28" height="30" loading="lazy" decoding="async">Snowman</span>` : ""}
             ${firstUser ? `<span class="mc-badge mc-badge-egg" title="Last Egg Standing"><img src="/badges/egg-full.png" alt="" width="19" height="30" loading="lazy" decoding="async">Last Egg Standing</span>` : ""}
             ${c.is_admin === true ? "" : `<span class="mc-badge${firstUser ? " mc-badge-first-user" : ""}">${esc(t(firstUser ? "First User" : "Early Access"))}</span>`}
             ${c.is_beta_tester === true && c.is_admin !== true ? `<span class="mc-badge mc-badge-beta-tester">${esc(t("Beta-Tester"))}</span>` : ""}
