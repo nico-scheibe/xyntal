@@ -85,6 +85,8 @@
   const OVERLAYS = {
     particles: ["Partikel", "back"], network: ["Netz", "back"], aurora: ["Aurora", "back"], stars: ["Sterne", "back"], grid: ["Raster", "back"], dots: ["Punkte", "back"],
     grain: ["Körnung", "top"], vignette: ["Vignette", "top"], scan: ["Scanlines", "top"],
+    // Exklusiv (nur freigeschaltete Konten, im Editor sonst ausgeblendet): Schneeflocken, Canvas in startSnow
+    snow: ["Schnee", "back"],
   };
   // Leuchtfarbe: die hellere der beiden Farben des Elements, damit Leuchten/Ring auf dunklem Grund sichtbar sind
   const lum = (h) => { const n = parseInt(String(h || "").slice(1), 16); return Number.isFinite(n) ? ((n >> 16) * 299 + ((n >> 8) & 255) * 587 + (n & 255) * 114) / 1000 : 0; };
@@ -467,7 +469,7 @@
         .replace('style="', `style="--ad:${a.d}s;--adl:${a.dl}s;--ai:${a.loop ? "infinite" : 1}${name};`);
     }).join("");
     const style = keyframes.length ? `<style>${keyframes.join("")}</style>` : "";
-    const layer = (where) => p.ov.filter((k) => OVERLAYS[k][1] === where).map((k) => `<div class="pc-ov pc-ov-${k}" aria-hidden="true"></div>`).join("");
+    const layer = (where) => p.ov.filter((k) => OVERLAYS[k] && OVERLAYS[k][1] === where).map((k) => `<div class="pc-ov pc-ov-${k}" aria-hidden="true"></div>`).join("");
     const flow = p.bga === "flow" && p.bg.color2 ? " is-flow" : "";
     const video = p.bgv ? `<video class="pc-bgv" src="${esc(mediaUrl(o.base, p.bgv))}" autoplay muted loop playsinline aria-hidden="true"></video>` : "";
     const cur = p.cursor && !o.edit ? ` data-cursor="${p.cursor}" data-cemo="${esc(p.cemo)}"` : "";
@@ -592,6 +594,124 @@
     if (fields.length && !fieldRaf) step();
   }
 
+  // ---- Schnee (exklusiv, Schlüssel snow): Flocken auf einem Canvas, eine Schleife für die ganze Seite ----
+  // Desktop 70 Flocken, Handy (Breite < 768) 36. Reduzierte Bewegung: statisches Bild (40 bzw. 20).
+  // Schwaches Gerät (≤ 4 Kerne) oder unter 40 fps über 2 s: halb so viele Flocken; bricht die Bildrate erneut ein: statisch.
+  // Tab im Hintergrund: pausiert; beim Zurückkehren ohne Zeitsprung (dt gekappt, Messfenster neu).
+  let snow = null;
+  const snowBase = () => (innerWidth < 768 ? 36 : 70);
+  const snowStill = () => (innerWidth < 768 ? 20 : 40);
+  function stopSnow() {
+    if (!snow) return;
+    cancelAnimationFrame(snow.raf);
+    document.removeEventListener("visibilitychange", snow.onVis);
+    removeEventListener("resize", snow.onResize);
+    if (snow.ro) snow.ro.disconnect();
+    if (snow.io) snow.io.disconnect();
+    snow = null;
+  }
+  function snowFlake(w, h) {
+    const small = Math.random() < 0.7;                                  // ca. 70 % klein
+    const r = small ? 1.5 + Math.random() : 2.5 + Math.random() * 1.5;  // Durchmesser 1,5–4 px (r = Radius)
+    const t = (r - 1.5) / 2.5;                                          // 0 = klein, 1 = groß
+    // v: Fallen 25–60 px/s (größer = schneller); a: Deckkraft 0,35–0,85 (klein = schwächer); P: Drift-Periode 6–10 s
+    return { x: Math.random() * w, y: Math.random() * h, r, v: 25 + 35 * t, a: 0.35 + 0.5 * t, P: 6 + Math.random() * 4, ph: Math.random() * 2 * Math.PI };
+  }
+  function snowFit(s) {
+    const w = s.ov.clientWidth, h = s.ov.clientHeight, dpr = Math.min(2, devicePixelRatio || 1);
+    if (s.cv.width !== Math.round(w * dpr) || s.cv.height !== Math.round(h * dpr)) { s.cv.width = Math.round(w * dpr); s.cv.height = Math.round(h * dpr); }
+    s.w = w; s.h = h; s.dpr = dpr;
+    return w > 0 && h > 0;
+  }
+  // Zeichnen: Drift ±20 px mit der Periode der Flocke, nur was in s.flakes steht
+  function snowDraw(s, t) {
+    s.g.setTransform(s.dpr, 0, 0, s.dpr, 0, 0); s.g.clearRect(0, 0, s.w, s.h);
+    s.flakes.forEach((f) => {
+      const x = f.x + 20 * Math.sin((2 * Math.PI * t) / f.P + f.ph);
+      s.g.beginPath(); s.g.arc(x, f.y, f.r, 0, 6.283); s.g.fillStyle = `rgba(236,246,255,${f.a.toFixed(2)})`; s.g.fill();
+    });
+  }
+  // Statisches Bild (reduzierte Bewegung oder zu langsames Gerät): einmal zeichnen, keine Schleife
+  function snowStillDraw(s) {
+    if (!snowFit(s)) return;
+    s.flakes = Array.from({ length: snowStill() }, () => snowFlake(s.w, s.h));
+    snowDraw(s, 0);
+  }
+  function startSnow(host) {
+    stopSnow();
+    const ov = host.querySelector(".pc-ov-snow");
+    if (!ov) return;
+    ov.querySelectorAll("canvas").forEach((c) => c.remove());
+    const s = { ov, cv: document.createElement("canvas"), raf: 0, last: 0, t: 0, win: null, flakes: [], static: false, level: 0, w: 0, h: 0, dpr: 1, inView: true, ro: null, io: null };
+    ov.append(s.cv); s.g = s.cv.getContext("2d");
+    // Ist das Overlay aus dem DOM verschwunden, meldet sich jeder Aufruf selbst ab (kein Zeichnen auf losgelöste Canvas)
+    const alive = () => {
+      if (snow !== s) return false;
+      if (!ov.isConnected) { stopSnow(); return false; }
+      return true;
+    };
+    // Die Schleife läuft nur bei sichtbarem Tab, im Blickfeld und mit einer Größe (sonst keine Einplanung pro Frame)
+    const ready = () => !document.hidden && s.inView && ov.clientWidth > 0 && ov.clientHeight > 0;
+    // Schleife (wieder) anwerfen; last = 0 heißt: erster Schritt ohne Zeitsprung
+    const kick = () => {
+      if (s.raf || s.static || !ready()) return;
+      s.last = 0; s.win = null; s.raf = requestAnimationFrame(frame);
+    };
+    s.onVis = () => {
+      if (!alive()) return;
+      if (document.hidden) { cancelAnimationFrame(s.raf); s.raf = 0; return; }
+      kick();
+    };
+    s.onResize = () => {
+      if (!alive()) return;
+      if (s.static) snowStillDraw(s); else kick();
+    };
+    snow = s;
+    document.addEventListener("visibilitychange", s.onVis);
+    addEventListener("resize", s.onResize);
+    // Größenänderung des Overlays: ResizeObserver, ohne ihn greift das resize-Ereignis oben
+    if (typeof ResizeObserver === "function") { s.ro = new ResizeObserver(s.onResize); s.ro.observe(ov); }
+    // Außerhalb des Blickfelds pausiert die Schleife, beim Wiedereintritt geht es ohne Zeitsprung weiter
+    if (typeof IntersectionObserver === "function") {
+      s.io = new IntersectionObserver((entries) => {
+        if (!alive()) return;
+        s.inView = entries[entries.length - 1].isIntersecting;
+        if (s.inView) kick(); else { cancelAnimationFrame(s.raf); s.raf = 0; }
+      });
+      s.io.observe(ov);
+    }
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) { s.static = true; snowStillDraw(s); return; }
+    if ((navigator.hardwareConcurrency || 8) <= 4) s.level = 1;
+    s.raf = requestAnimationFrame(frame);
+    function frame(now) {
+      s.raf = 0;
+      if (!alive() || !ready()) return;
+      const dt = s.last ? Math.min(0.05, (now - s.last) / 1000) : 0.016;
+      s.last = now; s.t += dt;
+      snowFit(s);
+      if (!s.flakes.length) s.flakes = Array.from({ length: s.level ? Math.ceil(snowBase() / 2) : snowBase() }, () => snowFlake(s.w, s.h));
+      // Wind +5 px/s nach rechts; am Rand wieder links hinein bzw. oben neu starten
+      s.flakes.forEach((f) => {
+        f.x += 5 * dt; f.y += f.v * dt;
+        if (f.x > s.w + 40) f.x = -40;
+        if (f.y > s.h + 10) { f.y = -10; f.x = Math.random() * s.w; }
+      });
+      snowDraw(s, s.t);
+      // Bildrate: je 2 s messen; erster Einbruch halbiert, zweiter macht das Bild statisch
+      if (!s.win) s.win = { t0: now, n: 0 };
+      s.win.n++;
+      if (now - s.win.t0 >= 2000) {
+        const fps = (s.win.n * 1000) / (now - s.win.t0);
+        s.win = null;
+        if (fps < 40) {
+          if (!s.level) { s.level = 1; s.flakes.length = Math.ceil(s.flakes.length / 2); }
+          else { s.static = true; snowStillDraw(s); return; }
+        }
+      }
+      s.raf = requestAnimationFrame(frame);
+    }
+  }
+
   function mount(host) {
     host.querySelectorAll(".pc").forEach((el) => {
       el.style.setProperty("--k", String(el.getBoundingClientRect().width / widthOf(el)));
@@ -600,6 +720,7 @@
     host.querySelectorAll('.pc-item[data-trig="view"], .pc-item[data-tfx="letters"]').forEach((el) => { if (io) io.observe(el); else el.classList.add("is-in"); });
     startCountdowns();
     startParticles(host);
+    startSnow(host);
     const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (!calm) { startParallax(host); startCursor(host); }
     // 3D-Kippen: Neigung und Lichtreflex folgen dem Mauszeiger (nur Maus, nicht bei reduzierter Bewegung)

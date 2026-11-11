@@ -440,6 +440,11 @@
   }
 
   // ---------- Konsole ----------
+  // Exklusive Designs: Spiegel der Serverliste (Supabase, admin_design_unlock). Der Server prüft den echten Wert.
+  const DESIGNS = { snow: "Schnee" };
+  const DESIGN_HINTS = { snow: "Winter-Design" };
+  const isDesign = (k) => Object.prototype.hasOwnProperty.call(DESIGNS, k);
+  const designNames = (keys) => keys.map((k) => (isDesign(k) ? DESIGNS[k] : k)).join(", ");
   const COMMANDS = [
     ["help", "", "help [Befehl]", "Befehle auflisten oder einen erklären."],
     ["user", "users.view", "user <@handle|E-Mail|ID>", "Konto anzeigen: Status, Rolle, Verwarnungen, Meldungen, Arbeitsbereiche."],
@@ -454,6 +459,10 @@
     ["unplan", "billing.manage", "unplan <Konto> <Grund>", "Einen von Hand vergebenen Tarif zurücknehmen: Das Konto ist sofort wieder im kostenlosen Tarif. Per Abo bezahlte Tarife werden nie entfernt. Fragt vorher nach."],
     ["credit", "billing.manage", "credit <Konto> <Euro> <Grund>", "KI-Guthaben gutschreiben (5, 2,50; negativ korrigiert). Das Konto bezahlt seine KI-Aufrufe daraus, sobald das Inklusivbudget des Tarifs aufgebraucht ist."],
     ["uncredit", "billing.manage", "uncredit <Konto> [Euro] <Grund>", "Von Hand gutgeschriebenes KI-Guthaben zurücknehmen: den Betrag, ohne Betrag alles, was davon übrig ist. Bezahltes Guthaben wird nie entfernt."],
+    // Exklusive Designs: das Recht prüft Supabase (admin_design_unlock*), nicht die Staff-Matrix – daher kein Recht hier.
+    ["unlock", "", "unlock <Konto> <Design> <Grund>", "Exklusives Design für ein Konto freischalten (z. B. snow). Das Design erscheint im Editor des Kontos."],
+    ["lock", "", "lock <Konto> <Design> [Grund]", "Freischaltung eines exklusiven Designs zurücknehmen. Die Seite behält ihre Farben, der Effekt entfällt. Fragt vorher nach."],
+    ["unlocks", "", "unlocks <Konto>", "Freigeschaltete exklusive Designs eines Kontos auflisten."],
     ["alts", "users.ban", "alts <Konto>", "Andere Konten, die dasselbe Gerät oder Netzwerk genutzt haben."],
     ["reports", "reports.handle", "reports", "Offene Meldungen auflisten."],
     ["note", "users.notes", "note <Konto> [Text]", "Staff-Notiz zu einem Konto; ohne Text werden die Notizen gelistet."],
@@ -498,7 +507,7 @@
     input.focus();
   };
   // ---------- Vorschläge beim Tippen (wie die Konsole in der App) ----------
-  const USER_COMMANDS = ["user", "ban", "unban", "warn", "unwarn", "mute", "unmute", "kick", "plan", "unplan", "credit", "uncredit", "audit", "alts", "note"];
+  const USER_COMMANDS = ["user", "ban", "unban", "warn", "unwarn", "mute", "unmute", "kick", "plan", "unplan", "credit", "uncredit", "unlock", "lock", "unlocks", "audit", "alts", "note"];
   const euro = (cents) => (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
   // Euro für credit: "5", "5.50", "5,50", "-2" → Cent; nie null, höchstens 500 € wie auf dem Server.
   function parseEuroCents(token) {
@@ -573,6 +582,10 @@
       } catch { if (seq === S.console.seq) setSuggestions([]); }
       return;
     }
+    if (argIndex === 1 && (name === "unlock" || name === "lock")) {
+      setSuggestions(Object.keys(DESIGNS).filter((k) => k.startsWith(prefix) && k !== prefix).map((k) => ({ label: k, detail: `${DESIGNS[k]} – ${DESIGN_HINTS[k] || "exklusives Design"}`, insert: `${k} ` })));
+      return;
+    }
     setSuggestions([]);
   }
   function print(kind, text) {
@@ -605,6 +618,30 @@
       return null;
     }
   }
+  // Exklusive Designs laufen über Supabase-RPCs, nicht über den App-Server (die IDs passen dort nicht).
+  // Der Server prüft Admin-Recht inkl. 2FA und schreibt das Protokoll; die Auflösung des Kontos macht er ebenfalls.
+  async function designRpc(fn, args) {
+    // sb ist ein Skript-Top-Level-const aus app.js: typeof statt direktem Zugriff, damit kein ReferenceError kommt
+    if (typeof sb === "undefined" || !sb) throw new Error("Die Datenbank-Verbindung ist auf dieser Seite nicht geladen.");
+    const { data, error } = await sb.rpc(fn, args);
+    if (error) throw new Error(designFailText(error));
+    return data || {};
+  }
+  function designFailText(error) {
+    const msg = String(error.message || "");
+    if (error.code === "PGRST202" || /Could not find the function/i.test(msg)) return "Die Freischaltungen sind in der Datenbank noch nicht eingerichtet (Migration design_unlocks fehlt).";
+    if (error.code === "42501" || /Nur für Admins\./.test(msg)) return "Dafür brauchst du Website-Admin-Rechte mit aktiver 2FA.";
+    if (/XYNTAL_UNLOCK:no_account/.test(msg)) return "Kein Konto passt dazu.";
+    if (/XYNTAL_UNLOCK:ambiguous/.test(msg)) return "Mehrere Konten passen – nutze @handle, E-Mail oder ID.";
+    if (/XYNTAL_UNLOCK:reason_required/.test(msg)) return "Der Grund braucht 3 bis 200 Zeichen.";
+    if (/XYNTAL_UNLOCK:unknown_design/.test(msg)) return unknownDesign();
+    if (msg.startsWith("XYNTAL_UNLOCK:")) return `Das hat nicht geklappt (${msg.slice("XYNTAL_UNLOCK:".length).trim()}).`;
+    return msg || "Das hat nicht geklappt.";
+  }
+  // Anzeige des Kontos: @handle aus der Antwort, sonst Name, sonst der getippte Begriff
+  const accountLabel = (r, term) => (r.handle ? `@${r.handle}` : r.name || term);
+  const unknownDesign = () => `Unbekanntes Design. Verfügbar: ${Object.keys(DESIGNS).join(", ")}.`;
+
   async function submitConsole(raw) {
     const line = raw.trim(); if (!line) return;
     print("input", line);
@@ -729,6 +766,38 @@
           const u = await resolveUser(args[0]); if (!u) return;
           const r = await api("POST", `/admin/users/${encodeURIComponent(u.id)}/ai-credit/remove`, { cents: amount, reason: why });
           print("ok", `${euro(r.removedCents)} entfernt – ${u.displayName} hat jetzt ${euro(r.creditCents)} KI-Guthaben.`);
+          return;
+        }
+        case "unlock": {
+          if (!need(2)) return;
+          const design = args[1].toLowerCase();
+          if (!isDesign(design)) { print("error", unknownDesign()); return; }
+          if (args.length < 3) { print("error", "Bitte einen Grund angeben: unlock <Konto> <Design> <Grund>."); return; }
+          const why = args.slice(2).join(" ");
+          const r = await designRpc("admin_design_unlock", { p_account: args[0], p_design: design, p_on: true, p_reason: why });
+          const who = accountLabel(r, args[0]);
+          print("ok", r.changed ? `${DESIGNS[design]} für ${who} freigeschaltet.` : `${who} hat ${DESIGNS[design]} bereits.`);
+          return;
+        }
+        case "lock": {
+          if (!need(2)) return;
+          const design = args[1].toLowerCase();
+          if (!isDesign(design)) { print("error", unknownDesign()); return; }
+          const term = args[0], why = args.slice(2).join(" ").trim();
+          S.console.pendingText = `${DESIGNS[design]} für ${term} zurücknehmen`;
+          S.console.pending = async () => {
+            const r = await designRpc("admin_design_unlock", { p_account: term, p_design: design, p_on: false, p_reason: why });
+            const who = accountLabel(r, term);
+            print("ok", r.changed ? `${DESIGNS[design]} für ${who} zurückgenommen.` : `${who} hat ${DESIGNS[design]} nicht freigeschaltet.`);
+          };
+          renderConsole(); return;
+        }
+        case "unlocks": {
+          if (!need(1)) return;
+          const r = await designRpc("admin_design_unlocks", { p_account: args[0] });
+          const who = accountLabel(r, args[0]);
+          const designs = Array.isArray(r.designs) ? r.designs : [];
+          print("info", designs.length ? `${who}: ${designNames(designs)}` : `${who} hat keine exklusiven Designs freigeschaltet.`);
           return;
         }
         case "alts": { if (!need(1)) return; const u = await resolveUser(args[0]); if (!u) return;

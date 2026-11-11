@@ -9,13 +9,20 @@ const links = [{ id: LID, title: 'Portfolio', url: 'https://example.com', icon: 
   { id: '11111111-1111-1111-1111-111111111113', title: 'Discord', url: 'Username: nico', icon: 'discord', active: true, clicks: null }];
 const card = { handle: 'nico', name: 'Nico', role: 'Entwicklung', level: 'Fortgeschritten', skills: ['Qt', 'QML'], pitch: 'Ich baue Dinge', user_id: UID, links, design: {}, profile: { headline: 'Gründer von Xyntal', about: 'Ich baue Xyntal am Wochenende.', offer: 'Erfahrung', seek: 'Ein Team' } };
 let saved = null, draft = null, shared = null, viewsTracked = 0, removed = [];
+// Exklusive Designs: unlocks = null simuliert fehlende RPCs (altes SQL, 404); sonst { designs, revoked }
+let unlocks = null, acks = [];
+// Overlays der geladenen Version (get_my_page_version); Vorlagen mit exklusivem Design lehnt der Server ab (wie migration design_unlocks)
+let versionOv = [];
+const unlockedDesigns = () => (unlocks && unlocks.designs) || [];
+const lockedSave = (p) => !!(p && (p.ov || []).includes('snow')) && !unlockedDesigns().includes('snow');
 
 const stub = `window.supabase = { createClient: () => ({
-  auth: { getSession: async () => ({ data: { session: { user: { id: '${UID}' } } } }) },
+  auth: { getSession: async () => ({ data: { session: { user: { id: '${UID}' } } } }), onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }) },
   from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { is_premium: true } }) }) }) }),
   rpc: async (name, args) => {
     const r = await fetch('/__rpc/' + name, { method: 'POST', body: JSON.stringify(args || {}) });
-    return { data: await r.json(), error: null };
+    const j = await r.json();
+    return r.ok ? { data: j, error: null } : { data: null, error: j };
   },
   storage: { from: () => ({ upload: async () => ({ error: null }),
     list: async () => ({ data: [{ name: '22222222-2222-2222-2222-222222222222.webp', created_at: '2020-01-01T00:00:00Z' }, { name: '33333333-3333-3333-3333-333333333333.webp', created_at: '2020-01-01T00:00:00Z' }, { name: '44444444-4444-4444-4444-444444444444.webp', created_at: new Date().toISOString() }], error: null }),
@@ -25,27 +32,39 @@ const stub = `window.supabase = { createClient: () => ({
 (async () => {
   const browser = await chromium.launch();
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
-  const pg = await ctx.newPage();
+  let pg = await ctx.newPage();
   const errors = [];
   pg.on('pageerror', (e) => errors.push(e.message));
   await pg.route('**/vendor/supabase.js*', (r) => r.fulfill({ contentType: 'text/javascript', body: stub }));
-  await pg.route('**/__rpc/*', async (r) => {
+  const rpcRoute = async (r) => {
     const name = new URL(r.request().url()).pathname.split('/').pop(), args = JSON.parse(r.request().postData() || '{}');
-    let body = null;
+    let body = null, status = 200;
     if (name === 'get_my_links') body = links;
     else if (name === 'get_my_card') body = card;
     else if (name === 'get_my_page') body = saved;
-    else if (name === 'save_my_page') { saved = args.p_page; draft = null; body = saved; }
+    else if (name === 'save_my_page') {
+      if (lockedSave(args.p_page)) { status = 400; body = { message: 'XYNTAL_UNLOCK:locked', code: 'P0001' }; }
+      else { saved = args.p_page; draft = null; body = saved; }
+    }
     else if (name === 'get_my_page_state') body = { page: saved, draft, views: 1234, versions: 1 };
-    else if (name === 'save_my_page_draft') { draft = args.p_page; body = true; }
+    else if (name === 'save_my_page_draft') {
+      if (lockedSave(args.p_page)) { status = 400; body = { message: 'XYNTAL_UNLOCK:locked', code: 'P0001' }; }
+      else { draft = args.p_page; body = true; }
+    }
+    else if (name === 'get_my_design_unlocks') { if (unlocks === null) { status = 404; body = { message: 'function not found' }; } else body = unlocks; }
+    else if (name === 'ack_design_revoked') { acks.push(args.p_design); body = true; }
     else if (name === 'list_my_page_versions') body = [{ id: 7, created_at: '2026-11-08T10:00:00Z', items: 2 }];
-    else if (name === 'get_my_page_version') body = { w: 1920, h: 700, items: [{ id: 'v1', type: 'text', text: 'Alte Version', x: 20, y: 20, w: 300, h: 60 }] };
+    else if (name === 'get_my_page_version') body = { w: 1920, h: 700, ov: versionOv, items:[{ id: 'v1', type: 'text', text: 'Alte Version', x: 20, y: 20, w: 300, h: 60 }] };
     else if (name === 'list_page_templates') body = [{ id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', name: 'Neon Grid', handle: 'lena', mine: false,
       page: { w: 1920, h: 800, items: [{ id: 't1', type: 'text', text: 'Von Lena', x: 40, y: 20, w: 300, h: 60 }, { id: 't2', type: 'link', ref: '00000000-0000-0000-0000-000000000000', x: 40, y: 120, w: 320, h: 60 }] } }];
-    else if (name === 'share_page_template') { shared = args; body = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'; }
+    else if (name === 'share_page_template') {
+      if ((args.p_page.ov || []).includes('snow')) { status = 400; body = { message: 'XYNTAL_UNLOCK:locked', code: '42501' }; }
+      else { shared = args; body = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'; }
+    }
     else if (name === '__remove') { removed = args; body = true; }
-    await r.fulfill({ contentType: 'application/json', body: JSON.stringify(body) });
-  });
+    await r.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
+  };
+  await pg.route('**/__rpc/*', rpcRoute);
 
   // 1. Editor öffnet direkt auf der eigenen Seite (xyntal.de/name#gestalten)
   await pg.addInitScript(([uid]) => localStorage.setItem('sb-db-auth-token', JSON.stringify({ access_token: 'x', expires_at: 9999999999, user: { id: uid } })), [UID]);
@@ -109,7 +128,9 @@ const stub = `window.supabase = { createClient: () => ({
   assert.ok(Math.abs(lb[0].y - lb[1].y) < 1 && Math.abs(lb[0].width - lb[1].width) < 1, 'Raster-Vorlage: zwei Links nebeneinander');
   await pg.click('[data-undo]');
   // 3a. Overlays der Seite
-  await pg.click('[data-add="bg"]'); await pg.click('[data-ov="aurora"]'); await pg.click('[data-ov="grain"]');
+  await pg.click('[data-add="bg"]');
+  assert.equal(await pg.locator('[data-ov="snow"]').count(), 0, 'Schnee ohne Freischaltung: kein Overlay-Eintrag');
+  await pg.click('[data-ov="aurora"]'); await pg.click('[data-ov="grain"]');
   assert.equal(await pg.locator('.pc > .pc-ov-aurora').count(), 1, 'Aurora hinter den Elementen');
   assert.equal(await pg.locator('.pc > .pc-ov-grain').count(), 1, 'Körnung über den Elementen');
   await pg.click('[data-add="bg"]');
@@ -182,7 +203,9 @@ const stub = `window.supabase = { createClient: () => ({
   assert.ok(await pg.locator('.pe-layer').count() > 5, 'Ebenen-Liste');
   await pg.click('[data-add="layers"]');
   // Theme
-  await pg.click('[data-add="layout"]'); await pg.click('[data-theme="cyber"]');
+  await pg.click('[data-add="layout"]');
+  assert.equal(await pg.locator('[data-theme="snow"]').count(), 0, 'Schnee-Theme ohne Freischaltung nicht sichtbar');
+  await pg.click('[data-theme="cyber"]');
   assert.equal(await pg.locator('.pc > .pc-ov-grid').count(), 1, 'Theme setzt Overlays');
   // Hintergrund: Partikel, bewegter Verlauf, Cursor
   await pg.click('[data-add="bg"]'); await pg.click('[data-ov="network"]');
@@ -219,6 +242,7 @@ const stub = `window.supabase = { createClient: () => ({
   await pg.click('[data-add="extras"]');
   await pg.waitForSelector('[data-version]');
   assert.match(await pg.locator('[data-pop]').textContent(), /1\.234/, 'Statistik zeigt Aufrufe');
+  assert.equal(await pg.locator('[data-tpl="winter"]').count(), 0, 'Winter-Vorlage ohne Freischaltung nicht sichtbar');
   const keep = await pg.locator('.pc-item').count();
   await pg.click('[data-tpl="creator"]');
   assert.equal(await pg.locator('.pc-t', { hasText: 'Hi, ich bin Nico' }).count(), 1, 'eingebaute Vorlage');
@@ -283,6 +307,7 @@ const stub = `window.supabase = { createClient: () => ({
   assert.equal(await pub.locator('.pc-icons a.pc-ib').count(), 2, 'Symbole (2 Links, 1 Text zum Kopieren)');
   assert.equal(await pub.evaluate(() => window.__xss), undefined, 'kein Skript aus Text');
   assert.equal(await pub.locator('.pc img[src=x]').count(), 0);
+  assert.equal(await pub.evaluate(() => window.XyntalPageCanvas.html({ w: 480, h: 400, ov: ['gibtsnicht', 'snow'], items: [] }, {}).includes('gibtsnicht')), false, 'unbekanntes Overlay: kein Absturz, wird weggelassen');
   // Fremde Besucher ohne Konto: Kontakt führt zur Anmeldung, Melden ist da, Aufruf wird gezählt
   const ctx2 = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   const guest = await ctx2.newPage();
@@ -298,6 +323,173 @@ const stub = `window.supabase = { createClient: () => ({
   assert.equal(viewsTracked, 1, 'Aufruf einmal je Sitzung gezählt');
   await pub.setViewportSize({ width: 390, height: 800 });
   await pub.screenshot({ path: process.env.SHOT_PUBLIC || '/tmp/public.png', fullPage: true });
+
+  // Prüfsumme der Schnee-Leinwand (Pixel); zeigt, ob sie sich bewegt
+  const canvasSum = (p) => p.evaluate(() => {
+    const cv = document.querySelector('.pc-ov-snow canvas'), d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data;
+    let s = 0; for (let i = 3; i < d.length; i += 4) s = (s + d[i] * ((i % 97) + 1)) % 1000000007;
+    return s;
+  });
+  // 6. Exklusives Design Schnee (nur freigeschaltete Konten). Jedes Szenario mit frischer Seite: im selben Kontext
+  // stellt session-share.js die Sitzung nach dem zweiten Laden nicht mehr her.
+  const ownerPage = async () => {
+    const c = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+    await c.addInitScript(([uid]) => localStorage.setItem('sb-db-auth-token', JSON.stringify({ access_token: 'x', expires_at: 9999999999, user: { id: uid } })), [UID]);
+    await c.route('**/vendor/supabase.js*', (r) => r.fulfill({ contentType: 'text/javascript', body: stub }));
+    await c.route('**/__rpc/*', rpcRoute);
+    await c.route('**/rest/v1/rpc/get_public_card', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ ...card, page: saved, design: {} }) }));
+    const p = await c.newPage();
+    p.on('pageerror', (e) => errors.push(e.message));
+    return p;
+  };
+  // 6a. Entzug: einmaliger Hinweis, Schließen bestätigt beim Server, Theme-Kachel bleibt ausgeblendet
+  unlocks = { designs: [], revoked: ['snow'] };
+  pg = await ownerPage();
+  await pg.goto(`${base}/nico#gestalten`);
+  await pg.waitForSelector('.pe-stage .pc-item');
+  assert.equal(await pg.locator('.pe-notice[data-revoked="snow"]').count(), 1, 'Entzug: Hinweis erscheint');
+  assert.match(await pg.locator('.pe-notice p').textContent(), /Schneeflocken entfallen/, 'Entzug: Text');
+  await pg.click('.pe-notice .pe-x');
+  assert.equal(await pg.locator('.pe-notice').count(), 0, 'Hinweis schließbar');
+  await pg.waitForTimeout(300);
+  assert.deepEqual(acks, ['snow'], 'Schließen bestätigt ack_design_revoked(snow)');
+  await pg.click('[data-add="layout"]');
+  assert.equal(await pg.locator('[data-theme="snow"]').count(), 0, 'nach Entzug keine Kachel');
+  await pg.click('[data-add="layout"]');
+
+  // 6b. Freigeschaltet: Kachel vorn mit Badge und Hinweis, Vorlage und Overlay wählbar, Schnee läuft
+  unlocks = { designs: ['snow'], revoked: [] };
+  pg = await ownerPage();
+  await pg.goto(`${base}/nico#gestalten`);
+  await pg.waitForSelector('.pe-stage .pc-item');
+  await pg.click('[data-add="layout"]');
+  assert.equal(await pg.locator('[data-pop] .pe-theme').first().getAttribute('data-theme'), 'snow', 'Schnee ist die erste Kachel');
+  assert.equal(await pg.locator('[data-pop] .pe-excl').count(), 1, 'Badge „Exklusiv“');
+  assert.match(await pg.locator('[data-pop] .pe-hint').last().textContent(), /Nur für ausgewählte Konten/, 'Hinweis unter den Kacheln');
+  await pg.click('[data-theme="snow"]');
+  await pg.waitForSelector('.pc-ov-snow canvas');
+  assert.equal(await pg.locator('.pc > .pc-ov-snow').count(), 1, 'Schnee-Overlay liegt auf der Seite');
+  await pg.waitForTimeout(300);
+  const flakes = await pg.locator('.pc-ov-snow canvas').evaluate((cv) => {
+    const d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data; let n = 0;
+    for (let i = 3; i < d.length; i += 4) if (d[i]) n++;
+    return n;
+  });
+  assert.ok(flakes > 0, 'Flocken werden gezeichnet');
+  // Vorlage „Winter“: Theme Schnee, Kopfzeile und Schnee-Overlay
+  pg.on('dialog', (d) => d.accept());
+  await pg.click('[data-add="extras"]');
+  await pg.click('[data-tpl="winter"]');
+  assert.equal(await pg.locator('.pc-t', { hasText: 'Lass uns im Winter etwas aufbauen' }).count(), 1, 'Winter-Vorlage übernommen');
+  assert.equal(await pg.locator('.pc > .pc-ov-snow').count(), 1, 'Winter-Vorlage: Schnee-Overlay');
+  // Neu-Rendern (Overlay aus/an, Handy-Vorschau): genau eine Animationsschleife, kein Doppel
+  await pg.click('[data-add="bg"]');
+  assert.equal(await pg.locator('[data-ov="snow"]').count(), 1, 'Schnee in der Overlay-Auswahl');
+  await pg.click('[data-ov="snow"]'); await pg.click('[data-ov="snow"]');
+  await pg.click('[data-add="bg"]');
+  await pg.click('[data-phone]'); await pg.click('[data-phone]');
+  assert.equal(await pg.locator('.pc-ov-snow canvas').count(), 1, 'ein Canvas nach dem Neu-Rendern');
+  const rafPerSec = await pg.evaluate(() => new Promise((ok) => {
+    const orig = window.requestAnimationFrame; let n = 0;
+    // Nur Aufrufe aus page-canvas.js zählen (Schnee); andere Schleifen der Seite (xyntal-core.js) gehören nicht dazu
+    window.requestAnimationFrame = (f) => { if (/page-canvas\.js/.test(new Error().stack || '')) n++; return orig(f); };
+    setTimeout(() => { window.requestAnimationFrame = orig; ok(n); }, 1000);
+  }));
+  assert.ok(rafPerSec > 20 && rafPerSec < 100, 'eine Schnee-Schleife (rAF pro Sekunde ' + rafPerSec + ')');
+  // Tab im Hintergrund: die Schnee-Leinwand bleibt stehen; zurück im Tab bewegt sie sich wieder
+  const setHidden = (hidden) => pg.evaluate((hidden) => {
+    Object.defineProperty(document, 'hidden', { configurable: true, get: () => hidden });
+    document.dispatchEvent(new Event('visibilitychange'));
+  }, hidden);
+  await setHidden(true);
+  await pg.waitForTimeout(150);
+  const h1 = await canvasSum(pg); await pg.waitForTimeout(600);
+  assert.equal(await canvasSum(pg), h1, 'Hintergrund-Tab: Schnee pausiert');
+  await setHidden(false);
+  const v1 = await canvasSum(pg); await pg.waitForTimeout(600);
+  assert.notEqual(await canvasSum(pg), v1, 'zurück im Tab: Schnee läuft weiter');
+
+  // 6c. Gespeichert mit Schnee, aber ohne Freischaltung: Vorschau ohne Schnee, Speichern meldet es und nimmt es heraus
+  unlocks = { designs: [], revoked: [] };
+  saved = { ...saved, ov: ['snow', 'vignette'] };
+  pg = await ownerPage();
+  await pg.goto(`${base}/nico#gestalten`);
+  await pg.waitForSelector('.pe-stage .pc-item');
+  assert.equal(await pg.locator('.pc-ov-snow').count(), 0, 'ohne Freischaltung kein Schnee in der Vorschau');
+  await pg.click('[data-add="bg"]'); await pg.click('[data-ov="grain"]'); await pg.click('[data-ov="grain"]'); await pg.click('[data-add="bg"]');
+  await pg.click('[data-save]');
+  await pg.waitForFunction(() => document.querySelector('[data-status]').textContent.includes('nicht freigeschaltet'));
+  assert.equal(await pg.locator('[data-status]').textContent(), 'Das Design Schnee ist für dein Konto nicht freigeschaltet. Wähle ein anderes Design.', 'Speichern-Meldung');
+  await pg.click('[data-add="bg"]');
+  assert.equal(await pg.locator('[data-ov="snow"]').count(), 0, 'Schnee nach dem Fehler aus der Seite genommen');
+  await pg.click('[data-add="bg"]');
+
+  // 6c2. Version mit gesperrtem Schnee laden: Schnee fällt sofort aus der Seite, die Meldung wird nicht überschrieben, Speichern klappt
+  versionOv = ['snow'];
+  unlocks = { designs: [], revoked: [] };
+  draft = null;
+  pg = await ownerPage();
+  await pg.goto(`${base}/nico#gestalten`);
+  await pg.waitForSelector('.pe-stage .pc-item');
+  await pg.click('[data-add="extras"]');
+  await pg.waitForSelector('[data-version]');
+  await pg.click('[data-version]');
+  await pg.waitForSelector('.pc-t:has-text("Alte Version")', { timeout: 5000 });
+  assert.equal(await pg.locator('.pc-ov-snow').count(), 0, 'Version mit gesperrtem Schnee: kein Schnee');
+  // Entwurfs-Speichern läuft nach 2,5 s (ersetzt die Meldung durch „Entwurf gespeichert“) – aber kein Sperr-Fehler
+  await pg.waitForFunction(() => document.querySelector('[data-status]').textContent.includes('Entwurf gespeichert'), null, { timeout: 8000 });
+  assert.ok(!(await pg.locator('[data-status]').evaluate((el) => el.classList.contains('is-error'))), 'Version: kein Fehler nach dem Laden');
+  assert.ok(!(await pg.locator('[data-status]').textContent()).includes('nicht freigeschaltet'), 'Version: kein Sperr-Fehler');
+  await pg.click('[data-add="extras"]');
+  await pg.click('[data-save]');
+  await pg.waitForFunction(() => document.querySelector('[data-status]').textContent.includes('Veröffentlicht'));
+  assert.ok(saved && !saved.ov.includes('snow'), 'nach Version: gesperrter Schnee nicht gespeichert');
+  versionOv = [];
+
+  // 6e. Vorlage teilen mit Schnee: die geteilte Kopie hat keinen Schnee, die eigene Seite behält ihn
+  unlocks = { designs: ['snow'], revoked: [] };
+  saved = { ...saved, ov: ['snow', 'vignette'] };
+  draft = null;
+  pg = await ownerPage();
+  await pg.goto(`${base}/nico#gestalten`);
+  await pg.waitForSelector('.pe-stage .pc-item');
+  await pg.click('[data-add="extras"]');
+  await pg.waitForSelector('[data-ctpl]');
+  await pg.fill('[data-share-name]', 'Schnee Test');
+  shared = null;
+  await pg.click('[data-share]');
+  await pg.waitForFunction(() => document.querySelector('[data-status]').textContent.includes('Vorlage geteilt'));
+  assert.ok(shared && !shared.p_page.ov.includes('snow') && shared.p_page.ov.includes('vignette'), 'geteilte Kopie ohne Schnee, übrige Overlays bleiben');
+  assert.equal(await pg.locator('[data-status]').textContent(), 'Vorlage geteilt. Der Schnee-Effekt ist exklusiv und nicht Teil der Vorlage.', 'Hinweis nach dem Teilen');
+  assert.equal(await pg.locator('.pc > .pc-ov-snow').count(), 1, 'eigene Seite behält Schnee in der Vorschau');
+  // Eine Änderung, die sich aufhebt (Körnung an und wieder aus), damit Veröffentlichen aktiv ist
+  await pg.click('[data-add="bg"]'); await pg.click('[data-ov="grain"]'); await pg.click('[data-ov="grain"]'); await pg.click('[data-add="bg"]');
+  await pg.click('[data-save]');
+  await pg.waitForFunction(() => document.querySelector('[data-status]').textContent.includes('Veröffentlicht'));
+  assert.ok(saved.ov.includes('snow'), 'eigene Seite behält Schnee gespeichert');
+
+  // 6d. Public: gespeicherter Schnee wird gezeigt (ohne Abfrage), mit reduzierter Bewegung statisch, unbekannte Namen stören nicht
+  // Mindestens ein Element, sonst zeigt u.js das Standardprofil statt der freien Seite
+  const pubPage = { w: 480, h: 400, bg: { color: '#0b1a2b' }, ov: ['snow'], items: [{ id: 'w1', type: 'text', text: 'Winter', x: 40, y: 40, w: 300, h: 60, size: 40, color: '#f2f7fc' }] };
+  const still = await browser.newContext({ viewport: { width: 800, height: 700 }, reducedMotion: 'reduce' });
+  const sp = await still.newPage();
+  sp.on('pageerror', (e) => errors.push(e.message));
+  await sp.route('**/rest/v1/rpc/get_public_card', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ ...card, page: pubPage, design: {} }) }));
+  await sp.goto(`${base}/nico`);
+  await sp.waitForSelector('.pc > .pc-ov-snow canvas');
+  const s1 = await canvasSum(sp); await sp.waitForTimeout(700); const s2 = await canvasSum(sp);
+  assert.ok(s1 > 0, 'statisches Bild ist gezeichnet');
+  assert.equal(s1, s2, 'reduzierte Bewegung: statisches Bild');
+  await still.close();
+  const mv = await browser.newContext({ viewport: { width: 800, height: 700 } });
+  const mp = await mv.newPage();
+  mp.on('pageerror', (e) => errors.push(e.message));
+  await mp.route('**/rest/v1/rpc/get_public_card', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ ...card, page: pubPage, design: {} }) }));
+  await mp.goto(`${base}/nico`);
+  await mp.waitForSelector('.pc > .pc-ov-snow canvas');
+  const m1 = await canvasSum(mp); await mp.waitForTimeout(700); const m2 = await canvasSum(mp);
+  assert.notEqual(m1, m2, 'Schnee läuft ohne reduzierte Bewegung');
+  await mv.close();
   assert.deepEqual(errors, []);
   await browser.close();
   console.log('OK custom-page');

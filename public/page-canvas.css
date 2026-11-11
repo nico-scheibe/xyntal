@@ -256,7 +256,7 @@ a.pc-ib:hover, button.pc-ib:hover { transform: translateY(-2px); filter: brightn
 .pc-bgv { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
 
 /* ---- Partikel / Netz ---- */
-.pc-ov-particles canvas, .pc-ov-network canvas { display: block; width: 100%; height: 100%; }
+.pc-ov-particles canvas, .pc-ov-network canvas, .pc-ov-snow canvas { display: block; width: 100%; height: 100%; }
 
 /* ---- Eigener Cursor ---- */
 .pc.has-cursor, .pc.has-cursor * { cursor: none !important; }

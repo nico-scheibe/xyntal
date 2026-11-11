@@ -4,6 +4,9 @@
   const C = window.XyntalPageCanvas, I = window.XyntalLinkIcons, cfg = window.XYNTAL_CONFIG;
   const t = (de) => (window.XyntalI18n ? window.XyntalI18n.t(de) : de);
   const { esc, round, num } = C;
+  // Exklusive Designs: nur für freigeschaltete Konten (RPC get_my_design_unlocks). Schlüssel = Theme-, Overlay- und Vorlagen-Schlüssel;
+  // weitere exklusive Designs sind hier eine Zeile. Ohne Freischaltung erscheinen sie im Editor gar nicht (kein Schloss).
+  const EXCLUSIVE = { snow: { name: "Schnee", hint: "Nur für ausgewählte Konten. Mit Schnee fallen sanft Flocken über deine Seite.", revoked: "Das Design Schnee ist für dein Konto nicht mehr freigeschaltet. Deine Seite behält die Farben, die Schneeflocken entfallen. Wähle ein anderes Design, wenn du etwas ändern möchtest." } };
   const markup = () => `
     <p class="pe-msg" data-loading>${esc(t("Wird geladen …"))}</p>
     <div class="pe-edit" data-editor hidden>
@@ -52,6 +55,11 @@
     let lastKey = "", lastAt = 0;
     // Gleiche Grenzen prüft die Datenbank (page_item_limit, Migration 20261108110000)
     const limit = () => (paid ? 100 : 40);
+    // Freigeschaltete exklusive Designs (get_my_design_unlocks); alles Gesperrte gilt als nicht vorhanden
+    let unlocked = new Set();
+    const locked = (k) => !!EXCLUSIVE[k] && !unlocked.has(k);
+    // Fehlt ein RPC (altes SQL) oder schlägt er fehl, kommt ein leeres Ergebnis zurück statt eines Absturzes
+    const safeRpc = async (name, args) => { try { return await sb.rpc(name, args); } catch { return { data: null, error: true }; } };
     const say = (text, kind = "") => { statusEl.textContent = text; statusEl.className = "pe-status" + (kind ? ` is-${kind}` : ""); };
     const uid8 = () => Math.random().toString(36).slice(2, 10);
     const byId = (id) => page.items.find((i) => i.id === id);
@@ -114,17 +122,19 @@
         if (el && k) { const h = round(el.offsetHeight / k); if (Math.abs(h - it.h) > 0.3) it.h = Math.max(16, h); fit(it); }
       });
     }
+    // Vorschau ohne gesperrte Designs (ein gespeichertes Schnee ohne Freischaltung erscheint hier nicht; Speichern entfernt es)
+    const shown = () => ({ ...page, ov: page.ov.filter((k) => !locked(k)) });
     function drawCanvas() {
       const focused = stage.contains(document.activeElement) && document.activeElement.classList.contains("pc-item");
       if (phone) {
         // Handy-Vorschau: so sehen Besucher die Seite am Handy (ohne Bearbeiten; Antippen wählt ein Element für die Eigenschaften)
-        stage.innerHTML = `<div class="pe-phone"><div class="pe-phone-in">${C.html({ ...page, cursor: "" }, { links, base: cfg.supabaseUrl, t, views, block: (kind) => blocks[kind] || "" })}</div></div>`;
+        stage.innerHTML = `<div class="pe-phone"><div class="pe-phone-in">${C.html({ ...shown(), cursor: "" }, { links, base: cfg.supabaseUrl, t, views, block: (kind) => blocks[kind] || "" })}</div></div>`;
         C.mount(stage);
         if (opts.after) opts.after(stage);
         if (sel) stage.querySelector(`.pc-item[data-id="${CSS.escape(sel)}"]`)?.classList.add("pe-in-group");
         return;
       }
-      stage.innerHTML = C.html(page, { links, base: cfg.supabaseUrl, edit: true, t, views, block: (kind) => blocks[kind] || "" });
+      stage.innerHTML = C.html(shown(), { links, base: cfg.supabaseUrl, edit: true, t, views, block: (kind) => blocks[kind] || "" });
       C.mount(stage);
       if (opts.after) opts.after(stage);
       measure();
@@ -147,7 +157,7 @@
     }
     // Hintergrund, Höhe, Anzahl: Fenster über der Werkzeugleiste
     const bgPanel = () => `<h2>${esc(t("Overlays"))}</h2>
-      <div class="pe-tiles">${Object.entries(C.OVERLAYS).map(([k, v]) => `<button type="button" class="pe-tile${page.ov.includes(k) ? " is-on" : ""}" data-ov="${k}" aria-pressed="${page.ov.includes(k)}">${esc(t(v[0]))}</button>`).join("")}</div>
+      <div class="pe-tiles">${Object.entries(C.OVERLAYS).filter(([k]) => !locked(k)).map(([k, v]) => `<button type="button" class="pe-tile${page.ov.includes(k) ? " is-on" : ""}" data-ov="${k}" aria-pressed="${page.ov.includes(k)}">${esc(t(v[0]))}</button>`).join("")}</div>
       <h2>${esc(t("Hintergrund"))}</h2>
       <label class="pe-field"><span>${esc(t("Farbe"))}</span><input type="color" data-bg="color" value="${page.bg.color}"></label>
       <label class="pe-field"><span>${esc(t("Verlauf"))}</span><input type="checkbox" data-bg-gradient ${page.bg.color2 ? "checked" : ""}></label>
@@ -222,7 +232,7 @@
           <div class="pe-tiles pe-layouts">${Object.entries(LAYOUTS).map(([k, v]) => `<button type="button" class="pe-tile" data-layout="${k}">${v.icon}${esc(t(v.label))}</button>`).join("")}</div>
           <h2 data-no-i18n>Themes</h2>
           <p>${esc(t("Färbt die ganze Seite auf einmal um: Hintergrund, Overlays, Farben, Schrift und Hover."))}</p>
-          <div class="pe-tiles">${Object.entries(THEMES).map(([k, v]) => `<button type="button" class="pe-tile pe-theme" data-theme="${k}" style="--t1:${v.bg[0]};--t2:${v.bg[1] || v.bg[0]};--ta:${v.accent}"><span aria-hidden="true"></span><b data-no-i18n>${v.name}</b></button>`).join("")}</div>`;
+          ${themeBlock()}`;
       } else if (name === "layers") {
         pop.innerHTML = layersPanel();
       } else if (name === "extras") {
@@ -862,8 +872,16 @@
 
     // ---- Speichern, Zurücksetzen ----
     // Fehler von save_my_page verständlich machen (Meldungstexte aus den Migrationen 20261108110000 ff.)
-    function saveError(err) {
+    // own = false: Fehler beim Teilen einer Vorlage – die eigene Seite (page.ov) bleibt unverändert
+    function saveError(err, own = true) {
       const code = err && err.code, msg = String((err && err.message) || "");
+      // Gesperrtes Design (Server: XYNTAL_UNLOCK:locked): aus der Seite nehmen und sagen, welches Design es war
+      if (/XYNTAL_UNLOCK:locked/.test(msg)) {
+        const bad = own ? page.ov.filter((k) => EXCLUSIVE[k]) : [];
+        if (own) { page.ov = page.ov.filter((k) => !EXCLUSIVE[k]); drawAll(); }
+        const name = bad.length ? EXCLUSIVE[bad[0]].name : "";
+        return name ? t("Das Design {name} ist für dein Konto nicht freigeschaltet. Wähle ein anderes Design.").replace("{name}", name) : t("Ein Design ist für dein Konto nicht freigeschaltet. Wähle ein anderes Design.");
+      }
       if (code === "54000" && !/template/.test(msg)) return t(/too large/.test(msg) ? "Die Seite ist zu groß. Entferne ein paar Elemente oder kürze Texte und Code." : "Zu viele Elemente für deinen Tarif.");
       if (code === "P0002") return t("Lege zuerst deine Karte an.");
       if (code === "42501") return t("Dein Konto ist gesperrt – Änderungen sind gerade nicht möglich.");
@@ -985,10 +1003,17 @@
       retro: { name: "Retro", bg: ["#1b120a", "#3a2210"], ov: ["grain", "vignette"], flow: false, text: "#ffe2b3", panel: "#2a1a0c", accent: "#ffb347", accent2: "#ff6b3d", font: "serif", hover: "shine" },
       ocean: { name: "Ocean", bg: ["#021a26", "#05445e"], ov: ["network"], flow: true, text: "#d8f7ff", panel: "#06293a", accent: "#7ee7ff", accent2: "#3fa9ff", font: "sans", hover: "glow" },
       space: { name: "Space", bg: ["#05050c", "#140a30"], ov: ["stars", "aurora"], flow: false, text: "#ecebff", panel: "#12122a", accent: "#b95cff", accent2: "#5b8cff", font: "sans", hover: "spotlight" },
+      snow: { name: "Schnee", bg: ["#0b1a2b", "#1c3350"], ov: ["snow", "vignette"], flow: false, text: "#f2f7fc", panel: "#14263b", accent: "#bfe3ff", accent2: "#8fb8e8", font: "sans", hover: "glow" },
     };
+    // Themes für die Kacheln: gesperrte fehlen; freigeschaltete exklusive stehen vorn, mit Badge und Hinweis darunter
+    const themeKeys = () => { const ks = Object.keys(THEMES).filter((k) => !locked(k)); return [...ks.filter((k) => EXCLUSIVE[k]), ...ks.filter((k) => !EXCLUSIVE[k])]; };
+    const themeBlock = () => `<div class="pe-tiles">${themeKeys().map((k) => {
+      const v = THEMES[k], ex = !!EXCLUSIVE[k];
+      return `<button type="button" class="pe-tile pe-theme${ex ? " pe-excl-tile" : ""}" data-theme="${k}"${ex ? ` title="${esc(t("Exklusives Design – für dich freigeschaltet."))}"` : ""} style="--t1:${v.bg[0]};--t2:${v.bg[1] || v.bg[0]};--ta:${v.accent}"><span aria-hidden="true"></span><b data-no-i18n>${v.name}</b>${ex ? `<i class="pe-excl">${esc(t("Exklusiv"))}</i>` : ""}</button>`;
+    }).join("")}</div>${themeKeys().filter((k) => EXCLUSIVE[k]).map((k) => `<p class="pe-hint">${esc(t(EXCLUSIVE[k].hint))}</p>`).join("")}`;
     function applyTheme(key, quiet) {
       const th = THEMES[key];
-      if (!th) return;
+      if (!th || locked(key)) return;
       if (!quiet) touch();
       page.bg = { color: th.bg[0], color2: th.bg[1] }; page.ov = [...th.ov]; page.bga = th.flow && th.bg[1] ? "flow" : "";
       page.items.forEach((it) => {
@@ -1030,7 +1055,7 @@
           : links.length ? `<p class="pe-hint">${esc(t("Klicks je Link siehst du mit Plus."))}</p>` : ""}
         <h2>${esc(t("Vorlagen"))}</h2>
         <p>${esc(t("Ersetzt Texte, Bilder und Formen durch die Vorlage – Karte, Links und Profil-Bausteine bleiben. Rückgängig geht mit ↶."))}</p>
-        <div class="pe-tiles">${Object.entries(TEMPLATES).map(([k, v]) => `<button type="button" class="pe-tile pe-theme" data-tpl="${k}" style="--t1:${THEMES[v.theme].bg[0]};--t2:${THEMES[v.theme].bg[1] || THEMES[v.theme].bg[0]};--ta:${THEMES[v.theme].accent}"><span aria-hidden="true"></span><b data-no-i18n>${esc(v.name)}</b></button>`).join("")}</div>
+        <div class="pe-tiles">${Object.entries(TEMPLATES).filter(([, v]) => !locked(v.theme)).map(([k, v]) => `<button type="button" class="pe-tile pe-theme" data-tpl="${k}" style="--t1:${THEMES[v.theme].bg[0]};--t2:${THEMES[v.theme].bg[1] || THEMES[v.theme].bg[0]};--ta:${THEMES[v.theme].accent}"><span aria-hidden="true"></span><b data-no-i18n>${esc(v.name)}</b></button>`).join("")}</div>
         <h2>${esc(t("Vorlagen der Community"))}</h2>
         <div data-community><p class="pe-hint">${esc(t("Wird geladen …"))}</p></div>
         <div class="pe-embed">
@@ -1065,10 +1090,11 @@
       vintage: { name: "Vintage", layout: "classic", theme: "retro", head: ["Willkommen", "Seit heute auf Xyntal"] },
       calm: { name: "Calm", layout: "center", theme: "ocean", head: ["{name}", "Lass uns zusammen etwas bauen"] },
       dream: { name: "Dream", layout: "mirror", theme: "pastel", head: ["Ideen brauchen Menschen", "Schreib mir einfach"] },
+      winter: { name: "Winter", layout: "center", theme: "snow", head: ["{name}", "Lass uns im Winter etwas aufbauen"] },
     };
     function applyTemplate(key) {
       const tp = TEMPLATES[key];
-      if (!tp || !confirm(t("Vorlage übernehmen? Eigene Texte, Bilder und Formen werden ersetzt (↶ macht es rückgängig)."))) return;
+      if (!tp || locked(tp.theme) || !confirm(t("Vorlage übernehmen? Eigene Texte, Bilder und Formen werden ersetzt (↶ macht es rückgängig)."))) return;
       touch();
       const name = String((cardInfo && cardInfo.name) || "").slice(0, 40) || t("Xyntal");
       page.items = page.items.filter((i) => i.type === "block" || i.type === "link");
@@ -1114,9 +1140,14 @@
       const copy = JSON.parse(snap());
       copy.items = copy.items.filter((i) => i.type !== "image" && i.type !== "embed").map((i) => (i.type === "link" ? { ...i, ref: C.SLOT } : i.type === "button" ? { ...i, url: "" } : i));
       copy.bgv = ""; copy.bgvOwn = false;
+      // Exklusive Designs sind nie Teil einer geteilten Vorlage (Server lehnt sie ab): nur aus der Kopie nehmen, nicht aus der eigenen Seite
+      const removed = copy.ov.filter((k) => EXCLUSIVE[k]);
+      copy.ov = copy.ov.filter((k) => !EXCLUSIVE[k]);
       const { error } = await sb.rpc("share_page_template", { p_name: name, p_page: copy });
-      if (error) { say(saveError(error), "error"); return; }
-      say(t("Vorlage geteilt – danke!"), "ok"); loadExtras();
+      if (error) { say(saveError(error, false), "error"); return; }
+      if (removed.length) say(t("Vorlage geteilt. Der {name}-Effekt ist exklusiv und nicht Teil der Vorlage.").replace("{name}", EXCLUSIVE[removed[0]].name), "ok");
+      else say(t("Vorlage geteilt – danke!"), "ok");
+      loadExtras();
     }
     pop.addEventListener("click", async (e) => {
       const tpl = e.target.closest("[data-tpl]"), ct = e.target.closest("[data-ctpl]"), del = e.target.closest("[data-ctpl-del]"), ver = e.target.closest("[data-version]");
@@ -1130,7 +1161,10 @@
       } else if (ver) {
         const { data, error } = await sb.rpc("get_my_page_version", { p_id: Number(ver.dataset.version) });
         if (error || !data) { say(t("Diese Version lässt sich gerade nicht laden."), "error"); return; }
-        touch(); page = C.normalize(data); sel = null; group.clear(); drawAll();
+        touch(); page = C.normalize(data);
+        // Gesperrte exklusive Designs gleich entfernen, sonst scheitert das nächste Speichern
+        page.ov = page.ov.filter((k) => !locked(k));
+        sel = null; group.clear(); drawAll();
         say(t("Version geladen – „Veröffentlichen“ macht sie wieder öffentlich."), "ok");
       }
     });
@@ -1294,7 +1328,7 @@
       if (!session) { loading.innerHTML = `${esc(t("Melde dich an, um deine Seite zu gestalten."))} <a class="text-link" href="/login">${esc(t("Anmelden"))}</a>`; return; }
       uid = session.user.id;
       try {
-        const [l, st, pr] = await Promise.all([sb.rpc("get_my_links"), sb.rpc("get_my_page_state"), sb.from("profiles").select("is_premium,is_admin").eq("id", uid).maybeSingle()]);
+        const [l, st, pr, du] = await Promise.all([sb.rpc("get_my_links"), sb.rpc("get_my_page_state"), sb.from("profiles").select("is_premium,is_admin").eq("id", uid).maybeSingle(), safeRpc("get_my_design_unlocks")]);
         if (l.error) throw l.error;
         // Ohne neuestes SQL (get_my_page_state fehlt): wie bisher ohne Entwurf
         let p = st, draft = null;
@@ -1305,9 +1339,21 @@
         admin = !!(pr.data && pr.data.is_admin);
         hasSaved = !!(p.data && Array.isArray(p.data.items) && p.data.items.length);
         const hasDraft = !!(draft && typeof draft === "object" && Array.isArray(draft.items));
+        // Exklusive Designs: freigeschaltete (designs) und einmalig gemeldete Entzüge (revoked); ohne RPC: nichts freigeschaltet
+        const ud = du && du.data && typeof du.data === "object" ? du.data : {};
+        unlocked = new Set(Array.isArray(ud.designs) ? ud.designs.filter((k) => typeof k === "string") : []);
+        const revoked = Array.isArray(ud.revoked) ? ud.revoked.filter((k) => EXCLUSIVE[k]) : [];
         page = hasDraft ? C.normalize(draft) : hasSaved ? C.normalize(p.data) : starter();
         loading.hidden = true; editor.hidden = false;
         drawAll();
+        // Hinweis bei Entzug: schließbar, Schließen bestätigt dem Server (ack_design_revoked); die Farben der Seite bleiben
+        revoked.forEach((k) => {
+          const note = document.createElement("div");
+          note.className = "pe-notice"; note.setAttribute("role", "status"); note.dataset.revoked = k;
+          note.innerHTML = `<p>${esc(t(EXCLUSIVE[k].revoked))}</p><button type="button" class="pe-x" aria-label="${esc(t("Schließen"))}">×</button>`;
+          note.querySelector(".pe-x").addEventListener("click", () => { note.remove(); safeRpc("ack_design_revoked", { p_design: k }); });
+          editor.prepend(note);
+        });
         if (hasDraft) { dirty = true; draftSaved = true; saveBtn.disabled = false; say(t("Dein Entwurf ist geladen – noch nicht veröffentlicht.")); }
         else if (!hasSaved) { relayout(); drawAll(); dirty = true; saveBtn.disabled = false; draftSaved = false; }
       } catch {
