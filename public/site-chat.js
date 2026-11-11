@@ -94,7 +94,7 @@
           <div class="sc-head-act"><button type="button" class="sc-icon" data-sc="clear" aria-label="${T("Gespräch löschen", "Clear conversation")}" title="${T("Gespräch löschen", "Clear conversation")}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button><button type="button" class="sc-icon" data-sc="close" aria-label="${T("Schließen", "Close")}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div></header>
         <ol class="sc-log" aria-live="polite"></ol>
         <form class="sc-form"><label class="sc-sr" for="sc-input">${T("Deine Frage", "Your question")}</label><textarea id="sc-input" rows="1" maxlength="800" placeholder="${T("Frag etwas zu Xyntal …", "Ask anything about Xyntal …")}"></textarea><button type="submit" class="sc-send">${T("Senden", "Send")}</button></form>
-        <p class="sc-note">${T("Antworten kommen von einer KI und können falsch sein. Deine Nachrichten gehen über unseren Server an OpenAI (USA) – bitte keine persönlichen Daten eingeben.", "Answers come from an AI and can be wrong. Your messages go through our server to OpenAI (USA) – please don't enter personal data.")} <a href="/impressum#assistent">${T("Datenschutz", "Privacy")}</a></p>
+        <p class="sc-note">${T("Antworten kommen von einer KI und können falsch sein. Deine Nachrichten gehen über unseren Server an OpenAI (USA) – bitte keine persönlichen Daten eingeben.", "Answers come from an AI and can be wrong. Your messages go through our server to OpenAI (USA) – please don't enter personal data.")} <a href="/datenschutz#assistent">${T("Datenschutz", "Privacy")}</a></p>
       </section>`;
   }
 

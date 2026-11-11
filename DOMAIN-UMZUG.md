@@ -61,7 +61,7 @@ Für Google-, Apple- und LinkedIn-Login ändert sich nichts: deren Rückleitung 
 ## 6. Brevo
 
 - Wartelisten-Formular: im Einwilligungstext den Datenschutz-Link auf
-  `https://xyntal.de/impressum#datenschutz` ändern.
+  `https://xyntal.de/datenschutz` ändern.
 - Eigene Absenderdomain (empfohlen, damit Mails seltener im Spam landen): *Senders, Domains & Dedicated IPs →
   Domains → Add a domain* → `xyntal.de`. Brevo zeigt die genauen DNS-Einträge (DKIM, Brevo-Code, DMARC);
   diese bei IONOS anlegen.
