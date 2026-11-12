@@ -29,21 +29,31 @@
   <script src="cosmos.js?v=40" defer></script>
   <style>
     .partner { padding-top: 64px; padding-bottom: 96px; }
-    .partner-hero h1 { font-family: var(--f-display); font-weight: 700; font-size: clamp(2.2rem, 7vw, 3.6rem); letter-spacing: -0.04em; line-height: 1.02; max-width: 16ch; }
+    .partner-hero { padding-top: 24px; }
+    .partner-hero::before { content: ""; display: block; width: 56px; height: 2px; margin-bottom: 28px; background: var(--ice); }
+    .partner-hero h1 { font-family: var(--f-display); font-weight: 700; font-size: clamp(2.2rem, 7vw, 3.6rem); letter-spacing: -0.04em; line-height: 1.02; max-width: 16ch; color: var(--text); }
     .partner-hero p { margin-top: 20px; color: var(--text-2); max-width: 38rem; font-size: 1.05rem; line-height: 1.55; }
     .partner-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 32px; }
-    .partner-fine { margin-top: 14px; font-size: 13px; color: var(--text-3); max-width: 38rem; line-height: 1.5; }
+    .partner-actions .btn { white-space: normal; text-align: center; max-width: 100%; }
+    .partner-actions .btn-primary { --h: 52px; padding: 0 28px; font-size: 16px; background: var(--ice) !important; border-color: var(--ice) !important; color: var(--ice-ink) !important; box-shadow: 0 10px 28px -14px rgba(34, 229, 255, 0.7); }
+    .partner-actions .btn-primary:hover { background: var(--ice-hi) !important; border-color: var(--ice-hi) !important; color: var(--ice-ink) !important; }
+    .partner-fine { margin-top: 16px; font-size: 13px; color: var(--text-3); max-width: 38rem; line-height: 1.5; }
     .partner-section { margin-top: 56px; padding-top: 32px; border-top: 1px solid var(--line); max-width: 46rem; }
-    .partner-section h2 { font-family: var(--f-display); font-weight: 700; font-size: clamp(1.5rem, 4vw, 2rem); letter-spacing: -0.03em; line-height: 1.1; }
+    .partner-section h2 { font-family: var(--f-display); font-weight: 700; font-size: clamp(1.5rem, 4vw, 2rem); letter-spacing: -0.03em; line-height: 1.1; color: var(--text); }
     .partner-section p { margin-top: 14px; color: var(--text-2); line-height: 1.6; }
-    .partner-list { margin-top: 18px; display: grid; gap: 12px; list-style: none; padding: 0; }
-    .partner-list li { padding: 16px 18px; border: 1px solid var(--line); border-radius: 12px; background: var(--s1); color: var(--text-2); line-height: 1.55; }
+    .partner-list { margin-top: 24px; display: grid; gap: 16px; list-style: none; padding: 0; }
+    .partner-list li { position: relative; padding: 24px 22px 22px; border: 1px solid var(--line); border-radius: var(--r); background: var(--s1); color: var(--text-2); line-height: 1.55; }
+    .partner-list li::before { content: ""; position: absolute; left: 22px; top: -1px; width: 40px; height: 2px; background: var(--ice); border-radius: 2px; }
     .partner-back { margin-top: 56px; }
+    @media (min-width: 900px) {
+      .partner-section { max-width: none; }
+      .partner-section > p, .partner-section > h2 { max-width: 46rem; }
+      .partner-list { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+    }
     @media (max-width: 719px) {
       .partner { padding-top: 40px; }
       .partner-actions .btn { width: 100%; }
     }
-    .partner-actions .btn { white-space: normal; text-align: center; max-width: 100%; }
   </style>
   <link rel="stylesheet" href="/backdrop.css?v=7">
   <link rel="stylesheet" href="/site-footer.css?v=4">
