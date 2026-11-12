@@ -6,7 +6,7 @@
   const HANDLE = /^[a-z0-9][a-z0-9_-]{2,19}$/;
   // Gesperrte Namen wie in supabase/016_account_cards.sql – nie als „noch frei“ anbieten
   const BLOCKED = new Set(["admin", "api", "app", "about", "beta", "bestaetigt", "blog", "datenschutz", "demo", "help", "hilfe", "impressum",
-    "karte", "login", "logout", "mail", "meine-karte", "mitglieder", "mitglied-werden", "nachrichten", "news", "passwort-neu",
+    "karte", "login", "logout", "mail", "meine-karte", "mitglieder", "mitglied-werden", "nachrichten", "news", "partner", "passwort-neu",
     "preise", "pricing", "profil", "projekte", "register", "settings", "signup", "support", "team", "warteliste", "www",
     "xyntal", "invite", "boerse", "community", "events"]);
   const SUPA = "https://db.xyntal.de";
