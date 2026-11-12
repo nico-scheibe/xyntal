@@ -97,9 +97,10 @@
   }
 
   /* ---------- Umschalter: unten in der Fußzeile, damit die Kopfzeile überall wie auf der Startseite aussieht.
+     Neue Fußzeile (.foot, Startseiten-Stil): Umschalter in die Basiszeile. Sonst bisherige Fußzeile.
      Seiten ohne Fußzeile behalten ihn in der Kopfzeile. ---------- */
   function mountSwitch() {
-    const host = document.querySelector(".site-footer .sf-bottom") || document.querySelector(".topbar-inner, .nav .wrap");
+    const host = document.querySelector(".foot .foot__base") || document.querySelector(".site-footer .sf-bottom") || document.querySelector(".topbar-inner, .nav .wrap");
     if (!host || document.querySelector(".lang-switch")) return;
     const sw = document.createElement("div");
     sw.className = "lang-switch";
@@ -121,7 +122,7 @@
     if (next === lang) return;
     if (EN_URL) {
       try { localStorage.setItem(KEY, next); } catch { /* egal */ }
-      location.href = (location.pathname.replace(/^\/en\/?/, "/") || "/") + location.search + location.hash;
+      location.href = "/" + location.pathname.replace(/^\/en(?=\/|$)/, "").replace(/^\/+/, "") + location.search + location.hash;
       return;
     }
     lang = next;
