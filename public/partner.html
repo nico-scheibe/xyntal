@@ -63,6 +63,16 @@
       .partner-actions { gap: 12px; }
       .partner-actions .btn { width: 100%; }
     }
+    /* Dezentes Einblenden beim Scrollen (partner.js setzt .is-visible; ohne JS und bei reduced-motion sofort sichtbar) */
+    @media (prefers-reduced-motion: no-preference) {
+      .partner-anim .partner-reveal:not(.is-visible) { opacity: 0; }
+      .partner-anim .partner-reveal.is-visible { animation: partner-rise 650ms var(--ease) var(--d, 0ms) backwards; }
+      .partner-hero > p.partner-reveal { --d: 90ms; }
+      .partner-actions.partner-reveal { --d: 180ms; }
+      .partner-list li:nth-child(2) { --d: 90ms; }
+      .partner-list li:nth-child(3) { --d: 180ms; }
+      @keyframes partner-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+    }
   </style>
   <link rel="stylesheet" href="/backdrop.css?v=7">
   <link rel="stylesheet" href="/site-footer.css?v=4">
@@ -89,9 +99,9 @@
 </header>
 <main class="shell partner" id="inhalt">
   <section class="partner-hero" aria-labelledby="partner-title">
-    <h1 id="partner-title">Xyntal x ClosingHub</h1>
-    <p>Eine Partnerschaft für alle, die im Vertrieb lernen und wachsen wollen. ClosingHub startet bald, die Warteliste ist offen.</p>
-    <div class="partner-actions">
+    <h1 id="partner-title" class="partner-reveal">Xyntal x ClosingHub</h1>
+    <p class="partner-reveal">Eine Partnerschaft für alle, die im Vertrieb lernen und wachsen wollen. ClosingHub startet bald, die Warteliste ist offen.</p>
+    <div class="partner-actions partner-reveal">
       <a class="btn btn-primary" href="https://www.getclosinghub.com/?utm_source=xyntal&utm_medium=partner&utm_campaign=partnerseite" data-waitlist target="_blank" rel="noopener noreferrer">Zur Warteliste bei ClosingHub<span class="sr-only"> (öffnet in neuem Tab)</span></a>
       <a class="btn btn-quiet" href="/">Zurück zu Xyntal</a>
     </div>
@@ -99,26 +109,26 @@
   </section>
 
   <section class="partner-section" aria-labelledby="partner-empfehlung">
-    <h2 id="partner-empfehlung">Wir empfehlen uns gegenseitig</h2>
+    <h2 id="partner-empfehlung" class="partner-reveal">Wir empfehlen uns gegenseitig</h2>
     <p>Xyntal und ClosingHub sind Partner. Wir empfehlen ClosingHub hier. Du findest bei uns Menschen, die sich vernetzen wollen. ClosingHub richtet sich an alle, die im Vertrieb arbeiten oder dort einsteigen möchten.</p>
   </section>
 
   <section class="partner-section" aria-labelledby="partner-plattform">
-    <h2 id="partner-plattform">Eine Plattform für den Vertrieb</h2>
+    <h2 id="partner-plattform" class="partner-reveal">Eine Plattform für den Vertrieb</h2>
     <p>ClosingHub ist für Closer, Setter und Auftraggeber gedacht. Geplant sind eine Jobbörse, ein Feed, ein Forum, Profile, in denen du deine Erfolge zeigen kannst, und Übungsgespräche mit erfahrenen Closern. Die Plattform ist noch nicht gestartet. Auf der Warteliste erfährst du, wann es losgeht.</p>
   </section>
 
   <section class="partner-section" aria-labelledby="partner-stand">
-    <h2 id="partner-stand">Egal, wo du gerade stehst</h2>
+    <h2 id="partner-stand" class="partner-reveal">Egal, wo du gerade stehst</h2>
     <ul class="partner-list">
-      <li>Du fängst gerade an und willst üben, ohne dich beweisen zu müssen: Übungsgespräche sind genau dafür gedacht.</li>
-      <li>Du baust dir etwas auf und suchst Leute aus dem Vertrieb: Hier findest du sie an einem Ort.</li>
-      <li>Du führst ein Unternehmen oder ein Team und suchst Vertriebstalente: ClosingHub bietet dafür eine eigene Jobbörse und Profile.</li>
+      <li class="partner-reveal">Du fängst gerade an und willst üben, ohne dich beweisen zu müssen: Übungsgespräche sind genau dafür gedacht.</li>
+      <li class="partner-reveal">Du baust dir etwas auf und suchst Leute aus dem Vertrieb: Hier findest du sie an einem Ort.</li>
+      <li class="partner-reveal">Du führst ein Unternehmen oder ein Team und suchst Vertriebstalente: ClosingHub bietet dafür eine eigene Jobbörse und Profile.</li>
     </ul>
   </section>
 
   <section class="partner-section" aria-labelledby="partner-frueh">
-    <h2 id="partner-frueh">Früh dabei sein</h2>
+    <h2 id="partner-frueh" class="partner-reveal">Früh dabei sein</h2>
     <p>Xyntal-Mitglieder lernen ClosingHub früh kennen. Alles Weitere erfährst du direkt bei ClosingHub.</p>
   </section>
 
@@ -189,6 +199,7 @@
   </div>
 </footer>
 <script src="/effects.js?v=40" defer></script>
+<script src="/partner.js?v=1" defer></script>
 <script src="/account-menu.js?v=22" defer></script>
 <script src="/site-search.js?v=2" defer></script>
 <script src="/site-chat.js?v=6" defer></script>
