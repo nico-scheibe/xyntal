@@ -24,6 +24,11 @@
 	}
 }
 
+# ACHTUNG, falls hier je Zugriffsprotokolle dazukommen: Ein "log" INNERHALB eines
+# Site-Blocks legt einen eigenen Logger an, und der erbt den Filter oben NICHT.
+# Caddy schreibt dort wieder die volle Adresse samt Abfrage. Wer Zugriffsprotokolle
+# will, muss denselben format-filter-Block im Site-Block wiederholen.
+
 xyntal.de, www.xyntal.de {
 	encode zstd gzip
 	reverse_proxy website:4129
