@@ -56,8 +56,8 @@ function dabei(ctx, x, y, w, press = 1) {
 const SC = []; const at = (u0, fn) => SC.push([u0, fn]);
 
 // Akt 1 · Hook über der App, unscharf, aber als Oberfläche erkennbar
-const HOOKCAM = (u) => [759, 1700 + 18 * u, 1518 * (1 - 0.004 * u)];
-const CARDCAM = camAt(390, 1443, 760, 700);
+const HOOKCAM = (u) => { const c = camAt(390, 1443, 760, 700); return [c[0], c[1] + 4 * (8.6 - u), c[2] * (1 + 0.004 * (8.6 - u))]; };
+const CARDCAM = HOOKCAM(8.6);
 const bg = (ctx, u, I, amt = 1, c = HOOKCAM(u)) => {
   shot(ctx, I.entdecken, c, amt > 0 ? `blur(${14 * amt}px) brightness(${lerp(1, 0.55, amt)})` : 'none');
   if (amt > 0) {   // die Karte von Noah etwas heller, damit sie als Produkt lesbar ist
@@ -86,7 +86,7 @@ at(K[1] - 0.04, (ctx, u, t, I) => {
 at(K[2] - 0.04, (ctx, u, t, I) => { const a = K[2] - 0.04;
   const c = cam(u, a, [[a, CARDCAM], [K[3], camAt(390, 1520, 760, 700)]], 0);
   shot(ctx, I.entdecken, c);
-  if (u < wt(2, 8) - 0.1) cap(ctx, u, toks(2, 0, ['Sag,', 'was', 'du', 'baust.']));
+  if (u < wt(2, 8) - 0.04) cap(ctx, u, [['Sag,', a]].concat(toks(2, 1, ['was', 'du', 'baust.'])));
   else cap(ctx, u, toks(2, 8, ['Wer', 'passt.']), 190); });
 // Kontrast-Makro: die Passung bildfüllend, dann die Zeit
 at(K[3] - 0.04, (ctx, u, t, I) => { const a = K[3] - 0.04, z = wt(3, 4) - 0.1;
@@ -97,15 +97,15 @@ at(K[3] - 0.04, (ctx, u, t, I) => { const a = K[3] - 0.04, z = wt(3, 4) - 0.1;
     ctx.save(); ctx.translate(W / 2, 1060); ctx.scale(z2, z2);
     font(ctx, 520, 800, 'Archivo', 'extra-condensed'); ctx.textAlign = 'center'; ctx.fillStyle = C.t1; ctx.fillText('94 %', 0, 180);
     ctx.restore(); ctx.textAlign = 'left';
-    font(ctx, 60, 500, 'Plex'); ctx.fillStyle = C.t2; ctx.fillText('Passung', 76, 1430);
+    font(ctx, 800 * 0 + 96, 800, 'Archivo', 'extra-condensed'); ctx.fillStyle = C.t2; ctx.fillText('Passung', 80, 1440);
     return;
   }
   if (u < z) {
     shot(ctx, I.entdecken, cam(u, a, [[a, camAt(390, P.pill[1], 640, 1180)]], 0.02));
-    cap(ctx, u, [['94 %', wt(3, 1) - 0.04], ['Passung.', wt(3, 1) - 0.04]], 190);
+    cap(ctx, u, [['94 %', a], ['Passung.', a]], 190);
   } else {
     shot(ctx, I.entdecken, cam(u, z, [[z, camAt(390, 2340, 760, 820)]], 0.015));
-    cap(ctx, u, [['Wie', wt(3, 5) - 0.04], ['viel', wt(3, 6) - 0.04], ['Zeit.', wt(3, 7) - 0.04]], 190);
+    cap(ctx, u, [['Wie', z], ['viel', wt(3, 6) - 0.04], ['Zeit.', wt(3, 7) - 0.04]], 190);
   } });
 // Leute finden dich: Benachrichtigung gleitet über die Karte (echter Wortlaut aus der Demo)
 at(K[4] - 0.04, (ctx, u, t, I) => { const a = K[4] - 0.04;
@@ -148,15 +148,15 @@ at(K[5] - 0.04, (ctx, u, t, I) => { const a = K[5] - 0.04, press = wt(5, 2) - 0.
   if (down && I.k0) { const sc = 0.94; ctx.drawImage(I.k0, ...P.btn, bx + bw * (1 - sc) / 2, by + bh * (1 - sc) / 2, bw * sc, bh * sc); }
   if (u >= press) dabeiDraw(ctx, bx, by, bw, clamp((u - press) / (10 * F)));
   // Tipp-Anzeige 20 px unter der Schrift: weicher Punkt und Ring
-  const tx = bx + bw * 0.5, ty = by + bh * 0.5 + 20 + 14, tp = u - (press - 4 * F);
+  const tx = bx + bw * 0.5, ty = by + bh + 8, tp = u - (press - 4 * F);
   if (tp >= 0) {
     const out = clamp((u - (press + 8 * F)) / (8 * F));
-    ctx.save(); ctx.globalAlpha = 0.2 * (1 - out); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(tx, ty, 34, 0, M.TAU); ctx.fill(); ctx.restore();
+    ctx.save(); ctx.globalAlpha = 0.2 * (1 - out); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(tx, ty, 30, 0, M.TAU); ctx.fill(); ctx.restore();
     const r = clamp((u - press) / (18 * F));
     if (r < 1) { ctx.save(); ctx.globalAlpha = 0.9 * (1 - r); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.arc(tx, ty, 34 * lerp(1, 2.2, EXPO(r)), 0, M.TAU); ctx.stroke(); ctx.restore(); }
+      ctx.beginPath(); ctx.arc(tx, ty, 30 * lerp(1, 1.8, EXPO(r)), 0, M.TAU); ctx.stroke(); ctx.restore(); }
   }
-  if (u < wt(5, 1) - 0.1) cap(ctx, u, [['Passt?', wt(5, 0) - 0.04]], 200);
+  if (u < wt(5, 1) - 0.04) cap(ctx, u, [['Passt?', a]], 200);
   else cap(ctx, u, toks(5, 1, ['Ein', 'Klick.']), 200); });
 // Akt 3 · Match-Cut: Karte tritt zurück (8 Frames), der Knopf wächst und wandert in die Endkarte (20 Frames)
 at(T.end - 0.04, (ctx, u, t, I) => { const a = T.end - 0.04, press = wt(5, 2) - 0.02;
