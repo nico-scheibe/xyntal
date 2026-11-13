@@ -377,6 +377,13 @@
     const nav = document.querySelector("[data-messages]");
     if (nav) nav.innerHTML = `${esc(t("Nachrichten"))}${total ? ` <span class="badge">${total}</span>` : ""}`;
   }
+  let listRetry = 0;
+  function listFailed(err) {
+    if (S.conversations.length) return; // eine schon geladene Liste bleibt stehen
+    listEl.querySelector("[data-items]").innerHTML = `<div class="xc-empty xc-empty-list"><p>${esc(fail(err))}</p><button type="button" class="btn btn-small btn-ghost" data-retry-list>${esc(t("Erneut versuchen"))}</button></div>`;
+    clearTimeout(listRetry);
+    listRetry = setTimeout(() => loadConversations().catch(listFailed), err && err.status === 429 ? 30000 : 15000);
+  }
   async function loadConversations() {
     const [{ conversations }, mine] = await Promise.all([
       X.api("GET", "/conversations"),
@@ -417,6 +424,7 @@
     if (f) { S.filter = f.dataset.filter; renderList(); return; }
     const sp = e.target.closest("[data-space]");
     if (sp) { S.space = sp.dataset.space; renderList(); return; }
+    if (e.target.closest("[data-retry-list]")) { clearTimeout(listRetry); loadConversations().catch(listFailed); return; }
     const w = e.target.closest("[data-withdraw]");
     if (w) {
       try { await X.api("DELETE", `/groups/${encodeURIComponent(w.dataset.withdraw)}/request`); await loadConversations(); }
@@ -860,7 +868,7 @@
           ? `<select class="xc-role" data-role="${esc(m.id)}" aria-label="${esc(t("Rolle"))}"><option value="member"${m.conversationRole === "member" ? " selected" : ""}>${esc(t("Mitglied"))}</option><option value="admin"${m.conversationRole === "admin" ? " selected" : ""}>Admin</option><option value="owner"${m.conversationRole === "owner" ? " selected" : ""}>${esc(t("Inhaber werden"))}</option></select>`
           : roleLabel(m.conversationRole) ? `<small>${esc(roleLabel(m.conversationRole))}</small>` : "";
         const remove = canRemove ? `<button type="button" class="xc-x" data-remove-member="${esc(m.id)}" aria-label="${esc(t("Entfernen"))}" title="${esc(t("Entfernen"))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>` : "";
-        return `<li>${avatar(userNow(m.id) || { displayName: m.displayName }, "xc-av-sm")}<span data-no-i18n>${esc(m.displayName)}${m.mine ? ` (${esc(t("du"))})` : ""}</span>${role}${remove}</li>`;
+        return `<li data-member="${esc(m.id)}">${avatar(userNow(m.id) || { displayName: m.displayName }, "xc-av-sm")}<span data-no-i18n>${esc(m.displayName)}${m.mine ? ` (${esc(t("du"))})` : ""}</span>${role}${remove}</li>`;
       };
       const editForm = S.editGroup && can.rename ? `<section class="xc-edit">
           <label>${esc(t("Name"))}<input data-edit-title maxlength="120" value="${esc(c.title)}"></label>
@@ -963,6 +971,61 @@
       list.innerHTML = found.map((u) => `<li><button type="button" data-add-user="${esc(u.id)}">${avatar(u, "xc-av-sm")}<span><b data-no-i18n>${esc(u.displayName)}</b>${u.headline ? `<small data-no-i18n>${esc(u.headline)}</small>` : ""}</span></button></li>`).join("") || `<li class="xc-hint">${esc(t("Niemand gefunden."))}</li>`;
     }, 250);
   });
+  // Rechtsklick auf ein Mitglied: anschreiben, erwähnen, Rolle ändern, entfernen (je nach eigenen Rechten)
+  infoEl.addEventListener("contextmenu", (e) => {
+    const li = e.target.closest("[data-member]");
+    if (!li || e.target.closest("select")) return;
+    const r = S.members.get(S.active) || { members: [] };
+    const m = r.members.find((x) => x.id === li.dataset.member);
+    if (!m) return;
+    const can = r.can || {};
+    const myRole = (r.members.find((x) => x.mine) || {}).conversationRole;
+    const canRole = can.setRole && !m.mine;
+    const canRemove = can.removeMember && !m.mine && m.conversationRole !== "owner" && (m.conversationRole !== "admin" || myRole === "owner");
+    const html = [
+      m.mine ? "" : ctxRow("dm", ICON_SVG("chat"), "Nachricht schreiben"),
+      m.mine ? "" : ctxRow("mention", `<span class="xc-ctx-at" aria-hidden="true">@</span>`, "Erwähnen"),
+      canRole && m.conversationRole !== "admin" && m.conversationRole !== "owner" ? ctxRow("admin", ICON_SVG("lock"), "Zum Admin machen") : "",
+      canRole && m.conversationRole === "admin" ? ctxRow("member", ICON_SVG("users"), "Admin-Rechte entziehen") : "",
+      canRole && m.conversationRole !== "owner" ? ctxRow("owner", ICON_SVG("check"), "Inhaberschaft übergeben") : "",
+      canRemove ? ctxRow("remove", ICON_SVG("x"), "Aus der Gruppe entfernen", ' class="xc-ctx-danger"') : "",
+    ].join("");
+    if (!html) return;
+    openCtx(e, li, html, async (b) => {
+      const act = b.dataset.ctx;
+      if (act === "remove" && !b.dataset.armed) {
+        b.dataset.armed = "1";
+        b.querySelector("span").textContent = t("Wirklich entfernen?");
+        return true;
+      }
+      closeCtx();
+      try {
+        if (act === "dm") {
+          const { conversation } = await X.api("POST", "/conversations", { kind: "dm", memberIds: [m.id] });
+          if (!conv(conversation.id)) await loadConversations();
+          await open(conversation.id);
+        } else if (act === "mention") {
+          const ta = input();
+          if (!ta) return;
+          const sep = ta.value && !/\s$/.test(ta.value) ? " " : "";
+          ta.value += `${sep}@${m.displayName} `;
+          S.mentionIds.set(m.id, m.displayName);
+          grow(ta); syncSend(); ta.focus();
+          ta.selectionStart = ta.selectionEnd = ta.value.length;
+          if (window.innerWidth <= 1180) setView("thread");
+        } else if (act === "admin" || act === "member" || act === "owner") {
+          if (act === "owner" && !confirm(t("Du gibst die Gruppe ab und wirst Admin. Fortfahren?"))) return;
+          await X.api("PATCH", `${base()}/members/${encodeURIComponent(m.id)}`, { role: act });
+          await afterGroupChange();
+        } else if (act === "remove") {
+          await X.api("DELETE", `${base()}/members/${encodeURIComponent(m.id)}`);
+          await afterGroupChange();
+        }
+      } catch (err) { say(fail(err), "error"); }
+    });
+  });
+  infoEl.addEventListener("scroll", closeCtx, true);
+
   infoEl.addEventListener("change", async (e) => {
     const sel = e.target.closest("[data-role]");
     if (sel) {
@@ -1998,7 +2061,7 @@
   }
 
   // ---------- Live-Updates (Long-Polling wie die App, eine Warteschlange pro Tab) ----------
-  let polling = false, refreshTimer = 0;
+  let polling = false, refreshTimer = 0, threadTimer = 0;
   async function pollLoop() {
     if (polling) return;
     polling = true;
@@ -2031,9 +2094,14 @@
         presence = true;
       }
     }
-    if (refreshThread && isGroup(conv(S.active))) loadAccess(S.active);
-    if (refreshThread) { for (const [id, v] of S.typing) if (v.conv === S.active) S.typing.delete(id); renderTyping(); refreshActive(); }
-    if (refreshList) { clearTimeout(refreshTimer); refreshTimer = setTimeout(() => loadConversations().catch(() => {}), 300); }
+    // Mehrere Ereignisse kurz hintereinander lösen nur ein Nachladen aus (spart das Anfrage-Limit des Servers)
+    if (refreshThread) {
+      for (const [id, v] of S.typing) if (v.conv === S.active) S.typing.delete(id);
+      renderTyping();
+      clearTimeout(threadTimer);
+      threadTimer = setTimeout(() => { refreshActive(); if (isGroup(conv(S.active))) loadAccess(S.active); }, 300);
+    }
+    if (refreshList) { clearTimeout(refreshTimer); refreshTimer = setTimeout(() => loadConversations().catch(listFailed), 600); }
     if (presence) { renderList(); if (S.active) { renderHeader(); renderInfo(); } }
   }
   document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && S.active) { refreshActive(); markRead(); } });
@@ -2141,7 +2209,9 @@
     root.hidden = false;
     threadEl.innerHTML = emptyThread();
     renderInfo();
-    try { await loadConversations(); } catch (err) { notice.innerHTML = `<div class="notice">${esc(fail(err))}</div>`; return; }
+    // Klappt das erste Laden nicht (z. B. Server-Limit), steht der Grund in der Liste und es wird
+    // von selbst neu versucht – vorher blieb die Liste leer und die Seite gab ganz auf.
+    try { await loadConversations(); } catch (err) { listFailed(err); pollLoop(); return; }
     pollLoop();
     const params = new URLSearchParams(location.search);
     try {
