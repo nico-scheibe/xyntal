@@ -34,6 +34,14 @@ do $$ begin
   if to_regclass('public.member_birthdates') is null then
     raise exception 'Erst 20261113120000_signup_birthdate.sql ausführen, dann diese Migration.';
   end if;
+  -- Zweites Sicherheitsnetz: Die Nachfolge-Migration 20261113140000 ersetzt age_check_start()
+  -- durch den eingefrorenen Ausrollzeitpunkt. Liefe diese Datei danach noch einmal, würde sie
+  -- den festen 14.11. zurückschreiben – und der Bestandsschutz wäre wieder für jeden abholbar,
+  -- der bis dahin ein Konto anlegt. Die Dateien werden von Hand im SQL-Editor ausgeführt,
+  -- deshalb hier ein klarer Abbruch statt einer stillen Rückabwicklung.
+  if to_regclass('public.age_check_config') is not null then
+    raise exception 'Diese Migration ist schon gelaufen und wurde von 20261113140000_age_gate_publishing.sql abgelöst. Nicht erneut ausführen.';
+  end if;
 end $$;
 
 -- Stichtag des Bestandsschutzes. Bewusst ein fester Wert und nicht now(), damit ein zweiter

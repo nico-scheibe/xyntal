@@ -776,7 +776,13 @@
             parts.push("Deine Karte wurde nicht gespeichert: Sie enthält eine Beleidigung, Spam oder einen unsicheren Link.");
           } else if (res !== null) {
             parts.push("Deine Karte ist gespeichert.");
-            if (res === "ok") parts.push(isPublic ? `Deine Karte ist jetzt unter xyntal.de/${card.handle} zu sehen.` : `Dein Link xyntal.de/${card.handle} ist reserviert.`);
+            // Ohne Konto wird die Karte nicht mehr öffentlich (Mindestalter 16, siehe
+            // supabase/migrations/20261113140000_age_gate_publishing.sql). Der Wunsch-Link ist
+            // reserviert; online geht die Karte, sobald ein Konto sie übernimmt. Darum hier
+            // kein "ist jetzt zu sehen" mehr – das wäre ein Versprechen, das nicht eingelöst wird.
+            if (res === "ok") parts.push(isPublic
+              ? `Dein Link xyntal.de/${card.handle} ist reserviert. Sobald du dein Konto anlegst, ist deine Karte dort zu sehen.`
+              : `Dein Link xyntal.de/${card.handle} ist reserviert.`);
             else if (res === "taken") parts.push(`xyntal.de/${card.handle} ist leider schon vergeben. Du kannst dir nach dem Start einen anderen aussuchen.`);
             else if (res === "invalid") parts.push("Dieser Wunsch-Link ist nicht verfügbar. Du kannst dir nach dem Start einen anderen aussuchen.");
           } else if (keptLocally) parts.push("Der Server hat die Karte noch nicht bestätigt. Sie bleibt auf diesem Gerät für die Übernahme nach deiner Registrierung vorgemerkt.");

@@ -271,6 +271,10 @@
       if (res === "taken") say(t("Gespeichert – aber dieser Wunsch-Link ist schon vergeben. Dein bisheriger Link bleibt."), "error");
       else if (res === "invalid") say(t("Gespeichert – dieser Wunsch-Link ist nicht verfügbar. Dein bisheriger Link bleibt."), "error");
       else if (fresh && fresh.is_public) say(t(`Gespeichert. Dein Profil ist unter xyntal.de/${fresh.handle} zu sehen.`), "ok");
+      // Karte gespeichert, Wunsch-Link reserviert, aber nicht öffentlich: Das kann nur am
+      // fehlenden Geburtsdatum liegen (sonst macht der Trigger member_cards_public sie online).
+      // Ohne diesen Hinweis stünde der Nutzer vor einem Link, der einfach nicht funktioniert.
+      else if (fresh && fresh.handle) say(t("Gespeichert. Damit dein Profil öffentlich wird, trag bitte noch dein Geburtsdatum im Profil ein – Xyntal ist ab 16 Jahren."), "ok");
       else say(t("Gespeichert."), "ok");
       // eingebettet im Profilbereich: Übersicht oben aktualisieren
       if (window.parent !== window) window.parent.postMessage({ type: "xyntal-card-saved" }, location.origin);
