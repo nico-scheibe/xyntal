@@ -1349,7 +1349,7 @@
       return;
     }
     if (target.closest("[data-attach]")) { close("[data-plus-menu]"); threadEl.querySelector("[data-file]").click(); return; }
-    if (target.closest("[data-gif-open]")) { close("[data-plus-menu]"); openGifs(); return; }
+    if (target.closest("[data-gif-open]")) { close("[data-plus-menu], [data-emoji-pop], [data-picker]"); openGifs(); return; }
     if (target.closest("[data-tag-open]")) { close("[data-plus-menu]"); input().focus(); syncPicker(true); return; }
     if (target.closest("[data-emoji-open]")) { const pop = threadEl.querySelector("[data-emoji-pop]"); pop.hidden = !pop.hidden; return; }
     const emo = target.closest("[data-emoji]");
@@ -1746,7 +1746,7 @@
     const chosen = new Map();
     let mode = startMode;
     let workspaces = [];
-    dlg.innerHTML = `<form method="dialog" class="xm-dialog-body">
+    dlg.innerHTML = `<form method="dialog" class="xm-dialog-body" novalidate>
       <h2>${esc(t("Neu"))}</h2>
       <div class="xg-tabs" role="tablist">
         ${[["dm", "Direktnachricht", "chat"], ["group", "Gruppe", "users"], ["team", "Team-Chat", "building"]].map(([k, l, ic]) => `<button type="button" role="tab" data-mode="${k}" aria-selected="${k === mode}">${ICON_SVG(ic)}<span>${esc(t(l))}</span></button>`).join("")}
@@ -1816,23 +1816,32 @@
       const un = e.target.closest("[data-unpick]");
       if (un) { chosen.delete(un.dataset.unpick); sync(); }
     });
-    dlg.addEventListener("close", async () => {
-      const go = dlg.returnValue === "ok";
-      const form = dlg.querySelector("form");
+    // Erst anlegen, dann schließen: Schlägt es fehl, bleibt der Dialog offen und zeigt den Grund
+    // (vorher ging der Fehler oben auf der Seite unter und es sah aus, als passiere nichts).
+    dlg.querySelector("form").addEventListener("submit", async (e) => {
+      if (!e.submitter || e.submitter.value !== "ok") return;
+      e.preventDefault();
+      const form = e.currentTarget;
+      const start = dlg.querySelector("[data-start]");
+      const errEl = dlg.querySelector("[data-err]");
+      if (start.disabled) return;
       const ids = [...chosen.keys()];
-      const payload = mode === "dm" ? null : readGroupForm(form);
-      const addAll = !!dlg.querySelector("[name=addWorkspaceMembers]:checked");
-      dlg.remove();
-      if (!go) return;
+      const body = mode === "dm" ? { kind: "dm", memberIds: ids }
+        : { kind: "group", memberIds: ids, ...readGroupForm(form), ...(mode === "team" ? { addWorkspaceMembers: !!dlg.querySelector("[name=addWorkspaceMembers]:checked") } : {}) };
+      errEl.textContent = "";
+      start.disabled = true;
       try {
-        const body = mode === "dm" ? { kind: "dm", memberIds: ids }
-          : { kind: "group", memberIds: ids, ...payload, ...(mode === "team" ? { addWorkspaceMembers: addAll } : {}) };
         const { conversation } = await X.api("POST", "/conversations", body);
+        dlg.close();
         await loadConversations();
         open(conversation.id);
         if (mode === "group" && body.visibility === "public") say(t("Deine Gruppe ist jetzt unter „Gruppen entdecken“ zu finden."));
-      } catch (err) { notice.innerHTML = `<div class="notice">${esc(fail(err))}</div>`; }
+      } catch (err) {
+        errEl.textContent = fail(err);
+        start.disabled = false;
+      }
     });
+    dlg.addEventListener("close", () => dlg.remove());
     renderForm();
     dlg.showModal();
     if (mode === "dm") q.focus();
