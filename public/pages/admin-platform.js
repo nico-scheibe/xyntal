@@ -455,7 +455,7 @@
     ["mute", "users.ban", "mute <Konto> [Dauer] [Grund]", "Konto stummschalten: lesen ja, Nachrichten, Reaktionen und Beiträge nein."],
     ["unmute", "users.ban", "unmute <Konto>", "Stummschaltung aufheben."],
     ["kick", "content.moderate", "kick <Konto> <Arbeitsbereich> [Grund]", "Konto aus einem seiner Arbeitsbereiche entfernen. Fragt vorher nach."],
-    ["plan", "billing.manage", "plan <Konto> <Tage> [Tarif] <Grund>", "Mitgliedschaftstage gutschreiben (30, 30d, 4w). Sie zählen ab dem Ende der laufenden Mitgliedschaft. Ein kostenloses Konto braucht den Tarif (Plus, Pro, Ultra); ein bezahltes behält seinen, außer du nennst einen anderen. Die Tage laufen von selbst ab."],
+    ["plan", "billing.manage", "plan <Konto> <Tage> [Tarif] <Grund>", "Mitgliedschaftstage gutschreiben (30, 30d, 4w). Sie zählen ab dem Ende der laufenden Mitgliedschaft. Ein kostenloses Konto braucht den Tarif (Plus, Pro, Ultra); ein bezahltes behält seinen, außer du nennst einen anderen. Die Tage laufen von selbst ab. Wer nur ein Website-Konto hat, wird über die E-Mail-Adresse gefunden und bekommt ein App-Konto, das er beim ersten Login in der App übernimmt."],
     ["unplan", "billing.manage", "unplan <Konto> <Grund>", "Einen von Hand vergebenen Tarif zurücknehmen: Das Konto ist sofort wieder im kostenlosen Tarif. Per Abo bezahlte Tarife werden nie entfernt. Fragt vorher nach."],
     ["credit", "billing.manage", "credit <Konto> <Euro> <Grund>", "KI-Guthaben gutschreiben (5, 2,50; negativ korrigiert). Das Konto bezahlt seine KI-Aufrufe daraus, sobald das Inklusivbudget des Tarifs aufgebraucht ist."],
     ["uncredit", "billing.manage", "uncredit <Konto> [Euro] <Grund>", "Von Hand gutgeschriebenes KI-Guthaben zurücknehmen: den Betrag, ohne Betrag alles, was davon übrig ist. Bezahltes Guthaben wird nie entfernt."],
@@ -606,15 +606,35 @@
     const m = DUR_RE.exec(token); if (!m) return undefined;
     return Number(m[1]) * { m: 1, h: 60, d: 1440, w: 10080 }[m[2].toLowerCase()];
   }
-  async function resolveUser(term) {
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  function printCandidates(err) {
+    if (!(err.status === 409 && err.details && Array.isArray(err.details.candidates))) return false;
+    print("error", "Mehrere Konten passen – nutze @handle, E-Mail oder ID:");
+    for (const c of err.details.candidates) print("info", `  ${c.displayName} · ${c.email}${c.handle ? ` · @${c.handle}` : ""} · ${c.id}`);
+    return true;
+  }
+  // website: { reason } – nur bei plan. Hat der App-Server zu einer E-Mail-Adresse kein Konto, sucht er sie unter
+  // den Website-Konten und legt das App-Konto an, das die Person beim ersten Login in der App übernimmt
+  // (POST /admin/users/website-account; der Grund landet im Audit-Log).
+  async function resolveUser(term, website) {
     try { return (await api("GET", `/admin/users/resolve${q({ q: term })}`)).user; }
     catch (err) {
-      if (err.status === 409 && err.details && Array.isArray(err.details.candidates)) {
-        print("error", "Mehrere Konten passen – nutze @handle, E-Mail oder ID:");
-        for (const c of err.details.candidates) print("info", `  ${c.displayName} · ${c.email}${c.handle ? ` · @${c.handle}` : ""} · ${c.id}`);
-        return null;
-      }
+      if (printCandidates(err)) return null;
+      if (err.status === 404 && website && EMAIL_RE.test(term)) return websiteAccount(term, website.reason);
       print("error", err.status === 404 ? "Kein Konto passt dazu." : reason(err));
+      return null;
+    }
+  }
+  async function websiteAccount(email, why) {
+    print("info", "Kein App-Konto mit dieser Adresse – suche unter den Website-Konten …");
+    try {
+      const r = await api("POST", "/admin/users/website-account", { email, reason: why });
+      if (r.source === "created") print("info", `Website-Konto gefunden: App-Konto für ${r.user.displayName} angelegt. Die Person übernimmt es beim ersten Login in der App mit ${r.user.email}.`);
+      else if (r.source === "linked") print("info", `Website-Konto gefunden und mit dem App-Konto von ${r.user.displayName} verknüpft.`);
+      return r.user;
+    } catch (err) {
+      if (printCandidates(err)) return null;
+      print("error", err.status === 404 ? "Kein Konto passt dazu – weder in der App noch auf der Website." : reason(err));
       return null;
     }
   }
@@ -734,7 +754,7 @@
           const plan = planWords ? PLAN_IDS.find((p) => p.toLowerCase() === planText) : undefined;
           const why = rest.join(" ").trim();
           if (!why) { print("error", "Gib einen Grund an – er landet im Audit-Log."); return; }
-          const u = await resolveUser(args[0]); if (!u) return;
+          const u = await resolveUser(args[0], { reason: why }); if (!u) return;
           const r = await api("POST", `/admin/users/${encodeURIComponent(u.id)}/plan/extend`, { days, plan, reason: why });
           print("ok", `${u.displayName} ist bis ${fmt(r.renewsAt)} auf ${r.plan} (${r.days} Tage gutgeschrieben).`);
           return;

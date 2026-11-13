@@ -218,5 +218,38 @@ const last = () => rpcCalls[rpcCalls.length - 1];
     assert(/5,00\s€ entfernt/.test(logText()), logText());
   });
 
+  // plan für ein Konto, das es nur auf der Website gibt: der App-Server findet die E-Mail nicht,
+  // sucht sie unter den Website-Konten und legt das App-Konto an; danach werden die Tage gutgeschrieben.
+  await test('plan findet ein reines Website-Konto über die E-Mail', async () => {
+    const calls = [];
+    const old = X.api;
+    const notFound = () => Object.assign(new Error('No account matches that.'), { status: 404 });
+    X.api = async (m, p, b) => {
+      if (p.startsWith('/admin/users/resolve')) throw notFound();
+      if (p === '/admin/users/website-account') { calls.push(['website', b]); return { user: { id: 'u9', displayName: 'Paul Seegert', email: 'paul@example.com' }, source: 'created' }; }
+      if (p.endsWith('/plan/extend')) { calls.push(['plan', p, b]); return { plan: 'Ultra', renewsAt: '2027-02-11T12:00:00.000Z', days: 90 }; }
+      return old(m, p, b);
+    };
+    await run('plan paul@example.com 90 Ultra Legende');
+    assert.deepEqual(calls[0], ['website', { email: 'paul@example.com', reason: 'Legende' }]);
+    assert.deepEqual(calls[1], ['plan', '/admin/users/u9/plan/extend', { days: 90, plan: 'Ultra', reason: 'Legende' }]);
+    assert(logText().includes('App-Konto für Paul Seegert angelegt'), logText());
+    assert(logText().includes('90 Tage gutgeschrieben'), logText());
+
+    calls.length = 0;
+    X.api = async (m, p, b) => {
+      if (p.startsWith('/admin/users/resolve') || p === '/admin/users/website-account') { calls.push(p); throw notFound(); }
+      return old(m, p, b);
+    };
+    await run('plan niemand@example.com 30 Plus Test');
+    assert(logText().includes('Kein Konto passt dazu – weder in der App noch auf der Website.'), logText());
+    // Ein @handle sucht nicht auf der Website, andere Befehle auch nicht
+    calls.length = 0;
+    await run('plan @niemand 30 Plus Test');
+    await run('credit niemand@example.com 5 Test');
+    X.api = old;
+    assert(!calls.includes('/admin/users/website-account'), calls.join(', '));
+  });
+
   console.log(`PASS: ${T.length} Fälle für unlock, lock, unlocks (${T.join(' · ')})`);
 })().catch((err) => { console.error('FAIL:', err.message); process.exitCode = 1; });
