@@ -1,0 +1,12 @@
+[
+ ["thump",   "wt(0,2) - 0.04", -14, "peak"],
+ ["thump",   "wt(0,7) - 0.04", -10, "peak"],
+ ["shimmer", "wt(1,3) - 0.1",  -16, "onset"],
+ ["swish",   "K[3] - 0.04",    -22, "peak"],
+ ["swish",   "K[4] - 0.04",    -22, "peak"],
+ ["click",   "wt(4,2) - 0.02", -6,  "peak"],
+ ["confirm", "wt(4,2) + 0.1",  -16, "onset"],
+ ["swish",   "K[5] - 0.04",    -22, "peak"],
+ ["swish",   "K[6] - 0.04",    -22, "peak"],
+ ["land",    "END + 0.2",      -14, "peak"]
+]

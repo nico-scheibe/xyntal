@@ -84,7 +84,8 @@ def main():
             w, d = tts(film, text, V[key], model, S)
             if spec.get("words"):
                 W_.append([[x, round((t + a) / BEAT, 3), round((t + b) / BEAT, 3)] for x, a, b in words(w)])
-            card_t.append(t); place.append((t, w)); t += d + spec.get("card_gap", 0.35)
+            extra = item[2] if isinstance(item, list) and len(item) > 2 else 0
+            card_t.append(t); place.append((t, w)); t += d + spec.get("card_gap", 0.35) + extra
         end_t = t
         end_off = spec.get("end_offset", 0.6)
         w, d = tts(film, spec["end"], V["N"], model, S); place.append((end_t + end_off, w))
