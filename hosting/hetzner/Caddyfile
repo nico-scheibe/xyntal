@@ -3,6 +3,25 @@
 # (in Cloudflare „DNS only“, graue Wolke).
 {
 	email {$ACME_EMAIL}
+
+	# Die Abfrage gehört nicht ins Protokoll. Zugriffsprotokolle führt Caddy hier
+	# keine, aber der Fehler-Logger (http.log.error) schreibt die volle Adresse mit –
+	# und der schlägt bei jedem Deploy an: Während die API neu startet, laufen die
+	# Anfragen ins Leere, und eine Suche in genau diesem Moment stünde dort im
+	# Klartext. Der Server kürzt seit e13c2d4 genauso; das hier ist dieselbe Regel
+	# eine Ebene davor, denn Caddy protokolliert unabhängig vom Server.
+	#
+	# Gekürzt wird nur ab dem Fragezeichen: Pfad, Methode, Adresse, Port und Status
+	# bleiben, sonst wäre die Zeile für die Fehlersuche wertlos – und genau dafür
+	# ist sie da. Authorization schwärzt Caddy von sich aus.
+	log {
+		format filter {
+			wrap json
+			fields {
+				request>uri regexp "\?.*$" ""
+			}
+		}
+	}
 }
 
 xyntal.de, www.xyntal.de {
