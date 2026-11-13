@@ -46,7 +46,7 @@
       mcLevel: $("[data-mc-level]"), mcLevel2: $("[data-mc-level-2]"), mcDots: $$("[data-mc-dots] i"), mcPlace: $("[data-mc-place]"),
       mcSkills: $("[data-mc-skills]"), mcHours: $("[data-mc-hours]"), mcBar: $("[data-mc-bar]"), mcPitch: $("[data-mc-pitch]"),
       mcLooking: $("[data-mc-looking]"), mcLink: $("[data-mc-link]"),
-      status: $("[data-card-status]"), save: $("[data-card-save]"), story: $("[data-card-story]"), launch: $("[data-launch-card]"),
+      status: $("[data-card-status]"), save: $("[data-card-save]"), launch: $("[data-launch-card]"),
       banners: $("[data-bf-banner]"), bannerUpload: $("[data-bf-banner-upload]"), bannerRemove: $("[data-bf-banner-remove]"),
     };
     // Banner-Vorlagen (banners.js); animierte und das eigene Bild nur mit Paid-Tarif
@@ -457,7 +457,7 @@
     el.suggest.addEventListener("click", (e) => { const b = e.target.closest("[data-add]"); if (b) addSkill(b.dataset.add); });
 
     /* ---- Karte als Bild zeichnen – folgt Farben, Layout und Anordnung ----
-       Zwei Formate mit derselben Karte: "feed" 1080 × 1350 (4:5) und "story" 1080 × 1920 (9:16). */
+       Format "feed" 1080 × 1350 (4:5). Das Story-Bild für Instagram (1080 × 1920) zeichnet card-story.js. */
     const FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Arial, sans-serif';
     function roundRect(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
     function wrap(g, text, maxW, max) {
@@ -570,56 +570,6 @@
       return cy + 50;
     }
 
-    // Banner (banners.css) auf das Titelbild der Karte (CW × H) zeichnen – ein Standbild der Vorlage, Animationen bleiben stehen
-    function paintBanner(k, id, CW, H, C, media) {
-      const sc = CW / 380, lin = (y0, y1, stops) => { const gr = k.createLinearGradient(0, y0, 0, y1); stops.forEach(([o, c]) => gr.addColorStop(o, c)); return gr; };
-      const tg = () => { const gr = k.createLinearGradient(0, 0, CW, H); C.forEach((col, i) => gr.addColorStop(i / (C.length - 1), col)); return gr; };
-      const shade = (a, b) => lin(0, H, [[0, `rgba(10,10,16,${a})`], [1, `rgba(26,26,35,${b})`]]);
-      const fill = (style) => { k.fillStyle = style; k.fillRect(0, 0, CW, H); };
-      const radial = (cx, cy, r, c0, c1 = "rgba(0,0,0,0)") => { const gr = k.createRadialGradient(cx, cy, 0, cx, cy, r); gr.addColorStop(0, c0); gr.addColorStop(1, c1); fill(gr); };
-      const lines = (step, col) => { k.fillStyle = col; for (let y = 0; y < H; y += step) k.fillRect(0, y, CW, sc); for (let x = 0; x < CW; x += step) k.fillRect(x, 0, sc, H); };
-      const dot = (x, y, r) => { const gr = k.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, "#fff"); gr.addColorStop(1, "rgba(255,255,255,0)"); k.fillStyle = gr; k.fillRect(x - r, y - r, r * 2, r * 2); };
-      const ellipseGlow = (cx, cy, rx, ry, col) => { k.save(); k.translate(cx, cy); k.scale(rx, ry); const gr = k.createRadialGradient(0, 0, 0, 0, 0, 1); gr.addColorStop(0, col); gr.addColorStop(1, "rgba(0,0,0,0)"); k.fillStyle = gr; k.fillRect(-cx / rx, -cy / ry, CW / rx, H / ry); k.restore(); };
-      k.save(); k.beginPath(); k.rect(0, 0, CW, H); k.clip();
-      switch (id) {
-        case "mesh": fill(tg()); fill(shade(0.05, 0.45)); radial(CW * 0.88, H * 0.85, 0.55 * Math.hypot(CW * 0.88, H * 0.85), "rgba(10,10,16,0.55)"); radial(CW * 0.12, H * 0.15, 0.42 * Math.hypot(CW * 0.88, H * 0.85), "rgba(255,255,255,0.32)"); break;
-        case "grid": fill(tg()); fill(shade(0.1, 0.6)); lines(16 * sc, "rgba(255,255,255,0.16)"); break;
-        case "dots": fill(tg()); fill(shade(0.05, 0.55)); k.fillStyle = "rgba(255,255,255,0.34)"; for (let y = 6 * sc; y < H; y += 12 * sc) for (let x = 6 * sc; x < CW; x += 12 * sc) { k.beginPath(); k.arc(x, y, 1.5 * sc, 0, Math.PI * 2); k.fill(); } break;
-        case "waves": {
-          fill(tg()); fill(lin(0, H, [[0, "rgba(10,10,16,0.02)"], [1, "rgba(26,26,35,0.35)"]]));
-          const w1 = new Path2D("M0 62c20-10 40-10 60 0s40 10 60 0 40-10 60 0V96H0z"), w2 = new Path2D("M0 76c20-8 40-8 60 0s40 8 60 0 40-8 60 0V96H0z"), ts = H / 96;
-          for (let x = 0; x < CW; x += 160 * ts) { k.save(); k.translate(x, 0); k.scale(ts, ts); k.beginPath(); k.rect(0, 0, 160, 96); k.clip(); k.fillStyle = "rgba(255,255,255,0.14)"; k.fill(w1); k.fillStyle = "rgba(0,0,0,0.18)"; k.fill(w2); k.restore(); }
-          break;
-        }
-        case "stripes": {
-          fill(tg()); fill(shade(0.05, 0.55)); k.fillStyle = "rgba(255,255,255,0.13)";
-          const step = 22 * Math.SQRT2 * sc, w = 10 * Math.SQRT2 * sc;
-          for (let c = 0; c < CW + H; c += step) { k.beginPath(); k.moveTo(c, 0); k.lineTo(c + w, 0); k.lineTo(c + w - H, H); k.lineTo(c - H, H); k.closePath(); k.fill(); }
-          break;
-        }
-        case "glow": fill(lin(0, H, [[0, "#0B0B12"], [1, "#15151E"]])); ellipseGlow(CW * 0.5, H * 1.3, CW * 0.9, H * 1.4 * 0.62, C[0]); k.globalAlpha = 0.9; k.fillStyle = tg(); k.fillRect(0, H - 2 * sc, CW, 2 * sc); break;
-        case "solid": fill(C[0]); fill(lin(0, H, [[0, "rgba(0,0,0,0.12)"], [1, "rgba(0,0,0,0.38)"]])); break;
-        case "flow": fill(tg()); fill(shade(0.02, 0.5)); break;
-        case "stars": {
-          fill(lin(0, H, [[0, "#07070D"], [1, "#12121C"]])); ellipseGlow(CW * 0.5, H * 1.4, CW * 0.8, H * 1.2 * 0.65, C[0]);
-          for (const [x, y, r] of [[12, 28, 1.4], [26, 62, 1], [41, 18, 1.6], [55, 48, 1], [68, 22, 1.4], [79, 58, 1], [90, 30, 1.5], [7, 75, 1], [34, 82, 1], [62, 76, 1.2],
-            [18, 45, 1], [47, 66, 1.3], [73, 40, 1], [85, 78, 1.4], [29, 12, 1]]) dot(CW * x / 100, H * y / 100, r * 2.2 * sc);
-          break;
-        }
-        case "pulse": fill(lin(0, H, [[0, "#0D0D15"], [1, "#171722"]])); k.globalAlpha = 0.85; fill(tg()); radial(CW * 0.3, H * 0.5, 0.38 * CW, rgba(C[0], 1)); radial(CW * 0.72, H * 0.45, 0.3 * CW, "rgba(255,255,255,0.5)"); break;
-        case "scan": fill(tg()); fill(shade(0.2, 0.7)); lines(14 * sc, "rgba(255,255,255,0.12)"); break;
-        case "image": {
-          if (!media) { fill(tg()); fill(shade(0.02, 0.6)); break; }
-          const mw = media.videoWidth || media.naturalWidth, mh = media.videoHeight || media.naturalHeight;
-          if (mw && mh) { const f = Math.max(CW / mw, H / mh); k.drawImage(media, (CW - mw * f) / 2, (H - mh * f) / 2, mw * f, mh * f); }
-          fill(lin(0, H, [[0, "rgba(10,10,16,0.08)"], [1, "rgba(10,10,16,0.45)"]]));
-          break;
-        }
-        default: fill(tg()); fill(shade(0.02, 0.6));
-      }
-      k.restore();
-    }
-
     // Die Karte selbst (900 px breit, Höhe nach Inhalt) als eigene Zeichenfläche
     async function paintCard() {
       const CW = 900;
@@ -638,7 +588,7 @@
       k.fillStyle = grad(0, 0, CW, 230); k.fillRect(0, 0, CW, 230);
       const shade = k.createLinearGradient(0, 0, 0, 230); shade.addColorStop(0, "rgba(10,10,16,0.02)"); shade.addColorStop(1, data.surface === "light" ? "rgba(255,255,255,0.35)" : "rgba(26,26,35,0.55)"); k.fillStyle = shade; k.fillRect(0, 0, CW, 230);
       k.restore();
-      if (bannerId !== "theme") { k.save(); roundRect(k, 2, 2, CW - 4, CH - 4, 62); k.clip(); paintBanner(k, bannerId, CW, 230, C, bannerMedia); k.restore(); }
+      if (bannerId !== "theme") { k.save(); roundRect(k, 2, 2, CW - 4, CH - 4, 62); k.clip(); BANNERS.paint(k, bannerId, CW, 230, C, bannerMedia); k.restore(); }
       k.save(); roundRect(k, 2, 2, CW - 4, CH - 4, 62); k.lineWidth = 4; k.strokeStyle = grad(0, 0, CW, CH); k.stroke(); k.restore();
       // Logo und Badge im Titelbild
       const ink = data.theme === "mono" ? "#111" : "#fff";
@@ -652,17 +602,14 @@
       return card;
     }
 
-    // Karte auf das Ausgabeformat setzen. Story: oben 250 px und unten 340 px frei (Instagram blendet dort
-    // Fortschrittsbalken, Profilname und Antwortfeld ein); unter der Karte das Feld mit dem Wunsch-Link,
-    // auf das man den Link-Sticker legt.
+    // Karte auf das Ausgabeformat setzen
     const FORMATS = {
       feed: { W: 1080, H: 1350, box: [60, 1170], tagline: 1310 },
-      story: { W: 1080, H: 1920, box: [270, 1060], link: [1365, 112], tagline: 1550 },
     };
     async function drawCard(format = "feed") {
       const F = FORMATS[format] || FORMATS.feed, { W, H } = F;
       const card = await paintCard();
-      const C = colors(), P = PALETTE[data.surface], light = data.surface === "light";
+      const C = colors(), light = data.surface === "light";
       const c = document.createElement("canvas"); c.width = W; c.height = H; const g = c.getContext("2d");
       g.fillStyle = light ? "#ECECF2" : "#07070B"; g.fillRect(0, 0, W, H);
       for (const [gx, gy, r, col] of [[160, 80, 900, C[0]], [W, H, 800, C[C.length - 1]]]) {
@@ -670,22 +617,14 @@
       }
       const [top, boxH] = F.box, s = Math.min(1, boxH / card.height), dw = card.width * s, dh = card.height * s;
       g.drawImage(card, (W - dw) / 2, top + (boxH - dh) / 2, dw, dh);
-      if (F.link) {
-        const [ly, lh] = F.link, lw = 900, lx = (W - lw) / 2;
-        roundRect(g, lx, ly, lw, lh, lh / 2); g.fillStyle = light ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.06)"; g.fill();
-        g.lineWidth = 2; g.strokeStyle = P.line; g.stroke();
-        g.font = `600 44px ${FONT}`; g.fillStyle = P.text; g.textAlign = "center"; g.textBaseline = "middle";
-        g.fillText(siteText(), W / 2, ly + lh / 2 + 2);
-      }
       const tg = g.createLinearGradient(W / 2 - 330, 0, W / 2 + 330, 0); C.forEach((col, i) => tg.addColorStop(i / (C.length - 1), col));
       g.font = `700 44px ${FONT}`; g.fillStyle = data.theme === "mono" && light ? "#111" : tg; g.textAlign = "center"; g.textBaseline = "alphabetic"; g.fillText("Stop swiping. Start building.", W / 2, F.tagline);
       return c;
     }
 
-    // Als PNG teilen (Handy: Teilen-Menü, z. B. direkt in die Instagram-Story) oder herunterladen
+    // Als PNG teilen (Handy: Teilen-Menü) oder herunterladen
     const EXPORTS = {
       feed: { file: "meine-xyntal-karte.png", title: "Meine Xyntal-Karte" },
-      story: { file: "meine-xyntal-story.png", title: "Meine Xyntal-Story" },
     };
     async function exportCard(format, button) {
       const { file: name, title } = EXPORTS[format];
@@ -710,7 +649,6 @@
       } finally { button.disabled = false; }
     }
     el.save.addEventListener("click", () => exportCard("feed", el.save));
-    el.story?.addEventListener("click", () => exportCard("story", el.story));
     $("[data-card-join]")?.addEventListener("click", () => setTimeout(() => $("#wl-email")?.focus({ preventScroll: true }), still ? 0 : 600));
 
     // Für die Warteliste: nur die Angaben – Foto und Gestaltung bleiben auf dem Gerät
