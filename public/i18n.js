@@ -2,15 +2,19 @@
 // Die Seiten sind auf Deutsch geschrieben. Für Englisch werden sichtbare Texte und Attribute
 // über das Wörterbuch in i18n-en.js ersetzt – auch Inhalte, die Skripte später einfügen.
 // Die Wahl wird im Browser gemerkt (localStorage „xyntal-lang“).
+// Seiten ohne Wörterbuch (die Startseite lädt die 370 KB von i18n-en.js nicht) übersetzen nicht selbst:
+// Dort führt „EN“ zur englischen Adresse aus <link rel="alternate" hreflang="en">, die der Server übersetzt.
 (() => {
   const KEY = "xyntal-lang";
   const ATTRS = ["placeholder", "aria-label", "title", "alt"];
   const SKIP = new Set(["SCRIPT", "STYLE", "NOSCRIPT", "TEXTAREA", "CODE"]);
   const DICT = window.XYNTAL_EN || {};
   const PATTERNS = window.XYNTAL_EN_PATTERNS || [];
+  const HAS_DICT = Object.keys(DICT).length > 0;
+  const EN_HREF = document.querySelector('link[rel="alternate"][hreflang="en"]')?.getAttribute("href") || "";
 
   let lang = "de";
-  try { lang = localStorage.getItem(KEY) === "en" ? "en" : "de"; } catch { /* ohne Speicher: Deutsch */ }
+  try { lang = HAS_DICT && localStorage.getItem(KEY) === "en" ? "en" : "de"; } catch { /* ohne Speicher: Deutsch */ }
   // Seiten unter /en/ kommen schon englisch vom Server (eigene Adresse für Suchmaschinen). Dort gilt
   // immer Englisch – auch für Texte, die Skripte später einfügen –, und „DE“ führt zur deutschen Adresse.
   const EN_URL = /^\/en(\/|$)/.test(location.pathname);
@@ -96,11 +100,11 @@
     return lang === "en" ? translate(de) : de;
   }
 
-  /* ---------- Umschalter: unten in der Fußzeile, damit die Kopfzeile überall wie auf der Startseite aussieht.
-     Neue Fußzeile (.foot, Startseiten-Stil): Umschalter in die Basiszeile. Sonst bisherige Fußzeile.
-     Seiten ohne Fußzeile behalten ihn in der Kopfzeile. ---------- */
+  /* ---------- Umschalter in der Kopfzeile, zwischen Suche und Bewerben ----------
+     Startseite: .top__right (Aussehen in css/neu.css). Unterseiten: .nav .wrap, direkt hinter der
+     Navigation, damit die Tab-Reihenfolge passt; die Stelle im Bild legt site-header.css fest. */
   function mountSwitch() {
-    const host = document.querySelector(".foot .foot__base") || document.querySelector(".site-footer .sf-bottom") || document.querySelector(".topbar-inner, .nav .wrap");
+    const host = document.querySelector(".top__right, .nav .wrap");
     if (!host || document.querySelector(".lang-switch")) return;
     const sw = document.createElement("div");
     sw.className = "lang-switch";
@@ -108,8 +112,8 @@
     sw.setAttribute("data-no-i18n", "");
     sw.setAttribute("aria-label", "Sprache / Language");
     sw.innerHTML = '<button type="button" data-lang="de" lang="de" aria-label="Deutsch">DE</button><button type="button" data-lang="en" lang="en" aria-label="English">EN</button>';
-    const before = host.querySelector(".menu-toggle, .nav-toggle, .sf-top");
-    host.insertBefore(sw, before || null);
+    const links = host.querySelector(":scope > .nav-links");
+    if (links) links.after(sw); else host.prepend(sw);
     sw.addEventListener("click", (e) => { const b = e.target.closest("[data-lang]"); if (b) set(b.dataset.lang); });
     syncSwitch();
   }
@@ -125,6 +129,12 @@
       location.href = "/" + location.pathname.replace(/^\/en(?=\/|$)/, "").replace(/^\/+/, "") + location.search + location.hash;
       return;
     }
+    if (!HAS_DICT) {
+      if (next !== "en" || !EN_HREF) return;
+      try { localStorage.setItem(KEY, next); } catch { /* egal */ }
+      location.href = new URL(EN_HREF, location.href).pathname + location.search + location.hash;
+      return;
+    }
     lang = next;
     try { localStorage.setItem(KEY, lang); } catch { /* egal */ }
     document.documentElement.lang = lang;
@@ -137,6 +147,7 @@
 
   function start() {
     mountSwitch();
+    if (!HAS_DICT) return; // nichts zu übersetzen (Text kommt schon in der richtigen Sprache)
     walk(document.body);
     applyHead();
     new MutationObserver((records) => {
