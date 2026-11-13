@@ -178,6 +178,18 @@ final class APIClient {
                            as: Ack.self)
     }
 
+    /// GET /users/:id/ai-summary: kurze, von der KI geschriebene Vorstellung. 404 heißt, das Profil ist nicht sichtbar.
+    /// 502 wird als eigener Text gemeldet, damit die Ansicht "Nochmal versuchen" anbietet. Sprache: Accept-Language aus send().
+    func aiSummary(userId: String, token: String) async throws -> MemberSummary {
+        let id = try Self.validatedUserId(userId)
+        return try await send("users/\(id)/ai-summary",
+                              token: token,
+                              as: MemberSummary.self,
+                              mapFailure: { status, _, _ in
+                                  status == 502 ? .message(MemberSummary.upstreamErrorText) : nil
+                              })
+    }
+
     // MARK: - Nachrichten
 
     /// GET /conversations: alle Gespräche, auch archivierte. Die App blendet archivierte selbst aus.

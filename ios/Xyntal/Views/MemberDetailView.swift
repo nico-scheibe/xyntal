@@ -63,8 +63,10 @@ struct MemberDetailView: View {
                 .disabled(isStartingChat || isBlocking)
             }
 
+            MemberBriefSection(userId: member.id)
+
             if let bio = member.bio.nonEmptyText {
-                Section("Kurzinfo") {
+                Section("Vorstellung") {
                     Text(bio)
                 }
             }

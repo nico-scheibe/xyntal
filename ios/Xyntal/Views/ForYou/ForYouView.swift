@@ -1,151 +1,142 @@
 import SwiftUI
 
-/// Tab „Für dich“: Vorschläge und gespeicherte Personen. Erstellt den MatchesStore für die Dauer der Anmeldung.
+/// Tab „Für dich“: der Stapel zum Wischen. Erstellt den MatchesStore für die Dauer der Anmeldung.
+/// Die Erklärung erscheint einmalig und ist danach über „So funktioniert’s“ erreichbar.
+/// „Deine Auswahl“ öffnet die gespeicherten Vorschläge in einem Blatt.
 struct ForYouView: View {
     @Environment(SessionStore.self) private var session
+    @AppStorage("forYou.introSeen") private var introSeen = false
 
     @State private var store: MatchesStore?
-    @State private var segment: MatchesStore.Segment = .suggestions
+    @State private var showsIntro = false
+    @State private var showsSaved = false
 
     var body: some View {
         NavigationStack {
             Group {
                 if let store {
-                    ForYouContent(store: store, segment: $segment)
+                    ForYouDeckView(store: store, onShowSaved: { showsSaved = true })
                 } else {
                     ProgressView()
                 }
             }
             .navigationTitle("Für dich")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        showsIntro = true
+                    } label: {
+                        Label("So funktioniert’s", systemImage: "questionmark.circle")
+                    }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showsSaved = true
+                    } label: {
+                        Label("Deine Auswahl", systemImage: "bookmark")
+                    }
+                }
+            }
             .task {
                 if store == nil {
                     store = MatchesStore(session: session)
                 }
                 guard let store else { return }
-                await store.loadIfNeeded(segment)
+                await store.loadIfNeeded(.suggestions)
                 await store.loadNoticeIfNeeded()
+            }
+            .task {
+                if !introSeen {
+                    showsIntro = true
+                }
+            }
+            .sheet(isPresented: $showsIntro, onDismiss: { introSeen = true }) {
+                ForYouIntroSheet(onDone: { showsIntro = false })
+            }
+            .sheet(isPresented: $showsSaved) {
+                if let store {
+                    SavedMatchesSheet(store: store)
+                }
             }
         }
     }
 }
 
-/// Segmentwahl, Hinweisbox und Liste. Bekommt einen fertigen Store.
-private struct ForYouContent: View {
+/// „Deine Auswahl“: die gespeicherten Vorschläge in einem Blatt.
+private struct SavedMatchesSheet: View {
+    @Environment(\.dismiss) private var dismiss
+
     let store: MatchesStore
-    @Binding var segment: MatchesStore.Segment
+
+    var body: some View {
+        NavigationStack {
+            SavedMatchesView(store: store)
+                .navigationTitle("Deine Auswahl")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Fertig") { dismiss() }
+                    }
+                }
+        }
+    }
+}
+
+/// Liste der gespeicherten Vorschläge. Das „Passt nicht“ hier bleibt wie bisher mit Grund-Dialog.
+private struct SavedMatchesView: View {
+    let store: MatchesStore
 
     @State private var dismissTarget: MatchPerson?
 
-    private var people: [MatchPerson] { store.people(in: segment) }
+    private var people: [MatchPerson] { store.people(in: .saved) }
 
     var body: some View {
-        list
-            .safeAreaInset(edge: .top, spacing: 0) {
-                VStack(spacing: 0) {
-                    Picker("Ansicht", selection: $segment) {
-                        ForEach(MatchesStore.Segment.allCases, id: \.self) { option in
-                            Text(option.title).tag(option)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .padding(.horizontal)
-                    .padding(.vertical, 8)
-                    if let loadError = store.loadError(for: segment), !people.isEmpty {
-                        ReloadErrorBanner(message: loadError) { Task { await store.load(segment) } }
+        Group {
+            if people.isEmpty && !store.hasLoaded(.saved) {
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if people.isEmpty, let loadError = store.loadError(for: .saved) {
+                ContentUnavailableView {
+                    Label("Vorschläge nicht geladen", systemImage: "wifi.exclamationmark")
+                } description: {
+                    Text(loadError)
+                } actions: {
+                    Button("Erneut versuchen") { Task { await store.load(.saved) } }
+                }
+            } else if people.isEmpty {
+                ContentUnavailableView {
+                    Label("Noch nichts gespeichert", systemImage: "bookmark")
+                } description: {
+                    Text("Gespeicherte Vorschläge findest du hier wieder.")
+                }
+            } else {
+                List {
+                    ForEach(people) { person in
+                        MatchCard(person: person,
+                                  isSaved: store.isSaved(person),
+                                  isBusy: store.isBusy(person.id),
+                                  error: store.actionError(for: person.id),
+                                  showsReason: false,
+                                  onToggleSaved: { Task { await store.toggleSaved(person) } },
+                                  onDismiss: { dismissTarget = person },
+                                  onClearError: { store.clearActionError(for: person.id) })
+                            .listRowSeparator(.hidden)
+                            .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
                     }
                 }
-                .background(.bar)
-            }
-            .navigationDestination(for: MatchPerson.self) { person in
-                MatchDetailView(person: person, store: store)
-            }
-            .dismissMatchFlow(target: $dismissTarget) { person, reason, note in
-                Task { await store.dismiss(person, reason: reason, note: note) }
-            }
-            .refreshable { await store.load(segment) }
-            .onChange(of: segment) { _, newValue in
-                Task { await store.loadIfNeeded(newValue) }
-            }
-    }
-
-    @ViewBuilder
-    private var list: some View {
-        if people.isEmpty && !store.hasLoaded(segment) {
-            ProgressView()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-        } else if people.isEmpty, let loadError = store.loadError(for: segment) {
-            ContentUnavailableView {
-                Label("Vorschläge nicht geladen", systemImage: "wifi.exclamationmark")
-            } description: {
-                Text(loadError)
-            } actions: {
-                Button("Erneut versuchen") { Task { await store.load(segment) } }
-            }
-        } else if people.isEmpty {
-            emptyState
-        } else {
-            List {
-                if segment == .suggestions, !store.noticeLines.isEmpty, !store.isNoticeDismissed {
-                    ProfileNoticeBox(lines: store.noticeLines) {
-                        withAnimation { store.isNoticeDismissed = true }
-                    }
-                    .listRowSeparator(.hidden)
-                    .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 4, trailing: 16))
-                }
-                ForEach(people) { person in
-                    MatchCard(person: person,
-                              isSaved: store.isSaved(person),
-                              isBusy: store.isBusy(person.id),
-                              error: store.actionError(for: person.id),
-                              showsReason: segment == .suggestions,
-                              onToggleSaved: { Task { await store.toggleSaved(person) } },
-                              onDismiss: { dismissTarget = person },
-                              onClearError: { store.clearActionError(for: person.id) })
-                        .listRowSeparator(.hidden)
-                        .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
-                }
-            }
-            .listStyle(.plain)
-            .animation(.default, value: people.map(\.id))
-        }
-    }
-
-    @ViewBuilder
-    private var emptyState: some View {
-        switch segment {
-        case .suggestions:
-            ContentUnavailableView {
-                Label("Noch keine Vorschläge", systemImage: "sparkles")
-            } description: {
-                Text("Ergänze dein Profil, damit wir passende Personen für dich finden.")
-            }
-        case .saved:
-            ContentUnavailableView {
-                Label("Noch nichts gespeichert", systemImage: "bookmark")
-            } description: {
-                Text("Gespeicherte Vorschläge findest du hier wieder.")
+                .listStyle(.plain)
+                .animation(.default, value: people.map(\.id))
             }
         }
-    }
-}
-
-/// Hinweis zu fehlenden eigenen Angaben. Nur Text; „Später“ blendet ihn für die Sitzung aus.
-private struct ProfileNoticeBox: View {
-    let lines: [String]
-    let onLater: () -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            ForEach(lines, id: \.self) { line in
-                Text(line)
-                    .font(.subheadline)
-            }
-            Button("Später", action: onLater)
-                .font(.subheadline.weight(.semibold))
+        .navigationDestination(for: MatchPerson.self) { person in
+            MatchDetailView(person: person, store: store)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(12)
-        .background(Theme.accent.opacity(0.18), in: RoundedRectangle(cornerRadius: 12))
+        .dismissMatchFlow(target: $dismissTarget) { person, reason, note in
+            Task { await store.dismiss(person, reason: reason, note: note) }
+        }
+        .refreshable { await store.load(.saved) }
+        .task { await store.loadIfNeeded(.saved) }
     }
 }
 
@@ -267,7 +258,7 @@ private struct Pill: View {
     }
 }
 
-// MARK: - „Passt nicht“ mit Grund
+// MARK: - „Passt nicht“ mit Grund (Detailansicht und Gespeichert-Liste)
 
 extension View {
     /// Fragt nach dem Grund (confirmationDialog mit allen Gründen plus „Ohne Grund ausblenden“).

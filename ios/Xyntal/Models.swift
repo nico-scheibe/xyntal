@@ -40,10 +40,13 @@ struct WebsiteCard: Decodable, Hashable {
     let isAdmin: Bool
     let isBetaTester: Bool
     let isPremium: Bool
+    /// Aussehen der Karte (Farben, Banner, Reihenfolge). Fehlt oder ist es unlesbar,
+    /// gilt die Standardgestaltung – eine Karte ohne design ist kein Fehler.
+    let design: CardDesign
 
     private enum CodingKeys: String, CodingKey {
         case userId = "user_id"
-        case handle, name, role, level, skills, hours, mode, city, looking, pitch, link
+        case handle, name, role, level, skills, hours, mode, city, looking, pitch, link, design
         case bannerPath = "banner_path"
         case avatarPath = "avatar_path"
         case isVerified = "is_verified"
@@ -72,6 +75,7 @@ struct WebsiteCard: Decodable, Hashable {
         isAdmin = container.lenient(Bool.self, .isAdmin) ?? false
         isBetaTester = container.lenient(Bool.self, .isBetaTester) ?? false
         isPremium = container.lenient(Bool.self, .isPremium) ?? false
+        design = container.lenient(CardDesign.self, .design) ?? .empty
     }
 }
 

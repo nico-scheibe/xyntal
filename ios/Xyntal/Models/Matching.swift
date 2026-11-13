@@ -34,9 +34,11 @@ struct MatchPerson: Decodable, Identifiable, Hashable {
     var topFactors: [MatchFactor]
     var websiteId: String?
     var handle: String?
+    /// Xyntal-Karte der Person (wie in GET /discover/people). Fehlt sie, zeigt der Stapel eine Notkarte.
+    var websiteCard: WebsiteCard?
 
     private enum CodingKeys: String, CodingKey {
-        case id, displayName, headline, avatar, overall, reason, saved, lowData, hasDna, topFactors, websiteId, handle
+        case id, displayName, headline, avatar, overall, reason, saved, lowData, hasDna, topFactors, websiteId, handle, websiteCard
     }
 
     init(id: String,
@@ -50,7 +52,8 @@ struct MatchPerson: Decodable, Identifiable, Hashable {
          hasDna: Bool? = nil,
          topFactors: [MatchFactor] = [],
          websiteId: String? = nil,
-         handle: String? = nil) {
+         handle: String? = nil,
+         websiteCard: WebsiteCard? = nil) {
         self.id = id
         self.displayName = displayName
         self.headline = headline
@@ -63,6 +66,7 @@ struct MatchPerson: Decodable, Identifiable, Hashable {
         self.topFactors = topFactors
         self.websiteId = websiteId
         self.handle = handle
+        self.websiteCard = websiteCard
     }
 
     init(from decoder: Decoder) throws {
@@ -79,11 +83,33 @@ struct MatchPerson: Decodable, Identifiable, Hashable {
         topFactors = container.lenient(LossyArray<MatchFactor>.self, .topFactors)?.elements ?? []
         websiteId = container.lenient(String.self, .websiteId)
         handle = container.lenient(String.self, .handle)
+        websiteCard = container.lenient(WebsiteCard.self, .websiteCard)
     }
 
     var name: String { displayName.nonEmptyText ?? "Unbekannt" }
     var score: Int { MatchScore.percent(overall) }
     var isSaved: Bool { saved == true }
+
+    /// Karte für den Stapel. Ohne websiteCard eine Karte nur mit Kennung, Name und Handle.
+    var deckCard: WebsiteCard {
+        if let websiteCard { return websiteCard }
+        var fields: [String: String] = ["user_id": id]
+        if let displayName = displayName.nonEmptyText { fields["name"] = displayName }
+        if let handle = handle.nonEmptyText { fields["handle"] = handle }
+        guard let data = try? JSONSerialization.data(withJSONObject: fields),
+              let card = try? JSONDecoder().decode(WebsiteCard.self, from: data) else {
+            return MatchPerson.emptyCard
+        }
+        return card
+    }
+
+    /// Leere Karte für den Notfall. Alle Felder von WebsiteCard sind tolerant, daher ist das Dekodieren von "{}" sicher.
+    private static let emptyCard: WebsiteCard = {
+        guard let card = try? JSONDecoder().decode(WebsiteCard.self, from: Data("{}".utf8)) else {
+            preconditionFailure("WebsiteCard muss aus {} lesbar sein")
+        }
+        return card
+    }()
 
     /// Höchstens zwei Faktoren mit Text, für die Pills auf der Karte.
     var visibleFactors: [String] {

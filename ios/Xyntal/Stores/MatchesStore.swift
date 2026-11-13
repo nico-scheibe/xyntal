@@ -37,12 +37,36 @@ final class MatchesStore {
     private var savedOverrides: [String: Bool] = [:]
     /// true, nachdem etwas gespeichert wurde; die Gespeichert-Liste wird dann beim nächsten Anzeigen neu geladen.
     private var savedListStale = false
+    /// Personen, die in dieser Sitzung ausgeblendet wurden. Sie bleiben beim Neuladen draußen, auch wenn der Server noch scheitert.
+    private var dismissedIds: Set<String> = []
+    /// Ausblenden, das noch nicht beim Server angekommen ist. Wird beim nächsten Versuch erneut gesendet.
+    private var pendingDismissals: [String: PendingDismissal] = [:]
+    /// Segmente, deren letzter Ladefehler ein fehlendes Netz war.
+    private(set) var networkFailed: Set<Segment> = []
+    /// Eigenes Profil, für Name und Bild im Blatt „Es passt“.
+    private(set) var ownProfile: Profile?
 
     private let session: SessionStore
     private var loadGeneration = 0
     private var noticeRequested = false
 
     static let pageLimit = 30
+
+    /// Ergebnis von „Kennenlernen“ auf dem Stapel.
+    enum AcceptResult: Equatable {
+        /// Beide Seiten haben Interesse: es passt.
+        case connected
+        /// Gespeichert, aber noch nicht gegenseitig.
+        case notConnected
+        /// Nichts gespeichert. Die Karte muss zurück.
+        case failed
+    }
+
+    private struct PendingDismissal {
+        let person: MatchPerson
+        let reason: DismissReason?
+        let note: String?
+    }
 
     init(session: SessionStore) {
         self.session = session
@@ -103,7 +127,7 @@ final class MatchesStore {
             guard generation == loadGeneration else { return }
             switch segment {
             case .suggestions:
-                suggestions = people
+                suggestions = people.filter { !dismissedIds.contains($0.id) }
             case .saved:
                 // Die Liste der gespeicherten Personen gilt als gespeichert, auch wenn das Flag fehlt.
                 saved = people.map { person in
@@ -116,6 +140,7 @@ final class MatchesStore {
             savedOverrides = [:]
             loadedSegments.insert(segment)
             loadErrors[segment] = nil
+            networkFailed.remove(segment)
         } catch is CancellationError {
             return
         } catch AppError.unauthorized {
@@ -123,6 +148,11 @@ final class MatchesStore {
         } catch {
             guard generation == loadGeneration else { return }
             loadErrors[segment] = AppError.displayText(for: error)
+            if let appError = error as? AppError, case .network = appError {
+                networkFailed.insert(segment)
+            } else {
+                networkFailed.remove(segment)
+            }
             loadedSegments.insert(segment)
         }
     }
@@ -143,6 +173,7 @@ final class MatchesStore {
                 return try await session.api.profile(id: me.id, token: token)
             }
             noticeLines = Self.noticeLines(for: profile)
+            ownProfile = profile
         } catch {
             // Ohne Hinweis geht es weiter; beim nächsten Start wird erneut geprüft.
             noticeRequested = false
@@ -216,6 +247,7 @@ final class MatchesStore {
             suggestions.removeAll { $0.id == person.id }
             saved.removeAll { $0.id == person.id }
             savedOverrides[person.id] = nil
+            dismissedIds.insert(person.id)
             return true
         } catch is CancellationError {
             return false
@@ -227,6 +259,85 @@ final class MatchesStore {
 
     func clearActionError(for id: String) {
         actionErrors[id] = nil
+    }
+
+    // MARK: - Stapel „Für dich“
+
+    /// Nimmt die Karte aus dem Stapel, ohne etwas an den Server zu schicken.
+    func removeSuggestion(_ id: String) {
+        suggestions.removeAll { $0.id == id }
+    }
+
+    /// Holt eine Karte nach vorn zurück, z. B. nach „Zurück“ oder wenn Kennenlernen scheitert.
+    func restoreSuggestion(_ person: MatchPerson) {
+        guard !suggestions.contains(where: { $0.id == person.id }) else { return }
+        suggestions.insert(person, at: 0)
+    }
+
+    /// „Kennenlernen“: sendet "saved" sofort. Das Ergebnis sagt, ob es gegenseitig passt.
+    func accept(_ person: MatchPerson) async -> AcceptResult {
+        do {
+            let connected = try await session.withAccess { token in
+                try await session.api.saveMatch(targetId: person.id, token: token)
+            }
+            savedOverrides[person.id] = true
+            if !saved.contains(where: { $0.id == person.id }) {
+                var copy = person
+                copy.saved = true
+                saved.insert(copy, at: 0)
+            }
+            savedListStale = true
+            return connected ? .connected : .notConnected
+        } catch {
+            return .failed
+        }
+    }
+
+    /// Nimmt "Kennenlernen" mit "unsaved" zurück. Gibt false zurück, wenn der Server es nicht angenommen hat.
+    func undoAccept(_ person: MatchPerson) async -> Bool {
+        do {
+            try await session.withAccess { token in
+                try await session.api.recordMatchInteraction(targetId: person.id, action: .unsaved, token: token)
+            }
+            savedOverrides[person.id] = false
+            saved.removeAll { $0.id == person.id }
+            return true
+        } catch {
+            return false
+        }
+    }
+
+    /// Sendet das Ausblenden an den Server. Scheitert der Aufruf, bleibt es vorgemerkt und wird später erneut gesendet.
+    /// Die Person bleibt in jedem Fall weg.
+    func sendDismissal(_ person: MatchPerson, reason: DismissReason?, note: String?) async {
+        dismissedIds.insert(person.id)
+        saved.removeAll { $0.id == person.id }
+        savedOverrides[person.id] = nil
+        pendingDismissals[person.id] = PendingDismissal(person: person, reason: reason, note: note)
+        await sendPendingDismissal(person.id)
+    }
+
+    /// Versucht alle vorgemerkten Ausblenden erneut, etwa beim Verlassen des Tabs oder der App.
+    func flushPendingDismissals() async {
+        for id in Array(pendingDismissals.keys) {
+            await sendPendingDismissal(id)
+        }
+    }
+
+    private func sendPendingDismissal(_ id: String) async {
+        guard let pending = pendingDismissals[id] else { return }
+        do {
+            try await session.withAccess { token in
+                try await session.api.recordMatchInteraction(targetId: id,
+                                                             action: .dismissed,
+                                                             reason: pending.reason,
+                                                             note: pending.reason == .other ? pending.note : nil,
+                                                             token: token)
+            }
+            pendingDismissals[id] = nil
+        } catch {
+            // Bleibt vorgemerkt. Die Person ist trotzdem ausgeblendet.
+        }
     }
 
     /// Markiert den Beginn einer Aktion. false, wenn für diese Person schon eine läuft (Doppel-Tap).
