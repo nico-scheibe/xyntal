@@ -72,6 +72,8 @@ struct DeckCard: View {
     let onAccept: () -> Void
     let onPass: () -> Void
     let onUndo: () -> Void
+    /// Tippen öffnet das volle Profil. Nur für die oberste Karte gesetzt, sonst nil.
+    var onOpen: (() -> Void)?
 
     private var isTop: Bool { depth == 0 }
 
@@ -137,9 +139,17 @@ struct DeckCard: View {
         .accessibilityHidden(!isTop)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Self.spokenLabel(for: person))
+        // Tippen öffnet das volle Profil, wie beim Desktop. Es beißt sich nicht mit dem
+        // Wischen: Das ist eine andere Geste, und während eines Wischers ist onOpen aus.
+        .onTapGesture {
+            if let onOpen, !swipeActive, drag == .zero { onOpen() }
+        }
         .accessibilityActions {
             Button("Kennenlernen", action: onAccept)
             Button("Passt nicht", action: onPass)
+            if let onOpen {
+                Button("Profil öffnen", action: onOpen)
+            }
             if canUndo {
                 Button("Letzte Entscheidung zurücknehmen", action: onUndo)
             }

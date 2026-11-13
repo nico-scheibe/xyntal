@@ -32,6 +32,8 @@ struct ForYouDeckView: View {
     @State private var reasonTarget: MatchPerson?
     @State private var matchPerson: MatchPerson?
     @State private var openConversation: Conversation?
+    /// Tippen auf die oberste Karte: das volle Profil dieser Person.
+    @State private var profilePerson: MatchPerson?
     @State private var showsMatchingProfile = false
     /// true, sobald der Stapel einmal Karten hatte. Danach heißt ein leerer Stapel „Das war’s für jetzt“.
     @State private var seenCards = false
@@ -138,6 +140,15 @@ struct ForYouDeckView: View {
         }
         .navigationDestination(item: $openConversation) { conversation in
             ChatView(conversation: conversation)
+        }
+        // Das volle Profil mit Kurzinfo, Details und Skills. Seit der Tab "Mitglieder"
+        // weg ist, ist das der einzige Weg dorthin.
+        .navigationDestination(item: $profilePerson) { person in
+            MemberDetailView(member: person.asMember) { _ in
+                // Gesperrt: Die Person soll im Stapel nicht wieder auftauchen.
+                store.removeSuggestion(person.id)
+                profilePerson = nil
+            }
         }
     }
 
@@ -267,11 +278,19 @@ struct ForYouDeckView: View {
                          canUndo: slot.depth == 0 && isUndoable,
                          onAccept: { decide(.right) },
                          onPass: { decide(.left) },
-                         onUndo: { undo() })
+                         onUndo: { undo() },
+                         onOpen: slot.depth == 0 ? { openProfile(slot.person) } : nil)
                     .opacity(slot.depth == 0 ? cardOpacity : 1)
                     .transition(.identity)
             }
         }
+    }
+
+    /// Tippen auf die oberste Karte. Nicht mitten in einer Entscheidung: Während die Karte
+    /// wegfliegt, gehört der Tipp noch zur alten Person, und man landete im falschen Profil.
+    private func openProfile(_ person: MatchPerson) {
+        guard !inFlight, profilePerson == nil else { return }
+        profilePerson = person
     }
 
     /// Zurück ist nur für die letzte Entscheidung möglich, solange sie noch zurückgenommen werden kann.

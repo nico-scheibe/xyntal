@@ -103,6 +103,26 @@ struct MatchPerson: Decodable, Identifiable, Hashable {
         return card
     }
 
+    /// Dieselbe Person als Mitglied, damit der Stapel den Mitglieds-Bildschirm öffnen kann.
+    ///
+    /// Die Vorschlagsliste und die Mitgliederliste sind zwei verschiedene Endpunkte mit
+    /// verschiedenen Feldern. Was hier fehlt, wird NICHT erfunden: Ort, Pitch und Skills
+    /// kommen aus der Xyntal-Karte derselben Person, also aus ihren eigenen Angaben, und
+    /// `country` bleibt leer, weil die Vorschlagsliste es nicht mitschickt. Der Abschnitt
+    /// "Details" zeigt dann eben nur den Ort – lieber eine Lücke als ein geratener Wert.
+    /// Die KI-Kurzinfo holt sich der Bildschirm ohnehin selbst über die Kennung.
+    var asMember: Member {
+        Member(id: id,
+               displayName: displayName,
+               headline: headline,
+               location: websiteCard?.city.nonEmptyText,
+               country: nil,
+               bio: websiteCard?.pitch.nonEmptyText,
+               skills: websiteCard?.skills,
+               verified: websiteCard?.isVerified,
+               websiteCard: websiteCard)
+    }
+
     /// Leere Karte für den Notfall. Alle Felder von WebsiteCard sind tolerant, daher ist das Dekodieren von "{}" sicher.
     private static let emptyCard: WebsiteCard = {
         guard let card = try? JSONDecoder().decode(WebsiteCard.self, from: Data("{}".utf8)) else {
