@@ -444,33 +444,47 @@
     await X.api("PUT", `/conversations/${encodeURIComponent(id)}/prefs`, prefs);
     await loadConversations();
   }
+  const ctxRow = (act, icon, label, extra = "") => `<button type="button" role="menuitem" data-ctx="${act}"${extra}>${icon}<span>${esc(t(label))}</span></button>`;
+  // Öffnet ein Kontextmenü am Mauszeiger (per Tastatur am Element), nie über den Fensterrand hinaus.
+  // onPick(button) gibt true zurück, wenn das Menü offen bleiben soll (z. B. „Wirklich löschen?“).
+  function openCtx(e, anchor, html, onPick) {
+    e.preventDefault();
+    closeCtx();
+    ctxMenu = document.createElement("div");
+    ctxMenu.className = "xc-menu xc-ctx";
+    ctxMenu.setAttribute("role", "menu");
+    ctxMenu.innerHTML = html;
+    root.append(ctxMenu);
+    const r = anchor.getBoundingClientRect();
+    const x = e.clientX || r.left + 24, y = e.clientY || r.bottom;
+    const w = ctxMenu.offsetWidth, h = ctxMenu.offsetHeight;
+    ctxMenu.style.left = `${Math.max(8, Math.min(x, innerWidth - w - 8))}px`;
+    ctxMenu.style.top = `${Math.max(8, Math.min(y, innerHeight - h - 8))}px`;
+    const menu = ctxMenu;
+    menu.querySelector("button").focus();
+    menu.addEventListener("click", async (ev) => {
+      const b = ev.target.closest("[data-ctx]");
+      if (!b) return;
+      if (await onPick(b) !== true && ctxMenu === menu) closeCtx();
+    });
+    menu.addEventListener("keydown", (ev) => {
+      const items = [...menu.querySelectorAll("button")];
+      const i = items.indexOf(document.activeElement);
+      if (ev.key === "ArrowDown" || ev.key === "ArrowUp") { ev.preventDefault(); items[(i + (ev.key === "ArrowDown" ? 1 : items.length - 1)) % items.length].focus(); }
+      if (ev.key === "Escape" || ev.key === "Tab") { ev.preventDefault(); ev.stopPropagation(); closeCtx(); anchor.focus?.(); }
+    });
+  }
   listEl.addEventListener("contextmenu", (e) => {
     const item = e.target.closest(".xc-item[data-open]");
     if (!item) return;
     const c = conv(item.dataset.open);
     if (!c) return;
-    e.preventDefault();
-    closeCtx();
-    const row = (act, icon, label) => `<button type="button" role="menuitem" data-ctx="${act}">${ICON_SVG(icon)}<span>${esc(t(label))}</span></button>`;
-    ctxMenu = document.createElement("div");
-    ctxMenu.className = "xc-menu xc-ctx";
-    ctxMenu.setAttribute("role", "menu");
-    ctxMenu.innerHTML = [
-      c.archived ? row("restore", "archive", "Wieder in die Liste holen") : row("close", "x", "Chat schließen"),
-      row("pin", "pin", c.favorite ? "Lösen" : "Anheften"),
-      c.unread ? "" : row("unread", "dot", "Als ungelesen markieren"),
+    const html = [
+      c.archived ? ctxRow("restore", ICON_SVG("archive"), "Wieder in die Liste holen") : ctxRow("close", ICON_SVG("x"), "Chat schließen"),
+      ctxRow("pin", ICON_SVG("pin"), c.favorite ? "Lösen" : "Anheften"),
+      c.unread ? "" : ctxRow("unread", ICON_SVG("dot"), "Als ungelesen markieren"),
     ].join("");
-    root.append(ctxMenu);
-    // Am Mauszeiger, per Tastatur am Eintrag; nie über den Fensterrand hinaus
-    const r = item.getBoundingClientRect();
-    const x = e.clientX || r.left + 24, y = e.clientY || r.bottom;
-    const w = ctxMenu.offsetWidth, h = ctxMenu.offsetHeight;
-    ctxMenu.style.left = `${Math.max(8, Math.min(x, innerWidth - w - 8))}px`;
-    ctxMenu.style.top = `${Math.max(8, Math.min(y, innerHeight - h - 8))}px`;
-    ctxMenu.querySelector("button").focus();
-    ctxMenu.addEventListener("click", async (ev) => {
-      const b = ev.target.closest("[data-ctx]");
-      if (!b) return;
+    openCtx(e, item, html, async (b) => {
       closeCtx();
       try {
         if (b.dataset.ctx === "close") {
@@ -484,12 +498,6 @@
           await loadConversations();
         }
       } catch (err) { say(fail(err), "error"); }
-    });
-    ctxMenu.addEventListener("keydown", (ev) => {
-      const items = [...ctxMenu.querySelectorAll("button")];
-      const i = items.indexOf(document.activeElement);
-      if (ev.key === "ArrowDown" || ev.key === "ArrowUp") { ev.preventDefault(); items[(i + (ev.key === "ArrowDown" ? 1 : items.length - 1)) % items.length].focus(); }
-      if (ev.key === "Escape" || ev.key === "Tab") { ev.preventDefault(); closeCtx(); item.focus(); }
     });
   });
   document.addEventListener("pointerdown", (e) => { if (ctxMenu && !ctxMenu.contains(e.target)) closeCtx(); });
@@ -1481,6 +1489,42 @@
       catch (err) { say(fail(err), "error"); }
     }
   });
+
+  // Rechtsklick auf eine Nachricht: reagieren, antworten, kopieren, bearbeiten, löschen.
+  // Auf Links, Bildern, Medien und markiertem Text bleibt das normale Browsermenü.
+  threadEl.addEventListener("contextmenu", (e) => {
+    const msgEl = e.target.closest("[data-msg]");
+    if (!msgEl || e.target.closest("a, img, video, audio, textarea, input, [data-edit-form]")) return;
+    const sel = getSelection();
+    if (sel && !sel.isCollapsed && msgEl.contains(sel.anchorNode)) return;
+    const m = S.messages.find((x) => x.id === msgEl.dataset.msg);
+    if (!m || m.kind === "system") return;
+    const html = [
+      `<div class="xc-ctx-react">${QUICK.slice(0, 6).map((x) => `<button type="button" data-ctx="react" data-emoji="${x}" aria-label="${esc(t("Reagieren mit"))} ${x}">${x}</button>`).join("")}</div>`,
+      ctxRow("reply", ICON.reply, "Antworten"),
+      m.body ? ctxRow("copy", ICON_SVG("copy"), "Text kopieren") : "",
+      m.mine && m.kind === "text" ? ctxRow("edit", ICON.edit, "Bearbeiten") : "",
+      m.mine ? ctxRow("delete", ICON.trash, "Löschen", ' class="xc-ctx-danger"') : "",
+    ].join("");
+    openCtx(e, msgEl, html, async (b) => {
+      const act = b.dataset.ctx;
+      if (act === "delete" && !b.dataset.armed) {
+        b.dataset.armed = "1";
+        b.querySelector("span").textContent = t("Wirklich löschen?");
+        return true;
+      }
+      closeCtx();
+      try {
+        if (act === "react") { await X.api("POST", `/messages/${encodeURIComponent(m.id)}/reactions`, { emoji: b.dataset.emoji }); await refreshActive(); }
+        else if (act === "reply") { S.replyTo = m; renderComposerTop(); input().focus(); }
+        else if (act === "copy") { await navigator.clipboard.writeText(m.body); say(t("Kopiert.")); }
+        else if (act === "edit") { S.editId = m.id; renderMessages(); threadEl.querySelector("[data-edit-input]")?.focus(); }
+        else if (act === "delete") { await X.api("DELETE", `/messages/${encodeURIComponent(m.id)}`); await refreshActive(); loadConversations(); }
+      } catch (err) { say(fail(err), "error"); }
+    });
+  });
+  threadEl.addEventListener("scroll", closeCtx, true);
+
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape") return;
     if (playing && !threadEl.querySelector(".xc-pop:not([hidden]), .xc-menu:not([hidden])")) stopPlayer();
