@@ -180,9 +180,14 @@ at(K[8] - 0.08, (ctx, u, t, I) => { const a = K[8] - 0.08;
   if (u < wt(8, 1) - 0.1) line(ctx, u, [['Passt?', wt(8, 0) - 0.06]], { y: 470, size: 240, align: 'left', x: 72 });
   else line(ctx, u, toks(8, 1, ['Ein', 'Klick.']), { y: 470, size: 240, align: 'left', x: 72 });
   cursor(ctx, cx0, cy0, 1.25 * ps); });
-// 7 · Leute finden dich
+// 7 · Leute finden dich: die Kamera liest die Nachricht mit, nur diese Zeile ist scharf
 at(K[9] - 0.08, (ctx, u, t, I) => { const a = K[9] - 0.08;
-  shot(ctx, I.frmich, cam(u, a, [[a, [1000, 1180, 660]], [K[10], [1150, 1195, 660]]]));
+  const c = cam(u, a, [[a, [900, 1284, 340]], [wt(9, 4), [1120, 1284, 340]], [K[10] - 0.3, [1470, 1284, 340]]]);
+  shot(ctx, I.frmich, c, 'blur(10px) brightness(0.38)');
+  const s = W / c[2];
+  const y0 = H / 2 + (1232 - c[1]) * s, y1 = H / 2 + (1336 - c[1]) * s;
+  ctx.save(); ctx.beginPath(); ctx.rect(0, y0, W, y1 - y0); ctx.clip();
+  shot(ctx, I.frmich, c); ctx.restore();
   scrim(ctx, true);
   line(ctx, u, [['Leute,', wt(9, 1) - 0.06], ['die', wt(9, 2) - 0.06], ['passen,', wt(9, 3) - 0.06]], { y: 360, style: 'thin', size: 80, x: 84, align: 'left', color: C.t2 });
   line(ctx, u, toks(9, 4, ['finden', 'auch', 'dich.']), { y: 540, size: 170, align: 'left', x: 72 }); });
