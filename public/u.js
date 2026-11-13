@@ -37,6 +37,11 @@
     ? `<a class="btn btn-glass" href="/mitglieder">${esc(t("Mitglieder entdecken"))}</a>`
     : `<a class="btn btn-glass" href="/beta">${esc(t("Für die Beta bewerben"))}</a>`}</div>`;
   const freeLink = (h) => `/?handle=${encodeURIComponent(h)}#karte`;
+  // „Erstellt mit Xyntal“ ganz unten auf jeder öffentlichen Seite; der Link trägt die Herkunft (utm_*) für die Auswertung.
+  // Ausblenden mit Paid (is_premium aus get_public_card) wäre ein Paid-Extra – noch nicht entschieden, darum aus.
+  const HIDE_MADE_WITH_FOR_PAID = false;
+  const madeWith = (c) => (HIDE_MADE_WITH_FOR_PAID && c.is_premium === true) || !HANDLE.test(c.handle || "") ? ""
+    : `<p class="pf-made"><a href="/?utm_source=memberpage&amp;utm_medium=badge&amp;utm_campaign=${encodeURIComponent(c.handle)}">${esc(t("Erstellt mit Xyntal"))}<span aria-hidden="true"> · </span><span class="pf-made-cta">${esc(t("Deine eigene Seite"))}</span></a></p>`;
 
   let shown = null;
   function renderCard(c) {
@@ -77,6 +82,7 @@
           ${me && UUID.test(c.user_id || "") && !own && window.XyntalApp ? `<section class="xm xm-public" aria-label="${esc(t("Eure Passung"))}" data-match hidden></section>` : ""}
           ${member ? "" : `<div class="pf-join"><p>${esc(t("Auf Xyntal finden Entwickler, Designer und Gründer die richtigen Leute für ihre Idee."))}</p><a class="btn btn-glass btn-sm" href="/beta">${esc(t("Für die Beta bewerben"))}</a></div>`}
         </div>
+        ${madeWith(c)}
       </div>`);
     // Admins bekommen eine eigene, exklusive Profilseite (Aussehen: u.html, Abschnitt „Admin-Profil“)
     document.body.classList.toggle("admin-profile", admin);
@@ -119,6 +125,7 @@
           <p class="pf-copied" role="status" data-copy-status></p>
         </div>
         ${!member && !own ? `<p class="pf-invited">${esc(t("Du wurdest eingeladen: Mit einem Konto bekommst du 7 Tage Plus gratis – und die Person, die dich eingeladen hat, auch."))} <a class="text-link" href="/login#registrieren">${esc(t("Konto anlegen"))}</a></p>` : ""}
+        ${madeWith(c)}
       </div>`);
     document.body.classList.remove("admin-profile");
     window.XyntalPageCanvas.mount(root);
