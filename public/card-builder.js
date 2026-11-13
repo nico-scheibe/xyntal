@@ -46,7 +46,7 @@
       mcLevel: $("[data-mc-level]"), mcLevel2: $("[data-mc-level-2]"), mcDots: $$("[data-mc-dots] i"), mcPlace: $("[data-mc-place]"),
       mcSkills: $("[data-mc-skills]"), mcHours: $("[data-mc-hours]"), mcBar: $("[data-mc-bar]"), mcPitch: $("[data-mc-pitch]"),
       mcLooking: $("[data-mc-looking]"), mcLink: $("[data-mc-link]"),
-      status: $("[data-card-status]"), save: $("[data-card-save]"), launch: $("[data-launch-card]"),
+      status: $("[data-card-status]"), save: $("[data-card-save]"), story: $("[data-card-story]"), launch: $("[data-launch-card]"),
       banners: $("[data-bf-banner]"), bannerUpload: $("[data-bf-banner-upload]"), bannerRemove: $("[data-bf-banner-remove]"),
     };
     // Banner-Vorlagen (banners.js); animierte und das eigene Bild nur mit Paid-Tarif
@@ -456,7 +456,8 @@
     });
     el.suggest.addEventListener("click", (e) => { const b = e.target.closest("[data-add]"); if (b) addSkill(b.dataset.add); });
 
-    /* ---- Karte als Bild (PNG, 1080 × 1350) zeichnen – folgt Farben, Layout und Anordnung ---- */
+    /* ---- Karte als Bild zeichnen – folgt Farben, Layout und Anordnung ----
+       Zwei Formate mit derselben Karte: "feed" 1080 × 1350 (4:5) und "story" 1080 × 1920 (9:16). */
     const FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Arial, sans-serif';
     function roundRect(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
     function wrap(g, text, maxW, max) {
@@ -619,8 +620,9 @@
       k.restore();
     }
 
-    async function drawCard() {
-      const W = 1080, H = 1350, CW = 900;
+    // Die Karte selbst (900 px breit, Höhe nach Inhalt) als eigene Zeichenfläche
+    async function paintCard() {
+      const CW = 900;
       const C = colors(), P = PALETTE[data.surface];
       const photo = data.photo ? await loadImg(data.photo) : null;
       const bannerId = BANNERS ? BANNERS.effective(data.banner, data.premium, !!data.bannerUrl) : "theme";
@@ -647,37 +649,68 @@
       roundRect(k, CW - 64 - bw, 38, bw, 54, 27); k.fillStyle = "rgba(0,0,0,0.32)"; k.fill();
       k.fillStyle = "#fff"; k.fillText(badge, CW - 64 - bw + 24, 66);
       k.drawImage(tmp, 0, 0);
-      // 3. Auf das Format 1080 × 1350 setzen
+      return card;
+    }
+
+    // Karte auf das Ausgabeformat setzen. Story: oben 250 px und unten 340 px frei (Instagram blendet dort
+    // Fortschrittsbalken, Profilname und Antwortfeld ein); unter der Karte das Feld mit dem Wunsch-Link,
+    // auf das man den Link-Sticker legt.
+    const FORMATS = {
+      feed: { W: 1080, H: 1350, box: [60, 1170], tagline: 1310 },
+      story: { W: 1080, H: 1920, box: [270, 1060], link: [1365, 112], tagline: 1550 },
+    };
+    async function drawCard(format = "feed") {
+      const F = FORMATS[format] || FORMATS.feed, { W, H } = F;
+      const card = await paintCard();
+      const C = colors(), P = PALETTE[data.surface], light = data.surface === "light";
       const c = document.createElement("canvas"); c.width = W; c.height = H; const g = c.getContext("2d");
-      g.fillStyle = data.surface === "light" ? "#ECECF2" : "#07070B"; g.fillRect(0, 0, W, H);
+      g.fillStyle = light ? "#ECECF2" : "#07070B"; g.fillRect(0, 0, W, H);
       for (const [gx, gy, r, col] of [[160, 80, 900, C[0]], [W, H, 800, C[C.length - 1]]]) {
         const gl = g.createRadialGradient(gx, gy, 0, gx, gy, r); gl.addColorStop(0, rgba(col, 0.35)); gl.addColorStop(1, rgba(col, 0)); g.fillStyle = gl; g.fillRect(0, 0, W, H);
       }
-      const s = Math.min(1, 1170 / CH), dw = CW * s, dh = CH * s;
-      g.drawImage(card, (W - dw) / 2, 60 + (1170 - dh) / 2, dw, dh);
+      const [top, boxH] = F.box, s = Math.min(1, boxH / card.height), dw = card.width * s, dh = card.height * s;
+      g.drawImage(card, (W - dw) / 2, top + (boxH - dh) / 2, dw, dh);
+      if (F.link) {
+        const [ly, lh] = F.link, lw = 900, lx = (W - lw) / 2;
+        roundRect(g, lx, ly, lw, lh, lh / 2); g.fillStyle = light ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.06)"; g.fill();
+        g.lineWidth = 2; g.strokeStyle = P.line; g.stroke();
+        g.font = `600 44px ${FONT}`; g.fillStyle = P.text; g.textAlign = "center"; g.textBaseline = "middle";
+        g.fillText(siteText(), W / 2, ly + lh / 2 + 2);
+      }
       const tg = g.createLinearGradient(W / 2 - 330, 0, W / 2 + 330, 0); C.forEach((col, i) => tg.addColorStop(i / (C.length - 1), col));
-      g.font = `700 44px ${FONT}`; g.fillStyle = data.theme === "mono" && data.surface === "light" ? "#111" : tg; g.textAlign = "center"; g.textBaseline = "alphabetic"; g.fillText("Stop swiping. Start building.", W / 2, H - 40);
+      g.font = `700 44px ${FONT}`; g.fillStyle = data.theme === "mono" && light ? "#111" : tg; g.textAlign = "center"; g.textBaseline = "alphabetic"; g.fillText("Stop swiping. Start building.", W / 2, F.tagline);
       return c;
     }
 
-    el.save.addEventListener("click", async () => {
-      const canvas = await drawCard();
-      const blob = await new Promise((r) => canvas.toBlob(r, "image/png"));
-      if (!blob) return;
-      const file = new File([blob], "meine-xyntal-karte.png", { type: "image/png" });
+    // Als PNG teilen (Handy: Teilen-Menü, z. B. direkt in die Instagram-Story) oder herunterladen
+    const EXPORTS = {
+      feed: { file: "meine-xyntal-karte.png", title: "Meine Xyntal-Karte" },
+      story: { file: "meine-xyntal-story.png", title: "Meine Xyntal-Story" },
+    };
+    async function exportCard(format, button) {
+      const { file: name, title } = EXPORTS[format];
+      button.disabled = true;
       try {
-        if (navigator.canShare && navigator.canShare({ files: [file] }) && matchMedia("(pointer: coarse)").matches) {
-          await navigator.share({ files: [file], title: "Meine Xyntal-Karte", text: "Stop swiping. Start building. – xyntal.de" });
-          el.status.textContent = t("Geteilt!");
-          return;
-        }
-      } catch (err) { if (err && err.name === "AbortError") return; }
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob); a.download = "meine-xyntal-karte.png";
-      document.body.append(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-      el.status.textContent = t("Bild gespeichert: meine-xyntal-karte.png");
-    });
+        const canvas = await drawCard(format);
+        const blob = await new Promise((r) => canvas.toBlob(r, "image/png"));
+        if (!blob) return;
+        const file = new File([blob], name, { type: "image/png" });
+        try {
+          if (navigator.canShare && navigator.canShare({ files: [file] }) && matchMedia("(pointer: coarse)").matches) {
+            await navigator.share({ files: [file], title, text: `Stop swiping. Start building. – ${siteText()}` });
+            el.status.textContent = t("Geteilt!");
+            return;
+          }
+        } catch (err) { if (err && err.name === "AbortError") return; }
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob); a.download = name;
+        document.body.append(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+        el.status.textContent = t(`Bild gespeichert: ${name}`);
+      } finally { button.disabled = false; }
+    }
+    el.save.addEventListener("click", () => exportCard("feed", el.save));
+    el.story?.addEventListener("click", () => exportCard("story", el.story));
     $("[data-card-join]")?.addEventListener("click", () => setTimeout(() => $("#wl-email")?.focus({ preventScroll: true }), still ? 0 : 600));
 
     // Für die Warteliste: nur die Angaben – Foto und Gestaltung bleiben auf dem Gerät
