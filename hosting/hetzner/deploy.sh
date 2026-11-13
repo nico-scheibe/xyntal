@@ -29,6 +29,16 @@ docker compose up -d --remove-orphans
 # Caddyfile ist als Datei eingebunden: nach einer Änderung sieht Caddy sie erst in einem neuen Container.
 CADDY_SUM=$(sha256sum Caddyfile | cut -d' ' -f1)
 if [ "$CADDY_SUM" != "$(cat "$ROOT/state/caddyfile.sha256" 2>/dev/null)" ]; then
+  # Erst prüfen, dann austauschen. Ein Tippfehler in der Caddyfile nimmt sonst alle
+  # vier Adressen gleichzeitig vom Netz - Website, Admin, API und Bot -, und zwar
+  # erst beim Start des neuen Containers, also wenn der alte schon weg ist.
+  # Geprüft wird im LAUFENDEN Container, der die neue Datei durch die Einbindung
+  # bereits sieht; der läuft dabei unverändert weiter.
+  if ! docker compose exec -T caddy caddy validate --adapter caddyfile --config /etc/caddy/Caddyfile; then
+    echo "Caddyfile ist fehlerhaft - Caddy bleibt auf dem alten Stand." >&2
+    echo "Die Prüfsumme wird NICHT gespeichert, der nächste Lauf versucht es wieder." >&2
+    exit 1
+  fi
   docker compose up -d --force-recreate --no-deps caddy
   mkdir -p "$ROOT/state" && echo "$CADDY_SUM" > "$ROOT/state/caddyfile.sha256"
 fi
