@@ -33,7 +33,10 @@ enum AppTab: Hashable {
     case forYou
     case messages
     case community
-    case members
+    // "Mitglieder" ist raus. MembersView und MemberDetailView bleiben im Projekt:
+    // Der Mitglieds-Bildschirm trägt die KI-Kurzinfo und die volle Xyntal-Karte und
+    // ist nur noch über nichts erreichbar – wer den Tab zurückholt oder die Karte im
+    // Stapel antippbar macht, hat ihn sofort wieder.
     case profile
 }
 
@@ -55,9 +58,6 @@ struct MainTabView: View {
             CommunityView()
                 .tabItem { Label("Community", systemImage: "person.3") }
                 .tag(AppTab.community)
-            MembersView()
-                .tabItem { Label("Mitglieder", systemImage: "person.2") }
-                .tag(AppTab.members)
             ProfileView()
                 .tabItem { Label("Profil", systemImage: "person.crop.circle") }
                 .tag(AppTab.profile)
