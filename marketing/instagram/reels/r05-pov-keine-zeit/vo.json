@@ -1,0 +1,15 @@
+{ "voices": {"N": "egBwWoDtXGCSMgwiS3vn", "L": "ztZBipzb4WQJRDayep3G", "R": "nkayp4imdkkDpvsEklDB"}, "model": "eleven_v3",
+  "hook": "POV: Dein Mitgründer, drei Wochen später.",
+  "msgs": [
+    ["l", "[excited] Ich bin all in. Ab jetzt jeden Abend!"],
+    ["r", "Mega. Morgen neunzehn Uhr Call?"],
+    ["l", "[excited] Bin dabei!"],
+    ["d", "Drei Wochen später."],
+    ["r", "Call heute?"],
+    ["l", "Diese Woche ist echt viel los."],
+    ["r", "Nächste Woche?"],
+    ["l", "Muss erst mal schauen."],
+    ["l", "Bin gerade eher so bei zwei Stunden pro Woche."]
+  ],
+  "punch": "Klärt die Zeit, bevor ihr anfangt.",
+  "end": "Hier steht bei jedem Projekt, wie viele Stunden drin sind." }

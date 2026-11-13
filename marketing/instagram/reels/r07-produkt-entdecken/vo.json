@@ -1,0 +1,10 @@
+{ "voices": {"N": "egBwWoDtXGCSMgwiS3vn"}, "model": "eleven_v3",
+  "cards": [
+    "Du suchst jemanden, der mitbaut?",
+    "So sieht das in der App aus.",
+    "Du siehst, wie gut jemand passt. Und warum.",
+    "Was die Person sucht.",
+    "Und wie viel Zeit sie hat.",
+    "Bedingungen zuerst: Anteile, Geld oder Nebenprojekt."
+  ],
+  "end": "Die Beta ist kostenlos. Der Link ist im Profil." }

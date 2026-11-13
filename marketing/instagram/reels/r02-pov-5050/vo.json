@@ -1,0 +1,17 @@
+{
+  "voices": { "N": "egBwWoDtXGCSMgwiS3vn", "L": "aTTiK3YzK3dXETpuDE2h", "R": "nkayp4imdkkDpvsEklDB" },
+  "model": "eleven_v3",
+  "hook": "POV: Der Ideen-Typ hat dich gefunden.",
+  "msgs": [
+    ["l", "[excited] Hey! Du bist doch Entwickler, oder?"],
+    ["r", "Ja ... wieso?"],
+    ["l", "[excited] Ich hab DIE Idee. Uber, aber für Hundesitter!"],
+    ["r", "Okay. Und was ist dein Part?"],
+    ["l", "Na, die Idee."],
+    ["l", "Wir machen fifty-fifty."],
+    ["r", "[sighs] Und wer baut die App?"],
+    ["l", "Du! Ist ja nur ein Wochenende Arbeit."]
+  ],
+  "punch": "Ideen hat jeder. Mitbauer nicht.",
+  "end": "Hier findest du Leute, die mitbauen."
+}

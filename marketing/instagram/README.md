@@ -76,3 +76,21 @@ _shared/final.sh r11-name
 ```
 
 Die Reels basieren auf dem motion-reel-Skill (Render-Gerüst `_shared/motion.js`). Alle Bildschirmaufnahmen kommen aus der echten App-Demo unter `/demo`.
+
+### Voice-over statt Musik
+
+Alle Reels laufen ohne Musik und Effekte, mit Stimmen von ElevenLabs (Modell `eleven_v3`, 10 % schneller). Jedes Reel hat eine `vo.json` mit dem gesprochenen Text. `_shared/vo.py` erzeugt die Zeilen, legt sie hintereinander und schreibt `timing.js`: Nachrichten und Karten erscheinen genau dann, wenn sie gesprochen werden.
+
+```sh
+uv run _shared/vo.py r11-name      # Sprachspur und Timing
+_shared/final-vo.sh r11-name       # Video mit Voice-over, ohne Musik
+```
+
+| Rolle | Stimme |
+|---|---|
+| Erzählerin (Hook, Pointe, Erklär-Reels) | Lucy Fennek |
+| Ich-Stimme der Challenge (Tag X von 30) | Reel Alex |
+| Gegenüber im Chat | Ben, Christian Plasa, Reel Alex, Anna, Laura |
+| „Du“ im Chat | Vali (Dev), Laura (Designerin) |
+
+Der Name „Xyntal“ wird nicht gesprochen, solange die Aussprache nicht festgelegt ist. Er steht auf der Endkarte. Geklonte Stimmen echter Personen werden nicht verwendet.

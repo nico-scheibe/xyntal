@@ -1,1 +1,8 @@
-{ "title": "Vesting in 30 Sekunden", "duration": 24, "formats": ["9x16"], "poster": 3 }
+{
+ "title": "Vesting in 30 Sekunden",
+ "duration": 25.0,
+ "formats": [
+  "9x16"
+ ],
+ "poster": 4.7
+}

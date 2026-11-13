@@ -1,6 +1,8 @@
 // R07 · Produkt: So findet Xyntal deine Leute (Säule E). Echte Demo-Ansicht, Beispieldaten.
 import * as M from '../_shared/motion.js';
 import { C, setFont, background, fatThin, endCard, gradStroke } from '../_shared/chat.js';
+import T from './timing.js';
+const K = T.cards;
 
 const { W, H, FORMAT, E, prog, springU, springKeys, SPRING, clamp, rrect } = M;
 
@@ -16,13 +18,13 @@ const HITS = [
   [19, 'statement', 'impact'],
   [25, 'end', 'bell', { pitch: 'E6' }],
 ];
-const END = 24.5;
+const END = T.end;
 // Kamera über dem Screenshot (Bildpixel): [Mitte x, Mitte y, sichtbare Breite]
-const CAM = [[4, [1000, 820, 1450]], [7, [702, 900, 600]], [11, [1198, 900, 600]], [15, [1198, 1230, 560]]];
+const CAM = [[K[1], [1000, 820, 1450]], [K[2] - 0.2, [702, 900, 600]], [K[3] - 0.2, [1198, 900, 600]], [K[4] - 0.2, [1198, 1230, 560]]];
 const CAPS = [
-  [7.5, 11, { fat: '94 % Passung.', thin: 'Mit Grund.' }],
-  [11.5, 15, { fat: 'Was jemand sucht.', thin: 'Vorher.' }],
-  [15.5, 19, { fat: 'Wie viel Zeit', thin: 'jemand hat.' }],
+  [K[2], K[3], { fat: '94 % Passung.', thin: 'Mit Grund.' }],
+  [K[3], K[4], { fat: 'Was jemand sucht.', thin: 'Vorher.' }],
+  [K[4], K[5], { fat: 'Wie viel Zeit', thin: 'jemand hat.' }],
 ];
 
 M.film({
@@ -34,15 +36,15 @@ M.film({
     const s = FORMAT.safe;
     background(ctx, t, 4);
     // Hook ab Frame 0
-    const hookOut = E.inCubic(prog(u, 3.7, 4.2));
+    const hookOut = E.inCubic(prog(u, K[1] - 0.3, K[1] + 0.2));
     if (hookOut < 1) {
       ctx.save(); ctx.translate(0, -hookOut * 300); ctx.globalAlpha = 1 - hookOut;
       fatThin(ctx, { fat: 'Du suchst', thin: 'jemanden,\nder mitbaut?' }, s.x, s.y + 150, 165, 1);
       ctx.restore();
     }
     // Screenshot mit Kamerafahrt
-    const sk = springU(u, 4, SPRING.gentle);
-    const outK = E.inCubic(prog(u, 18.7, 19.2));
+    const sk = springU(u, K[1], SPRING.gentle);
+    const outK = E.inCubic(prog(u, K[5] - 0.3, K[5] + 0.2));
     if (sk > 0 && outK < 1 && IMG.shot) {
       const ax = 40, aw = W - 80, ay = s.y - 70, ah = 900;
       const y = ay + (1 - sk) * H * 0.6 - outK * H * 0.5;
@@ -72,7 +74,7 @@ M.film({
       });
     }
     // Aussage
-    const st = springU(u, 19, SPRING.gentle);
+    const st = springU(u, K[5], SPRING.gentle);
     if (st > 0) fatThin(ctx, { fat: 'Bedingungen', thin: 'zuerst.', sub: 'Anteile, Geld oder Nebenprojekt.\nBevor jemand Zeit investiert.' }, s.x, s.y + 200, 210, clamp(st));
     endCard(ctx, u, END, 'Die Beta ist kostenlos. Bewerben über den Link im Profil.', IMG);
   },

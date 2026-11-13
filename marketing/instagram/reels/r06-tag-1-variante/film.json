@@ -1,1 +1,8 @@
-{ "title": "Tag 1 Variante", "duration": 16, "formats": ["9x16"], "poster": 3 }
+{
+ "title": "Tag 1 Variante",
+ "duration": 16.0,
+ "formats": [
+  "9x16"
+ ],
+ "poster": 6.82
+}

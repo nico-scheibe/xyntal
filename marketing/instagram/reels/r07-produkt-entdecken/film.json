@@ -1,1 +1,8 @@
-{ "title": "Produkt: Entdecken", "duration": 16, "formats": ["9x16"], "poster": 3 }
+{
+ "title": "Produkt: Entdecken",
+ "duration": 17.0,
+ "formats": [
+  "9x16"
+ ],
+ "poster": 4.29
+}

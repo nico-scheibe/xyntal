@@ -1,1 +1,8 @@
-{ "title": "POV: Sechs Monate", "duration": 18, "formats": ["9x16"], "poster": 3 }
+{
+ "title": "POV: Sechs Monate",
+ "duration": 25.5,
+ "formats": [
+  "9x16"
+ ],
+ "poster": 12.23
+}

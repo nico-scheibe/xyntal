@@ -1,0 +1,12 @@
+{ "voices": {"N": "egBwWoDtXGCSMgwiS3vn", "L": "aTTiK3YzK3dXETpuDE2h", "R": "nkayp4imdkkDpvsEklDB", "A": "LB5G0Z4EP98YaEgL654m", "B": "aTTiK3YzK3dXETpuDE2h", "C": "nsFsExJHz4xV1sOX6Kdn", "D": "ztZBipzb4WQJRDayep3G"}, "model": "eleven_v3",
+  "hook": "POV: Gründer-Event. Du bist der einzige Dev.",
+  "msgs": [
+    ["l", "Hi! Wir hatten vorhin kurz gequatscht. Lust auf ein Fintech?", "A"],
+    ["l", "Hey, ich bin Tim. Ich bräuchte nur kurz eine App.", "B"],
+    ["l", "Du kannst doch bestimmt was mit KI?", "C"],
+    ["l", "[excited] Ist erst mal unbezahlt, aber mega Lernkurve!", "D"],
+    ["l", "Anteile gibt es auch. Zwei Prozent.", "B"],
+    ["r", "Ich war nur wegen der Pizza da."]
+  ],
+  "punch": "Devs sind gefragt. Sag, was du willst.",
+  "end": "Hier stehen die Bedingungen vorher fest." }
