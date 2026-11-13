@@ -34,7 +34,17 @@ main() {
     const db = new DatabaseSync('/app/data/xyntalnet.db', { readOnly: true });
     const r = db.prepare(\"SELECT COUNT(DISTINCT c.id) AS n FROM calls c JOIN call_participants p ON p.call_id = c.id WHERE c.ended_at IS NULL AND c.started_at > strftime('%Y-%m-%dT%H:%M:%fZ', 'now', '-12 hours')\").get();
     console.log(r.n);" 2>/dev/null || echo 0)
-  if [ "${calls:-0}" -gt 0 ]; then
+  # Nur die letzte Zeile und nur Ziffern. Schreibt node irgendwann eine Warnung vor
+  # die Zahl, steht hier sonst etwas Mehrzeiliges, und "[ ... -gt 0 ]" scheitert –
+  # in einer if-Bedingung, wo set -e NICHT greift. Das Skript liefe weiter, als wäre
+  # kein Anruf aktiv, und würde mitten in ein Gespräch hinein ausrollen. Genau die
+  # Schutzregel, die oben im Kopf steht, wäre dann still wirkungslos.
+  calls=$(printf '%s' "$calls" | tail -n 1 | tr -cd '0-9')
+  if [ -z "$calls" ]; then
+    echo "Anrufzahl nicht lesbar – rolle aus, als liefe keiner. (Prüfung ansehen!)"
+    calls=0
+  fi
+  if [ "$calls" -gt 0 ]; then
     [ -f "$STATE/waiting-since" ] || date +%s > "$STATE/waiting-since"
     waited=$(( ($(date +%s) - $(cat "$STATE/waiting-since")) / 60 ))
     if [ "$waited" -lt "$MAX_WAIT_MIN" ]; then
