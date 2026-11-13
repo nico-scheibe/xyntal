@@ -544,7 +544,9 @@ function englishPage(currentRoot, name) {
     .replace(/(\s(?:href|src|poster|action)=")(?![a-z][a-z0-9+.-]*:|\/|#|\?)(?:\.\/)?([^"]+)/gi, '$1/$2')
     .replace(/(\ssrcset=")([^"]*)/gi, (all, a, list) => a + list.split(',').map((part) => part.replace(/^(\s*)(?![a-z][a-z0-9+.-]*:|\/)(?:\.\/)?/i, '$1/')).join(','))
     // Links auf Seiten, die es englisch gibt, bleiben im Englischen
-    .replace(/(<a(?:\s(?:[^>"']|"[^"]*"|'[^']*')*?)?\shref=")\/([a-z0-9-]*)(?=["#?])/gi, (all, a, page) => (EN_PAGES.has(page || 'index') ? a + enPath(page || 'index') : all));
+    .replace(/(<a(?:\s(?:[^>"']|"[^"]*"|'[^']*')*?)?\shref=")\/([a-z0-9-]*)(?=["#?])/gi, (all, a, page) => (EN_PAGES.has(page || 'index') ? a + enPath(page || 'index') : all))
+    // App-Screenshots: liegt unter assets/img/en/ dieselbe Datei auf Englisch, zeigt die englische Seite diese
+    .replace(/\/assets\/img\/([a-z0-9-]+\.(?:webp|png|jpg))/gi, (all, file) => (fs.existsSync(path.join(currentRoot, 'assets/img/en', file)) ? '/assets/img/en/' + file : all));
   if (enCache.size > 64) enCache.clear();
   enCache.set(cacheKey, html);
   return html;
