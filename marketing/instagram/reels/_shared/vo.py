@@ -50,6 +50,21 @@ def tts(film, text, vid, model, settings, tempo=1.0):
     return wav, dur
 
 
+def words(wav):
+    """Wort-Zeitstempel einer Zeile per ElevenLabs-Transkription (gecacht neben der WAV)."""
+    js = wav[:-4] + ".words.json"
+    if not os.path.exists(js):
+        mp3 = wav[:-4] + "_stt.mp3"
+        sh("ffmpeg", "-loglevel", "error", "-y", "-i", wav, "-ac", "1", "-b:a", "96k", mp3)
+        out = subprocess.run(["curl", "-sS", "-f", "-X", "POST", "https://api.elevenlabs.io/v1/speech-to-text",
+                              "-H", "xi-api-key: dummy", "-F", "model_id=scribe_v1", "-F", "language_code=de",
+                              "-F", "timestamps_granularity=word", "-F", "tag_audio_events=false", "-F", f"file=@{mp3}"],
+                             capture_output=True, text=True, check=True).stdout
+        ws = [[w["text"], w["start"], w["end"]] for w in json.loads(out)["words"] if w["type"] == "word"]
+        json.dump(ws, open(js, "w"), ensure_ascii=False); os.remove(mp3)
+    return json.load(open(js))
+
+
 def main():
     film = sys.argv[1].rstrip("/")
     spec = json.load(open(os.path.join(film, "vo.json"), encoding="utf-8"))
@@ -63,15 +78,21 @@ def main():
     place = []  # (startsekunde, wav)
 
     if "cards" in spec:
-        t, card_t = 0.1, []
+        t, card_t, W_ = 0.1, [], []
         for item in spec["cards"]:
             key, text = (item[0], item[1]) if isinstance(item, list) else ("N", item)
             w, d = tts(film, text, V[key], model, S)
+            if spec.get("words"):
+                W_.append([[x, round((t + a) / BEAT, 3), round((t + b) / BEAT, 3)] for x, a, b in words(w)])
             card_t.append(t); place.append((t, w)); t += d + spec.get("card_gap", 0.35)
         end_t = t
-        w, d = tts(film, spec["end"], V["N"], model, S); place.append((end_t + 0.6, w))
-        total = int((end_t + 0.6 + d + 0.9) * 2 + 1) / 2
+        end_off = spec.get("end_offset", 0.6)
+        w, d = tts(film, spec["end"], V["N"], model, S); place.append((end_t + end_off, w))
+        if spec.get("words"):
+            W_.append([[x, round((end_t + end_off + a) / BEAT, 3), round((end_t + end_off + b) / BEAT, 3)] for x, a, b in words(w)])
+        total = int((end_t + end_off + d + spec.get("tail", 0.9)) * 2 + 1) / 2
         T = {"cards": [round(x / BEAT, 3) for x in card_t], "end": round(end_t / BEAT, 3)}
+        if W_: T["words"] = W_
         return finish(film, place, total, T, card_t[min(2, len(card_t) - 1)] + 0.8)
 
     t, intro_t, until = 0.1, [], None
