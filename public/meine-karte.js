@@ -39,11 +39,11 @@
     try {
       if (/\.(mp4|webm)$/.test(path)) {
         const { data, error } = await sb.storage.from("avatars").createSignedUrl(path, 3600);
-        if (!error && data && data.signedUrl) B.set({ photo: data.signedUrl, photoIsVideo: true });
+        if (!error && data && data.signedUrl) { B.set({ photo: data.signedUrl, photoIsVideo: true }); story?.soon(300); }
         return;
       }
       const { data, error } = await sb.storage.from("avatars").download(path);
-      if (!error && data) B.set({ photo: URL.createObjectURL(data), photoIsVideo: false });
+      if (!error && data) { B.set({ photo: URL.createObjectURL(data), photoIsVideo: false }); story?.soon(300); }
     } catch { /* ohne Bild geht es auch */ }
   }
 
@@ -73,7 +73,7 @@
     if (!window.XyntalBanners?.validPath(path)) return;
     try {
       const url = await window.XyntalBanners.fileUrl(path, sb, window.XYNTAL_CONFIG);
-      if (url) B.set({ bannerUrl: url, bannerIsVideo: window.XyntalBanners.isVideo(path) });
+      if (url) { B.set({ bannerUrl: url, bannerIsVideo: window.XyntalBanners.isVideo(path) }); story?.soon(300); }
     } catch { /* ohne Datei zeigt die Karte den Farbverlauf */ }
   }
   // Ein Video wird so hochgeladen, wie es ist, nachdem der Browser es lesen konnte
@@ -216,9 +216,34 @@
     if (me && me.is_premium === true && me.banner_path) loadBanner(me.banner_path);
     dirty = false;
     updateLink();
+    story?.soon(600);
   }
 
+  // ---- Story-Bild für Instagram (card-story.js): dieselbe Karte wie unter xyntal.de/name ----
+  // Wird vorab erzeugt (nach dem Laden und kurz nach jeder Änderung), damit sich das Teilen-Menü
+  // am Handy direkt beim Tippen öffnet.
+  function storyInput() {
+    const d = B.get(), flag = (k) => member?.[k] === true;
+    return {
+      card: {
+        name: d.name.trim(), role: d.role, level: d.level, city: d.city.trim(), mode: d.mode, pitch: d.pitch.trim(), looking: d.looking,
+        skills: d.skills, hours: d.hours, link: B.linkUrl(d.link), handle: B.validHandle(d.handle) ? d.handle : "",
+        design: { theme: d.theme, c1: d.c1, c2: d.c2, surface: d.surface, shape: d.shape, layout: d.layout, banner: d.banner, order: d.order, off: d.off },
+        is_premium: d.premium, hasBannerImage: !!d.bannerUrl,
+        is_admin: flag("is_admin"), is_verified: flag("is_verified"), is_beta_tester: flag("is_beta_tester"),
+        user_id: member?.id || "",
+      },
+      avatar: d.photo ? { url: d.photo, video: d.photoIsVideo === true } : null,
+      banner: d.bannerUrl ? { url: d.bannerUrl, video: d.bannerIsVideo === true } : null,
+    };
+  }
+  const storyBtn = $("[data-story-share]");
+  const story = storyBtn && B && window.XyntalCardStory
+    ? window.XyntalCardStory.attach(storyBtn, { status: $("[data-card-status]"), input: storyInput, key: () => JSON.stringify(storyInput()) })
+    : null;
+
   B?.onChange(markDirty);
+  B?.onChange(() => story?.soon());
   window.addEventListener("beforeunload", (e) => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
 
   saveBtn.addEventListener("click", async () => {
