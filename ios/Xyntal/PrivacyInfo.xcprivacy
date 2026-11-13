@@ -79,6 +79,23 @@
 			</array>
 		</dict>
 		<dict>
+			<!-- Suchbegriffe: Die App schickt sie als Teil der Adresse (GET /users/search?q=…,
+			     discover). Der App-Server protokolliert jede Anfrage samt Adresse, und das
+			     Protokoll wird nach Größe rotiert, nicht nach Zeit – es bleibt also länger
+			     erhalten, als für die Antwort nötig wäre. Nach Apples Maßstab ist das eine
+			     Erhebung und gehört deklariert. -->
+			<key>NSPrivacyCollectedDataType</key>
+			<string>NSPrivacyCollectedDataTypeSearchHistory</string>
+			<key>NSPrivacyCollectedDataTypeLinked</key>
+			<true/>
+			<key>NSPrivacyCollectedDataTypeTracking</key>
+			<false/>
+			<key>NSPrivacyCollectedDataTypePurposes</key>
+			<array>
+				<string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
+			</array>
+		</dict>
+		<dict>
 			<key>NSPrivacyCollectedDataType</key>
 			<string>NSPrivacyCollectedDataTypeOtherUserContent</string>
 			<key>NSPrivacyCollectedDataTypeLinked</key>
