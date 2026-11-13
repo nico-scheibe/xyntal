@@ -56,6 +56,14 @@ const root = path.resolve(__dirname, '../public');
     assert.match((await get('xyntal.de', '/en')).body, /You have the idea\./);
     assert.match((await get('xyntal.de', '/en/preise')).body, /Start for free\./);
     assert.match((await get('xyntal.de', '/en/mitglieder')).body, /<meta name="robots" content="noindex, follow">/);
+    // App-Screenshots: englische Fassung aus assets/img/en/, die deutsche Seite behält die deutschen Bilder
+    const enHome = (await get('xyntal.de', '/en')).body;
+    for (const shot of ['discover-2880', 'profil-1440', 'home-1920', 'chat-960', 'projects-1920']) {
+      assert.ok(fs.existsSync(path.join(root, 'assets/img/en', shot + '.webp')), 'Datei en/' + shot);
+      assert.ok(enHome.includes('/assets/img/en/' + shot + '.webp'), 'englisches Bild ' + shot);
+    }
+    assert.doesNotMatch(enHome, /\/assets\/img\/(?!en\/)[a-z0-9-]+\.webp/, 'kein deutsches Bild auf /en');
+    assert.doesNotMatch((await get('xyntal.de', '/')).body, /assets\/img\/en\//, 'deutsche Startseite ohne englische Bilder');
     // was unter data-no-i18n steht, bleibt unverändert
     assert.match((await get('xyntal.de', '/en/brief')).body, /<span data-no-i18n>Regensburg, <\/span>/);
 

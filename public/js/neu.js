@@ -134,9 +134,23 @@
     var steps = $$('[data-step]', pin), shots = $$('[data-shot]', pin), win = $('[data-win]', pin), cam = $('[data-cam]', pin);
     var focus = $('[data-focus]', pin), focusLabel = $('[data-focus-label]', pin), now = $('[data-pin-now]', pin), bar = $('[data-pin-bar]', pin);
     // Kamera je Schritt: Mittelpunkt (Anteil am Bild), Zoom, welches Bild, optionaler Rahmen (x, y, b, h als Anteil)
-    // Die Koordinaten gehören zu den Screens aus App-Version 0.2.19. Neue Screens: Werte hier nachziehen.
+    // Die Koordinaten gehören zu den Screens aus App-Version 0.2.19 (deutsch) und 0.2.28 (englisch,
+    // assets/img/en/, gezeigt auf /en). Neue Screens: Werte hier nachziehen.
     var RATIO = [1800 / 2880, 2800 / 2880];   // Höhe/Breite je Bild (Entdecken, Profil)
-    var CAMS = {
+    var CAMS = document.documentElement.lang === 'en' ? {
+      wide: [
+        { shot: 0, cx: .50, cy: .50, s: 1.00 },
+        { shot: 0, cx: .29, cy: .681, s: 2.25, f: [.175, .642, .181, .040], label: '91 % match' },
+        { shot: 1, cx: .575, cy: .638, s: 1.22, f: [.196, .509, .754, .274], label: 'The reason' },
+        { shot: 1, cx: .575, cy: .88, s: 1.22, f: [.196, .799, .754, .131], label: 'Every area on its own' }
+      ],
+      small: [
+        { shot: 0, cx: .33, cy: .33, s: 2.5 },
+        { shot: 0, cx: .27, cy: .691, s: 3.3, f: [.175, .642, .181, .040], label: '91 % match' },
+        { shot: 1, cx: .41, cy: .608, s: 2.5, f: [.196, .509, .754, .274], label: 'The reason' },
+        { shot: 1, cx: .385, cy: .87, s: 2.5, f: [.196, .799, .754, .131], label: 'Every area on its own' }
+      ]
+    } : {
       wide: [
         { shot: 0, cx: .50, cy: .50, s: 1.00 },
         { shot: 0, cx: .29, cy: .69, s: 2.25, f: [.175, .650, .185, .042], label: '89 % Passung' },
