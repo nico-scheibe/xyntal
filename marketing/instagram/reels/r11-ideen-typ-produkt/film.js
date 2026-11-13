@@ -18,7 +18,7 @@ storyFilm({
     { at: K[3], type: 'text', fat: 'So verlierst', thin: 'du Monate.', size: 175 },
     { at: K[4], type: 'text', fat: 'Es geht', thin: 'einfacher.', size: 230 },
     { at: K[5], type: 'shot', img: 'entdecken', keys: [
-      { at: K[5], cam: [1000, 820, 1450], cap: { fat: 'Sag, was', thin: 'du baust.' } },
+      { at: K[5], cam: [1200, 830, 1560], cap: { fat: 'Sag, was', thin: 'du baust.' } },
       { at: K[6], cam: [702, 900, 600], cap: { fat: '94 % Passung.', thin: 'Mit Grund.' } },
       { at: K[7], cam: [1198, 1230, 560], cap: { fat: 'Zeit und Ziel.', thin: 'Vorher.' } },
     ] },

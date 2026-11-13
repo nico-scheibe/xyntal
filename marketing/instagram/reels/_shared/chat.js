@@ -57,6 +57,17 @@ export function gradStroke(ctx, x0, x1) {
 
 // Zwei Zeilen im Stil der Startseite: schmal und fett, darunter breit und dünn.
 export function fatThin(ctx, { fat, thin, sub }, x, y, size, k = 1, color = C.t1) {
+  // Schrift verkleinern, bis jede Zeile in die Bildbreite passt (rechts 60 px Rand).
+  const maxW = W - x - 60;
+  for (let i = 0; i < 40; i++) {
+    let w = 0;
+    setFont(ctx, size, 800, DISPLAY, 'extra-condensed');
+    String(fat || '').split('\n').forEach((l) => { w = Math.max(w, ctx.measureText(l).width); });
+    setFont(ctx, size * 0.86, 200, DISPLAY, 'expanded');
+    String(thin || '').split('\n').forEach((l) => { w = Math.max(w, ctx.measureText(l).width + size * 0.22); });
+    if (w <= maxW) break;
+    size *= 0.96;
+  }
   ctx.save();
   ctx.globalAlpha *= clamp(k * 1.4);
   const dy = (1 - k) * 60;

@@ -1537,7 +1537,7 @@ p.xa-ai-pane { flex: none; padding-top: 0; }
 .xa-pc-av { display: grid; place-items: center; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(140deg, var(--h), var(--h2)); box-shadow: 0 0 0 3px #14171F, 0 0 0 4.5px rgba(255, 255, 255, 0.55); color: #fff; font-size: 24px; font-weight: 700; }
 .xa-pc-open b { font-size: 21px; font-weight: 700; letter-spacing: -0.01em; }
 .xa-pc-role { color: var(--xa-muted); font-size: 12.5px; margin-top: -6px; }
-.xa-pc-match { display: inline-flex; align-items: center; gap: 8px; height: 24px; padding: 0 11px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.22); background: rgba(255, 255, 255, 0.04); font-size: 11px; font-weight: 600; }
+.xa-pc-match { display: inline-flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 2px 8px; min-height: 24px; padding: 4px 11px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.22); background: rgba(255, 255, 255, 0.04); font-size: 11px; font-weight: 600; line-height: 1.25; white-space: nowrap; }
 .xa-pc-match i { color: color-mix(in srgb, var(--h) 60%, #fff); font-style: normal; }
 .xa-pc-loc { display: inline-flex; align-items: center; gap: 5px; color: var(--xa-muted); font-size: 12px; }
 .xa-pc-loc .xa-i { width: 12px; height: 12px; }
