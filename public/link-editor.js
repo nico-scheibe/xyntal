@@ -21,7 +21,7 @@
   const nextTier = () => (admin ? null : TIERS[TIERS.indexOf(tier) + 1] || null);
   const say = (text, kind = "") => { out.textContent = text; out.className = "mk-status" + (kind ? ` is-${kind}` : ""); };
   const validUrl = (u) => /^https?:\/\/[^\s]{3,}$/i.test(u) && u.length <= 500;
-  // Statt einer Adresse darf auch Text stehen (z. B. „Username: nico“): der erscheint auf der Seite zum Kopieren
+  // Statt einer Adresse darf auch Text stehen (z. B. „Username: xyntal“): der erscheint auf der Seite zum Kopieren
   const validEntry = (u) => { const v = String(u || "").trim(); return v.length > 0 && v.length <= 500; };
   // Eingabe ohne Schema („github.com/x“) wird zu https://
   // Nur „https://…“ oder „http://…“ ist ein Link; „xyntal.de“ ohne Schema bleibt Text (wird nicht ergänzt)
@@ -48,7 +48,7 @@
         </label>
         <div class="le-fields">
           <input type="text" class="le-title" data-f="title" maxlength="60" value="${esc(r.title)}" placeholder="${esc(t("Titel, z. B. Mein Portfolio"))}" aria-label="${esc(t("Titel"))}">
-          <input type="text" class="le-url" data-f="url" maxlength="500" autocapitalize="off" spellcheck="false" value="${esc(r.url)}" placeholder="${esc(t("https://… oder Text, z. B. Username: nico"))}" aria-label="${esc(t("Adresse oder Text"))}">
+          <input type="text" class="le-url" data-f="url" maxlength="500" autocapitalize="off" spellcheck="false" value="${esc(r.url)}" placeholder="${esc(t("https://… oder Text, z. B. Username: xyntal"))}" aria-label="${esc(t("Adresse oder Text"))}">
           ${r.url && !validUrl(normalize(r.url)) ? `<span class="le-kind">${esc(t("Text zum Kopieren"))}</span>` : ""}
         </div>
         <div class="le-tools">

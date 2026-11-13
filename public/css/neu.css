@@ -240,8 +240,7 @@ figcaption.mono b { color: var(--t-1); font-weight: 500; margin-right: 8px; }
 .say__text .w { opacity: .13; transition: opacity .35s linear; }
 .say__text .w.is-lit { opacity: 1; }
 .no-js .say__text .w { opacity: 1; }
-.say__sign { grid-column: 8 / -1; justify-self: end; color: var(--t-2); }
-@media (max-width: 760px) { .say__text, .say__sign { grid-column: 1 / -1; } }
+@media (max-width: 760px) { .say__text { grid-column: 1 / -1; } }
 
 /* 5.2 Matching: bleibt stehen */
 .pin { position: relative; height: 330vh; }

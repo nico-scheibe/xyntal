@@ -255,17 +255,11 @@
   .xu-day:nth-child(2)::after { content: none; }
 }
 
-/* ---------- 8 Notiz von Nico und die Anfrage ---------- */
+/* ---------- 8 Kontakt und Anfrage ---------- */
 .xu-ask__grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(32px, 6vw, 104px); align-items: start; }
-.xu-note { position: relative; display: grid; gap: 22px; padding: clamp(24px, 3vw, 44px) clamp(22px, 3vw, 44px) clamp(22px, 2.6vw, 36px); background: var(--g-3); color: var(--t-1); transform: rotate(-.8deg); transform-origin: 20% 0; box-shadow: 0 1px 0 rgba(255, 255, 255, .1) inset, 0 0 0 1px rgba(255, 255, 255, .04), 0 2px 3px rgba(0, 0, 0, .3), 0 34px 60px -28px rgba(0, 0, 0, .7); }
-.xu-note::before { content: ""; position: absolute; left: 50%; top: -11px; width: 84px; height: 22px; margin-left: -42px; background: rgba(var(--t-rgb), .13); transform: rotate(1.6deg); }
+.xu-note { position: relative; display: grid; gap: 22px; padding: clamp(24px, 3vw, 44px) clamp(22px, 3vw, 44px) clamp(22px, 2.6vw, 36px); background: var(--g-3); color: var(--t-1); border: 1px solid var(--line); border-radius: 4px; }
 .xu-note__top { display: flex; justify-content: space-between; gap: 12px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
 .xu-note__body { display: grid; gap: 14px; font: 400 clamp(1.05rem, 1.25vw, 1.22rem)/1.6 var(--f-serif); font-optical-sizing: auto; }
-.xu-note__sign { justify-self: start; display: grid; margin-top: 4px; font: italic 500 clamp(2rem, 3vw, 2.8rem)/1 var(--f-serif); }
-.xu-note__sign svg { width: 112%; height: 12px; margin-top: 2px; overflow: visible; }
-.xu-note__sign path { fill: none; stroke: url(#xu-ng); stroke: var(--cy); stroke-width: 1.5; stroke-linecap: round; vector-effect: non-scaling-stroke; stroke-dasharray: 1; stroke-dashoffset: 0; }
-@media (scripting: enabled) { .xu-ask:not(.is-in) .xu-note__sign path { stroke-dashoffset: 1; } }
-@media (scripting: enabled) { .xu-ask.is-in .xu-note__sign path { transition: stroke-dashoffset 1.1s var(--ease-io) .5s; } }
 .xu-note__ps a { color: var(--t-2); }
 .xu-note__ps a:hover { color: var(--t-1); }
 
@@ -312,7 +306,6 @@
 @keyframes xuLine { from { transform: scaleX(0); } }
 @media (max-width: 900px) {
   .xu-ask__grid { grid-template-columns: 1fr; }
-  .xu-note { transform: rotate(-.5deg); }
 }
 @media (max-width: 520px) { .xu-form { grid-template-columns: 1fr; } }
 
@@ -323,8 +316,6 @@
   @media (scripting: enabled) { .xu-chart .c-late { opacity: 1 !important; } }
   @media (scripting: enabled) { .xu-net .xu-net__lines path { stroke-dasharray: none !important; } }
   @media (scripting: enabled) { .xu-trial .xu-days::after { transform: none !important; } }
-  @media (scripting: enabled) { .xu-ask .xu-note__sign path { stroke-dashoffset: 0 !important; } }
-  .xu-note { transform: none; }
 }
 
 /* ---------- 10 Druck: Rechnung und Vergleich fürs nächste Meeting ---------- */
@@ -339,7 +330,7 @@
   .xu-out__save { font-size: 40pt; }
   .xu-bar__track i { background: #111 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .xu-plans { break-before: page; }
-  .xu-note { transform: none; box-shadow: none; background: #fff; border: 1px solid #999; }
+  .xu-note { background: #fff; border-color: #999; }
   .xu-ask__grid { display: block; }
   .xu-days::after { background: #111; }
 }

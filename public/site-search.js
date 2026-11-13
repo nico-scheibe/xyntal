@@ -19,7 +19,7 @@
     { label: "Matching", href: "/matching", keys: "passung punkte rechnung gewichte arbeitsstil vorschläge" },
     { label: "Preise", href: "/preise", keys: "tarife kosten plan free pro business abo" },
     { label: "Für Firmen", href: "/unternehmen", keys: "unternehmen firma business festpreis team" },
-    { label: "Brief", href: "/brief", keys: "nico warum idee geschichte über" },
+    { label: "Über uns", href: "/ueber-uns", keys: "über uns xyntal warum idee mission kontakt" },
     { label: "Beta-Programm", href: "/beta", keys: "beta tester testen bewerben bewerbung früher zugang" },
     { label: "Mitglieder", href: "/mitglieder", keys: "profile menschen leute suchen finden team" },
     { label: "Für dich", href: "/fuer-dich", keys: "matching vorschläge passende leute team" },

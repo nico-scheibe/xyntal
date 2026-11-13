@@ -127,7 +127,7 @@ form.addEventListener("submit", (e) => {
     requireFields(d, ["focus", "hours", "why"], "Bitte fülle alle Pflichtfelder aus.");
     if (d.why.length < MIN_WHY) {
       why.focus();
-      throw new Error(`Erzähl mir etwas mehr über dein Vorhaben – mindestens ${MIN_WHY} Zeichen.`);
+      throw new Error(`Erzähl uns etwas mehr über dein Vorhaben – mindestens ${MIN_WHY} Zeichen.`);
     }
     if (!consentGiven()) throw new Error("Bitte bestätige, dass deine Angaben für die Auswahl gespeichert werden dürfen.");
     if (guest) {
@@ -169,7 +169,7 @@ function showDone(mine) {
   if (mine) {
     done.querySelector(".beta-done-line").textContent = "Deine Bewerbung";
     done.querySelector("#beta-done-head").textContent = "Du hast dich schon beworben.";
-    done.querySelector("[data-beta-done-text]").textContent = "Deine erste Bewerbung zählt. Wenn sich etwas ändert, melde ich mich per E-Mail bei dir.";
+    done.querySelector("[data-beta-done-text]").textContent = "Deine erste Bewerbung zählt. Wenn sich etwas ändert, melden wir uns per E-Mail bei dir.";
     const state = done.querySelector("[data-beta-state]");
     const when = mine.created_at ? new Date(mine.created_at).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" }) : "";
     state.textContent = `${when ? `Eingegangen am ${when}. ` : ""}${STATE[mine.status] || ""}`.trim();

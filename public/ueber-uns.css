@@ -1,8 +1,8 @@
 /* =====================================================================
-   Xyntal – Startseite als Brief
-   Eine schmale Textspalte in Serifenschrift auf dunklem Grau. Keine Sektionen,
-   keine Labels, keine Boxen, keine Effekte. Das Logo bleibt das einzige
-   bunte Element. Kopf- und Fußzeile werden hier auf hell gedreht.
+   Xyntal – Über uns (/ueber-uns)
+   Eine schmale Textspalte auf dunklem Grau: Überschriften in Serifenschrift,
+   Abschnitte mit feiner Linie getrennt, Labels in Mono. Keine Boxen, keine
+   Effekte. Das Logo bleibt das einzige bunte Element.
    ===================================================================== */
 :root {
   --paper: #1F1F21;
@@ -31,7 +31,7 @@ body {
   -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
   -webkit-tap-highlight-color: transparent;
 }
-p, ul { margin: 0; }
+p, ul, h1, h2 { margin: 0; }
 ul { padding: 0; list-style: none; }
 a { color: var(--link); text-decoration: underline; text-decoration-color: var(--rule-2); text-decoration-thickness: 1px; text-underline-offset: 3px; }
 a:hover { text-decoration-color: var(--ink); }
@@ -43,23 +43,25 @@ button, input { font: inherit; color: inherit; }
 .skip { position: absolute; left: 16px; top: 10px; z-index: 100; padding: 10px 14px; background: var(--ink); color: var(--paper); font: 600 14px/1 var(--f-sans); text-decoration: none; transform: translateY(-200%); }
 .skip:focus { transform: none; }
 
-/* ---------- Der Brief ---------- */
-.letter {
-  width: min(38rem, 100% - 2rem);
+/* ---------- Inhalt ---------- */
+.about-page {
+  width: min(40rem, 100% - 2rem);
   margin: 0 auto;
   padding: clamp(40px, 8vw, 96px) 0 clamp(48px, 8vw, 96px);
-  display: grid; gap: 1.25em;
+  display: grid; gap: clamp(36px, 5vw, 52px);
 }
-@media (min-width: 760px) { .letter { margin-left: max(1rem, calc((100% - 38rem) * 0.38)); } }
-.letter-date { font: 500 13px/1.6 var(--f-mono); letter-spacing: 0.04em; color: var(--ink-3); margin-bottom: 1.5em; }
-.letter ul { display: grid; gap: 0.6em; padding-left: 1.4em; }
-.letter li { position: relative; }
-.letter li::before { content: "–"; position: absolute; left: -1.4em; color: var(--ink-3); }
-.letter b { font-weight: 600; }
-.letter-cta { margin: 0.5em 0; }
-.letter-sign { margin-top: 1.5em; font-size: 1.9em; line-height: 1.1; font-style: italic; font-weight: 400; }
-.letter-sign span { display: block; margin-top: 0.5em; font: 400 14px/1.6 var(--f-sans); font-style: normal; color: var(--ink-2); }
-.letter-sign span a { color: inherit; }
+@media (min-width: 760px) { .about-page { margin-left: max(1rem, calc((100% - 40rem) * 0.38)); } }
+.about-head { display: grid; gap: 18px; }
+.about-kicker { font: 500 12.5px/1.6 var(--f-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+.about-head h1 { font: 500 clamp(30px, 4.6vw, 44px)/1.15 var(--f-serif); letter-spacing: -0.01em; text-wrap: balance; }
+.about-lead { font-size: 1.08em; color: var(--ink-2); }
+.about-page section { display: grid; gap: 1em; padding-top: clamp(28px, 4vw, 40px); border-top: 1px solid var(--rule); }
+.about-page h2 { font: 500 12.5px/1.6 var(--f-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+.about-page ul { display: grid; gap: 0.6em; padding-left: 1.4em; }
+.about-page li { position: relative; }
+.about-page li::before { content: "–"; position: absolute; left: -1.4em; color: var(--ink-3); }
+.about-page b { font-weight: 600; }
+.about-cta { margin-top: 0.5em; }
 
 .button {
   display: inline-flex; align-items: center; justify-content: center;
@@ -74,9 +76,8 @@ button, input { font: inherit; color: inherit; }
 .button-quiet { background: transparent; color: var(--ink); }
 .button-quiet:hover, .button-quiet:focus-visible { background: var(--ink); color: var(--paper); }
 
-/* ---------- PS: Newsletter ---------- */
-.letter-ps { margin-top: 2em; padding-top: 2em; border-top: 1px solid var(--rule); display: grid; gap: 1em; font-size: 0.92em; color: var(--ink-2); }
-.letter-ps b { color: var(--ink); }
+/* ---------- Newsletter ---------- */
+.about-news { font-size: 0.92em; color: var(--ink-2); }
 .waitlist-form { display: grid; gap: 12px; font-family: var(--f-sans); }
 .waitlist-row { display: grid; grid-template-columns: 1fr auto; max-width: 30rem; border: 1px solid var(--rule-2); border-radius: 2px; background: var(--paper-2); }
 .waitlist-row input { min-width: 0; height: 46px; padding: 0 14px; border: 0; background: transparent; color: var(--ink); font-size: 16px; }
@@ -104,25 +105,25 @@ button, input { font: inherit; color: inherit; }
 body.is-member .news { display: none; }
 
 /* ---------- Kopfzeile ---------- */
-body.brief .acct-btn { border-color: var(--rule-2) !important; background: transparent !important; color: var(--ink) !important; }
-body.brief .acct-menu { background: var(--paper-2) !important; border-color: var(--rule-2) !important; color: var(--ink); }
-body.brief .acct-menu a { color: var(--ink) !important; }
-body.brief .cmdk { background: rgba(0, 0, 0, 0.5); }
-body.brief .cmdk-box { background: var(--paper-2); border-color: var(--rule-2); color: var(--ink); }
-body.brief .cmdk-input input { color: var(--ink); }
-body.brief .cmdk-item { color: var(--ink-2); }
-body.brief .cmdk-item[aria-selected="true"] { background: var(--paper-2); color: var(--ink); }
-body.brief .cmdk-item[aria-selected="true"] .g, body.brief .cmdk-item mark { color: var(--link); }
+body.about .acct-btn { border-color: var(--rule-2) !important; background: transparent !important; color: var(--ink) !important; }
+body.about .acct-menu { background: var(--paper-2) !important; border-color: var(--rule-2) !important; color: var(--ink); }
+body.about .acct-menu a { color: var(--ink) !important; }
+body.about .cmdk { background: rgba(0, 0, 0, 0.5); }
+body.about .cmdk-box { background: var(--paper-2); border-color: var(--rule-2); color: var(--ink); }
+body.about .cmdk-input input { color: var(--ink); }
+body.about .cmdk-item { color: var(--ink-2); }
+body.about .cmdk-item[aria-selected="true"] { background: var(--paper-2); color: var(--ink); }
+body.about .cmdk-item[aria-selected="true"] .g, body.about .cmdk-item mark { color: var(--link); }
 
 /* ---------- Fußzeile ---------- */
-body.brief .site-footer {
+body.about .site-footer {
   --sf-text: var(--ink); --sf-text-2: var(--ink-2); --sf-text-3: var(--ink-3); --sf-line: var(--rule); --sf-accent: var(--ink);
   margin-top: 0; font-family: var(--f-sans);
 }
-body.brief .site-footer a { text-decoration: none; }
-body.brief .sf-btn { border-color: var(--rule-2); }
-body.brief .sf-btn-primary { background: var(--ink); border-color: var(--ink); color: var(--paper) !important; }
-body.brief .sf-btn-primary:hover { background: transparent; color: var(--ink) !important; }
+body.about .site-footer a { text-decoration: none; }
+body.about .sf-btn { border-color: var(--rule-2); }
+body.about .sf-btn-primary { background: var(--ink); border-color: var(--ink); color: var(--paper) !important; }
+body.about .sf-btn-primary:hover { background: transparent; color: var(--ink) !important; }
 
 @media (prefers-reduced-motion: reduce) { .button { transition: none; } }
 @media (forced-colors: active) { .button { border: 1px solid ButtonText; } }
