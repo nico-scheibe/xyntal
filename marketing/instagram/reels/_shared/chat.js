@@ -221,6 +221,35 @@ export function chatFilm(SCRIPT) {
     ctx.restore();
   }
 
+  // Intro im Vollbild vor dem Chat: Sprechblasen und große Schrift, ab Frame 0 sichtbar.
+  function intro(ctx, u) {
+    const s = FORMAT.safe;
+    SCRIPT.intro.items.forEach((it) => {
+      const k = it.at <= 0.3 ? 1 : springU(u, it.at, SPRING.bouncy);
+      if (k <= 0) return;
+      const y = s.y + (it.y || 0);
+      if (it.bubble) {
+        const fs = it.size || 84, lh = fs * 1.25, pad = fs * 0.62;
+        setFont(ctx, fs, 500, TEXT);
+        const lines = wrap(ctx, it.bubble, s.w - pad * 2 - 40);
+        const w = Math.max(...lines.map((l) => ctx.measureText(l).width)) + pad * 2;
+        const h = lines.length * lh + pad * 1.4;
+        const x = it.right ? W - 72 - w : s.x;
+        ctx.save();
+        ctx.globalAlpha = clamp(k * 2);
+        const ox = it.right ? x + w : x, oy = y + h;
+        ctx.translate(ox, oy); ctx.scale(lerp(0.5, 1, k), lerp(0.5, 1, k)); ctx.translate(-ox, -oy);
+        rrect(ctx, x, y, w, h, Math.min(64, h / 2)); ctx.fillStyle = it.right ? C.t1 : C.bg3; ctx.fill();
+        ctx.fillStyle = it.right ? C.bg : C.t1;
+        lines.forEach((l, j) => ctx.fillText(l, x + pad, y + pad * 0.7 + fs * 0.85 + j * lh));
+        if (it.name) { setFont(ctx, 30, 500, MONO); ctx.fillStyle = C.t3; ctx.fillText(it.name.toUpperCase(), x + 8, y - 22); }
+        ctx.restore();
+      } else {
+        fatThin(ctx, it, s.x, y, it.size || 150, clamp(k));
+      }
+    });
+  }
+
   M.film({
     fonts: [`800 100px ${DISPLAY}`, `200 100px ${DISPLAY}`, `400 40px ${TEXT}`, `600 40px ${TEXT}`, `500 30px ${MONO}`],
     images: { logo: '../_shared/fonts/logo.svg' },
@@ -231,13 +260,23 @@ export function chatFilm(SCRIPT) {
       background(ctx, t);
       const s = FORMAT.safe;
       const pk = springU(u, SCRIPT.punch.at, SPRING.gentle);
-      const dim = clamp(pk);
-      // Hook oben, ab Frame 0
+      let dim = clamp(pk), shift = 0;
+      if (SCRIPT.intro) {
+        const iu = SCRIPT.intro.until;
+        const out = E.inCubic(prog(u, iu - 0.2, iu + 0.3));
+        if (out < 1) { ctx.save(); ctx.globalAlpha = 1 - out; ctx.translate(0, -out * 220); intro(ctx, u); ctx.restore(); }
+        const ik = springU(u, iu + 0.35, SPRING.gentle);
+        if (ik <= 0) { endCard(ctx, u, SCRIPT.end.at, SCRIPT.end.line, IMG); return; }
+        dim = Math.max(dim, 1 - clamp(ik * 1.5)); shift = (1 - clamp(ik)) * 120;
+      }
+      // Hook oben (ohne Intro ab Frame 0)
       ctx.save();
-      ctx.globalAlpha = 1 - dim;
+      ctx.globalAlpha = 1 - dim; ctx.translate(0, shift);
       const hookBottom = hook(ctx, u, s.y - 120);
       ctx.restore();
+      ctx.save(); ctx.translate(0, shift);
       chat(ctx, u, hookBottom + 10, s.y + s.h, dim);
+      ctx.restore();
       if (pk > 0) {
         const p = SCRIPT.punch;
         ctx.save();

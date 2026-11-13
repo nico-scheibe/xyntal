@@ -64,8 +64,9 @@ def main():
 
     if "cards" in spec:
         t, card_t = 0.1, []
-        for text in spec["cards"]:
-            w, d = tts(film, text, V["N"], model, S)
+        for item in spec["cards"]:
+            key, text = (item[0], item[1]) if isinstance(item, list) else ("N", item)
+            w, d = tts(film, text, V[key], model, S)
             card_t.append(t); place.append((t, w)); t += d + spec.get("card_gap", 0.35)
         end_t = t
         w, d = tts(film, spec["end"], V["N"], model, S); place.append((end_t + 0.6, w))
@@ -73,8 +74,14 @@ def main():
         T = {"cards": [round(x / BEAT, 3) for x in card_t], "end": round(end_t / BEAT, 3)}
         return finish(film, place, total, T, card_t[min(2, len(card_t) - 1)] + 0.8)
 
-    t = 0.15
-    w, d = tts(film, spec["hook"], V["N"], model, S); place.append((t, w)); t += d + 0.25
+    t, intro_t, until = 0.1, [], None
+    for key, text in spec.get("intro", []):
+        w, d = tts(film, text, V[key], model, S)
+        intro_t.append(t); place.append((t, w)); t += d + spec.get("intro_gap", 0.2)
+    if intro_t:
+        until = t; t += 0.35
+    if spec.get("hook"):
+        w, d = tts(film, spec["hook"], V["N"], model, S); place.append((t, w)); t += d + 0.25
     msg_t = []
     for m in spec["msgs"]:
         side, text = m[0], m[1]
@@ -91,6 +98,8 @@ def main():
     total = int(total * 2 + 1) / 2  # auf halbe Sekunden aufrunden
 
     T = {"msgs": [round(x / BEAT, 3) for x in msg_t], "punch": round(punch_t / BEAT, 3), "end": round(end_t / BEAT, 3)}
+    if intro_t:
+        T["intro"] = [round(x / BEAT, 3) for x in intro_t]; T["until"] = round(until / BEAT, 3)
     finish(film, place, total, T, msg_t[min(3, len(msg_t) - 1)] + 1.0)
 
 
