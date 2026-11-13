@@ -205,8 +205,24 @@ select public.test_card('00000000-0000-0000-0000-000000000003', true,
 select public.test_card('00000000-0000-0000-0000-000000000004', false,
   'Karte mit Geburtsdatum unter 16 wird ausgeblendet');
 select public.test_check(
-  (select is_public from public.waitlist_cards where user_id is null and handle = 'warteliste') = true,
-  'Wartelisten-Karte ohne Konto bleibt unberührt');
+  (select is_public from public.waitlist_cards where user_id is null and handle = 'warteliste') = false,
+  'Auch eine schon öffentliche Karte ohne Konto wird beim Nachziehen ausgeblendet');
+select public.test_check(
+  (select handle from public.waitlist_cards where email = 'warteliste@x.de') = 'warteliste',
+  'Sie bleibt dabei gespeichert, mit ihrem Wunsch-Link');
+
+-- Der Weg zurück: ein Konto übernimmt die Karte über die E-Mail (das macht get_my_card) und
+-- hat ein Geburtsdatum. Dann geht sie wieder online.
+insert into auth.users (id, email, email_confirmed_at) values
+  ('00000000-0000-0000-0000-000000000009', 'warteliste@x.de', now());
+insert into public.profiles (id, status, created_at) values
+  ('00000000-0000-0000-0000-000000000009', 'pending', :nachher);
+insert into public.member_birthdates (id, birthdate) values
+  ('00000000-0000-0000-0000-000000000009', (current_date - interval '21 years')::date);
+update public.waitlist_cards set user_id = '00000000-0000-0000-0000-000000000009'
+ where email = 'warteliste@x.de' and user_id is null;
+select public.test_card('00000000-0000-0000-0000-000000000009', true,
+  'Übernimmt ein Konto mit Geburtsdatum die Karte, ist sie wieder öffentlich');
 
 -- Eine Wartelisten-Karte, die NACH der Migration entsteht, wird nicht mehr öffentlich.
 -- submit_waitlist_card() ist an anon vergeben und setzte is_public frei: über das Formular

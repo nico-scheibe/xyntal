@@ -23,10 +23,13 @@
 -- BESTANDSSCHUTZ: Konten von vor dem Stichtag (public.age_check_start(), 14.11.2026 00:00+01)
 --   verlieren nichts. Ihre Karten bleiben öffentlich, auch ohne Geburtsdatum. Sie sind nie nach
 --   ihrem Alter gefragt worden. Dieselbe Regel gilt in der vorigen Migration und im App-Server.
---   Bestehende Wartelisten-Karten ohne Konto bleiben vorerst, wie sie sind – das Nachziehen
---   unten fasst sie nicht an. Beim nächsten Schreibzugriff auf eine solche Karte greift die
---   neue Regel aber auch dort. Ob der Altbestand ebenfalls ausgeblendet werden soll, ist eine
---   Entscheidung für den Betreiber: Sie trifft auch Erwachsene, die nichts falsch gemacht haben.
+--   Bestehende Karten OHNE Konto werden dagegen mit ausgeblendet. Für sie gibt es keinen
+--   Bestandsschutz, denn er beruht darauf, dass wir jemanden nie nach dem Alter gefragt haben
+--   UND ihn kennen; hinter einer Karte ohne Konto steht niemand, den wir fragen könnten. Das
+--   trifft auch Erwachsene, die nichts falsch gemacht haben – deshalb ist es eine bewusste
+--   Entscheidung des Betreibers und keine technische Notwendigkeit. Verloren geht dabei nichts:
+--   Die Karte bleibt mit ihrem Wunsch-Link gespeichert und geht wieder online, sobald ein Konto
+--   sie übernimmt (save_my_card holt sie über die E-Mail) und das Geburtsdatum vorliegt.
 --
 -- KARTEN OHNE KONTO werden dagegen ab jetzt nicht mehr öffentlich. submit_waitlist_card() ist an
 --   anon vergeben und schrieb is_public frei mit: Über das Formular auf der Startseite konnte
@@ -138,9 +141,11 @@ create trigger member_cards_public before insert or update on public.waitlist_ca
   for each row execute function public.member_cards_public();
 
 -- Bestehende Karten einmal nachziehen: Wer nach dem Stichtag dazugekommen ist und kein
--- Geburtsdatum hinterlegt hat, wird ausgeblendet. Bestandskarten bleiben unangetastet.
+-- Geburtsdatum hinterlegt hat, wird ausgeblendet; ebenso jede Karte ohne Konto. Karten von
+-- Konten aus der Zeit vor dem Stichtag bleiben unangetastet – das erledigt age_ok().
+-- age_ok(null) ist false, deshalb genügt hier eine Bedingung für beide Fälle.
 update public.waitlist_cards c set is_public = false
- where c.user_id is not null and c.is_public and not public.age_ok(c.user_id);
+ where c.is_public and not public.age_ok(c.user_id);
 
 -- ---------- 3) Vorlagen-Galerie ----------
 -- Bestehende Vorlagen werden ausgeblendet, nicht gelöscht. Für Karten gilt oben dasselbe,
