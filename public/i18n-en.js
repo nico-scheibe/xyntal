@@ -837,6 +837,8 @@ window.XYNTAL_EN = {
   "TikTok (öffnet in neuem Tab)": "TikTok (opens in new tab)",
   "Instagram (öffnet in neuem Tab)": "Instagram (opens in new tab)",
   "GitHub (öffnet in neuem Tab)": "GitHub (opens in new tab)",
+  "Erstellt mit Xyntal": "Made with Xyntal",
+  "Deine eigene Seite": "Get your own page",
   "Startseite": "Home",
   "Zur Startseite": "Back to home",
   "Zurück zur Startseite": "Back to home",
