@@ -46,7 +46,7 @@
       mcLevel: $("[data-mc-level]"), mcLevel2: $("[data-mc-level-2]"), mcDots: $$("[data-mc-dots] i"), mcPlace: $("[data-mc-place]"),
       mcSkills: $("[data-mc-skills]"), mcHours: $("[data-mc-hours]"), mcBar: $("[data-mc-bar]"), mcPitch: $("[data-mc-pitch]"),
       mcLooking: $("[data-mc-looking]"), mcLink: $("[data-mc-link]"),
-      status: $("[data-card-status]"), save: $("[data-card-save]"), launch: $("[data-launch-card]"),
+      status: $("[data-card-status]"), save: $("[data-card-save]"), story: $("[data-card-story]"), launch: $("[data-launch-card]"),
       banners: $("[data-bf-banner]"), bannerUpload: $("[data-bf-banner-upload]"), bannerRemove: $("[data-bf-banner-remove]"),
     };
     // Banner-Vorlagen (banners.js); animierte und das eigene Bild nur mit Paid-Tarif
@@ -456,7 +456,7 @@
     });
     el.suggest.addEventListener("click", (e) => { const b = e.target.closest("[data-add]"); if (b) addSkill(b.dataset.add); });
 
-    /* ---- Karte als Bild (PNG, 1080 × 1350) zeichnen – folgt Farben, Layout und Anordnung ---- */
+    /* ---- Karte als Bild (PNG, Feed 1080 × 1350 oder Story 1080 × 1920) zeichnen – folgt Farben, Layout und Anordnung ---- */
     const FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Arial, sans-serif';
     function roundRect(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
     function wrap(g, text, maxW, max) {
@@ -619,8 +619,9 @@
       k.restore();
     }
 
-    async function drawCard() {
-      const W = 1080, H = 1350, CW = 900;
+    // Die Karte selbst (CW × CH, transparent außerhalb der Ecken) – gemeinsam für Feed und Story
+    async function renderCard() {
+      const CW = 900;
       const C = colors(), P = PALETTE[data.surface];
       const photo = data.photo ? await loadImg(data.photo) : null;
       const bannerId = BANNERS ? BANNERS.effective(data.banner, data.premium, !!data.bannerUrl) : "theme";
@@ -647,24 +648,65 @@
       roundRect(k, CW - 64 - bw, 38, bw, 54, 27); k.fillStyle = "rgba(0,0,0,0.32)"; k.fill();
       k.fillStyle = "#fff"; k.fillText(badge, CW - 64 - bw + 24, 66);
       k.drawImage(tmp, 0, 0);
-      // 3. Auf das Format 1080 × 1350 setzen
-      const c = document.createElement("canvas"); c.width = W; c.height = H; const g = c.getContext("2d");
+      return card;
+    }
+
+    // Äußerer Rahmen: Fläche mit zwei Lichtern in den Kartenfarben, darunter der Satz
+    function paintBackdrop(g, W, H) {
+      const C = colors();
       g.fillStyle = data.surface === "light" ? "#ECECF2" : "#07070B"; g.fillRect(0, 0, W, H);
       for (const [gx, gy, r, col] of [[160, 80, 900, C[0]], [W, H, 800, C[C.length - 1]]]) {
         const gl = g.createRadialGradient(gx, gy, 0, gx, gy, r); gl.addColorStop(0, rgba(col, 0.35)); gl.addColorStop(1, rgba(col, 0)); g.fillStyle = gl; g.fillRect(0, 0, W, H);
       }
+    }
+    function paintTagline(g, W, y, size) {
+      const C = colors();
+      const tg = g.createLinearGradient(W / 2 - size * 7.5, 0, W / 2 + size * 7.5, 0); C.forEach((col, i) => tg.addColorStop(i / (C.length - 1), col));
+      g.font = `700 ${size}px ${FONT}`; g.fillStyle = data.theme === "mono" && data.surface === "light" ? "#111" : tg;
+      g.textAlign = "center"; g.textBaseline = "alphabetic"; g.fillText("Stop swiping. Start building.", W / 2, y);
+    }
+
+    // Feed: 1080 × 1350 (4:5)
+    async function drawCard() {
+      const W = 1080, H = 1350, card = await renderCard(), CW = card.width, CH = card.height;
+      const c = document.createElement("canvas"); c.width = W; c.height = H; const g = c.getContext("2d");
+      paintBackdrop(g, W, H);
       const s = Math.min(1, 1170 / CH), dw = CW * s, dh = CH * s;
       g.drawImage(card, (W - dw) / 2, 60 + (1170 - dh) / 2, dw, dh);
-      const tg = g.createLinearGradient(W / 2 - 330, 0, W / 2 + 330, 0); C.forEach((col, i) => tg.addColorStop(i / (C.length - 1), col));
-      g.font = `700 44px ${FONT}`; g.fillStyle = data.theme === "mono" && data.surface === "light" ? "#111" : tg; g.textAlign = "center"; g.textBaseline = "alphabetic"; g.fillText("Stop swiping. Start building.", W / 2, H - 40);
+      paintTagline(g, W, H - 40, 44);
       return c;
     }
 
-    el.save.addEventListener("click", async () => {
-      const canvas = await drawCard();
+    // Story: 1080 × 1920 (9:16). Oben 250 px und unten 340 px bleiben frei (Fortschrittsbalken und Name,
+    // Antwortfeld); unter der Karte eine leere Fläche von 900 × 200 px für den Link-Sticker.
+    const STORY = { W: 1080, H: 1920, top: 250, bottom: 340, stickerW: 900, stickerH: 200, gap: 40, cardMax: 980 };
+    async function drawStory() {
+      const { W, H, top, bottom, stickerW, stickerH, gap, cardMax } = STORY;
+      const card = await renderCard(), CW = card.width, CH = card.height;
+      const c = document.createElement("canvas"); c.width = W; c.height = H; const g = c.getContext("2d");
+      paintBackdrop(g, W, H);
+      const s = Math.min(1, cardMax / CH), dw = CW * s, dh = CH * s;
+      const tagSize = 40, tagH = 48;
+      // Karte, Sticker-Fläche und Satz als Gruppe mittig in den freien Bereich setzen
+      const group = dh + gap + stickerH + gap + tagH, y0 = top + Math.max(0, (H - top - bottom - group) / 2);
+      g.drawImage(card, (W - dw) / 2, y0, dw, dh);
+      const sy = y0 + dh + gap, sx = (W - stickerW) / 2;
+      const wish = validHandle(data.handle) ? linkUrl(`xyntal.de/${data.handle}`) : "";
+      if (wish) {
+        g.font = `500 30px ${FONT}`; g.textAlign = "center"; g.textBaseline = "middle";
+        g.fillStyle = data.surface === "light" ? "rgba(18,18,24,0.55)" : "rgba(245,245,247,0.6)";
+        g.fillText(linkLabel(wish), sx + stickerW / 2, sy + stickerH / 2);
+      }
+      paintTagline(g, W, sy + stickerH + gap + tagH - 10, tagSize);
+      return c;
+    }
+
+    // Teilen (Touch-Geräte) oder herunterladen
+    async function exportImage(draw, filename, savedText) {
+      const canvas = await draw();
       const blob = await new Promise((r) => canvas.toBlob(r, "image/png"));
       if (!blob) return;
-      const file = new File([blob], "meine-xyntal-karte.png", { type: "image/png" });
+      const file = new File([blob], filename, { type: "image/png" });
       try {
         if (navigator.canShare && navigator.canShare({ files: [file] }) && matchMedia("(pointer: coarse)").matches) {
           await navigator.share({ files: [file], title: "Meine Xyntal-Karte", text: "Stop swiping. Start building. – xyntal.de" });
@@ -673,11 +715,13 @@
         }
       } catch (err) { if (err && err.name === "AbortError") return; }
       const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob); a.download = "meine-xyntal-karte.png";
+      a.href = URL.createObjectURL(blob); a.download = filename;
       document.body.append(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-      el.status.textContent = t("Bild gespeichert: meine-xyntal-karte.png");
-    });
+      el.status.textContent = t(savedText);
+    }
+    el.save.addEventListener("click", () => exportImage(drawCard, "meine-xyntal-karte.png", "Bild gespeichert: meine-xyntal-karte.png"));
+    el.story?.addEventListener("click", () => exportImage(drawStory, "meine-xyntal-story.png", "Story gespeichert: meine-xyntal-story.png"));
     $("[data-card-join]")?.addEventListener("click", () => setTimeout(() => $("#wl-email")?.focus({ preventScroll: true }), still ? 0 : 600));
 
     // Für die Warteliste: nur die Angaben – Foto und Gestaltung bleiben auf dem Gerät
@@ -685,6 +729,7 @@
       mode: data.mode, looking: data.looking, pitch: data.pitch, link: linkUrl(data.link), handle: validHandle(data.handle) ? data.handle : "", touched: data.touched,
       design: { theme: data.theme, c1: data.c1, c2: data.c2, surface: data.surface, shape: data.shape, layout: data.layout, fx: data.fx, banner: data.banner, order: data.order.slice(), off: data.off.slice() } });
     window.XyntalCardDraw = drawCard;
+    window.XyntalStoryDraw = drawStory;
     // Schnittstelle für /meine-karte: Karte vom Server laden, Änderungen beobachten
     window.XyntalBuilder = {
       get: () => ({ ...data, skills: data.skills.slice(), order: data.order.slice(), off: data.off.slice() }),

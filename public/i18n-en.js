@@ -756,6 +756,8 @@ window.XYNTAL_EN = {
   "Danke. Bitte prüfe dein Postfach und bestätige deine E-Mail-Adresse. Erst danach stehst du auf der Warteliste. Deine Karte ist gespeichert.": "Thanks. Please check your inbox and confirm your email address. Only then are you on the waitlist. Your card has been saved.",
   "Geteilt!": "Shared!",
   "Bild gespeichert: meine-xyntal-karte.png": "Image saved: meine-xyntal-karte.png",
+  "Als Story teilen": "Share as story",
+  "Story gespeichert: meine-xyntal-story.png": "Story saved: meine-xyntal-story.png",
   "entfernen": "remove",
   "Strategie": "Strategy", "Finanzen": "Finance", "Produkt": "Product", "Ads": "Ads", "Content": "Content",
   "Demo ansehen": "See the demo",
