@@ -503,35 +503,4 @@ adminView.addEventListener("click", (e) => {
   }
 });
 
-
-// Partnerprogramm: Zahlen kommen vom App-Server (GET /admin/partners, Partner-Links xyntal.de/?partner=<code>)
-async function renderPartners() {
-  const panel = document.querySelector('[data-panel="partners"]');
-  panel.innerHTML = '<p class="empty">Partner werden geladen …</p>';
-  let data;
-  try { data = await window.XyntalApp.api("GET", "/admin/partners"); }
-  catch (e) { panel.innerHTML = `<div class="notice">${esc(e.status === 403 ? "Dein App-Konto hat keine Staff-Rechte für Partner-Zahlen." : e.message || "Die Partner-Zahlen sind gerade nicht erreichbar.")}</div>`; return; }
-  const rows = data.partners || [];
-  panel.innerHTML = `
-    <p class="hint">Wer über den Link kommt und innerhalb von ${data.claimWindowDays} Tagen ein Konto anlegt, zählt für den Partner und bekommt das Angebot einmal. Klicks: Aufrufe des Links (einmal pro Browser), ohne Daten über die Person.</p>
-    ${rows.length ? `<div class="table-wrap"><table>
-      <thead><tr><th>Partner</th><th>Link</th><th>Angebot</th><th>Klicks (30 T.)</th><th>Konten (30 T.)</th><th>Gratis-Monat erhalten</th><th>Gerade im Gratis-Monat</th><th>Zahlen jetzt</th><th>Konversion</th></tr></thead>
-      <tbody>${rows.map((p) => {
-        const link = `https://xyntal.de/?partner=${p.code}`;
-        const conv = p.clicks ? Math.round((p.signups / p.clicks) * 100) + " %" : "–";
-        return `<tr><td><b>${esc(p.name)}</b>${p.active ? "" : " <small>(pausiert)</small>"}</td>
-          <td><button type="button" class="text-link" data-copy="${esc(link)}" title="Link kopieren">${esc(link.replace("https://", ""))}</button></td>
-          <td>${p.rewardDays} Tage ${esc(p.rewardPlan)}</td>
-          <td>${p.clicks} <small>(${p.clicks30d})</small></td><td><b>${p.signups}</b> <small>(${p.signups30d})</small></td>
-          <td>${p.rewarded}</td><td>${p.inFreeMonth}</td><td>${p.paying}</td><td>${conv}</td></tr>`;
-      }).join("")}</tbody></table></div>` : '<p class="empty">Noch keine Partner.</p>'}
-    <div class="row-actions"><button type="button" data-partners-refresh>Aktualisieren</button></div>`;
-  panel.querySelector("[data-partners-refresh]").addEventListener("click", renderPartners);
-  panel.querySelectorAll("[data-copy]").forEach((b) => b.addEventListener("click", async () => {
-    try { await navigator.clipboard.writeText(b.dataset.copy); b.textContent = "Kopiert ✓"; setTimeout(() => { b.textContent = b.dataset.copy.replace("https://", ""); }, 1500); } catch { /* ohne Zwischenablage */ }
-  }));
-}
-document.querySelector('[data-tab="partners"]').addEventListener("click", renderPartners);
-if (location.hash === "#partners") renderPartners();
-
 load();
