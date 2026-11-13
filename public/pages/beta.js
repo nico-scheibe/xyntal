@@ -19,6 +19,25 @@ let guest = true;
 // Die Einwilligung steht bei den Anmelde-Buttons und noch einmal unten im Formular; einer der Haken reicht
 const consentGiven = () => form.elements.consent.checked || (form.elements.consent_quick && form.elements.consent_quick.checked);
 
+// Geburtsdatum: Pflicht, ab 16 und taggenau. Die Prüfung im Server (handle_new_user, set_my_birthdate) gilt trotzdem.
+const BIRTHDATE_TOO_YOUNG = "Xyntal ist ab 16 Jahren. Sobald du 16 wirst, bist du herzlich willkommen.";
+function birthdateLimit() {
+  const t = new Date();
+  return [t.getFullYear() - 16, String(t.getMonth() + 1).padStart(2, "0"), String(t.getDate()).padStart(2, "0")].join("-");
+}
+function birthdateProblem(value) {
+  const v = String(value || "");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return "Bitte gib dein Geburtsdatum an.";
+  const [y, m, d] = v.split("-").map(Number);
+  const real = new Date(Date.UTC(y, m - 1, d));
+  if (real.getUTCFullYear() !== y || real.getUTCMonth() !== m - 1 || real.getUTCDate() !== d) return "Bitte gib ein gültiges Geburtsdatum an.";
+  if (v > birthdateLimit()) return BIRTHDATE_TOO_YOUNG; // zukünftige Daten sind ebenfalls jünger als 16
+  return "";
+}
+// Mit Prüfung: Fehlt das Feld einmal, soll das Modul hier nicht werfen – sonst wird der
+// Submit-Handler darunter nie registriert und das ganze Bewerbungsformular ist tot.
+if (form.elements.birthdate) form.elements.birthdate.max = birthdateLimit();
+
 function updateCount() {
   const n = why.value.trim().length;
   whyCount.textContent = n < MIN_WHY ? `noch ${MIN_WHY - n} Zeichen bis zum Minimum` : `${n} / 1500 Zeichen`;
@@ -115,11 +134,13 @@ form.addEventListener("submit", (e) => {
       requireFields(d, ["name", "email", "password"], "Bitte gib Name, E-Mail und ein Passwort mit mindestens 8 Zeichen an.");
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)) throw new Error("Bitte gib eine gültige E-Mail-Adresse an.");
       if (d.password.length < 8) throw new Error("Dein Passwort braucht mindestens 8 Zeichen.");
+      const birthProblem = birthdateProblem(d.birthdate);
+      if (birthProblem) { form.elements.birthdate.focus(); throw new Error(birthProblem); }
       saveDraft(d);
       const result = unwrap(await sb.auth.signUp({
         email: d.email.trim(), password: d.password,
         options: {
-          data: profileFrom({ name: d.name.trim(), headline: (d.project || d.why).trim().slice(0, 120) }),
+          data: { ...profileFrom({ name: d.name.trim(), headline: (d.project || d.why).trim().slice(0, 120) }), birthdate: d.birthdate },
           emailRedirectTo: new URL("beta", location.href).href,
         },
       }));

@@ -166,7 +166,9 @@ function birthdateProblem(value) {
   if (v > birthdateLimit()) return BIRTHDATE_TOO_YOUNG; // zukünftige Daten sind ebenfalls jünger als 16
   return "";
 }
-signupForm.elements.birthdate.max = birthdateLimit();
+// Mit Prüfung: Fehlt das Feld einmal, soll das Modul hier nicht werfen – sonst wird der
+// Submit-Handler darunter nie registriert und die Registrierung ist tot.
+if (signupForm.elements.birthdate) signupForm.elements.birthdate.max = birthdateLimit();
 
 signupForm.addEventListener("submit", (e) => {
   e.preventDefault();
