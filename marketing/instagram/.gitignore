@@ -1,0 +1,3 @@
+reels/out/
+reels/*/audio/*.wav
+reels/*/audio/stems/
