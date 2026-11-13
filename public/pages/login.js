@@ -151,6 +151,23 @@ pw.addEventListener("input", () => {
   if (ok(code)) field.value = code;
 })();
 
+// Geburtsdatum: Pflicht, ab 16 und taggenau. Die Prüfung im Server (handle_new_user, set_my_birthdate) gilt trotzdem.
+const BIRTHDATE_TOO_YOUNG = "Xyntal ist ab 16 Jahren. Sobald du 16 wirst, bist du herzlich willkommen.";
+function birthdateLimit() {
+  const t = new Date();
+  return [t.getFullYear() - 16, String(t.getMonth() + 1).padStart(2, "0"), String(t.getDate()).padStart(2, "0")].join("-");
+}
+function birthdateProblem(value) {
+  const v = String(value || "");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return "Bitte gib dein Geburtsdatum an.";
+  const [y, m, d] = v.split("-").map(Number);
+  const real = new Date(Date.UTC(y, m - 1, d));
+  if (real.getUTCFullYear() !== y || real.getUTCMonth() !== m - 1 || real.getUTCDate() !== d) return "Bitte gib ein gültiges Geburtsdatum an.";
+  if (v > birthdateLimit()) return BIRTHDATE_TOO_YOUNG; // zukünftige Daten sind ebenfalls jünger als 16
+  return "";
+}
+signupForm.elements.birthdate.max = birthdateLimit();
+
 signupForm.addEventListener("submit", (e) => {
   e.preventDefault();
   submitWith(signupForm, signupStatus, async (d) => {
@@ -159,9 +176,14 @@ signupForm.addEventListener("submit", (e) => {
     if (d.name.trim().length < 2) throw new Error("Bitte gib deinen Namen an.");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email.trim())) throw new Error("Bitte gib eine gültige E-Mail-Adresse an.");
     if (d.password.length < 8) throw new Error("Dein Passwort braucht mindestens 8 Zeichen.");
+    const birthProblem = birthdateProblem(d.birthdate);
+    if (birthProblem) { signupForm.elements.birthdate.focus(); throw new Error(birthProblem); }
     const result = unwrap(await sb.auth.signUp({
       email: d.email.trim(), password: d.password,
-      options: { data: profileFrom({ name: d.name.trim() }), emailRedirectTo: new URL(NEXT, location.href).href },
+      options: {
+        data: { ...profileFrom({ name: d.name.trim() }), birthdate: d.birthdate },
+        emailRedirectTo: new URL(NEXT, location.href).href,
+      },
     }));
     // Supabase meldet bei schon vorhandener E-Mail keinen Fehler, sondern ein Konto ohne Identitäten
     if (result.user && result.user.identities && result.user.identities.length === 0) {

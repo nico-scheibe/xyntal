@@ -102,6 +102,17 @@
 <button class="btn btn-small btn-ghost" type="button" data-avatar-remove disabled>Bild entfernen</button>
 <button class="btn btn-small btn-ghost" type="button" data-avatar-cleanup hidden>Alte Dateien aufräumen</button>
 <p class="form-status" role="status" aria-live="polite"></p></form>
+        <form id="birthdate-form" class="card-form" novalidate hidden>
+          <fieldset>
+            <legend>Dein Geburtsdatum</legend>
+            <p class="hint">Xyntal ist ab 16 Jahren. Trag dein Geburtsdatum einmal ein – danach kann dein Profil freigeschaltet werden. Andere Mitglieder sehen es nicht, und ändern lässt es sich danach nicht mehr.</p>
+            <label>Geburtsdatum
+              <input type="date" name="birthdate" autocomplete="bday" required>
+            </label>
+          </fieldset>
+          <button class="btn btn-small" type="submit">Geburtsdatum speichern</button>
+          <p class="form-status" role="status" aria-live="polite"></p>
+        </form>
         <form id="profile" class="card-form" novalidate>
           <fieldset>
             <legend>Profil bearbeiten</legend>
@@ -426,7 +437,7 @@
 <script src="/prompts.js?v=1" defer></script>
 <script src="/pages/profil-billing.js?v=5"></script>
 <script src="/invite.js?v=4" defer></script>
-<script src="/pages/profil.js?v=11"></script>
+<script src="/pages/profil.js?v=12"></script>
 <script src="/link-icons.js?v=1"></script>
 <script src="/link-editor.js?v=6"></script>
 <script src="/pages/profil-matching.js?v=1"></script>

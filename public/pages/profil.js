@@ -1,8 +1,26 @@
 const form = document.getElementById("profile");
 const status = document.getElementById("status");
+const birthdateForm = document.getElementById("birthdate-form");
 let me = null;
 
+// Geburtsdatum: Pflicht, ab 16 und taggenau (wie login.js; die Prüfung im Server gilt trotzdem)
+const BIRTHDATE_TOO_YOUNG = "Xyntal ist ab 16 Jahren. Sobald du 16 wirst, bist du herzlich willkommen.";
+function birthdateLimit() {
+  const t = new Date();
+  return [t.getFullYear() - 16, String(t.getMonth() + 1).padStart(2, "0"), String(t.getDate()).padStart(2, "0")].join("-");
+}
+function birthdateProblem(value) {
+  const v = String(value || "");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return "Bitte gib dein Geburtsdatum an.";
+  const [y, m, d] = v.split("-").map(Number);
+  const real = new Date(Date.UTC(y, m - 1, d));
+  if (real.getUTCFullYear() !== y || real.getUTCMonth() !== m - 1 || real.getUTCDate() !== d) return "Bitte gib ein gültiges Geburtsdatum an.";
+  if (v > birthdateLimit()) return BIRTHDATE_TOO_YOUNG;
+  return "";
+}
+
 function render(m) {
+  birthdateForm.hidden = true; // wird in explainReview wieder eingeblendet, wenn das Datum fehlt
   const betaCard = document.querySelector("[data-beta-download]");
   betaCard.hidden = m.is_beta_tester !== true;
   // The download for this computer comes first and stands out.
@@ -41,6 +59,7 @@ const REVIEW_HINTS = {
   name: "Trag deinen Namen ein (mindestens 2 Zeichen) – dann wird dein Profil automatisch freigeschaltet.",
   email: "Bestätige noch deine E-Mail-Adresse über den Link in der Mail, die wir dir geschickt haben – danach wird dein Profil automatisch freigeschaltet.",
   content: "Ein Text in deinem Profil passt nicht zu den <a class=\"text-link\" href=\"community-richtlinien\">Community-Richtlinien</a>. Pass ihn an, dann wird dein Profil automatisch freigeschaltet.",
+  birthdate: "Dein Profil wartet noch auf dein Geburtsdatum. <a class=\"text-link\" href=\"#birthdate-form\">Trag es hier ein</a> – Xyntal ist ab 16 Jahren. Danach kann dein Profil freigeschaltet werden.",
 };
 async function explainReview(fresh) {
   const box = document.querySelector("[data-review-notice]");
@@ -50,6 +69,13 @@ async function explainReview(fresh) {
     const r = Array.isArray(data) ? data[0] : data;
     if (!r) return;
     const welcome = fresh ? "<strong>Willkommen bei Xyntal!</strong> " : "";
+    // Fehlendes Geburtsdatum: unabhängig von der Automatik erklären und das Formular zeigen
+    if (r.problem === "birthdate") {
+      birthdateForm.elements.birthdate.max = birthdateLimit();
+      birthdateForm.hidden = false;
+      box.innerHTML = `${welcome}${REVIEW_HINTS.birthdate}`;
+      return;
+    }
     // Ohne Automatik (abgeschaltet oder vom Admin übernommen) bleibt der Satz zur
     // persönlichen Prüfung stehen; sonst steht da, was noch fehlt.
     if (!r.automatic) return;
@@ -188,6 +214,20 @@ form.addEventListener("submit", (e) => {
     fillForm(form, me);
     render(me);
     setStatus(status, "Gespeichert.", "ok");
+  });
+});
+
+// ---------- Geburtsdatum nachtragen (einmal; danach prüft die Datenbank das Profil neu) ----------
+birthdateForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  submitWith(birthdateForm, birthdateForm.querySelector(".form-status"), async (data) => {
+    const problem = birthdateProblem(data.birthdate);
+    if (problem) { birthdateForm.elements.birthdate.focus(); throw new Error(problem); }
+    unwrap(await sb.rpc("set_my_birthdate", { p_birthdate: data.birthdate }));
+    const fresh = unwrap(await sb.from("profiles").select("*").eq("id", me.id).single());
+    me = { ...me, ...fresh };
+    render(me);
+    setStatus(status, "Geburtsdatum gespeichert.", "ok");
   });
 });
 
