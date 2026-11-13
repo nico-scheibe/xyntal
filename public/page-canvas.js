@@ -631,10 +631,14 @@
       s.g.beginPath(); s.g.arc(x, f.y, f.r, 0, 6.283); s.g.fillStyle = `rgba(236,246,255,${f.a.toFixed(2)})`; s.g.fill();
     });
   }
-  // Statisches Bild (reduzierte Bewegung oder zu langsames Gerät): einmal zeichnen, keine Schleife
+  // Statisches Bild (reduzierte Bewegung oder zu langsames Gerät): einmal zeichnen, keine Schleife.
+  // Erneute Aufrufe (ResizeObserver meldet sich gleich nach dem Start, Größenänderungen) behalten dieselben
+  // Flocken und skalieren sie nur auf die neue Größe – das Bild springt nicht.
   function snowStillDraw(s) {
+    const pw = s.w, ph = s.h, n = snowStill();
     if (!snowFit(s)) return;
-    s.flakes = Array.from({ length: snowStill() }, () => snowFlake(s.w, s.h));
+    if (!s.still || s.flakes.length !== n) { s.flakes = Array.from({ length: n }, () => snowFlake(s.w, s.h)); s.still = true; }
+    else if (pw > 0 && ph > 0 && (pw !== s.w || ph !== s.h)) s.flakes.forEach((f) => { f.x *= s.w / pw; f.y *= s.h / ph; });
     snowDraw(s, 0);
   }
   function startSnow(host) {
