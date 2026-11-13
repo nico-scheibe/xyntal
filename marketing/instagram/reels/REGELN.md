@@ -27,6 +27,11 @@ Gesammelt aus [motionmaxxing](https://github.com/Tejashmakwana/motionmaxxing) (A
 - **Eine Hauptsache pro Bild.**
 - **Ende höchstens 1,4 Sekunden halten,** die letzte Szene höchstens 25 % des Films.
 - **Ton:** -14 LUFS, Voice-over statt Musik.
+- **Tiefe statt flacher Screenshots:** Das Hauptobjekt (z. B. eine Profilkarte) löst sich als gekippte Fläche aus der App, mit Schatten und einer Lichtkante, vor der unscharf und dunkel gestellten App (`persp()` in `r13-ideen-typ-final/film.js`).
+- **Physische Demo:** Ein Cursor fährt an, parkt, drückt, und die echte Oberfläche antwortet. Die Zustände vorher, beim Hover und danach werden aus der Demo aufgenommen und auf den Pixel ausgerichtet.
+- **Hook kinetisch, nicht als Folie:** immer nur ein Satz im Bild, harte Schnitte im Sprechrhythmus, Sprecher über die Schrift unterschieden (schmal und fett gegen breit und dünn).
+
+Vorlage für neue Reels ist jetzt `r13-ideen-typ-final/film.js`.
 
 ## Prüfen vor dem Abgeben
 
