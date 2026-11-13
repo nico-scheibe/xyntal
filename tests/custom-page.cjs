@@ -389,13 +389,19 @@ const stub = `window.supabase = { createClient: () => ({
   await pg.click('[data-add="bg"]');
   await pg.click('[data-phone]'); await pg.click('[data-phone]');
   assert.equal(await pg.locator('.pc-ov-snow canvas').count(), 1, 'ein Canvas nach dem Neu-Rendern');
-  const rafPerSec = await pg.evaluate(() => new Promise((ok) => {
-    const orig = window.requestAnimationFrame; let n = 0;
+  // Gezählt wird im Verhältnis zu den Bildern, die der Browser in derselben Sekunde liefert: Eine Schleife
+  // plant genau ein rAF pro Bild, eine doppelte zwei. So hängt das Ergebnis nicht davon ab, wie schnell die
+  // Maschine zeichnet (Headless-Chromium mit Software-Rendering schafft teils nur 7–8 Bilder pro Sekunde).
+  const raf = await pg.evaluate(() => new Promise((ok) => {
+    const orig = window.requestAnimationFrame; let snow = 0, frames = 0, run = true;
     // Nur Aufrufe aus page-canvas.js zählen (Schnee); andere Schleifen der Seite (xyntal-core.js) gehören nicht dazu
-    window.requestAnimationFrame = (f) => { if (/page-canvas\.js/.test(new Error().stack || '')) n++; return orig(f); };
-    setTimeout(() => { window.requestAnimationFrame = orig; ok(n); }, 1000);
+    window.requestAnimationFrame = (f) => { if (/page-canvas\.js/.test(new Error().stack || '')) snow++; return orig(f); };
+    const tick = () => { frames++; if (run) orig(tick); };
+    orig(tick);
+    setTimeout(() => { run = false; window.requestAnimationFrame = orig; ok({ snow, frames }); }, 1000);
   }));
-  assert.ok(rafPerSec > 20 && rafPerSec < 100, 'eine Schnee-Schleife (rAF pro Sekunde ' + rafPerSec + ')');
+  assert.ok(raf.frames >= 3, 'Browser liefert Bilder (' + raf.frames + ' pro Sekunde)');
+  assert.ok(raf.snow >= raf.frames - 2 && raf.snow <= raf.frames + 2, `eine Schnee-Schleife (${raf.snow} rAF bei ${raf.frames} Bildern)`);
   // Tab im Hintergrund: die Schnee-Leinwand bleibt stehen; zurück im Tab bewegt sie sich wieder
   const setHidden = (hidden) => pg.evaluate((hidden) => {
     Object.defineProperty(document, 'hidden', { configurable: true, get: () => hidden });
