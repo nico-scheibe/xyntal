@@ -725,12 +725,12 @@ function serve(req, res) {
       return res.end();
     }
   }
-  // Project short links use the project page and its existing access checks.
-  if ((!fs.existsSync(file) || !fs.statSync(file).isFile()) && /^\/[a-z0-9][a-z0-9_-]{0,19}-[a-z0-9][a-z0-9_-]{0,118}\/?$/.test(pathname)) file = path.join(currentRoot, 'projekte.html');
   // xyntal.de/name/invite: Einladungsseite (Promo-Code = Link-Name, führt zur Registrierung)
   if ((!fs.existsSync(file) || !fs.statSync(file).isFile()) && /^\/[a-z0-9][a-z0-9_-]{2,19}\/invite\/?$/i.test(pathname) && fs.existsSync(path.join(currentRoot, 'invite.html'))) file = path.join(currentRoot, 'invite.html');
-  // xyntal.de/name: Wunsch-Link zeigt die öffentliche Karte (die Seite fragt Supabase selbst)
+  // xyntal.de/name: Wunsch-Link zeigt die öffentliche Karte (die Seite fragt Supabase selbst); vor den Projekt-Links, damit auch /vor-nachname zur Karte führt
   if ((!fs.existsSync(file) || !fs.statSync(file).isFile()) && /^\/[a-z0-9][a-z0-9_-]{2,19}\/?$/i.test(pathname) && fs.existsSync(path.join(currentRoot, 'u.html'))) file = path.join(currentRoot, 'u.html');
+  // Längere Projekt-Kurzlinks führen auf die Projektseite.
+  if ((!fs.existsSync(file) || !fs.statSync(file).isFile()) && /^\/[a-z0-9][a-z0-9_-]{0,19}-[a-z0-9][a-z0-9_-]{0,118}\/?$/.test(pathname)) file = path.join(currentRoot, 'projekte.html');
   if (!fs.existsSync(file) || !fs.statSync(file).isFile()) {
     res.writeHead(404, {'Content-Type':'text/html; charset=utf-8'});
     return res.end(req.method === 'HEAD' ? undefined : fs.readFileSync(path.join(currentRoot,'404.html')));

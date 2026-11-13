@@ -1,5 +1,5 @@
 // Bekannte Adressen ohne eigene Seite weiterleiten, bevor die Karte (u.html) oder ein Projekt (projekte.html) lädt.
-// Der Server schickt unbekannte /name an u.html und /wort-wort an projekte.html.
+// Der Server schickt unbekannte /name (3–20 Zeichen, auch mit Bindestrich) an u.html, längere /wort-wort an projekte.html.
 (function () {
   var to = {
     "events": "/community", "treffen": "/community",
