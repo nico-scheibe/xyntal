@@ -56,8 +56,8 @@ function dabei(ctx, x, y, w, press = 1) {
 const SC = []; const at = (u0, fn) => SC.push([u0, fn]);
 
 // Akt 1 · Hook über der App, unscharf, aber als Oberfläche erkennbar
-const HOOKCAM = (u) => { const c = camAt(390, 1443, 760, 700); return [c[0], c[1] + 4 * (8.6 - u), c[2] * (1 + 0.004 * (8.6 - u))]; };
-const CARDCAM = HOOKCAM(8.6);
+const HOOKCAM = (u) => { const c = camAt(390, 1443, 760, 700); return [c[0], c[1] + 4 * (K[2] - u), c[2] * (1 + 0.004 * (K[2] - u))]; };
+const CARDCAM = HOOKCAM(K[2]);
 const bg = (ctx, u, I, amt = 1, c = HOOKCAM(u)) => {
   shot(ctx, I.entdecken, c, amt > 0 ? `blur(${14 * amt}px) brightness(${lerp(1, 0.55, amt)})` : 'none');
   if (amt > 0) {   // die Karte von Noah etwas heller, damit sie als Produkt lesbar ist

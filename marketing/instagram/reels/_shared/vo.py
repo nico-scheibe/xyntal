@@ -78,7 +78,7 @@ def main():
     place = []  # (startsekunde, wav)
 
     if "cards" in spec:
-        t, card_t, W_ = 0.1, [], []
+        t, card_t, W_ = spec.get("start", 0.1), [], []
         for item in spec["cards"]:
             key, text = (item[0], item[1]) if isinstance(item, list) else ("N", item)
             w, d = tts(film, text, V[key], model, S)
