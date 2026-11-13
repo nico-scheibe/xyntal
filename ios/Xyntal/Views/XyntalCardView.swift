@@ -234,8 +234,12 @@ struct XyntalCardView: View {
     private static let firstUserID = "be172112-15cd-49de-af85-e7f71dfeac47"
     private static let firstUserHandle = "maxim"
 
+    /// Bewusst NUR die Kennung. Der Desktop prüft zusätzlich den Handle "maxim", aber
+    /// Handles sind frei wählbar und werden nach einer Löschung wieder frei: Wer sich
+    /// den Namen sichert, bekäme das Abzeichen "01 First User" geschenkt. In einem Club,
+    /// der von Vertrauen lebt, ist ein erschlichenes Abzeichen schlimmer als ein fehlendes.
     private var isFirstUser: Bool {
-        card.userId == Self.firstUserID || card.handle?.lowercased() == Self.firstUserHandle
+        card.userId == Self.firstUserID
     }
 
     /// Steht beim Desktop immer rechts oben, solange die Person kein Admin ist:
@@ -411,9 +415,11 @@ struct XyntalCardView: View {
     }
 
     /// Chips mit Höhe 28 und Radius 14, Innenabstand 12 links und rechts, Abstand 6.
+    /// Gedeckelt, weil die Liste aus einem fremden Profil kommt: Die Website begrenzt auf
+    /// vier, aber darauf verlassen wir uns nicht, wenn die Daten über zwei Server laufen.
     private var skillChips: some View {
         ChipFlow(spacing: 6, alignment: centered ? .center : .leading) {
-            ForEach(Array(card.skills.enumerated()), id: \.offset) { _, skill in
+            ForEach(Array(card.skills.prefix(20).enumerated()), id: \.offset) { _, skill in
                 Text(verbatim: skill)
                     .font(.system(size: 13))
                     .foregroundStyle(design.text1)

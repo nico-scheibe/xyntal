@@ -100,10 +100,15 @@ struct CardDesign: Decodable, Hashable {
     /// Die Blöcke in der Reihenfolge der Karte, ohne die ausgeblendeten.
     /// Unbekannte Namen fallen weg, fehlende werden hinten ergänzt – so kann eine
     /// künftige Website-Version nichts verschlucken.
+    /// Entdoppelt wird bewusst: "order" kommt aus dem Profil eines fremden Mitglieds.
+    /// Ohne das Entdoppeln legt eine Karte mit ["pitch", "pitch", ... 50.000-mal] die App
+    /// jeder Person lahm, die sie zu sehen bekommt – in der Mitgliederliste wie im Stapel.
+    /// Das Ergebnis kann so nie mehr Einträge haben als es Blöcke gibt.
     var blocks: [String] {
         let hidden = Set(off ?? [])
-        let wanted = (order ?? []).filter { Self.defaultOrder.contains($0) }
-        let rest = Self.defaultOrder.filter { !wanted.contains($0) }
+        var seen = Set<String>()
+        let wanted = (order ?? []).filter { Self.defaultOrder.contains($0) && seen.insert($0).inserted }
+        let rest = Self.defaultOrder.filter { !seen.contains($0) }
         return (wanted + rest).filter { !hidden.contains($0) }
     }
 
@@ -138,7 +143,11 @@ enum CardMedia {
     private static let stillImages = ["jpg", "png", "webp"]
 
     static func url(kind: String, userID: String?, path: String?) -> URL? {
-        guard let userID, !userID.isEmpty,
+        // Die Kennung wird geprüft, nicht nur der Pfad: Sie geht in den Pfad der Adresse,
+        // und ein Wert wie "../../etwas" würde daraus eine Anfrage auf einen ganz anderen
+        // Pfad des eigenen Servers machen. Der Host bliebe zwar unser eigener, aber die
+        // Anfrage wäre nicht die, die wir stellen wollten.
+        guard let userID, UUID(uuidString: userID) != nil,
               let path, (try? pathPattern.wholeMatch(in: path)) != nil,
               let fileExtension = path.split(separator: ".").last.map(String.init),
               stillImages.contains(fileExtension.lowercased()),

@@ -21,6 +21,8 @@ struct MatchFoundSheet: View {
     @State private var text = ""
     @State private var isSending = false
     @State private var sendFailed = false
+    /// Einmal erfolgreich gesendet. Sperrt den Knopf dauerhaft, bis das Blatt weg ist.
+    @State private var didSend = false
 
     /// Vorname = erstes Wort von personName.
     private var firstName: String {
@@ -42,7 +44,7 @@ struct MatchFoundSheet: View {
     }
 
     private var canSend: Bool {
-        !isSending && !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        !isSending && !didSend && !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     var body: some View {
@@ -150,6 +152,14 @@ struct MatchFoundSheet: View {
             let ok = await onSend(message)
             isSending = false
             sendFailed = !ok
+            if ok {
+                // Gesendet bleibt gesendet: Das Blatt schließt der Aufrufer mit einer
+                // Animation, und in diesem Moment wäre der Knopf sonst wieder aktiv und
+                // der Text noch da – ein zweiter Tipp schickte dieselbe Nachricht erneut.
+                // Der Text wird dabei gleich geleert, er wird nicht mehr gebraucht.
+                didSend = true
+                text = ""
+            }
         }
     }
 }
