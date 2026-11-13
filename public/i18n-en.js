@@ -758,6 +758,7 @@ window.XYNTAL_EN = {
   "Bild gespeichert: meine-xyntal-karte.png": "Image saved: meine-xyntal-karte.png",
   "Bild gespeichert: meine-xyntal-story.png": "Image saved: meine-xyntal-story.png",
   "Als Story teilen": "Share as story",
+  "Für die Story: Leg in Instagram den Link-Sticker auf das Feld mit deinem Link. Dann kommt man mit einem Tipp auf deine Seite.": "For your story: in Instagram, put the link sticker on the field with your link. One tap then takes people to your page.",
   "entfernen": "remove",
   "Strategie": "Strategy", "Finanzen": "Finance", "Produkt": "Product", "Ads": "Ads", "Content": "Content",
   "Demo ansehen": "See the demo",

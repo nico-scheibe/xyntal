@@ -49,6 +49,7 @@ const pngSize = (buf) => {
   assert.deepEqual(pngSize(story.buf), [1080, 1920]);
   assert.match(await pg.textContent('[data-card-status]'), /meine-xyntal-story\.png/);
   assert.equal(await pg.isDisabled('[data-card-story]'), false, 'Knopf bleibt nach dem Export bedienbar');
+  assert.match(await pg.textContent('[data-card-story-hint]'), /Link-Sticker/, 'Hinweis zum Link-Sticker steht beim Knopf');
 
   // Die oberen 250 px der Story bleiben frei: dort liegt nur der Hintergrund, keine Karte
   const topIsEmpty = await pg.evaluate(async () => {
