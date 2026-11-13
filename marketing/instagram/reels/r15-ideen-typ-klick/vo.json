@@ -4,8 +4,8 @@
   "L": "aTTiK3YzK3dXETpuDE2h"
  },
  "model": "eleven_v3",
- "tempo": 1.15,
- "card_gap": 0.2,
+ "tempo": 1.0,
+ "card_gap": 0.4,
  "words": true,
  "end_offset": 0.25,
  "tail": 0.6,

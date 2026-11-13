@@ -24,13 +24,28 @@ function words(ctx, u, tokens, { x = 72, y, size = 160, color = C.t1, maxW = W -
   }
 }
 const toks = (l, from, ws) => ws.map((w, i) => [w, wt(l, from + i) - 0.04]);
+// Ganze Zeilen gleiten aus einer unsichtbaren Kante nach oben ins Bild (18 Frames, abbremsend) und bleiben stehen.
+// rows: [[Text, Startbeat, Verlauf?]]. Ein Schlüsselwort pro Karte bekommt den Verlauf des Logos.
+function lines(ctx, u, rows, { x = 72, y, size = 200, lh = 0.98, color = C.t1, maxW = W - 144 }) {
+  font(ctx, size, 800, 'Archivo', 'extra-condensed');
+  while (Math.max(...rows.map(([t]) => ctx.measureText(t).width)) > maxW && size > 40) { size *= 0.96; font(ctx, size, 800, 'Archivo', 'extra-condensed'); }
+  rows.forEach(([txt, at, grad], i) => {
+    if (u < at) return;
+    const by = y + i * size * lh, p = EXPO(clamp((u - at) / (18 * F)));
+    ctx.save(); ctx.beginPath(); ctx.rect(0, by - size * 0.95, W, size * 1.15); ctx.clip();
+    if (grad) { const w = ctx.measureText(txt).width, g = ctx.createLinearGradient(x, 0, x + w, 0);
+      g.addColorStop(0, '#B36BFF'); g.addColorStop(0.5, '#3A8AFF'); g.addColorStop(1, '#3FE0F0'); ctx.fillStyle = g; }
+    else ctx.fillStyle = color;
+    ctx.fillText(txt, x, by + (1 - p) * size * 1.05); ctx.restore();
+  });
+}
 function shot(ctx, img, [cx, cy, vw], filter = 'none', dy = 0) {
   ctx.fillStyle = C.ui; ctx.fillRect(0, 0, W, H); if (!img) return;
   const s = W / vw;
   ctx.save(); ctx.filter = filter; ctx.translate(W / 2, H / 2); ctx.scale(s, s); ctx.translate(-cx, -cy + dy); ctx.drawImage(img, 0, 0); ctx.restore();
 }
 // feste, deckende Textzone oben; die Oberfläche beginnt darunter
-const cap = (ctx, u, tokens, size = 160) => { ctx.fillStyle = C.ground; ctx.fillRect(0, 0, W, BAND); words(ctx, u, tokens, { y: BAND - 110, size }); };
+const cap = (ctx, u, rows, size = 170) => { ctx.fillStyle = C.ground; ctx.fillRect(0, 0, W, BAND); lines(ctx, u, rows, { y: BAND - 110 - (rows.length - 1) * size * 0.98, size }); };
 function cam(u, a, keys, push = 0.012) { const c = kf(u, keys, E.inOutCubic); return [c[0], c[1], c[2] * (1 - push * (u - a))]; }
 
 // Bildkoordinaten in der Handy-Aufnahme (1518 px breit), gemessen per DOM
@@ -66,26 +81,20 @@ const bg = (ctx, u, I, amt = 1, c = HOOKCAM(u)) => {
     shot(ctx, I.entdecken, c, `blur(${14 * amt}px) brightness(${lerp(1, 0.72, amt)})`); ctx.restore();
   } };
 const veil = (ctx) => { ctx.fillStyle = 'rgba(14,14,17,0.22)'; ctx.fillRect(0, 700, W, 760); };    // ruhige Fläche hinter der Schrift
-at(0, (ctx, u, t, I) => {   // Frame 0: Produkt scharf. Mit dem ersten Wort zieht die Schärfe weg (12 Frames).
+at(0, (ctx, u, t, I) => {   // Frame 0: Produkt scharf. Mit dem ersten Wort zieht die Schärfe weg.
   const w0 = wt(0, 0) - 0.04, k = EXPO(clamp((u - w0) / (12 * F)));
   bg(ctx, u, I, Math.max(0.001, k));
   if (k > 0) { ctx.save(); ctx.globalAlpha = k; veil(ctx); ctx.restore(); }
-  words(ctx, u, [['Wir', w0], ['machen', wt(0, 1) - 0.04]], { y: 1040, size: 230 }); });
-at(wt(0, 2) - 0.04, (ctx, u, t, I) => { const a = wt(0, 2) - 0.04; bg(ctx, u, I); veil(ctx);
-  const s = lerp(1.4, 1, EXPO(clamp((u - a) / (6 * F))));
-  ctx.save(); ctx.translate(72, 1160); ctx.scale(s, s); words(ctx, u, [['50/50.', a]], { x: 0, y: 0, size: 400 }); ctx.restore(); });
+  lines(ctx, u, [['Wir machen', w0], ['50/50.', wt(0, 2) - 0.04, true]], { y: 960, size: 300 }); });
 at(wt(0, 3) - 0.04, (ctx, u, t, I) => { bg(ctx, u, I); veil(ctx);
-  words(ctx, u, toks(0, 3, ['Ich', 'hab']), { y: 940, size: 230 }); words(ctx, u, toks(0, 5, ['die', 'Idee,']), { y: 1150, size: 230 }); });
-at(wt(0, 7) - 0.04, (ctx, u, t, I) => { bg(ctx, u, I); veil(ctx);
-  words(ctx, u, [['du', wt(0, 7) - 0.04]], { y: 1100, size: 560 });
-  words(ctx, u, toks(0, 8, ['baust', 'die', 'App.']), { y: 1290, size: 150, color: C.t2 }); });
+  lines(ctx, u, [['Ich: die Idee.', wt(0, 3) - 0.04], ['Du: die App.', wt(0, 7) - 0.04, true]], { y: 980, size: 220 }); });
 // Wendepunkt: Schrift steht, bis die Schärfe in 12 Frames aufzieht, dann ist sie weg (harter Schnitt)
 const PULL = () => wt(1, 3) + 0.25;
 at(K[1] - 0.04, (ctx, u, t, I) => {
   const f = EXPO(clamp((u - PULL()) / (12 * F)));
   const c = HOOKCAM(u).map((v, i) => lerp(v, CARDCAM[i], f));
   bg(ctx, u, I, 1 - f, c);
-  if (f < 0.35) { veil(ctx); words(ctx, u, toks(1, 0, ['Es', 'geht', 'auch']), { y: 990, size: 210 }); words(ctx, u, [['anders.', wt(1, 3) - 0.04]], { y: 1190, size: 210 }); } });
+  if (f < 0.35) { veil(ctx); lines(ctx, u, [['Es geht', K[1] - 0.04], ['auch anders.', wt(1, 2) - 0.04, true]], { y: 980, size: 240 }); } });
 // Akt 2 · EINE durchgehende Kamerafahrt über Noahs Karte, ohne Jump-Cuts.
 // Harte Schnitte nur, wo sich das Bild wirklich ändert: Einschub „94 %“ und Match-Cut ins Ende.
 const PILL = camAt(390, 2004, 640, 1100), ZEIT = camAt(390, 2330, 760, 840), TAP = camAt(390, 2560, 760, 820);
@@ -160,14 +169,13 @@ at(K[2] - 0.04, (ctx, u, t, I) => { const a = K[2] - 0.04, press = wt(5, 2) - 0.
     const kin = SLIDE(clamp((u - b0) / (14 * F))), kout = E.inCubic(dout);
     banner(ctx, I, lerp(BAND - 60, 700, kin) - kout * 420);
   }
-  // Textzone: hält immer den aktuellen Satz
-  if (u < wt(2, 8) - 0.04) cap(ctx, u, [['Sag,', a]].concat(toks(2, 1, ['was', 'du', 'baust.'])));
-  else if (u < K[3] - 0.04) cap(ctx, u, toks(2, 8, ['Wer', 'passt.']), 190);
-  else if (u < N0()) cap(ctx, u, [['Mit', K[3] - 0.04], ['Passung.', wt(3, 1) - 0.04]], 190);
-  else if (u < K[4] - 0.04) cap(ctx, u, [['Wie', N1()], ['viel', wt(3, 6) - 0.04], ['Zeit.', wt(3, 7) - 0.04]], 190);
-  else if (u < K[5] - 0.04) cap(ctx, u, [['Leute', K[4] - 0.04], ['finden', wt(4, 4) - 0.04], ['dich.', wt(4, 6) - 0.04]], 190);
-  else if (u < wt(5, 1) - 0.04) cap(ctx, u, [['Passt?', K[5] - 0.04]], 200);
-  else cap(ctx, u, toks(5, 1, ['Ein', 'Klick.']), 200); });
+  // Textzone: ganze Sätze, die stehen bleiben, bis der nächste kommt
+  if (u < wt(2, 8) - 0.04) cap(ctx, u, [['Sag, was du baust.', a]]);
+  else if (u < K[3] - 0.04) cap(ctx, u, [['Wer passt?', wt(2, 8) - 0.04, true]], 210);
+  else if (u < N0()) cap(ctx, u, [['Passung in Prozent.', K[3] - 0.04]]);
+  else if (u < K[4] - 0.04) cap(ctx, u, [['Und wie viel Zeit.', N1()]]);
+  else if (u < K[5] - 0.04) cap(ctx, u, [['Leute finden dich.', K[4] - 0.04]]);
+  else cap(ctx, u, [['Passt?', K[5] - 0.04], ['Ein Klick.', wt(5, 1) - 0.04, true]], 170); });
 // Akt 3 · Match-Cut: Karte tritt zurück (8 Frames), der Knopf wächst und wandert in die Endkarte (20 Frames)
 at(T.end - 0.04, (ctx, u, t, I) => { const a = T.end - 0.04, press = wt(5, 2) - 0.02;
   ctx.fillStyle = C.ground; ctx.fillRect(0, 0, W, H);
@@ -184,8 +192,7 @@ at(T.end - 0.04, (ctx, u, t, I) => { const a = T.end - 0.04, press = wt(5, 2) - 
   dabeiDraw(ctx, lerp(x0, x1, m), lerp(y0, y1, m), lerp(w0, w1, m), 1);
   const e = WD[6], tx = (W - 820) / 2;
   if (u > a + 0.5) {
-    words(ctx, u, [['Kostenlos', e[0][1] - 0.04]], { y: 1120, size: 170, x: tx });
-    words(ctx, u, [['in', e[1][1] - 0.04], ['der', e[2][1] - 0.04], ['Beta.', e[3][1] - 0.04]], { y: 1280, size: 170, x: tx });
+    lines(ctx, u, [['Kostenlos', e[0][1] - 0.04], ['in der Beta.', e[1][1] - 0.04, true]], { y: 1120, size: 170, x: tx });
     font(ctx, 44, 500, 'Plex'); ctx.fillStyle = C.t2; ctx.fillText('Link im Profil · xyntal.de', tx + 4, 1380);
     font(ctx, 28, 400, 'Plex'); ctx.fillStyle = C.t3; ctx.fillText('Gezeigt: App-Demo mit Beispieldaten', tx + 4, 1450);
   } });
