@@ -66,7 +66,11 @@ const bg = (ctx, u, I, amt = 1, c = HOOKCAM(u)) => {
     shot(ctx, I.entdecken, c, `blur(${14 * amt}px) brightness(${lerp(1, 0.72, amt)})`); ctx.restore();
   } };
 const veil = (ctx) => { ctx.fillStyle = 'rgba(14,14,17,0.22)'; ctx.fillRect(0, 700, W, 760); };    // ruhige Fläche hinter der Schrift
-at(0, (ctx, u, t, I) => { bg(ctx, u, I); veil(ctx); words(ctx, u, [['Wir', -1], ['machen', wt(0, 1) - 0.04]], { y: 1040, size: 230 }); });
+at(0, (ctx, u, t, I) => {   // Frame 0: Produkt scharf. Mit dem ersten Wort zieht die Schärfe weg (12 Frames).
+  const w0 = wt(0, 0) - 0.04, k = EXPO(clamp((u - w0) / (12 * F)));
+  bg(ctx, u, I, Math.max(0.001, k));
+  if (k > 0) { ctx.save(); ctx.globalAlpha = k; veil(ctx); ctx.restore(); }
+  words(ctx, u, [['Wir', w0], ['machen', wt(0, 1) - 0.04]], { y: 1040, size: 230 }); });
 at(wt(0, 2) - 0.04, (ctx, u, t, I) => { const a = wt(0, 2) - 0.04; bg(ctx, u, I); veil(ctx);
   const s = lerp(1.4, 1, EXPO(clamp((u - a) / (6 * F))));
   ctx.save(); ctx.translate(72, 1160); ctx.scale(s, s); words(ctx, u, [['50/50.', a]], { x: 0, y: 0, size: 400 }); ctx.restore(); });
