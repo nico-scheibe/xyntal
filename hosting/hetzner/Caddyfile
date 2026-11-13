@@ -19,6 +19,11 @@
 			wrap json
 			fields {
 				request>uri regexp "\?.*$" ""
+				# Der Referer ist der zweite Weg, auf dem eine Abfrage in dieselbe
+				# Zeile gerät: Kommt jemand von /beta?code=... oder /login?next=...,
+				# steht das dort. Suchbegriffe sind davon nicht betroffen, aber
+				# Einladungscodes schon – und eine Zeile kostet es nicht mehr.
+				request>headers>Referer regexp "\?.*$" ""
 			}
 		}
 	}
