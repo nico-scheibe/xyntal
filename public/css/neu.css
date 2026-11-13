@@ -164,6 +164,25 @@ figcaption.mono b { color: var(--t-1); font-weight: 500; margin-right: 8px; }
 .top__right { display: flex; align-items: center; gap: 22px; font-size: .94rem; }
 .top__login { color: var(--t-2); }
 @media (max-width: 760px) { .top__nav { display: none; } }
+/* Sprache DE/EN (i18n.js): Pille wie Suche und Konto daneben. Gleiches Aussehen in site-header.css.
+   Bis 1000 px nur die andere Sprache als runder Knopf wie die Lupe, damit die Zeile nicht eng wird. */
+.top .lang-switch { display: inline-flex; align-items: center; flex: none; height: 32px; padding: 3px; box-sizing: border-box; border-radius: 999px; box-shadow: inset 0 0 0 1px var(--line); }
+.top .lang-switch button { height: 26px; min-width: 34px; padding: 0 9px; border: 0; border-radius: 999px; background: transparent; color: var(--t-3); font: 500 11.5px/1 var(--f-mono); cursor: pointer; transition: color .25s, background-color .25s; }
+.top .lang-switch button:hover { color: var(--t-1); }
+.top .lang-switch button[aria-pressed="true"] { background: rgba(var(--t-rgb), .12); color: var(--t-1); }
+.top .lang-switch button:focus-visible { outline: 2px solid #3FE0F0; outline-offset: 2px; }
+@media (max-width: 1000px) {
+  .top .lang-switch { padding: 0; box-shadow: none; }
+  .top .lang-switch button[aria-pressed="true"] { display: none; }
+  .top .lang-switch button { width: 32px; height: 32px; min-width: 0; padding: 0; background: rgba(var(--t-rgb), .08); color: var(--t-1); }
+  .top .lang-switch button:hover { background: rgba(var(--t-rgb), .18); }
+}
+@media (max-width: 480px) {
+  .top__right { gap: 8px; }
+  .top .lang-switch button { width: 36px; height: 36px; }
+}
+/* Sehr schmale Handys: nur das Zeichen, ohne Schriftzug, damit Lupe, Sprache, Bewerben und Konto in die Zeile passen */
+@media (max-width: 360px) { .top__logo span { display: none; } }
 
 /* ---------- 5 Szenen ---------- */
 
