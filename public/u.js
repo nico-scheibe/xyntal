@@ -298,7 +298,7 @@
   const sameUrl = (a, b) => { const k = (u) => { try { const x = new URL(u); return `${x.hostname.replace(/^www\./, "")}${x.pathname.replace(/\/+$/, "")}${x.search}`.toLowerCase(); } catch { return u; } }; return k(a) === k(b); };
   const isOwnSite = (u) => { try { return /^(www\.)?xyntal\.(de|com)$/i.test(new URL(u).hostname); } catch { return false; } };
   function linkItems(c) {
-    // Eigene Einträge: Links (http/https) und reiner Text, z. B. „Username: nico“
+    // Eigene Einträge: Links (http/https) und reiner Text, z. B. „Username: xyntal“
     const own = Array.isArray(c.links) ? c.links.filter((l) => l && String(l.url || "").trim() && String(l.title || "").trim()) : [];
     if (own.length) return own;
     const p = c.profile || {};

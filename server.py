@@ -15,6 +15,8 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
 
 PUBLIC = os.path.join(os.path.dirname(os.path.abspath(__file__)), "public")
+# Umgezogene Seiten wie in hosting/daki/server.cjs (MOVED_PAGES)
+MOVED_PAGES = {"/brief": "/ueber-uns"}
 
 
 class Handler(SimpleHTTPRequestHandler):
@@ -23,6 +25,12 @@ class Handler(SimpleHTTPRequestHandler):
 
     def redirect_project_slash(self):
         parsed = urlparse(self.path)
+        moved = MOVED_PAGES.get(re.sub(r"(\.html|/)$", "", parsed.path))
+        if moved:
+            self.send_response(301)
+            self.send_header("Location", moved + ("?" + parsed.query if parsed.query else ""))
+            self.end_headers()
+            return True
         if re.fullmatch(r"/[a-z0-9][a-z0-9_-]{0,19}-[a-z0-9][a-z0-9_-]{0,118}/", parsed.path):
             self.send_response(308)
             self.send_header("Location", parsed.path[:-1] + ("?" + parsed.query if parsed.query else ""))

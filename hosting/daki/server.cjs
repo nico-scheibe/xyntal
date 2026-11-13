@@ -425,7 +425,9 @@ const types = { '.html':'text/html; charset=utf-8', '.css':'text/css; charset=ut
 // (plus demo-i18n.js, beta-i18n.js) übersetzt – damit Suchmaschinen und Vorschauen englischen Text unter einer
 // eigenen Adresse bekommen, ohne dass es zwei Fassungen jeder Seite zu pflegen gibt. Was im Wörterbuch fehlt,
 // bleibt deutsch stehen. AGB und Widerruf gibt es bewusst nur auf Deutsch (nicht übersetzt).
-const EN_PAGES = new Set(['index', 'matching', 'demo', 'preise', 'unternehmen', 'beta', 'brief', 'community', 'mitglieder', 'community-richtlinien', 'kuendigen']);
+const EN_PAGES = new Set(['index', 'matching', 'demo', 'preise', 'unternehmen', 'beta', 'ueber-uns', 'community', 'mitglieder', 'community-richtlinien', 'kuendigen']);
+// Umgezogene Seiten: alte Adresse -> neue (dauerhaft). /brief war bis November 2026 der Brief, heute „Über uns“.
+const MOVED_PAGES = new Map([['/brief', '/ueber-uns'], ['/en/brief', '/en/ueber-uns']]);
 const enCache = new Map(); // "commit:seite" -> HTML
 let enDict = { commit: null, dict: {}, patterns: [] };
 function englishDict(currentRoot) {
@@ -648,6 +650,13 @@ function serve(req, res) {
   }
   if (!root) { res.writeHead(503, {'Retry-After':'10'}); return res.end('Website is starting'); }
   const currentRoot = root;
+  {
+    const moved = MOVED_PAGES.get(pathname.replace(/(?:\.html|\/)$/, ''));
+    if (moved && requestHost(req) !== ADMIN_HOST) {
+      res.writeHead(301, { Location: MAIN_SITE + moved + new URL(req.url, 'http://localhost').search, 'Cache-Control': 'public, max-age=3600' });
+      return res.end();
+    }
+  }
   // Englische Seiten: /en und /en/seite. Alles andere unter /en/ ist dieselbe Datei wie ohne /en
   // (Skripte laden manches relativ zur Seite); deutsche Seiten ohne englische Fassung leiten weiter.
   if ((pathname === '/en' || pathname.startsWith('/en/')) && requestHost(req) !== ADMIN_HOST) {

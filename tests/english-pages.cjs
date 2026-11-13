@@ -19,7 +19,7 @@ const root = path.resolve(__dirname, '../public');
     }).on('error', reject).end();
   });
   try {
-    const pages = ['index', 'matching', 'demo', 'preise', 'unternehmen', 'beta', 'brief', 'community', 'mitglieder', 'community-richtlinien', 'kuendigen'];
+    const pages = ['index', 'matching', 'demo', 'preise', 'unternehmen', 'beta', 'ueber-uns', 'community', 'mitglieder', 'community-richtlinien', 'kuendigen'];
     const en = (p) => (p === 'index' ? '/en' : '/en/' + p), de = (p) => (p === 'index' ? '/' : '/' + p);
     const sitemap = fs.readFileSync(path.join(root, 'sitemap.xml'), 'utf8');
     for (const p of pages) {
@@ -65,13 +65,15 @@ const root = path.resolve(__dirname, '../public');
     assert.doesNotMatch(enHome, /\/assets\/img\/(?!en\/)[a-z0-9-]+\.webp/, 'kein deutsches Bild auf /en');
     assert.doesNotMatch((await get('xyntal.de', '/')).body, /assets\/img\/en\//, 'deutsche Startseite ohne englische Bilder');
     // was unter data-no-i18n steht, bleibt unverändert
-    assert.match((await get('xyntal.de', '/en/brief')).body, /<span data-no-i18n>Regensburg, <\/span>/);
+    assert.match((await get('xyntal.de', '/en/ueber-uns')).body, /<a href="mailto:admin@xyntal.com" data-no-i18n>admin@xyntal.com<\/a>/);
 
     // Adressen: eine pro Seite, Rest leitet weiter
     for (const [host, url, status, to] of [
       ['xyntal.de', '/en/', 301, '/en'], ['xyntal.de', '/en/index.html', 301, '/en'], ['xyntal.de', '/en/preise.html?jahr=1', 301, '/en/preise?jahr=1'],
       ['xyntal.de', '/en/preise/', 301, '/en/preise'], ['www.xyntal.de', '/en/preise', 301, 'https://xyntal.de/en/preise'],
       // deutsche Seiten ohne englische Fassung (AGB, Login …): weiter zur deutschen Adresse
+      // umgezogene Seite: der frühere Brief ist heute „Über uns“
+      ['xyntal.de', '/brief', 301, 'https://xyntal.de/ueber-uns'], ['xyntal.de', '/en/brief', 301, 'https://xyntal.de/en/ueber-uns'], ['xyntal.de', '/brief.html?x=1', 301, 'https://xyntal.de/ueber-uns?x=1'],
       ['xyntal.de', '/en/agb', 302, '/agb'], ['xyntal.de', '/en/login?next=beta', 302, '/login?next=beta'],
     ]) {
       const r = await get(host, url);
