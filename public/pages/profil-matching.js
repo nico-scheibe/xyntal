@@ -17,26 +17,63 @@
   const say = (el, text, kind = "") => { el.textContent = text; el.className = `${el.className.split(" ")[0]}${kind ? " " + kind : ""}`; };
   const fmtDate = (iso) => new Date(iso).toLocaleDateString(document.documentElement.lang === "en" ? "en-GB" : "de-DE", { day: "numeric", month: "long", year: "numeric" });
 
+  // ---------- Geburtsdatum fürs erste App-Konto (der Server prüft: ab 16) ----------
+  const birth = form.querySelector("[data-matching-birth]");
+  const birthInput = birth.querySelector("[data-birthdate-input]");
+  const birthButton = birth.querySelector("[data-birthdate-save]");
+  const birthStatus = birth.querySelector("[data-birthdate-status]");
+  const birthLimit = () => { const d = new Date(); return [d.getFullYear() - 16, String(d.getMonth() + 1).padStart(2, "0"), String(d.getDate()).padStart(2, "0")].join("-"); };
+  function sendBirthdate() {
+    const v = birthInput.value;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(v) || v > birthLimit()) {
+      say(birthStatus, v ? t("Xyntal ist ab 16 Jahren. Sobald du 16 wirst, bist du herzlich willkommen.") : t("Bitte gib dein Geburtsdatum an."), "error");
+      birthInput.focus();
+      return;
+    }
+    birth.dataset.sent = "1";
+    birthButton.disabled = true;
+    say(birthStatus, t("Wird gespeichert …"));
+    // Auch auf der Website nachtragen, falls es dort noch fehlt
+    if (typeof sb !== "undefined" && sb) sb.rpc("set_my_birthdate", { p_birthdate: v }).then(() => {}, () => {});
+    if (!loading) loading = load(v).catch((e) => { loading = null; loadFailed(e); });
+  }
+  birthButton.addEventListener("click", sendBirthdate);
+  birthInput.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); sendBirthdate(); } });
+
   window.openMatchingTab = () => {
     if (!loading) loading = load().catch((err) => { loading = null; loadFailed(err); });
   };
 
-  async function load() {
-    loadEl.hidden = false;
-    say(loadEl, t("Wird geladen …"));
-    const s = await X.session();
+  async function load(birthdate = "") {
+    if (!birthdate) {
+      loadEl.hidden = false;
+      say(loadEl, t("Wird geladen …"));
+    }
+    const s = await X.session({ birthdate });
     const [{ profile }, assessment] = await Promise.all([X.api("GET", `/users/${encodeURIComponent(s.userId)}`), X.api("GET", "/profile/assessment")]);
     fill(profile);
     state.assessment = assessment;
     renderWorkStyle();
     loadEl.hidden = true;
+    birth.hidden = true;
     fields.hidden = false;
   }
 
   function loadFailed(err) {
     loadEl.hidden = false;
+    birth.hidden = true;
     if (err && err.code === "SIGNED_OUT") {
       loadEl.innerHTML = `${esc(err.message)} <a class="text-link" href="login?next=profil">${esc(t("Zum Login"))}</a>`;
+      return;
+    }
+    // Erstes App-Konto: Der Server prüft das Mindestalter (16). Das Datum wird hier im Profil eingetragen.
+    if (err && (err.code === "BIRTHDATE_REQUIRED" || err.code === "UNDERAGE" || (birth.dataset.sent && err.code === "VALIDATION_FAILED"))) {
+      loadEl.hidden = true;
+      birth.hidden = false;
+      birthInput.max = birthLimit();
+      birthButton.disabled = false;
+      if (err.code === "BIRTHDATE_REQUIRED") say(birthStatus, "");
+      else say(birthStatus, err.message, "error");
       return;
     }
     loadEl.innerHTML = `${esc((err && err.message) || t("Das hat nicht geklappt. Versuch es gleich noch einmal."))} <button class="btn btn-small btn-ghost" type="button" data-retry>${esc(t("Neu laden"))}</button>`;

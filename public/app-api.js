@@ -45,34 +45,58 @@
     return { id: raw.user.id, token: raw.access_token };
   }
 
+  // Ein gescheiterter Tausch sperrt weitere Versuche kurz (über alle Tabs und Seiten).
+  // Sonst probiert es jeder Seitenaufruf und jeder Hintergrundaufruf sofort wieder,
+  // das Login-Limit des Servers (10/Minute) ist weg und der echte Fehler verdeckt.
+  const FAIL = "xyntal-app-session-fail";
+  function failedRecently(site) {
+    const f = read(FAIL);
+    return f && f.sb === site.id && f.until > Date.now() ? new ApiError(f.status, f.code, f.message) : null;
+  }
+  function rememberFailure(site, res) {
+    const wait = res.status === 429 ? Math.max(10, res.retryAfter || 60) : 30;
+    try { localStorage.setItem(FAIL, JSON.stringify({ sb: site.id, until: Date.now() + wait * 1000, status: res.status, code: res.code, message: res.message })); } catch { /* privat */ }
+  }
+
   let exchanging = null;
   // `silent`: nichts nachfragen (kein 2FA-Dialog) – für Hintergrundaufrufe wie das
   // Ankündigungs-Banner, die lieber still scheitern als eine Seite zu unterbrechen.
-  async function session({ fresh = false, silent = false } = {}) {
+  // `birthdate` (JJJJ-MM-TT): nur fürs erste App-Konto – kommt aus dem Profil (Matching-Reiter
+  // oder Geburtsdatum-Formular), weil die Website ihr gespeichertes Datum nicht herausgibt.
+  async function session({ fresh = false, silent = false, birthdate = "" } = {}) {
     const site = await websiteSession();
     if (!site) { forget(); throw new ApiError(401, "SIGNED_OUT", t("Bitte logg dich ein.")); }
     const cached = read(STORE);
     if (!fresh && cached && cached.sb === site.id && cached.token && Date.parse(cached.expiresAt) > Date.now() + 60000) return cached;
     if (cached && cached.sb !== site.id) forget();
     if (!site.token) throw new ApiError(401, "SIGNED_OUT", t("Deine Sitzung ist abgelaufen. Bitte logg dich neu ein."));
+    if (birthdate) return exchange(site, "", silent, birthdate);
+    const blocked = failedRecently(site);
+    if (blocked) throw blocked;
     if (!exchanging) exchanging = exchange(site, "", silent).finally(() => { exchanging = null; });
     return exchanging;
   }
 
-  async function exchange(site, code = "", silent = false) {
-    const res = await raw("POST", "/auth/supabase", { body: { accessToken: site.token, deviceName: "xyntal.de", code } });
+  async function exchange(site, code = "", silent = false, birthdate = "") {
+    const body = { accessToken: site.token, deviceName: "xyntal.de", code };
+    if (birthdate) body.birthdate = birthdate;
+    const res = await raw("POST", "/auth/supabase", { body });
     if (res.ok) {
       const s = { sb: site.id, userId: res.data.user.id, token: res.data.token, expiresAt: res.data.expiresAt };
-      try { localStorage.setItem(STORE, JSON.stringify(s)); } catch { /* ohne Speicher: pro Seite neu */ }
+      try { localStorage.setItem(STORE, JSON.stringify(s)); localStorage.removeItem(FAIL); } catch { /* ohne Speicher: pro Seite neu */ }
       return s;
     }
     if (res.code === "TWOFA_REQUIRED" || res.code === "TWOFA_INVALID") {
       if (silent) throw new ApiError(401, "TWOFA_REQUIRED", t("Dein Xyntal-App-Konto ist mit Zwei-Faktor-Anmeldung geschützt."));
       const next = await askCode(res.code === "TWOFA_INVALID");
       if (!next) throw new ApiError(401, "TWOFA_CANCELLED", t("Ohne den Code aus deiner Authenticator-App geht es hier nicht weiter."));
-      return exchange(site, next, silent);
+      return exchange(site, next, silent, birthdate);
     }
     if (res.code === "SUPABASE_MFA_REQUIRED" && typeof mfaRedirect === "function") return mfaRedirect();
+    // Erstes App-Konto: Der Server prüft das Mindestalter (16) und braucht dafür das Geburtsdatum.
+    // Eingetragen wird es im Profil unter Matching (profil-matching.js).
+    if (res.code === "BIRTHDATE_REQUIRED") res.message = t("Für Matching brauchen wir einmal dein Geburtsdatum – Xyntal ist ab 16 Jahren. Trag es im Profil unter Matching ein.");
+    if (res.status && !birthdate) rememberFailure(site, res);
     throw new ApiError(res.status, res.code, res.message);
   }
 
@@ -88,7 +112,7 @@
     }
     const json = await res.json().catch(() => ({}));
     const error = json.error || {};
-    return { ok: res.ok, status: res.status, data: json.data, code: error.code, message: error.message || t("Das hat nicht geklappt. Versuch es gleich noch einmal."), details: error.details };
+    return { ok: res.ok, status: res.status, data: json.data, code: error.code, message: error.message || t("Das hat nicht geklappt. Versuch es gleich noch einmal."), details: error.details, retryAfter: Number(res.headers.get("retry-after")) || 0 };
   }
 
   // Ein API-Aufruf mit App-Sitzung; eine abgelaufene wird einmal neu getauscht.

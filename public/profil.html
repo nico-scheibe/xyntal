@@ -26,7 +26,7 @@
   <link rel="stylesheet" href="/site-header.css?v=12">
   <link rel="stylesheet" href="/site-search.css?v=2">
 <link rel="stylesheet" href="/profile-layout.css?v=101">
-<link rel="stylesheet" href="/matching.css?v=102">
+<link rel="stylesheet" href="/matching.css?v=104">
 <link rel="stylesheet" href="/invite.css?v=2">
 <link rel="stylesheet" href="/linkpage.css?v=10">
   <link rel="stylesheet" href="/footer-home.css?v=1">
@@ -190,6 +190,17 @@
               <p class="hint">Diese Angaben nutzt das Matching von Xyntal – hier auf der Website und in der Desktop-App, es sind dieselben Daten. Je mehr du ausfüllst, desto genauer werden deine Vorschläge unter <a class="text-link" href="fuer-dich">Für dich</a>. <a class="text-link" href="matching">So berechnen wir die Passung</a>.</p>
             </div>
             <p class="xm-status" data-matching-load role="status">Wird geladen …</p>
+            <div class="xm-style xm-birth" data-matching-birth hidden>
+              <h3>Noch ein Schritt: dein Geburtsdatum</h3>
+              <p>Für Matching legen wir einmal dein Konto in der Xyntal-App an. Xyntal ist ab 16 Jahren – andere Mitglieder sehen dein Geburtsdatum nicht.</p>
+              <div class="xm-birth-row">
+                <label>Geburtsdatum
+                  <input type="date" autocomplete="bday" min="1900-01-01" data-birthdate-input>
+                </label>
+                <button class="btn btn-small btn-primary" type="button" data-birthdate-save>Speichern und weiter</button>
+              </div>
+              <p class="xm-status" data-birthdate-status role="status" aria-live="polite"></p>
+            </div>
             <div data-matching-fields hidden>
               <fieldset>
                 <legend>Was du machst</legend>
@@ -431,14 +442,14 @@
 <script src="avatars.js?v=35"></script>
 <script src="notifications.js?v=35"></script>
 <script src="effects.js?v=40"></script>
-<script src="/app-api.js?v=5"></script>
+<script src="/app-api.js?v=7"></script>
 <script src="/prompts.js?v=1" defer></script>
 <script src="/pages/profil-billing.js?v=5"></script>
 <script src="/invite.js?v=4" defer></script>
-<script src="/pages/profil.js?v=12"></script>
+<script src="/pages/profil.js?v=13"></script>
 <script src="/link-icons.js?v=1"></script>
 <script src="/link-editor.js?v=7"></script>
-<script src="/pages/profil-matching.js?v=1"></script>
+<script src="/pages/profil-matching.js?v=3"></script>
 <script src="/account-menu.js?v=23" defer></script>
 <script src="/site-search.js?v=3" defer></script>
 <script src="/site-chat.js?v=6" defer></script>

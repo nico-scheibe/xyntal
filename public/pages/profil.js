@@ -224,6 +224,8 @@ birthdateForm.addEventListener("submit", (e) => {
     const problem = birthdateProblem(data.birthdate);
     if (problem) { birthdateForm.elements.birthdate.focus(); throw new Error(problem); }
     unwrap(await sb.rpc("set_my_birthdate", { p_birthdate: data.birthdate }));
+    // Dasselbe Datum gilt fürs App-Konto (Matching) – sonst fragt der Matching-Reiter noch einmal
+    if (window.XyntalApp) window.XyntalApp.session({ birthdate: data.birthdate }).then(() => {}, () => {});
     const fresh = unwrap(await sb.from("profiles").select("*").eq("id", me.id).single());
     me = { ...me, ...fresh };
     render(me);

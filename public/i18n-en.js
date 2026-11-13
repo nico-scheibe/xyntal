@@ -1452,6 +1452,13 @@ window.XYNTAL_EN = {
 
   "Swipen": "Swipe",
   "Weiter": "Next",
+  "Geburtsdatum": "Date of birth",
+  "Bitte gib dein Geburtsdatum an.": "Please enter your date of birth.",
+  "Xyntal ist ab 16 Jahren. Sobald du 16 wirst, bist du herzlich willkommen.": "Xyntal is for people aged 16 and over. Once you turn 16, you're very welcome.",
+  "Noch ein Schritt: dein Geburtsdatum": "One more step: your date of birth",
+  "Für Matching legen wir einmal dein Konto in der Xyntal-App an. Xyntal ist ab 16 Jahren – andere Mitglieder sehen dein Geburtsdatum nicht.": "For matching we set up your Xyntal app account once. Xyntal is for people aged 16 and over – other members can't see your date of birth.",
+  "Speichern und weiter": "Save and continue",
+  "Für Matching brauchen wir einmal dein Geburtsdatum – Xyntal ist ab 16 Jahren. Trag es im Profil unter Matching ein.": "For matching we need your date of birth once – Xyntal is for people aged 16 and over. Add it in your profile under Matching.",
   "Ins Team": "Add to team",
   "REIN": "IN",
   "WEITER": "NEXT",
