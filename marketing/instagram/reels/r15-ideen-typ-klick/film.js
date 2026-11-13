@@ -12,8 +12,10 @@ const IO = E.bezier(0.65, 0, 0.35, 1), EXPO = E.outExpo, SLIDE = E.bezier(0.2, 0
 const F = 1 / 30, BAND = 620;
 
 function font(ctx, size, weight, family, stretch = 'normal') { ctx.font = `${weight} ${Math.round(size)}px ${family}`; ctx.fontStretch = stretch; ctx.letterSpacing = '0px'; }
-function words(ctx, u, tokens, { x = 72, y, size = 160, color = C.t1 }) {
+function words(ctx, u, tokens, { x = 72, y, size = 160, color = C.t1, maxW = W - 144 }) {
   font(ctx, size, 800, 'Archivo', 'extra-condensed');
+  const full = tokens.map(([t]) => t).join(' ');
+  while (ctx.measureText(full).width > maxW && size > 40) { size *= 0.95; font(ctx, size, 800, 'Archivo', 'extra-condensed'); }
   const space = ctx.measureText(' ').width; let cx = x;
   for (const [txt, at] of tokens) {
     const w = ctx.measureText(txt).width;
@@ -55,7 +57,14 @@ const SC = []; const at = (u0, fn) => SC.push([u0, fn]);
 
 // Akt 1 · Hook über der App, unscharf, aber als Oberfläche erkennbar
 const HOOKCAM = (u) => [759, 1700 + 18 * u, 1518 * (1 - 0.004 * u)];
-const bg = (ctx, u, I, amt = 1) => shot(ctx, I.entdecken, HOOKCAM(u), amt > 0 ? `blur(${14 * amt}px) brightness(${lerp(1, 0.55, amt)})` : 'none');
+const CARDCAM = camAt(390, 1443, 760, 700);
+const bg = (ctx, u, I, amt = 1, c = HOOKCAM(u)) => {
+  shot(ctx, I.entdecken, c, amt > 0 ? `blur(${14 * amt}px) brightness(${lerp(1, 0.55, amt)})` : 'none');
+  if (amt > 0) {   // die Karte von Noah etwas heller, damit sie als Produkt lesbar ist
+    const s = W / c[2], x = W / 2 + (42 - c[0]) * s, y = H / 2 + (1443 - c[1]) * s;
+    ctx.save(); ctx.beginPath(); ctx.roundRect(x, y, 696 * s, 1611 * s, 40 * s); ctx.clip();
+    shot(ctx, I.entdecken, c, `blur(${14 * amt}px) brightness(${lerp(1, 0.72, amt)})`); ctx.restore();
+  } };
 const veil = (ctx) => { ctx.fillStyle = 'rgba(14,14,17,0.22)'; ctx.fillRect(0, 700, W, 760); };    // ruhige Fläche hinter der Schrift
 at(0, (ctx, u, t, I) => { bg(ctx, u, I); veil(ctx); words(ctx, u, [['Wir', -1], ['machen', wt(0, 1) - 0.04]], { y: 1040, size: 230 }); });
 at(wt(0, 2) - 0.04, (ctx, u, t, I) => { const a = wt(0, 2) - 0.04; bg(ctx, u, I); veil(ctx);
@@ -70,16 +79,27 @@ at(wt(0, 7) - 0.04, (ctx, u, t, I) => { bg(ctx, u, I); veil(ctx);
 const PULL = () => wt(1, 3) + 0.25;
 at(K[1] - 0.04, (ctx, u, t, I) => {
   const f = EXPO(clamp((u - PULL()) / (12 * F)));
-  bg(ctx, u, I, 1 - f);
-  if (f < 1) { veil(ctx); words(ctx, u, toks(1, 0, ['Es', 'geht', 'auch']), { y: 990, size: 210 }); words(ctx, u, [['anders.', wt(1, 3) - 0.04]], { y: 1190, size: 210 }); } });
+  const c = HOOKCAM(u).map((v, i) => lerp(v, CARDCAM[i], f));
+  bg(ctx, u, I, 1 - f, c);
+  if (f < 0.35) { veil(ctx); words(ctx, u, toks(1, 0, ['Es', 'geht', 'auch']), { y: 990, size: 210 }); words(ctx, u, [['anders.', wt(1, 3) - 0.04]], { y: 1190, size: 210 }); } });
 // Akt 2 · eine Karte statt zwei: Kamera fährt von der Übersicht auf Noah
 at(K[2] - 0.04, (ctx, u, t, I) => { const a = K[2] - 0.04;
-  const c = cam(u, a, [[a, HOOKCAM(a)], [a + 1.6, camAt(390, 1443, 760, 700)], [K[3], camAt(390, 1520, 760, 700)]], 0);
+  const c = cam(u, a, [[a, CARDCAM], [K[3], camAt(390, 1520, 760, 700)]], 0);
   shot(ctx, I.entdecken, c);
   if (u < wt(2, 8) - 0.1) cap(ctx, u, toks(2, 0, ['Sag,', 'was', 'du', 'baust.']));
   else cap(ctx, u, toks(2, 8, ['Wer', 'passt.']), 190); });
 // Kontrast-Makro: die Passung bildfüllend, dann die Zeit
 at(K[3] - 0.04, (ctx, u, t, I) => { const a = K[3] - 0.04, z = wt(3, 4) - 0.1;
+  const n0 = wt(3, 1) - 0.04, n1 = n0 + 1.2;
+  if (u >= n0 && u < n1) {                       // „94 %“ allein, bildfüllend, 0,6 s
+    ctx.fillStyle = C.ground; ctx.fillRect(0, 0, W, H);
+    const z2 = 1 + 0.03 * (u - n0);
+    ctx.save(); ctx.translate(W / 2, 1060); ctx.scale(z2, z2);
+    font(ctx, 520, 800, 'Archivo', 'extra-condensed'); ctx.textAlign = 'center'; ctx.fillStyle = C.t1; ctx.fillText('94 %', 0, 180);
+    ctx.restore(); ctx.textAlign = 'left';
+    font(ctx, 60, 500, 'Plex'); ctx.fillStyle = C.t2; ctx.fillText('Passung', 76, 1430);
+    return;
+  }
   if (u < z) {
     shot(ctx, I.entdecken, cam(u, a, [[a, camAt(390, P.pill[1], 640, 1180)]], 0.02));
     cap(ctx, u, [['94 %', wt(3, 1) - 0.04], ['Passung.', wt(3, 1) - 0.04]], 190);
@@ -90,63 +110,81 @@ at(K[3] - 0.04, (ctx, u, t, I) => { const a = K[3] - 0.04, z = wt(3, 4) - 0.1;
 // Leute finden dich: Benachrichtigung gleitet über die Karte (echter Wortlaut aus der Demo)
 at(K[4] - 0.04, (ctx, u, t, I) => { const a = K[4] - 0.04;
   shot(ctx, I.entdecken, cam(u, a, [[a, camAt(390, 2340, 760, 820)]], 0.01), `brightness(${lerp(1, 0.55, clamp((u - a) / (10 * F)))})`);
-  cap(ctx, u, [['Leute', a], ['finden', wt(4, 4) - 0.04], ['dich.', wt(4, 6) - 0.04]], 190);
   const k = SLIDE(clamp((u - (a + 0.15)) / (14 * F)));
-  const bx = 40, bw = W - 80, bh = 290, by = lerp(-bh - 40, 700, k);
+  const bx = 40, bw = W - 80, bh = 290, by = lerp(BAND - 60, 700, k);
   ctx.save();
   ctx.shadowColor = 'rgba(0,0,0,0.55)'; ctx.shadowBlur = 50; ctx.shadowOffsetY = 18;
   ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 44); ctx.fillStyle = '#202024'; ctx.fill(); ctx.restore();
   ctx.strokeStyle = 'rgba(236,234,228,0.10)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 44); ctx.stroke();
   if (I.logo) ctx.drawImage(I.logo, bx + 40, by + 44, 92, 92);
-  font(ctx, 46, 600, 'Plex'); ctx.fillStyle = C.t1; ctx.fillText('Noah Becker möchte dir schreiben', bx + 160, by + 92);
+  font(ctx, 48, 600, 'Plex'); ctx.fillStyle = C.t1; ctx.fillText('Noah Becker möchte dir schreiben', bx + 160, by + 92);
   font(ctx, 40, 400, 'Plex'); ctx.fillStyle = C.t2;
-  ctx.fillText('Hi Lena! Xyntal hat mich als', bx + 160, by + 168); ctx.fillText('iOS-Entwickler für Loopr vorgeschlagen.', bx + 160, by + 222); });
-// Höhepunkt · ein Tipp
-at(K[5] - 0.04, (ctx, u, t, I) => { const a = K[5] - 0.04;
-  const press = wt(5, 2) - 0.02;
-  const c0 = cam(u, a, [[a, camAt(390, 2560, 760, 820)]], 0.012), c = [c0[0], c0[1], c0[2] * (1 - 0.03 * EXPO(clamp((u - press) / 0.8)))];
-  const img = u < press + 2 * F ? I.k0 : I.k2;
-  shot(ctx, img, c);
-  const s = W / c[2];
-  const bx = W / 2 + (P.btn[0] - c[0]) * s, by = H / 2 + (P.btn[1] - c[1]) * s, bw = P.btn[2] * s, bh = P.btn[3] * s;
-  // Knopf gibt beim Drücken 4 Frames lang nach (0.96)
-  const dn = clamp((u - (press - 4 * F)) / (2 * F)) * (1 - clamp((u - press) / (2 * F)));
-  if (dn > 0 && I.k0) { const sc = 1 - 0.04 * dn; ctx.fillStyle = '#111318'; ctx.fillRect(bx - 4, by - 4, bw + 8, bh + 8);
-    ctx.drawImage(I.k0, ...P.btn, bx + (bw * (1 - sc)) / 2, by + (bh * (1 - sc)) / 2, bw * sc, bh * sc); }
-  // Tipp-Anzeige: Punkt erscheint, Welle läuft aus
-  const tx = bx + bw * 0.5, ty = by + bh * 0.55, tp = u - (press - 6 * F);
-  if (tp > 0) {
-    const d = clamp(tp / (6 * F)), out = clamp((u - (press + 10 * F)) / (8 * F));
-    ctx.save(); ctx.globalAlpha = 0.6 * (1 - out); ctx.fillStyle = '#fff';
-    ctx.beginPath(); ctx.arc(tx, ty, 32 * lerp(0.8, 1, d) * s / 1.42, 0, M.TAU); ctx.fill(); ctx.restore();
+  ctx.fillText('Hi Lena! Xyntal hat mich als', bx + 160, by + 168); ctx.fillText('iOS-Entwickler für Loopr vorgeschlagen.', bx + 160, by + 222);
+  cap(ctx, u, [['Leute', a], ['finden', wt(4, 4) - 0.04], ['dich.', wt(4, 6) - 0.04]], 190); });
+// Höhepunkt · ein Tipp: Knopf gibt nach, wird grün, der Haken zeichnet sich, 0,6 s Halt
+const TAPCAM = (u, a, press) => { const c0 = cam(u, a, [[a, camAt(390, 2560, 760, 820)]], 0.012); return [c0[0], c0[1], c0[2] * (1 - 0.03 * EXPO(clamp((u - press) / 0.8)))]; };
+function btnRect(c) { const s = W / c[2]; return [W / 2 + (P.btn[0] - c[0]) * s, H / 2 + (P.btn[1] - c[1]) * s, P.btn[2] * s, P.btn[3] * s, s]; }
+function dabeiDraw(ctx, x, y, w, k = 1) {     // Vektor-Knopf; k = Fortschritt des Hakens 0..1
+  const h = w * (102 / 336), r = h / 2;
+  ctx.save(); ctx.beginPath(); ctx.roundRect(x, y, w, h, r); ctx.fillStyle = C.greenBg; ctx.fill();
+  ctx.lineWidth = Math.max(2, w * 0.009); ctx.strokeStyle = C.green; ctx.stroke();
+  const fs = h * 0.34; font(ctx, fs, 600, 'Plex'); ctx.fillStyle = C.green;
+  const label = 'Du bist dabei', tw = ctx.measureText(label).width, ck = fs * 0.75, gap = fs * 0.45;
+  const sx = x + (w - (ck + gap + tw)) / 2, cy = y + h / 2;
+  const p1 = [sx, cy], p2 = [sx + ck * 0.38, cy + ck * 0.36], p3 = [sx + ck, cy - ck * 0.42];
+  const l1 = Math.hypot(p2[0] - p1[0], p2[1] - p1[1]), l2 = Math.hypot(p3[0] - p2[0], p3[1] - p2[1]), d = k * (l1 + l2);
+  ctx.beginPath(); ctx.moveTo(...p1);
+  if (d <= l1) ctx.lineTo(p1[0] + (p2[0] - p1[0]) * d / l1, p1[1] + (p2[1] - p1[1]) * d / l1);
+  else { ctx.lineTo(...p2); const e = (d - l1) / l2; ctx.lineTo(p2[0] + (p3[0] - p2[0]) * e, p2[1] + (p3[1] - p2[1]) * e); }
+  ctx.lineWidth = fs * 0.12; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; if (k > 0) ctx.stroke();
+  ctx.fillText(label, sx + ck + gap, cy + fs * 0.36); ctx.restore();
+}
+at(K[5] - 0.04, (ctx, u, t, I) => { const a = K[5] - 0.04, press = wt(5, 2) - 0.02;
+  const c = TAPCAM(u, a, press);
+  shot(ctx, I.k0, c);
+  const [bx, by, bw, bh, s] = btnRect(c);
+  const down = u >= press - 4 * F && u < press;              // 4 Frames gedrückt
+  if (down || u >= press) { ctx.fillStyle = '#111318'; ctx.fillRect(bx - 6, by - 6, bw + 12, bh + 12); }
+  if (down && I.k0) { const sc = 0.94; ctx.drawImage(I.k0, ...P.btn, bx + bw * (1 - sc) / 2, by + bh * (1 - sc) / 2, bw * sc, bh * sc); }
+  if (u >= press) dabeiDraw(ctx, bx, by, bw, clamp((u - press) / (10 * F)));
+  // Tipp-Anzeige 20 px unter der Schrift: weicher Punkt und Ring
+  const tx = bx + bw * 0.5, ty = by + bh * 0.5 + 20 + 14, tp = u - (press - 4 * F);
+  if (tp >= 0) {
+    const out = clamp((u - (press + 8 * F)) / (8 * F));
+    ctx.save(); ctx.globalAlpha = 0.2 * (1 - out); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(tx, ty, 34, 0, M.TAU); ctx.fill(); ctx.restore();
     const r = clamp((u - press) / (18 * F));
-    if (r > 0 && r < 1) { ctx.save(); ctx.globalAlpha = 0.5 * (1 - r); ctx.strokeStyle = '#fff'; ctx.lineWidth = 4;
-      ctx.beginPath(); ctx.arc(tx, ty, 32 * lerp(1, 1.6, EXPO(r)) * s / 1.42 * 1.6, 0, M.TAU); ctx.stroke(); ctx.restore(); }
+    if (r < 1) { ctx.save(); ctx.globalAlpha = 0.9 * (1 - r); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(tx, ty, 34 * lerp(1, 2.2, EXPO(r)), 0, M.TAU); ctx.stroke(); ctx.restore(); }
   }
   if (u < wt(5, 1) - 0.1) cap(ctx, u, [['Passt?', wt(5, 0) - 0.04]], 200);
   else cap(ctx, u, toks(5, 1, ['Ein', 'Klick.']), 200); });
-// Akt 3 · Match-Cut: der Knopf fliegt in die Endkarte, 20 Frames
-at(T.end - 0.04, (ctx, u, t, I) => { const a = T.end - 0.04;
+// Akt 3 · Match-Cut: Karte tritt zurück (8 Frames), der Knopf wächst und wandert in die Endkarte (20 Frames)
+at(T.end - 0.04, (ctx, u, t, I) => { const a = T.end - 0.04, press = wt(5, 2) - 0.02;
   ctx.fillStyle = C.ground; ctx.fillRect(0, 0, W, H);
-  // Startlage = Lage des Knopfs im letzten Bild der Klick-Szene
-  const cE = camAt(390, 2560, 760, 820), s0 = W / (cE[2] * (1 - 0.012 * (a - K[5] + 0.04)) * 0.97);
-  const x0 = W / 2 + (P.btn[0] - cE[0]) * s0, y0 = H / 2 + (P.btn[1] - cE[1]) * s0, w0 = P.btn[2] * s0;
+  const cA = TAPCAM(a, K[5] - 0.04, press), [x0, y0, w0] = btnRect(cA);
+  const fo = clamp((u - a) / (8 * F));
+  if (fo < 1) {
+    const sc = lerp(1, 0.92, fo), cx = x0 + w0 / 2, cy = y0 + w0 * 0.15;
+    ctx.save(); ctx.globalAlpha = 1 - fo; ctx.translate(cx, cy); ctx.scale(sc, sc); ctx.translate(-cx, -cy);
+    shot(ctx, I.k0, cA); ctx.fillStyle = '#111318'; ctx.fillRect(x0 - 6, y0 - 6, w0 + 12, w0 * (102 / 336) + 12); ctx.restore();
+  }
   const m = IO(clamp((u - a) / (20 * F)));
-  const w1 = 820, x1 = (W - w1) / 2, y1 = 640;
-  dabei(ctx, lerp(x0, x1, m), lerp(y0, y1, m), lerp(w0, w1, m));
-  const e = WD[6];
-  if (m >= 1 || u > a + 0.5) {
-    words(ctx, u, [['Kostenlos', e[0][1] - 0.04]], { y: 1120, size: 170, x: x1 });
-    words(ctx, u, [['in', e[1][1] - 0.04], ['der', e[2][1] - 0.04], ['Beta.', e[3][1] - 0.04]], { y: 1280, size: 170, x: x1 });
-    font(ctx, 44, 500, 'Plex'); ctx.fillStyle = C.t2; ctx.fillText('Link im Profil · xyntal.de', x1 + 4, 1380);
-    font(ctx, 28, 400, 'Plex'); ctx.fillStyle = C.t3; ctx.fillText('Gezeigt: App-Demo mit Beispieldaten', x1 + 4, 1450);
+  const drift = 1 + 0.02 * clamp((u - a - 0.7) / 3);
+  const w1 = 820 * drift, x1 = (W - w1) / 2, y1 = 640 - (w1 - 820) * 0.15;
+  dabeiDraw(ctx, lerp(x0, x1, m), lerp(y0, y1, m), lerp(w0, w1, m), 1);
+  const e = WD[6], tx = (W - 820) / 2;
+  if (u > a + 0.5) {
+    words(ctx, u, [['Kostenlos', e[0][1] - 0.04]], { y: 1120, size: 170, x: tx });
+    words(ctx, u, [['in', e[1][1] - 0.04], ['der', e[2][1] - 0.04], ['Beta.', e[3][1] - 0.04]], { y: 1280, size: 170, x: tx });
+    font(ctx, 44, 500, 'Plex'); ctx.fillStyle = C.t2; ctx.fillText('Link im Profil · xyntal.de', tx + 4, 1380);
+    font(ctx, 28, 400, 'Plex'); ctx.fillStyle = C.t3; ctx.fillText('Gezeigt: App-Demo mit Beispieldaten', tx + 4, 1450);
   } });
 
 const GRAIN = [];
 M.film({
   fonts: ['800 100px Archivo', '600 40px Plex', '500 40px Plex', '400 28px Plex'],
   images: { logo: '../_shared/fonts/logo.svg', entdecken: '../_shared/shots/m_entdecken.png', k0: '../_shared/shots/m_klick_0.png', k2: '../_shared/shots/m_klick_2.png' },
-  hits: [], samples: 6,
+  hits: [], samples: 1,          // keine Mehrfachbelichtung: harte Schnitte, keine Geisterbilder
   init() {
     for (let k = 0; k < 6; k++) {
       const c = document.createElement('canvas'); c.width = c.height = 256;
