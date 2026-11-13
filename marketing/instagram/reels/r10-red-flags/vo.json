@@ -1,0 +1,11 @@
+{ "voices": {"N": "egBwWoDtXGCSMgwiS3vn"}, "model": "eleven_v3",
+  "cards": [
+    "Fünf Red Flags beim Mitgründer.",
+    "Eins: Ich hab die Idee, du machst den Rest.",
+    "Zwei: keine Zahl bei den Stunden pro Woche.",
+    "Drei: will keinen Vertrag. Wir sind doch Freunde.",
+    "Vier: hat noch nie etwas zu Ende gebaut.",
+    "Fünf: redet nur über Exit und Geld.",
+    "Eine davon? Sprecht darüber."
+  ],
+  "end": "Schick das jemandem, der gerade sucht." }

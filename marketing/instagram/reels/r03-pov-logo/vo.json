@@ -1,0 +1,14 @@
+{ "voices": {"N": "egBwWoDtXGCSMgwiS3vn", "L": "nsFsExJHz4xV1sOX6Kdn", "R": "LB5G0Z4EP98YaEgL654m"}, "model": "eleven_v3",
+  "hook": "POV: Du bist Designerin. Der Dev meldet sich.",
+  "msgs": [
+    ["l", "Kannst du mal schnell ein Logo machen?"],
+    ["r", "Klar. Für was genau?"],
+    ["l", "Für die App. Irgendwas Modernes."],
+    ["r", "Wer ist die Zielgruppe?"],
+    ["l", "Alle."],
+    ["r", "[confused] Farben? Stil? Beispiele?"],
+    ["l", "Mach einfach. Du bist ja kreativ."],
+    ["l", "Bis morgen früh? Pitch ist um neun."]
+  ],
+  "punch": "Design ist kein Extra. Es ist ein Job.",
+  "end": "Hier findest du Designerinnen, die von Anfang an mitbauen." }

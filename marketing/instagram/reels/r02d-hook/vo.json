@@ -1,0 +1,63 @@
+{
+ "voices": {
+  "N": "egBwWoDtXGCSMgwiS3vn",
+  "L": "aTTiK3YzK3dXETpuDE2h",
+  "R": "nkayp4imdkkDpvsEklDB"
+ },
+ "model": "eleven_v3",
+ "hook": "",
+ "msgs": [
+  [
+   "l",
+   "[excited] Hey! Du bist doch Entwickler, oder?"
+  ],
+  [
+   "r",
+   "Ja ... wieso?"
+  ],
+  [
+   "l",
+   "[excited] Ich hab DIE Idee. Uber, aber für Hundesitter!"
+  ],
+  [
+   "r",
+   "Okay. Und was ist dein Part?"
+  ],
+  [
+   "l",
+   "Na, die Idee."
+  ],
+  [
+   "l",
+   "Wir machen fifty-fifty."
+  ],
+  [
+   "r",
+   "[sighs] Und wer baut die App?"
+  ],
+  [
+   "l",
+   "Du! Ist ja nur ein Wochenende Arbeit."
+  ]
+ ],
+ "punch": "Ideen hat jeder. Mitbauer nicht.",
+ "end": "Und? Fair oder nicht? Schreib's in die Kommentare.",
+ "intro": [
+  [
+   "L",
+   "[excited] Wir machen fifty-fifty!"
+  ],
+  [
+   "N",
+   "Er bringt die Idee."
+  ],
+  [
+   "N",
+   "Du baust die App."
+  ],
+  [
+   "N",
+   "Fair?"
+  ]
+ ]
+}

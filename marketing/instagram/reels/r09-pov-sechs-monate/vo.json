@@ -1,0 +1,15 @@
+{ "voices": {"N": "egBwWoDtXGCSMgwiS3vn", "L": "DEZHhPbmb8LVZmWufkCh", "R": "nkayp4imdkkDpvsEklDB"}, "model": "eleven_v3",
+  "hook": "POV. Erstes Meeting. Versus sechs Monate später.",
+  "msgs": [
+    ["l", "[excited] Ich hab so ein gutes Gefühl bei uns!"],
+    ["r", "Ich auch. Wir machen alles zusammen."],
+    ["l", "Entscheidungen immer gemeinsam, ja?"],
+    ["r", "Klar!"],
+    ["d", "Sechs Monate später."],
+    ["l", "Ich hab das Logo geändert."],
+    ["r", "Ohne mich zu fragen?"],
+    ["l", "Wir hatten nie gesagt, wer was entscheidet."],
+    ["r", "[sighs] Hm."]
+  ],
+  "punch": "Gute Gefühle ersetzen keine Regeln.",
+  "end": "Klärt vorher, wer was entscheidet." }

@@ -1,0 +1,57 @@
+[
+{
+  "id": "c01-was-ist-xyntal",
+  "series": "Xyntal",
+  "slides": [
+    {"type":"cover","kicker":"Du hast die Idee.","fat":"Dir fehlt","thin":"jemand,","sub":"der sie mit dir baut."},
+    {"type":"text","label":"Das Problem","title":"Die Leute gibt es. __Man findet sie nur nicht.__","body":"LinkedIn ist zum Zeigen da. Discord zum Reden. Meetups zum Zufall.\n\nNirgends steht, **wer gerade wirklich Zeit hat**, was die Person kann und was sie erwartet."},
+    {"type":"text","label":"Die Idee","title":"Du sagst, was du vorhast. __Xyntal zeigt dir, wer passt.__","body":"Und vor allem: **warum** die Person passt. Skills, Zeit pro Woche, Arbeitsweise, Ziel."},
+    {"type":"list","label":"Für wen","title":"Drei Arten von Leuten","items":[["01","Mitgründer:innen","Bauen mit dir eine Firma auf und teilen das Risiko."],["02","Projektpartner","Bauen ein Stück mit dir: App, Design, erster Vertrieb. Bezahlt oder gegen Anteile."],["03","Leute, die schon weiter sind","Ersparen dir in einem Gespräch, was sie selbst ein Jahr gekostet hat."]]},
+    {"type":"text","label":"Die Regel","title":"Bedingungen __zuerst.__","body":"Jedes Projekt auf Xyntal sagt vorher, worum es geht:\n\n**Anteile, bezahlt oder Nebenprojekt.** Und wie viele Stunden pro Woche.\n\nBevor irgendwer Zeit investiert."},
+    {"type":"text","label":"Wo wir stehen","title":"Die Beta läuft. __Sie kostet nichts.__","body":"Profile, Mitglieder, Community und Nachrichten funktionieren. Rein kommt man per Bewerbung: **drei Fragen**. Was baust du, wen suchst du, wie viel Zeit hast du."},
+    {"type":"cta","title":"Jeden Tag: wer gerade __wen sucht.__","body":"Projekte mit offenen Rollen, Wissen fürs Gründen zu zweit und ein Solo-Gründer, der versucht, das hier groß zu machen.","send":"Kennst du jemanden, der seit Monaten „mal was gründen“ will? Schick ihm das."}
+  ],
+  "caption": "Du hast die Idee. Dir fehlt jemand, der sie mit dir baut.\n\nGenau dafür gibt es Xyntal: Du beschreibst, was du vorhast, und siehst Leute, die dazu passen. Mit Begründung, mit Zeit pro Woche, mit klaren Bedingungen.\n\nMitgründer finden, Projektpartner finden, Entwickler:innen und Designer:innen fürs eigene Startup. In der Beta kostenlos.\n\nFolg @xyntal, hier siehst du ab jetzt jeden Tag, wer gerade wen sucht.\n\n#mitgründer #startupdeutschland #gründen #buildinpublic #cofounder"
+},
+{
+  "id": "c02-7-orte-mitgruender",
+  "series": "Mitgründer finden",
+  "slides": [
+    {"type":"cover","kicker":"Du suchst einen Mitgründer?","fat":"7 Orte,","thin":"an denen","sub":"du ihn wirklich findest.","size":"m"},
+    {"type":"list","label":"Offline","title":"Wo du schon bist","items":[["01","Uni und Gründerzentrum","Fast jede Hochschule hat ein Entrepreneurship-Center mit Events, Kursen und Pitch-Abenden."],["02","Hackathons","Du siehst in 48 Stunden, wie jemand unter Druck arbeitet. Besser als jedes Kennenlernen."],["03","Gründer-Events vor Ort","Startup Weekends, Meetups, Pitch Nights. Geh hin, um zu helfen, nicht um zu suchen."]]},
+    {"type":"list","label":"Netzwerk","title":"Wen du schon kennst","items":[["04","Ehemalige Kolleg:innen","Du weißt schon, wie sie arbeiten. Das ist mehr wert als jeder Lebenslauf."],["05","Online-Communities","Discord-Server, Subreddits, Foren zu deinem Thema. Zuerst beitragen, dann fragen."]]},
+    {"type":"list","label":"Gezielt","title":"Wo Leute danach suchen","items":[["06","Matching-Plattformen","Orte, an denen Leute explizit sagen, dass sie ein Team suchen. Xyntal ist so ein Ort."],["07","In der Öffentlichkeit bauen","Zeig, woran du arbeitest. Die besten Leute melden sich bei dir, nicht andersherum."]]},
+    {"type":"text","label":"Bevor ihr gründet","title":"Erst ein Projekt. __Dann eine Firma.__","body":"Baut zwei bis vier Wochen lang **etwas Kleines zusammen**: einen Prototyp, eine Landingpage, zehn Kundengespräche.\n\nDanach weißt du mehr als nach zehn Kaffees."},
+    {"type":"cta","title":"Speicher dir __die Liste.__","body":"Auf @xyntal zeigen wir jeden Tag ein Projekt, das gerade jemanden sucht.","send":"Schick das der Person, mit der du schon immer mal was gründen wolltest."}
+  ],
+  "caption": "Wo findet man eigentlich einen Mitgründer? Sieben Orte, die wirklich funktionieren, von der Uni bis zum Hackathon.\n\nUnd der wichtigste Tipp: Gründet nicht sofort. Baut erst zwei bis vier Wochen etwas Kleines zusammen. Danach wisst ihr, ob es passt.\n\nSpeicher dir den Post für später und folg @xyntal für mehr zum Thema Mitgründer finden.\n\n#mitgründer #gründen #startupdeutschland #cofounder #startup"
+},
+{
+  "id": "c03-10-fragen-vor-dem-gruenden",
+  "series": "Gründen zu zweit",
+  "slides": [
+    {"type":"cover","kicker":"Bevor du mit jemandem gründest:","fat":"10 Fragen,","thin":"die ihr","sub":"vorher klären müsst.","size":"m"},
+    {"type":"list","label":"Motivation","q":true,"items":[["01","Warum willst du gründen, und warum genau jetzt?"],["02","Wie viele Stunden pro Woche kannst du die nächsten 12 Monate wirklich geben?"]]},
+    {"type":"list","label":"Geld und Risiko","q":true,"items":[["03","Wie lange hältst du ohne Gehalt durch?"],["04","Wie viel Risiko ist für dich okay: Erspartes, Kredit, Job kündigen?"]]},
+    {"type":"list","label":"Macht und Anteile","q":true,"items":[["05","Wer entscheidet was, wenn wir uns nicht einig sind?"],["06","Wie teilen wir die Anteile auf, und mit welchem Vesting?"]]},
+    {"type":"list","label":"Ziel und Alltag","q":true,"items":[["07","Wo wollen wir in fünf Jahren sein: Verkauf, eigene Firma auf Dauer, Börse?"],["08","Wie arbeitest du: remote oder vor Ort, morgens oder nachts?"]]},
+    {"type":"list","label":"Der Ernstfall","q":true,"items":[["09","Was passiert mit den Anteilen, wenn einer aussteigt?"],["10","Woran merken wir, dass es nicht klappt, und wie trennen wir uns fair?"]]},
+    {"type":"cta","title":"Unangenehm? __Genau deshalb.__","body":"Jede Frage, die ihr jetzt klärt, ist ein Streit, den ihr später nicht habt.","send":"Schick das deiner Mitgründerin. Heute Abend, nicht nach dem Notartermin."}
+  ],
+  "caption": "10 Fragen, die ihr klären solltet, bevor ihr zusammen gründet. Besonders 5, 6 und 9 werden gern übersprungen, und genau an denen scheitern später die meisten Teams.\n\nSpeicher dir den Post, geht die Fragen gemeinsam durch und schreibt die Antworten auf.\n\nMehr zum Thema Mitgründer finden und Gründen zu zweit auf @xyntal.\n\n#mitgründer #gründen #startupdeutschland #cofounder #startuptipps"
+},
+{
+  "id": "c04-equity-split",
+  "series": "Anteile",
+  "slides": [
+    {"type":"cover","kicker":"Wer bekommt wie viel?","fat":"Equity-Split:","thin":"4 Modelle,","sub":"die funktionieren.","size":"s"},
+    {"type":"text","label":"Modell 1","title":"Gleich __aufteilen__","body":"Zwei Leute, 50/50. Drei Leute, je ein Drittel.","pc":["Schnell, fühlt sich fair an, keiner fühlt sich zurückgesetzt.","Bei 50/50 gibt es ein Patt. Legt vorher fest, wer bei Streit entscheidet."]},
+    {"type":"text","label":"Modell 2","title":"Nach __Beitrag__","body":"Ihr bewertet Zeit, Geld, Know-how, Netzwerk und Idee und teilt danach auf.","pc":["Bildet ab, wer wirklich wie viel einbringt.","Die Idee wird fast immer überschätzt. Umsetzung über Jahre ist mehr wert."]},
+    {"type":"text","label":"Modell 3","title":"Dynamisch, __bis zum Meilenstein__","body":"Anteile wachsen mit dem, was jede:r einbringt, bis zu einem festen Punkt, z. B. der ersten Finanzierung. Dann werden sie festgeschrieben.","pc":["Fair, wenn noch unklar ist, wer wie viel Zeit hat.","Ihr müsst Stunden und Geld sauber mitschreiben."]},
+    {"type":"text","label":"Modell 4 · gehört zu jedem","title":"Vesting","body":"Anteile werden über Zeit „verdient“. Üblich sind **4 Jahre mit 1 Jahr Cliff**: Wer im ersten Jahr geht, behält fast nichts.\n\nIn einer deutschen GmbH regelt man das meist über eine **Gesellschaftervereinbarung** mit Rückkaufrechten."},
+    {"type":"text","label":"Der häufigste Fehler","n":"70/30","title":"„Ich hatte ja __die Idee.__“","body":"Eine Idee ohne Umsetzung ist fast nichts wert. Wer drei Jahre baut, verdient mehr als die Person, die vor einem Jahr den Gedanken hatte."},
+    {"type":"cta","title":"Klärt das, __bevor es um Geld geht.__","send":"Schick das deinem Mitgründer, bevor ihr zum Notar geht.","disc":"Kein Rechts- oder Steuerrat. Lasst eure Vereinbarung von einer Anwältin oder einem Notar prüfen."}
+  ],
+  "caption": "Wie teilt man Anteile unter Mitgründer:innen auf? Vier Modelle, mit Vor- und Nachteilen. Und egal welches ihr nehmt: Ohne Vesting wird es gefährlich, sobald jemand früh aussteigt.\n\nKein Rechtsrat, lasst eure Vereinbarung prüfen. Aber redet darüber, bevor es um echtes Geld geht.\n\nMehr zum Gründen zu zweit auf @xyntal.\n\n#mitgründer #gründen #startupdeutschland #equity #vesting"
+}
+]

@@ -1,0 +1,5 @@
+reels/out/
+reels/*/audio/*.wav
+reels/*/audio/stems/
+reels/*/audio/vo/*.wav
+reels/*/audio/alt/

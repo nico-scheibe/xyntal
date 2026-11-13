@@ -1,0 +1,42 @@
+[
+{
+  "id": "c05-mitgruendervertrag",
+  "series": "Gründen zu zweit",
+  "slides": [
+    {"type":"cover","kicker":"Bevor ihr zum Notar geht:","fat":"8 Punkte","thin":"für euren","sub":"Mitgründervertrag.","size":"m"},
+    {"type":"list","label":"Anteile und Rollen","items":[["01","Anteile und Vesting","Wer bekommt wie viel, und über welchen Zeitraum werden die Anteile verdient?"],["02","Rollen","Wer verantwortet Produkt, Technik, Vertrieb, Finanzen? Wer ist Geschäftsführer:in?"]]},
+    {"type":"list","label":"Entscheiden und Zeit","items":[["03","Entscheidungen","Was braucht Einstimmigkeit? Wer entscheidet bei einem Patt?"],["04","Zeit und Nebenjobs","Ab wann Vollzeit? Welche anderen Jobs und Projekte sind okay?"]]},
+    {"type":"list","label":"Rechte und Geld","items":[["05","Geistiges Eigentum","Code, Design und Marke gehören der Firma, nicht einzelnen Gründer:innen."],["06","Geld","Ab wann gibt es Gehalt? Wer schießt wie viel Geld ein?"]]},
+    {"type":"list","label":"Der Ernstfall","items":[["07","Ausstieg","Good Leaver, Bad Leaver: Wer geht, gibt Anteile zu welchem Preis zurück?"],["08","Wettbewerb","Darf jemand nach dem Ausstieg ein Konkurrenzprodukt bauen oder Kund:innen mitnehmen?"]]},
+    {"type":"text","label":"In Deutschland","title":"Gesellschafter-\nvereinbarung","body":"Bei einer GmbH stehen viele dieser Punkte nicht in der Satzung, sondern in einer **Gesellschaftervereinbarung** zwischen euch. Lasst sie von einer Anwältin oder einem Notar aufsetzen."},
+    {"type":"cta","title":"Speichern. __Gemeinsam lesen.__","send":"Schick das deinem Mitgründer, bevor ihr unterschreibt.","disc":"Kein Rechts- oder Steuerrat. Nur die Fragen, die ihr vorher klären solltet."}
+  ],
+  "caption": "8 Punkte, die in euren Mitgründervertrag gehören: von Anteilen und Vesting bis zu der Frage, was passiert, wenn jemand aussteigt.\n\nBei einer GmbH regelt man vieles davon in einer Gesellschaftervereinbarung. Kein Rechtsrat, lasst sie prüfen. Aber geht die Punkte vorher zusammen durch.\n\nSpeichern und deinem Mitgründer schicken. Mehr zum Gründen zu zweit auf @xyntal.\n\n#mitgründer #gründen #gmbh #startupdeutschland #vesting"
+},
+{
+  "id": "c06-idee-ohne-code",
+  "series": "Mitgründer finden",
+  "slides": [
+    {"type":"cover","kicker":"Du hast eine Idee,","fat":"kannst aber","thin":"nicht","sub":"programmieren? So geht's weiter.","size":"m"},
+    {"type":"text","label":"Schritt 1","title":"Prüf das Problem, __nicht die Lösung.__","body":"Sprich mit **zehn Leuten**, die das Problem haben könnten. Frag, wie sie es heute lösen und was sie das kostet. Nicht, ob sie deine App gut fänden."},
+    {"type":"text","label":"Schritt 2","title":"Teste __ohne Code.__","body":"Eine Landingpage mit Anmeldeformular. Ein klickbarer Prototyp. Ein Prozess, den du erst mal von Hand machst.\n\nWenn sich niemand einträgt, hast du gerade Monate gespart."},
+    {"type":"text","label":"Schritt 3","title":"Zeig, was du __einbringst.__","body":"Kund:innen, Branchenwissen, Vertrieb, Geld, Zeit. Das überzeugt eine Entwicklerin.\n\n**Die Idee allein zählt kaum.**"},
+    {"type":"text","label":"Schritt 4","title":"Such mit __klaren Bedingungen.__","body":"Sag vorher, worum es geht: **Anteile mit Vesting, Bezahlung oder Nebenprojekt.** Und wie viele Stunden pro Woche du erwartest."},
+    {"type":"text","label":"Was nicht funktioniert","title":"„Ich hab die Idee, __du baust, 50/50.“__","body":"Diese Nachricht bekommt jede Entwicklerin dreimal im Monat. Sie wird fast nie beantwortet."},
+    {"type":"cta","title":"Erst prüfen, __dann suchen.__","body":"Auf Xyntal legst du ein Projekt mit offenen Rollen und klaren Bedingungen an.","send":"Schick das der Person mit der Idee, die seit einem Jahr „bald“ anfängt."}
+  ],
+  "caption": "Du hast eine Idee, kannst aber nicht programmieren? Vier Schritte, bevor du eine Entwicklerin oder einen Entwickler suchst.\n\nKurz gesagt: Problem prüfen, ohne Code testen, zeigen, was du selbst einbringst, und mit klaren Bedingungen suchen. „Ich hab die Idee, du baust“ funktioniert fast nie.\n\nMehr zum Thema Mitgründer finden auf @xyntal.\n\n#gründen #startupidee #mitgründer #startupdeutschland #nocode"
+},
+{
+  "id": "c07-red-flags",
+  "series": "Mitgründer finden",
+  "slides": [
+    {"type":"cover","kicker":"Achtung bei der Mitgründer-Suche:","fat":"5 Red Flags,","thin":"die du","sub":"nicht übersehen solltest.","size":"m"},
+    {"type":"list","label":"Red Flags 1 bis 3","items":[["01","„Ich hab die Idee, du machst den Rest.“","Wer nichts außer der Idee einbringt, will einen Dienstleister, kein Team."],["02","Keine Zahl bei der Zeit","„Mal schauen“ heißt meist: zwei Stunden pro Woche."],["03","„Wir brauchen keinen Vertrag.“","Gerade unter Freunden braucht ihr einen. Sonst endet die Freundschaft mit der Firma."]]},
+    {"type":"list","label":"Red Flags 4 und 5","items":[["04","Hat noch nie etwas fertig gebaut","Ein abgeschlossenes Nebenprojekt sagt mehr als zehn angefangene."],["05","Redet nur über Exit und Geld","Wer nach drei Minuten bei der Bewertung ist, hat das Problem noch nicht verstanden."]]},
+    {"type":"text","label":"Und jetzt?","title":"Eine Red Flag ist __kein Aus.__","body":"Aber ein Grund, offen darüber zu reden. Wie jemand auf die Frage reagiert, sagt dir mehr als die Antwort."},
+    {"type":"cta","title":"Lieber jetzt __als nach dem Notar.__","send":"Schick das jemandem, der gerade einen Mitgründer sucht."}
+  ],
+  "caption": "5 Red Flags bei der Mitgründer-Suche. Nummer 3 hören wir am häufigsten: „Wir sind doch Freunde, wir brauchen keinen Vertrag.“\n\nEine Red Flag ist kein Grund, sofort abzusagen. Aber ein Grund, darüber zu reden, bevor ihr gründet.\n\nMehr zum Thema Mitgründer finden auf @xyntal.\n\n#mitgründer #gründen #startupdeutschland #cofounder #startuptipps"
+}
+]

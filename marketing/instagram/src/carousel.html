@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Xyntal Carousel Renderer</title>
+<style>
+@font-face{font-family:"Archivo";font-weight:100 900;font-stretch:62% 125%;src:url(archivo-latin.woff2) format("woff2")}
+@font-face{font-family:"IBM Plex Sans";font-weight:100 700;src:url(plexsans-latin.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212}
+@font-face{font-family:"IBM Plex Sans";font-weight:100 700;src:url(plexsans-latin-ext.woff2) format("woff2");unicode-range:U+0100-02BA,U+1E00-1E9F}
+@font-face{font-family:"JetBrains Mono";font-weight:400 500;src:url(font-13.woff2) format("woff2")}
+:root{
+  --g-0:#151516;--g-2:#1F1F21;--g-3:#262629;--g-4:#2E2E32;
+  --t-1:#ECEAE4;--t-2:#B9B7B0;--t-3:#918F89;
+  --line:rgba(236,234,228,.12);--line-2:rgba(236,234,228,.24);
+  --pu:#B36BFF;--bl:#3A8AFF;--cy:#3FE0F0;
+  --grad:linear-gradient(90deg,var(--pu),var(--bl) 50%,var(--cy));
+  --f-display:"Archivo","Arial Narrow",Arial,sans-serif;
+  --f-text:"IBM Plex Sans",Arial,sans-serif;
+  --f-mono:"JetBrains Mono",Menlo,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#000;display:flex;flex-direction:column;gap:40px;padding:40px;-webkit-font-smoothing:antialiased}
+.slide{width:1080px;height:1350px;position:relative;overflow:hidden;background:var(--g-2);color:var(--t-1);
+  display:grid;grid-template-rows:auto 1fr auto;padding:84px 88px 76px;font-family:var(--f-text)}
+.slide::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.06;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+.glow{position:absolute;width:900px;height:900px;border-radius:50%;filter:blur(140px);opacity:.22;pointer-events:none}
+.head{display:flex;justify-content:space-between;align-items:center;font:500 22px/1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--t-3);position:relative;z-index:1}
+.head .series{display:flex;align-items:center;gap:16px}
+.head .series i{display:block;width:44px;height:3px;background:var(--grad);border-radius:2px}
+.main{position:relative;z-index:1;display:flex;flex-direction:column;justify-content:center;gap:40px;min-height:0}
+.foot{display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1;font:500 24px/1 var(--f-mono);color:var(--t-3);letter-spacing:.04em}
+.brand{display:flex;align-items:center;gap:14px;color:var(--t-1);font:600 34px/1 var(--f-display);font-stretch:110%;letter-spacing:-.01em;text-transform:none}
+.brand img{width:44px;height:44px}
+.swipe{display:flex;align-items:center;gap:14px}
+.swipe svg{width:44px;height:20px}
+
+/* Cover */
+.kicker{font:400 52px/1.1 var(--f-display);font-stretch:112%;color:var(--t-2);letter-spacing:-.01em}
+.fat{font:800 260px/.84 var(--f-display);font-stretch:62%;letter-spacing:-.03em;word-spacing:.14em;text-wrap:balance}
+.thin{font:200 220px/.86 var(--f-display);font-stretch:125%;letter-spacing:-.055em;margin-left:60px}
+.sub{font:700 88px/1 var(--f-display);font-stretch:62%;word-spacing:.12em;margin-left:66px}
+.fat.m{font-size:210px}.thin.m{font-size:180px}
+.fat.s{font-size:190px}.thin.s{font-size:160px}
+.cover-note{font:400 34px/1.45 var(--f-text);color:var(--t-2);max-width:820px;border-top:1px solid var(--line);padding-top:32px}
+
+/* Text */
+.label{font:500 24px/1 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--t-3)}
+.title{font:800 112px/.92 var(--f-display);font-stretch:62%;letter-spacing:-.02em;word-spacing:.1em;text-wrap:balance}
+.title em{font-style:normal;font-weight:200;font-stretch:125%;letter-spacing:-.05em}
+.body{font:400 40px/1.45 var(--f-text);color:var(--t-2);max-width:880px;text-wrap:pretty}
+.body b{color:var(--t-1);font-weight:600}
+.big-n{font:200 300px/.8 var(--f-display);font-stretch:125%;letter-spacing:-.06em;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;padding-bottom:10px}
+
+/* List */
+.list{display:grid;gap:0;border-top:1px solid var(--line)}
+.item{display:grid;grid-template-columns:110px 1fr;gap:28px;padding:30px 0;border-bottom:1px solid var(--line)}
+.item .n{font:500 30px/1.25 var(--f-mono);color:var(--t-3);padding-top:6px}
+.item .t{font:700 54px/1.02 var(--f-display);font-stretch:75%;letter-spacing:-.01em;word-spacing:.08em}
+.item .d{font:400 32px/1.4 var(--f-text);color:var(--t-2);margin-top:10px}
+.list.q .t{font:600 48px/1.15 var(--f-text);font-stretch:100%;letter-spacing:-.01em}
+
+/* Compare */
+.pc{display:grid;grid-template-columns:1fr 1fr;gap:28px}
+.pc div{border-top:2px solid var(--line-2);padding-top:22px;display:grid;gap:12px;align-content:start}
+.pc .h{font:500 22px/1 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--t-3)}
+.pc .v{font:400 32px/1.4 var(--f-text);color:var(--t-2)}
+.pc .plus{border-color:var(--cy)}
+.pc .minus{border-color:var(--pu)}
+
+/* CTA */
+.cta .title{font-size:128px}
+.handle{display:inline-flex;align-items:center;gap:22px;font:700 64px/1 var(--f-display);font-stretch:100%;padding:28px 40px;border-radius:999px;background:var(--t-1);color:var(--g-2);align-self:flex-start}
+.handle img{width:58px;height:58px}
+.send{font:400 36px/1.4 var(--f-text);color:var(--t-2);border-left:3px solid;border-image:var(--grad) 1;padding-left:28px}
+.disc{font:400 22px/1.4 var(--f-mono);color:var(--t-3)}
+</style>
+</head>
+<body>
+<script>
+const LOGO="logo.svg";
+const ARROW='<svg viewBox="0 0 44 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 10h38M32 2l8 8-8 8"/></svg>';
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const rich=s=>esc(s).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/__(.+?)__/g,"<em>$1</em>").replace(/\n/g,"<br>");
+const GLOWS=[["-300px","-260px","auto","auto","var(--bl)"],["auto","-320px","-300px","auto","var(--pu)"],["-280px","auto","auto","-300px","var(--cy)"]];
+function glow(i){const g=GLOWS[i%3];return `<div class="glow" style="top:${g[0]};right:${g[1]};bottom:${g[2]};left:${g[3]};background:${g[4]}"></div>`}
+function slide(c,s,i,n){
+  const last=i===n-1;
+  let main="";
+  if(s.type==="cover"){
+    main=`${s.kicker?`<p class="kicker">${rich(s.kicker)}</p>`:""}
+      <div><p class="fat ${s.size||""}">${rich(s.fat)}</p>${s.thin?`<p class="thin ${s.size||""}">${rich(s.thin)}</p>`:""}${s.sub?`<p class="sub">${rich(s.sub)}</p>`:""}</div>
+      ${s.note?`<p class="cover-note">${rich(s.note)}</p>`:""}`;
+  } else if(s.type==="text"){
+    main=`${s.label?`<p class="label">${rich(s.label)}</p>`:""}${s.n?`<p class="big-n">${esc(s.n)}</p>`:""}<h2 class="title">${rich(s.title)}</h2>${s.body?`<p class="body">${rich(s.body)}</p>`:""}${s.pc?`<div class="pc"><div class="plus"><span class="h">Gut</span><span class="v">${rich(s.pc[0])}</span></div><div class="minus"><span class="h">Achtung</span><span class="v">${rich(s.pc[1])}</span></div></div>`:""}`;
+  } else if(s.type==="list"){
+    main=`${s.label?`<p class="label">${rich(s.label)}</p>`:""}${s.title?`<h2 class="title" style="font-size:${s.ts||96}px">${rich(s.title)}</h2>`:""}
+      <div class="list ${s.q?"q":""}">${s.items.map(it=>`<div class="item"><span class="n">${esc(it[0])}</span><div><p class="t">${rich(it[1])}</p>${it[2]?`<p class="d">${rich(it[2])}</p>`:""}</div></div>`).join("")}</div>`;
+  } else if(s.type==="cta"){
+    main=`<h2 class="title">${rich(s.title)}</h2>${s.body?`<p class="body">${rich(s.body)}</p>`:""}
+      <span class="handle"><img src="${LOGO}" alt="">@xyntal</span>${s.send?`<p class="send">${rich(s.send)}</p>`:""}${s.disc?`<p class="disc">${rich(s.disc)}</p>`:""}`;
+  }
+  return `<section class="slide ${s.type}" data-file="${c.id}_${String(i+1).padStart(2,"0")}">
+    ${s.type==="cover"||s.type==="cta"?glow(i+c.id.length):""}
+    <div class="head"><span class="series"><i></i>${esc(c.series)}</span><span>${String(i+1).padStart(2,"0")} / ${String(n).padStart(2,"0")}</span></div>
+    <div class="main">${main}</div>
+    <div class="foot"><span class="brand"><img src="${LOGO}" alt="">xyntal</span>${last?`<span>xyntal.de</span>`:`<span class="swipe">Weiter ${ARROW}</span>`}</div>
+  </section>`;
+}
+window.renderDeck=(deck)=>{document.body.innerHTML=deck.slides.map((s,i,a)=>slide(deck,s,i,a.length)).join("");return document.fonts.ready.then(()=>deck.slides.length)};
+</script>
+</body>
+</html>

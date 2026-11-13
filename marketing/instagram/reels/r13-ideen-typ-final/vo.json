@@ -1,0 +1,60 @@
+{
+ "voices": {
+  "N": "egBwWoDtXGCSMgwiS3vn",
+  "L": "aTTiK3YzK3dXETpuDE2h",
+  "R": "nkayp4imdkkDpvsEklDB"
+ },
+ "model": "eleven_v3",
+ "card_gap": 0.2,
+ "cards": [
+  [
+   "L",
+   "[excited] Wir machen fifty-fifty! Ich hab ja die Idee."
+  ],
+  [
+   "R",
+   "Und wer baut die App?"
+  ],
+  [
+   "L",
+   "Du. Ist ja nur ein Wochenende."
+  ],
+  [
+   "N",
+   "So verlierst du Monate."
+  ],
+  [
+   "N",
+   "Es geht viel einfacher."
+  ],
+  [
+   "N",
+   "Sag, was du baust. Die App zeigt dir, wer passt."
+  ],
+  [
+   "N",
+   "Mit Passung in Prozent. Und warum."
+  ],
+  [
+   "N",
+   "Wie viel Zeit jemand hat. Und was er sucht."
+  ],
+  [
+   "N",
+   "Passt? Ein Klick genügt."
+  ],
+  [
+   "N",
+   "Und Leute, die passen, finden auch dich."
+  ],
+  [
+   "N",
+   "Dann direkt los: Chat, Aufgaben, Dateien. An einem Ort."
+  ]
+ ],
+ "end": "In der Beta kostenlos. Link im Profil.",
+ "tempo": 1.15,
+ "words": true,
+ "end_offset": 0.15,
+ "tail": 0.45
+}
