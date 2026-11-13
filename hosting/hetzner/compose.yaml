@@ -81,6 +81,22 @@ services:
       api: { condition: service_healthy }
     logging: *logs
 
+  # Discord-Bot gegen Scam und Phishing (xyntal-app-windows/discord-bot).
+  # Aus, bis er eingerichtet ist: Token nach /opt/xyntal/secrets/discord-guard.env
+  # und COMPOSE_PROFILES=discord in hosting/hetzner/.env (siehe README.md).
+  discord-guard:
+    build: /opt/xyntal/app/discord-bot
+    profiles: [discord]
+    restart: unless-stopped
+    init: true
+    env_file: /opt/xyntal/secrets/discord-guard.env
+    environment:
+      DB_PATH: /app/data/guard.db
+      XYNTAL_SKIP_DOTENV: '1'
+    volumes:
+      - /opt/xyntal/data/discord-guard:/app/data
+    logging: *logs
+
 volumes:
   caddy_data:
   caddy_config:

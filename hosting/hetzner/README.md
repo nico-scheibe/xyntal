@@ -9,6 +9,7 @@ und den Cloudflare-Tunnel. Darauf laufen mit Docker Compose:
 | `website` | `hosting/daki/server.cjs`; holt `public/` weiterhin alle 30 s von `main`, ohne Neustart |
 | `api` | App-Backend aus `nico-scheibe/xyntal-app-windows` (`server/`), Daten in `/opt/xyntal/data/api` |
 | `backup` | Tägliches, geprüftes Wiederherstellungs-Bündel nach `/opt/xyntal/backups`, 14 bleiben |
+| `discord-guard` | Discord-Bot gegen Scam und Phishing (`discord-bot/` in `xyntal-app-windows`); nur mit `COMPOSE_PROFILES=discord`, siehe unten |
 
 ## Automatische Updates
 
@@ -42,6 +43,24 @@ und den Cloudflare-Tunnel. Darauf laufen mit Docker Compose:
    `BREVO_API_KEY` (= `.brevo-key`), `BREVO_LIST_ID` (= `.brevo-list`),
    `BREVO_SENDER_EMAIL` (= `.brevo-sender`) und die Zeilen aus `.smtp.env`.
 5. Daten umziehen (unten), dann `/opt/xyntal/site/hosting/hetzner/deploy.sh`.
+
+## Discord-Bot (Xyntal Guard)
+
+Läuft erst, wenn er eingerichtet ist (Compose-Profil `discord`); vorher baut und startet
+`deploy.sh` ihn nicht. Bot anlegen und Token holen: `discord-bot/README.md` in `xyntal-app-windows`.
+Dann als root:
+
+```sh
+printf 'DISCORD_TOKEN=%s\n' 'DEIN-TOKEN' > /opt/xyntal/secrets/discord-guard.env
+chmod 600 /opt/xyntal/secrets/discord-guard.env
+mkdir -p /opt/xyntal/data/discord-guard && chown 1000:1000 /opt/xyntal/data/discord-guard
+echo 'COMPOSE_PROFILES=discord' >> /opt/xyntal/site/hosting/hetzner/.env
+/opt/xyntal/site/hosting/hetzner/deploy.sh
+```
+
+Der Einladungslink steht danach im Log: `docker compose logs discord-guard | grep Invite`.
+Die Datenbank (`/opt/xyntal/data/discord-guard/guard.db`) enthält nur Einstellungen und Vorfälle
+der letzten 30 Tage und ist nicht im täglichen Backup.
 
 ## Daten von Daki umziehen
 
