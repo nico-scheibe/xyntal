@@ -74,7 +74,7 @@
     if (window.XyntalApp) return Promise.resolve(window.XyntalApp);
     return new Promise((resolve, reject) => {
       const s = document.createElement("script");
-      s.src = "/app-api.js?v=7";
+      s.src = "/app-api.js?v=8";
       s.onload = () => (window.XyntalApp ? resolve(window.XyntalApp) : reject(new Error("app-api")));
       s.onerror = reject;
       document.head.append(s);

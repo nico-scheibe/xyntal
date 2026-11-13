@@ -49,13 +49,25 @@
   // Sonst probiert es jeder Seitenaufruf und jeder Hintergrundaufruf sofort wieder,
   // das Login-Limit des Servers (10/Minute) ist weg und der echte Fehler verdeckt.
   const FAIL = "xyntal-app-session-fail";
+  // Fehler, die erst eine Eingabe auf einer Seite löst (2FA-Code, Geburtsdatum): Hintergrundaufrufe
+  // fragen dann 5 Minuten gar nicht mehr, eine Seite darf trotzdem sofort fragen.
+  const NEEDS_INPUT = ["TWOFA_REQUIRED", "BIRTHDATE_REQUIRED", "SUPABASE_MFA_REQUIRED"];
   function failedRecently(site) {
     const f = read(FAIL);
-    return f && f.sb === site.id && f.until > Date.now() ? new ApiError(f.status, f.code, f.message) : null;
+    if (!f || f.sb !== site.id || f.until <= Date.now()) return null;
+    const err = new ApiError(f.status, f.code, f.code === "RATE_LIMITED" ? rateLimitText(f.until) : f.message);
+    err.retryAt = f.until;
+    return err;
   }
   function rememberFailure(site, res) {
-    const wait = res.status === 429 ? Math.max(10, res.retryAfter || 60) : 30;
-    try { localStorage.setItem(FAIL, JSON.stringify({ sb: site.id, until: Date.now() + wait * 1000, status: res.status, code: res.code, message: res.message })); } catch { /* privat */ }
+    const wait = res.status === 429 ? Math.max(10, res.retryAfter || 60) : NEEDS_INPUT.includes(res.code) ? 300 : 30;
+    const until = Date.now() + wait * 1000;
+    try { localStorage.setItem(FAIL, JSON.stringify({ sb: site.id, until, status: res.status, code: res.code, message: res.message })); } catch { /* privat */ }
+    return until;
+  }
+  function rateLimitText(until) {
+    const s = Math.max(1, Math.ceil((until - Date.now()) / 1000));
+    return t("Gerade gab es zu viele Anmeldeversuche von deinem Internetanschluss. Matching lädt in {s} Sekunden von selbst neu.").replace("{s}", s);
   }
 
   let exchanging = null;
@@ -72,7 +84,7 @@
     if (!site.token) throw new ApiError(401, "SIGNED_OUT", t("Deine Sitzung ist abgelaufen. Bitte logg dich neu ein."));
     if (birthdate) return exchange(site, "", silent, birthdate);
     const blocked = failedRecently(site);
-    if (blocked) throw blocked;
+    if (blocked && (silent || !NEEDS_INPUT.includes(blocked.code))) throw blocked;
     if (!exchanging) exchanging = exchange(site, "", silent).finally(() => { exchanging = null; });
     return exchanging;
   }
@@ -87,17 +99,24 @@
       return s;
     }
     if (res.code === "TWOFA_REQUIRED" || res.code === "TWOFA_INVALID") {
-      if (silent) throw new ApiError(401, "TWOFA_REQUIRED", t("Dein Xyntal-App-Konto ist mit Zwei-Faktor-Anmeldung geschützt."));
+      if (silent) {
+        const msg = t("Dein Xyntal-App-Konto ist mit Zwei-Faktor-Anmeldung geschützt.");
+        rememberFailure(site, { status: 401, code: "TWOFA_REQUIRED", message: msg });
+        throw new ApiError(401, "TWOFA_REQUIRED", msg);
+      }
       const next = await askCode(res.code === "TWOFA_INVALID");
       if (!next) throw new ApiError(401, "TWOFA_CANCELLED", t("Ohne den Code aus deiner Authenticator-App geht es hier nicht weiter."));
       return exchange(site, next, silent, birthdate);
     }
-    if (res.code === "SUPABASE_MFA_REQUIRED" && typeof mfaRedirect === "function") return mfaRedirect();
+    // Hintergrundaufrufe leiten nie auf die 2FA-Abfrage um, das macht nur eine Seite
+    if (res.code === "SUPABASE_MFA_REQUIRED" && !silent && typeof mfaRedirect === "function") return mfaRedirect();
     // Erstes App-Konto: Der Server prüft das Mindestalter (16) und braucht dafür das Geburtsdatum.
     // Eingetragen wird es im Profil unter Matching (profil-matching.js).
     if (res.code === "BIRTHDATE_REQUIRED") res.message = t("Für Matching brauchen wir einmal dein Geburtsdatum – Xyntal ist ab 16 Jahren. Trag es im Profil unter Matching ein.");
-    if (res.status && !birthdate) rememberFailure(site, res);
-    throw new ApiError(res.status, res.code, res.message);
+    const until = res.status && !birthdate ? rememberFailure(site, res) : 0;
+    const err = new ApiError(res.status, res.code, res.status === 429 && until ? rateLimitText(until) : res.message);
+    if (until && res.status === 429) err.retryAt = until;
+    throw err;
   }
 
   async function raw(method, path, { body, token } = {}) {

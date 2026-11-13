@@ -310,7 +310,7 @@
     function ensureApi() {
       if (window.XyntalApp) return Promise.resolve();
       return (window.__xyntalAppApi = window.__xyntalAppApi || new Promise((res, rej) => {
-        const sc = document.createElement("script"); sc.src = "/app-api.js?v=7"; sc.onload = res; sc.onerror = rej; document.head.append(sc);
+        const sc = document.createElement("script"); sc.src = "/app-api.js?v=8"; sc.onload = res; sc.onerror = rej; document.head.append(sc);
       }));
     }
     async function loadStaffRole(userId) {

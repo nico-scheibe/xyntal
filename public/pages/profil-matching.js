@@ -76,6 +76,17 @@
       else say(birthStatus, err.message, "error");
       return;
     }
+    // Login-Limit des Servers: Sekunden herunterzählen und dann von selbst neu laden
+    if (err && err.retryAt) {
+      const tick = () => {
+        const s = Math.ceil((err.retryAt - Date.now()) / 1000);
+        if (s <= 0) { clearInterval(timer); window.openMatchingTab(); return; }
+        say(loadEl, t("Gerade gab es zu viele Anmeldeversuche von deinem Internetanschluss. Matching lädt in {s} Sekunden von selbst neu.").replace("{s}", s));
+      };
+      const timer = setInterval(tick, 1000);
+      tick();
+      return;
+    }
     loadEl.innerHTML = `${esc((err && err.message) || t("Das hat nicht geklappt. Versuch es gleich noch einmal."))} <button class="btn btn-small btn-ghost" type="button" data-retry>${esc(t("Neu laden"))}</button>`;
     loadEl.querySelector("[data-retry]").addEventListener("click", () => window.openMatchingTab());
   }

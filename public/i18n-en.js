@@ -2055,6 +2055,7 @@ window.XYNTAL_EN = {
   "Bitte wähle ein JPG-, PNG-, WebP- oder GIF-Bild oder ein MP4-/WebM-Video.": "Please choose a JPG, PNG, WebP or GIF image, or an MP4/WebM video.",
   "Das Banner darf höchstens 4 MB groß sein.": "The banner must be 4 MB or smaller.",
   "Das Video darf in deinem Tarif höchstens {mb} MB groß sein.": "On your plan the video must be {mb} MB or smaller.",
+  "Gerade gab es zu viele Anmeldeversuche von deinem Internetanschluss. Matching lädt in {s} Sekunden von selbst neu.": "There were too many sign-in attempts from your internet connection just now. Matching reloads by itself in {s} seconds.",
   "Das Video darf in deinem Tarif höchstens {s} Sekunden lang sein.": "On your plan the video must be {s} seconds or shorter.",
   "Ein Banner-Video gibt es ab Plus.": "Banner videos are available from Plus.",
   "oder MP4/WebM-Video ohne Größenlimit (Admin)": "or an MP4/WebM video with no size limit (admin)",
