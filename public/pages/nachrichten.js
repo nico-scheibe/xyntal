@@ -431,6 +431,72 @@
     if (e.target.closest("[data-new]")) newConversation();
   });
 
+  // Rechtsklick (oder Kontextmenü-Taste) auf einen Chat: schließen, anheften, als ungelesen markieren
+  let ctxMenu = null;
+  const closeCtx = () => { if (ctxMenu) { ctxMenu.remove(); ctxMenu = null; } };
+  function closeThread(id) {
+    if (S.active !== id) return;
+    S.draft.set(id, composerText());
+    S.active = ""; setView("list"); history.replaceState(null, "", "nachrichten");
+    threadEl.innerHTML = emptyThread(); renderInfo();
+  }
+  async function setPrefs(id, prefs) {
+    await X.api("PUT", `/conversations/${encodeURIComponent(id)}/prefs`, prefs);
+    await loadConversations();
+  }
+  listEl.addEventListener("contextmenu", (e) => {
+    const item = e.target.closest(".xc-item[data-open]");
+    if (!item) return;
+    const c = conv(item.dataset.open);
+    if (!c) return;
+    e.preventDefault();
+    closeCtx();
+    const row = (act, icon, label) => `<button type="button" role="menuitem" data-ctx="${act}">${ICON_SVG(icon)}<span>${esc(t(label))}</span></button>`;
+    ctxMenu = document.createElement("div");
+    ctxMenu.className = "xc-menu xc-ctx";
+    ctxMenu.setAttribute("role", "menu");
+    ctxMenu.innerHTML = [
+      c.archived ? row("restore", "archive", "Wieder in die Liste holen") : row("close", "x", "Chat schließen"),
+      row("pin", "pin", c.favorite ? "Lösen" : "Anheften"),
+      c.unread ? "" : row("unread", "dot", "Als ungelesen markieren"),
+    ].join("");
+    root.append(ctxMenu);
+    // Am Mauszeiger, per Tastatur am Eintrag; nie über den Fensterrand hinaus
+    const r = item.getBoundingClientRect();
+    const x = e.clientX || r.left + 24, y = e.clientY || r.bottom;
+    const w = ctxMenu.offsetWidth, h = ctxMenu.offsetHeight;
+    ctxMenu.style.left = `${Math.max(8, Math.min(x, innerWidth - w - 8))}px`;
+    ctxMenu.style.top = `${Math.max(8, Math.min(y, innerHeight - h - 8))}px`;
+    ctxMenu.querySelector("button").focus();
+    ctxMenu.addEventListener("click", async (ev) => {
+      const b = ev.target.closest("[data-ctx]");
+      if (!b) return;
+      closeCtx();
+      try {
+        if (b.dataset.ctx === "close") {
+          closeThread(c.id);
+          await setPrefs(c.id, { archived: true });
+        } else if (b.dataset.ctx === "restore") await setPrefs(c.id, { archived: false });
+        else if (b.dataset.ctx === "pin") await setPrefs(c.id, { favorite: !c.favorite });
+        else if (b.dataset.ctx === "unread") {
+          closeThread(c.id);
+          await X.api("POST", `/conversations/${encodeURIComponent(c.id)}/unread`);
+          await loadConversations();
+        }
+      } catch (err) { say(fail(err), "error"); }
+    });
+    ctxMenu.addEventListener("keydown", (ev) => {
+      const items = [...ctxMenu.querySelectorAll("button")];
+      const i = items.indexOf(document.activeElement);
+      if (ev.key === "ArrowDown" || ev.key === "ArrowUp") { ev.preventDefault(); items[(i + (ev.key === "ArrowDown" ? 1 : items.length - 1)) % items.length].focus(); }
+      if (ev.key === "Escape" || ev.key === "Tab") { ev.preventDefault(); closeCtx(); item.focus(); }
+    });
+  });
+  document.addEventListener("pointerdown", (e) => { if (ctxMenu && !ctxMenu.contains(e.target)) closeCtx(); });
+  window.addEventListener("blur", closeCtx);
+  window.addEventListener("resize", closeCtx);
+  listEl.addEventListener("scroll", closeCtx, true);
+
   // ---------- Gespräch öffnen ----------
   async function open(id, { push = true } = {}) {
     if (S.active && S.active !== id) S.draft.set(S.active, composerText());
@@ -1997,6 +2063,8 @@
     dot: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="2.5"/></svg>',
     spark: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM18.5 15.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></svg>',
     filter: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16l-6 7.5V19l-4 1.5v-8z"/></svg>',
+    pin: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6l-1 6 4 3v2H6v-2l4-3zM12 15v6"/></svg>',
+    archive: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="4" rx="1"/><path d="M5 8.5V18a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 18V8.5M10 12.5h4"/></svg>',
     chat: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 0 1-11.6 7.1L4 20l1-4.2A8 8 0 1 1 20 12z"/></svg>',
   };
 
