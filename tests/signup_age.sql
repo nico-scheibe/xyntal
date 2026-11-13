@@ -232,4 +232,116 @@ reset role;
 select public.test_profile('00000000-0000-0000-0000-000000000102', 'approved', true,
   'Bestand: nachgetragenes Datum schaltet das wartende Profil frei');
 
+-- ---------- Was die Migration NICHT kaputt machen darf ----------
+-- Die Migration schreibt handle_new_user() neu. Sie muss dabei die Fassung aus 002 und 007
+-- fortführen, nicht die alte aus schema.sql. Diese drei Prüfungen halten das fest.
+-- 0021 Name nur als full_name (so liefern Apple, Google und LinkedIn ihn)
+-- 0022 Anmeldung mit Newsletter-Haken · 0023 Anmeldung mit Geburtsdatum
+insert into auth.users (id, email, email_confirmed_at, raw_user_meta_data) values
+  ('00000000-0000-0000-0000-000000000021', 'fullname@x.de', now(),
+     jsonb_build_object('full_name', 'Max Voll', 'headline', 'Baue eine Software-Firma',
+                        'birthdate', ((current_date - interval '30 years')::date)::text)),
+  ('00000000-0000-0000-0000-000000000022', 'newsletter@x.de', now(),
+     jsonb_build_object('name', 'News Letter', 'headline', 'Baue eine Software-Firma',
+                        'newsletter', true, 'birthdate', ((current_date - interval '30 years')::date)::text)),
+  ('00000000-0000-0000-0000-000000000023', 'metadaten@x.de', now(),
+     jsonb_build_object('name', 'Meta Daten', 'headline', 'Baue eine Software-Firma',
+                        'birthdate', ((current_date - interval '30 years')::date)::text));
+
+select public.test_check(
+  (select name from public.profiles where id = '00000000-0000-0000-0000-000000000021') = 'Max Voll',
+  'Name wird aus full_name übernommen (Apple, Google, LinkedIn liefern nur dieses Feld)');
+select public.test_profile('00000000-0000-0000-0000-000000000021', 'approved', true,
+  'full_name plus Datum: Profil wird freigeschaltet');
+
+select public.test_check(not exists (select 1 from public.newsletter where email = 'newsletter@x.de'),
+  'Anmeldung trägt NICHT in public.newsletter ein (Einwilligung nur über Double-Opt-in, Migration 007)');
+
+select public.test_check(
+  not ((select raw_user_meta_data from auth.users where id = '00000000-0000-0000-0000-000000000023') ? 'birthdate'),
+  'Geburtsdatum wird aus raw_user_meta_data entfernt (es landet sonst in jedem Access-Token)');
+select public.test_profile('00000000-0000-0000-0000-000000000023', 'approved', true,
+  'Entfernen der Metadaten ändert nichts am hinterlegten Datum');
+
+-- ---------- Berichtigung durch Admin (Art. 16 DSGVO) ----------
+-- 0030 ist Admin · 0031 hat sich vertippt und wartet deshalb
+insert into auth.users (id, email, email_confirmed_at, raw_user_meta_data) values
+  ('00000000-0000-0000-0000-000000000030', 'admin@x.de', now(),
+     jsonb_build_object('name', 'Admin Mensch', 'headline', 'Baue eine Software-Firma',
+                        'birthdate', ((current_date - interval '40 years')::date)::text)),
+  ('00000000-0000-0000-0000-000000000031', 'vertippt@x.de', now(),
+     jsonb_build_object('name', 'Ver Tippt', 'headline', 'Baue eine Software-Firma',
+                        'birthdate', ((current_date - interval '5 years')::date)::text));
+update public.profiles set is_admin = true where id = '00000000-0000-0000-0000-000000000030';
+select public.test_profile('00000000-0000-0000-0000-000000000031', 'pending', false,
+  'Vertipptes Datum (5 Jahre alt) hält das Profil zurück');
+
+-- Ein normales Mitglied darf nicht berichtigen, auch nicht bei sich selbst
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000031', false);
+select public.test_expect_error(
+  $q$select public.admin_set_birthdate('00000000-0000-0000-0000-000000000031'::uuid, '2000-01-01')$q$,
+  '%Nur für Admins%');
+select public.test_expect_error(
+  $q$select public.admin_set_birthdate('00000000-0000-0000-0000-000000000011'::uuid, '2000-01-01')$q$,
+  '%Nur für Admins%');
+reset role;
+select public.test_profile('00000000-0000-0000-0000-000000000031', 'pending', false,
+  'Nach abgelehntem Versuch unverändert');
+
+-- Der Admin berichtigt, das Profil wird freigeschaltet
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000030', false);
+select public.test_expect_error(
+  $q$select public.admin_set_birthdate('00000000-0000-0000-0000-000000000031'::uuid, 'abc')$q$,
+  '%gültiges Geburtsdatum%');
+select public.test_expect_error(
+  $q$select public.admin_set_birthdate('00000000-0000-0000-0000-000000000031'::uuid, (current_date + 1)::date::text)$q$,
+  '%Zukunft%');
+select public.admin_set_birthdate('00000000-0000-0000-0000-000000000031'::uuid,
+  (current_date - interval '25 years')::date::text);
+reset role;
+select public.test_profile('00000000-0000-0000-0000-000000000031', 'approved', true,
+  'Admin berichtigt das Datum, das Profil wird freigeschaltet');
+select public.test_check(
+  (select birthdate from public.member_birthdates where id = '00000000-0000-0000-0000-000000000031')
+    = (current_date - interval '25 years')::date,
+  'Das berichtigte Datum steht in member_birthdates');
+
+-- Der Admin darf auch ein Datum unter 16 eintragen – das ist der Sinn der Berichtigung.
+-- Die Altersgrenze hält trotzdem: das Profil fällt zurück ins Warten, statt freigeschaltet zu bleiben.
+-- Diese Prüfung ist der Grund, warum admin_set_birthdate keine eigene Mindestalterprüfung braucht.
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000030', false);
+select public.admin_set_birthdate('00000000-0000-0000-0000-000000000031'::uuid,
+  (current_date - interval '10 years')::date::text);
+reset role;
+select public.test_check(
+  (select status from public.profiles where id = '00000000-0000-0000-0000-000000000031') = 'approved',
+  'Freigeschaltetes Profil wird durch ein zu junges Datum nicht nachträglich zurückgestuft (kein Bestandsbruch)');
+-- Dasselbe Datum bei einem wartenden Profil hält es zurück
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000030', false);
+select public.admin_set_birthdate('00000000-0000-0000-0000-000000000013'::uuid,
+  (current_date - interval '10 years')::date::text);
+reset role;
+select public.test_check(
+  (select status from public.profiles where id = '00000000-0000-0000-0000-000000000013') = 'pending',
+  'Wartendes Profil bleibt mit einem Datum unter 16 wartend, obwohl der Admin es eingetragen hat');
+-- Und die Berichtigung auf ein gültiges Datum schaltet es dann frei
+set role authenticated;
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000030', false);
+select public.admin_set_birthdate('00000000-0000-0000-0000-000000000013'::uuid,
+  (current_date - interval '18 years')::date::text);
+reset role;
+select public.test_profile('00000000-0000-0000-0000-000000000013', 'approved', true,
+  'Berichtigung auf ein gültiges Datum schaltet das wartende Profil frei');
+
+-- Anon kommt an die Admin-Funktion nicht heran
+set role anon;
+select public.test_expect_error(
+  $q$select public.admin_set_birthdate('00000000-0000-0000-0000-000000000031'::uuid, '2000-01-01')$q$,
+  '%permission denied%');
+reset role;
+
 do $$ begin raise notice 'ALLE PRÜFUNGEN BESTANDEN (Altersprüfung ab 16)'; end $$;

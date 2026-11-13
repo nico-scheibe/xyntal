@@ -101,8 +101,37 @@ $$;
 revoke execute on function public.set_my_birthdate(text) from public, anon;
 grant execute on function public.set_my_birthdate(text) to authenticated;
 
+-- ---------- Geburtsdatum berichtigen (nur Admin) ----------
+-- Mitglieder können ihr Datum nicht selbst ändern, sonst wäre die Altersgrenze wertlos.
+-- Ein Tippfehler darf aber niemanden dauerhaft aussperren, und Art. 16 DSGVO gibt ein Recht
+-- auf Berichtigung. Deshalb dieser Weg – mit Admin-Prüfung und einer Zeile im Protokoll.
+create or replace function public.admin_set_birthdate(p_id uuid, p_birthdate text)
+returns void language plpgsql security definer set search_path = '' as $$
+declare
+  b date := public.birthdate_from_text(p_birthdate);
+begin
+  if not public.is_admin() then raise exception 'Nur für Admins.'; end if;
+  if b is null then raise exception 'Bitte gib ein gültiges Geburtsdatum an (JJJJ-MM-TT).'; end if;
+  if b > current_date then raise exception 'Das Geburtsdatum liegt in der Zukunft.'; end if;
+  insert into public.member_birthdates (id, birthdate) values (p_id, b)
+    on conflict (id) do update set birthdate = excluded.birthdate, set_at = now();
+  -- Absichtlich OHNE die Datumswerte: das Postgres-Log ist unverschlüsselt, langlebig und wird
+  -- beim Löschen eines Kontos nicht mitgelöscht. Dass berichtigt wurde, genügt; worauf, steht
+  -- in member_birthdates.
+  raise log 'admin_set_birthdate: Geburtsdatum von % berichtigt durch %', p_id, auth.uid();
+  -- Wartet das Profil nur noch auf das Datum, wird es jetzt geprüft.
+  update public.profiles set status = status where id = p_id and status = 'pending';
+end;
+$$;
+revoke execute on function public.admin_set_birthdate(uuid, text) from public, anon;
+grant execute on function public.admin_set_birthdate(uuid, text) to authenticated;
+
 -- ---------- Neues Konto: Geburtsdatum aus der Anmeldung übernehmen ----------
--- Grundlage: handle_new_user() aus supabase/schema.sql. Neu ist nur der Teil mit dem Geburtsdatum.
+-- Grundlage: handle_new_user() aus supabase/007_newsletter_double_opt_in.sql – die neueste Fassung.
+-- NICHT aus schema.sql: dort trägt der Trigger die E-Mail noch ohne bestätigte Einwilligung in
+-- public.newsletter ein, was 007 bewusst abgeschafft hat (Newsletter läuft nur über Brevo
+-- Double-Opt-in). Und der Name kommt aus 002 auch aus "full_name", wie Apple, Google und LinkedIn
+-- ihn liefern. Beides muss hier erhalten bleiben, sonst macht diese Migration es rückgängig.
 -- Ein ungültiges oder zu junges Datum wird still ignoriert, die Anmeldung scheitert nie daran.
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = '' as $$
@@ -114,7 +143,7 @@ begin
                                linkedin, instagram, website, is_public)
   values (
     new.id,
-    left(coalesce(d->>'name', ''), 80),
+    left(coalesce(nullif(d->>'name', ''), nullif(d->>'full_name', ''), ''), 80),
     left(coalesce(d->>'headline', ''), 120),
     left(coalesce(d->>'about', ''), 1500),
     case when d->>'phase' in ('idee', 'nebenberuflich', 'vollzeit', 'team') then d->>'phase' end,
@@ -134,8 +163,22 @@ begin
     update public.profiles set status = status where id = new.id and status = 'pending';
   end if;
 
-  if coalesce((d->>'newsletter')::boolean, false) then
-    insert into public.newsletter (email) values (lower(new.email)) on conflict (email) do nothing;
+  -- Kein Newsletter-Eintrag hier: seit 007 läuft jede Einwilligung über Brevo Double-Opt-in.
+
+  -- Das Geburtsdatum kam als Anmelde-Metadatum herein. Supabase legt raw_user_meta_data als
+  -- user_metadata in JEDES Access-Token – und das Token liegt als JS-lesbares Cookie für
+  -- .xyntal.de. Das Geburtsdatum gehört nicht dorthin, es steht jetzt in member_birthdates.
+  -- Deshalb hier entfernen, sobald es übernommen ist. Der Wert dort wäre ohnehin wertlos,
+  -- weil Mitglieder user_metadata über auth.updateUser() selbst überschreiben können.
+  -- Bewusst mit Auffangnetz: Das ist der einzige Schreibzugriff dieses Triggers auf auth.users.
+  -- Fehlt dem Eigentümer der Funktion dort das Schreibrecht, würde sonst JEDE Registrierung
+  -- scheitern – auch die ohne Geburtsdatum. Das Datum steht dann weiter in den Metadaten,
+  -- aber niemand wird ausgesperrt. Das ist die richtige Reihenfolge der Übel.
+  if d ? 'birthdate' then
+    begin
+      update auth.users set raw_user_meta_data = raw_user_meta_data - 'birthdate' where id = new.id;
+    exception when others then null;
+    end;
   end if;
 
   return new;
