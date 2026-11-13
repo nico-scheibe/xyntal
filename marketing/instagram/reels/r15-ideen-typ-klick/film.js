@@ -1,0 +1,166 @@
+// R15 · Der Ideen-Typ, Fassung „Klick“. Regeln: ../REGELN.md, beide Kritiken eingearbeitet (docs/kritik.md).
+// Idee: Das Problem ist unscharf, Xyntal macht es klar, und am Ende reicht ein Tipp. Der Film läuft auf den Klick zu,
+// und der Knopf „Du bist dabei“ fliegt per Match-Cut in die Endkarte.
+import * as M from '../_shared/motion.js';
+import T from './timing.js';
+
+const { W, H, E, clamp, lerp, kf } = M;
+const K = T.cards, WD = T.words;
+const wt = (l, i) => WD[l][i][1];
+const C = { ground: '#0E0E11', ui: '#0C0C0D', t1: '#ECEAE4', t2: '#B9B7B0', t3: '#918F89', green: '#45c99b', greenBg: '#192f2d' };
+const IO = E.bezier(0.65, 0, 0.35, 1), EXPO = E.outExpo, SLIDE = E.bezier(0.2, 0.8, 0.2, 1);
+const F = 1 / 30, BAND = 620;
+
+function font(ctx, size, weight, family, stretch = 'normal') { ctx.font = `${weight} ${Math.round(size)}px ${family}`; ctx.fontStretch = stretch; ctx.letterSpacing = '0px'; }
+function words(ctx, u, tokens, { x = 72, y, size = 160, color = C.t1 }) {
+  font(ctx, size, 800, 'Archivo', 'extra-condensed');
+  const space = ctx.measureText(' ').width; let cx = x;
+  for (const [txt, at] of tokens) {
+    const w = ctx.measureText(txt).width;
+    if (u >= at) { const p = clamp((u - at) / (4 * F)); ctx.fillStyle = color; ctx.fillText(txt, cx, y + (1 - p) * 10); }
+    cx += w + space;
+  }
+}
+const toks = (l, from, ws) => ws.map((w, i) => [w, wt(l, from + i) - 0.04]);
+function shot(ctx, img, [cx, cy, vw], filter = 'none', dy = 0) {
+  ctx.fillStyle = C.ui; ctx.fillRect(0, 0, W, H); if (!img) return;
+  const s = W / vw;
+  ctx.save(); ctx.filter = filter; ctx.translate(W / 2, H / 2); ctx.scale(s, s); ctx.translate(-cx, -cy + dy); ctx.drawImage(img, 0, 0); ctx.restore();
+}
+// feste, deckende Textzone oben; die Oberfläche beginnt darunter
+const cap = (ctx, u, tokens, size = 160) => { ctx.fillStyle = C.ground; ctx.fillRect(0, 0, W, BAND); words(ctx, u, tokens, { y: BAND - 110, size }); };
+function cam(u, a, keys, push = 0.012) { const c = kf(u, keys, E.inOutCubic); return [c[0], c[1], c[2] * (1 - push * (u - a))]; }
+
+// Bildkoordinaten in der Handy-Aufnahme (1518 px breit), gemessen per DOM
+const P = { pill: [390, 2004], zeit: [300, 2440], btn: [93, 2831, 336, 102] };
+// Oberfläche so legen, dass ein Bildpunkt (iy) bei Bildschirmhöhe sy landet
+const camAt = (cx, iy, vw, sy) => [cx, iy - (sy - H / 2) * (vw / W), vw];
+
+// „Du bist dabei“ als Vektor, in den Farben der echten Oberfläche
+function dabei(ctx, x, y, w, press = 1) {
+  const h = w * (102 / 336), r = h / 2;
+  ctx.save(); ctx.translate(x + w / 2, y + h / 2); ctx.scale(press, press); ctx.translate(-w / 2, -h / 2);
+  ctx.beginPath(); ctx.roundRect(0, 0, w, h, r); ctx.fillStyle = C.greenBg; ctx.fill();
+  ctx.lineWidth = Math.max(2, w * 0.009); ctx.strokeStyle = C.green; ctx.stroke();
+  const fs = h * 0.34; font(ctx, fs, 600, 'Plex'); ctx.fillStyle = C.green;
+  const label = 'Du bist dabei', tw = ctx.measureText(label).width, ck = fs * 0.75, gap = fs * 0.45;
+  const sx = (w - (ck + gap + tw)) / 2, cy = h / 2;
+  ctx.beginPath(); ctx.moveTo(sx, cy); ctx.lineTo(sx + ck * 0.38, cy + ck * 0.36); ctx.lineTo(sx + ck, cy - ck * 0.42);
+  ctx.lineWidth = fs * 0.12; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke();
+  ctx.fillText(label, sx + ck + gap, cy + fs * 0.36);
+  ctx.restore();
+}
+
+const SC = []; const at = (u0, fn) => SC.push([u0, fn]);
+
+// Akt 1 · Hook über der App, unscharf, aber als Oberfläche erkennbar
+const HOOKCAM = (u) => [759, 1700 + 18 * u, 1518 * (1 - 0.004 * u)];
+const bg = (ctx, u, I, amt = 1) => shot(ctx, I.entdecken, HOOKCAM(u), amt > 0 ? `blur(${14 * amt}px) brightness(${lerp(1, 0.55, amt)})` : 'none');
+const veil = (ctx) => { ctx.fillStyle = 'rgba(14,14,17,0.22)'; ctx.fillRect(0, 700, W, 760); };    // ruhige Fläche hinter der Schrift
+at(0, (ctx, u, t, I) => { bg(ctx, u, I); veil(ctx); words(ctx, u, [['Wir', -1], ['machen', wt(0, 1) - 0.04]], { y: 1040, size: 230 }); });
+at(wt(0, 2) - 0.04, (ctx, u, t, I) => { const a = wt(0, 2) - 0.04; bg(ctx, u, I); veil(ctx);
+  const s = lerp(1.4, 1, EXPO(clamp((u - a) / (6 * F))));
+  ctx.save(); ctx.translate(72, 1160); ctx.scale(s, s); words(ctx, u, [['50/50.', a]], { x: 0, y: 0, size: 400 }); ctx.restore(); });
+at(wt(0, 3) - 0.04, (ctx, u, t, I) => { bg(ctx, u, I); veil(ctx);
+  words(ctx, u, toks(0, 3, ['Ich', 'hab']), { y: 940, size: 230 }); words(ctx, u, toks(0, 5, ['die', 'Idee,']), { y: 1150, size: 230 }); });
+at(wt(0, 7) - 0.04, (ctx, u, t, I) => { bg(ctx, u, I); veil(ctx);
+  words(ctx, u, [['du', wt(0, 7) - 0.04]], { y: 1100, size: 560 });
+  words(ctx, u, toks(0, 8, ['baust', 'die', 'App.']), { y: 1290, size: 150, color: C.t2 }); });
+// Wendepunkt: Schrift steht, bis die Schärfe in 12 Frames aufzieht, dann ist sie weg (harter Schnitt)
+const PULL = () => wt(1, 3) + 0.25;
+at(K[1] - 0.04, (ctx, u, t, I) => {
+  const f = EXPO(clamp((u - PULL()) / (12 * F)));
+  bg(ctx, u, I, 1 - f);
+  if (f < 1) { veil(ctx); words(ctx, u, toks(1, 0, ['Es', 'geht', 'auch']), { y: 990, size: 210 }); words(ctx, u, [['anders.', wt(1, 3) - 0.04]], { y: 1190, size: 210 }); } });
+// Akt 2 · eine Karte statt zwei: Kamera fährt von der Übersicht auf Noah
+at(K[2] - 0.04, (ctx, u, t, I) => { const a = K[2] - 0.04;
+  const c = cam(u, a, [[a, HOOKCAM(a)], [a + 1.6, camAt(390, 1443, 760, 700)], [K[3], camAt(390, 1520, 760, 700)]], 0);
+  shot(ctx, I.entdecken, c);
+  if (u < wt(2, 8) - 0.1) cap(ctx, u, toks(2, 0, ['Sag,', 'was', 'du', 'baust.']));
+  else cap(ctx, u, toks(2, 8, ['Wer', 'passt.']), 190); });
+// Kontrast-Makro: die Passung bildfüllend, dann die Zeit
+at(K[3] - 0.04, (ctx, u, t, I) => { const a = K[3] - 0.04, z = wt(3, 4) - 0.1;
+  if (u < z) {
+    shot(ctx, I.entdecken, cam(u, a, [[a, camAt(390, P.pill[1], 640, 1180)]], 0.02));
+    cap(ctx, u, [['94 %', wt(3, 1) - 0.04], ['Passung.', wt(3, 1) - 0.04]], 190);
+  } else {
+    shot(ctx, I.entdecken, cam(u, z, [[z, camAt(390, 2340, 760, 820)]], 0.015));
+    cap(ctx, u, [['Wie', wt(3, 5) - 0.04], ['viel', wt(3, 6) - 0.04], ['Zeit.', wt(3, 7) - 0.04]], 190);
+  } });
+// Leute finden dich: Benachrichtigung gleitet über die Karte (echter Wortlaut aus der Demo)
+at(K[4] - 0.04, (ctx, u, t, I) => { const a = K[4] - 0.04;
+  shot(ctx, I.entdecken, cam(u, a, [[a, camAt(390, 2340, 760, 820)]], 0.01), `brightness(${lerp(1, 0.55, clamp((u - a) / (10 * F)))})`);
+  cap(ctx, u, [['Leute', a], ['finden', wt(4, 4) - 0.04], ['dich.', wt(4, 6) - 0.04]], 190);
+  const k = SLIDE(clamp((u - (a + 0.15)) / (14 * F)));
+  const bx = 40, bw = W - 80, bh = 290, by = lerp(-bh - 40, 700, k);
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.55)'; ctx.shadowBlur = 50; ctx.shadowOffsetY = 18;
+  ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 44); ctx.fillStyle = '#202024'; ctx.fill(); ctx.restore();
+  ctx.strokeStyle = 'rgba(236,234,228,0.10)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 44); ctx.stroke();
+  if (I.logo) ctx.drawImage(I.logo, bx + 40, by + 44, 92, 92);
+  font(ctx, 46, 600, 'Plex'); ctx.fillStyle = C.t1; ctx.fillText('Noah Becker möchte dir schreiben', bx + 160, by + 92);
+  font(ctx, 40, 400, 'Plex'); ctx.fillStyle = C.t2;
+  ctx.fillText('Hi Lena! Xyntal hat mich als', bx + 160, by + 168); ctx.fillText('iOS-Entwickler für Loopr vorgeschlagen.', bx + 160, by + 222); });
+// Höhepunkt · ein Tipp
+at(K[5] - 0.04, (ctx, u, t, I) => { const a = K[5] - 0.04;
+  const press = wt(5, 2) - 0.02;
+  const c0 = cam(u, a, [[a, camAt(390, 2560, 760, 820)]], 0.012), c = [c0[0], c0[1], c0[2] * (1 - 0.03 * EXPO(clamp((u - press) / 0.8)))];
+  const img = u < press + 2 * F ? I.k0 : I.k2;
+  shot(ctx, img, c);
+  const s = W / c[2];
+  const bx = W / 2 + (P.btn[0] - c[0]) * s, by = H / 2 + (P.btn[1] - c[1]) * s, bw = P.btn[2] * s, bh = P.btn[3] * s;
+  // Knopf gibt beim Drücken 4 Frames lang nach (0.96)
+  const dn = clamp((u - (press - 4 * F)) / (2 * F)) * (1 - clamp((u - press) / (2 * F)));
+  if (dn > 0 && I.k0) { const sc = 1 - 0.04 * dn; ctx.fillStyle = '#111318'; ctx.fillRect(bx - 4, by - 4, bw + 8, bh + 8);
+    ctx.drawImage(I.k0, ...P.btn, bx + (bw * (1 - sc)) / 2, by + (bh * (1 - sc)) / 2, bw * sc, bh * sc); }
+  // Tipp-Anzeige: Punkt erscheint, Welle läuft aus
+  const tx = bx + bw * 0.5, ty = by + bh * 0.55, tp = u - (press - 6 * F);
+  if (tp > 0) {
+    const d = clamp(tp / (6 * F)), out = clamp((u - (press + 10 * F)) / (8 * F));
+    ctx.save(); ctx.globalAlpha = 0.6 * (1 - out); ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(tx, ty, 32 * lerp(0.8, 1, d) * s / 1.42, 0, M.TAU); ctx.fill(); ctx.restore();
+    const r = clamp((u - press) / (18 * F));
+    if (r > 0 && r < 1) { ctx.save(); ctx.globalAlpha = 0.5 * (1 - r); ctx.strokeStyle = '#fff'; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.arc(tx, ty, 32 * lerp(1, 1.6, EXPO(r)) * s / 1.42 * 1.6, 0, M.TAU); ctx.stroke(); ctx.restore(); }
+  }
+  if (u < wt(5, 1) - 0.1) cap(ctx, u, [['Passt?', wt(5, 0) - 0.04]], 200);
+  else cap(ctx, u, toks(5, 1, ['Ein', 'Klick.']), 200); });
+// Akt 3 · Match-Cut: der Knopf fliegt in die Endkarte, 20 Frames
+at(T.end - 0.04, (ctx, u, t, I) => { const a = T.end - 0.04;
+  ctx.fillStyle = C.ground; ctx.fillRect(0, 0, W, H);
+  // Startlage = Lage des Knopfs im letzten Bild der Klick-Szene
+  const cE = camAt(390, 2560, 760, 820), s0 = W / (cE[2] * (1 - 0.012 * (a - K[5] + 0.04)) * 0.97);
+  const x0 = W / 2 + (P.btn[0] - cE[0]) * s0, y0 = H / 2 + (P.btn[1] - cE[1]) * s0, w0 = P.btn[2] * s0;
+  const m = IO(clamp((u - a) / (20 * F)));
+  const w1 = 820, x1 = (W - w1) / 2, y1 = 640;
+  dabei(ctx, lerp(x0, x1, m), lerp(y0, y1, m), lerp(w0, w1, m));
+  const e = WD[6];
+  if (m >= 1 || u > a + 0.5) {
+    words(ctx, u, [['Kostenlos', e[0][1] - 0.04]], { y: 1120, size: 170, x: x1 });
+    words(ctx, u, [['in', e[1][1] - 0.04], ['der', e[2][1] - 0.04], ['Beta.', e[3][1] - 0.04]], { y: 1280, size: 170, x: x1 });
+    font(ctx, 44, 500, 'Plex'); ctx.fillStyle = C.t2; ctx.fillText('Link im Profil · xyntal.de', x1 + 4, 1380);
+    font(ctx, 28, 400, 'Plex'); ctx.fillStyle = C.t3; ctx.fillText('Gezeigt: App-Demo mit Beispieldaten', x1 + 4, 1450);
+  } });
+
+const GRAIN = [];
+M.film({
+  fonts: ['800 100px Archivo', '600 40px Plex', '500 40px Plex', '400 28px Plex'],
+  images: { logo: '../_shared/fonts/logo.svg', entdecken: '../_shared/shots/m_entdecken.png', k0: '../_shared/shots/m_klick_0.png', k2: '../_shared/shots/m_klick_2.png' },
+  hits: [], samples: 6,
+  init() {
+    for (let k = 0; k < 6; k++) {
+      const c = document.createElement('canvas'); c.width = c.height = 256;
+      const g = c.getContext('2d'), d = g.createImageData(256, 256), r = M.mulberry32(100 + k);
+      for (let i = 0; i < d.data.length; i += 4) { const v = r() * 255; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; }
+      g.putImageData(d, 0, 0); GRAIN.push(c);
+    }
+  },
+  draw(ctx, u, t, IMG) { let i = SC.length - 1; while (i > 0 && u < SC[i][0]) i--; SC[i][1](ctx, u, t, IMG); },
+  post(ctx, u, t) {
+    if (!GRAIN.length) return;
+    const f = Math.floor(t * 60);
+    ctx.save(); ctx.globalAlpha = 0.05; ctx.globalCompositeOperation = 'overlay';
+    ctx.translate((f * 37) % 256, (f * 91) % 256); ctx.fillStyle = ctx.createPattern(GRAIN[f % 6], 'repeat');
+    ctx.fillRect(-256, -256, W + 512, H + 512); ctx.restore();
+  },
+});
