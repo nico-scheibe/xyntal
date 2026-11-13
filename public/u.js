@@ -65,7 +65,8 @@
             ${primary}
             ${own ? `<a class="btn btn-glass" href="#gestalten" data-edit-page>${esc(t("Seite frei gestalten"))}</a>` : ""}
             ${!member && !own ? `<p class="pf-invited">${esc(t("Du wurdest eingeladen: Mit einem Konto bekommst du 7 Tage Plus gratis – und die Person, die dich eingeladen hat, auch."))} <a class="text-link" href="/login#registrieren">${esc(t("Konto anlegen"))}</a></p>` : ""}
-            <button class="btn btn-glass" type="button" data-copy-link>${esc(t(navigator.share ? "Profil teilen" : "Link kopieren"))}</button>
+            ${own ? `<div class="pf-share"><button class="btn btn-glass" type="button" data-copy-link>${esc(t(navigator.share ? "Teilen" : "Link kopieren"))}</button>${storyButton()}</div>`
+              : `<button class="btn btn-glass" type="button" data-copy-link>${esc(t(navigator.share ? "Profil teilen" : "Link kopieren"))}</button>`}
             ${own ? "" : reportLink(c)}
             <p class="pf-copied" role="status" data-copy-status></p>
           </div>
@@ -82,6 +83,7 @@
     document.body.classList.toggle("admin-profile", admin);
     if (admin) adminTilt();
     else linkGlow();
+    if (own) setupStory(c);
   }
   // Editor: öffnet sich direkt auf der eigenen Seite (xyntal.de/name#gestalten) und ersetzt sie, bis „Fertig“ gedrückt wird
   const loadAsset = (tag, attr, url) => new Promise((ok, fail) => { const el = document.createElement(tag); if (tag === "link") el.rel = "stylesheet"; el[attr] = url; el.onload = ok; el.onerror = fail; document.head.append(el); });
@@ -115,6 +117,7 @@
           ${primary}
           ${own ? `<a class="btn btn-glass" href="#gestalten" data-edit-page><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>${esc(t("Gestalten"))}</a>` : ""}
           <button class="btn btn-glass" type="button" data-copy-link><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>${esc(t(navigator.share ? "Teilen" : "Link kopieren"))}</button>
+          ${own ? storyButton() : ""}
           ${own ? "" : reportLink(c, true)}
           <p class="pf-copied" role="status" data-copy-status></p>
         </div>
@@ -123,6 +126,42 @@
     document.body.classList.remove("admin-profile");
     window.XyntalPageCanvas.mount(root);
     afterBlocks(root, c);
+    if (own) setupStory(c);
+  }
+  // Story-Bild für Instagram (card-story.js): nur auf der eigenen Seite, neben „Teilen“.
+  // Das Bild wird gleich nach dem Laden vorbereitet, damit das Teilen-Menü beim Tippen sofort aufgeht.
+  const STORY_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M10.5 18h3"/></svg>';
+  const storyButton = () => (window.XyntalCardStory ? `<button class="btn btn-glass" type="button" data-story-share>${STORY_ICON}<span data-story-label>${esc(t("Für Instagram-Story"))}</span></button>` : "");
+  const AVATAR_PATH = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|gif|webp|mp4|webm)$/;
+  // Profilbild für den Canvas: Bild über die Speicher-API, Video über eine signierte URL
+  async function storyAvatar(path) {
+    if (!AVATAR_PATH.test(path || "")) return null;
+    const auth = { apikey: KEY, Authorization: `Bearer ${KEY}` };
+    if (!/\.(mp4|webm)$/.test(path)) return { url: `${SUPA}/storage/v1/object/authenticated/avatars/${path}`, headers: auth };
+    const res = await fetch(`${SUPA}/storage/v1/object/sign/avatars/${path}`, { method: "POST", headers: { ...auth, "Content-Type": "application/json" }, body: JSON.stringify({ expiresIn: 600 }) });
+    const body = res.ok ? await res.json() : null;
+    return body && typeof body.signedURL === "string" ? { url: `${SUPA}/storage/v1${body.signedURL}`, video: true } : null;
+  }
+  async function storyBanner(path) {
+    const B = window.XyntalBanners;
+    if (!B || !B.validPath(path)) return null;
+    const url = await B.fileUrl(path, null, { supabaseUrl: SUPA, supabaseKey: KEY }, 600);
+    return url ? { url, video: B.isVideo(path) } : null;
+  }
+  function setupStory(c) {
+    const button = root.querySelector("[data-story-share]");
+    if (!button || !window.XyntalCardStory) return;
+    const story = window.XyntalCardStory.attach(button, {
+      status: root.querySelector("[data-copy-status]"),
+      input: async () => {
+        const [avatar, banner] = await Promise.all([
+          storyAvatar(c.profile && c.profile.avatar_path).catch(() => null),
+          storyBanner(c.banner_path).catch(() => null),
+        ]);
+        return { card: c, avatar, banner };
+      },
+    });
+    (window.requestIdleCallback || ((fn) => setTimeout(fn, 600)))(() => story.prepare(), { timeout: 2000 });
   }
   // Seite melden (nur fremde Seiten): öffnet das Meldeformular der Community-Richtlinien mit dieser Adresse
   function reportLink(c, icon) {

@@ -46,6 +46,15 @@
 .pf-side .bp-stage::before { opacity: .5; }
 .pf-actions { display: grid; gap: 10px; width: 100%; max-width: 380px; }
 .pf-actions .btn { width: 100%; justify-content: center; }
+/* Eigene Seite: „Teilen“ und „Für Instagram-Story“ nebeneinander (card-story.js) */
+.pf-share { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; }
+.pf-share .btn[data-copy-link] { padding-inline: 22px; }
+.pf-share .btn { min-width: 0; padding-inline: 12px; gap: 8px; white-space: nowrap; }
+.pf-share .btn svg { width: 18px; height: 18px; flex: none; }
+.pf-share .btn span { overflow: hidden; text-overflow: ellipsis; }
+.btn[data-story-share][aria-busy="true"] { opacity: .7; cursor: progress; }
+.btn[data-story-share].is-ready { border-color: #8FB8FF; color: #8FB8FF; }
+@media (max-width: 320px) { .pf-share { grid-template-columns: minmax(0, 1fr); } }
 .pf-invited { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--text-2, #C9C9CF); text-align: center; }
 .pf-copied { min-height: 1.2em; color: var(--text-3); font-size: 13px; text-align: center; }
 .pf-copied:empty { display: none; }
@@ -321,14 +330,15 @@ body.admin-profile .lp-link:hover .lp-arrow { color: var(--pfa-c); }
   </div>
   <p class="foot__mark" aria-hidden="true">xyntal</p>
 </footer>
-<script src="/banners.js?v=5" defer></script>
+<script src="/banners.js?v=6" defer></script>
 <script src="/xcard.js?v=18" defer></script>
 <script src="/card-fx.js?v=1" defer></script>
 <script src="/config.js?v=31" defer></script>
 <script src="/app-api.js?v=5" defer></script>
 <script src="/link-icons.js?v=1" defer></script>
 <script src="/page-canvas.js?v=23" defer></script>
-<script src="/u.js?v=56" defer></script>
+<script src="/card-story.js?v=1" defer></script>
+<script src="/u.js?v=57" defer></script>
 <script src="/effects.js?v=40" defer></script>
 <script src="/account-menu.js?v=22" defer></script>
 <script src="/site-search.js?v=2" defer></script>
