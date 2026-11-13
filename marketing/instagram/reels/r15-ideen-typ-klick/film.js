@@ -86,47 +86,19 @@ at(K[1] - 0.04, (ctx, u, t, I) => {
   const c = HOOKCAM(u).map((v, i) => lerp(v, CARDCAM[i], f));
   bg(ctx, u, I, 1 - f, c);
   if (f < 0.35) { veil(ctx); words(ctx, u, toks(1, 0, ['Es', 'geht', 'auch']), { y: 990, size: 210 }); words(ctx, u, [['anders.', wt(1, 3) - 0.04]], { y: 1190, size: 210 }); } });
-// Akt 2 · eine Karte statt zwei: Kamera fährt von der Übersicht auf Noah
-at(K[2] - 0.04, (ctx, u, t, I) => { const a = K[2] - 0.04;
-  const c = cam(u, a, [[a, CARDCAM], [K[3], camAt(390, 1520, 760, 700)]], 0);
-  shot(ctx, I.entdecken, c);
-  if (u < wt(2, 8) - 0.04) cap(ctx, u, [['Sag,', a]].concat(toks(2, 1, ['was', 'du', 'baust.'])));
-  else cap(ctx, u, toks(2, 8, ['Wer', 'passt.']), 190); });
-// Kontrast-Makro: die Passung bildfüllend, dann die Zeit
-at(K[3] - 0.04, (ctx, u, t, I) => { const a = K[3] - 0.04, z = wt(3, 4) - 0.1;
-  const n0 = wt(3, 1) - 0.04, n1 = n0 + 1.2;
-  if (u >= n0 && u < n1) {                       // „94 %“ allein, bildfüllend, 0,6 s
-    ctx.fillStyle = C.ground; ctx.fillRect(0, 0, W, H);
-    const z2 = 1 + 0.03 * (u - n0);
-    ctx.save(); ctx.translate(W / 2, 1060); ctx.scale(z2, z2);
-    font(ctx, 520, 800, 'Archivo', 'extra-condensed'); ctx.textAlign = 'center'; ctx.fillStyle = C.t1; ctx.fillText('94 %', 0, 180);
-    ctx.restore(); ctx.textAlign = 'left';
-    font(ctx, 800 * 0 + 96, 800, 'Archivo', 'extra-condensed'); ctx.fillStyle = C.t2; ctx.fillText('Passung', 80, 1440);
-    return;
-  }
-  if (u < z) {
-    shot(ctx, I.entdecken, cam(u, a, [[a, camAt(390, P.pill[1], 640, 1180)]], 0.02));
-    cap(ctx, u, [['94 %', a], ['Passung.', a]], 190);
-  } else {
-    shot(ctx, I.entdecken, cam(u, z, [[z, camAt(390, 2340, 760, 820)]], 0.015));
-    cap(ctx, u, [['Wie', z], ['viel', wt(3, 6) - 0.04], ['Zeit.', wt(3, 7) - 0.04]], 190);
-  } });
-// Leute finden dich: Benachrichtigung gleitet über die Karte (echter Wortlaut aus der Demo)
-at(K[4] - 0.04, (ctx, u, t, I) => { const a = K[4] - 0.04;
-  shot(ctx, I.entdecken, cam(u, a, [[a, camAt(390, 2340, 760, 820)]], 0.01), `brightness(${lerp(1, 0.55, clamp((u - a) / (10 * F)))})`);
-  const k = SLIDE(clamp((u - (a + 0.15)) / (14 * F)));
-  const bx = 40, bw = W - 80, bh = 290, by = lerp(BAND - 60, 700, k);
-  ctx.save();
-  ctx.shadowColor = 'rgba(0,0,0,0.55)'; ctx.shadowBlur = 50; ctx.shadowOffsetY = 18;
-  ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 44); ctx.fillStyle = '#202024'; ctx.fill(); ctx.restore();
-  ctx.strokeStyle = 'rgba(236,234,228,0.10)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 44); ctx.stroke();
-  if (I.logo) ctx.drawImage(I.logo, bx + 40, by + 44, 92, 92);
-  font(ctx, 48, 600, 'Plex'); ctx.fillStyle = C.t1; ctx.fillText('Noah Becker möchte dir schreiben', bx + 160, by + 92);
-  font(ctx, 40, 400, 'Plex'); ctx.fillStyle = C.t2;
-  ctx.fillText('Hi Lena! Xyntal hat mich als', bx + 160, by + 168); ctx.fillText('iOS-Entwickler für Loopr vorgeschlagen.', bx + 160, by + 222);
-  cap(ctx, u, [['Leute', a], ['finden', wt(4, 4) - 0.04], ['dich.', wt(4, 6) - 0.04]], 190); });
-// Höhepunkt · ein Tipp: Knopf gibt nach, wird grün, der Haken zeichnet sich, 0,6 s Halt
-const TAPCAM = (u, a, press) => { const c0 = cam(u, a, [[a, camAt(390, 2560, 760, 820)]], 0.012); return [c0[0], c0[1], c0[2] * (1 - 0.03 * EXPO(clamp((u - press) / 0.8)))]; };
+// Akt 2 · EINE durchgehende Kamerafahrt über Noahs Karte, ohne Jump-Cuts.
+// Harte Schnitte nur, wo sich das Bild wirklich ändert: Einschub „94 %“ und Match-Cut ins Ende.
+const PILL = camAt(390, 2004, 640, 1100), ZEIT = camAt(390, 2330, 760, 840), TAP = camAt(390, 2560, 760, 820);
+const CARD2 = camAt(390, 1500, 760, 700);
+const N0 = () => wt(3, 3) - 0.04, N1 = () => N0() + 1.1;            // Einschub „94 %“ auf „Prozent“
+function PATH(u) {
+  const a = K[2] - 0.04;
+  if (u < N1()) return cam(u, a, [[a, CARDCAM], [wt(2, 8), camAt(390, 1470, 700, 700)], [K[3] - 0.3, camAt(390, 1500, 680, 700)], [wt(3, 1) + 0.2, PILL]], 0.006);
+  // nach dem Einschub: neue Einstellung (Zeit-Bereich), dann gleitend weiter bis zum Knopf
+  const b = N1(), press = wt(5, 2) - 0.02;
+  const c = cam(u, b, [[b, ZEIT], [K[5] - 0.5, [ZEIT[0], ZEIT[1] + 40, ZEIT[2]]], [K[5] + 0.6, TAP]], 0.006);
+  return [c[0], c[1], c[2] * (1 - 0.03 * EXPO(clamp((u - press) / 0.8)))];
+}
 function btnRect(c) { const s = W / c[2]; return [W / 2 + (P.btn[0] - c[0]) * s, H / 2 + (P.btn[1] - c[1]) * s, P.btn[2] * s, P.btn[3] * s, s]; }
 function dabeiDraw(ctx, x, y, w, k = 1) {     // Vektor-Knopf; k = Fortschritt des Hakens 0..1
   const h = w * (102 / 336), r = h / 2;
@@ -143,29 +115,63 @@ function dabeiDraw(ctx, x, y, w, k = 1) {     // Vektor-Knopf; k = Fortschritt d
   ctx.lineWidth = fs * 0.12; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; if (k > 0) ctx.stroke();
   ctx.fillText(label, sx + ck + gap, cy + fs * 0.36); ctx.restore();
 }
-at(K[5] - 0.04, (ctx, u, t, I) => { const a = K[5] - 0.04, press = wt(5, 2) - 0.02;
-  const c = TAPCAM(u, a, press);
-  shot(ctx, I.k0, c);
-  const [bx, by, bw, bh, s] = btnRect(c);
-  const down = u >= press - 4 * F && u < press;              // 4 Frames gedrückt
+function banner(ctx, I, by) {
+  const bx = 40, bw = W - 80, bh = 290;
+  ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.55)'; ctx.shadowBlur = 50; ctx.shadowOffsetY = 18;
+  ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 44); ctx.fillStyle = '#202024'; ctx.fill(); ctx.restore();
+  ctx.strokeStyle = 'rgba(236,234,228,0.10)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 44); ctx.stroke();
+  if (I.logo) ctx.drawImage(I.logo, bx + 40, by + 44, 92, 92);
+  font(ctx, 48, 600, 'Plex'); ctx.fillStyle = C.t1; ctx.fillText('Noah Becker möchte dir schreiben', bx + 160, by + 92);
+  font(ctx, 40, 400, 'Plex'); ctx.fillStyle = C.t2;
+  ctx.fillText('Hi Lena! Xyntal hat mich als', bx + 160, by + 168); ctx.fillText('iOS-Entwickler für Loopr vorgeschlagen.', bx + 160, by + 222);
+}
+at(K[2] - 0.04, (ctx, u, t, I) => { const a = K[2] - 0.04, press = wt(5, 2) - 0.02;
+  // Einschub „94 %“: harter Schnitt hinein auf „Prozent“, harter Schnitt hinaus in eine neue Einstellung
+  if (u >= N0() && u < N1()) {
+    ctx.fillStyle = C.ground; ctx.fillRect(0, 0, W, H);
+    const z2 = 1 + 0.03 * (u - N0());
+    ctx.save(); ctx.translate(W / 2, 1060); ctx.scale(z2, z2);
+    font(ctx, 520, 800, 'Archivo', 'extra-condensed'); ctx.textAlign = 'center'; ctx.fillStyle = C.t1; ctx.fillText('94 %', 0, 180);
+    ctx.restore(); ctx.textAlign = 'left';
+    font(ctx, 96, 800, 'Archivo', 'extra-condensed'); ctx.fillStyle = C.t2; ctx.fillText('Passung', 80, 1440);
+    return;
+  }
+  const c = PATH(u);
+  // Benachrichtigung: Bild dunkelt ab, Banner gleitet unter der Textzone hervor und verlässt das Bild wieder nach oben
+  const b0 = K[4] - 0.04 + 0.15, b1 = K[5] - 0.25;
+  const din = clamp((u - (K[4] - 0.04)) / (10 * F)), dout = clamp((u - b1) / (10 * F));
+  const dim = din * (1 - dout);
+  shot(ctx, I.k0, c, dim > 0 ? `brightness(${lerp(1, 0.55, dim)})` : 'none');
+  // Tipp auf den Knopf
+  const [bx, by, bw, bh] = btnRect(c);
+  const down = u >= press - 4 * F && u < press;
   if (down || u >= press) { ctx.fillStyle = '#111318'; ctx.fillRect(bx - 6, by - 6, bw + 12, bh + 12); }
   if (down && I.k0) { const sc = 0.94; ctx.drawImage(I.k0, ...P.btn, bx + bw * (1 - sc) / 2, by + bh * (1 - sc) / 2, bw * sc, bh * sc); }
   if (u >= press) dabeiDraw(ctx, bx, by, bw, clamp((u - press) / (10 * F)));
-  // Tipp-Anzeige 20 px unter der Schrift: weicher Punkt und Ring
-  const tx = bx + bw * 0.5, ty = by + bh + 8, tp = u - (press - 4 * F);
-  if (tp >= 0) {
+  const tx = bx + bw * 0.5, ty = by + bh + 8;
+  if (u >= press - 4 * F) {
     const out = clamp((u - (press + 8 * F)) / (8 * F));
     ctx.save(); ctx.globalAlpha = 0.2 * (1 - out); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(tx, ty, 30, 0, M.TAU); ctx.fill(); ctx.restore();
     const r = clamp((u - press) / (18 * F));
     if (r < 1) { ctx.save(); ctx.globalAlpha = 0.9 * (1 - r); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.arc(tx, ty, 30 * lerp(1, 1.8, EXPO(r)), 0, M.TAU); ctx.stroke(); ctx.restore(); }
   }
-  if (u < wt(5, 1) - 0.04) cap(ctx, u, [['Passt?', a]], 200);
+  if (u >= b0 && dout < 1) {
+    const kin = SLIDE(clamp((u - b0) / (14 * F))), kout = E.inCubic(dout);
+    banner(ctx, I, lerp(BAND - 60, 700, kin) - kout * 420);
+  }
+  // Textzone: hält immer den aktuellen Satz
+  if (u < wt(2, 8) - 0.04) cap(ctx, u, [['Sag,', a]].concat(toks(2, 1, ['was', 'du', 'baust.'])));
+  else if (u < K[3] - 0.04) cap(ctx, u, toks(2, 8, ['Wer', 'passt.']), 190);
+  else if (u < N0()) cap(ctx, u, [['Mit', K[3] - 0.04], ['Passung.', wt(3, 1) - 0.04]], 190);
+  else if (u < K[4] - 0.04) cap(ctx, u, [['Wie', N1()], ['viel', wt(3, 6) - 0.04], ['Zeit.', wt(3, 7) - 0.04]], 190);
+  else if (u < K[5] - 0.04) cap(ctx, u, [['Leute', K[4] - 0.04], ['finden', wt(4, 4) - 0.04], ['dich.', wt(4, 6) - 0.04]], 190);
+  else if (u < wt(5, 1) - 0.04) cap(ctx, u, [['Passt?', K[5] - 0.04]], 200);
   else cap(ctx, u, toks(5, 1, ['Ein', 'Klick.']), 200); });
 // Akt 3 · Match-Cut: Karte tritt zurück (8 Frames), der Knopf wächst und wandert in die Endkarte (20 Frames)
 at(T.end - 0.04, (ctx, u, t, I) => { const a = T.end - 0.04, press = wt(5, 2) - 0.02;
   ctx.fillStyle = C.ground; ctx.fillRect(0, 0, W, H);
-  const cA = TAPCAM(a, K[5] - 0.04, press), [x0, y0, w0] = btnRect(cA);
+  const cA = PATH(a), [x0, y0, w0] = btnRect(cA);
   const fo = clamp((u - a) / (8 * F));
   if (fo < 1) {
     const sc = lerp(1, 0.92, fo), cx = x0 + w0 / 2, cy = y0 + w0 * 0.15;
