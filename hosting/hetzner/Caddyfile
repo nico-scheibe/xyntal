@@ -31,3 +31,11 @@ api.xyntal.de {
 		flush_interval -1
 	}
 }
+
+# Web-Panel von Xyntal Guard (Discord-Bot). Läuft nur mit COMPOSE_PROFILES=discord;
+# sonst antwortet diese Adresse mit 502. DNS: A-Record "bot", „DNS only“.
+bot.xyntal.de {
+	encode zstd gzip
+	header Strict-Transport-Security "max-age=31536000"
+	reverse_proxy discord-guard:8790
+}
