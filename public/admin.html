@@ -18,7 +18,7 @@
   <link rel="stylesheet" href="fonts/fonts.css?v=32">
   <link rel="stylesheet" href="style.css?v=38">
   <link rel="stylesheet" href="cosmos.css?v=43">
-  <script src="i18n-en.js?v=129" defer></script>
+  <script src="i18n-en.js?v=130" defer></script>
   <script src="i18n.js?v=32" defer></script>
   <script src="cosmos.js?v=40" defer></script>
   <style>
@@ -87,6 +87,7 @@
         <button role="tab" data-tab="announcements" data-group="content" data-platform data-perm="announcements.manage" aria-selected="false"><i class="xa-ico" data-ico="megaphone"></i><span>Ankündigungen</span> <em id="c-announcements"></em></button>
         <button role="tab" data-tab="contracts" data-group="content" data-site aria-selected="false"><i class="xa-ico" data-ico="file"></i><span>Firmenverträge</span></button>
         <button role="tab" data-tab="vouchers" data-group="content" data-platform data-perm="billing.manage" aria-selected="false"><i class="xa-ico" data-ico="ticket"></i><span>Gutscheine</span> <em id="c-vouchers"></em></button>
+        <button role="tab" data-tab="partners" data-group="content" data-platform data-perm="users.view" aria-selected="false"><i class="xa-ico" data-ico="activity"></i><span>Partner</span></button>
         <p class="xa-group" data-group-title="insights">Auswertung</p>
         <button role="tab" data-tab="platform" data-group="insights" data-platform aria-selected="false"><i class="xa-ico" data-ico="gauge"></i><span>Plattform-Zahlen</span></button>
         <button role="tab" data-tab="feedback" data-group="insights" data-platform data-perm="users.view" aria-selected="false"><i class="xa-ico" data-ico="activity"></i><span>Feedback &amp; Herkunft</span> <em id="c-feedback"></em></button>
@@ -124,6 +125,7 @@
       <div data-panel="health" data-no-i18n hidden></div>
       <div data-panel="announcements" data-no-i18n hidden></div>
       <div data-panel="vouchers" data-no-i18n hidden></div>
+      <div data-panel="partners" data-no-i18n hidden></div>
       <div data-panel="feedback" data-no-i18n hidden></div>
       <div data-panel="audit" data-no-i18n hidden></div>
 
@@ -150,9 +152,10 @@
 <script src="/pages/admin-support.js?v=1"></script>
 <script src="/pages/admin-contracts.js?v=1"></script>
 <script src="/pages/admin-vouchers.js?v=1"></script>
+<script src="/pages/admin-partners.js?v=1"></script>
 <script src="/pages/admin.js?v=11"></script>
 <script src="/pages/admin-people.js?v=3"></script>
-<script src="/account-menu.js?v=22" defer></script>
+<script src="/account-menu.js?v=23" defer></script>
 <script src="/site-search.js?v=3" defer></script>
 </body>
 </html>

@@ -351,6 +351,17 @@
     if (c) c.auth.onAuthStateChange((ev) => { if (ev === "SIGNED_OUT" || ev === "SIGNED_IN") { state.session = readSession(); render(); loadProfile(); } });
   }
 
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
-  else init();
+  // Partnerprogramm (partner-link.js): nur laden, wenn ein Partner-Link im Spiel ist
+  function initPartner() {
+    let pending = /[?&]partner=/.test(location.search);
+    try { pending = pending || /"code"/.test(localStorage.getItem("xyntal-partner") || "") && !/"done":true/.test(localStorage.getItem("xyntal-partner")); } catch { /* privat */ }
+    if (!pending || document.querySelector('script[src^="/partner-link.js"]')) return;
+    const s = document.createElement("script");
+    s.src = "/partner-link.js?v=1";
+    s.defer = true;
+    document.head.append(s);
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => { init(); initPartner(); });
+  else { init(); initPartner(); }
 })();
