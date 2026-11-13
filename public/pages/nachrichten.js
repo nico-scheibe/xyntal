@@ -358,9 +358,13 @@
       : S.filter !== "all" ? "Hier ist gerade nichts."
       : { all: "Noch keine Gespräche. Starte eins mit dem Plus oben.", private: "Noch keine privaten Gespräche.",
           teams: "Noch kein Team-Chat. Leg einen für deinen Arbeitsbereich oder ein Projekt an.", groups: "Du bist noch in keiner öffentlichen Gruppe – schau mal unter „Gruppen entdecken“." }[S.space];
-    listEl.querySelector("[data-items]").innerHTML = items || hits || waiting
+    // Nur bei echter Änderung neu zeichnen: Sonst ersetzt jedes Live-Ereignis (z. B. Online-Status)
+    // die Einträge unter der Maus – Hover flackert und ein Klick geht verloren.
+    const itemsEl = listEl.querySelector("[data-items]");
+    const nextHtml = items || hits || waiting
       ? `${waiting}${items}${hits}`
       : `<div class="xc-empty xc-empty-list"><p>${esc(t(emptyText))}</p>${S.space === "teams" ? `<button type="button" class="btn btn-small btn-ghost" data-new-team>${esc(t("Team-Chat anlegen"))}</button>` : S.space === "groups" ? `<button type="button" class="btn btn-small btn-ghost" data-discover>${esc(t("Gruppen entdecken"))}</button>` : ""}</div>`;
+    if (itemsEl._html !== nextHtml) { itemsEl.innerHTML = nextHtml; itemsEl._html = nextHtml; }
     listEl.querySelectorAll("[data-filter]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.filter === S.filter)));
     listEl.querySelectorAll("[data-space]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.space === S.space)));
     // Ungelesene je Bereich an den Reitern
@@ -380,7 +384,7 @@
   let listRetry = 0;
   function listFailed(err) {
     if (S.conversations.length) return; // eine schon geladene Liste bleibt stehen
-    listEl.querySelector("[data-items]").innerHTML = `<div class="xc-empty xc-empty-list"><p>${esc(fail(err))}</p><button type="button" class="btn btn-small btn-ghost" data-retry-list>${esc(t("Erneut versuchen"))}</button></div>`;
+    const box = listEl.querySelector("[data-items]"); box._html = ""; box.innerHTML = `<div class="xc-empty xc-empty-list"><p>${esc(fail(err))}</p><button type="button" class="btn btn-small btn-ghost" data-retry-list>${esc(t("Erneut versuchen"))}</button></div>`;
     clearTimeout(listRetry);
     listRetry = setTimeout(() => loadConversations().catch(listFailed), err && err.status === 429 ? 30000 : 15000);
   }
@@ -832,7 +836,9 @@
 
   // ---------- Rechte Spalte ----------
   function setInfo(html) {
-    infoEl.innerHTML = `<button type="button" class="xc-icon xc-info-back" data-info-back aria-label="${esc(t("Zurück zum Gespräch"))}">${ICON.back}</button>${html}`;
+    const next = `<button type="button" class="xc-icon xc-info-back" data-info-back aria-label="${esc(t("Zurück zum Gespräch"))}">${ICON.back}</button>${html}`;
+    if (infoEl._html === next) return; // unverändert: nicht unter der Maus (oder beim Tippen) neu zeichnen
+    infoEl.innerHTML = next; infoEl._html = next;
   }
   // Löschen trifft alle Mitglieder: erst nach Eingabe des Gruppennamens möglich (nur Inhaber).
   function deleteBlock(c) {
