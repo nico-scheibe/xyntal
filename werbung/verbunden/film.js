@@ -399,7 +399,7 @@ const CITY = (() => {
   });
   const d = (h) => Math.hypot((h.x0 + h.x1) / 2 - 380, h.base - GROUND0);
   lit.sort((a, b) => d(a) - d(b));
-  lit.forEach((h, k) => { h.litU = 52.96 + 4.2 * Math.sqrt(k / lit.length); });
+  lit.forEach((h, k) => { h.litU = 52.98 + 2.6 * Math.sqrt(k / lit.length); });
   leip.litU = 53.58; graz.litU = 54.02;
   const cen = (h) => [h.lit.x + h.lit.w / 2, h.lit.y + h.lit.h / 2];
   return { houses, lit, mine, LEIP: leip, GRAZ: graz, Lp: cen(leip), Gp: cen(graz), Mp: [MY_WIN.x + MY_WIN.w / 2, MY_WIN.y + MY_WIN.h / 2] };
@@ -419,18 +419,9 @@ function cityCam(u) {
     return { cx, cy, z };
   }
   if (u < 51.2) return { cx: M0[0], cy: M0[1], z: 0.34 * Math.pow(0.9, prog(u, 47.5, 51.2)) };
-  // the pull back: zoom in log space so it reads as a constant-rate dolly
-  if (u < 57.6) {
-    const p = E.inOutSine(prog(u, 51.2, 57.4));
-    const z = 0.306 * Math.pow(0.105 / 0.306, p);
-    return { cx: lerp(M0[0], 0, p), cy: lerp(M0[1], GROUND0 - 200, p), z };
-  }
-  const mid = [(L[0] + G[0]) / 2, (L[1] + G[1]) / 2];
-  const [cx, cy] = springKeys(u, [[57.6, [0, GROUND0 - 200]], [57.62, L], [64.95, G], [71.4, mid]], u < 64.9 ? SPRING.gentle : u < 71.3 ? { stiffness: 260, damping: 26 } : SPRING.gentle);
-  const z = u < 64.9 ? 0.105 * Math.pow(0.6 / 0.105, clamp(springU(u, 57.62, SPRING.gentle), 0, 1.02))
-    : u < 71.4 ? 0.6 * (1 - 0.45 * bump(u, 65.25, 0.45))
-      : 0.6 * Math.pow(0.17 / 0.6, clamp(springU(u, 71.42, SPRING.gentle), 0, 1));
-  return { cx, cy, z };
+  // the pull back, in log space (a constant-rate dolly), then the city collapses into your point
+  if (u < 55.4) return { cx: M0[0], cy: M0[1], z: 0.306 * Math.pow(0.1 / 0.306, E.inOutSine(prog(u, 51.2, 55.4))) };
+  return { cx: M0[0], cy: M0[1], z: 0.1 * Math.pow(0.003 / 0.1, E.inQuad(prog(u, 55.4, 57.3))) };
 }
 const toS = (p, cam) => [(p[0] - cam.cx) * cam.z + W / 2, (p[1] - cam.cy) * cam.z + H / 2];
 
@@ -530,7 +521,7 @@ function sceneCity(ctx, u) {
   // my window
   const myK = u < 47.5 ? 1 - 0.25 * bump(u, 43.5, 1.5) : 1;
   const sparkG = u < 47.5 ? prog(u, 42, 44.5) * 0.7 : 0;
-  litWindow(ctx, MY_WIN, cam, u, myK * (1 - prog(u, 81.3, 81.8)), { spk: u > 33 && u < 47.5 ? 1 - 0.5 * bump(u, 44.4, 0.3) * (Math.floor(u * 10) % 2) : 0, me: true, sparkGray: sparkG });
+  litWindow(ctx, MY_WIN, cam, u, myK, { spk: u > 33 && u < 47.5 ? 1 - 0.5 * bump(u, 44.4, 0.3) * (Math.floor(u * 10) % 2) : 0, me: true, sparkGray: sparkG });
   // the plan in the night sky (S6) that only you can see; it falls apart in S7
   if (u > 34.5 && u < 47.5) plan(ctx, u, cam);
   // the "?" (S7)
@@ -543,37 +534,26 @@ function sceneCity(ctx, u) {
     if (u < h.litU) continue;
     const k = clamp(prog(u, h.litU, h.litU + 0.12)) * (1 - 0.6 * bump(u, h.litU + 0.06, 0.06));
     const special = h === CITY.LEIP || h === CITY.GRAZ;
-    litWindow(ctx, h.lit, cam, u, k * (u > 81 ? 1 - prog(u, 81.3, 81.8) : 1), { spk: special && z > 0.35 ? clamp((z - 0.35) / 0.15) : 0 });
+    litWindow(ctx, h.lit, cam, u, k, { spk: special && z > 0.35 ? clamp((z - 0.35) / 0.15) : 0 });
   }
   // S12/S13: the line that doesn't reach, then the network
-  if (u > 73 && u < 82.2) links(ctx, u, cam);
   ctx.restore();
 
-  // screen-space tags (S10/S11/S12)
-  const tL = toS([CITY.Lp[0], CITY.LEIP.lit.y], cam), tG = toS([CITY.Gp[0], CITY.GRAZ.lit.y], cam);
-  const tagOut = 1 - prog(u, 78.6, 79.2);
-  if (u > 59 && tagOut > 0) {
-    const sz = lerp(1, 0.84, clamp(springU(u, 71.42, SPRING.gentle)));
-    ctx.save(); ctx.globalAlpha = tagOut;
-    label(ctx, toS(CITY.Lp, cam), ['LEIPZIG', 'BACKEND & DATEN', 'SUCHT: MITGRÜNDER:IN'], u, 59.49, sz, 1);
-    if (u > 66.6) label(ctx, toS(CITY.Gp, cam), ['GRAZ', 'MOBILE', 'SUCHT: PROJEKT'], u, 66.74, sz, -1);
-    ctx.restore();
-  }
-  if (u > 79) particlesX(ctx, u, cam);
 }
 
 // A mono label card tied to a light (the reference's price tag): a ring around the light, a thread
 // up to a card that stays inside the safe area.
-function label(ctx, p, lines, u, u0, sc, side) {
+function label(ctx, p, lines, u, u0, sc, side, ringR = 26) {
   const k = springU(u, u0, SPRING.bouncy);
   if (k <= 0.001) return;
   const kk = clamp(k, 0, 1.15);
   // ring
   ctx.strokeStyle = rgba(C.ink, 0.9); ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.arc(p[0], p[1], (26 + 8 * wobble(u - u0, 1.2, 3)) * Math.min(1, k * 1.4), 0, TAU); ctx.stroke();
+  ctx.beginPath(); ctx.arc(p[0], p[1], (ringR + 8 * wobble(u - u0, 1.2, 3)) * Math.min(1, k * 1.4), 0, TAU); ctx.stroke();
   const s1 = 64 * sc, s2 = 38 * sc, pad = 26 * sc;
   ctx.font = font(s1, 500, MONO); let w = ctx.measureText(lines[0]).width;
   ctx.font = font(s2, 500, MONO); lines.slice(1).forEach((l) => { w = Math.max(w, ctx.measureText(l).width + l.length * 1); });
+  if (w + pad * 2 > 850) { const f = 850 / (w + pad * 2); return label(ctx, p, lines, u, u0, sc * f, side, ringR); }
   const cw = w + pad * 2, ch = s1 * 1.1 + (lines.length - 1) * s2 * 1.45 + pad * 1.6;
   let x = side > 0 ? p[0] + 40 : p[0] - 40 - cw;
   x = clamp(x, 72, 930 - cw);
@@ -581,7 +561,7 @@ function label(ctx, p, lines, u, u0, sc, side) {
   const ax = clamp(p[0], x + 30, x + cw - 30);
   // thread
   ctx.strokeStyle = rgba(C.ink, 0.75); ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(p[0], p[1] - 26); ctx.lineTo(lerp(p[0], ax, kk), lerp(p[1] - 26, y + ch, kk)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(p[0], p[1] - ringR); ctx.lineTo(lerp(p[0], ax, kk), lerp(p[1] - ringR, y + ch, kk)); ctx.stroke();
   const rot = 0.06 * wobble(u - u0, 1.1, 2.2) * side;
   ctx.save(); ctx.translate(ax, y + ch); ctx.rotate(rot); ctx.scale(kk, kk); ctx.translate(-ax, -(y + ch));
   rrect(ctx, x, y, cw, ch, 6); ctx.fillStyle = C.ink; ctx.fill();
@@ -687,19 +667,20 @@ const PARTS = (() => {
     const ang = R() * TAU, rad = Math.abs((R() + R() + R()) / 3 - 0.5) * 2 * 34;
     const tgt = toX([x + Math.cos(ang) * rad, y + Math.sin(ang) * rad]);
     const col = stroke ? gradAt(t * 0.5) : gradAt(0.5 + t * 0.5);
-    out.push({ tgt, col, src: Math.floor(R() * NET.P.length), jx: R() * 2 - 1, jy: R() * 2 - 1, d: R(), r: 1.4 + R() * 2.6, ph: R() * 100 });
+    out.push({ tgt, col, src: R(), jx: R() * 2 - 1, jy: R() * 2 - 1, d: R(), r: 1.4 + R() * 2.6, ph: R() * 100 });
   }
   return out;
 })();
-function particlesX(ctx, u, cam) {
-  const fly0 = 81.3;
-  const out = E.inCubic(prog(u, 86.05, 86.7));           // scatter into the app window
+const FLY0 = 86.65, WORD0 = 87.6, SCATTER = [91.05, 91.7];
+function particlesX(ctx, u, srcAt) {
+  const fly0 = FLY0;
+  const out = E.inCubic(prog(u, SCATTER[0], SCATTER[1]));   // scatter into the app window
   const flash = 1;
   for (const p of PARTS) {
-    const s = toS(NET.P[p.src], cam);
     const start = fly0 + p.d * 0.9;
+    if (u < start) continue;
+    const s = srcAt(p.src);
     const k = clamp(springU(u, start, { stiffness: 70, damping: 13 }), 0, 1.08);
-    if (u < fly0 + p.d * 0.9 && u < 81.2) continue;
     let x = lerp(s[0] + p.jx * 12, p.tgt[0], k), y = lerp(s[1] + p.jy * 12, p.tgt[1], k);
     // shimmer once in place
     x += noise1(u * 1.4 + p.ph, 3) * 4 * k; y += noise1(u * 1.4 + p.ph, 7) * 4 * k;
@@ -716,7 +697,7 @@ function particlesX(ctx, u, cam) {
   const L = layout(ctx, wm, f, -3);
   const x0 = 540 - L.width / 2, base = 1335;
   L.glyphs.forEach((g, j) => {
-    const k = springU(u, 82.3 + j * 0.05, SPRING.bouncy);
+    const k = springU(u, WORD0 + j * 0.05, SPRING.bouncy);
     if (k <= 0) return;
     glyph(ctx, g.ch, x0 + g.cx, base + (1 - k) * 60 + out * 900, f, rgba(C.ink, clamp(k) * (1 - out)));
   });
@@ -733,10 +714,10 @@ function sceneApp(ctx, u, IMG) {
   const rise = springU(u, 86.3, { stiffness: 140, damping: 19 });
   const fall = E.inCubic(prog(u, 94.55, 95.25));
   const wX = 60, wW = 960, wH = 972, wY0 = 380;
-  const toWhy = springU(u, 92.62, SPRING.gentle);
-  if (u < 92.9 || toWhy < 0.6) {
+  const toWhy = springU(u, 92.19, SPRING.gentle);
+  if (u < 92.47 || toWhy < 0.6) {
     // window with the discover screen; pushes in on Selin's card
-    const y = lerp(H + 80, wY0, rise) + 1100 * E.inCubic(prog(u, 92.6, 93.1));
+    const y = lerp(H + 80, wY0, rise) + 1100 * E.inCubic(prog(u, 92.17, 92.67));
     const zin = clamp(springU(u, 90.3, { stiffness: 60, damping: 14 }), 0, 1.05);
     const r = DISC_FULL.map((v, i) => lerp(v, DISC_SELIN[i], zin));
     const tilt = 0.012 * (1 - rise);
@@ -749,9 +730,9 @@ function sceneApp(ctx, u, IMG) {
     ctx.strokeStyle = rgba(C.ink, 0.16); ctx.lineWidth = 2; rrect(ctx, wX, y, wW, wH, 18); ctx.stroke();
     ctx.restore();
   }
-  if (u > 92.5) {
+  if (u > 92.05) {
     // "Und warum": the match explanation, two cards from the profile screen
-    const cards = [[PROF_MATCH, 92.62, 660], [PROF_ADD, 92.92, 900], [PROF_WHY, 93.2, 1072]];
+    const cards = [[PROF_MATCH, 92.19, 660], [PROF_ADD, 92.49, 900], [PROF_WHY, 92.77, 1072]];
     cards.forEach(([src, b, yy], i) => {
       const k = springU(u, b, { stiffness: 200, damping: 20 });
       if (k <= 0) return;
@@ -777,7 +758,7 @@ function sceneEnd(ctx, u) {
   const ox = 72, oy = lerp(760, 380, up);
   ctx.save(); ctx.translate(ox, oy); ctx.scale(sc, sc);
   const f1 = font(178, 800, DISPLAY), f2 = font(150, 200, DISPLAY);
-  const words = [['Hör', 94.99, f1, 0, 0], ['auf,', 95.28, f1, 1, 0], ['allein', 95.65, f2, 0, 1], ['zu', 96.19, f2, 1, 1], ['bauen.', 96.38, f2, 2, 1]];
+  const words = [['Hör', 94.99, f1, 0, 0], ['auf,', 95.25, f1, 1, 0], ['allein', 95.59, f2, 0, 1], ['zu', 96.06, f2, 1, 1], ['bauen.', 96.26, f2, 2, 1]];
   let lineX = [0, 0];
   const L1 = layout(ctx, 'Hör auf,', f1, -5), L2 = layout(ctx, 'allein zu bauen.', f2, -4);
   for (const [wd, b, f, idx, line] of words) {

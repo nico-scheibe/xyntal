@@ -42,10 +42,10 @@ BEAT = 60 / BPM
 seed(20261114)
 
 # silence wanted before each line (s); the line then starts on the next half beat
-GAP = {0: 0.0, 1: 0.45, 2: 0.45, 3: 0.4, 4: 0.85, 5: 0.55, 6: 0.55, 7: 0.9, 8: 1.25, 9: 0.55,
-       10: 0.4, 11: 0.55, 12: 1.05, 13: 0.6, 14: 0.55}
+GAP = {0: 0.0, 1: 0.45, 2: 0.45, 3: 0.4, 4: 0.85, 5: 0.55, 6: 0.55, 7: 0.9, 8: 1.25, 9: 0.6,
+       10: 0.45, 11: 0.45, 12: 0.6, 13: 1.05, 14: 0.6, 15: 0.55}
 FIRST_BEAT = 0.5
-WHOLE = {7, 12, 14}  # these lines start on a whole beat (the turn, the reveal, the CTA)
+WHOLE = {7, 13, 15}  # these lines start on a whole beat (the turn, the reveal, the CTA)
 TAIL = 4.2          # end card hold after the last word
 
 
@@ -184,7 +184,7 @@ def main():
     # ---- sections in beats
     b_night = L[4] - 1          # pad darkens
     b_cut = L[7] - 0.5          # everything stops before "Aber hier ist der Punkt"
-    b_lift = L[12]              # the reveal
+    b_lift = L[13]              # the reveal
     b_pulse = b_lift - 4 * np.floor((b_lift - (L[8] - 1)) / 4)   # heartbeat: whole bars into the lift
     b_end = DUR / BEAT
 
