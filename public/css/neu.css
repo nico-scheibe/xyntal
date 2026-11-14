@@ -242,48 +242,45 @@ figcaption.mono b { color: var(--t-1); font-weight: 500; margin-right: 8px; }
 .no-js .say__text .w { opacity: 1; }
 @media (max-width: 760px) { .say__text { grid-column: 1 / -1; } }
 
-/* 5.2 Matching: bleibt stehen */
+/* 5.2 Matching: bleibt stehen. Text und Bild wechseln, das Bild fährt gedämpft (höchstens 1.5x) über die echte App. */
 .pin { position: relative; height: 330vh; }
-.pin__stick { position: sticky; top: 0; height: 100svh; display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); grid-template-rows: auto 1fr; gap: 0 clamp(24px, 4vw, 72px); padding: 92px 0 36px var(--pad); overflow: hidden; }
-.pin__title .thin { white-space: nowrap; }
-.pin__title { font: 800 clamp(2.2rem, 5vw, 6rem)/.9 var(--f-display); font-stretch: 62%; letter-spacing: -.01em; margin-top: 18px; }
+.pin__stick { position: sticky; top: 0; height: 100svh; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); grid-template-rows: auto 1fr; gap: 0 clamp(40px, 6vw, 112px); padding: clamp(88px, 12vh, 128px) var(--pad) clamp(32px, 6vh, 56px); overflow: hidden; }
+.pin__title { font: 600 clamp(2.25rem, 4.2vw, 4.5rem)/1.05 var(--f-display); font-stretch: 100%; letter-spacing: -.02em; text-wrap: balance; margin-top: 18px; }
+.pin__title .thin { white-space: nowrap; color: var(--t-2); font-weight: 600; font-stretch: 100%; letter-spacing: -.02em; }
 .pin__steps { position: relative; grid-column: 1; grid-row: 2; align-self: end; min-height: 15.5rem; }
-.step { position: absolute; left: 0; right: 0; bottom: 56px; opacity: 0; transform: translateY(16px); transition: opacity .2s var(--ease), transform .4s var(--ease); pointer-events: none; }
-.step.is-on { opacity: 1; transform: none; pointer-events: auto; transition: opacity .35s var(--ease) .14s, transform .45s var(--ease) .14s; }   /* neuer Text kommt erst, wenn der alte weg ist */
-.step.is-past { transform: translateY(-16px); }
-.step h3 { font: 600 clamp(1.3rem, 2vw, 1.9rem)/1.12 var(--f-display); font-stretch: 92%; letter-spacing: -.01em; margin-bottom: 12px; max-width: 20ch; }
-.step p { color: var(--t-2); max-width: 40ch; }
+.step { position: absolute; left: 0; right: 0; bottom: 56px; opacity: 0; transform: translateY(8px); transition: opacity .4s cubic-bezier(.22,1,.36,1), transform .4s cubic-bezier(.22,1,.36,1); pointer-events: none; }
+.step.is-on { opacity: 1; transform: none; pointer-events: auto; transition-delay: .14s; }   /* neuer Text kommt erst, wenn der alte weg ist */
+.step.is-past { transform: translateY(-8px); }
+.step h3 { font: 600 clamp(1.375rem, 2vw, 2rem)/1.15 var(--f-display); font-stretch: 92%; letter-spacing: -.01em; margin-bottom: 14px; max-width: 18ch; text-wrap: balance; }
+.step p { font-size: clamp(1rem, 1.1vw, 1.125rem); line-height: 1.5; color: var(--t-2); max-width: 38ch; }
 .pin__count { position: absolute; left: 0; bottom: 0; display: flex; align-items: center; gap: 12px; }
 .pin__count b { color: var(--t-1); font-weight: 500; }
 .pin__count i { width: 120px; height: 1px; background: var(--line-2); }
-.pin__count u { display: block; height: 1px; background: var(--grad); transform-origin: 0 50%; transform: scaleX(0); }
-.pin__stage { grid-column: 2; grid-row: 1 / span 2; align-self: center; margin-right: -3vw; perspective: 1800px; }
-.pin__stage .win { transform: rotateY(6deg) rotateX(2deg); transform-origin: 0 50%; will-change: transform; }
+.pin__count u { display: block; height: 1px; background: #4C8DFF; transform-origin: 0 50%; transform: scaleX(0); }
+.pin__stage { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
+.pin__stage .win { transform: none; border-radius: 20px; box-shadow: 0 40px 80px -20px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.06); }
+.pin__stage .win::before { display: none; }
 .win__cam { position: absolute; left: 0; top: 0; width: 100%; transform-origin: 0 0; will-change: transform; }
 .win__cam picture { display: block; }
 .win__cam picture + picture { position: absolute; left: 0; top: 0; width: 100%; }   /* zweites Bild ist höher als das erste */
-.win__cam .win__img { height: auto; opacity: 0; transition: opacity .4s var(--ease); }
+.win__cam .win__img { height: auto; opacity: 0; transition: opacity .6s cubic-bezier(.4, 0, .2, 1); }
 .win__cam .win__img.is-on { opacity: 1; }
-.win__focus { position: absolute; left: 0; top: 0; z-index: 2; border: 1px solid rgba(var(--t-rgb), .9); border-radius: 10px; opacity: 0; transition: opacity .3s; will-change: transform; box-shadow: 0 0 0 4000px rgba(8, 9, 14, .42); }
-.win__focus.is-on { opacity: 1; }
-.win__focus span { position: absolute; right: -1px; bottom: calc(100% + 8px); color: var(--g-0); background: var(--t-1); padding: 4px 8px; border-radius: 4px; white-space: nowrap; }
-.pin__stage figcaption { margin-left: 4px; }
+.pin__stage figcaption { margin-top: 14px; text-align: center; color: var(--t-2); font-size: .75rem; }
 .no-js .pin { height: auto; } .no-js .pin__stick { position: static; height: auto; }
 .no-js .step { position: static; opacity: 1; transform: none; margin-bottom: 28px; }
 
-@media (max-width: 860px) {
+@media (max-width: 760px) {
   .pin { height: 300vh; }
-  .pin__stick { grid-template-columns: 1fr; grid-template-rows: auto auto 1fr; padding: 76px var(--pad) 22px; gap: 14px; }
-  .pin__title { font-size: clamp(2rem, 9.5vw, 3.2rem); margin-top: 10px; }
-  .pin__title br { display: none; }
-  .pin__stage { grid-column: 1; grid-row: 2; margin: 0; perspective: none; }
-  .pin__stage .win { transform: none; aspect-ratio: auto; height: min(46svh, 108vw); }
-  .pin__stage figcaption { margin-top: 8px; }
-  .win__focus span { right: auto; left: -1px; }
+  .pin__stick { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto 1fr; padding: 76px var(--pad) 22px; gap: 14px; }
+  .pin__title { margin-top: 10px; }
+  .pin__stage { grid-column: 1; grid-row: 2; }
+  .pin__stage { width: 100%; aspect-ratio: 2880 / 2800; max-height: 44svh; }   /* Höhe fest für beide Bilder: die Schritte springen beim Bildwechsel nicht */
+  .pin__stage .win { width: 100%; aspect-ratio: 2880 / 1800; max-height: 44svh; border-radius: 16px; }   /* Rahmen = Seitenverhältnis des Bildes, kein Zoom nötig */
+  .pin__stage .win.is-profil { aspect-ratio: 2880 / 2800; }
   .pin__steps { grid-row: 3; min-height: 0; align-self: stretch; }
   .step { bottom: auto; top: 6px; }
-  .step h3 { margin-bottom: 8px; }
-  .step p { font-size: .95rem; }
+  .step h3 { font-size: 1.25rem; }
+  .step p { font-size: 1rem; }
 }
 
 /* 5.3 Was beim Matching nie zählt */
@@ -524,8 +521,13 @@ figcaption.mono b { color: var(--t-1); font-weight: 500; margin-right: 8px; }
   .pin__stick { position: static; height: auto; overflow: visible; padding-bottom: var(--s-6); }
   .pin__steps { min-height: 0; }
   .step { position: static; opacity: 1; transform: none; pointer-events: auto; margin-bottom: 26px; }
-  .pin__count, .win__focus { display: none; }
+  .pin__count { display: none; }
+  .pin__stage { display: none; }
+  .pin__still { display: block; margin-top: 22px; }
+  .pin__still .win { width: 100%; }
+  .pin__still .win.is-profil { aspect-ratio: 2880 / 2800; }
   .pin__stage .win { transform: none; }
+  .pin .step, .pin .step.is-on, .win__cam .win__img { transition: none; }
   .way { height: auto !important; }
   .way__stick { position: static; height: min(82svh, 720px); }
   .way__scroller { overflow-x: auto; }

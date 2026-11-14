@@ -131,102 +131,87 @@
     });
   })();
 
-  // 5.2 Matching: Abschnitt bleibt stehen. Vier Schritte, die Kamera fährt über die echte App.
+  // 5.2 Matching: Abschnitt bleibt stehen. Vier Schritte, die Kamera fährt gedämpft über die echte App (max. 1.5x, mobil 1.3x).
   (function () {
-    var pin = $('[data-pin]'); if (!pin || calm) return;
+    var pin = $('[data-pin]'); if (!pin) return;
     var steps = $$('[data-step]', pin), shots = $$('[data-shot]', pin), win = $('[data-win]', pin), cam = $('[data-cam]', pin);
-    var focus = $('[data-focus]', pin), focusLabel = $('[data-focus-label]', pin), now = $('[data-pin-now]', pin), bar = $('[data-pin-bar]', pin);
-    // Kamera je Schritt: Mittelpunkt (Anteil am Bild), Zoom, welches Bild, optionaler Rahmen (x, y, b, h als Anteil)
+    var now = $('[data-pin-now]', pin), bar = $('[data-pin-bar]', pin);
+    var mqPhone = window.matchMedia('(max-width: 760px)');
+    // Kamera je Schritt: Mittelpunkt (Anteil am Bild), Zoom (wird unten gedeckelt), welches Bild
     // Die Koordinaten gehören zu den Screens aus App-Version 0.2.19 (deutsch) und 0.2.28 (englisch,
     // assets/img/en/, gezeigt auf /en). Neue Screens: Werte hier nachziehen.
     var RATIO = [1800 / 2880, 2800 / 2880];   // Höhe/Breite je Bild (Entdecken, Profil)
     var CAMS = document.documentElement.lang === 'en' ? {
       wide: [
         { shot: 0, cx: .50, cy: .50, s: 1.00 },
-        { shot: 0, cx: .29, cy: .681, s: 2.25, f: [.175, .642, .181, .040], label: '91 % match' },
-        { shot: 1, cx: .575, cy: .638, s: 1.22, f: [.196, .509, .754, .274], label: 'The reason' },
-        { shot: 1, cx: .575, cy: .88, s: 1.22, f: [.196, .799, .754, .131], label: 'Every area on its own' }
+        { shot: 0, cx: .29, cy: .681, s: 2.25 },
+        { shot: 1, cx: .575, cy: .638, s: 1.22 },
+        { shot: 1, cx: .575, cy: .88, s: 1.22 }
       ],
       small: [
         { shot: 0, cx: .33, cy: .33, s: 2.5 },
-        { shot: 0, cx: .27, cy: .691, s: 3.3, f: [.175, .642, .181, .040], label: '91 % match' },
-        { shot: 1, cx: .41, cy: .608, s: 2.5, f: [.196, .509, .754, .274], label: 'The reason' },
-        { shot: 1, cx: .385, cy: .87, s: 2.5, f: [.196, .799, .754, .131], label: 'Every area on its own' }
+        { shot: 0, cx: .27, cy: .691, s: 3.3 },
+        { shot: 1, cx: .41, cy: .608, s: 2.5 },
+        { shot: 1, cx: .385, cy: .87, s: 2.5 }
       ]
     } : {
       wide: [
         { shot: 0, cx: .50, cy: .50, s: 1.00 },
-        { shot: 0, cx: .29, cy: .69, s: 2.25, f: [.175, .650, .185, .042], label: '89 % Passung' },
-        { shot: 1, cx: .575, cy: .56, s: 1.22, f: [.196, .460, .754, .215], label: 'Der Grund' },
-        { shot: 1, cx: .575, cy: .765, s: 1.22, f: [.196, .686, .754, .126], label: 'Jeder Bereich einzeln' }
+        { shot: 0, cx: .29, cy: .69, s: 2.25 },
+        { shot: 1, cx: .575, cy: .56, s: 1.22 },
+        { shot: 1, cx: .575, cy: .765, s: 1.22 }
       ],
       small: [
         { shot: 0, cx: .33, cy: .33, s: 2.5 },
-        { shot: 0, cx: .27, cy: .70, s: 3.3, f: [.175, .650, .185, .042], label: '89 % Passung' },
-        { shot: 1, cx: .41, cy: .53, s: 2.5, f: [.196, .460, .754, .215], label: 'Der Grund' },
-        { shot: 1, cx: .385, cy: .755, s: 2.5, f: [.196, .686, .754, .126], label: 'Jeder Bereich einzeln' }
+        { shot: 0, cx: .27, cy: .70, s: 3.3 },
+        { shot: 1, cx: .41, cy: .53, s: 2.5 },
+        { shot: 1, cx: .385, cy: .755, s: 2.5 }
       ]
     };
-    var W = 1, H = 1, cur = null, step = -1, tilt = { x: 0, y: 0, tx: 0, ty: 0 };
-    var pose = null;   // laufende Pose des Fensters, pro Frame zur Zielpose gezogen
-    var POSE = [{ ry: 6, rx: 2, z: 0 }, { ry: 3, rx: 1, z: 40 }, { ry: 8, rx: 3, z: 0 }, { ry: 4.5, rx: -1, z: 20 }];   // Grundpose je Kameraschritt
-    var wasSmall = false;
-    function measure() {
-      W = win.clientWidth; H = win.clientHeight; cur = null;
-      if (mqSmall.matches || wasSmall) pose = null;   // mobil oder zurück von mobil: direkt setzen, sonst weich nachziehen
-      wasSmall = mqSmall.matches;
-      if (mqSmall.matches) win.style.transform = '';   // mobil: CSS (transform: none) gilt, kein altes inline-Stück
+    // Ruhige Fassung: keine Fahrt. Jeder Schritt bekommt eine feste Kopie des Fensters mit dem Bild, das zu ihm gehört.
+    if (calm) {
+      steps.forEach(function (s, i) {
+        var still = win.cloneNode(true), fig = document.createElement('figure');
+        still.removeAttribute('data-win'); var inner = $('[data-cam]', still); if (inner) inner.removeAttribute('data-cam');
+        $$('[data-shot]', still).forEach(function (im, k) { im.classList.toggle('is-on', k === CAMS.wide[i].shot); });
+        still.classList.toggle('is-profil', CAMS.wide[i].shot === 1);
+        fig.className = 'pin__still'; fig.appendChild(still); s.appendChild(fig);
+      });
+      return;
     }
+
+    var W = 1, H = 1, cur = null, step = -1, last = 0;
+    function measure() { W = win.clientWidth; H = win.clientHeight; cur = null; }
     measure(); resizers.push(measure);
 
     function target(i, local) {
-      var c = (mqSmall.matches ? CAMS.small : CAMS.wide)[i];
+      var phone = mqPhone.matches;
+      var c = (phone ? CAMS.small : CAMS.wide)[i];
       var IH = W * RATIO[c.shot];
-      var s = Math.max(c.s * (1 + local * 0.035), H / IH);                 // kleine Fahrt innerhalb des Schritts
-      return { ih: IH, s: s, x: clamp(W / 2 - c.cx * W * s, W - W * s, 0), y: clamp(H / 2 - c.cy * IH * s, H - IH * s, 0), c: c };
+      var cap = phone ? 1.3 : 1.5;                                             // Zoom-Deckel
+      var s = Math.max(Math.min(c.s * (1 + local * 0.035), cap), H / IH);       // kleine Fahrt im Schritt; H/IH: das Bild füllt den Rahmen, kein Rand
+      return { ih: IH, s: s, x: clamp(W / 2 - c.cx * W * s, W - W * s, 0), y: clamp(H / 2 - c.cy * IH * s, H - IH * s, 0) };
     }
-    if (fine) pin.addEventListener('pointermove', function (e) { tilt.tx = e.clientX / vw - .5; tilt.ty = e.clientY / vh - .5; }, { passive: true });
 
     tickers.push(function () {
       var r = pin.getBoundingClientRect();
       if (r.bottom < 0 || r.top > vh) return;
+      var nowT = performance.now(), dt = Math.min(100, nowT - (last || nowT)); last = nowT;   // Zeit pro Frame, damit die Fahrt unabhängig von der Bildrate läuft
       var p = clamp(-r.top / Math.max(1, r.height - vh), 0, 1), f = Math.min(3.999, p * 4), i = Math.floor(f), local = f - i;
       if (i !== step) {
         step = i;
         steps.forEach(function (s, k) { s.classList.toggle('is-on', k === i); s.classList.toggle('is-past', k < i); });
-        var c = (mqSmall.matches ? CAMS.small : CAMS.wide)[i];
+        var c = (mqPhone.matches ? CAMS.small : CAMS.wide)[i];
         shots.forEach(function (s, k) { s.classList.toggle('is-on', k === c.shot); });
+        win.classList.toggle('is-profil', c.shot === 1); H = win.clientHeight;   // Mobil folgt der Rahmen dem Seitenverhältnis des Bildes
         now.textContent = '0' + (i + 1);
-        focus.classList.toggle('is-on', !!c.f);
-        if (c.label) focusLabel.textContent = c.label;
       }
       bar.style.transform = 'scaleX(' + p.toFixed(4) + ')';
       var t = target(i, local);
       if (!cur) cur = { s: t.s, x: t.x, y: t.y };
-      cur.s = lerp(cur.s, t.s, .16); cur.x = lerp(cur.x, t.x, .16); cur.y = lerp(cur.y, t.y, .16);
+      var k = 1 - Math.exp(-dt / 380);   // Zeitkonstante 380 ms: nach ca. 900 ms ist die Kamera fast am Ziel
+      cur.s = lerp(cur.s, t.s, k); cur.x = lerp(cur.x, t.x, k); cur.y = lerp(cur.y, t.y, k);
       cam.style.transform = 'translate3d(' + cur.x.toFixed(2) + 'px,' + cur.y.toFixed(2) + 'px,0) scale(' + cur.s.toFixed(4) + ')';
-      if (t.c.f) {   // Rahmen folgt dem Bild (Breite/Höhe ändern das Layout nur dieses einen Elements)
-        var fx = cur.x + t.c.f[0] * W * cur.s, fy = cur.y + t.c.f[1] * t.ih * cur.s;
-        focus.style.transform = 'translate3d(' + fx.toFixed(1) + 'px,' + fy.toFixed(1) + 'px,0)';
-        focus.style.width = (t.c.f[2] * W * cur.s).toFixed(1) + 'px'; focus.style.height = (t.c.f[3] * t.ih * cur.s).toFixed(1) + 'px';
-      }
-      if (!mqSmall.matches) {   // Fenster: Einfahrt, Schritt-Pose, Ausfahrt, Trägheit, Scroll-Kipp, Maus
-        var en = clamp(1 - r.top / vh, 0, 1), ex = clamp(1 - r.bottom / vh, 0, 1);   // Einfahrt von unten, Ausfahrt nach oben
-        var e2 = clamp((en - .25) / .75, 0, 1), a = e2 * e2 * (3 - 2 * e2), g = POSE[i];   // Einfahrt erst ab sichtbarem Teil, smoothstep (weicher Anfang und Ende)
-        var ry = g.ry + (local - .5) * 1.5, rx = g.rx, z = g.z, s = 1, px = 0, py = 0;
-        ry = lerp(24, ry, a); rx = lerp(10, rx, a); z = lerp(-260, z, a); s = lerp(.9, s, a); px = lerp(W * .06, px, a); py = lerp(70, py, a);
-        ry = lerp(ry, 0, ex); rx = lerp(rx, 0, ex); z = lerp(z, 0, ex); s = lerp(s, .96, ex); py = lerp(py, -24, ex);
-        rx += clamp(velocity * .04, -1.5, 1.5);                                       // Scrolltempo: kleiner Kipp in rotateX
-        var goal = { ry: ry, rx: rx, z: z, s: s, x: px, y: py };
-        if (!pose) pose = goal;                                                       // erster Frame / nach measure(): direkt setzen
-        else for (var k in goal) pose[k] = lerp(pose[k], goal[k], .08);             // sonst weich nachziehen
-        var mxr = 0, myr = 0;
-        if (fine) {   // Fenster neigt sich leicht zur Maus
-          tilt.x = lerp(tilt.x, tilt.tx, .06); tilt.y = lerp(tilt.y, tilt.ty, .06);
-          mxr = tilt.x * 5; myr = tilt.y * 4;
-        }
-        win.style.transform = 'translate3d(' + pose.x.toFixed(2) + 'px,' + pose.y.toFixed(2) + 'px,' + pose.z.toFixed(2) + 'px) rotateY(' + (pose.ry + mxr).toFixed(3) + 'deg) rotateX(' + (pose.rx - myr).toFixed(3) + 'deg) scale(' + pose.s.toFixed(4) + ')';
-      }
     });
   })();
 
