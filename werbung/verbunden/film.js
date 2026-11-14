@@ -13,8 +13,25 @@ const C = {
 };
 const DISPLAY = 'Display', MONO = 'UI';
 
+// ---------------------------------------------------------------- time warp
+// Act I and the city were timed on an earlier read (design beats). The English read lands its words
+// elsewhere, so those scenes run on warp(u): piecewise linear between matching cues
+// [beat in this read, design beat]. Everything from the globe on is timed on this read directly.
+const WARP = [[0, 0], [0.5, 0.5], [1.62, 1.84], [5.68, 4.89], [7.01, 6.0], [8.42, 7.47], [10.0, 9.21], [12.1, 11.4],
+  [13.92, 13.41], [16.77, 16.55], [20.11, 18.5], [24.36, 20.82], [26.2, 22.6], [27.42, 23.0], [27.93, 23.85],
+  [30.5, 26.15], [31.3, 26.9], [31.38, 26.93], [34.69, 28.82], [37.32, 31.35], [38.52, 32.62], [40.4, 34.39],
+  [44.65, 37.28], [46.44, 39.44], [49.51, 40.99], [52.67, 42.0], [55.31, 44.37], [58.7, 47.5], [59.16, 47.97],
+  [62.64, 51.4], [63.42, 52.98], [64.93, 53.89], [68.5, 55.4], [69.3, 55.84], [71.0, 57.3]];
+function pw(u, A, a, b) {
+  if (u <= A[0][a]) return A[0][b] + (u - A[0][a]);
+  for (let i = 1; i < A.length; i++) if (u <= A[i][a]) return lerp(A[i - 1][b], A[i][b], (u - A[i - 1][a]) / (A[i][a] - A[i - 1][a]));
+  const L = A[A.length - 1]; return L[b] + (u - L[a]);
+}
+const warp = (u) => pw(u, WARP, 0, 1), unwarp = (d) => pw(d, WARP, 1, 0);
+
 // ---------------------------------------------------------------- hits (sfx.mjs voices these)
-const HITS = [
+// Act I + city hits are written in design beats and mapped onto this read below.
+const HITS_D = [
   [0, 'lamp on', 'click', { gain: 0.5 }],
   [4.89, 'others slide away', 'whoosh', { len: 0.6, from: 1400, to: 300, gain: 0.18 }],
   [9.21, 'idea bubble', 'pop', { pitch: 'A5', gain: 0.25 }],
@@ -36,28 +53,34 @@ const HITS = [
     [b, `plan node ${i}`, 'blip', { pitch: ['D5', 'F5', 'A5', 'C6', 'D6', 'F6', 'E6', 'A6', 'D7'][i], gain: 0.07 }]),
   ...[41.4, 41.9, 42.5, 43.1, 43.6].map((b, i) => [b, `node out ${i}`, 'tick', { gain: 0.08 }]),
   [47.97, 'turn', 'sub', { len: 1.2, gain: 0.25 }],
-  ...[52.96, 53.58, 54.02, 54.6, 55.0, 55.5, 56.1].map((b, i) =>
+  ...[52.98, 53.53, 53.89, 54.36, 54.77, 55.1, 55.4].map((b, i) =>
     [b, `light ${i}`, 'blip', { pitch: ['A5', 'D6', 'F6', 'A6', 'C7', 'D7', 'F7'][i], gain: 0.07 }]),
-  [57.6, 'fly to Leipzig', 'whoosh', { len: 0.9, from: 300, to: 1500, gain: 0.12 }],
-  [59.49, 'Leipzig tag', 'tick', { gain: 0.25 }],
-  [64.95, 'whip to Graz', 'whoosh', { len: 0.5, from: 2500, to: 500, pan: 0.4, gain: 0.25 }],
-  [66.74, 'Graz tag', 'tick', { gain: 0.25 }],
-  [71.4, 'pull back', 'whoosh', { len: 1.0, from: 1200, to: 300, gain: 0.12 }],
-  [73.24, 'line starts', 'tick', { gain: 0.12 }],
-  [76.84, 'line breaks', 'tick', { gain: 0.18 }],
-  [79.0, 'connected', 'bell', { pitch: 'F6', gain: 0.22 }],
-  ...[79.5, 79.8, 80.1, 80.4, 80.7].map((b, i) => [b, `network ${i}`, 'blip', { pitch: ['C6', 'F6', 'A6', 'C7', 'F7'][i], gain: 0.06 }]),
-  [81.3, 'particles fly', 'whoosh', { len: 1.2, from: 400, to: 3000, gain: 0.18 }],
-  [82.5, 'X lands + wordmark', 'bell', { pitch: 'A6', gain: 0.2 }],
-  [86.3, 'app window', 'whoosh', { len: 0.6, from: 600, to: 2400, gain: 0.18 }],
-  [86.75, 'window lands', 'thud', { gain: 0.2 }],
-  [90.3, 'push to match', 'whoosh', { len: 0.7, from: 500, to: 1800, gain: 0.12 }],
-  [91.67, '89 %', 'blip', { pitch: 'A6', gain: 0.1 }],
-  [92.66, 'match cards', 'pop', { pitch: 'F5', gain: 0.2 }], [92.95, 'breakdown', 'pop', { pitch: 'A5', gain: 0.16 }],
-  [94.6, 'cards fall', 'whoosh', { len: 0.5, from: 1800, to: 400, gain: 0.14 }],
-  [94.99, 'Hör auf', 'thud', { gain: 0.25 }],
-  [95.65, 'allein zu bauen', 'tick', { gain: 0.15 }],
-  [97.6, 'logo', 'bell', { pitch: 'D6', gain: 0.22 }],
+];
+const HITS = [
+  ...HITS_D.map(([b, ...r]) => [+unwarp(b).toFixed(3), ...r]),
+  [68.6, 'out to the globe', 'whoosh', { len: 1.6, from: 300, to: 2400, gain: 0.16 }],
+  [71.2, 'fly to Lagos', 'whoosh', { len: 0.8, from: 500, to: 1600, gain: 0.12 }],
+  [72.58, 'Lagos tag', 'tick', { gain: 0.25 }],
+  [76.4, 'spin to Seoul', 'whoosh', { len: 0.7, from: 2500, to: 500, pan: 0.4, gain: 0.22 }],
+  [77.62, 'Seoul tag', 'tick', { gain: 0.25 }],
+  [82.35, 'spin to São Paulo', 'whoosh', { len: 0.7, from: 2500, to: 500, pan: -0.4, gain: 0.22 }],
+  [83.35, 'São Paulo tag', 'tick', { gain: 0.25 }],
+  [87.9, 'pull back', 'whoosh', { len: 1.0, from: 1200, to: 300, gain: 0.12 }],
+  [89.06, 'arc starts', 'tick', { gain: 0.12 }],
+  [93.0, 'arc breaks', 'tick', { gain: 0.18 }],
+  [97.0, 'connected', 'bell', { pitch: 'F6', gain: 0.22 }],
+  ...[97.6, 97.95, 98.3, 98.65, 99.0].map((b, i) => [b, `network ${i}`, 'blip', { pitch: ['C6', 'F6', 'A6', 'C7', 'F7'][i], gain: 0.06 }]),
+  [99.8, 'particles fly', 'whoosh', { len: 1.2, from: 400, to: 3000, gain: 0.18 }],
+  [100.6, 'X lands + wordmark', 'bell', { pitch: 'A6', gain: 0.2 }],
+  [103.85, 'app window', 'whoosh', { len: 0.6, from: 600, to: 2400, gain: 0.18 }],
+  [104.3, 'window lands', 'thud', { gain: 0.2 }],
+  [107.3, 'push to match', 'whoosh', { len: 0.7, from: 500, to: 1800, gain: 0.12 }],
+  [107.93, '91 %', 'blip', { pitch: 'A6', gain: 0.1 }],
+  [109.16, 'match cards', 'pop', { pitch: 'F5', gain: 0.2 }], [109.46, 'complement', 'pop', { pitch: 'A5', gain: 0.16 }],
+  [112.05, 'cards fall', 'whoosh', { len: 0.5, from: 1800, to: 400, gain: 0.14 }],
+  [112.53, 'Stop', 'thud', { gain: 0.25 }],
+  [113.64, 'alone', 'tick', { gain: 0.15 }],
+  [114.95, 'logo', 'bell', { pitch: 'D6', gain: 0.22 }],
 ];
 
 // ---------------------------------------------------------------- helpers
@@ -316,7 +339,7 @@ function sceneStage(ctx, u) {
 
   // moon + "03:12" (nachts)
   moon(ctx, 850, 470, 42, clamp(springU(u, 10.2, SPRING.bouncy)) * (1 - prog(u, 13.0, 13.6)));
-  if (u < 13.7) { ctx.save(); ctx.globalAlpha = 1 - prog(u, 13.1, 13.6); tag(ctx, 205, 250, 250, ['03:12', 'NACHTS'], u, 10.25, { size: 40 }); ctx.restore(); }
+  if (u < 13.7) { ctx.save(); ctx.globalAlpha = 1 - prog(u, 13.1, 13.6); tag(ctx, 205, 250, 250, ['03:12', 'AM'], u, 10.25, { size: 40 }); ctx.restore(); }
   if (u >= 12.9 && u < 13.6) { /* tag retracts with the cut back to the room */ }
 
   // answers (S3): smiles on "Lächeln", the question on "Frage"
@@ -338,9 +361,9 @@ function sceneStage(ctx, u) {
     const qx = 680, qy = 760;
     ctx.save(); ctx.translate(qx, qy); ctx.scale(q, q);
     bubbleRect(ctx, -245, -105, 490, 190, [stageX(1, u) - qx, 255], { fillC: C.ink, strokeC: null });
-    const f = font(41, 700, DISPLAY);
-    text(ctx, 'Und wann machst du', -212, -18, f, C.bg, 'left', -0.4);
-    text(ctx, 'was Richtiges?', -212, 40, f, C.bg, 'left', -0.4);
+    const f = font(M.fitSize(ctx, 'So when are you doing', 700, DISPLAY, 436, 41), 700, DISPLAY);
+    text(ctx, 'So when are you doing', -212, -18, f, C.bg, 'left', -0.4);
+    text(ctx, 'something real?', -212, 40, f, C.bg, 'left', -0.4);
     ctx.restore();
   }
   ctx.restore();
@@ -516,7 +539,7 @@ function sceneCity(ctx, u) {
       const hop = Math.abs(Math.sin((t * 2.0 + i * 0.3) * Math.PI)) * 16 * (t > 0 ? 1 : 0);
       person(ctx, x, GROUND0 - hop, 104, C.gray2, t > 0 ? 0.03 * Math.cos(t * TAU * 2) : 0);
     }
-    tag(ctx, 760, 250, 230, ['FREITAG', '22:47'], u, 26.93, { size: 46 });
+    tag(ctx, 760, 250, 230, ['FRIDAY', '10:47 PM'], u, 26.93, { size: 46 });
   }
   // my window
   const myK = u < 47.5 ? 1 - 0.25 * bump(u, 43.5, 1.5) : 1;
@@ -609,47 +632,6 @@ function plan(ctx, u, cam) {
   ctx.restore();
 }
 
-// S12: a dashed line from Leipzig toward Graz that stops halfway and dies.
-// S13: it completes in the gradient, and lines run between all the lights.
-const NET = (() => {
-  const P = CITY.lit.map((h) => [h.lit.x + h.lit.w / 2, h.lit.y + h.lit.h / 2]);
-  P.push(CITY.Mp);
-  const E2 = [];
-  P.forEach((p, i) => {
-    const d = P.map((q, j) => [Math.hypot(q[0] - p[0], q[1] - p[1]), j]).filter(([, j]) => j !== i).sort((a, b) => a[0] - b[0]);
-    for (const [, j] of d.slice(0, 2)) if (!E2.some(([a, b]) => (a === j && b === i))) E2.push([i, j]);
-  });
-  return { P, E: E2 };
-})();
-function links(ctx, u, cam) {
-  const z = cam.z, L = CITY.Lp, G = CITY.Gp;
-  ctx.save(); ctx.lineCap = 'round';
-  if (u < 79) {
-    const p = 0.46 * E.outCubic(prog(u, 73.24, 75.2));
-    const die = prog(u, 76.6, 77.6);
-    const fl = die > 0 && die < 1 ? (Math.floor(u * 14) % 3 ? 1 : 0.2) : 1;
-    ctx.setLineDash([16 / z, 14 / z]); ctx.lineDashOffset = -u * 30 / z;
-    ctx.strokeStyle = rgba(C.ink, 0.75 * (1 - die) * fl); ctx.lineWidth = 3 / z;
-    drawPoly(ctx, [L, G], p * (1 - 0.35 * die));
-    ctx.setLineDash([]);
-  } else {
-    // completes in the gradient
-    const p = E.outCubic(prog(u, 79.0, 79.45));
-    ctx.strokeStyle = grad(ctx, L[0], L[1], G[0], G[1]); ctx.lineWidth = 5 / z;
-    drawPoly(ctx, [L, G], p);
-    // the network
-    NET.E.forEach(([a, b], i) => {
-      const t0 = 79.4 + 1.4 * hash01(i, 31);
-      const q = E.outCubic(prog(u, t0, t0 + 0.35));
-      if (q <= 0) return;
-      const A = NET.P[a], B = NET.P[b];
-      ctx.strokeStyle = grad(ctx, A[0], A[1], B[0], B[1], 0.85); ctx.lineWidth = 2.6 / z;
-      drawPoly(ctx, [A, B], q);
-    });
-  }
-  ctx.restore();
-}
-
 // S13: every light flies into the Xyntal X (the particle X of xyntal.de's hero).
 const XS = 1100, XC = [540, 850];
 const qpt = (p0, p1, p2, t) => [(1 - t) ** 2 * p0[0] + 2 * (1 - t) * t * p1[0] + t * t * p2[0], (1 - t) ** 2 * p0[1] + 2 * (1 - t) * t * p1[1] + t * t * p2[1]];
@@ -671,7 +653,7 @@ const PARTS = (() => {
   }
   return out;
 })();
-const FLY0 = 86.65, WORD0 = 87.6, SCATTER = [91.05, 91.7];
+const FLY0 = 99.8, WORD0 = 100.6, SCATTER = [103.6, 104.25];
 function particlesX(ctx, u, srcAt) {
   const fly0 = FLY0;
   const out = E.inCubic(prog(u, SCATTER[0], SCATTER[1]));   // scatter into the app window
@@ -703,22 +685,215 @@ function particlesX(ctx, u, srcAt) {
   });
 }
 
-// ======================================================================= S14: the real app (u 86..95)
-// Source-pixel crops of the real screenshots (assets/app/, from xyntal.de).
-const DISC_FULL = [440, 100, 1640, 1660];                 // "Finde deine Leute." + Selin + Tom
-const DISC_SELIN = [380, 700, 900, 911];                  // Selin's card, 89 % Passung
-const PROF_MATCH = [560, 1300, 1060, 220];                // 89 % ring + "Wie gut du und Selin Kaya zusammenpasst"
-const PROF_ADD = [560, 1580, 1100, 150];                  // Ergänzung: what she brings that you lack
-const PROF_WHY = [560, 1975, 1090, 140];                  // Vision 20/20
+// ======================================================================= the globe (this read's beats)
+// A dotted Earth (assets/world.json, land points from tools/world.py). The city collapses into your
+// light over Germany; the camera flies to Lagos, Seoul and São Paulo, pulls back, and at "Meet
+// Xyntal" arcs join the lights before they fly into the X.
+const WORLD = await (await fetch('assets/world.json')).json();
+const D2R = Math.PI / 180;
+const vec = (lat, lon) => [Math.cos(lat * D2R) * Math.cos(lon * D2R), Math.cos(lat * D2R) * Math.sin(lon * D2R), Math.sin(lat * D2R)];
+const LAND = WORLD.map(([a, b]) => vec(a, b));
+const HOME = [50.1, 8.7];
+const HEROES = [
+  { ll: [6.5, 3.4], lines: ['LAGOS · NIGERIA', 'DEVELOPER', 'LOOKING FOR: DESIGN'], u0: 72.58, side: 1 },
+  { ll: [37.6, 127.0], lines: ['SEOUL · SOUTH KOREA', 'DESIGNER', 'LOOKING FOR: PROJECT'], u0: 77.62, side: 1 },
+  { ll: [-23.5, -46.6], lines: ['SÃO PAULO · BRAZIL', 'FOUNDER', 'LOOKING FOR: TEAM'], u0: 83.35, side: 1 },
+];
+const CITY_LL = [[6.5, 3.4], [37.6, 127.0], [-23.5, -46.6], [5.6, -0.2], [-1.3, 36.8], [9.0, 38.7], [-4.3, 15.3], [-26.2, 28.0],
+  [-33.9, 18.4], [30.0, 31.2], [33.6, -7.6], [14.7, -17.4], [-1.9, 30.1], [-15.4, 28.3], [35.7, 139.7], [31.2, 121.5],
+  [22.5, 114.1], [25.0, 121.5], [14.6, 121.0], [-6.2, 106.8], [1.35, 103.8], [13.75, 100.5], [21.0, 105.8], [12.97, 77.6],
+  [19.1, 72.9], [28.6, 77.2], [23.8, 90.4], [24.9, 67.0], [25.2, 55.3], [24.7, 46.7], [41.0, 29.0], [35.7, 51.4], [43.2, 76.9],
+  [52.5, 13.4], [51.5, -0.1], [48.9, 2.35], [40.4, -3.7], [38.7, -9.1], [59.3, 18.1], [52.2, 21.0], [50.45, 30.5], [41.9, 12.5],
+  [-34.6, -58.4], [4.7, -74.1], [-12.0, -77.0], [-33.45, -70.7], [19.4, -99.1], [-22.9, -43.2], [40.7, -74.0], [43.7, -79.4],
+  [37.8, -122.4], [41.9, -87.6], [25.8, -80.2], [30.3, -97.7], [49.3, -123.1], [-33.9, 151.2], [-37.8, 145.0], [-36.85, 174.8],
+  [6.4, 2.4], [12.0, 8.5], [-8.8, 13.2], [33.9, 35.5], [55.75, 37.6], [64.1, -21.9], [-41.3, 174.8], [10.5, -66.9]];
+const angle = (a, b) => Math.acos(clamp(a[0] * b[0] + a[1] * b[1] + a[2] * b[2], -1, 1));
+const HOMEV = vec(...HOME);
+const CITIES = CITY_LL.map((ll, i) => ({ ll, v: vec(...ll), hero: i < 3 ? HEROES[i] : null }));
+CITIES.forEach((c) => { c.d = angle(c.v, HOMEV); });
+[...CITIES].sort((a, b) => a.d - b.d).forEach((c, k) => { c.litU = 69.2 + 1.8 * Math.sqrt(k / CITIES.length); });
+CITIES[0].litU = Math.min(CITIES[0].litU, 70.4);
+const ALLV = [HOMEV, ...CITIES.map((c) => c.v)];
+const ARCS = (() => {
+  const E2 = [];
+  ALLV.forEach((v, i) => {
+    const d = ALLV.map((w, j) => [angle(v, w), j]).filter(([, j]) => j !== i).sort((a, b) => a[0] - b[0]);
+    for (const [, j] of d.slice(0, 2)) if (!E2.some(([a, b]) => (a === j && b === i) || (a === i && b === j))) E2.push([i, j]);
+  });
+  return E2;
+})();
+
+function globeCam(u) {
+  const keys = [[68.4, HOME], [71.15, HEROES[0].ll], [76.4, HEROES[1].ll], [82.35, HEROES[2].ll], [87.9, [14, 4]]];
+  let [lat0, lon0] = springKeys(u, keys, { stiffness: 55, damping: 13 });
+  lon0 += 0.45 * Math.max(0, u - 88.5) + 34 * E.inOutSine(prog(u, 96.8, 103.5));
+  let lr = kf(u, [[68.4, Math.log(60000)], [71.0, Math.log(1500)]], E.inOutSine);
+  if (u > 71) lr = Math.log(1500) + Math.log(0.42) * bump(u, 76.95, 0.75) + Math.log(0.4) * bump(u, 82.9, 0.75);
+  if (u > 87.9) lr = lerp(Math.log(1500), Math.log(455), clamp(springU(u, 87.9, { stiffness: 40, damping: 12 }), 0, 1.03));
+  const R = Math.exp(lr);
+  const la = lat0 * D2R, lo = lon0 * D2R;
+  return { R, cx: 540, cy: 960,
+    c: [Math.cos(la) * Math.cos(lo), Math.cos(la) * Math.sin(lo), Math.sin(la)],
+    e: [-Math.sin(lo), Math.cos(lo), 0],
+    n: [-Math.sin(la) * Math.cos(lo), -Math.sin(la) * Math.sin(lo), Math.cos(la)] };
+}
+const dot3 = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+// project a point (unit vector scaled by h) -> [sx, sy, depth, visible]
+function gp(v, g, h = 1) {
+  const x = g.R * h * dot3(v, g.e), y = g.R * h * dot3(v, g.n), z = dot3(v, g.c);
+  const vis = z > 0 || x * x + y * y > g.R * g.R;
+  return [g.cx + x, g.cy - y, z, vis];
+}
+function slerp(a, b, t) {
+  const w = angle(a, b), s0 = Math.sin(w);
+  if (s0 < 1e-6) return a;
+  const k0 = Math.sin((1 - t) * w) / s0, k1 = Math.sin(t * w) / s0;
+  return [a[0] * k0 + b[0] * k1, a[1] * k0 + b[1] * k1, a[2] * k0 + b[2] * k1];
+}
+// a great-circle arc lifted off the surface, drawn up to fraction p; hidden where it passes behind
+function arc(ctx, a, b, g, p, style, lw, dash) {
+  if (p <= 0) return;
+  const w = angle(a, b), n = 40, lift = 0.08 + 0.22 * (w / Math.PI);
+  ctx.strokeStyle = style; ctx.lineWidth = lw; ctx.setLineDash(dash || []);
+  ctx.beginPath();
+  let pen = false;
+  for (let i = 0; i <= n; i++) {
+    const t = (i / n) * p;
+    const q = gp(slerp(a, b, t), g, 1 + lift * Math.sin(Math.PI * t));
+    if (q[3]) { if (pen) ctx.lineTo(q[0], q[1]); else ctx.moveTo(q[0], q[1]); pen = true; } else pen = false;
+  }
+  ctx.stroke(); ctx.setLineDash([]);
+}
+// the window motif at a hero city, seen close
+function heroWindow(ctx, x, y, s, u) {
+  if (s <= 0.02) return;
+  const w = 74 * s, h = 58 * s;
+  const glow = ctx.createRadialGradient(x, y, 0, x, y, 90 * s);
+  glow.addColorStop(0, rgba(C.ink, 0.3)); glow.addColorStop(1, rgba(C.ink, 0));
+  ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(x, y, 90 * s, 0, TAU); ctx.fill();
+  ctx.fillStyle = C.ink; ctx.fillRect(x - w / 2, y - h / 2, w, h);
+  ctx.save(); ctx.beginPath(); ctx.rect(x - w / 2, y - h / 2, w, h); ctx.clip();
+  person(ctx, x - w * 0.12, y + h / 2 + h * 0.05, h * 0.62, C.sil);
+  ctx.strokeStyle = C.sil; ctx.lineWidth = Math.max(2, 3 * s);
+  ctx.beginPath(); ctx.moveTo(x + w * 0.1, y + h * 0.28); ctx.lineTo(x + w * 0.33, y + h * 0.28); ctx.lineTo(x + w * 0.4, y + h * 0.02); ctx.stroke();
+  ctx.restore();
+  spark(ctx, x - w * 0.12, y - h / 2 - 16 * s, 8 * s, u);
+}
+
+function sceneGlobe(ctx, u, alpha = 1) {
+  const g = globeCam(u);
+  const A = alpha * clamp(prog(u, 68.3, 69.6)) * (1 - prog(u, 100.0, 101.0));
+  if (A > 0.003) globeBody(ctx, u, g, A);
+  if (u > FLY0 - 0.05) {
+    const vis = globeSources();
+    const gf = globeCam(Math.min(u, FLY0 + 1.2));
+    particlesX(ctx, u, (r) => { const q = gp(vis[Math.floor(r * vis.length)], gf); return [q[0], q[1]]; });
+  }
+}
+function globeBody(ctx, u, g, A) {
+  ctx.save(); ctx.globalAlpha = 1;
+  // the sphere: a faint disc and limb
+  if (g.R < 6000) {
+    const disc = ctx.createRadialGradient(g.cx - g.R * 0.3, g.cy - g.R * 0.35, g.R * 0.1, g.cx, g.cy, g.R);
+    disc.addColorStop(0, rgba('#202024', 0.9 * A)); disc.addColorStop(1, rgba('#161618', 0.9 * A));
+    ctx.fillStyle = disc; ctx.beginPath(); ctx.arc(g.cx, g.cy, g.R, 0, TAU); ctx.fill();
+    ctx.strokeStyle = rgba(C.ink, 0.16 * A); ctx.lineWidth = 2; ctx.stroke();
+  }
+  // land dots, bucketed by depth so each bucket is one path
+  const r0 = clamp(g.R * 0.0052, 1.3, 4.6);
+  const buckets = [[], [], [], []];
+  for (const v of LAND) {
+    const z = dot3(v, g.c);
+    if (z <= 0.02) continue;
+    const x = g.cx + g.R * dot3(v, g.e), y = g.cy - g.R * dot3(v, g.n);
+    if (x < -10 || x > W + 10 || y < -10 || y > H + 10) continue;
+    buckets[Math.min(3, Math.floor(z * 4))].push(x, y);
+  }
+  buckets.forEach((b, k) => {
+    if (!b.length) return;
+    const r = r0 * (0.6 + 0.13 * k);
+    ctx.fillStyle = rgba(C.ink3, (0.22 + 0.17 * k) * A);
+    ctx.beginPath();
+    for (let i = 0; i < b.length; i += 2) { ctx.moveTo(b[i] + r, b[i + 1]); ctx.arc(b[i], b[i + 1], r, 0, TAU); }
+    ctx.fill();
+  });
+  // arcs: the dashed one that stops halfway (Lagos -> São Paulo), then the network in the gradient
+  const fade = 1 - prog(u, 100.0, 100.8);
+  if (u > 89 && u < 97) {
+    const pp = 0.46 * E.outCubic(prog(u, 89.06, 91.3));
+    const die = prog(u, 92.2, 93.4);
+    const fl = die > 0 && die < 1 ? (Math.floor(u * 14) % 3 ? 1 : 0.2) : 1;
+    arc(ctx, CITIES[0].v, CITIES[2].v, g, pp * (1 - 0.3 * die), rgba(C.ink, 0.8 * (1 - die) * fl * A), 3, [12, 10]);
+  }
+  if (u >= 97) {
+    const a0 = gp(CITIES[0].v, g), a1 = gp(CITIES[2].v, g);
+    arc(ctx, CITIES[0].v, CITIES[2].v, g, E.outCubic(prog(u, 97.0, 97.45)), grad(ctx, a0[0], a0[1], a1[0], a1[1], fade), 5);
+    ARCS.forEach(([i, j], k) => {
+      const t0 = 97.5 + 1.7 * hash01(k, 31);
+      const q = E.outCubic(prog(u, t0, t0 + 0.4));
+      if (q <= 0) return;
+      const p0 = gp(ALLV[i], g), p1 = gp(ALLV[j], g);
+      arc(ctx, ALLV[i], ALLV[j], g, q, grad(ctx, p0[0], p0[1], p1[0], p1[1], 0.85 * fade), 2.6);
+    });
+  }
+  // lights
+  const lightA = A * (1 - prog(u, 99.9, 100.5));
+  const drawLight = (v, k, big) => {
+    const q = gp(v, g);
+    if (q[2] <= 0.04 || k <= 0) return null;
+    const a = k * lightA * Math.min(1, q[2] * 3);
+    const gl = ctx.createRadialGradient(q[0], q[1], 0, q[0], q[1], big ? 30 : 22);
+    gl.addColorStop(0, rgba(C.ink, 0.5 * a)); gl.addColorStop(1, rgba(C.ink, 0));
+    ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(q[0], q[1], big ? 30 : 22, 0, TAU); ctx.fill();
+    ctx.fillStyle = rgba(C.ink, a); ctx.beginPath(); ctx.arc(q[0], q[1], big ? 5.5 : 4, 0, TAU); ctx.fill();
+    return q;
+  };
+  const hq = drawLight(HOMEV, 1, true);
+  if (hq && g.R < 4000) spark(ctx, hq[0], hq[1] - 22, 7, u, 0, lightA * Math.min(1, hq[2] * 3));
+  for (const c of CITIES) {
+    const k = clamp(prog(u, c.litU, c.litU + 0.15)) * (1 - 0.6 * bump(u, c.litU + 0.08, 0.08));
+    const q = drawLight(c.v, k, !!c.hero);
+    if (q && c.hero) heroWindow(ctx, q[0], q[1], clamp((g.R - 900) / 500) * lightA, u);
+  }
+  // labels: visible while their city faces us and is on screen
+  for (const h of HEROES) {
+    if (u < h.u0 || u > 96.6) continue;
+    const q = gp(vec(...h.ll), g);
+    const on = clamp(q[2] * 4) * clamp((q[0] + 40) / 120) * clamp((W + 40 - q[0]) / 120) * clamp((q[1] - 200) / 120) * clamp((H - 300 - q[1]) / 120);
+    const a = on * A * (1 - prog(u, 95.8, 96.6));
+    if (a <= 0.01) continue;
+    const close = clamp((g.R - 900) / 500);
+    const sc = lerp(0.68, 1, close);
+    ctx.save(); ctx.globalAlpha = a;
+    label(ctx, [q[0], q[1]], h.lines, u, h.u0, sc, h.side, lerp(18, 56, close));
+    ctx.restore();
+  }
+  ctx.restore();
+}
+let VIS_CACHE = null;   // the lights that face us when the particles leave: a pure function of FLY0
+function globeSources() {
+  if (VIS_CACHE) return VIS_CACHE;
+  const g = globeCam(FLY0);
+  VIS_CACHE = ALLV.filter((v) => dot3(v, g.c) > 0.1);
+  return VIS_CACHE;
+}
+
+// ======================================================================= the real app (English)
+// Source-pixel crops of the real screenshots (public/assets/img/en/, converted to assets/app/en-*.png).
+const DISC_FULL = [440, 100, 1640, 1660];                 // "Find your people." + Selin + Tom
+const DISC_SELIN = [380, 700, 900, 911];                  // Selin's card, 91 % match
+const PROF_MATCH = [560, 1415, 1060, 205];                // 91 % ring + "How well you and Selin Kaya fit"
+const PROF_ADD = [560, 1895, 1100, 145];                  // Complement: what she brings that you lack
+const PROF_WHY = [560, 2290, 1090, 135];                  // Vision Fit 20/20
+const TA = { rise: 103.85, push: 107.3, why: 109.16, fall: 112.05 };
 function sceneApp(ctx, u, IMG) {
-  const rise = springU(u, 86.3, { stiffness: 140, damping: 19 });
-  const fall = E.inCubic(prog(u, 94.55, 95.25));
+  const rise = springU(u, TA.rise, { stiffness: 140, damping: 19 });
+  const fall = E.inCubic(prog(u, TA.fall, TA.fall + 0.7));
   const wX = 60, wW = 960, wH = 972, wY0 = 380;
-  const toWhy = springU(u, 92.19, SPRING.gentle);
-  if (u < 92.47 || toWhy < 0.6) {
-    // window with the discover screen; pushes in on Selin's card
-    const y = lerp(H + 80, wY0, rise) + 1100 * E.inCubic(prog(u, 92.17, 92.67));
-    const zin = clamp(springU(u, 90.3, { stiffness: 60, damping: 14 }), 0, 1.05);
+  const toWhy = springU(u, TA.why, SPRING.gentle);
+  if (u < TA.why + 0.3 || toWhy < 0.6) {
+    const y = lerp(H + 80, wY0, rise) + 1100 * E.inCubic(prog(u, TA.why - 0.02, TA.why + 0.48));
+    const zin = clamp(springU(u, TA.push, { stiffness: 60, damping: 14 }), 0, 1.05);
     const r = DISC_FULL.map((v, i) => lerp(v, DISC_SELIN[i], zin));
     const tilt = 0.012 * (1 - rise);
     ctx.save(); ctx.translate(540, y + wH / 2); ctx.rotate(tilt); ctx.translate(-540, -(y + wH / 2));
@@ -730,9 +905,8 @@ function sceneApp(ctx, u, IMG) {
     ctx.strokeStyle = rgba(C.ink, 0.16); ctx.lineWidth = 2; rrect(ctx, wX, y, wW, wH, 18); ctx.stroke();
     ctx.restore();
   }
-  if (u > 92.05) {
-    // "Und warum": the match explanation, two cards from the profile screen
-    const cards = [[PROF_MATCH, 92.19, 660], [PROF_ADD, 92.49, 900], [PROF_WHY, 92.77, 1072]];
+  if (u > TA.why - 0.15) {
+    const cards = [[PROF_MATCH, TA.why, 660], [PROF_ADD, TA.why + 0.3, 900], [PROF_WHY, TA.why + 0.58, 1072]];
     cards.forEach(([src, b, yy], i) => {
       const k = springU(u, b, { stiffness: 200, damping: 20 });
       if (k <= 0) return;
@@ -751,32 +925,37 @@ function sceneApp(ctx, u, IMG) {
   }
 }
 
-// ======================================================================= S15/S16: the line + end card
+// ======================================================================= the line + end card
+const TE = { words: [['Stop', 112.53, 0], ['building', 112.71, 1], ['alone.', 113.64, 1]], card: 114.85 };
 function sceneEnd(ctx, u) {
-  const up = springU(u, 97.45, SPRING.gentle);
+  const up = springU(u, TE.card, SPRING.gentle);
   const sc = lerp(1, 0.62, up);
   const ox = 72, oy = lerp(760, 380, up);
   ctx.save(); ctx.translate(ox, oy); ctx.scale(sc, sc);
-  const f1 = font(178, 800, DISPLAY), f2 = font(150, 200, DISPLAY);
-  const words = [['Hör', 94.99, f1, 0, 0], ['auf,', 95.25, f1, 1, 0], ['allein', 95.59, f2, 0, 1], ['zu', 96.06, f2, 1, 1], ['bauen.', 96.26, f2, 2, 1]];
-  let lineX = [0, 0];
-  const L1 = layout(ctx, 'Hör auf,', f1, -5), L2 = layout(ctx, 'allein zu bauen.', f2, -4);
-  for (const [wd, b, f, idx, line] of words) {
-    const Lw = line ? L2 : L1;
-    const startIdx = line ? ['allein', 'zu', 'bauen.'].slice(0, idx).join(' ').length + (idx ? 1 : 0) : ['Hör', 'auf,'].slice(0, idx).join(' ').length + (idx ? 1 : 0);
-    [...wd].forEach((ch, j) => {
-      const g = Lw.glyphs[startIdx + j];
-      const k = springU(u, b + j * 0.025, SPRING.bouncy);
-      if (k <= 0) return;
-      ctx.save(); ctx.beginPath(); ctx.rect(-20, line ? 60 : -200, 1200, line ? 200 : 260); ctx.clip();
-      glyph(ctx, ch, g.cx, (line ? 175 : 0) + (1 - k) * 170, f, C.ink);
-      ctx.restore();
+  const f1 = font(230, 800, DISPLAY);
+  const f2 = font(M.fitSize(ctx, 'building alone.', 300, DISPLAY, 860, 160, -0.03), 300, DISPLAY);
+  const lines = [[], []];
+  TE.words.forEach((w) => lines[w[2]].push(w));
+  lines.forEach((ws, li) => {
+    const str = ws.map((w) => w[0]).join(' ');
+    const L = layout(ctx, str, li ? f2 : f1, li ? -4 : -6);
+    let idx = 0;
+    ws.forEach(([wd, b]) => {
+      [...wd].forEach((ch, j) => {
+        const gph = L.glyphs[idx + j];
+        const k = springU(u, b + j * 0.025, SPRING.bouncy);
+        if (k <= 0) return;
+        ctx.save(); ctx.beginPath(); ctx.rect(-20, li ? 40 : -240, 1300, li ? 210 : 290); ctx.clip();
+        glyph(ctx, ch, gph.cx, (li ? 175 : 0) + (1 - k) * 200, li ? f2 : f1, C.ink);
+        ctx.restore();
+      });
+      idx += wd.length + 1;
     });
-  }
+  });
   ctx.restore();
-  // end card
-  if (u > 97.45) {
-    const k = prog(u, 97.6, 98.5);
+  if (u > TE.card) {
+    const t0 = TE.card + 0.15;
+    const k = prog(u, t0, t0 + 0.9);
     const cx = 540, cy = 930, size = 360;
     const s = size / 512;
     ctx.save(); ctx.translate(cx - 256 * s, cy - 256 * s); ctx.scale(s, s);
@@ -788,24 +967,24 @@ function sceneEnd(ctx, u) {
     const gb = ctx.createLinearGradient(140, 140, 372, 372); gb.addColorStop(0, C.bl); gb.addColorStop(1, C.cy);
     const ga = ctx.createLinearGradient(140, 372, 372, 140); ga.addColorStop(0, C.pu); ga.addColorStop(1, C.bl);
     drawQ(XB, E.outCubic(k), gb, 60);
-    drawQ(XA, E.outCubic(prog(u, 97.9, 98.8)), C.bg, 96);
-    drawQ(XA, E.outCubic(prog(u, 97.9, 98.8)), ga, 60);
+    drawQ(XA, E.outCubic(prog(u, t0 + 0.3, t0 + 1.2)), C.bg, 96);
+    drawQ(XA, E.outCubic(prog(u, t0 + 0.3, t0 + 1.2)), ga, 60);
     ctx.restore();
     const wf = font(132, 600, DISPLAY);
     const L = layout(ctx, 'xyntal', wf, -3);
     L.glyphs.forEach((g, j) => {
-      const kk = springU(u, 98.3 + j * 0.04, SPRING.snappy);
+      const kk = springU(u, t0 + 0.7 + j * 0.04, SPRING.snappy);
       if (kk <= 0) return;
       glyph(ctx, g.ch, 540 - L.width / 2 + g.cx, 1240 + (1 - kk) * 50, wf, rgba(C.ink, clamp(kk)));
     });
-    const t1 = E.outQuint(prog(u, 99.0, 99.8));
+    const t1 = E.outQuint(prog(u, t0 + 1.4, t0 + 2.2));
     if (t1 > 0) {
-      const tf = font(42, 400, DISPLAY);
-      text(ctx, 'Der Ort, der ambitionierte Menschen', 540, 1318 + (1 - t1) * 24, tf, rgba(C.ink2, t1), 'center');
-      text(ctx, 'miteinander verbindet.', 540, 1370 + (1 - t1) * 24, tf, rgba(C.ink2, t1), 'center');
+      const tf = font(44, 400, DISPLAY);
+      text(ctx, 'The place that connects', 540, 1318 + (1 - t1) * 24, tf, rgba(C.ink2, t1), 'center');
+      text(ctx, 'ambitious people.', 540, 1372 + (1 - t1) * 24, tf, rgba(C.ink2, t1), 'center');
     }
-    const t2 = E.outQuint(prog(u, 99.6, 100.4));
-    if (t2 > 0) text(ctx, 'XYNTAL.DE · IN DER BETA KOSTENLOS', 540, 1462, font(32, 500, MONO), rgba(C.ink3, t2), 'center', 1.5);
+    const t2 = E.outQuint(prog(u, t0 + 2.0, t0 + 2.8));
+    if (t2 > 0) text(ctx, 'XYNTAL.DE · FREE DURING THE BETA', 540, 1462, font(32, 500, MONO), rgba(C.ink3, t2), 'center', 1.5);
   }
 }
 
@@ -820,21 +999,26 @@ function makeGrain() {
 let VIG = null;
 
 M.film({
-  fonts: [font(100, 800, DISPLAY), font(100, 200, DISPLAY), font(100, 600, DISPLAY), font(100, 700, DISPLAY), font(100, 400, DISPLAY), font(40, 500, MONO)],
-  images: { disc: 'assets/app/discover-2880.png', prof: 'assets/app/profil-2880.png' },
+  fonts: [font(100, 800, DISPLAY), font(100, 200, DISPLAY), font(100, 300, DISPLAY), font(100, 600, DISPLAY), font(100, 700, DISPLAY), font(100, 400, DISPLAY), font(40, 500, MONO)],
+  images: { disc: 'assets/app/en-discover-2880.png', prof: 'assets/app/en-profil-2880.png' },
   hits: HITS,
   samples: 12,
   init() { GRAIN = makeGrain(); },
   draw(ctx, u, t, IMG) {
-    if (u < 26.9) sceneStage(ctx, u);
-    else if (u < 86.05) sceneCity(ctx, u);
-    else if (u < 94.55) {
+    const d = warp(u);                              // design beats for Act I + the city
+    if (u < 31.3) sceneStage(ctx, d);
+    else if (u < 71.0) {
       fill(ctx, C.bg);
-      if (u < 86.8) { ctx.save(); sceneCityParticlesOnly(ctx, u); ctx.restore(); }
+      ctx.save(); ctx.globalAlpha = 1 - prog(u, 69.0, 70.4); sceneCity(ctx, d); ctx.restore();
+      sceneGlobe(ctx, u);
+    } else if (u < 103.85) { fill(ctx, C.bg); sceneGlobe(ctx, u); }
+    else if (u < 112.05) {
+      fill(ctx, C.bg);
+      if (u < 104.3) particlesX(ctx, u, (r) => { const vis = globeSources(); const q = gp(vis[Math.floor(r * vis.length)], globeCam(FLY0 + 1.2)); return [q[0], q[1]]; });
       sceneApp(ctx, u, IMG);
     } else {
       fill(ctx, C.bg);
-      if (u < 95.4) sceneApp(ctx, u, IMG);
+      if (u < 112.9) sceneApp(ctx, u, IMG);
       sceneEnd(ctx, u);
     }
   },
@@ -854,4 +1038,3 @@ M.film({
   },
 });
 
-function sceneCityParticlesOnly(ctx, u) { particlesX(ctx, u, cityCam(u)); }

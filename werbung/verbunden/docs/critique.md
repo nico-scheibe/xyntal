@@ -22,3 +22,12 @@ Worst three:
 2. The dotted thread from the window to the (already dead) plan crossed the roof during the push-in. -> fades with the first node (43.4-43.9).
 3. S8 holds 2.5 s on a tiny window: kept on purpose (the silence before "Aber hier ist der Punkt"), the voice carries it.
 Remaining (not blocking): network lines leave the frame at the edges; UI text in the app shots is small at phone size (headline, names, 89 % read; body copy doesn't).
+
+## Round 4 – English, international version (contact every 2 beats, strips globe-in / heroes / reveal / end line)
+Voice: ElevenLabs v3 with audio tags, library voice "Dahlia", read tightened 1.1x. Act I and the city run on a time warp
+(film.js WARP) from the earlier read; the globe, app and end card are timed on this read directly.
+Scores: hook 8 · readability 8 · motion 8 · variety 9 · brand 9 · sync 8
+Worst three, fixed:
+1. Blank frame between the network and the X: the particles were drawn inside the globe's early return. -> globe body and particles split.
+2. "building alone." overflowed and read grey: fitSize got a pixel tracking. -> fit to 860 px, weight 300.
+3. Dim gap in the city -> globe handover. -> globe fades in from 68.3, city out from 69.0.

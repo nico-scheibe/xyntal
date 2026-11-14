@@ -47,6 +47,7 @@ GAP = {0: 0.0, 1: 0.45, 2: 0.45, 3: 0.4, 4: 0.85, 5: 0.55, 6: 0.55, 7: 0.9, 8: 1
 FIRST_BEAT = 0.5
 WHOLE = {7, 13, 15}  # these lines start on a whole beat (the turn, the reveal, the CTA)
 TAIL = 4.2          # end card hold after the last word
+TEMPO = 1.1         # the v3 read is slow; tighten it (ffmpeg atempo keeps the pitch)
 
 
 def T(b):
@@ -59,9 +60,12 @@ def load_lines():
     takes = json.loads((HERE / "vo" / "takes.json").read_text())
     out = []
     for tk in takes:
-        y, _ = librosa.load(HERE / "vo" / tk["mp3"], sr=SR, mono=True)
+        import subprocess
+        raw = subprocess.run(["ffmpeg", "-loglevel", "error", "-i", str(HERE / "vo" / tk["mp3"]), "-af", f"atempo={TEMPO}",
+                              "-ac", "1", "-ar", str(SR), "-f", "f32le", "-"], capture_output=True).stdout
+        y = np.frombuffer(raw, dtype=np.float32).astype(np.float64)
         al = json.loads((HERE / "vo" / tk["mp3"]).with_suffix(".json").read_text())
-        ch, st, en = al["characters"], al["character_start_times_seconds"], al["character_end_times_seconds"]
+        ch, st, en = al["characters"], [x / TEMPO for x in al["character_start_times_seconds"]], [x / TEMPO for x in al["character_end_times_seconds"]]
         # words from characters
         words, cur = [], None
         for c, s, e in zip(ch, st, en):
@@ -77,13 +81,25 @@ def load_lines():
                 cur["t1"] = e
         if cur:
             words.append(cur)
+        # audio tags ([sighs], [slight chuckle]) steer the read and aren't words
+        clean, inside = [], False
+        for w in words:
+            if "[" in w["w"]:
+                inside = True
+            if not inside:
+                w["w"] = w["w"].replace("*", "")
+                clean.append(w)
+            if "]" in w["w"]:
+                inside = False
+        words = clean
         # true speech onset/offset from the envelope (alignment runs a little late)
         hop = int(SR * 0.005)
         rms = librosa.feature.rms(y=y, frame_length=hop * 4, hop_length=hop)[0]
         db = 20 * np.log10(rms + 1e-9) - 20 * np.log10(rms.max())
         loud = np.nonzero(db > -34)[0]
         on, off = loud[0] * 0.005, loud[-1] * 0.005 + 0.04
-        out.append({"i": tk["i"], "text": tk["text"], "y": y, "on": on, "off": off, "words": words})
+        import re
+        out.append({"i": tk["i"], "text": re.sub(r"\s+", " ", re.sub(r"\[[^\]]*\]|\*", "", tk["text"])).strip(), "y": y, "on": on, "off": off, "words": words})
     return out
 
 

@@ -1,9 +1,10 @@
 # Werbung – Motion-Design-Spots
 
-## `verbunden/` – „Verbunden“ (TikTok, 9:16, 73 s)
+## `verbunden/` – „Connected“ (TikTok, 9:16, 86 s, Englisch)
 
-Storytelling-Spot: der Einzige im Umfeld, der etwas aufbauen will → irgendwo sitzt jemand genauso da →
-Xyntal verbindet sie → echte App-Screens (Finde deine Leute, 89 % Match) → „Hör auf, allein zu bauen.“
+Storytelling-Spot: der Einzige im Umfeld, der etwas aufbauen will → irgendwo auf der Welt sitzt jemand genauso da
+(Lagos, Seoul, São Paulo auf einem gepunkteten Globus) → Xyntal verbindet sie → echte englische App-Screens
+(Find your people, 91 % match) → „Stop building alone.“ Skript: `verbunden/docs/script_en.md`.
 
 Der Film ist Code: `verbunden/film.js` zeichnet jedes Bild als Funktion der Zeit (Canvas), getaktet auf ein
 84-BPM-Raster. Plan und Kritik stehen in `verbunden/docs/` (`skript.md`, `shotlist.md`, `critique.md`).
@@ -11,17 +12,17 @@ Der Film ist Code: `verbunden/film.js` zeichnet jedes Bild als Funktion der Zeit
 | Datei | Inhalt |
 |---|---|
 | `verbunden/film.js` | alle Szenen, Kamerafahrten, Sound-Hits (`HITS`) |
-| `verbunden/audio/script.txt`, `vo.py` | Sprechertext; erzeugt die Stimme zeilenweise über ElevenLabs (Stimme „Bella Brenell“) |
+| `verbunden/audio/script.txt`, `vo.py` | Sprechertext mit ElevenLabs-v3-Audio-Tags; erzeugt die Stimme zeilenweise (Bibliotheksstimme „Dahlia“, „Xyntal“ wird als „Ksintal“ geschickt) |
 | `verbunden/audio/vo/` | die erzeugten Takes (mp3 + Zeichen-Timing) |
 | `verbunden/audio/score.py` | eigene Musik + Platzierung der Sätze auf dem Raster → `music.wav`, `vo.wav`, `beats.json`, `vo.json` |
-| `verbunden/assets/` | Marke (Logo, Farben, Schriften Archivo + JetBrains Mono) |
+| `verbunden/assets/` | Marke (Logo, Farben, Schriften Archivo + JetBrains Mono), `world.json` (Landpunkte, `tools/world.py`) |
 
-App-Screenshots (nicht eingecheckt, aus `public/assets/img/`):
+App-Screenshots (nicht eingecheckt, aus `public/assets/img/en/`):
 
 ```sh
 mkdir -p verbunden/assets/app
-ffmpeg -i ../public/assets/img/discover-2880.webp verbunden/assets/app/discover-2880.png
-ffmpeg -i ../public/assets/img/profil-2880.webp verbunden/assets/app/profil-2880.png
+ffmpeg -i ../public/assets/img/en/discover-2880.webp verbunden/assets/app/en-discover-2880.png
+ffmpeg -i ../public/assets/img/en/profil-2880.webp verbunden/assets/app/en-profil-2880.png
 ```
 
 Rendern (Motion-Reel-Skill, Playwright + ffmpeg):
