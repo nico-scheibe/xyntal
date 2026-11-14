@@ -14,7 +14,8 @@ Der Film ist Code: `verbunden/film.js` zeichnet jedes Bild als Funktion der Zeit
 | `verbunden/film.js` | alle Szenen, Kamerafahrten, Sound-Hits (`HITS`) |
 | `verbunden/audio/script.txt`, `vo.py` | Sprechertext mit ElevenLabs-v3-Audio-Tags; erzeugt die Stimme zeilenweise (Bibliotheksstimme „Dahlia“, „Xyntal“ wird als „Ksintal“ geschickt) |
 | `verbunden/audio/vo/` | die erzeugten Takes (mp3 + Zeichen-Timing) |
-| `verbunden/audio/score.py` | eigene Musik + Platzierung der Sätze auf dem Raster → `music.wav`, `vo.wav`, `beats.json`, `vo.json` |
+| `verbunden/audio/score.py` | Platzierung der Sätze auf dem Raster → `vo.wav`, `beats.json`, `vo.json` (und ein synthetisches Musikbett) |
+| `verbunden/audio/music_gen/` | Musik von ElevenLabs Music (`gen.py`, zwei Teile per Composition Plan), `assemble.py` legt sie auf die Zeitachse: Teil B startet in der Stille, der Drop sitzt auf „Meet Xyntal“ → `music.wav` (nach `score.py` ausführen) |
 | `verbunden/assets/` | Marke (Logo, Farben, Schriften Archivo + JetBrains Mono), `world.json` (Landpunkte, `tools/world.py`) |
 
 App-Screenshots (nicht eingecheckt, aus `public/assets/img/en/`):
