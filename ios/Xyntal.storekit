@@ -1,0 +1,177 @@
+{
+  "identifier" : "7C1F0A52-3B8E-4D5A-9E61-2F4B8D0C7A11",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_developerTeamID" : "",
+    "_failTransactionsEnabled" : false,
+    "_locale" : "de_DE",
+    "_storefrontCountryCode" : "DEU",
+    "_storeKitErrors" : [
+
+    ]
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "5A0E3C71-8D2B-4F96-B4C1-0E7D9A2F6B30",
+      "localizations" : [
+
+      ],
+      "name" : "Xyntal",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "4.99",
+          "familyShareable" : false,
+          "groupNumber" : 3,
+          "internalID" : "6000000101",
+          "localizations" : [
+            {
+              "description" : "Mehr Kontakte und Matching für den Start",
+              "displayName" : "Plus",
+              "locale" : "de_DE"
+            }
+          ],
+          "productID" : "de.xyntal.plus.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Plus monatlich",
+          "subscriptionGroupID" : "5A0E3C71-8D2B-4F96-B4C1-0E7D9A2F6B30",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "49.90",
+          "familyShareable" : false,
+          "groupNumber" : 3,
+          "internalID" : "6000000102",
+          "localizations" : [
+            {
+              "description" : "Mehr Kontakte und Matching für den Start",
+              "displayName" : "Plus",
+              "locale" : "de_DE"
+            }
+          ],
+          "productID" : "de.xyntal.plus.yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Plus jährlich",
+          "subscriptionGroupID" : "5A0E3C71-8D2B-4F96-B4C1-0E7D9A2F6B30",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "9.99",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "internalID" : "6000000103",
+          "localizations" : [
+            {
+              "description" : "Alles aus Plus, dazu mehr Sichtbarkeit und Empfehlungen",
+              "displayName" : "Pro",
+              "locale" : "de_DE"
+            }
+          ],
+          "productID" : "de.xyntal.pro.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Pro monatlich",
+          "subscriptionGroupID" : "5A0E3C71-8D2B-4F96-B4C1-0E7D9A2F6B30",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "99.90",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "internalID" : "6000000104",
+          "localizations" : [
+            {
+              "description" : "Alles aus Plus, dazu mehr Sichtbarkeit und Empfehlungen",
+              "displayName" : "Pro",
+              "locale" : "de_DE"
+            }
+          ],
+          "productID" : "de.xyntal.pro.yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Pro jährlich",
+          "subscriptionGroupID" : "5A0E3C71-8D2B-4F96-B4C1-0E7D9A2F6B30",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "19.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6000000105",
+          "localizations" : [
+            {
+              "description" : "Alles aus Pro, dazu Xyntal AI mit großem Budget",
+              "displayName" : "Ultra",
+              "locale" : "de_DE"
+            }
+          ],
+          "productID" : "de.xyntal.ultra.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Ultra monatlich",
+          "subscriptionGroupID" : "5A0E3C71-8D2B-4F96-B4C1-0E7D9A2F6B30",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "199.90",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6000000106",
+          "localizations" : [
+            {
+              "description" : "Alles aus Pro, dazu Xyntal AI mit großem Budget",
+              "displayName" : "Ultra",
+              "locale" : "de_DE"
+            }
+          ],
+          "productID" : "de.xyntal.ultra.yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Ultra jährlich",
+          "subscriptionGroupID" : "5A0E3C71-8D2B-4F96-B4C1-0E7D9A2F6B30",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

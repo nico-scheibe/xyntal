@@ -5,6 +5,7 @@ import SwiftUI
 struct RootView: View {
     @Environment(SessionStore.self) private var session
     @Environment(ConversationsStore.self) private var conversations
+    @Environment(SubscriptionStore.self) private var subscription
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -24,6 +25,9 @@ struct RootView: View {
         }
         .onChange(of: session.state) { _, _ in
             conversations.update(isSceneActive: scenePhase == .active)
+        }
+        .onChange(of: session.state, initial: true) { _, state in
+            subscription.update(isSignedIn: state == .signedIn)
         }
     }
 }

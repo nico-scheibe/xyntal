@@ -17,6 +17,8 @@ enum AppError: LocalizedError {
     case assessmentRequired(String)
     /// Der Server hat die Anfrage dauerhaft abgelehnt (4xx außer 401/429). Eine unveränderte Wiederholung bringt nichts.
     case rejected
+    /// Abo über den In-App-Kauf: einer der Fehlercodes aus dem Abo-Vertrag (siehe APIClient+Billing.swift).
+    case appleBilling(AppleBillingFailure)
     case message(String)
 
     var errorDescription: String? {
@@ -27,6 +29,8 @@ enum AppError: LocalizedError {
             return "Deine Anmeldung ist abgelaufen. Bitte melde dich erneut an."
         case .rejected:
             return AppError.genericMessage
+        case .appleBilling(let failure):
+            return failure.text
         case .twoFactor(let text, _), .birthDateRequired(let text, _), .underage(let text), .message(let text), .accountExists(let text), .assessmentRequired(let text):
             return text
         }
@@ -424,6 +428,7 @@ final class APIClient {
                             body: (any Encodable)? = nil,
                             as type: T.Type,
                             mapFailure: ((Int, String, String) -> AppError?)? = nil,
+                            mapFailureDetail: ((Int, String, Bool?) -> AppError?)? = nil,
                             timeout: TimeInterval = 20,
                             maxBytes: Int = APIClient.maxResponseBytes) async throws -> T {
         guard let baseURL else { throw AppError.message(AppError.genericMessage) }
@@ -468,7 +473,9 @@ final class APIClient {
             let envelope = try? Self.decoder.decode(ErrorEnvelope.self, from: data)
             let code = envelope?.error?.code ?? ""
             let message = envelope?.error?.message ?? ""
-            if let mapped = mapFailure?(http.statusCode, code, message) {
+            // mapFailureDetail sieht zusätzlich das Feld error.recorded (nur Abo-Prüfung nutzt es).
+            if let mapped = mapFailureDetail?(http.statusCode, code, envelope?.error?.recorded)
+                ?? mapFailure?(http.statusCode, code, message) {
                 throw mapped
             }
             throw Self.failure(status: http.statusCode, code: code, message: message,
@@ -582,6 +589,8 @@ private struct ErrorBody: Decodable {
     let message: String?
     /// Nur bei COOLDOWN_ACTIVE: ISO-Datum, ab dem wieder versucht werden darf.
     let retryAfter: String?
+    /// Nur bei apple_not_redeemable: true, wenn der Server den Kauf zur Erstattung vermerkt hat.
+    let recorded: Bool?
 }
 
 private struct TicketBody: Decodable {

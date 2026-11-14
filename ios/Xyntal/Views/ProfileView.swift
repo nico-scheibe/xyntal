@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ProfileView: View {
     @Environment(SessionStore.self) private var session
+    @Environment(SubscriptionStore.self) private var subscription
 
     @State private var me: CurrentUser?
     @State private var hasLoaded = false
@@ -9,11 +10,14 @@ struct ProfileView: View {
     @State private var showDeleteSheet = false
     /// Wird bei Pull-to-Refresh erhöht, damit der Abschnitt "Gesperrte Mitglieder" neu lädt.
     @State private var blocksReloadToken = 0
+    /// Anzeigename des aktuellen Tarifs für die Zeile "Tarif & KI-Guthaben".
+    @State private var planName: String?
 
     var body: some View {
         NavigationStack {
             Form {
                 matchingSection
+                planSection
                 accountSection
                 BlockedMembersSection(reloadToken: blocksReloadToken)
                 settingsSection
@@ -23,8 +27,13 @@ struct ProfileView: View {
             .refreshable {
                 blocksReloadToken += 1
                 await load()
+                await loadPlan()
             }
             .task { await load() }
+            .task { await loadPlan() }
+            .onChange(of: subscription.revision) { _, _ in
+                Task { await loadPlan() }
+            }
             .sheet(isPresented: $showDeleteSheet) {
                 if let me {
                     DeleteAccountSheet(email: me.email)
@@ -45,8 +54,24 @@ struct ProfileView: View {
                         .foregroundStyle(.secondary)
                 }
             }
-            NavigationLink("Tarif & KI-Guthaben") {
+        }
+    }
+
+    /// Eigener Abschnitt, nicht unter „Matching“: Hier wird jetzt auch gekauft, und ein
+    /// Kaufweg, der unter einer fremden Überschrift versteckt liegt, findet niemand.
+    private var planSection: some View {
+        Section("Tarif") {
+            NavigationLink {
                 BillingView()
+            } label: {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Tarif & KI-Guthaben")
+                    if let planName {
+                        Text(planName)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
             }
         }
     }
@@ -102,6 +127,14 @@ struct ProfileView: View {
             loadError = AppError.displayText(for: error)
         }
         hasLoaded = true
+    }
+
+    /// Nur für die Zweitzeile. Scheitert das Laden, bleibt die Zeile ohne Tarif.
+    private func loadPlan() async {
+        let billing = try? await session.withAccess { token in
+            try await session.api.billing(token: token)
+        }
+        planName = billing?.planName
     }
 }
 

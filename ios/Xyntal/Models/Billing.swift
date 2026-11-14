@@ -1,7 +1,7 @@
 import Foundation
 
-/// Tarif und KI-Guthaben aus GET /billing. Nur Anzeige: keine Preise, kein Kauf (App-Store-Regel 3.1.1).
-/// Alles wird tolerant gelesen; die Liste `plans` wird nicht ausgewertet.
+/// Tarif und KI-Guthaben aus GET /billing. Keine Preise: die kommen von Apple (StoreKit, siehe SubscriptionStore).
+/// Alles wird tolerant gelesen; fehlen die neuen Felder source, canPurchaseInApp und plans, bleibt die Ansicht brauchbar.
 struct BillingInfo: Decodable, Hashable {
     struct AIBudget: Decodable, Hashable {
         var callCents: Double?
@@ -36,6 +36,28 @@ struct BillingInfo: Decodable, Hashable {
         }
     }
 
+    /// Ein Tarif aus der Liste `plans`. Nur Anzeigetexte; Preise kommen von Apple, nicht vom Server.
+    struct Plan: Decodable, Hashable {
+        /// Die feste Kennung des Tarifs („Plus“, „Pro“, „Ultra“). Sie ist das stabile Wort
+        /// im Server: `name` ist ein Anzeigetext und darf sich ändern oder übersetzt werden.
+        var id: String?
+        var name: String?
+        var blurb: String?
+        var features: [String]
+
+        private enum CodingKeys: String, CodingKey {
+            case id, name, blurb, features
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            id = container.lenient(String.self, .id)
+            name = container.lenient(String.self, .name)
+            blurb = container.lenient(String.self, .blurb)
+            features = container.lenient(LossyArray<String>.self, .features)?.elements ?? []
+        }
+    }
+
     var plan: String?
     var locked: Bool?
     var configured: Bool?
@@ -43,9 +65,14 @@ struct BillingInfo: Decodable, Hashable {
     /// entitlements.ai: false heißt, Xyntal AI ist im Tarif nicht enthalten.
     var aiEntitled: Bool?
     var ai: AIBudget?
+    /// Woher das aktive Abo kommt: "stripe", "apple", "grant" oder nil (Free). Fehlt der Wert, gilt nil.
+    var source: String?
+    /// true, wenn das Konto über Apple kaufen darf. Fehlt der Wert, gilt false (kein Kaufknopf).
+    var canPurchaseInApp: Bool?
+    var plans: [Plan]
 
     private enum CodingKeys: String, CodingKey {
-        case plan, locked, configured, renewsAt, entitlements, ai
+        case plan, locked, configured, renewsAt, entitlements, ai, source, canPurchaseInApp, plans
     }
 
     private struct Entitlements: Decodable {
@@ -66,13 +93,19 @@ struct BillingInfo: Decodable, Hashable {
          configured: Bool? = nil,
          renewsAt: String? = nil,
          aiEntitled: Bool? = nil,
-         ai: AIBudget? = nil) {
+         ai: AIBudget? = nil,
+         source: String? = nil,
+         canPurchaseInApp: Bool? = nil,
+         plans: [Plan] = []) {
         self.plan = plan
         self.locked = locked
         self.configured = configured
         self.renewsAt = renewsAt
         self.aiEntitled = aiEntitled
         self.ai = ai
+        self.source = source
+        self.canPurchaseInApp = canPurchaseInApp
+        self.plans = plans
     }
 
     init(from decoder: Decoder) throws {
@@ -83,6 +116,9 @@ struct BillingInfo: Decodable, Hashable {
         renewsAt = container.lenient(String.self, .renewsAt)
         aiEntitled = container.lenient(Entitlements.self, .entitlements)?.ai
         ai = container.lenient(AIBudget.self, .ai)
+        source = container.lenient(String.self, .source)
+        canPurchaseInApp = container.lenient(Bool.self, .canPurchaseInApp)
+        plans = container.lenient(LossyArray<Plan>.self, .plans)?.elements ?? []
     }
 
     // MARK: - Abgeleitete Werte
@@ -101,6 +137,23 @@ struct BillingInfo: Decodable, Hashable {
     }
 
     var renewsDate: Date? { ISODate.parse(renewsAt) }
+
+    /// Tarifkarten zum Kauf: nur im kostenlosen Tarif, nur wenn der Server ausdrücklich Käufe in der App erlaubt.
+    /// Fehlt canPurchaseInApp, weiß der Server nichts von Apple-Käufen, also kein Kaufknopf.
+    var showsTierCards: Bool {
+        isFree && source != "apple" && source != "stripe" && canPurchaseInApp == true
+    }
+
+    /// Käufe wiederherstellen: nur wenn der Server ausdrücklich Käufe in der App erlaubt und kein Website-Abo läuft.
+    var showsRestore: Bool {
+        source != "stripe" && canPurchaseInApp == true
+    }
+
+    /// Abo über Apple: verwaltet wird bei Apple.
+    var isManagedByApple: Bool { source == "apple" }
+
+    /// Abo über die Website: nur dann der Hinweis, dass man dort zahlt. Kauf-Erlaubnis allein sagt nichts über den Tarif.
+    var isManagedOnWeb: Bool { source == "stripe" }
 
     /// false nur, wenn der Server es ausdrücklich verneint.
     var isAIAvailable: Bool { aiEntitled != false }
