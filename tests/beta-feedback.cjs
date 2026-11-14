@@ -1,7 +1,7 @@
 const fs=require('fs'),vm=require('vm'),http=require('http'),assert=require('assert/strict'),{randomUUID}=require('crypto');
 const source=fs.readFileSync(require('path').join(__dirname,'../hosting/daki/server.cjs'),'utf8');
 let key='test-key',providerOk=true;const sent=[];
-const ctx={Buffer,Date,AbortSignal,readSecret:(file)=>file==='.brevo-key'?key:'',fetch:async(url,opts)=>{sent.push({url,opts,data:JSON.parse(opts.body)});return {ok:providerOk}}};
+const ctx={Buffer,Date,AbortSignal,process:{env:{}},readSecret:(file)=>file==='.brevo-key'?key:'',fetch:async(url,opts)=>{sent.push({url,opts,data:JSON.parse(opts.body)});return {ok:providerOk}}};
 vm.runInNewContext(source.slice(source.indexOf('// Beta feedback:'),source.indexOf('const types ='))+'\nglobalThis.handle=handleBetaFeedback;',ctx);
 (async()=>{const server=http.createServer(ctx.handle);server.listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));try{
  const url='http://127.0.0.1:'+server.address().port;

@@ -15,11 +15,10 @@
   /* Text */
   --text: #ECEAE4;
   --text-2: #A09E98;
-  --text-3: #73716B;
 
   /* Türkis */
-  --ice: #22E5FF;
-  --ice-hi: #9AF0FF;
+  --ice: #4C8DFF;
+  --ice-hi: #8FB8FF;
   --ice-ink: #03050F;
   --ice-soft: rgba(236, 234, 228, 0.09);
   --ice-line: rgba(236, 234, 228, 0.38);

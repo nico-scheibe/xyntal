@@ -17,7 +17,7 @@
 .kd-submit { justify-self: start; min-width: 200px; justify-content: center; }
 .kd-note { margin: 0; color: var(--text-3); font-size: 14px; line-height: 1.5; }
 .kd-done { padding: 28px; border: 1px solid var(--text); border-radius: 2px; }
-.kd-done:focus { outline: none; }
+.kd-done:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .kd-done h2 { margin: 6px 0 20px; font: 600 clamp(1.6rem, 3vw, 2.2rem)/1.1 var(--f); }
 .kd-done dl { margin: 0 0 20px; border-top: 1px solid var(--border); }
 .kd-done dl > div { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }

@@ -17,7 +17,8 @@
 
   if (error) {
     show('error');
-    if (!/expired|invalid|abgelaufen/i.test(error)) document.getElementById('error-text').textContent = error;
+    // Fehlertext aus der URL wird bewusst nicht angezeigt (manipulierbar); fester Text genügt
+    if (!/expired|invalid|abgelaufen/i.test(error)) document.getElementById('error-text').textContent = 'Die Anmeldung hat nicht geklappt. Bitte versuche es noch einmal.';
     return;
   }
   if (!/^[A-Za-z0-9-]{8,200}$/.test(code)) {

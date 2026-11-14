@@ -77,6 +77,17 @@ begin
   if msg not like pattern then raise exception 'TEST FEHLGESCHLAGEN: Fehler "%" statt "%" bei: %', msg, pattern, stmt; end if;
   raise notice 'OK (abgelehnt): %', msg;
 end $$;
+-- Rechteprüfung über SQLSTATE 42501 statt Fehlertext (sprachunabhängig)
+create function public.test_expect_denied(stmt text) returns void language plpgsql as $$
+begin
+  begin
+    execute stmt;
+  exception when insufficient_privilege then
+    raise notice 'OK (abgelehnt, SQLSTATE 42501): %', stmt;
+    return;
+  end;
+  raise exception 'TEST FEHLGESCHLAGEN: kein Rechtefehler bei: %', stmt;
+end $$;
 create function public.test_profile(uid text, want_status text, want_row boolean, label text) returns void language plpgsql as $$
 declare st text; has boolean;
 begin
@@ -164,13 +175,13 @@ select public.test_profile('00000000-0000-0000-0000-000000000019', 'pending', fa
 
 -- ---------- Rechte: Geburtsdatum nie direkt lesbar oder schreibbar ----------
 set role anon;
-select public.test_expect_error($q$select count(*) from public.member_birthdates$q$, '%permission denied%');
-select public.test_expect_error($q$select public.set_my_birthdate('2000-01-01')$q$, '%permission denied%');
+select public.test_expect_denied($q$select count(*) from public.member_birthdates$q$);
+select public.test_expect_denied($q$select public.set_my_birthdate('2000-01-01')$q$);
 reset role;
 
 set role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000011', false);
-select public.test_expect_error($q$select count(*) from public.member_birthdates$q$, '%permission denied%');
+select public.test_expect_denied($q$select count(*) from public.member_birthdates$q$);
 
 -- Ohne Datum: Anzeige sagt „birthdate“, und das Setzen prüft alle Fälle
 select public.test_check((select problem from public.my_profile_review()) = 'birthdate',

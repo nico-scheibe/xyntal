@@ -19,7 +19,8 @@ function showMfa() {
   const back = new URLSearchParams(location.search + "&" + location.hash.slice(1));
   const fromProvider = back.has("access_token") || back.has("code");
   const { data: { session } } = await sb.auth.getSession();
-  if (back.has("error_description")) setStatus(status, `Anmeldung fehlgeschlagen: ${back.get("error_description")}`, "error");
+  // Fehlertext aus der URL wird bewusst nicht angezeigt (manipulierbar); fester Text genügt
+  if (back.has("error_description")) setStatus(status, "Die Anmeldung hat nicht geklappt. Bitte versuche es noch einmal.", "error");
   if (session && await mfaPending()) showMfa();
   else if (session && fromProvider) location.replace(NEXT);
 })();
@@ -46,11 +47,39 @@ renderAuthOptions(document.getElementById("auth-options"), { statusEl: status, r
   providersShown = !!shown;
   showProviders(signupDone.hidden);
 });
+// Login-Fehler: jeweils am Feld (Text, aria-invalid, aria-describedby); die Meldung der Anmeldung steht im einen role="alert"-Container
+const loginAlert = document.getElementById("login-alert");
+const loginFieldErrors = { email: document.getElementById("login-email-error"), password: document.getElementById("login-password-error") };
+const trLogin = (s) => (window.XyntalI18n ? window.XyntalI18n.t(s) : s);
+function markLoginField(name, text = "", describedBy = "") {
+  const input = form.elements[name], err = loginFieldErrors[name];
+  err.textContent = text;
+  err.hidden = !text;
+  if (text || describedBy) input.setAttribute("aria-invalid", "true"); else input.removeAttribute("aria-invalid");
+  input.setAttribute("aria-describedby", describedBy || err.id);
+}
 form.addEventListener("submit", (e) => {
   e.preventDefault();
-  submitWith(form, status, async (data) => {
-    requireFields(data, ["email", "password"], "Bitte gib E-Mail und Passwort ein.");
-    unwrap(await sb.auth.signInWithPassword({ email: data.email, password: data.password }));
+  markLoginField("email");
+  markLoginField("password");
+  setStatus(loginAlert, "");
+  const values = formData(form);
+  const texts = { email: trLogin("Bitte gib deine E-Mail-Adresse ein."), password: trLogin("Bitte gib dein Passwort ein.") };
+  const missing = ["email", "password"].filter((f) => !values[f]);
+  if (missing.length) {
+    for (const f of missing) markLoginField(f, texts[f]);
+    form.elements[missing[0]].focus();
+    return;
+  }
+  submitWith(form, loginAlert, async (data) => {
+    try {
+      unwrap(await sb.auth.signInWithPassword({ email: data.email, password: data.password }));
+    } catch (err) {
+      markLoginField("email", "", "login-alert");
+      markLoginField("password", "", "login-alert");
+      form.elements.email.focus();
+      throw err;
+    }
     if (await mfaPending()) { setStatus(status, ""); showMfa(); return; }
     location.href = NEXT;
   });

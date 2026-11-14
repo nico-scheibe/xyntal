@@ -96,7 +96,7 @@
 .sp.is-failed > * { opacity: 0.6; }
 .sp.is-out { border-color: #2A2A2A; }
 .sp.is-out > * { opacity: 0.2; }
-.sp.is-match { border-color: rgba(143, 184, 255, 0.5); }
+.sp.is-match { border-color: rgba(76, 141, 255, 0.5); }
 .sp.is-match .st-av { background: var(--key); color: var(--bg); }
 .sp.is-gone { opacity: 0; pointer-events: none; }
 
@@ -176,7 +176,7 @@
 .story-stage[data-step="3"] .st-count { opacity: 1; transition-delay: 1100ms; }
 
 /* ---------- Vorschläge: Linie vom Vorhaben ---------- */
-.st-rail { stroke: rgba(143, 184, 255, 0.55); stroke-width: 1; }
+.st-rail { stroke: rgba(76, 141, 255, 0.55); stroke-width: 1; }
 .st-link { stroke: url(#st-grad); stroke-width: 2; }
 .story-stage[data-step="4"] .st-rail { opacity: 1; transition-delay: 250ms; }
 .story-stage[data-step="5"] .st-link { opacity: 1; transition-delay: 200ms; }
@@ -191,7 +191,7 @@
   opacity: 0; translate: 0 8px; transition: opacity 320ms ease, translate 420ms var(--ease);
 }
 .st-bubble.is-me { align-self: flex-end; background: var(--text); color: var(--bg); border-color: var(--text); }
-.st-bubble.is-them { align-self: flex-start; border-color: rgba(143, 184, 255, 0.45); }
+.st-bubble.is-them { align-self: flex-start; border-color: rgba(76, 141, 255, 0.45); }
 .st-bubble.is-on { opacity: 1; translate: 0 0; }
 .st-typing { display: none; gap: 4px; padding: 12px; }
 .st-typing.is-on { display: flex; opacity: 1; translate: 0 0; }

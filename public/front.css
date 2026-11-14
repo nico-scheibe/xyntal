@@ -12,12 +12,12 @@
   --bg-3: #2A2A2A;
   --text: #ECEAE4;
   --text-2: #A09E98;
-  --text-3: #73716B;
+  --text-3: #8A8882;
   --line: #333333;
   --line-2: #4A4A4A;
-  --key: #8FB8FF;
-  --key-glow: rgba(143, 184, 255, 0.35);
-  --key-soft: rgba(143, 184, 255, 0.14);
+  --key: #4C8DFF;
+  --key-glow: rgba(76, 141, 255, 0.35);
+  --key-soft: rgba(76, 141, 255, 0.14);
   --f-serif: "Source Serif 4", Georgia, "Times New Roman", serif;
   --f-sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --f-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
@@ -285,7 +285,7 @@ body.front .site-footer a { text-decoration: none; }
 .pv-why { margin-top: 6px; padding-left: 12px; border-left: 2px solid var(--key); color: var(--text-2); font-size: 14px; }
 .place-says { font: italic 400 1.1rem/1.4 var(--f-serif); color: var(--text-2); max-width: 30ch; }
 .place-us .place-where { color: var(--key); }
-.place-us .place-view { border-color: rgba(143, 184, 255, 0.45); }
+.place-us .place-view { border-color: rgba(76, 141, 255, 0.45); }
 .place-us .place-says { color: var(--text); }
 @media (min-width: 900px) {
   .places { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; }

@@ -127,6 +127,17 @@ begin
   if msg not like pattern then raise exception 'TEST FEHLGESCHLAGEN: Fehler "%" statt "%" bei: %', msg, pattern, stmt; end if;
   raise notice 'OK (abgelehnt): %', msg;
 end $$;
+-- Rechteprüfung über SQLSTATE 42501 statt Fehlertext (sprachunabhängig)
+create function public.test_expect_denied(stmt text) returns void language plpgsql as $$
+begin
+  begin
+    execute stmt;
+  exception when insufficient_privilege then
+    raise notice 'OK (abgelehnt, SQLSTATE 42501): %', stmt;
+    return;
+  end;
+  raise exception 'TEST FEHLGESCHLAGEN: kein Rechtefehler bei: %', stmt;
+end $$;
 -- Ist die Karte dieses Kontos öffentlich?
 create function public.test_card(uid text, want_public boolean, label text) returns void language plpgsql as $$
 declare got boolean;
@@ -326,7 +337,7 @@ select public.test_check(public.age_ok('00000000-0000-0000-0000-000000000007') =
 select public.test_check(public.age_ok(null) = false, 'age_ok: ohne Konto');
 select public.test_check(public.age_ok('00000000-0000-0000-0000-0000000000ff') = false, 'age_ok: unbekanntes Konto');
 set role authenticated;
-select public.test_expect_error($q$select public.age_ok(null)$q$, '%permission denied%');
+select public.test_expect_denied($q$select public.age_ok(null)$q$);
 reset role;
 
 -- ---------- is_active_member() verhält sich unverändert ----------

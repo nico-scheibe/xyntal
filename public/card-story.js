@@ -3,7 +3,7 @@
 //
 // Aufbau: Markengrund #1C1C1C, darauf die Karte (so wie xcard.js/xcard.css/banners.css sie zeigen,
 // als Standbild – Hover-Effekte aus card-fx.js und Animationen bleiben weg), darunter das Feld
-// „xyntal.de/name“ (dort legt man den Link-Sticker hin) und „@xyntal“ in Blau (#8FB8FF, einzige Akzentfarbe).
+// „xyntal.de/name“ (dort legt man den Link-Sticker hin) und „@xyntal“ in Blau (#4C8DFF, einzige Akzentfarbe).
 // Oben 250 px und unten 340 px bleiben frei: Dort blendet Instagram Fortschrittsbalken, Profilname
 // und Antwortfeld ein.
 //
@@ -17,7 +17,7 @@
 // Chrome erlauben das Teilen nur kurz nach dem Tippen.
 (() => {
   const W = 1080, H = 1920, SAFE_TOP = 250, SAFE_BOTTOM = 340;
-  const BRAND = { bg: "#1C1C1C", text: "#ECEAE4", line: "rgba(236, 234, 228, 0.28)", key: "#8FB8FF" };
+  const BRAND = { bg: "#1C1C1C", text: "#ECEAE4", line: "rgba(236, 234, 228, 0.28)", key: "#4C8DFF" };
   const SERIF = '"Source Serif 4", Georgia, "Times New Roman", serif';
   const SANS = '"IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
   const t = (de) => (window.XyntalI18n ? window.XyntalI18n.t(de) : de);

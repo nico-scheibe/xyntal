@@ -16,12 +16,12 @@ body.messages-page .site-footer { display: none; }
   --xc-text: var(--text, #ECEBF7);
   --xc-text-2: var(--text-2, #A6A4BD);
   --xc-text-3: var(--text-3, #827F9C);
-  --xc-accent: var(--accent, #22E5FF);
-  --xc-accent-soft: rgba(34, 229, 255, .10);
+  --xc-accent: var(--accent, #4C8DFF);
+  --xc-accent-soft: rgba(76, 141, 255, .10);
   --xc-blue: #2F7BFF;
   --xc-blue-soft: rgba(47, 123, 255, .14);
   --xc-mine: #2F7BFF;
-  --xc-ring: 0 0 0 1px rgba(34, 229, 255, .55), 0 0 0 4px rgba(34, 229, 255, .12);
+  --xc-ring: 0 0 0 1px rgba(76, 141, 255, .55), 0 0 0 4px rgba(76, 141, 255, .12);
   --xc-ease: 160ms cubic-bezier(.2, .7, .2, 1);
   display: grid; grid-template-columns: 312px minmax(0, 1fr) 328px;
   height: calc(100dvh - 72px); min-height: 520px;
@@ -135,7 +135,7 @@ body.messages-page .site-footer { display: none; }
 .xc-messages { flex: 1; overflow-y: auto; padding: 18px 20px 10px; display: flex; flex-direction: column; gap: 3px; background-repeat: repeat; background-size: 340px; scroll-behavior: smooth; }
 .xc-messages:focus-visible { outline: none; }
 .xc[data-chat-bg="xyntal"] .xc-messages { background-image: radial-gradient(120% 80% at 50% 0%, rgba(47, 123, 255, .06), transparent 60%), url("/chat-pattern.svg"); }
-.xc[data-chat-bg="space"] .xc-messages { background-image: radial-gradient(120% 80% at 50% 0%, rgba(34, 229, 255, .06), transparent 60%), url("/chat-pattern-space.svg"); }
+.xc[data-chat-bg="space"] .xc-messages { background-image: radial-gradient(120% 80% at 50% 0%, rgba(76, 141, 255, .06), transparent 60%), url("/chat-pattern-space.svg"); }
 .xc[data-chat-bg="natur"] .xc-messages { background-image: radial-gradient(120% 80% at 50% 0%, rgba(110, 231, 183, .06), transparent 60%), url("/chat-pattern-natur.svg"); }
 .xc[data-chat-bg="tech"] .xc-messages { background-image: radial-gradient(120% 80% at 50% 0%, rgba(99, 102, 241, .08), transparent 60%), url("/chat-pattern-tech.svg"); }
 .xc[data-chat-bg="fun"] .xc-messages { background-image: radial-gradient(120% 80% at 50% 0%, rgba(236, 72, 153, .07), transparent 60%), url("/chat-pattern-fun.svg"); }
@@ -245,7 +245,7 @@ body.messages-page .site-footer { display: none; }
 
 /* Eingabe: ein Feld auf dem Hintergrund, Haarlinie, beim Tippen ein Akzentring */
 .xc-composer { position: relative; display: grid; gap: 6px; margin: 0 16px 14px; padding: 5px 6px; border: 1px solid var(--xc-line-2); border-radius: 15px; background: var(--xc-panel); transition: border-color var(--xc-ease), box-shadow var(--xc-ease); }
-.xc-composer:focus-within { border-color: rgba(34, 229, 255, .45); box-shadow: 0 0 0 4px rgba(34, 229, 255, .08), 0 12px 32px -12px rgba(34, 229, 255, .25); }
+.xc-composer:focus-within { border-color: rgba(76, 141, 255, .45); box-shadow: 0 0 0 4px rgba(76, 141, 255, .08), 0 12px 32px -12px rgba(76, 141, 255, .25); }
 .xc-composer > [data-composer-top]:not(:empty) { display: grid; gap: 6px; padding: 4px 4px 0; }
 .xc-compose-row { display: flex; align-items: flex-end; gap: 1px; }
 .xc-compose-row .xc-icon { width: 32px; height: 32px; margin-bottom: 2px; border-radius: 8px; }

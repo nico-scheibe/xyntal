@@ -70,12 +70,12 @@ function normalizeUrl(u) {
   return /^https?:\/\//i.test(u) ? u : "https://" + u;
 }
 
-// Formular -> Objekt (Checkboxen als true/false)
+// Formular -> Objekt (Checkboxen als true/false; Passwörter unverändert, nur der Rest wird getrimmt)
 function formData(form) {
   const out = {};
   for (const el of form.elements) {
     if (!el.name) continue;
-    out[el.name] = el.type === "checkbox" ? el.checked : el.value.trim();
+    out[el.name] = el.type === "checkbox" ? el.checked : el.type === "password" ? el.value : el.value.trim();
   }
   return out;
 }

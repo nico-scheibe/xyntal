@@ -153,6 +153,7 @@
 .auth-panel .btn.auth-submit:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 3px; }
 .auth-panel .form-status { text-align: center; }
 .auth-panel .form-status:empty { display: none; }
+.auth-panel .field-error { margin: 0; font-size: 13px; color: var(--pink); }
 .auth-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 0; font-size: 13.5px; }
 .auth-row .text-link { color: #A09E98; }
 .auth-row .text-link:hover { color: #ECEAE4; }
@@ -241,7 +242,7 @@
   .auth-panel[data-mode="login"] .auth-overlay-copy[data-for="login"],
   .auth-panel[data-mode="signup"] .auth-overlay-copy[data-for="signup"] { opacity: 1; visibility: visible; transition: opacity 0.4s ease 0.4s, visibility 0s; }
   .auth-overlay-copy h2 { margin: 0; font-size: clamp(1.7rem, 2.6vw, 2.2rem); line-height: 1.15; letter-spacing: -0.02em; }
-  .auth-overlay-copy h2 em { font-style: italic; color: #8FB8FF; }
+  .auth-overlay-copy h2 em { font-style: italic; color: #4C8DFF; }
   .auth-overlay-copy p { margin: 0 0 8px; color: rgba(255, 255, 255, 0.72); font-size: 15px; line-height: 1.55; }
 }
 

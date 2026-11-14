@@ -48,7 +48,7 @@
     if (PLAT && PLAT.ask) return PLAT.ask(opts);
     if (!confirm(`${opts.title}\n\n${opts.text || ""}`)) return null;
     const out = {};
-    for (const f of opts.fields || []) out[f.name] = f.type === "checkbox" ? false : f.type === "select" ? (f.value ?? f.options[0][0]) : (prompt(f.label) || "").trim();
+    for (const f of opts.fields || []) out[f.name] = f.type === "checkbox" ? false : f.type === "select" ? (f.value ?? f.options[0][0]) : f.type === "password" ? (prompt(f.label) || "") : (prompt(f.label) || "").trim();
     return out;
   }
 

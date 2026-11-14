@@ -25,7 +25,7 @@
       <!-- Binär -->
       <g transform="translate(158 242)"><path d="M3 2v10M9 2a3 5 0 1 0 0 10 3 5 0 1 0 0-10zM17 2v10M23 2a3 5 0 1 0 0 10 3 5 0 1 0 0-10z"/></g>
     </g>
-    <g stroke="#22E5FF" stroke-opacity=".1">
+    <g stroke="#4C8DFF" stroke-opacity=".1">
       <path d="M92 52l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/>
       <path d="M252 66l1.5 3.5 3.5 1.5-3.5 1.5-1.5 3.5-1.5-3.5-3.5-1.5 3.5-1.5z"/>
       <path d="M144 146l6 6M150 146l-6 6"/>

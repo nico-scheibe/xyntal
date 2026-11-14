@@ -118,7 +118,7 @@
         const out = {};
         if (dlg.returnValue === "ok") for (const f of fields) {
           const el = dlg.querySelector(`[name="${f.name}"]`);
-          out[f.name] = f.type === "checkbox" ? el.checked : (el.value || "").trim();
+          out[f.name] = f.type === "checkbox" ? el.checked : f.type === "password" ? (el.value || "") : (el.value || "").trim();
         }
         dlg.remove();
         resolve(dlg.returnValue === "ok" ? out : null);
