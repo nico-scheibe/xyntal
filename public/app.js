@@ -2,7 +2,7 @@
 
 const sb = window.supabase
   ? window.supabase.createClient(window.XYNTAL_CONFIG.supabaseUrl, window.XYNTAL_CONFIG.supabaseKey,
-      window.XyntalSession ? window.XyntalSession.clientOptions : undefined) // Sitzung gilt auf allen xyntal.de-Adressen (session-share.js)
+      window.XyntalSession ? window.XyntalSession.clientOptions : undefined) // Sitzung gilt auf allen xyntal.com-Adressen (session-share.js)
   : null;
 
 const PHASES = { idee: "Idee", nebenberuflich: "Nebenberuflich", vollzeit: "Vollzeit selbstständig", team: "Mit Team / Firma" };

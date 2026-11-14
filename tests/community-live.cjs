@@ -29,7 +29,7 @@ const okResponse = (data) => ({ ok: true, status: 200, json: async () => ({ data
     community: { name: 'Xyntal', description: '', avatar: 'javascript:alert(1)' },
     channels: ['updates', 'polls'],
     posts: [
-      { id: 'a', channel: 'updates', author: evil, body: `🚀 Xyntal 9.9.9 is here\n\nSummary ${evil}\n\n✨ New\n• One\n• javascript:alert(1)\n\nhttps://xyntal.de/x`, createdAt: '2026-11-05T10:00:00Z', poll: null, reactions: [{ emoji: '🔥', count: 2 }], attachmentCount: 2 },
+      { id: 'a', channel: 'updates', author: evil, body: `🚀 Xyntal 9.9.9 is here\n\nSummary ${evil}\n\n✨ New\n• One\n• javascript:alert(1)\n\nhttps://xyntal.com/x`, createdAt: '2026-11-05T10:00:00Z', poll: null, reactions: [{ emoji: '🔥', count: 2 }], attachmentCount: 2 },
       { id: 'b', channel: 'polls', author: 'Nico', body: 'Frage', createdAt: '2026-11-05T09:00:00Z', poll: { question: evil, options: [{ label: evil, votes: 3 }, { label: 'B', votes: 1 }], totalVotes: 4, closed: true }, reactions: [], attachmentCount: 0 },
     ],
   }));
@@ -42,7 +42,7 @@ const okResponse = (data) => ({ ok: true, status: 200, json: async () => ({ data
   assert(!html.includes('src="javascript:'), 'logo must be a data: image');
   assert(html.includes('<p class="live-lead">🚀 Xyntal 9.9.9 is here</p>'), 'headline');
   assert(html.includes('<p class="live-sub">✨ New</p><ul><li>One</li>'), 'bullet section');
-  assert(html.includes('href="https://xyntal.de/x"'));
+  assert(html.includes('href="https://xyntal.com/x"'));
   assert(html.includes('75 %') && html.includes('4 Stimmen') && html.includes('Abstimmung beendet'));
   assert(html.includes('2 Anhänge in der App') && html.includes('🔥 2'));
   assert(node('live-filter').innerHTML.includes('#updates') && node('live-filter').hidden === false);

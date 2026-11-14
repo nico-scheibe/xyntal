@@ -1,5 +1,5 @@
 // Ankündigungen: dieselben Banner, die angemeldete Mitglieder in der Xyntal-App sehen,
-// auch auf xyntal.de – unter der Kopfzeile, je nach Art gefärbt (Hinweis, Warnung, Wartung).
+// auch auf xyntal.com – unter der Kopfzeile, je nach Art gefärbt (Hinweis, Warnung, Wartung).
 // Quelle ist der App-Server (GET /announcements/active); veröffentlicht wird im Admin-Bereich
 // (App oder /admin → Ankündigungen). Lädt account-menu.js nur für angemeldete Mitglieder.
 // Läuft still: ohne App-Sitzung oder bei 2FA-Pflicht erscheint einfach kein Banner.

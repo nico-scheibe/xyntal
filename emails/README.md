@@ -1,6 +1,6 @@
 # E-Mails für die Warteliste (Brevo)
 
-Zwei Vorlagen im Look der Website. Das Logo wird von `https://xyntal.de/email/logo.png` geladen –
+Zwei Vorlagen im Look der Website. Das Logo wird von `https://xyntal.com/email/logo.png` geladen –
 erst **pushen**, dann in Brevo einrichten, sonst fehlt das Logo.
 
 | Datei | Wofür | Betreff | Vorschautext |
@@ -18,7 +18,7 @@ Absendername überall: **Nico von Xyntal** (wirkt persönlicher als „xyntal“
 4. Der Button verlinkt auf `{{ doubleoptin }}` – das ist der Bestätigungslink. Speichern und aktivieren.
 5. Brevo → **Marketing → Formulare** → dein Wartelisten-Formular → **Einstellungen** →
    „Double-Opt-in-Bestätigungs-E-Mail“ → die neue Vorlage auswählen → speichern.
-6. **Testen:** mit einer eigenen Adresse auf xyntal.de eintragen und auf den Button klicken.
+6. **Testen:** mit einer eigenen Adresse auf xyntal.com eintragen und auf den Button klicken.
 
 Falls Brevo im HTML-Editor `{{ doubleoptin }}` nicht als Bestätigungslink erkennt (der Button führt dann ins Leere):
 Vorlage stattdessen im **Drag-&-Drop-Editor** nachbauen – Hintergrund `#07070B`, Karte `#121219`, Text `#F5F5F7` / `#B4B4BE`,

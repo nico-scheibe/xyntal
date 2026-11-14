@@ -1,6 +1,6 @@
-// Xyntal – eine Anmeldung für xyntal.de, www.xyntal.de und admin.xyntal.de.
+// Xyntal – eine Anmeldung für xyntal.com und www.xyntal.com; admin.xyntal.de hat ein eigenes Cookie (.xyntal.de).
 // Der Browser trennt den Speicher (localStorage) je Adresse; deshalb liegen die Sitzungs-Tokens
-// zusätzlich in einem Cookie für alle xyntal.de-Adressen. Beim Laden jeder Seite und bei jedem
+// zusätzlich in einem Cookie für alle xyntal.com-Adressen. Beim Laden jeder Seite und bei jedem
 // Zugriff des Supabase-Clients wird abgeglichen: Das Cookie gilt, localStorage ist die Kopie,
 // aus der die übrigen Skripte lesen. Muss vor allen anderen Skripten laden.
 (() => {
@@ -10,7 +10,8 @@
   const CACHE = "xyntal-acct";           // Name und Foto fürs Kontomenü (account-menu.js)
   const CHUNK = 3000, MAX_AGE = 60 * 60 * 24 * 400;
   const host = location.hostname;
-  const domain = host === "xyntal.de" || host.endsWith(".xyntal.de") ? ".xyntal.de" : "";   // lokal: nur diese Adresse
+  const domain = host === "xyntal.com" || host.endsWith(".xyntal.com") ? ".xyntal.com"
+    : host === "xyntal.de" || host.endsWith(".xyntal.de") ? ".xyntal.de" : "";   // lokal: nur diese Adresse
   const attrs = `; Path=/; SameSite=Lax${domain ? `; Domain=${domain}` : ""}${location.protocol === "https:" ? "; Secure" : ""}`;
 
   const jar = () => {
@@ -88,7 +89,7 @@
           localStorage.setItem(KEY, JSON.stringify(fromCookie(c, local)));
         }
       } else if (c === null && jar()[MARK] !== undefined) {
-        // Auf einer anderen xyntal.de-Adresse abgemeldet
+        // Auf einer anderen xyntal.com-Adresse abgemeldet
         if (localStorage.getItem(KEY) !== null) { localStorage.removeItem(KEY); localStorage.removeItem(CACHE); }
       } else if (local) writeCookie(local);   // erste Seite nach der Umstellung oder Cookie beschädigt
       else if (c === undefined) clearCookie();

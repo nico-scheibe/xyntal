@@ -1,4 +1,4 @@
-/* Link-Seite unter xyntal.de/name: am Handy eine Spalte (Karte, Links, Profil), am Desktop links die Karte, rechts Links und Profil */
+/* Link-Seite unter xyntal.com/name: am Handy eine Spalte (Karte, Links, Profil), am Desktop links die Karte, rechts Links und Profil */
 .pf.pf--links { gap: 28px; }
 .pf.pf--links .pf-main { gap: 28px; }
 @media (max-width: 899px) { .pf.pf--links { max-width: 580px; } }

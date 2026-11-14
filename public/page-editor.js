@@ -1,5 +1,5 @@
-// Editor der freien Seite, läuft direkt auf xyntal.de/name (u.js öffnet ihn über #gestalten): Text, Links und Bilder ohne Raster platzieren, Farben wählen, speichern (RPC save_my_page).
-// Darstellung kommt aus page-canvas.js – der Editor zeigt exakt, was Besucher unter xyntal.de/name sehen.
+// Editor der freien Seite, läuft direkt auf xyntal.com/name (u.js öffnet ihn über #gestalten): Text, Links und Bilder ohne Raster platzieren, Farben wählen, speichern (RPC save_my_page).
+// Darstellung kommt aus page-canvas.js – der Editor zeigt exakt, was Besucher unter xyntal.com/name sehen.
 (() => {
   const C = window.XyntalPageCanvas, I = window.XyntalLinkIcons, cfg = window.XYNTAL_CONFIG;
   const t = (de) => (window.XyntalI18n ? window.XyntalI18n.t(de) : de);
@@ -34,7 +34,7 @@
       <p class="pe-status" role="status" aria-live="polite" data-status></p>
     </div>`;
 
-  // Öffnet den Editor in root (auf xyntal.de/name selbst) und ersetzt dort die Seite
+  // Öffnet den Editor in root (auf xyntal.com/name selbst) und ersetzt dort die Seite
   function open(root, opts = {}) {
     const $ = (s) => root.querySelector(s);
     root.innerHTML = markup();

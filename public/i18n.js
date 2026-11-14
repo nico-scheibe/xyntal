@@ -1,8 +1,8 @@
-// Xyntal – Sprachumschalter Deutsch/Englisch (Standard: Deutsch).
+// Xyntal – Sprachumschalter Deutsch/Englisch (Standard: Englisch, nur eine gespeicherte Wahl „de“ schaltet auf Deutsch).
 // Die Seiten sind auf Deutsch geschrieben. Für Englisch werden sichtbare Texte und Attribute
 // über das Wörterbuch in i18n-en.js ersetzt – auch Inhalte, die Skripte später einfügen.
 // Die Wahl wird im Browser gemerkt (localStorage „xyntal-lang“).
-// Seiten ohne Wörterbuch (die Startseite lädt die 370 KB von i18n-en.js nicht) übersetzen nicht selbst:
+// Seiten ohne Wörterbuch (ohne i18n-en.js) übersetzen nicht selbst und bleiben deutsch:
 // Dort führt „EN“ zur englischen Adresse aus <link rel="alternate" hreflang="en">, die der Server übersetzt.
 (() => {
   const KEY = "xyntal-lang";
@@ -13,8 +13,9 @@
   const HAS_DICT = Object.keys(DICT).length > 0;
   const EN_HREF = document.querySelector('link[rel="alternate"][hreflang="en"]')?.getAttribute("href") || "";
 
+  // Standard ist Englisch – aber nur, wenn ein Wörterbuch da ist. Ohne Wörterbuch bleibt der (deutsche) Text stehen.
   let lang = "de";
-  try { lang = HAS_DICT && localStorage.getItem(KEY) === "en" ? "en" : "de"; } catch { /* ohne Speicher: Deutsch */ }
+  try { lang = HAS_DICT && localStorage.getItem(KEY) !== "de" ? "en" : "de"; } catch { /* ohne Speicher: Englisch */ if (HAS_DICT) lang = "en"; }
   // Seiten unter /en/ kommen schon englisch vom Server (eigene Adresse für Suchmaschinen). Dort gilt
   // immer Englisch – auch für Texte, die Skripte später einfügen –, und „DE“ führt zur deutschen Adresse.
   const EN_URL = /^\/en(\/|$)/.test(location.pathname);

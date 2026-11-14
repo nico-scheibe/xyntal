@@ -1,4 +1,4 @@
-// Partnerprogramm: xyntal.de/?partner=<code> (z. B. closinghub).
+// Partnerprogramm: xyntal.com/?partner=<code> (z. B. closinghub).
 // 1) Der Code wird beim App-Server geprüft, der Besuch gezählt (nur ein Zähler pro Tag,
 //    nichts über die Person) und im Browser gemerkt (localStorage „xyntal-partner“, 30 Tage).
 // 2) Ein Hinweis zeigt das Angebot (1 Monat Plus gratis), bis das Konto da ist.

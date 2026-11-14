@@ -1,4 +1,4 @@
-// xyntal.de/<name>/invite: Einladungsseite. Zeigt, wer einlädt, nennt den Promo-Code (= der Link-Name) und führt
+// xyntal.com/<name>/invite: Einladungsseite. Zeigt, wer einlädt, nennt den Promo-Code (= der Link-Name) und führt
 // zur Registrierung. Der Name wird gemerkt (xyntal-ref-handle); eingelöst wird er in account-menu.js, sobald das
 // neue Konto die E-Mail bestätigt hat. Eingeloggte Konten brauchen keine Einladung.
 (() => {

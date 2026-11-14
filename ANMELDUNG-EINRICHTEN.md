@@ -60,8 +60,8 @@ Versandgrenzen prüfen und passend zu den verfügbaren Brevo-Kontingenten setzen
 
 Unter **Authentication → URL Configuration**:
 
-- **Site URL:** `https://xyntal.de/`
-- **Redirect URLs:** `https://xyntal.de/**`, `https://www.xyntal.de/**`
+- **Site URL:** `https://xyntal.com/`
+- **Redirect URLs:** `https://xyntal.com/**`, `https://www.xyntal.com/**`
 - Für lokale Tests zusätzlich: `http://localhost:4173/**`
 
 E-Mail-Bestätigung unter dem E-Mail-Anbieter aktiviert lassen. Link-Tracking

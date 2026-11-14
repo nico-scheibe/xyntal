@@ -1,4 +1,4 @@
-// Einladungsprogramm: persönlicher Link xyntal.de/deinname, 7 Tage Plus gratis für beide – nur mit Konto.
+// Einladungsprogramm: persönlicher Link xyntal.com/deinname, 7 Tage Plus gratis für beide – nur mit Konto.
 // Füllt jedes [data-invite]: eingeloggt mit Wunsch-Link zeigt es den Link und den Stand, sonst (nur data-invite="always"
 // oder nach dem Eintragen auf der Startseite) den Hinweis, ein Konto anzulegen. Eingelöst wird in account-menu.js.
 (() => {
@@ -38,13 +38,13 @@
 
   function teaser(box) {
     box.innerHTML = `${head()}
-      <p>${esc(t("Mit einem Konto bekommst du deinen persönlichen Link xyntal.de/deinname/invite. Für jede Person, die sich darüber anmeldet, bekommt ihr beide 7 Tage Plus gratis."))}</p>
+      <p>${esc(t("Mit einem Konto bekommst du deinen persönlichen Link xyntal.com/deinname/invite. Für jede Person, die sich darüber anmeldet, bekommt ihr beide 7 Tage Plus gratis."))}</p>
       <p class="invite-count"><a class="text-link" href="/login#registrieren">${esc(t("Konto anlegen"))}</a></p>`;
     box.hidden = false;
   }
 
   function link(box, d) {
-    const url = `https://xyntal.de/${d.handle}/invite`;
+    const url = `https://xyntal.com/${d.handle}/invite`;
     const n = Number(d.invited) || 0;
     const stand = n === 0
       ? t("Noch niemand eingeladen.")
@@ -81,7 +81,7 @@
 
   function noHandle(box) {
     box.innerHTML = `${head()}
-      <p>${esc(t("Dein Einladungslink ist dein Wunsch-Link plus /invite (xyntal.de/deinname/invite). Wähle ihn in deiner Karte – dann bekommt ihr beide für jede Anmeldung 7 Tage Plus gratis."))}</p>
+      <p>${esc(t("Dein Einladungslink ist dein Wunsch-Link plus /invite (xyntal.com/deinname/invite). Wähle ihn in deiner Karte – dann bekommt ihr beide für jede Anmeldung 7 Tage Plus gratis."))}</p>
       <p class="invite-count"><a class="text-link" href="/meine-karte">${esc(t("Meine Karte bearbeiten"))}</a></p>`;
     box.hidden = false;
   }

@@ -1,81 +1,88 @@
-# Umzug auf xyntal.de
+# Umzug auf xyntal.com
 
-Stand: 22.10.2026. Die Domains liegen bei IONOS (Nameserver `ui-dns.*`).
-`xyntal.de` zeigt derzeit auf die IONOS-Parkseite (`217.160.0.168`). Für die Domain gibt es bereits
-E-Mail-Einträge bei IONOS (MX `mx00/mx01.ionos.de`, SPF `include:_spf-eu.ionos.com`) – **diese bleiben unverändert**.
+Stand: 14.11.2026. Die Website zieht von `xyntal.de` auf `xyntal.com`. `xyntal.de` und `www.xyntal.de`
+leiten danach dauerhaft (308) auf `https://xyntal.com` weiter; `www.xyntal.com` leitet auf `xyntal.com` weiter.
 
-Im Code ist alles vorbereitet (`public/CNAME`, Adressen in allen Seiten, Vorschaubild), aber noch **nicht
-veröffentlicht**: Sobald `CNAME` auf GitHub liegt, leitet `nico-scheibe.github.io/xyntal/` auf xyntal.de um.
-Darum erst die DNS-Einträge setzen, dann veröffentlichen.
+**Bleibt unverändert:**
 
-## 1. IONOS – DNS für xyntal.de
+- Subdomains `api.xyntal.de`, `db.xyntal.de`, `admin.xyntal.de`, `bot.xyntal.de`. Installierte Apps haben `api.xyntal.de` fest eingebaut.
+- Alle E-Mail-Adressen (z. B. `hallo@xyntal.de`, `nico@xyntal.de`) und ihre DNS-Einträge (MX, SPF, DKIM, DMARC).
+- Die iPhone-App: ihre Links laufen über die Weiterleitung.
 
-Unter *Domains & SSL → xyntal.de → DNS*:
+Die Reihenfolge ist wichtig: Erst DNS und Backend, dann dieses Repo pushen. Sonst holt Caddy keine Zertifikate für `.com`.
 
-| Typ | Host | Wert |
-|---|---|---|
-| A | @ | 185.199.108.153 |
-| A | @ | 185.199.109.153 |
-| A | @ | 185.199.110.153 |
-| A | @ | 185.199.111.153 |
-| AAAA | @ | 2606:50c0:8000::153 |
-| AAAA | @ | 2606:50c0:8001::153 |
-| AAAA | @ | 2606:50c0:8002::153 |
-| AAAA | @ | 2606:50c0:8003::153 |
-| CNAME | www | nico-scheibe.github.io |
+## 1. DNS für xyntal.com und www.xyntal.com
 
-- Den bisherigen A-Eintrag auf `217.160.0.168` (IONOS-Parkseite) und vorhandene AAAA-Einträge von IONOS für `@` entfernen.
-- MX- und TXT/SPF-Einträge **nicht** anfassen.
-- Falls IONOS „Domain mit Website verbinden“ oder eine Weiterleitung für xyntal.de aktiv hat: ausschalten,
-  sonst greifen die eigenen Einträge nicht.
+Die DNS-Verwaltung für `xyntal.com` liegt bei **IONOS** (Nameserver `ui-dns.*`, Stand 14.11.2026; `xyntal.de` liegt bei Cloudflare).
+Bisher zeigt `xyntal.com` auf die IONOS-Parkseite (`217.160.0.220`, `2001:8d8:100f:f000::200`).
 
-## 2. IONOS – Weiterleitungen
+- In IONOS unter *Domains & SSL → xyntal.com*: eine aktive Weiterleitung oder „Domain mit Website verbinden“ ausschalten.
+- Den A-Eintrag `@ → 217.160.0.220` und den AAAA-Eintrag `@ → 2001:8d8:100f:f000::200` löschen.
+- Neu anlegen: A `@` → `91.98.171.233`, AAAA `@` → `2a01:4f8:1c19:5598::1`, CNAME `www` → `xyntal.com`.
+- MX-, SPF-, DKIM- und DMARC-Einträge nicht anfassen (über sie läuft `admin@xyntal.com`).
+- Sonstige alte Einträge unter `*.xyntal.com`, die auf nichts mehr zeigen, löschen: Das Login-Cookie gilt für alle Subdomains von `xyntal.com`.
+- `xyntal.de` und `www.xyntal.de` behalten ihre Einträge. Sie zeigen weiter auf den Server und liefern die Weiterleitung aus.
 
-xyntal.com, xyntal.info und xyntal.store jeweils als **HTTP-Weiterleitung, dauerhaft (301)** auf
-`https://xyntal.de` einrichten (mit und ohne `www`). Kein Frame-/Maskierungs-Redirect.
+Prüfen: `dig +short A xyntal.com` und `dig +short A www.xyntal.com` ergeben `91.98.171.233`.
 
-## 3. Veröffentlichen (mache ich)
+## 2. Backend: api.env, dann ausrollen
 
-Sobald `dig +short A xyntal.de` die vier GitHub-Adressen zeigt:
-`git push` und `git subtree push --prefix public origin gh-pages`. Damit kommt `CNAME` auf GitHub.
+In `/opt/xyntal/secrets/api.env`:
 
-## 4. GitHub
+Diese drei Zeilen setzen (vorhandene Zeilen gleichen Namens ersetzen):
 
-1. Repository → *Settings → Pages*: unter *Custom domain* steht `xyntal.de` (kommt aus der CNAME-Datei).
-   Warten, bis der DNS-Check grün ist, dann **Enforce HTTPS** einschalten (das Zertifikat kann bis zu
-   einer Stunde dauern).
-2. Empfohlen gegen Übernahme der Domain durch Fremde: *Profil → Settings → Pages → Add a domain* →
-   `xyntal.de` verifizieren. GitHub zeigt dazu einen TXT-Eintrag (`_github-pages-challenge-nico-scheibe`),
-   der bei IONOS zusätzlich angelegt wird.
+```
+WEBSITE_ORIGINS=https://xyntal.com,https://www.xyntal.com,https://xyntal.de,https://www.xyntal.de,https://admin.xyntal.de
+PAIR_SITE_URL=https://xyntal.com
+WEBSITE_URL=https://xyntal.com
+```
 
-## 5. Supabase
+Dann nur den API-Container mit der neuen Umgebung starten (kurze Unterbrechung der API, laufende Anrufe brechen ab):
 
-*Authentication → URL Configuration*:
-- **Site URL:** `https://xyntal.de/`
-- **Redirect URLs:** `https://xyntal.de/**`, `https://www.xyntal.de/**`, `http://localhost:4173/**`
-  (die alte `https://nico-scheibe.github.io/xyntal/**` noch ein paar Wochen stehen lassen, bis alte
-  Bestätigungslinks abgelaufen sind)
+```
+cd /opt/xyntal/site/hosting/hetzner && docker compose up -d --force-recreate --no-deps api
+```
 
-Für Google-, Apple- und LinkedIn-Login ändert sich nichts: deren Rückleitung läuft über die Supabase-Adresse.
+So braucht es kein neues Backend-Release: Die Standardwerte im App-Server (Repo `xyntal-app-windows`) sind ebenfalls
+auf `.com` umgestellt, kommen aber erst mit dem nächsten regulären Release auf `master`.
 
-## 6. Brevo
+## 3. Login-Dienst (db.xyntal.de)
 
-- Wartelisten-Formular: im Einwilligungstext den Datenschutz-Link auf
-  `https://xyntal.de/datenschutz` ändern.
-- Eigene Absenderdomain (empfohlen, damit Mails seltener im Spam landen): *Senders, Domains & Dedicated IPs →
-  Domains → Add a domain* → `xyntal.de`. Brevo zeigt die genauen DNS-Einträge (DKIM, Brevo-Code, DMARC);
-  diese bei IONOS anlegen.
-  - **Wichtig:** Es darf nur **einen** SPF-Eintrag geben. Statt einen zweiten anzulegen, den bestehenden
-    erweitern, z. B. `v=spf1 include:_spf-eu.ionos.com include:spf.brevo.com ~all` – den genauen
-    Brevo-Teil aus der Brevo-Anzeige übernehmen.
-  - DMARC zum Start beobachtend: TXT `_dmarc` → `v=DMARC1; p=none; rua=mailto:DEINE-ADRESSE@xyntal.de`
-- Danach Absender in Brevo und im Supabase-SMTP (Authentication → Emails → SMTP Settings) auf eine
-  Adresse `@xyntal.de` umstellen, z. B. `hallo@xyntal.de` (Postfach bzw. Weiterleitung bei IONOS anlegen).
+Der Login-Dienst auf `db.xyntal.de` bleibt. Die Website nutzt ihn weiter (`supabaseUrl` in `public/config.js`).
+Auf dem DB-Server die `.env` des Supabase-Stacks in `/opt/xyntal/supabase/.env` (siehe `hosting/hetzner/supabase/install.sh`) anpassen:
 
-## 7. Prüfen
+- `SITE_URL=https://xyntal.com`
+- `ADDITIONAL_REDIRECT_URLS=https://xyntal.com/**,https://www.xyntal.com/**,https://xyntal.de/**,https://www.xyntal.de/**,https://admin.xyntal.de/**`
 
-- https://xyntal.de und https://www.xyntal.de laden die Seite mit gültigem Zertifikat
-- https://nico-scheibe.github.io/xyntal/ leitet auf https://xyntal.de/ um
-- xyntal.com/.info/.store leiten auf https://xyntal.de um
-- Registrierung, Bestätigungsmail und Passwort-Reset führen auf xyntal.de zurück
-- Vorschau beim Teilen (z. B. in WhatsApp) zeigt das Bild mit „xyntal.de“
+Danach den Auth-Dienst neu starten. Ein bloßes `docker compose restart auth` lädt die `.env` nicht neu, daher:
+
+```
+cd /opt/xyntal/supabase && docker compose up -d auth
+```
+
+Begründung: GoTrue akzeptiert als Ziel nur Adressen aus `ADDITIONAL_REDIRECT_URLS`, sonst fällt es auf `SITE_URL` zurück. Ohne diesen Schritt landen Google-, Apple- und LinkedIn-Login sowie Bestätigungs- und Passwort-Mails nicht auf der richtigen Seite.
+
+Die OAuth-Rückleitung bei Google, Apple und LinkedIn bleibt `https://db.xyntal.de/auth/v1/callback` und muss dort nicht geändert werden.
+
+Hinweis für Nutzer: Konten bleiben erhalten, niemand muss sich neu registrieren. Nur einmal auf `xyntal.com` neu anmelden.
+
+## 4. Dieses Repo pushen
+
+Erst danach `main` pushen. Caddy holt die Zertifikate für `xyntal.com` und `www.xyntal.com`. Das `Caddyfile` wird
+mit `deploy.sh` neu eingebunden. Die übrige Website (`public/`) ist nach spätestens 30 s online.
+
+## 5. Prüfen
+
+- `https://xyntal.com/` lädt mit gültigem Zertifikat.
+- `https://www.xyntal.com/preise` leitet auf `https://xyntal.com/preise` weiter.
+- `https://xyntal.de/preise` antwortet mit 308 und `Location: https://xyntal.com/preise`.
+- `https://www.xyntal.de/?x=1` antwortet mit 308 und `Location: https://xyntal.com/?x=1`.
+- Ein POST an `https://xyntal.de/` bleibt ein POST (308, nicht 301).
+- `https://api.xyntal.de` und `https://admin.xyntal.de` antworten wie vorher.
+- Registrierung, Bestätigungsmail und Passwort-Reset führen auf `xyntal.com` zurück.
+
+## Hinweise für Nutzer
+
+- Anmeldungen und Spracheinstellungen liegen im Browser je Domain. Nutzer müssen sich auf `xyntal.com` **einmal neu anmelden**.
+- Die Anmeldung teilt sich nicht mehr mit `admin.xyntal.de`. Der Admin hat ein eigenes Cookie für `.xyntal.de`
+  und bleibt dort angemeldet, bis sein Token abläuft.

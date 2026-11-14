@@ -24,7 +24,7 @@
   // Statt einer Adresse darf auch Text stehen (z. B. „Username: xyntal“): der erscheint auf der Seite zum Kopieren
   const validEntry = (u) => { const v = String(u || "").trim(); return v.length > 0 && v.length <= 500; };
   // Eingabe ohne Schema („github.com/x“) wird zu https://
-  // Nur „https://…“ oder „http://…“ ist ein Link; „xyntal.de“ ohne Schema bleibt Text (wird nicht ergänzt)
+  // Nur „https://…“ oder „http://…“ ist ein Link; „xyntal.com“ ohne Schema bleibt Text (wird nicht ergänzt)
   const normalize = (u) => String(u || "").trim();
 
   // Kleine Symbole für die Werkzeuge einer Zeile
@@ -197,7 +197,7 @@
       // Wer schon mehr Links hat, als sein Tarif erlaubt, behält sie und kann sie bearbeiten
       grandfathered = rows.length;
       const handle = card && card.handle;
-      if (handle && leUrl) leUrl.textContent = `xyntal.de/${handle}`;
+      if (handle && leUrl) leUrl.textContent = `xyntal.com/${handle}`;
       const design = $("[data-le-design]");
       if (handle && design) design.href = `/${handle}#gestalten`;
       if (handle && view) { view.href = `/${handle}`; view.hidden = false; }

@@ -14,7 +14,7 @@
     city: "93059 Regensburg",
     country: "Deutschland",
     email: "admin@xyntal.com",
-    web: "xyntal.de",
+    web: "xyntal.com",
   };
   const STATUS = { entwurf: "Entwurf", verschickt: "Verschickt", unterschrieben: "Unterschrieben", gekuendigt: "Gekündigt" };
   const PLANS = ["Business", "Enterprise", "Individuell"];

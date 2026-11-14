@@ -11,7 +11,7 @@ vm.runInNewContext(source.slice(source.indexOf('// Beta feedback:'),source.index
 const sent=[];let smtpOk=true;ctx.transport.send=async(m)=>{if(!smtpOk)throw new Error('SMTP 535 auth failed');sent.push(m);};
 (async()=>{const server=http.createServer(ctx.handle);server.listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));try{
  const url='http://127.0.0.1:'+server.address().port, admin='a'.repeat(40);
- const post=(body,headers={})=>fetch(url,{method:'POST',headers:{'Content-Type':'application/json',Origin:'https://xyntal.de',Authorization:'Bearer '+admin,...headers},body:JSON.stringify(body)});
+ const post=(body,headers={})=>fetch(url,{method:'POST',headers:{'Content-Type':'application/json',Origin:'https://xyntal.com',Authorization:'Bearer '+admin,...headers},body:JSON.stringify(body)});
  assert.equal((await fetch(url)).status,405);
  assert.equal((await post({id:'7'},{Origin:'https://evil.example'})).status,403);
  assert.equal((await post({id:'x'},{Origin:'https://admin.xyntal.de'})).status,400,'Admin-Adresse darf die Route aufrufen');
@@ -21,7 +21,7 @@ const sent=[];let smtpOk=true;ctx.transport.send=async(m)=>{if(!smtpOk)throw new
  assert.equal(sent.length,0);
  const res=await post({id:'7',to:'attacker@example.com'});assert.equal(res.status,200);const body=await res.json();assert.equal(body.ok,true);assert.equal(body.status,'angenommen');
  assert.equal(sent.length,1);assert.equal(sent[0].to,'marvin@example.com');assert.equal(sent[0].from,'nico@xyntal.de');assert.equal(sent[0].user,'nico@xyntal.de');assert.equal(sent[0].host,'smtp.ionos.de');assert.equal(sent[0].port,465);assert.equal(sent[0].fromName,'Nico von Xyntal');
- assert.match(sent[0].subject,/Willkommen/);assert.match(sent[0].text,/^Hallo Marvin,/);assert.match(sent[0].text,/xyntal\.de\/profil/);assert.match(sent[0].html,/<h1[^>]*>Du bist dabei/);assert.match(sent[0].html,/Hallo Marvin,/);assert.match(sent[0].html,/email\/logo\.png/);
+ assert.match(sent[0].subject,/Willkommen/);assert.match(sent[0].text,/^Hallo Marvin,/);assert.match(sent[0].text,/xyntal\.com\/profil/);assert.match(sent[0].html,/<h1[^>]*>Du bist dabei/);assert.match(sent[0].html,/Hallo Marvin,/);assert.match(sent[0].html,/email\/logo\.png/);
  assert.equal(marked.length,1);assert.equal(marked[0].body.mailed_status,'angenommen');assert.equal(marked[0].headers.Authorization,'Bearer '+admin);
  assert.ok(lookups.every(l=>l.headers.apikey==='anon'));
  application={...application,status:'neu'};const skip=await (await post({id:'7'})).json();assert.equal(skip.skipped,true);assert.equal(sent.length,1);

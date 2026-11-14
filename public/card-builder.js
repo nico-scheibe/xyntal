@@ -87,7 +87,7 @@
       data.hours = Math.max(2, Math.min(40, Number(data.hours) || 8));
     }
     normalize();
-    const siteText = () => (validHandle(data.handle) ? `xyntal.de/${data.handle}` : "xyntal.de");
+    const siteText = () => (validHandle(data.handle) ? `xyntal.com/${data.handle}` : "xyntal.com");
 
     const colors = () => (data.theme === "custom" ? [data.c1, data.c2] : THEMES[data.theme]);
     const cssGrad = () => `linear-gradient(120deg, ${colors().map((c, k, a) => `${c} ${Math.round((k / (a.length - 1)) * 100)}%`).join(", ")})`;
@@ -427,7 +427,7 @@
     if (el.photoRemove) el.photoRemove.addEventListener("click", () => { data.photo = ""; persist(); renderPhoto(); render(); el.photoPick.focus(); });
 
     // Formular mit gespeicherten Werten füllen
-    // Kommt man über einen freien Link (xyntal.de/name → „Diesen Link sichern“), ist der Name schon eingetragen
+    // Kommt man über einen freien Link (xyntal.com/name → „Diesen Link sichern“), ist der Name schon eingetragen
     try {
       const params = new URLSearchParams(location.search), wanted = cleanHandle(params.get("handle") || "");
       if (validHandle(wanted)) { data.handle = wanted; data.touched = true; persist(); }
@@ -674,7 +674,7 @@
         const ok = data.touched && validHandle(data.handle);
         publicBox.hidden = !ok;
         if (!ok) { const cb = $("input", publicBox); if (cb) cb.checked = false; }
-        const label = $("[data-public-handle]", publicBox); if (label) label.textContent = `xyntal.de/${ok ? data.handle : "deinname"}`;
+        const label = $("[data-public-handle]", publicBox); if (label) label.textContent = `xyntal.com/${ok ? data.handle : "deinname"}`;
       }
     };
     form.addEventListener("input", showShare);

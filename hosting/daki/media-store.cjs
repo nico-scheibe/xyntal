@@ -1,4 +1,4 @@
-// Uploads der freien Seite (xyntal.de/name) im eigenen Hetzner-Bucket statt bei Supabase:
+// Uploads der freien Seite (xyntal.com/name) im eigenen Hetzner-Bucket statt bei Supabase:
 // dort gilt keine 50-MB-Grenze. Ohne Pakete: S3-Signatur (AWS SigV4) von Hand.
 //
 //   POST   /api/page-media              Datei hochladen (Body = Datei, Content-Type = Bild/Video)

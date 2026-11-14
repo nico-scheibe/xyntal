@@ -82,7 +82,7 @@
     line.textContent = text;
   }
 
-  // Strafkatalog (xyntal.de/community-richtlinien#strafkatalog): Grad und Regel einer Verwarnung.
+  // Strafkatalog (xyntal.com/community-richtlinien#strafkatalog): Grad und Regel einer Verwarnung.
   // Der App-Server zählt die Punkte und sperrt ab 3 / 6 / 9 Punkten von selbst (admin/strikes.ts).
   const RULES = ["Respekt", "Kein Spam", "Sei echt", "Ideen sind Vertrauenssache", "Ein Match ist kein Vertrag", "Fair zusammenarbeiten", "Aufbauen statt abzocken", "Gesetz", "Keine Technik-Tricks", "Melden"];
   const STRIKE_FIELDS = [
@@ -1185,7 +1185,7 @@
   const FACE = ["", "😞", "🙁", "😐", "🙂", "😍"];
   loaders.feedback = async () => {
     const p = panel("feedback");
-    p.innerHTML = `${head("COMMUNITY", "Feedback & Herkunft", "Woher neue Mitglieder kommen und wie hilfreich sie Xyntal finden – aus der App und von xyntal.de. Gefragt wird einmal nach der Herkunft, nach Feedback frühestens nach 7 Tagen und höchstens alle 30 Tage.")}<div data-list>${loading()}</div>`;
+    p.innerHTML = `${head("COMMUNITY", "Feedback & Herkunft", "Woher neue Mitglieder kommen und wie hilfreich sie Xyntal finden – aus der App und von xyntal.com. Gefragt wird einmal nach der Herkunft, nach Feedback frühestens nach 7 Tagen und höchstens alle 30 Tage.")}<div data-list>${loading()}</div>`;
     const box = $("[data-list]", p);
     try {
       const d = await api("GET", "/admin/feedback");
@@ -1216,7 +1216,7 @@
   loaders.announcements = async () => {
     const p = panel("announcements");
     if (!p.querySelector("[data-ann-form]")) {
-      p.innerHTML = `${head("KOMMUNIKATION", "Ankündigungen", "Banner für alle Mitglieder – in der Xyntal-App und auf xyntal.de – veröffentlichen und schalten, welche gerade live sind.")}
+      p.innerHTML = `${head("KOMMUNIKATION", "Ankündigungen", "Banner für alle Mitglieder – in der Xyntal-App und auf xyntal.com – veröffentlichen und schalten, welche gerade live sind.")}
         <form class="xa-card xa-inline xa-ann-form" data-ann-form>
           <h3>Neue Ankündigung</h3>
           <label>Titel<input name="title" maxlength="160" required placeholder="Kurze Überschrift (Pflicht)"></label>

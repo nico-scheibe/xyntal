@@ -15,10 +15,10 @@
       if (me && !form.elements.email.value) form.elements.email.value = me.email || '';
     } catch { /* Guests can send feedback too. */ }
   }));
-  // „Seite melden“ auf xyntal.de/name führt hierher mit ?melden=name: Formular gleich offen, Ort schon ausgefüllt
+  // „Seite melden“ auf xyntal.com/name führt hierher mit ?melden=name: Formular gleich offen, Ort schon ausgefüllt
   const reported = new URLSearchParams(location.search).get('melden') || '';
   if (/^[a-z0-9][a-z0-9_-]{2,19}$/.test(reported) && form.elements.where) {
-    form.elements.where.value = 'xyntal.de/' + reported;
+    form.elements.where.value = 'xyntal.com/' + reported;
     document.querySelector('[data-feedback-open]')?.click();
   }
   dialog.querySelectorAll('[data-feedback-close]').forEach(button => button.addEventListener('click', () => dialog.close()));

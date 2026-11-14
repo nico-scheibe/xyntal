@@ -1379,7 +1379,7 @@
     }
   }
   // Warum der Browser das Mikrofon nicht freigibt. Oft fragt er gar nicht erst: wenn Windows bzw. macOS
-  // dem Browser das Mikrofon sperrt, wenn xyntal.de früher einmal blockiert wurde oder wenn keins da ist.
+  // dem Browser das Mikrofon sperrt, wenn xyntal.com früher einmal blockiert wurde oder wenn keins da ist.
   async function micProblem(err) {
     const name = (err && err.name) || "";
     const detail = (err && err.message) || "";
@@ -1401,7 +1401,7 @@
           : "Dein Betriebssystem sperrt das Mikrofon für deinen Browser. Erlaube es in den Systemeinstellungen unter Datenschutz → Mikrofon und lade die Seite neu.");
       }
       if (state === "denied") {
-        return t("Das Mikrofon ist für xyntal.de blockiert. Klick links neben der Adresse auf das Symbol für die Website-Einstellungen, stell „Mikrofon“ auf „Zulassen“ und lade die Seite neu.");
+        return t("Das Mikrofon ist für xyntal.com blockiert. Klick links neben der Adresse auf das Symbol für die Website-Einstellungen, stell „Mikrofon“ auf „Zulassen“ und lade die Seite neu.");
       }
     }
     return t("Kein Zugriff aufs Mikrofon. Erlaube es in deinem Browser, um Sprachnachrichten aufzunehmen.");
@@ -2200,7 +2200,7 @@
       const { data: l } = await sb.from("listings").select("id, title, type").eq("id", Number(rawId)).maybeSingle();
       const ta = input();
       if (!l || !ta || ta.value.trim()) return;
-      ta.value = `${t("Hallo! Ich melde mich auf dein")} ${t(l.type === "suche" ? "Gesuch" : "Angebot")} „${l.title}“: https://xyntal.de/boerse#anzeige-${l.id}\n\n`;
+      ta.value = `${t("Hallo! Ich melde mich auf dein")} ${t(l.type === "suche" ? "Gesuch" : "Angebot")} „${l.title}“: https://xyntal.com/boerse#anzeige-${l.id}\n\n`;
       grow(ta); syncSend(); ta.focus();
     } catch { /* ohne Bezug weiterschreiben */ }
   }

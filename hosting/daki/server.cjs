@@ -93,7 +93,8 @@ function feedbackJson(res, code, data) {
 }
 async function handleBetaFeedback(req, res) {
   if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return feedbackJson(res, 405, { error: 'Bitte sende das Feedback über das Formular.' }); }
-  if (req.headers.origin && !['https://xyntal.de', 'https://www.xyntal.de'].includes(req.headers.origin)) {
+  // Hauptadresse xyntal.com; die alten .de-Adressen bleiben für den Übergang erlaubt (Umzug: DOMAIN-UMZUG.md)
+  if (req.headers.origin && !['https://xyntal.com', 'https://www.xyntal.com', 'https://xyntal.de', 'https://www.xyntal.de'].includes(req.headers.origin)) {
     return feedbackJson(res, 403, { error: 'Diese Anfrage ist nicht erlaubt.' });
   }
   if (!/^application\/json(?:\s*;|$)/i.test(req.headers['content-type'] || '')) return feedbackJson(res, 415, { error: 'Ungültiges Datenformat.' });
@@ -184,31 +185,31 @@ const STATUS_MAILS = {
     subject: 'Deine Xyntal-Beta-Bewerbung ist in Prüfung', kicker: 'Beta-Bewerbung · In Prüfung', accent: '#60a5fa',
     heading: 'Ich schaue mir deine Bewerbung an.',
     paragraphs: ['ich habe deine Bewerbung für die Xyntal-Beta gelesen und schaue sie mir gerade genauer an. Ich lese jede Bewerbung selbst, deshalb dauert das ein paar Tage.', 'Du hörst von mir, sobald ich entschieden habe. Bis dahin kannst du dein Profil schon einmal vervollständigen – das hilft mir bei der Einschätzung.'],
-    button: 'Mein Profil ansehen', link: 'https://xyntal.de/profil',
+    button: 'Mein Profil ansehen', link: 'https://xyntal.com/profil',
   },
   eingeladen: {
     subject: 'Du bist zur Xyntal-Beta eingeladen', kicker: 'Beta-Bewerbung · Eingeladen', accent: '#a855f7',
     heading: 'Du bist eingeladen.',
     paragraphs: ['ich möchte dich gern in der Xyntal-Beta dabeihaben. Dein Vorhaben passt gut zu dem, was wir gerade testen.', 'Logg dich ein und vervollständige dein Profil: Was du baust, was du kannst und wen du suchst. Sobald das steht, schalte ich dich frei und du bekommst Zugang zur Desktop-App.'],
-    button: 'Jetzt einloggen', link: 'https://xyntal.de/login?next=profil',
+    button: 'Jetzt einloggen', link: 'https://xyntal.com/login?next=profil',
   },
   warteliste: {
     subject: 'Du stehst auf der Warteliste für die Xyntal-Beta', kicker: 'Beta-Bewerbung · Warteliste', accent: '#f59e0b',
     heading: 'Du stehst auf der Warteliste.',
     paragraphs: ['danke für deine Bewerbung. Die erste Testrunde ist gerade voll, deshalb habe ich dich auf die Warteliste gesetzt. Sobald ein Platz frei wird, melde ich mich bei dir.', 'Projekte, Gesuche und Nachrichten kannst du mit deinem Konto schon jetzt nutzen – so bist du nicht untätig, bis es losgeht.'],
-    button: 'Projekte entdecken', link: 'https://xyntal.de/projekte',
+    button: 'Projekte entdecken', link: 'https://xyntal.com/projekte',
   },
   angenommen: {
     subject: 'Willkommen in der Xyntal-Beta', kicker: 'Beta-Bewerbung · Angenommen', accent: '#34d399',
     heading: 'Du bist dabei. Willkommen in der Beta!',
     paragraphs: ['dein Konto ist für die Beta freigeschaltet. In deinem Profil findest du ab sofort die Desktop-App für Mac und Windows zum Download.', 'Probier alles aus, bau dein Projekt auf und sag mir, was gut läuft und was fehlt. Dein Feedback kommt direkt bei mir an und entscheidet mit, was als Nächstes gebaut wird.'],
-    button: 'Desktop-App herunterladen', link: 'https://xyntal.de/profil',
+    button: 'Desktop-App herunterladen', link: 'https://xyntal.com/profil',
   },
   abgelehnt: {
     subject: 'Deine Xyntal-Beta-Bewerbung', kicker: 'Beta-Bewerbung · Diesmal nicht', accent: '#8a8a95',
     heading: 'Diesmal leider nicht.',
     paragraphs: ['danke, dass du dich für die Xyntal-Beta beworben hast. Diesmal kann ich dich leider nicht aufnehmen – die Plätze der ersten Runde sind begrenzt und ich muss sehr eng auswählen.', 'Projekte, Gesuche und Nachrichten kannst du mit deinem Konto trotzdem nutzen. Und ich melde mich, sobald es neue Plätze gibt.'],
-    button: 'Projekte entdecken', link: 'https://xyntal.de/projekte',
+    button: 'Projekte entdecken', link: 'https://xyntal.com/projekte',
   },
 };
 const STATUS_LABELS = { in_pruefung: 'In Prüfung', eingeladen: 'Eingeladen', warteliste: 'Warteliste', angenommen: 'Angenommen', abgelehnt: 'Abgelehnt' };
@@ -217,12 +218,12 @@ const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (c) => ({ '&': '
 function statusMailText(name, status) {
   const mail = STATUS_MAILS[status];
   const safeName = escapeHtml(name);
-  const text = ['Hallo ' + name + ',', '', ...mail.paragraphs.flatMap((p) => [p, '']), 'Stand deiner Bewerbung: ' + STATUS_LABELS[status], '', mail.button + ': ' + mail.link, '', 'Viele Grüße', 'Nico von Xyntal', '', 'Antworte einfach auf diese E-Mail, wenn du Fragen hast.', 'https://xyntal.de/impressum · https://xyntal.de/datenschutz'].join('\n');
-  const html = `<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><title>${escapeHtml(mail.subject)}</title></head><body style="margin:0;background:#07070b;color:#f5f5f7;font-family:Arial,sans-serif"><div style="display:none;max-height:0;overflow:hidden;opacity:0">${escapeHtml(mail.heading)} Stand deiner Bewerbung: ${STATUS_LABELS[status]}</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#07070b"><tr><td align="center" style="padding:40px 14px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px"><tr><td align="center" style="padding:0 0 26px"><a href="https://xyntal.de/"><img src="https://xyntal.de/email/logo.png" width="113" height="31" alt="Xyntal" style="display:block;border:0"></a></td></tr><tr><td style="padding:1px;border-radius:24px;background:#26262f"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="padding:40px;background:#121219;border-radius:23px"><div style="height:4px;background:linear-gradient(90deg,#a855f7,#ec4899,#6366f1);border-radius:4px"></div><p style="margin:28px 0 8px;color:${mail.accent};font-size:12px;letter-spacing:.08em;text-transform:uppercase">${escapeHtml(mail.kicker)}</p><h1 style="margin:0 0 16px;font-size:30px;line-height:1.15">${escapeHtml(mail.heading)}</h1><p style="margin:0 0 16px;color:#f5f5f7;font-size:16px;line-height:1.6">Hallo ${safeName},</p>${mail.paragraphs.map((p) => `<p style="margin:0 0 16px;color:#b4b4be;font-size:16px;line-height:1.6">${escapeHtml(p)}</p>`).join('')}<table role="presentation" cellpadding="0" cellspacing="0" style="margin:12px 0 28px"><tr><td style="padding:12px 16px;border-radius:14px;background:#1a1a23;border:1px solid #26262f"><span style="color:#8a8a95;font-size:12px;letter-spacing:.08em;text-transform:uppercase">Stand deiner Bewerbung</span><br><span style="color:${mail.accent};font-size:16px;font-weight:bold">${STATUS_LABELS[status]}</span></td></tr></table><a href="${escapeHtml(mail.link)}" style="display:inline-block;padding:16px 26px;border-radius:999px;background:#a855f7;background-image:linear-gradient(100deg,#a855f7,#ec4899 50%,#6366f1);color:#fff;font-weight:bold;text-decoration:none">${escapeHtml(mail.button)} &rarr;</a><hr style="margin:28px 0 16px;border:0;border-top:1px solid #26262f"><p style="margin:0 0 6px;color:#f5f5f7;font-size:14px;line-height:1.5">Viele Grüße<br>Nico von Xyntal</p><p style="margin:0;color:#8a8a95;font-size:13px;line-height:1.5">Antworte einfach auf diese E-Mail, wenn du Fragen hast.</p></td></tr></table></td></tr><tr><td align="center" style="padding:24px 10px 0;color:#8a8a95;font-size:12px">Stop swiping. <span style="color:#e879f9">Start building.</span><br><a href="https://xyntal.de/impressum" style="color:#8a8a95">Impressum</a> · <a href="https://xyntal.de/datenschutz" style="color:#8a8a95">Datenschutz</a></td></tr></table></td></tr></table></body></html>`;
+  const text = ['Hallo ' + name + ',', '', ...mail.paragraphs.flatMap((p) => [p, '']), 'Stand deiner Bewerbung: ' + STATUS_LABELS[status], '', mail.button + ': ' + mail.link, '', 'Viele Grüße', 'Nico von Xyntal', '', 'Antworte einfach auf diese E-Mail, wenn du Fragen hast.', 'https://xyntal.com/impressum · https://xyntal.com/datenschutz'].join('\n');
+  const html = `<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><title>${escapeHtml(mail.subject)}</title></head><body style="margin:0;background:#07070b;color:#f5f5f7;font-family:Arial,sans-serif"><div style="display:none;max-height:0;overflow:hidden;opacity:0">${escapeHtml(mail.heading)} Stand deiner Bewerbung: ${STATUS_LABELS[status]}</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#07070b"><tr><td align="center" style="padding:40px 14px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px"><tr><td align="center" style="padding:0 0 26px"><a href="https://xyntal.com/"><img src="https://xyntal.com/email/logo.png" width="113" height="31" alt="Xyntal" style="display:block;border:0"></a></td></tr><tr><td style="padding:1px;border-radius:24px;background:#26262f"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="padding:40px;background:#121219;border-radius:23px"><div style="height:4px;background:linear-gradient(90deg,#a855f7,#ec4899,#6366f1);border-radius:4px"></div><p style="margin:28px 0 8px;color:${mail.accent};font-size:12px;letter-spacing:.08em;text-transform:uppercase">${escapeHtml(mail.kicker)}</p><h1 style="margin:0 0 16px;font-size:30px;line-height:1.15">${escapeHtml(mail.heading)}</h1><p style="margin:0 0 16px;color:#f5f5f7;font-size:16px;line-height:1.6">Hallo ${safeName},</p>${mail.paragraphs.map((p) => `<p style="margin:0 0 16px;color:#b4b4be;font-size:16px;line-height:1.6">${escapeHtml(p)}</p>`).join('')}<table role="presentation" cellpadding="0" cellspacing="0" style="margin:12px 0 28px"><tr><td style="padding:12px 16px;border-radius:14px;background:#1a1a23;border:1px solid #26262f"><span style="color:#8a8a95;font-size:12px;letter-spacing:.08em;text-transform:uppercase">Stand deiner Bewerbung</span><br><span style="color:${mail.accent};font-size:16px;font-weight:bold">${STATUS_LABELS[status]}</span></td></tr></table><a href="${escapeHtml(mail.link)}" style="display:inline-block;padding:16px 26px;border-radius:999px;background:#a855f7;background-image:linear-gradient(100deg,#a855f7,#ec4899 50%,#6366f1);color:#fff;font-weight:bold;text-decoration:none">${escapeHtml(mail.button)} &rarr;</a><hr style="margin:28px 0 16px;border:0;border-top:1px solid #26262f"><p style="margin:0 0 6px;color:#f5f5f7;font-size:14px;line-height:1.5">Viele Grüße<br>Nico von Xyntal</p><p style="margin:0;color:#8a8a95;font-size:13px;line-height:1.5">Antworte einfach auf diese E-Mail, wenn du Fragen hast.</p></td></tr></table></td></tr><tr><td align="center" style="padding:24px 10px 0;color:#8a8a95;font-size:12px">Stop swiping. <span style="color:#e879f9">Start building.</span><br><a href="https://xyntal.com/impressum" style="color:#8a8a95">Impressum</a> · <a href="https://xyntal.com/datenschutz" style="color:#8a8a95">Datenschutz</a></td></tr></table></td></tr></table></body></html>`;
   return { subject: mail.subject, text, html };
 }
 // Supabase-Adresse und öffentlicher Schlüssel kommen aus der veröffentlichten config.js, damit nichts doppelt gepflegt wird.
-// Sitemap der öffentlichen Karten (xyntal.de/name), damit Suchmaschinen sie finden, ohne dass eine Seite
+// Sitemap der öffentlichen Karten (xyntal.com/name), damit Suchmaschinen sie finden, ohne dass eine Seite
 // sie alle verlinkt. Liste aus get_member_cards (nur öffentliche Karten nicht gesperrter Konten), 10 Minuten gemerkt.
 // null = Abfrage hat nicht geklappt.
 let cardSitemap = { xml: null, until: 0 };
@@ -239,7 +240,7 @@ async function cardSitemapXml() {
     if (!Array.isArray(cards)) return null;
     const handles = [...new Set(cards.map((c) => String(c && c.handle || '').toLowerCase()).filter((h) => /^[a-z0-9][a-z0-9_-]{2,19}$/.test(h)))].sort().slice(0, 45000);
     const xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-      + handles.map((h) => '  <url><loc>https://xyntal.de/' + h + '</loc></url>\n').join('') + '</urlset>\n';
+      + handles.map((h) => '  <url><loc>https://xyntal.com/' + h + '</loc></url>\n').join('') + '</urlset>\n';
     cardSitemap = { xml, until: Date.now() + 600000 };
     return xml;
   } catch { return null; }
@@ -253,7 +254,7 @@ function supabaseConfig() {
   } catch {}
   return null;
 }
-// Vorschau beim Teilen (WhatsApp, Discord, X …): Name und Beschreibung der Seite xyntal.de/name in Titel und og:-Tags.
+// Vorschau beim Teilen (WhatsApp, Discord, X …): Name und Beschreibung der Seite xyntal.com/name in Titel und og:-Tags.
 // Fragt get_public_card (öffentlich), merkt sich das Ergebnis 5 Minuten und wartet höchstens 2,5 Sekunden.
 const metaCache = new Map();
 async function profileMeta(handle) {
@@ -274,7 +275,7 @@ async function profileMeta(handle) {
         const p = card.profile || {};
         const clip = (v, n) => { const t = String(v || '').replace(/\s+/g, ' ').trim(); return t.length > n ? t.slice(0, n - 1) + '…' : t; };
         const desc = clip(p.headline || card.pitch || p.about || [card.role, card.city].filter(Boolean).join(' · '), 180);
-        meta = { name: clip(card.name, 60), title: clip(card.name, 60) + ' · xyntal.de/' + card.handle, description: desc || 'Die Seite von ' + clip(card.name, 60) + ' auf Xyntal.' };
+        meta = { name: clip(card.name, 60), title: clip(card.name, 60) + ' · xyntal.com/' + card.handle, description: desc || 'Die Seite von ' + clip(card.name, 60) + ' auf Xyntal.' };
       }
     } catch {}
   }
@@ -284,7 +285,7 @@ async function profileMeta(handle) {
 }
 function withProfileMeta(html, meta, handle) {
   const e = escapeHtml;
-  const url = 'https://xyntal.de/' + handle;
+  const url = 'https://xyntal.com/' + handle;
   // Öffentliche Karten dürfen in Suchmaschinen erscheinen: statt „noindex“ (das für freie, reservierte
   // und nicht öffentliche Namen stehen bleibt) bekommt die Seite ihre feste Adresse und eine maschinenlesbare
   // Kurzfassung. Nur Angaben, die auf der öffentlichen Seite ohnehin stehen.
@@ -297,7 +298,7 @@ function withProfileMeta(html, meta, handle) {
     .replace(/(<meta name="description" content=")[^"]*/, (m, a) => a + e(meta.description))
     .replace(/(<meta property="og:title" content=")[^"]*/, (m, a) => a + e(meta.title))
     .replace(/(<meta property="og:description" content=")[^"]*/, (m, a) => a + e(meta.description))
-    .replace('<meta property="og:image"', () => '<meta property="og:url" content="https://xyntal.de/' + e(handle) + '">\n  <meta name="twitter:card" content="summary_large_image">\n  <meta property="og:image"');
+    .replace('<meta property="og:image"', () => '<meta property="og:url" content="https://xyntal.com/' + e(handle) + '">\n  <meta name="twitter:card" content="summary_large_image">\n  <meta property="og:image"');
 }
 // Kleiner SMTP-Client für IONOS (Port 465, TLS von Anfang an). Keine Abhängigkeiten nötig.
 const b64 = (s) => Buffer.from(s, 'utf8').toString('base64');
@@ -325,7 +326,7 @@ function smtpSend({ host, port, user, pass, from, fromName, to, subject, text, h
       'MIME-Version: 1.0', ...mimeBody(text, html),
     ].join('\r\n');
     const steps = [
-      [220, 'EHLO xyntal.de'], [250, 'AUTH LOGIN'], [334, b64(user)], [334, b64(pass)], [235, 'MAIL FROM:<' + from + '>'],
+      [220, 'EHLO xyntal.com'], [250, 'AUTH LOGIN'], [334, b64(user)], [334, b64(pass)], [235, 'MAIL FROM:<' + from + '>'],
       [250, 'RCPT TO:<' + to + '>'], [250, 'DATA'], [354, message + '\r\n.'], [250, 'QUIT'], [221, null],
     ];
     socket.setEncoding('utf8');
@@ -372,7 +373,8 @@ const statusMailLimits = { count: 0, until: 0 };
 async function handleBetaStatusMail(req, res) {
   if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return feedbackJson(res, 405, { error: 'Nur POST.' }); }
   // Der Admin-Bereich läuft unter admin.xyntal.de (ADMIN_HOST, siehe unten) und ruft diese Route von dort auf.
-  if (req.headers.origin && !['https://xyntal.de', 'https://www.xyntal.de', 'https://' + (process.env.ADMIN_HOST || 'admin.xyntal.de').toLowerCase()].includes(req.headers.origin)) return feedbackJson(res, 403, { error: 'Diese Anfrage ist nicht erlaubt.' });
+  // Hauptadresse xyntal.com; die alten .de-Adressen bleiben für den Übergang erlaubt (Umzug: DOMAIN-UMZUG.md)
+  if (req.headers.origin && !['https://xyntal.com', 'https://www.xyntal.com', 'https://xyntal.de', 'https://www.xyntal.de', 'https://' + (process.env.ADMIN_HOST || 'admin.xyntal.de').toLowerCase()].includes(req.headers.origin)) return feedbackJson(res, 403, { error: 'Diese Anfrage ist nicht erlaubt.' });
   const token = /^Bearer\s+([A-Za-z0-9._-]{20,4096})$/.exec(req.headers.authorization || '');
   if (!token) return feedbackJson(res, 401, { error: 'Bitte als Admin einloggen.' });
   if (!/^application\/json(?:\s*;|$)/i.test(req.headers['content-type'] || '')) return feedbackJson(res, 415, { error: 'Ungültiges Datenformat.' });
@@ -512,7 +514,7 @@ function englishPage(currentRoot, name) {
   const words = englishDict(currentRoot);
   const say = (de) => englishText(de, words);
   let html = englishHtml(fs.readFileSync(path.join(currentRoot, name + '.html'), 'utf8'), words);
-  const site = 'https://xyntal.de';
+  const site = 'https://xyntal.com';
   const here = site + enPath(name);
   html = html
     .replace(/<html lang="de"/, '<html lang="en"')
@@ -564,7 +566,7 @@ const SECURITY_HEADERS = {
   'Permissions-Policy': 'camera=(), microphone=(self), geolocation=(), payment=()',
   // frame-src: die eigene Seite (Profil bettet die Karte ein) und genau die Player, die
   // /nachrichten nach einem Klick auf „Abspielen“ lädt (YouTube ohne Cookies, TikTok,
-  // Instagram, Vimeo) sowie die Einbettungen der freien Seite xyntal.de/name (YouTube, Vimeo, Spotify; page-canvas.js).
+  // Instagram, Vimeo) sowie die Einbettungen der freien Seite xyntal.com/name (YouTube, Vimeo, Spotify; page-canvas.js).
   // Vorschaubilder kommen als blob: vom App-Server (img-src blob:).
   // media-src https://db.xyntal.de: Profilbild und Banner als Video (MP4/WebM) streamen über signierte
   // URLs aus den privaten Buckets avatars/banners (u.js, xcard.js/banners.js, meine-karte.js).
@@ -601,14 +603,14 @@ function overLimit(req, res, kind) {
 }
 const HEAVY_PATH = /^\/(api\/|[a-z0-9][a-z0-9_-]{2,19}(\/invite)?\/?$)/i;
 
-// Admin-Bereich nur unter admin.xyntal.de. Auf xyntal.de gibt es Admin-Seite und Admin-Skripte nicht
+// Admin-Bereich nur unter admin.xyntal.de. Auf xyntal.com gibt es Admin-Seite und Admin-Skripte nicht
 // (404); die Rechte prüfen Supabase (is_admin + 2FA) und der App-Server (Staff-Rolle).
 const ADMIN_HOST = (process.env.ADMIN_HOST || 'admin.xyntal.de').toLowerCase();
 const ADMIN_ONLY_FILES = new Set(['admin.html', 'admin.css', 'admin-contracts.css', 'admin-support.css', 'world-geo.js',
   'pages/admin.js', 'pages/admin-platform.js', 'pages/admin-contracts.js', 'pages/admin-people.js', 'pages/admin-support.js']);
-// Seiten, die auf admin.xyntal.de bleiben (Anmeldung samt 2FA); alle anderen Seiten leiten auf xyntal.de um.
+// Seiten, die auf admin.xyntal.de bleiben (Anmeldung samt 2FA); alle anderen Seiten leiten auf xyntal.com um.
 const ADMIN_HOST_PAGES = new Set(['admin.html', 'login.html', 'passwort-neu.html', '404.html']);
-const MAIN_SITE = (process.env.MAIN_SITE_URL || 'https://xyntal.de').replace(/\/+$/, '');
+const MAIN_SITE = (process.env.MAIN_SITE_URL || 'https://xyntal.com').replace(/\/+$/, '');
 const requestHost = (req) => String(req.headers.host || '').toLowerCase().replace(/:\d+$/, '');
 const httpServer = http.createServer(serve).listen(Number(process.env.SERVER_PORT || process.env.PORT || 4129), '0.0.0.0', () => console.log('Xyntal Daki server ready'));
 function serve(req, res) {
@@ -697,7 +699,7 @@ function serve(req, res) {
   const relative = path.relative(currentRoot, file).split(path.sep).join('/');
   if (onAdminHost) {
     res.setHeader('X-Robots-Tag', 'noindex, nofollow');
-    // Normale Seiten (und Kurzlinks) gehören zu xyntal.de, nicht in den Admin-Bereich.
+    // Normale Seiten (und Kurzlinks) gehören zu xyntal.com, nicht in den Admin-Bereich.
     if (!ADMIN_HOST_PAGES.has(relative) && (relative.endsWith('.html') || !path.extname(relative))) {
       res.writeHead(308, { Location: MAIN_SITE + new URL(req.url, 'http://localhost').pathname + new URL(req.url, 'http://localhost').search });
       return res.end();
@@ -706,8 +708,8 @@ function serve(req, res) {
     res.writeHead(404, {'Content-Type':'text/html; charset=utf-8'});
     return res.end(req.method === 'HEAD' ? undefined : fs.readFileSync(path.join(currentRoot,'404.html')));
   }
-  // Eine Adresse pro Seite (für Suchmaschinen und geteilte Links): www.xyntal.de, /seite.html,
-  // /index.html und /seite/ leiten dauerhaft auf https://xyntal.de/seite um. Suchteil bleibt erhalten,
+  // Eine Adresse pro Seite (für Suchmaschinen und geteilte Links): www.xyntal.com, /seite.html,
+  // /index.html und /seite/ leiten dauerhaft auf https://xyntal.com/seite um. Suchteil bleibt erhalten,
   // den Teil nach # reicht der Browser selbst weiter. Der Admin-Bereich bleibt, wie er ist.
   if (!onAdminHost) {
     const search = new URL(req.url, 'http://localhost').search;
@@ -725,9 +727,9 @@ function serve(req, res) {
       return res.end();
     }
   }
-  // xyntal.de/name/invite: Einladungsseite (Promo-Code = Link-Name, führt zur Registrierung)
+  // xyntal.com/name/invite: Einladungsseite (Promo-Code = Link-Name, führt zur Registrierung)
   if ((!fs.existsSync(file) || !fs.statSync(file).isFile()) && /^\/[a-z0-9][a-z0-9_-]{2,19}\/invite\/?$/i.test(pathname) && fs.existsSync(path.join(currentRoot, 'invite.html'))) file = path.join(currentRoot, 'invite.html');
-  // xyntal.de/name: Wunsch-Link zeigt die öffentliche Karte (die Seite fragt Supabase selbst); vor den Projekt-Links, damit auch /vor-nachname zur Karte führt
+  // xyntal.com/name: Wunsch-Link zeigt die öffentliche Karte (die Seite fragt Supabase selbst); vor den Projekt-Links, damit auch /vor-nachname zur Karte führt
   if ((!fs.existsSync(file) || !fs.statSync(file).isFile()) && /^\/[a-z0-9][a-z0-9_-]{2,19}\/?$/i.test(pathname) && fs.existsSync(path.join(currentRoot, 'u.html'))) file = path.join(currentRoot, 'u.html');
   // Längere Projekt-Kurzlinks führen auf die Projektseite.
   if ((!fs.existsSync(file) || !fs.statSync(file).isFile()) && /^\/[a-z0-9][a-z0-9_-]{0,19}-[a-z0-9][a-z0-9_-]{0,118}\/?$/.test(pathname)) file = path.join(currentRoot, 'projekte.html');
@@ -736,7 +738,7 @@ function serve(req, res) {
     return res.end(req.method === 'HEAD' ? undefined : fs.readFileSync(path.join(currentRoot,'404.html')));
   }
   if (!fs.realpathSync(file).startsWith(fs.realpathSync(currentRoot) + path.sep)) { res.writeHead(403); return res.end(); }
-  // Wunsch-Link xyntal.de/name: Vorschau-Tags mit Name und Beschreibung (ohne Treffer bleibt die Seite unverändert)
+  // Wunsch-Link xyntal.com/name: Vorschau-Tags mit Name und Beschreibung (ohne Treffer bleibt die Seite unverändert)
   const handleMatch = file === path.join(currentRoot, 'u.html') && /^\/([a-z0-9][a-z0-9_-]{2,19})\/?$/i.exec(pathname);
   if (handleMatch && req.method === 'GET') {
     profileMeta(handleMatch[1].toLowerCase()).then((meta) => {

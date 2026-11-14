@@ -212,7 +212,7 @@ function renderCardsList(cards) {
         return `
         <tr data-card-row="${c.id}">
           <td><input type="checkbox" data-sel="${c.id}" ${cardSel.has(String(c.id)) ? "checked" : ""} aria-label="${esc(c.name)} auswählen"></td>
-          <td><b>${esc(c.name)}</b>${c.handle ? ` <small>· <a class="text-link" href="/${esc(c.handle)}" target="_blank" rel="noopener">xyntal.de/${esc(c.handle)}</a>${c.is_public ? " · öffentlich" : ""}</small>` : ""}<br><small>${esc(c.role)}${c.level ? ` · ${esc(c.level)}` : ""} · ${c.hours} Std./Woche</small><br>${c.city || c.mode ? `<small>${esc([c.city, c.mode].filter(Boolean).join(" · "))}</small><br>` : ""}${/^https?:\/\//.test(c.link || "") ? `<small><a class="text-link" href="${esc(c.link)}" target="_blank" rel="noopener noreferrer nofollow">${esc(c.link.replace(/^https?:\/\/(www\.)?/, "").slice(0, 40))}</a></small><br>` : ""}<small><a class="text-link" href="mailto:${esc(c.email)}">${esc(c.email)}</a></small><br><small>${fmt(c.created_at)}${c.lang === "en" ? " · EN" : ""}</small></td>
+          <td><b>${esc(c.name)}</b>${c.handle ? ` <small>· <a class="text-link" href="/${esc(c.handle)}" target="_blank" rel="noopener">xyntal.com/${esc(c.handle)}</a>${c.is_public ? " · öffentlich" : ""}</small>` : ""}<br><small>${esc(c.role)}${c.level ? ` · ${esc(c.level)}` : ""} · ${c.hours} Std./Woche</small><br>${c.city || c.mode ? `<small>${esc([c.city, c.mode].filter(Boolean).join(" · "))}</small><br>` : ""}${/^https?:\/\//.test(c.link || "") ? `<small><a class="text-link" href="${esc(c.link)}" target="_blank" rel="noopener noreferrer nofollow">${esc(c.link.replace(/^https?:\/\/(www\.)?/, "").slice(0, 40))}</a></small><br>` : ""}<small><a class="text-link" href="mailto:${esc(c.email)}">${esc(c.email)}</a></small><br><small>${fmt(c.created_at)}${c.lang === "en" ? " · EN" : ""}</small></td>
           <td>${(c.skills || []).map((x) => `<span class="skill-tag">${esc(x)}</span>`).join(" ")}${c.pitch ? `<p class="beta-why-text">${esc(c.pitch)}</p>` : ""}</td>
           <td><small>${esc(c.looking)}</small></td>
           <td><textarea class="card-note" data-note="${c.id}" rows="2" maxlength="500" placeholder="Notiz, z. B. passt zu …">${esc(c.note || "")}</textarea></td>
@@ -224,7 +224,7 @@ function renderCardsList(cards) {
             ${sug.length ? `<ul class="match-list">${sug.map(({ o, why }) => `<li><b>${esc(o.name)}</b> <small>${esc(o.role)} · ${esc(o.looking)}</small><br><small>${esc(why.join(" · "))}</small><br><button data-intro="${c.id}:${o.id}">Vorstellen</button></li>`).join("")}</ul>` : `<p class="hint">Noch niemand passt gut. Mit mehr Karten kommen hier Vorschläge.</p>`}
           </details>
           <details class="card-more"><summary>Wunsch-Link</summary>
-            <div class="handle-edit"><span>xyntal.de/</span><input type="text" maxlength="20" value="${esc(c.handle || "")}" data-handle-input="${c.id}" aria-label="Wunsch-Link für ${esc(c.name)}" autocapitalize="off" spellcheck="false"></div>
+            <div class="handle-edit"><span>xyntal.com/</span><input type="text" maxlength="20" value="${esc(c.handle || "")}" data-handle-input="${c.id}" aria-label="Wunsch-Link für ${esc(c.name)}" autocapitalize="off" spellcheck="false"></div>
             <div class="row-actions"><button data-handle-save="${c.id}">Speichern</button>${c.handle ? `<button data-handle-free="${c.id}">Freigeben</button>` : ""}${c.is_public ? `<button data-hide-public="${c.id}">Öffentliche Karte ausblenden</button>` : ""}</div>
             <p class="hint">${c.is_public ? "Die Karte ist unter dem Link öffentlich sichtbar (Zustimmung beim Eintragen)." : "Unter dem Link steht nur „reserviert“. Öffentlich wird die Karte nur, wenn die Person selbst zustimmt."}</p>
           </details></td>
@@ -292,9 +292,9 @@ cardsPanel.addEventListener("click", async (e) => {
       const changed = unwrap(await sb.from("waitlist_cards").update({ handle: value }).eq("id", id).select("id,handle"));
       if (!changed.length) throw Error("Karte nicht mehr vorhanden oder keine Berechtigung.");
       Object.assign(lastData.cards.find((c) => String(c.id) === id), changed[0]);
-      rerenderCards(value ? `Wunsch-Link xyntal.de/${value} gespeichert.` : "Wunsch-Link freigegeben.");
+      rerenderCards(value ? `Wunsch-Link xyntal.com/${value} gespeichert.` : "Wunsch-Link freigegeben.");
     } catch (err) {
-      cardMsg(/duplicate|unique/i.test(err.message) ? `xyntal.de/${value} ist schon vergeben.` : `Nicht gespeichert: ${err.message}`);
+      cardMsg(/duplicate|unique/i.test(err.message) ? `xyntal.com/${value} ist schon vergeben.` : `Nicht gespeichert: ${err.message}`);
       hs.disabled = false;
     }
     return;
@@ -312,7 +312,7 @@ cardsPanel.addEventListener("click", async (e) => {
     }
     if (bulk.dataset.bulk === "csv") {
       downloadCsv("xyntal-karten-auswahl.csv", ["Name", "Wunsch-Link", "E-Mail", "Bereich", "Erfahrung", "Skills", "Std./Woche", "Stadt", "Arbeitsweise", "Sucht", "Satz", "Link", "Notiz"],
-        list.map((c) => [c.name, c.handle ? `xyntal.de/${c.handle}` : "", c.email, c.role, c.level || "", (c.skills || []).join(", "), c.hours, c.city || "", c.mode || "", c.looking, c.pitch, c.link || "", c.note]));
+        list.map((c) => [c.name, c.handle ? `xyntal.com/${c.handle}` : "", c.email, c.role, c.level || "", (c.skills || []).join(", "), c.hours, c.city || "", c.mode || "", c.looking, c.pitch, c.link || "", c.note]));
       return;
     }
     if (bulk.dataset.bulk === "delete") {
@@ -418,7 +418,7 @@ const STATUS_MAILABLE = new Set(['in_pruefung','eingeladen','warteliste','angeno
 async function sendStatusMail(id){
   const { data: { session } } = await sb.auth.getSession();
   if(!session) throw Error('Nicht eingeloggt.');
-  const response = await fetch('/api/beta-status-mail',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+session.access_token},body:JSON.stringify({id:String(id)}),signal:AbortSignal.timeout(30000)}).catch(()=>{throw Error('Server nicht erreichbar (nur auf xyntal.de möglich).');});
+  const response = await fetch('/api/beta-status-mail',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+session.access_token},body:JSON.stringify({id:String(id)}),signal:AbortSignal.timeout(30000)}).catch(()=>{throw Error('Server nicht erreichbar (nur auf xyntal.com möglich).');});
   const result = await response.json().catch(()=>({}));
   if(!response.ok||result.ok!==true) throw Error(result.error||'HTTP '+response.status);
   const row = lastData.beta.find(b=>String(b.id)===String(id));
@@ -493,7 +493,7 @@ adminView.addEventListener("click", (e) => {
   e.preventDefault();
   if (link.dataset.csv === "cards") {
     downloadCsv("xyntal-karten.csv", ["Name", "Wunsch-Link", "Öffentlich", "E-Mail", "Bereich", "Erfahrung", "Skills", "Std./Woche", "Stadt", "Arbeitsweise", "Sucht", "Satz", "Link", "Notiz", "Sprache", "Eingegangen"],
-      lastData.cards.map((c) => [c.name, c.handle ? `xyntal.de/${c.handle}` : "", c.is_public ? "ja" : "nein", c.email, c.role, c.level || "", (c.skills || []).join(", "), c.hours, c.city || "", c.mode || "", c.looking, c.pitch, c.link || "", c.note, c.lang, fmt(c.created_at)]));
+      lastData.cards.map((c) => [c.name, c.handle ? `xyntal.com/${c.handle}` : "", c.is_public ? "ja" : "nein", c.email, c.role, c.level || "", (c.skills || []).join(", "), c.hours, c.city || "", c.mode || "", c.looking, c.pitch, c.link || "", c.note, c.lang, fmt(c.created_at)]));
   } else if (link.dataset.csv === "signups") {
     downloadCsv("xyntal-anmeldungen.csv", ["Name", "E-Mail", "Projekt", "Angemeldet"],
       lastData.signups.map((s) => [s.name, s.email, s.project, fmt(s.created_at)]));

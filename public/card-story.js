@@ -1,9 +1,9 @@
 // Xyntal – Story-Bild für Instagram: die Xyntal-Karte als PNG in 1080 × 1920 (9:16).
-// Für die eigene Seite xyntal.de/name (u.js) und den Karten-Editor /meine-karte (meine-karte.js).
+// Für die eigene Seite xyntal.com/name (u.js) und den Karten-Editor /meine-karte (meine-karte.js).
 //
 // Aufbau: Markengrund #1C1C1C, darauf die Karte (so wie xcard.js/xcard.css/banners.css sie zeigen,
 // als Standbild – Hover-Effekte aus card-fx.js und Animationen bleiben weg), darunter das Feld
-// „xyntal.de/name“ (dort legt man den Link-Sticker hin) und „@xyntal“ in Blau (#4C8DFF, einzige Akzentfarbe).
+// „xyntal.com/name“ (dort legt man den Link-Sticker hin) und „@xyntal“ in Blau (#4C8DFF, einzige Akzentfarbe).
 // Oben 250 px und unten 340 px bleiben frei: Dort blendet Instagram Fortschrittsbalken, Profilname
 // und Antwortfeld ein.
 //
@@ -291,7 +291,7 @@
       g.fillStyle = P.text; g.fillText(label, PAD + 16, y + 22);
     }
     g.font = font(400, 12.5); g.fillStyle = P.text3; g.textAlign = "right";
-    g.fillText(m.handle ? `xyntal.de/${m.handle}` : "xyntal.de", CARD_W - PAD, y + footH / 2);
+    g.fillText(m.handle ? `xyntal.com/${m.handle}` : "xyntal.com", CARD_W - PAD, y + footH / 2);
     y += footH + 20;
     g.restore();
     return Math.ceil(y);
@@ -319,7 +319,7 @@
     g.fillStyle = BRAND.bg; g.fillRect(0, 0, W, H);
 
     // Unter der Karte: Link-Feld (für den Link-Sticker) und @xyntal
-    const site = m.handle ? `xyntal.de/${m.handle}` : "xyntal.de";
+    const site = m.handle ? `xyntal.com/${m.handle}` : "xyntal.com";
     const GAP1 = 64, PILL = 104, GAP2 = 34, TAG = 44, foot = GAP1 + PILL + GAP2 + TAG;
     const zoneTop = SAFE_TOP + 60, zoneBottom = H - SAFE_BOTTOM - 40;
     const s = Math.min(820 / card.width, (zoneBottom - zoneTop - foot) / card.height);
@@ -412,7 +412,7 @@
   // Schriften der Seite (fonts.css) müssen geladen sein, bevor der Canvas sie nutzt
   function fonts() {
     if (!document.fonts || !document.fonts.load) return Promise.resolve();
-    const need = [font(400, 20), font(600, 20), font(700, 20), font(500, 20, SERIF)].map((f) => document.fonts.load(f, "xyntal.de/Äß").catch(() => {}));
+    const need = [font(400, 20), font(600, 20), font(700, 20), font(500, 20, SERIF)].map((f) => document.fonts.load(f, "xyntal.com/Äß").catch(() => {}));
     return Promise.race([Promise.all(need), timeout(3000)]);
   }
 

@@ -6,7 +6,7 @@ vm.runInNewContext(source.slice(source.indexOf('// Beta feedback:'),source.index
 (async()=>{const server=http.createServer(ctx.handle);server.listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));try{
  const url='http://127.0.0.1:'+server.address().port;
  const data=()=>({name:'Test Person',email:randomUUID()+'@example.com',message:'Mein Feedback: Grüße aus Regensburg!',requestId:randomUUID()});
- const post=(body,headers={})=>fetch(url,{method:'POST',headers:{'Content-Type':'application/json',Origin:'https://xyntal.de',...headers},body:typeof body==='string'?body:JSON.stringify(body)});
+ const post=(body,headers={})=>fetch(url,{method:'POST',headers:{'Content-Type':'application/json',Origin:'https://xyntal.com',...headers},body:typeof body==='string'?body:JSON.stringify(body)});
  assert.equal((await fetch(url)).status,405);
  assert.equal((await post(data(),{Origin:'https://evil.example'})).status,403);
  assert.equal((await post(data(),{'Content-Type':'text/plain'})).status,415);

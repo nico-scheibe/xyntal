@@ -1,4 +1,4 @@
-// /admin – Partner: Partner-Links (xyntal.de/?partner=<code>) mit Klicks, neuen Konten,
+// /admin – Partner: Partner-Links (xyntal.com/?partner=<code>) mit Klicks, neuen Konten,
 // Gratis-Monaten und Zahlenden. Routen: server/src/partners/routes.ts im App-Server
 // (lesen: users.view, anlegen/pausieren: billing.manage – prüft der Server).
 (() => {
@@ -8,7 +8,7 @@
   const panel = document.querySelector('[data-panel="partners"]');
   if (!panel) return;
 
-  const linkOf = (code) => `https://xyntal.de/?partner=${code}`;
+  const linkOf = (code) => `https://xyntal.com/?partner=${code}`;
   const pct = (a, b) => (b ? `${Math.round((a / b) * 100)} %` : "–");
 
   function say(text, ok = true) {

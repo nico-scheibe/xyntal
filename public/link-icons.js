@@ -1,4 +1,4 @@
-// Symbole und Erkennung für die Link-Seite (xyntal.de/name und Editor in /meine-karte)
+// Symbole und Erkennung für die Link-Seite (xyntal.com/name und Editor in /meine-karte)
 (() => {
   const P = {
     link: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',

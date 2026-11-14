@@ -1,4 +1,4 @@
-// Öffentliche Xyntal-Karte unter xyntal.de/name – zeigt nur, was die Person freigegeben hat
+// Öffentliche Xyntal-Karte unter xyntal.com/name – zeigt nur, was die Person freigegeben hat
 (() => {
   const root = document.querySelector("[data-profile]");
   const t = (de) => (window.XyntalI18n ? window.XyntalI18n.t(de) : de);
@@ -44,7 +44,7 @@
     const name = c.name || "?";
     const own = !!(me && c.user_id && c.user_id === me.id);
     const admin = c.is_admin === true;
-    document.title = `${name} · xyntal.de/${c.handle}`;
+    document.title = `${name} · xyntal.com/${c.handle}`;
     // Einladungsprogramm: Wer über diesen Link kommt und ein Konto anlegt, löst die Einladung ein (account-menu.js)
     if (!own && HANDLE.test(c.handle || "")) {
       try { localStorage.setItem("xyntal-ref-handle", JSON.stringify({ handle: c.handle, at: Date.now() })); } catch { /* geht auch ohne */ }
@@ -85,7 +85,7 @@
     else linkGlow();
     if (own) setupStory(c);
   }
-  // Editor: öffnet sich direkt auf der eigenen Seite (xyntal.de/name#gestalten) und ersetzt sie, bis „Fertig“ gedrückt wird
+  // Editor: öffnet sich direkt auf der eigenen Seite (xyntal.com/name#gestalten) und ersetzt sie, bis „Fertig“ gedrückt wird
   const loadAsset = (tag, attr, url) => new Promise((ok, fail) => { const el = document.createElement(tag); if (tag === "link") el.rel = "stylesheet"; el[attr] = url; el.onload = ok; el.onerror = fail; document.head.append(el); });
   let editing = false;
   async function startEditor() {
@@ -187,7 +187,7 @@
     const tile = (cls, title, body) => `<section class="pf-tile ${cls}"><h2>${esc(t(title))}</h2><p data-no-i18n>${esc(body)}</p></section>`;
     return {
       card: `<div class="bp-stage">${window.XyntalCardHtml(c, { t, heading: "h1", avatarAttrs: "data-pub-avatar" })}</div>`,
-      head: `<header class="pf-head"><p class="pf-address"><span data-no-i18n>xyntal.de/${esc(c.handle)}</span></p>${headline ? `<p class="pf-headline" data-no-i18n>${esc(headline)}</p>` : ""}${factsHtml(c)}</header>`,
+      head: `<header class="pf-head"><p class="pf-address"><span data-no-i18n>xyntal.com/${esc(c.handle)}</span></p>${headline ? `<p class="pf-headline" data-no-i18n>${esc(headline)}</p>` : ""}${factsHtml(c)}</header>`,
       about: about ? `<section class="pf-section"><h2>${esc(t("Über mich"))}</h2><p class="pf-prose" data-no-i18n>${esc(about)}</p></section>` : "",
       offer: offer ? tile("pf-tile-offer", "Ich biete", offer) : "",
       seek: seek ? tile("pf-tile-seek", "Ich suche", seek) : "",
@@ -304,7 +304,7 @@
     const p = c.profile || {};
     return [["LinkedIn", p.linkedin, "linkedin"], ["Instagram", p.instagram, "instagram"], ["Website", p.website, "globe"], ["Website", c.link, "globe"]]
       .map(([title, url, icon]) => ({ title, url: safeUrl(url), icon }))
-      // Ein automatischer Link auf xyntal.de selbst führt nur hierher zurück: weglassen
+      // Ein automatischer Link auf xyntal.com selbst führt nur hierher zurück: weglassen
       .filter((l) => !isOwnSite(l.url))
       .filter((l, i, a) => l.url && a.findIndex((x) => sameUrl(x.url, l.url)) === i);
   }
@@ -365,7 +365,7 @@
       offer || seek ? `<div class="pf-duo">${offer ? tile("pf-tile-offer", "Ich biete", offer) : ""}${seek ? tile("pf-tile-seek", "Ich suche", seek) : ""}</div>` : "",
       skills.length ? `<section class="pf-section"><h2>${esc(t("Skills"))}</h2><ul class="pf-chips" data-no-i18n>${skills.map((s) => `<li>${esc(s)}</li>`).join("")}</ul></section>` : "",
     ].join("");
-    return `<header class="pf-head">${egg ? "" : `<p class="pf-address"><span data-no-i18n>xyntal.de/${esc(c.handle)}</span>${c.is_admin === true ? `<span class="pf-admin-chip"><i aria-hidden="true"></i>${esc(t("Offizielles Konto"))}</span>` : ""}</p>${headline ? `<p class="pf-headline" data-no-i18n>${esc(headline)}</p>` : ""}`}
+    return `<header class="pf-head">${egg ? "" : `<p class="pf-address"><span data-no-i18n>xyntal.com/${esc(c.handle)}</span>${c.is_admin === true ? `<span class="pf-admin-chip"><i aria-hidden="true"></i>${esc(t("Offizielles Konto"))}</span>` : ""}</p>${headline ? `<p class="pf-headline" data-no-i18n>${esc(headline)}</p>` : ""}`}
         ${factsHtml(c)}</header>
       ${c.is_admin === true ? adminHtml(c) : ""}
       ${sections || `<p class="pf-muted">${esc(t("Lerne die Person hinter der Idee kennen."))}</p>`}`;
@@ -460,15 +460,15 @@
         return; }
       if (card && card.name && editing) return;
       if (card && card.reserved) {
-        document.title = `xyntal.de/${handle} – ${t("reserviert")}`;
-        return page(`<div class="profile-msg"><h1><b>xyntal.de/${esc(handle)}</b><br>${esc(t("ist reserviert."))}</h1><p>${esc(t("Dieses Profil ist noch nicht öffentlich freigegeben. Es kann schon jetzt im eigenen Konto veröffentlicht werden."))}</p>${ctas(`<a class="btn btn-primary" href="/#karte">${esc(t("Eigenen Link sichern"))}</a>`)}</div>`);
+        document.title = `xyntal.com/${handle} – ${t("reserviert")}`;
+        return page(`<div class="profile-msg"><h1><b>xyntal.com/${esc(handle)}</b><br>${esc(t("ist reserviert."))}</h1><p>${esc(t("Dieses Profil ist noch nicht öffentlich freigegeben. Es kann schon jetzt im eigenen Konto veröffentlicht werden."))}</p>${ctas(`<a class="btn btn-primary" href="/#karte">${esc(t("Eigenen Link sichern"))}</a>`)}</div>`);
       }
       if (BLOCKED.has(handle)) {
-        document.title = `xyntal.de/${handle} – ${t("nicht verfügbar")}`;
+        document.title = `xyntal.com/${handle} – ${t("nicht verfügbar")}`;
         return page(`<div class="profile-msg"><h1>${esc(t("Diese Seite gibt es nicht."))}</h1><p>${esc(t("Prüf den Link oder schau dich auf der Startseite um."))}</p>${ctas(`<a class="btn btn-primary" href="/">${esc(t("Zur Startseite"))}</a>`)}</div>`);
       }
-      document.title = `xyntal.de/${handle} – ${t("noch frei")}`;
-      page(`<div class="profile-msg"><h1><b>xyntal.de/${esc(handle)}</b><br>${esc(t("ist noch frei."))}</h1><p>${esc(t("Bau deine Xyntal-Karte und sichere dir diesen Link, bevor ihn jemand anders bekommt."))}</p>${ctas(`<a class="btn btn-primary" href="${freeLink(handle)}">${esc(t("Diesen Link sichern"))}</a>`)}</div>`);
+      document.title = `xyntal.com/${handle} – ${t("noch frei")}`;
+      page(`<div class="profile-msg"><h1><b>xyntal.com/${esc(handle)}</b><br>${esc(t("ist noch frei."))}</h1><p>${esc(t("Bau deine Xyntal-Karte und sichere dir diesen Link, bevor ihn jemand anders bekommt."))}</p>${ctas(`<a class="btn btn-primary" href="${freeLink(handle)}">${esc(t("Diesen Link sichern"))}</a>`)}</div>`);
     } catch {
       page(`<div class="profile-msg"><h1>${esc(t("Die Karte konnte gerade nicht geladen werden."))}</h1><p>${esc(t("Bitte versuch es gleich noch einmal."))}</p>${ctas(`<button class="btn btn-primary" type="button" data-reload>${esc(t("Neu laden"))}</button>`)}</div>`);
     }

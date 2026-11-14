@@ -729,7 +729,7 @@
     } catch { return false; }
   }
 
-  // Einladungen laufen nur noch über Konten: persönlicher Link xyntal.de/deinname (invite.js, Einlösen in account-menu.js).
+  // Einladungen laufen nur noch über Konten: persönlicher Link xyntal.com/deinname (invite.js, Einlösen in account-menu.js).
 
   const SENT = "Fast geschafft – bestätige jetzt deine E-Mail.";
   $$("[data-waitlist]").forEach((form) => {
@@ -781,9 +781,9 @@
             // reserviert; online geht die Karte, sobald ein Konto sie übernimmt. Darum hier
             // kein "ist jetzt zu sehen" mehr – das wäre ein Versprechen, das nicht eingelöst wird.
             if (res === "ok") parts.push(isPublic
-              ? `Dein Link xyntal.de/${card.handle} ist reserviert. Sobald du dein Konto anlegst, ist deine Karte dort zu sehen.`
-              : `Dein Link xyntal.de/${card.handle} ist reserviert.`);
-            else if (res === "taken") parts.push(`xyntal.de/${card.handle} ist leider schon vergeben. Du kannst dir nach dem Start einen anderen aussuchen.`);
+              ? `Dein Link xyntal.com/${card.handle} ist reserviert. Sobald du dein Konto anlegst, ist deine Karte dort zu sehen.`
+              : `Dein Link xyntal.com/${card.handle} ist reserviert.`);
+            else if (res === "taken") parts.push(`xyntal.com/${card.handle} ist leider schon vergeben. Du kannst dir nach dem Start einen anderen aussuchen.`);
             else if (res === "invalid") parts.push("Dieser Wunsch-Link ist nicht verfügbar. Du kannst dir nach dem Start einen anderen aussuchen.");
           } else if (keptLocally) parts.push("Der Server hat die Karte noch nicht bestätigt. Sie bleibt auf diesem Gerät für die Übernahme nach deiner Registrierung vorgemerkt.");
           else parts.push("Die Karte konnte gerade nicht gespeichert werden. Bitte bleib auf diesem Gerät und versuch es nach der Registrierung erneut.");

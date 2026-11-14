@@ -4,7 +4,7 @@
 // Anmeldung: Die Supabase-Sitzung der Website wird einmal gegen eine App-Sitzung getauscht
 // (POST /auth/supabase). Ohne App-Konto legt der Server eines an bzw. übernimmt die
 // Platzhalter-Person, die die Brücke für die Xyntal-Karte angelegt hat.
-// Läuft auch auf Seiten ohne Supabase-Bibliothek (z. B. xyntal.de/name).
+// Läuft auch auf Seiten ohne Supabase-Bibliothek (z. B. xyntal.com/name).
 (() => {
   const CFG = window.XYNTAL_CONFIG || {};
   const API = CFG.appApiUrl || "https://api.xyntal.de";
@@ -90,7 +90,7 @@
   }
 
   async function exchange(site, code = "", silent = false, birthdate = "") {
-    const body = { accessToken: site.token, deviceName: "xyntal.de", code };
+    const body = { accessToken: site.token, deviceName: "xyntal.com", code };
     if (birthdate) body.birthdate = birthdate;
     const res = await raw("POST", "/auth/supabase", { body });
     if (res.ok) {

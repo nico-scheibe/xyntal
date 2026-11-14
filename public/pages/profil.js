@@ -169,18 +169,18 @@ async function renderXcard() {
   view.hidden = copy.hidden = true;
   try {
     const card = unwrap(await sb.rpc("get_my_card"));
-    if (!card) { text.textContent = "Du hast noch keine Karte. Gestalte sie unten – dann kannst du dir auch deinen Link xyntal.de/deinname sichern."; return; }
+    if (!card) { text.textContent = "Du hast noch keine Karte. Gestalte sie unten – dann kannst du dir auch deinen Link xyntal.com/deinname sichern."; return; }
     if (card.handle && card.is_public) {
-      text.innerHTML = `Dein öffentliches Profil: <b data-no-i18n>xyntal.de/${esc(card.handle)}</b> – mit deiner Karte, deinen Profilangaben sowie deinen öffentlichen Projekten und Anzeigen.`;
-      cardLink = `https://xyntal.de/${card.handle}`;
+      text.innerHTML = `Dein öffentliches Profil: <b data-no-i18n>xyntal.com/${esc(card.handle)}</b> – mit deiner Karte, deinen Profilangaben sowie deinen öffentlichen Projekten und Anzeigen.`;
+      cardLink = `https://xyntal.com/${card.handle}`;
       view.href = `/${card.handle}`; view.hidden = copy.hidden = false;
     } else if (card.handle) {
       // Seit Karten immer öffentlich sind: nur noch, bis die Karte einmal neu gespeichert ist (oder ein Admin sie ausgeblendet hat).
-      text.innerHTML = `Dein Link <b data-no-i18n>xyntal.de/${esc(card.handle)}</b> führt zu deinem Profil, sobald du deine Karte unten einmal speicherst.`;
+      text.innerHTML = `Dein Link <b data-no-i18n>xyntal.com/${esc(card.handle)}</b> führt zu deinem Profil, sobald du deine Karte unten einmal speicherst.`;
     } else {
-      text.textContent = "Deine Karte ist gespeichert. Sichere dir unten noch deinen Link xyntal.de/deinname.";
+      text.textContent = "Deine Karte ist gespeichert. Sichere dir unten noch deinen Link xyntal.com/deinname.";
     }
-  } catch { text.textContent = "Gestalte deine Karte und sichere dir deinen Link xyntal.de/deinname."; }
+  } catch { text.textContent = "Gestalte deine Karte und sichere dir deinen Link xyntal.com/deinname."; }
 }
 document.querySelector("[data-xcard-copy]").addEventListener("click", async (e) => {
   try { await navigator.clipboard.writeText(cardLink); e.target.textContent = "Kopiert ✓"; }

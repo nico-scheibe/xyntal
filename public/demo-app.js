@@ -951,7 +951,7 @@
           <span class="xa-pc-seek">${T("Sucht", "Looking for")} <b>${esc(L(c.seek))}</b></span>
           <small class="xa-pc-note">${T("Gemeinsame Sprache: Deutsch, Englisch · Gleiche Zeitzone", "Shared language: German, English · Same time zone")}</small>
           <div class="xa-pc-act"><button type="button" class="xa-pc-yes${s.connected[x.id] ? " is-sent" : ""}" data-act="connect" data-id="${x.id}" data-k="bc-${x.id}" aria-pressed="${!!s.connected[x.id]}">${s.connected[x.id] ? icon("check") + T("Du bist dabei", "You're in") : T("Ich wäre dabei", "I'd be in")}</button><button type="button" class="xa-pc-no" data-act="match-hide" data-id="${x.id}" data-k="bn-${x.id}">${T("Nicht relevant", "Not relevant")}</button></div>
-          <small class="xa-pc-url">xyntal.de/${x.id}</small>
+          <small class="xa-pc-url">xyntal.com/${x.id}</small>
         </li>`; }).join("") || `<li class="xa-empty">${T("Gerade keine weiteren Vorschläge.", "No more suggestions right now.")}</li>`}</ul>`;
     } else if (s.discScope === "projects") {
       body = `${entHead(T("Projekte, die zu dir passen", "Projects that fit you"), OTHER_PROJECTS.length)}<ul class="xa-ents">${OTHER_PROJECTS.map((p) => entity(p.id, p.hue, L(p.name)[0], esc(L(p.name)), T("Im Aufbau", "Building"), T(`in ${p.by} · geleitet von ${p.lead}`, `in ${p.by} · led by ${p.lead}`), esc(L(p.role)), esc(L(p.why)), p.tags, p.score, `${dabei("disc-req", p.id, `dp-${p.id}`, s.requested[p.id], T("Angefragt", "Requested"))}<button type="button" class="xa-ghost" data-act="app-only" data-v="contact" data-k="dpc-${p.id}">${T("Inhaber kontaktieren", "Contact owner")}</button>`)).join("")}</ul>`;
@@ -967,7 +967,7 @@
     const aside = b && s.discScope === "people"
       ? `<aside class="xa-card xa-explain" aria-label="${T(`Profil von ${b.name}`, `${b.name}'s profile`)}" data-explain>
         <div class="xa-b-top"><span class="xa-av xa-av-lg" style="--h:${KIND_HUE[b.kind]}" aria-hidden="true">${esc(initials(b.name))}</span><div class="xa-grow"><h4>${esc(b.name)}</h4><small class="xa-muted">${esc(L(b.role))} · ${esc(b.city)} · ${T(`${b.hours} Std./Woche`, `${b.hours} h/week`)}</small></div><button type="button" class="xa-iconbtn" data-act="builder-close" data-k="ex-close" aria-label="${T("Profil schließen", "Close profile")}">${icon("x")}</button></div>
-        <div class="xa-b-top">${ring(b.score, 56, 5)}<div class="xa-grow"><b>${T("Eure Passung", "Your fit")}</b><small class="xa-muted">${T("Aus zehn Bereichen berechnet – so wie auf xyntal.de/matching erklärt.", "Calculated from ten areas – as explained on xyntal.de/matching.")}</small></div></div>
+        <div class="xa-b-top">${ring(b.score, 56, 5)}<div class="xa-grow"><b>${T("Eure Passung", "Your fit")}</b><small class="xa-muted">${T("Aus zehn Bereichen berechnet – so wie auf xyntal.com/matching erklärt.", "Calculated from ten areas – as explained on xyntal.com/matching.")}</small></div></div>
         <ul class="xa-factors">${b.f.map((v, i) => `<li><span>${fl[i]}</span><span class="xa-mono">${v}</span><div class="xa-progress"><i style="width:${v}%"></i></div></li>`).join("")}</ul>
         <div class="xa-ai-sum"><span class="xa-kicker">${icon("sparkle")} ${T("Warum es passt", "Why it fits")}</span><p>${esc(L(b.sum))}</p></div>
         <p class="xa-small"><b>${T("Nächster Schritt:", "Next step:")}</b> ${esc(L(b.next))}</p>

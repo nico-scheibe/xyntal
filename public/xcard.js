@@ -66,7 +66,7 @@
             <p class="mc-role">${esc(t(c.role || ""))}${level ? ` · ${esc(t(level))}` : ""}</p>
           </div>
           <div class="mc-blocks">${order.filter((b) => !off.includes(b)).map((b) => blocks[b]).join("")}</div>
-          <div class="mc-foot">${link ? `<a class="mc-link mc-link-button" href="${esc(link)}" target="_blank" rel="noopener noreferrer nofollow" data-no-i18n>${esc(linkText)} ↗</a>` : ""}<span class="mc-site" data-no-i18n>xyntal.de/${esc(c.handle)}</span>${message}</div>
+          <div class="mc-foot">${link ? `<a class="mc-link mc-link-button" href="${esc(link)}" target="_blank" rel="noopener noreferrer nofollow" data-no-i18n>${esc(linkText)} ↗</a>` : ""}<span class="mc-site" data-no-i18n>xyntal.com/${esc(c.handle)}</span>${message}</div>
         </article>`;
   }
 

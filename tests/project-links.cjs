@@ -1,4 +1,4 @@
-// Projekt-Kurzlinks (xyntal.de/name-titel): Weiterleitung auf projekte.html und 404 für ungültige Namen.
+// Projekt-Kurzlinks (xyntal.com/name-titel): Weiterleitung auf projekte.html und 404 für ungültige Namen.
 // server.cjs exportiert nichts und startet beim Import Listener und Git-Abrufe. Deshalb werden die
 // Routing-Zeilen aus dem Quelltext ausgeschnitten und unverändert in einem vm-Kontext ausgeführt.
 const assert = require('node:assert/strict');

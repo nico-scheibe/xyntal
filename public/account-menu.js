@@ -6,7 +6,7 @@
   const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzk0MTc3MzEwLCJleHAiOjE5NTE4NTczMTB9.1H1nAG_eqZLMIsCvkNDqdCGDluTM0p3zhdx5aWLvToQ";
   const TOKEN = "sb-db-auth-token";
   // Admin-Bereich liegt auf eigener Adresse (Cloudflare Access davor); lokal weiter unter /admin.
-  const ADMIN_URL = /^(xyntal\.de|www\.xyntal\.de|admin\.xyntal\.de)$/.test(location.hostname) ? "https://admin.xyntal.de/" : "/admin";
+  const ADMIN_URL = /^(xyntal\.com|www\.xyntal\.com|xyntal\.de|www\.xyntal\.de|admin\.xyntal\.de)$/.test(location.hostname) ? "https://admin.xyntal.de/" : "/admin";
 
   // Rückkehr von Google & Co. auf einer Seite ohne Supabase (z. B. Startseite):
   // weiter zum Login, der die Sitzung aus der Adresse übernimmt bzw. den Fehler zeigt.
@@ -154,7 +154,7 @@
     return ((parts[0]?.[0] || "") + (parts[1]?.[0] || "")).toUpperCase() || "?";
   }
 
-  // Einladungsprogramm: Link xyntal.de/name besucht (u.js merkt sich den Namen 30 Tage) und jetzt mit Konto da →
+  // Einladungsprogramm: Link xyntal.com/name besucht (u.js merkt sich den Namen 30 Tage) und jetzt mit Konto da →
   // Einladung einlösen. 7 Tage Plus für beide bucht danach der App-Server. Bei „unconfirmed“ (E-Mail noch nicht
   // bestätigt) bleibt der Name gemerkt und wird beim nächsten Seitenaufruf erneut versucht.
   const REF_KEY = "xyntal-ref-handle";
@@ -283,7 +283,7 @@
         localStorage.removeItem("xyntal-app-session");
       } catch { /* egal */ }
       try { localStorage.removeItem(TOKEN); localStorage.removeItem(CACHE); } catch { /* egal */ }
-      if (window.XyntalSession) window.XyntalSession.clear(); // auch auf den anderen xyntal.de-Adressen abmelden
+      if (window.XyntalSession) window.XyntalSession.clear(); // auch auf den anderen xyntal.com-Adressen abmelden
       location.href = "/";
     });
 

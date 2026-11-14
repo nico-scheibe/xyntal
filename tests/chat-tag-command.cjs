@@ -34,7 +34,7 @@ assert.equal(at('/arbeitsbereich stu').prefix, 'stu');
 assert.equal(kinds('/arbeitsbereich stu'), 'workspace');
 assert.equal(at('/pro apo').active, false);
 assert.equal(at('and/projekt').active, false);
-assert.equal(at('https://xyntal.de/projekt').active, false);
+assert.equal(at('https://xyntal.com/projekt').active, false);
 assert.equal(at('hello /projekt').start, 6);
 assert.equal(at('zeile\n/gruppe').start, 6);
 assert.equal(tagCommand('/projekt x', 0).active, false);

@@ -34,9 +34,30 @@
 # Caddy schreibt dort wieder die volle Adresse samt Abfrage. Wer Zugriffsprotokolle
 # will, muss denselben format-filter-Block im Site-Block wiederholen.
 
-xyntal.de, www.xyntal.de {
+xyntal.com, www.xyntal.com {
 	encode zstd gzip
 	reverse_proxy website:4129
+}
+
+# Die alte Adresse leitet dauerhaft auf xyntal.com weiter. 308 statt 301, damit POST-Anfragen erhalten bleiben.
+# Alte Sitzungs-Cookies löschen: public/session-share.js hat sie auf xyntal.de gesetzt
+# (Domain=.xyntal.de, Teile xy-sess.0, xy-sess.1 … bei CHUNK=3000, bis .5 sicherheitshalber).
+# Es sind alte Sitzungs-Tokens; sie werden bei jeder Weiterleitung abgelaufen gesetzt.
+# Bewusst akzeptiert: Da Domain=.xyntal.de gilt, wird damit auch das Admin-Cookie bei einem
+# Aufruf von xyntal.de mit entfernt. admin.xyntal.de setzt sein Cookie bei der Anmeldung neu;
+# das Löschen ist dort unkritisch, weil der Admin sich ohnehin neu anmeldet.
+xyntal.de, www.xyntal.de {
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		+Set-Cookie "xy-sess-on=; Max-Age=0; Domain=.xyntal.de; Path=/; Secure; SameSite=Lax"
+		+Set-Cookie "xy-sess.0=; Max-Age=0; Domain=.xyntal.de; Path=/; Secure; SameSite=Lax"
+		+Set-Cookie "xy-sess.1=; Max-Age=0; Domain=.xyntal.de; Path=/; Secure; SameSite=Lax"
+		+Set-Cookie "xy-sess.2=; Max-Age=0; Domain=.xyntal.de; Path=/; Secure; SameSite=Lax"
+		+Set-Cookie "xy-sess.3=; Max-Age=0; Domain=.xyntal.de; Path=/; Secure; SameSite=Lax"
+		+Set-Cookie "xy-sess.4=; Max-Age=0; Domain=.xyntal.de; Path=/; Secure; SameSite=Lax"
+		+Set-Cookie "xy-sess.5=; Max-Age=0; Domain=.xyntal.de; Path=/; Secure; SameSite=Lax"
+	}
+	redir https://xyntal.com{uri} 308
 }
 
 # Admin-Bereich: in Cloudflare „Proxied“ (orange Wolke) mit Cloudflare Access davor,

@@ -1,11 +1,11 @@
-# Hetzner-Server (xyntal.de und api.xyntal.de)
+# Hetzner-Server (xyntal.com und api.xyntal.de)
 
 Ein eigener Server (Hetzner Cloud CAX11, Nürnberg, IPv4 `91.98.171.233`) ersetzt Daki
 und den Cloudflare-Tunnel. Darauf laufen mit Docker Compose:
 
 | Dienst | Aufgabe |
 |---|---|
-| `caddy` | HTTPS (Let's Encrypt) für `xyntal.de`, `www.xyntal.de`, `api.xyntal.de`, `bot.xyntal.de` |
+| `caddy` | HTTPS (Let's Encrypt) für `xyntal.com`, `www.xyntal.com`, `api.xyntal.de`, `bot.xyntal.de` |
 | `website` | `hosting/daki/server.cjs`; holt `public/` weiterhin alle 30 s von `main`, ohne Neustart |
 | `api` | App-Backend aus `nico-scheibe/xyntal-app-windows` (`server/`), Daten in `/opt/xyntal/data/api` |
 | `backup` | Tägliches, geprüftes Wiederherstellungs-Bündel nach `/opt/xyntal/backups`, 14 bleiben |
@@ -82,7 +82,7 @@ Danach auf dem Server `chown -R 1000:1000 /opt/xyntal/data/api`.
 
 ## DNS umstellen (Cloudflare)
 
-`xyntal.de`, `www` und `api` als **A-Record** auf `91.98.171.233` (AAAA auf die IPv6),
+`xyntal.com`, `www.xyntal.com` und `api.xyntal.de` als **A-Record** auf `91.98.171.233` (AAAA auf die IPv6),
 **„DNS only“ (graue Wolke)**, damit Caddy die Zertifikate bekommt und kein Umweg entsteht.
 MX-, SPF-, DKIM- und DMARC-Einträge für IONOS-Mail bleiben unverändert.
 Den Tunnel `xyntal-daki` erst löschen, wenn alles auf dem neuen Server läuft.
@@ -91,14 +91,14 @@ Den Tunnel `xyntal-daki` erst löschen, wenn alles auf dem neuen Server läuft.
 
 Der Admin-Bereich wird nur für den Host `admin.xyntal.de` ausgeliefert (`hosting/daki/server.cjs`,
 Test `tests/admin-host.cjs`). Dort zeigt `/` die Admin-Seite; Login und Passwort-Zurücksetzen bleiben,
-alle anderen Seiten leiten auf `https://xyntal.de` um. Auf xyntal.de antworten `admin.html`, `admin*.css`,
+alle anderen Seiten leiten auf `https://xyntal.com` um. Auf xyntal.com antworten `admin.html`, `admin*.css`,
 `world-geo.js` und `pages/admin*.js` mit 404.
 
 Kein Cloudflare Access davor: die Seite lädt für alle, Inhalte gibt es erst nach der Anmeldung.
 Die Rechte prüfen Supabase (`is_admin` + 2FA) und der App-Server (Staff-Rolle).
-Die Anmeldung gilt auf allen xyntal.de-Adressen: `public/session-share.js` legt die Sitzungs-Tokens zusätzlich in ein
-Cookie für `.xyntal.de` (Test `tests/session-share.cjs`). Wer auf xyntal.de angemeldet ist, muss sich im Admin nicht
-noch einmal anmelden; fehlt der zweite Faktor, fragt der Admin nur noch den Code ab.
+Die Anmeldung gilt auf `xyntal.com` und `www.xyntal.com`: `public/session-share.js` legt die Sitzungs-Tokens zusätzlich in ein
+Cookie für `.xyntal.com` (Test `tests/session-share.cjs`). `admin.xyntal.de` hat ein eigenes Cookie für `.xyntal.de`;
+dort meldet man sich einmal neu an (E-Mail, Passwort, 2FA).
 
 Cloudflare-Einstellungen:
 
@@ -117,9 +117,9 @@ geänderter Inhalt kommt sonst nicht im Container an).
 
 ## Uploads der freien Seite (Bilder, Hintergrund-Videos)
 
-Admins laden im Seiten-Editor (xyntal.de/name#gestalten) nicht zu Supabase hoch (dort höchstens 50 MB je Datei),
+Admins laden im Seiten-Editor (xyntal.com/name#gestalten) nicht zu Supabase hoch (dort höchstens 50 MB je Datei),
 sondern über die Website (`hosting/daki/media-store.cjs`) in den Hetzner-Bucket: bis 5 GB je Datei, Ordner
-`page-media/<konto>/`, ausgeliefert unter `xyntal.de/media/<konto>/<datei>`.
+`page-media/<konto>/`, ausgeliefert unter `xyntal.com/media/<konto>/<datei>`.
 Den Zugang (`MEDIA_S3_*`) schreibt `deploy.sh` bei jedem Ausrollen aus `api.env` nach
 `/opt/xyntal/secrets/media.env`; die Website liest ihn von dort. Fehlt er, lädt der Editor wie bisher zu Supabase.
 Ersetzte oder entfernte Dateien löscht der Editor direkt nach dem Veröffentlichen (auch wenn nur eine ältere Version sie noch nutzte); nur fremde Uploads der letzten 10 Minuten bleiben verschont.
@@ -163,7 +163,7 @@ Backups zusätzlich regelmäßig auf einen zweiten Ort kopieren (z. B. Hetzner S
 ## Bot-Schutz
 
 - **Website (`hosting/daki/server.cjs`):** höchstens 600 Anfragen pro IP und Minute,
-  60 für Profilseiten (`xyntal.de/name`) und `/api/*`. Darüber antwortet sie mit 429.
+  60 für Profilseiten (`xyntal.com/name`) und `/api/*`. Darüber antwortet sie mit 429.
   Ändern lässt sich das mit `SITE_RATE_LIMIT` und `SITE_RATE_LIMIT_HEAVY` in
   `website.env` (0 = aus). Verbindungen ohne Kopfzeilen nach 20 s und ohne Datenfluss
   nach 2 Minuten werden getrennt.
@@ -171,7 +171,7 @@ Backups zusätzlich regelmäßig auf einen zweiten Ort kopieren (z. B. Hetzner S
   10 pro Minute, und höchstens 5 neue Konten pro IP bzw. 3 pro Gerät in 24 Stunden
   (`SIGNUP_DAILY_PER_IP`, `SIGNUP_DAILY_PER_DEVICE` in `api.env`).
 - **Gegen echte Überlastung (DDoS)** hilft nur ein vorgeschalteter Schutz: in Cloudflare
-  bei `xyntal.de`, `www`, `api` und `db` die Wolke auf orange („Proxied“) stellen,
+  bei `xyntal.com`, `www.xyntal.com`, `api.xyntal.de` und `db.xyntal.de` die Wolke auf orange („Proxied“) stellen,
   SSL/TLS auf „Full (strict)“ und unter Security → Bots „Bot Fight Mode“ einschalten.
   Caddy holt seine Zertifikate dann weiter, weil Cloudflare `/.well-known/acme-challenge`
   durchreicht.

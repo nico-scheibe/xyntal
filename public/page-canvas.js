@@ -1,4 +1,4 @@
-// Freie Seite unter xyntal.de/name: Layout (Text, Links, Bilder frei positioniert) prüfen und als HTML ausgeben.
+// Freie Seite unter xyntal.com/name: Layout (Text, Links, Bilder frei positioniert) prüfen und als HTML ausgeben.
 // Genutzt von u.js (öffentliche Seite) und page-editor.js (Editor), damit beide exakt dasselbe zeigen.
 // Alles, was aus der Datenbank kommt, wird hier auf erlaubte Werte begrenzt – Farben nur als #rrggbb, Bilder nur aus dem eigenen Ordner.
 (() => {
@@ -14,7 +14,7 @@
   const round = (n) => Math.round(n * 10) / 10;
   const hex = (v, d) => (/^#[0-9a-f]{6}$/i.test(String(v || "")) ? String(v).toLowerCase() : d);
   const FONTS = { sans: "var(--f-text, system-ui, sans-serif)", serif: "'Source Serif 4', Georgia, serif", mono: "ui-monospace, 'IBM Plex Mono', monospace" };
-  // Eigene Dateien: Supabase-Bucket page-media (konto/datei) oder eigener Server (s/konto/datei, xyntal.de/media/…)
+  // Eigene Dateien: Supabase-Bucket page-media (konto/datei) oder eigener Server (s/konto/datei, xyntal.com/media/…)
   const SRC = /^(s\/)?[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp|gif)$/;
   const UUID = /^[0-9a-f-]{36}$/;
   const TYPES = ["text", "link", "image", "block", "shape", "button", "embed", "icons", "countdown", "contact", "counter"];

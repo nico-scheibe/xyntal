@@ -29,7 +29,8 @@
   // ---------- 2 Text zerlegen ----------
   // Überschrift im Einstieg: Wörter bleiben zusammen, Zeichen werden einzeln animiert.
   $$('[data-split]').forEach(function (line) {
-    var words = line.textContent.split(' '), i = 0;
+    var src = window.XyntalI18n ? window.XyntalI18n.t(line.textContent) : line.textContent;
+    var words = src.split(' '), i = 0;
     line.textContent = '';
     line.setAttribute('aria-hidden', 'true');           // der ganze Satz steht im aria-label der h1
     words.forEach(function (word, wi) {
@@ -39,6 +40,9 @@
       if (wi < words.length - 1) { line.appendChild(document.createTextNode(' ')); i++; }
     });
   });
+
+  // Bei Sprachwechsel (Schalter DE/EN) ist die Überschrift schon zerlegt: neu laden, dann wird neu übersetzt.
+  document.addEventListener('xyntal:lang', function () { location.reload(); });
 
   // „Warum“-Absatz: jedes Wort einzeln, damit es beim Scrollen hell wird.
   var sayWords = [];

@@ -370,7 +370,7 @@
     return out.join("");
   }
 
-  // Wunsch-Link (xyntal.de/name) der Karte dieser Person: über das Website-Konto oder die E-Mail
+  // Wunsch-Link (xyntal.com/name) der Karte dieser Person: über das Website-Konto oder die E-Mail
   function cardOf(r) {
     const d = siteData(); if (!P.siteAdmin || !d || !Array.isArray(d.cards)) return null;
     const email = lc(r.v.email);
@@ -379,7 +379,7 @@
   function wishLinkSection(r) {
     const c = cardOf(r); if (!c) return "";
     return `<section class="xp-dsec"><h3>Wunsch-Link</h3>
-      <div class="handle-edit"><span>xyntal.de/</span><input type="text" maxlength="20" value="${esc(c.handle || "")}" data-xp-handle aria-label="Wunsch-Link" autocapitalize="off" spellcheck="false"></div>
+      <div class="handle-edit"><span>xyntal.com/</span><input type="text" maxlength="20" value="${esc(c.handle || "")}" data-xp-handle aria-label="Wunsch-Link" autocapitalize="off" spellcheck="false"></div>
       <div class="row-actions"><button type="button" data-xp-act="handle-save">Speichern</button>${c.handle ? `<button type="button" data-xp-act="handle-free">Freigeben</button><a class="text-link" href="/${esc(c.handle)}" target="_blank" rel="noopener">Öffnen ↗</a>` : ""}</div>
       <p class="hint">${c.is_public ? "Die Karte ist unter dem Link öffentlich sichtbar." : "Unter dem Link steht nur „reserviert“, bis die Person ihre Karte öffentlich macht."}</p>
     </section>`;
@@ -470,12 +470,12 @@
         const input = $("[data-xp-handle]", drawer);
         const value = kind === "handle-free" ? null : lc(input && input.value);
         if (value !== null && !HANDLE_RE.test(value)) throw Error("Wunsch-Link: 3–20 Zeichen, Kleinbuchstaben, Zahlen, - und _, beginnt mit Buchstabe oder Zahl.");
-        if (value === null && !(await ask({ title: `xyntal.de/${c.handle} freigeben?`, text: "Danach kann jemand anderes diesen Link wählen.", confirm: "Freigeben", danger: true }))) return null;
+        if (value === null && !(await ask({ title: `xyntal.com/${c.handle} freigeben?`, text: "Danach kann jemand anderes diesen Link wählen.", confirm: "Freigeben", danger: true }))) return null;
         try {
           const changed = unwrap(await sb.from("waitlist_cards").update({ handle: value }).eq("id", c.id).select("id,handle"));
           if (!changed.length) throw Error("Karte nicht mehr vorhanden oder keine Berechtigung.");
-        } catch (err) { if (/duplicate|unique/i.test(err.message)) throw Error(`xyntal.de/${value} ist schon vergeben.`); throw err; }
-        return value ? `Wunsch-Link xyntal.de/${value} gespeichert.` : "Wunsch-Link freigegeben.";
+        } catch (err) { if (/duplicate|unique/i.test(err.message)) throw Error(`xyntal.com/${value} ist schon vergeben.`); throw err; }
+        return value ? `Wunsch-Link xyntal.com/${value} gespeichert.` : "Wunsch-Link freigegeben.";
       }
       case "approve": await rpc("admin_set_status", { p_id: m.id, p_status: "approved" }); return `${v.name} ist freigeschaltet.`;
       case "reject": {

@@ -16,7 +16,7 @@
 
   function updateLink() {
     const d = B.get(), ok = B.validHandle(d.handle);
-    urlLabel.textContent = `xyntal.de/${ok ? d.handle : "deinname"}`;
+    urlLabel.textContent = `xyntal.com/${ok ? d.handle : "deinname"}`;
     pubHint.hidden = ok;
     view.hidden = !savedHandle;
     if (savedHandle) view.href = `/${savedHandle}`;
@@ -219,7 +219,7 @@
     story?.soon(600);
   }
 
-  // ---- Story-Bild für Instagram (card-story.js): dieselbe Karte wie unter xyntal.de/name ----
+  // ---- Story-Bild für Instagram (card-story.js): dieselbe Karte wie unter xyntal.com/name ----
   // Wird vorab erzeugt (nach dem Laden und kurz nach jeder Änderung), damit sich das Teilen-Menü
   // am Handy direkt beim Tippen öffnet.
   function storyInput() {
@@ -270,7 +270,7 @@
       dirty = false; saveBtn.textContent = t("Karte speichern"); updateLink();
       if (res === "taken") say(t("Gespeichert – aber dieser Wunsch-Link ist schon vergeben. Dein bisheriger Link bleibt."), "error");
       else if (res === "invalid") say(t("Gespeichert – dieser Wunsch-Link ist nicht verfügbar. Dein bisheriger Link bleibt."), "error");
-      else if (fresh && fresh.is_public) say(t(`Gespeichert. Dein Profil ist unter xyntal.de/${fresh.handle} zu sehen.`), "ok");
+      else if (fresh && fresh.is_public) say(t(`Gespeichert. Dein Profil ist unter xyntal.com/${fresh.handle} zu sehen.`), "ok");
       // Karte gespeichert, Wunsch-Link reserviert, aber nicht öffentlich: Das kann nur am
       // fehlenden Geburtsdatum liegen (sonst macht der Trigger member_cards_public sie online).
       // Ohne diesen Hinweis stünde der Nutzer vor einem Link, der einfach nicht funktioniert.

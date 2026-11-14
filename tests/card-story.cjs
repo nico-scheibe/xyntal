@@ -1,4 +1,4 @@
-// Story-Bild für Instagram (card-story.js): Knopf „Für Instagram-Story“ auf der eigenen Seite xyntal.de/name
+// Story-Bild für Instagram (card-story.js): Knopf „Für Instagram-Story“ auf der eigenen Seite xyntal.com/name
 // und auf /meine-karte, PNG 1080 × 1920, freie Ränder für Instagram, Profilbild und Banner aus privaten
 // Buckets (Bild, GIF, Video → erstes Bild; Fehler → Initiale), am Handy navigator.share({ files }).
 // Dazu „Als Bild speichern“ (1080 × 1350) im Karten-Editor.

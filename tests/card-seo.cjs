@@ -16,20 +16,20 @@ const cut = (from, to) => source.slice(source.indexOf(from), source.indexOf(to))
   // Kartenseite: ohne Karte bleibt „noindex“, mit Karte Canonical und ProfilePage
   const page = fs.readFileSync(path.resolve(__dirname, '../public/u.html'), 'utf8');
   assert.match(page, /<meta name="robots" content="noindex">/);
-  const html = box.withProfileMeta(page, { name: 'Ada <b>', title: 'Ada <b> · xyntal.de/ada', description: 'Baut </script><script>x' }, 'ada');
+  const html = box.withProfileMeta(page, { name: 'Ada <b>', title: 'Ada <b> · xyntal.com/ada', description: 'Baut </script><script>x' }, 'ada');
   assert.doesNotMatch(html, /name="robots"/);
-  assert.match(html, /<link rel="canonical" href="https:\/\/xyntal\.de\/ada">/);
+  assert.match(html, /<link rel="canonical" href="https:\/\/xyntal\.com\/ada">/);
   assert.equal(html.split('</script><script>x').length, 1, 'kein Ausbruch aus dem JSON-LD');
   const ld = JSON.parse(/<script type="application\/ld\+json">(.*?)<\/script>/.exec(html)[1]);
   assert.equal(ld['@type'], 'ProfilePage');
-  assert.deepEqual(ld.mainEntity, { '@type': 'Person', name: 'Ada <b>', description: 'Baut </script><script>x', url: 'https://xyntal.de/ada' });
-  assert.match(html, /<title>Ada &lt;b&gt; · xyntal\.de\/ada<\/title>/);
+  assert.deepEqual(ld.mainEntity, { '@type': 'Person', name: 'Ada <b>', description: 'Baut </script><script>x', url: 'https://xyntal.com/ada' });
+  assert.match(html, /<title>Ada &lt;b&gt; · xyntal\.com\/ada<\/title>/);
 
   // Sitemap: nur gültige Namen, klein geschrieben, ohne Dopplungen
   reply = { ok: true, json: async () => [{ handle: 'Nico' }, { handle: 'ada' }, { handle: 'ada' }, { handle: 'x"><y' }, { handle: null }, {}] };
   const xml = await box.cardSitemapXml();
   assert.equal(calls[0][0], 'https://db.example/rest/v1/rpc/get_member_cards');
-  assert.deepEqual(xml.match(/<loc>[^<]+<\/loc>/g), ['<loc>https://xyntal.de/ada</loc>', '<loc>https://xyntal.de/nico</loc>']);
+  assert.deepEqual(xml.match(/<loc>[^<]+<\/loc>/g), ['<loc>https://xyntal.com/ada</loc>', '<loc>https://xyntal.com/nico</loc>']);
   // gemerkt: zweite Abfrage ohne neuen Aufruf
   await box.cardSitemapXml();
   assert.equal(calls.length, 1);
