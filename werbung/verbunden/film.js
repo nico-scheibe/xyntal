@@ -70,8 +70,6 @@ const HITS = [
   [93.0, 'arc breaks', 'tick', { gain: 0.18 }],
   [97.0, 'connected', 'bell', { pitch: 'F6', gain: 0.22 }],
   ...[97.6, 97.95, 98.3, 98.65, 99.0].map((b, i) => [b, `network ${i}`, 'blip', { pitch: ['C6', 'F6', 'A6', 'C7', 'F7'][i], gain: 0.06 }]),
-  [99.8, 'particles fly', 'whoosh', { len: 1.2, from: 400, to: 3000, gain: 0.18 }],
-  [100.6, 'X lands + wordmark', 'bell', { pitch: 'A6', gain: 0.2 }],
   [103.85, 'app window', 'whoosh', { len: 0.6, from: 600, to: 2400, gain: 0.18 }],
   [104.3, 'window lands', 'thud', { gain: 0.2 }],
   [107.3, 'push to match', 'whoosh', { len: 0.7, from: 500, to: 1800, gain: 0.12 }],
@@ -82,7 +80,6 @@ const HITS = [
   [113.64, 'alone + links', 'tick', { gain: 0.15 }],
   [112.1, 'crowd rises', 'swell', { len: 0.8, gain: 0.12 }],
   ...[112.3, 112.5, 112.75, 113.0].map((b, i) => [b, `crowd ${i}`, 'pop', { pitch: ['D5', 'F5', 'A5', 'D6'][i], gain: 0.07 }]),
-  [101.0, 'X resolves', 'thud+bell', { pitch: 'A6', gain: 0.18 }],
   [114.85, 'streaks rise', 'riser', { len: 0.5, gain: 0.14 }],
   [115.2, 'stroke B', 'whoosh', { len: 0.25, from: 900, to: 4000, pan: -0.3, gain: 0.2 }],
   [115.5, 'stroke A', 'whoosh', { len: 0.25, from: 900, to: 4000, pan: 0.3, gain: 0.2 }],
@@ -639,58 +636,11 @@ function plan(ctx, u, cam) {
   ctx.restore();
 }
 
-// S13: every light flies into the Xyntal X (the particle X of xyntal.de's hero).
+// Geometry of the Xyntal mark (the 512 box of assets/logo/icon_0.svg), used by logoMark() on the end card.
 const XS = 1100, XC = [540, 850];
 const qpt = (p0, p1, p2, t) => [(1 - t) ** 2 * p0[0] + 2 * (1 - t) * t * p1[0] + t * t * p2[0], (1 - t) ** 2 * p0[1] + 2 * (1 - t) * t * p1[1] + t * t * p2[1]];
 const XB = [[140, 140], [300, 212], [372, 372]], XA = [[140, 372], [212, 212], [372, 140]];
 const toX = ([x, y]) => [XC[0] + (x - 256) / 512 * XS, XC[1] + (y - 256) / 512 * XS];
-const PARTS = (() => {
-  const R = mulberry32(777);
-  const out = [];
-  const n = 2400;
-  for (let i = 0; i < n; i++) {
-    const stroke = i % 2;
-    const t = R();
-    const [x, y] = qpt(...(stroke ? XA : XB), t);
-    // spread across the stroke like the hero's particle cloud
-    const ang = R() * TAU, rad = Math.abs((R() + R() + R()) / 3 - 0.5) * 2 * 34;
-    const tgt = toX([x + Math.cos(ang) * rad, y + Math.sin(ang) * rad]);
-    const col = stroke ? gradAt(t * 0.5) : gradAt(0.5 + t * 0.5);
-    out.push({ tgt, col, src: R(), jx: R() * 2 - 1, jy: R() * 2 - 1, d: R(), r: 1.4 + R() * 2.6, ph: R() * 100 });
-  }
-  return out;
-})();
-const FLY0 = 99.8, WORD0 = 100.6, SCATTER = [103.6, 104.25];
-function particlesX(ctx, u, srcAt) {
-  const fly0 = FLY0;
-  const out = E.inCubic(prog(u, SCATTER[0], SCATTER[1]));   // scatter into the app window
-  const flash = 1;
-  for (const p of PARTS) {
-    const start = fly0 + p.d * 0.9;
-    if (u < start) continue;
-    const s = srcAt(p.src);
-    const k = clamp(springU(u, start, { stiffness: 70, damping: 13 }), 0, 1.08);
-    let x = lerp(s[0] + p.jx * 12, p.tgt[0], k), y = lerp(s[1] + p.jy * 12, p.tgt[1], k);
-    // shimmer once in place
-    x += noise1(u * 1.4 + p.ph, 3) * 4 * k; y += noise1(u * 1.4 + p.ph, 7) * 4 * k;
-    // fly out toward the screen edges at the end
-    if (out > 0) { x += (x - 540) * out * 2.2; y += (y - 860) * out * 2.2 + 900 * out; }
-    const a = (k > 0 ? 0.35 + 0.65 * Math.min(1, k) : 0) * (1 - out) * flash * (1 - 0.8 * E.outCubic(prog(u, 101.0, 101.45)));
-    if (a <= 0.01) continue;
-    ctx.fillStyle = rgba(p.col, a);
-    ctx.beginPath(); ctx.arc(x, y, p.r, 0, TAU); ctx.fill();
-  }
-  // the cloud snaps into the solid mark, a flash, a light band across it
-  const res = E.outCubic(prog(u, 101.0, 101.45));
-  if (res > 0 && out < 1) {
-    bloom(ctx, XC[0], XC[1], 560, 0.55 * Math.exp(-Math.max(0, u - 101.0) * 5) * (1 - out));
-    ctx.save(); ctx.translate(XC[0], XC[1] + 900 * out); const zs = 1 + 0.06 * (1 - res) + 0.5 * out; ctx.scale(zs, zs); ctx.translate(-XC[0], -XC[1]);
-    logoMark(ctx, XC[0], XC[1], XS * 0.9, { alpha: res * (1 - out), sheen: prog(u, 101.5, 102.7), heads: false });
-    ctx.restore();
-  }
-  wordmarkIn(ctx, u, WORD0, 540, 1335 + out * 900, 150, 1 - out);
-}
-
 // The Xyntal mark from its own SVG geometry (assets/logo/icon_0.svg): stroke B (blue -> cyan), a dark
 // gap, stroke A (purple -> blue) over it. pB / pA draw each stroke; heads light the drawing tips;
 // sheen (0..1) runs a light band across the mark.
@@ -794,7 +744,7 @@ function globeCam(u) {
   lon0 += 0.45 * Math.max(0, u - 88.5) + 34 * E.inOutSine(prog(u, 96.8, 103.5));
   let lr = kf(u, [[68.4, Math.log(60000)], [71.0, Math.log(1500)]], E.inOutSine);
   if (u > 71) lr = Math.log(1500) + Math.log(0.42) * bump(u, 76.95, 0.75) + Math.log(0.4) * bump(u, 82.9, 0.75);
-  if (u > 87.9) lr = lerp(Math.log(1500), Math.log(455), clamp(springU(u, 87.9, { stiffness: 40, damping: 12 }), 0, 1.03));
+  if (u > 87.9) lr = lerp(Math.log(1500), Math.log(455), clamp(springU(u, 87.9, { stiffness: 40, damping: 12 }), 0, 1.03)) + Math.log(1.22) * E.inOutSine(prog(u, 98.0, 104.3));
   const R = Math.exp(lr);
   const la = lat0 * D2R, lo = lon0 * D2R;
   return { R, cx: 540, cy: 960,
@@ -847,13 +797,8 @@ function heroWindow(ctx, x, y, s, u) {
 
 function sceneGlobe(ctx, u, alpha = 1) {
   const g = globeCam(u);
-  const A = alpha * clamp(prog(u, 68.3, 69.6)) * (1 - prog(u, 100.0, 101.0));
+  const A = alpha * clamp(prog(u, 68.3, 69.6)) * (1 - prog(u, 103.5, 104.3));
   if (A > 0.003) globeBody(ctx, u, g, A);
-  if (u > FLY0 - 0.05) {
-    const vis = globeSources();
-    const gf = globeCam(Math.min(u, FLY0 + 1.2));
-    particlesX(ctx, u, (r) => { const q = gp(vis[Math.floor(r * vis.length)], gf); return [q[0], q[1]]; });
-  }
 }
 function globeBody(ctx, u, g, A) {
   ctx.save(); ctx.globalAlpha = 1;
@@ -883,7 +828,7 @@ function globeBody(ctx, u, g, A) {
     ctx.fill();
   });
   // arcs: the dashed one that stops halfway (Lagos -> São Paulo), then the network in the gradient
-  const fade = 1 - prog(u, 100.0, 100.8);
+  const fade = 1;
   if (u > 89 && u < 97) {
     const pp = 0.46 * E.outCubic(prog(u, 89.06, 91.3));
     const die = prog(u, 92.2, 93.4);
@@ -899,10 +844,24 @@ function globeBody(ctx, u, g, A) {
       if (q <= 0) return;
       const p0 = gp(ALLV[i], g), p1 = gp(ALLV[j], g);
       arc(ctx, ALLV[i], ALLV[j], g, q, grad(ctx, p0[0], p0[1], p1[0], p1[1], 0.85 * fade), 2.6);
+      // packets: a bright dot running along each finished arc, both ways
+      if (q >= 1) {
+        const w = angle(ALLV[i], ALLV[j]), lift = 0.08 + 0.22 * (w / Math.PI);
+        for (const dir of [0, 1]) {
+          const ph = ((u - t0) * (0.55 + 0.4 * hash01(k, 33 + dir)) + hash01(k, 35 + dir)) % 1;
+          const tt = dir ? 1 - ph : ph;
+          const pk = gp(slerp(ALLV[i], ALLV[j], tt), g, 1 + lift * Math.sin(Math.PI * tt));
+          if (!pk[3]) continue;
+          const col = gradAt(tt);
+          const gl = ctx.createRadialGradient(pk[0], pk[1], 0, pk[0], pk[1], 16);
+          gl.addColorStop(0, rgba('#FFFFFF', 0.95 * A)); gl.addColorStop(0.4, rgba(col, 0.7 * A)); gl.addColorStop(1, rgba(col, 0));
+          ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(pk[0], pk[1], 16, 0, TAU); ctx.fill();
+        }
+      }
     });
   }
   // lights
-  const lightA = A * (1 - prog(u, 99.9, 100.5));
+  const lightA = A;
   const drawLight = (v, k, big) => {
     const q = gp(v, g);
     if (q[2] <= 0.04 || k <= 0) return null;
@@ -911,6 +870,8 @@ function globeBody(ctx, u, g, A) {
     gl.addColorStop(0, rgba(C.ink, 0.5 * a)); gl.addColorStop(1, rgba(C.ink, 0));
     ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(q[0], q[1], big ? 30 : 22, 0, TAU); ctx.fill();
     ctx.fillStyle = rgba(C.ink, a); ctx.beginPath(); ctx.arc(q[0], q[1], big ? 5.5 : 4, 0, TAU); ctx.fill();
+    const on = clamp(prog(u, 97.6 + 1.6 * hash01(Math.round(q[0] + q[1] * 7), 9), 98.4 + 1.6 * hash01(Math.round(q[0] + q[1] * 7), 9)));
+    if (on > 0) { ctx.strokeStyle = rgba(gradAt(hash01(Math.round(v[0] * 1000), 3)), 0.8 * on * a); ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(q[0], q[1], big ? 12 : 9, 0, TAU); ctx.stroke(); }
     return q;
   };
   const hq = drawLight(HOMEV, 1, true);
@@ -934,13 +895,6 @@ function globeBody(ctx, u, g, A) {
     ctx.restore();
   }
   ctx.restore();
-}
-let VIS_CACHE = null;   // the lights that face us when the particles leave: a pure function of FLY0
-function globeSources() {
-  if (VIS_CACHE) return VIS_CACHE;
-  const g = globeCam(FLY0);
-  VIS_CACHE = ALLV.filter((v) => dot3(v, g.c) > 0.1);
-  return VIS_CACHE;
 }
 
 // ======================================================================= the real app (English)
@@ -1150,7 +1104,7 @@ M.film({
     } else if (u < 103.85) { fill(ctx, C.bg); sceneGlobe(ctx, u); }
     else if (u < 112.05) {
       fill(ctx, C.bg);
-      if (u < 104.3) particlesX(ctx, u, (r) => { const vis = globeSources(); const q = gp(vis[Math.floor(r * vis.length)], globeCam(FLY0 + 1.2)); return [q[0], q[1]]; });
+      if (u < 104.4) sceneGlobe(ctx, u);
       sceneApp(ctx, u, IMG);
     } else {
       fill(ctx, C.bg);

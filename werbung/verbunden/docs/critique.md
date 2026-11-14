@@ -46,3 +46,9 @@ Feedback: the logo animation looked flat (strokes simply drawing on).
 - End card: light streaks rise from the crowd, stroke B and stroke A slash in with lit tips, the hit lands with a
   flash, a jolt and a gradient ring that lights the crowd as it passes, then a sheen; wordmark tracks in.
 Scores: hook 8 · readability 8 · motion 9 · variety 9 · brand 9 · sync 8
+
+## Round 7 – one logo only (strip 68.8-74.6 s, stills 72 / 84 s)
+Feedback: the first Xyntal logo (particle X) should go; the logo belongs on the end card only.
+- "Meet Xyntal. The place that connects ambitious people." now stays on the globe: the network builds in the
+  gradient, light packets run both ways along every arc, each light gets a gradient ring, the camera turns and
+  pushes in, and the app window rises out of it. Particle-X code removed.
