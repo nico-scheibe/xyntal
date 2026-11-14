@@ -17,6 +17,6 @@
 | 11 | A designer in Seoul, waiting for the right project. | Whip spin to Seoul. | `SEOUL · SOUTH KOREA` / `DESIGNER` / `LOOKING FOR: PROJECT` |
 | 12 | A founder in São Paulo, looking for her first team. | Whip spin to São Paulo. | `SÃO PAULO · BRAZIL` / `FOUNDER` / `LOOKING FOR: TEAM` |
 | 13 | People who need each other. And who don't know the other exists. | Pull back to the whole globe, lights on every continent; a dashed arc from Lagos toward São Paulo breaks off halfway. | – |
-| 14 | Meet Xyntal. The place that connects ambitious people. | The arc completes in the Xyntal gradient, arcs run between all the lights around the globe, then every light flies into the particle X. | `xyntal` |
-| 15 | You describe what you're building, and Xyntal shows you who fits. And why. | The real app in English: "Find your people", the match cards, the 89 % match with its reasons. | – |
-| 16 | Stop building alone. | Big type, then the end card. | "Stop building alone." · `xyntal` · "The place that connects ambitious people." · `XYNTAL.DE · FREE DURING THE BETA` |
+| 14 | Meet Xyntal. The place that connects ambitious people. | The arc completes in the Xyntal gradient, arcs run between all the lights around the globe, light packets travel along them, the camera pushes in. | – |
+| 15 | You describe what you're building, and Xyntal shows you who fits. And why. | The real app in English: "Find your people", the match cards, the 91 % match with its reasons. | – |
+| 16 | Stop building alone. | Big type, then the end card. | "Stop building alone." · `xyntal` · "The place that connects ambitious people." · `XYNTAL.COM · FREE DURING THE BETA` |

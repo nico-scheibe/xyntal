@@ -1074,7 +1074,7 @@ function sceneEnd(ctx, u) {
       text(ctx, 'ambitious people.', 540, 1372 + (1 - t1) * 24, tf, rgba(C.ink2, t1), 'center');
     }
     const t2 = E.outQuint(prog(u, t0 + 2.0, t0 + 2.8));
-    if (t2 > 0) text(ctx, 'XYNTAL.DE · FREE DURING THE BETA', 540, 1462, font(32, 500, MONO), rgba(C.ink3, t2), 'center', 1.5);
+    if (t2 > 0) text(ctx, 'XYNTAL.COM · FREE DURING THE BETA', 540, 1462, font(32, 500, MONO), rgba(C.ink3, t2), 'center', 1.5);
   }
 }
 
