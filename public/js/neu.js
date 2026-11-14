@@ -100,19 +100,18 @@
     });
   })();
 
-  // Laufband: läuft immer leicht, schneller mit dem Scrolltempo, in Scrollrichtung.
+  // Laufband: läuft immer nach links, schneller mit dem Scrolltempo (egal in welche Richtung gescrollt wird).
   (function () {
     var track = $('[data-band-track]'); if (!track) return;
     track.innerHTML += track.innerHTML;                     // einmal verdoppeln für die Endlosschleife
-    var half = 0, x = 0, dir = -1;
+    var half = 0, x = 0;
     function measure() { half = track.scrollWidth / 2; }
     measure(); resizers.push(measure);
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
     if (calm) return;
     tickers.push(function () {
-      if (velocity > 0.5) dir = -1; else if (velocity < -0.5) dir = 1;
-      x += dir * (0.45 + Math.min(Math.abs(velocity), 60) * 0.22);
-      if (x <= -half) x += half; if (x > 0) x -= half;
+      x -= 0.45 + Math.min(Math.abs(velocity), 60) * 0.22;
+      if (half > 0 && x <= -half) x += half;
       track.style.transform = 'translate3d(' + x.toFixed(1) + 'px,0,0)';
     });
   })();
