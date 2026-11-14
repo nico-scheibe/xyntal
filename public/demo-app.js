@@ -117,9 +117,9 @@
     JW: { name: "Jonas Weber", role: ["Backend", "Backend"], hue: "#45C99B" },
     AK: { name: "Aylin Kaya", role: ["Design", "Design"], hue: "#B36BFF" },
     MS: { name: "Mara Schulz", role: ["Marketing", "Marketing"], hue: "#D9A54E" },
-    TB: { name: "Tim Berger", role: ["Frontend", "Frontend"], hue: "#3FE0F0" },
+    TB: { name: "Tim Berger", role: ["Frontend", "Frontend"], hue: "#4C8DFF" },
     SR: { name: "Sophie Roth", role: ["Produkt", "Product"], hue: "#E05E6D" },
-    NB: { name: "Noah Becker", role: ["iOS-Entwickler", "iOS developer"], hue: "#3FE0F0" },
+    NB: { name: "Noah Becker", role: ["iOS-Entwickler", "iOS developer"], hue: "#4C8DFF" },
   };
   const AREAS = [
     { id: "forme", icon: "inbox", label: ["Für mich", "For me"] },
@@ -152,7 +152,7 @@
     matchSaved: {}, matchHidden: {},
     workspaces: [
       { id: "loopr", code: "LS", name: "Loopr Studio", hue: "#007AFF", desc: ["KI-App: Du summst, sie macht den Song.", "AI app: you hum, it makes the song."], owner: true, role: "owner", plan: "PRO", tpl: "STARTUP", slug: "loopr-studio", members: ["LV", "JW", "AK", "MS"], milestone: ["Closed Beta · 7. Nov.", "Closed beta · 7 Nov"], online: 3 },
-      { id: "kiez", code: "KK", name: "Kiezkiste", hue: "#3FE0F0", desc: ["Tauschbörse für die Nachbarschaft.", "A swap market for your neighbourhood."], owner: false, role: "admin", plan: "FREE", tpl: "BLANK", slug: "kiezkiste", members: ["TB", "LV", "SR"], milestone: ["MVP-Demo · 20. Nov.", "MVP demo · 20 Nov"], online: 1 },
+      { id: "kiez", code: "KK", name: "Kiezkiste", hue: "#4C8DFF", desc: ["Tauschbörse für die Nachbarschaft.", "A swap market for your neighbourhood."], owner: false, role: "admin", plan: "FREE", tpl: "BLANK", slug: "kiezkiste", members: ["TB", "LV", "SR"], milestone: ["MVP-Demo · 20. Nov.", "MVP demo · 20 Nov"], online: 1 },
       { id: "zirkel", code: "FZ", name: "Founder-Zirkel", hue: "#D9A54E", desc: ["Monatlicher Austausch unter Solo-Foundern.", "Monthly exchange between solo founders."], owner: false, role: "member", plan: "FREE", tpl: "BLANK", slug: "founder-zirkel", members: ["SR", "MS", "LV"], milestone: ["Demo Day · 28. Nov.", "Demo day · 28 Nov"], online: 0 },
     ],
     projects: [
@@ -176,7 +176,7 @@
         task("t13", ["Farbpalette festlegen", "Define the colour palette"], "mid", "review", "AK"),
         task("t14", ["Tonalität für Texte", "Tone of voice for copy"], "low", "done", "MS"),
       ] },
-      { id: "mvp", ws: "kiez", code: "MK", name: ["MVP Kiezkiste", "Kiezkiste MVP"], hue: "#3FE0F0", desc: ["Inserate, Chat und Abholung im Kiez.", "Listings, chat and pick-up in the neighbourhood."], tasks: [
+      { id: "mvp", ws: "kiez", code: "MK", name: ["MVP Kiezkiste", "Kiezkiste MVP"], hue: "#4C8DFF", desc: ["Inserate, Chat und Abholung im Kiez.", "Listings, chat and pick-up in the neighbourhood."], tasks: [
         task("t15", ["Inserat-Formular bauen", "Build the listing form"], "high", "doing", "TB", ["Di", "Tue"]),
         task("t16", ["Karte mit Abholpunkten", "Map with pick-up points"], "mid", "todo", "SR", ["Fr", "Fri"]),
         task("t17", ["Nutzerinterviews auswerten", "Analyse user interviews"], "mid", "todo", "LV", ["Mi", "Wed"]),
@@ -232,7 +232,7 @@
     communities: [
       { id: "indie", name: "Indie Hacker DACH", letter: "I", hue: "#007AFF", members: 1239, joined: true, desc: ["Bauen, launchen, Zahlen teilen. Jeden Freitag Show & Tell.", "Build, launch, share numbers. Show & tell every Friday."], tags: ["SaaS", "Bootstrapping"] },
       { id: "audio", name: ["Audio- & Musik-Tech", "Audio & music tech"], letter: "A", hue: "#8B6CFF", members: 310, joined: false, rec: true, priv: true, desc: ["Für alle, die Software rund um Klang und Musik bauen.", "For everyone building software around sound and music."], tags: ["Audio", "DSP"] },
-      { id: "design", name: "Design & UX", letter: "D", hue: "#3FE0F0", members: 979, joined: true, desc: ["Austausch zu Design-Fragen, Reviews und Portfolios.", "Design questions, reviews and portfolios."], tags: ["Figma", "UX"] },
+      { id: "design", name: "Design & UX", letter: "D", hue: "#4C8DFF", members: 979, joined: true, desc: ["Austausch zu Design-Fragen, Reviews und Portfolios.", "Design questions, reviews and portfolios."], tags: ["Figma", "UX"] },
       { id: "ai", name: ["KI-Produkte bauen", "Building AI products"], letter: "K", hue: "#45C99B", members: 1560, joined: false, rec: true, fresh: true, desc: ["Von der Idee zum KI-Feature, das Menschen wirklich nutzen.", "From idea to an AI feature people actually use."], tags: ["LLM", ["Prototyping", "Prototyping"]] },
       { id: "nocode", name: "No-Code Builder", letter: "N", hue: "#D9A54E", members: 870, joined: false, fresh: true, desc: ["Schnell bauen ohne Code: Tools, Tricks und Vorlagen.", "Build fast without code: tools, tricks and templates."], tags: ["Webflow", "Make"] },
     ],
@@ -915,13 +915,13 @@
   // Entdecken wie in der App: Personen als Xyntal-Karte mit Passung, andere Bereiche als Karten mit Ring
   const OTHER_PROJECTS = [
     { id: "op1", lead: "Finn", tags: ["Audio", "Python", "Produkt"], why: ["Du hast Audio-Erfahrung, die hier fehlt.", "You have the audio experience that is missing here."], name: ["Podcast-Schnitt mit KI", "AI podcast editing"], by: "Synth Lab", role: ["Sucht: Audio-Entwickler·in", "Looking for: audio developer"], score: 87, hue: "#8B6CFF" },
-    { id: "op2", lead: "Tim", tags: ["Design", "React Native"], why: ["Ihr arbeitet schon in einem gemeinsamen Arbeitsbereich.", "You already share a workspace."], name: ["Lernkarten-App für Azubis", "Flashcard app for apprentices"], by: "Kiezkiste", role: ["Sucht: Product Design", "Looking for: product design"], score: 81, hue: "#3FE0F0" },
+    { id: "op2", lead: "Tim", tags: ["Design", "React Native"], why: ["Ihr arbeitet schon in einem gemeinsamen Arbeitsbereich.", "You already share a workspace."], name: ["Lernkarten-App für Azubis", "Flashcard app for apprentices"], by: "Kiezkiste", role: ["Sucht: Product Design", "Looking for: product design"], score: 81, hue: "#4C8DFF" },
     { id: "op3", lead: "Sophie", tags: ["Produkt", "Musik"], why: ["Musik und Produkt – beides steht in deinem Profil.", "Music and product – both are on your profile."], name: ["Bandprobe-Planer", "Band rehearsal planner"], by: "Founder-Zirkel", role: ["Sucht: Mitgründer·in", "Looking for: co-founder"], score: 76, hue: "#D9A54E" },
   ];
   // Personenkarten in Entdecken sehen aus wie die Xyntal-Karte: Banner, Abzeichen, Bild, Passung, Kurztext
   const BCARD = {
-    noah: { hue: ["#3A8AFF", "#7B5BFF"], badges: [["Früher Zugang", "Early access"], ["Beta-Tester", "Beta tester"]], focus: ["Entwicklung", "Engineering"], lvl: ["Fortgeschritten", "Advanced"], n: 2, bio: ["Ich baue iOS-Apps mit Audio und suche ein Nebenprojekt mit Musik.", "I build iOS apps with audio and want a music side project."], seek: ["ein Projekt zum Mitbauen", "a project to help build"] },
-    emre: { hue: ["#45C99B", "#3FE0F0"], badges: [["Beta-Tester", "Beta tester"]], focus: ["Entwicklung", "Engineering"], lvl: ["Profi", "Expert"], n: 3, bio: ["Ich forsche an Melodie-Erkennung und will sie in ein echtes Produkt bringen.", "I research melody detection and want to ship it in a real product."], seek: ["Mitgründer:in", "a co-founder"] },
+    noah: { hue: ["#4C8DFF", "#7B5BFF"], badges: [["Früher Zugang", "Early access"], ["Beta-Tester", "Beta tester"]], focus: ["Entwicklung", "Engineering"], lvl: ["Fortgeschritten", "Advanced"], n: 2, bio: ["Ich baue iOS-Apps mit Audio und suche ein Nebenprojekt mit Musik.", "I build iOS apps with audio and want a music side project."], seek: ["ein Projekt zum Mitbauen", "a project to help build"] },
+    emre: { hue: ["#45C99B", "#4C8DFF"], badges: [["Beta-Tester", "Beta tester"]], focus: ["Entwicklung", "Engineering"], lvl: ["Profi", "Expert"], n: 3, bio: ["Ich forsche an Melodie-Erkennung und will sie in ein echtes Produkt bringen.", "I research melody detection and want to ship it in a real product."], seek: ["Mitgründer:in", "a co-founder"] },
     lea: { hue: ["#B36BFF", "#FF7AB8"], badges: [["Früher Zugang", "Early access"]], focus: ["Design", "Design"], lvl: ["Profi", "Expert"], n: 3, bio: ["Ich baue Design-Systeme und mag frühe Produkte, bei denen noch alles offen ist.", "I build design systems and like early products where everything is still open."], seek: ["ein Team für frühe Produkte", "a team for early products"] },
     mia: { hue: ["#E05E6D", "#D9A54E"], badges: [["Beta-Tester", "Beta tester"]], focus: ["Musik", "Music"], lvl: ["Fortgeschritten", "Advanced"], n: 2, bio: ["Ich produziere für Indie-Künstler und höre sofort, ob ein Song trägt.", "I produce for indie artists and hear at once whether a song works."], seek: ["ein Projekt zum Mitbauen", "a project to help build"] },
     clara: { hue: ["#D9A54E", "#FF6A3D"], badges: [["Früher Zugang", "Early access"]], focus: ["Wachstum", "Growth"], lvl: ["Fortgeschritten", "Advanced"], n: 2, bio: ["Ich habe eine Musik-Community mit 12.000 Mitgliedern aufgebaut.", "I grew a music community to 12,000 members."], seek: ["ein Team für meine Idee", "a team for my idea"] },
@@ -1338,7 +1338,7 @@
     return VIEWS[r.area](s);
   };
   let logoN = 0;
-  const LOGO = () => { const n = "xa" + uid + "-" + (logoN++ % 4); return `<svg class="xa-logo" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="${n}a" x1="3" y1="21" x2="21" y2="3" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#B36BFF"/><stop offset="1" stop-color="#3A8AFF"/></linearGradient><linearGradient id="${n}b" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#3A8AFF"/><stop offset="1" stop-color="#3FE0F0"/></linearGradient><mask id="${n}m" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><path d="M3 21Q8.59 8.59 21 3" fill="none" stroke="#000" stroke-width="7.4" stroke-linecap="round"/></mask></defs><path d="M3 3Q15.41 8.59 21 21" fill="none" stroke="url(#${n}b)" stroke-width="4.6" stroke-linecap="round" mask="url(#${n}m)"/><path d="M3 21Q8.59 8.59 21 3" fill="none" stroke="url(#${n}a)" stroke-width="4.6" stroke-linecap="round"/></svg>`; };
+  const LOGO = () => { const n = "xa" + uid + "-" + (logoN++ % 4); return `<svg class="xa-logo" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="${n}a" x1="3" y1="21" x2="21" y2="3" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#B36BFF"/><stop offset="1" stop-color="#4C8DFF"/></linearGradient><linearGradient id="${n}b" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#4C8DFF"/><stop offset="1" stop-color="#4C8DFF"/></linearGradient><mask id="${n}m" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><path d="M3 21Q8.59 8.59 21 3" fill="none" stroke="#000" stroke-width="7.4" stroke-linecap="round"/></mask></defs><path d="M3 3Q15.41 8.59 21 21" fill="none" stroke="url(#${n}b)" stroke-width="4.6" stroke-linecap="round" mask="url(#${n}m)"/><path d="M3 21Q8.59 8.59 21 3" fill="none" stroke="url(#${n}a)" stroke-width="4.6" stroke-linecap="round"/></svg>`; };
 
   /* ---------- Einbinden ---------- */
   hosts.forEach((host, hostIndex) => {

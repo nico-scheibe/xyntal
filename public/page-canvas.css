@@ -172,7 +172,7 @@ a.pc-ib:hover, button.pc-ib:hover { transform: translateY(-2px); filter: brightn
 @keyframes pc-twinkle { from { opacity: .2; } to { opacity: 1; } }
 .pc-ov-aurora::before, .pc-ov-aurora::after { content: ""; position: absolute; width: 70%; height: 70%; border-radius: 50%; filter: blur(calc(80px * var(--k, 1))); opacity: .65; mix-blend-mode: screen; }
 .pc-ov-aurora::before { left: -10%; top: -20%; background: radial-gradient(circle, #b95cff, transparent 65%); animation: pc-aurora-a 18s ease-in-out infinite alternate; }
-.pc-ov-aurora::after { right: -15%; bottom: -25%; background: radial-gradient(circle, #3fd8ff, transparent 65%); animation: pc-aurora-b 22s ease-in-out infinite alternate; }
+.pc-ov-aurora::after { right: -15%; bottom: -25%; background: radial-gradient(circle, #4C8DFF, transparent 65%); animation: pc-aurora-b 22s ease-in-out infinite alternate; }
 @keyframes pc-aurora-a { to { transform: translate(35%, 25%) scale(1.2); } }
 @keyframes pc-aurora-b { to { transform: translate(-30%, -20%) scale(1.15); } }
 .pc-ov-grain { background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); background-size: 160px 160px; opacity: .14; mix-blend-mode: overlay; }
@@ -193,7 +193,7 @@ a.pc-ib:hover, button.pc-ib:hover { transform: translateY(-2px); filter: brightn
 .pc-item[data-hover="reveal"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk):hover::before, .pc-item[data-hover="reveal"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk)::before { clip-path: circle(150% at var(--mx, 50%) var(--my, 50%)); }
 .pc-item[data-hover="reveal"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk):hover, .pc-item[data-hover="reveal"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk) { color: var(--hb) !important; }
 .pc-item[data-hover="borderflow"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk)::before { content: ""; position: absolute; inset: 0; z-index: 3; pointer-events: none; padding: calc(2px * var(--k, 1)); border-radius: inherit; opacity: 0; transition: opacity .3s ease;
-  background: linear-gradient(90deg, #ff5fd2, #b95cff, #5b8cff, #3fd8ff, #ff5fd2) 0 0 / 300% 100%;
+  background: linear-gradient(90deg, #ff5fd2, #b95cff, #4C8DFF, #4C8DFF, #ff5fd2) 0 0 / 300% 100%;
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
 .pc-item[data-hover="borderflow"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk):hover::before, .pc-item[data-hover="borderflow"].is-hover :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk)::before { opacity: 1; animation: pc-flow 2s linear infinite; }
 .pc-item[data-hover="underline"] :is(.pc-l, .pc-t, .pc-ib, .pc-shape, img, .pc-blk)::after { content: ""; position: absolute; left: 50%; bottom: 14%; height: calc(2px * var(--k, 1)); width: 0; background: var(--hc); transform: translateX(-50%); transition: width .35s cubic-bezier(.2, .8, .2, 1); }
@@ -266,7 +266,7 @@ a.pc-ib:hover, button.pc-ib:hover { transform: translateY(-2px); filter: brightn
 .pc-cursor.is-dot.is-link { width: 34px; height: 34px; margin: -17px 0 0 -17px; }
 .pc-cursor.is-ring { width: 34px; height: 34px; margin: -17px 0 0 -17px; border: 2px solid rgba(255, 255, 255, .85); border-radius: 50%; }
 .pc-cursor.is-ring.is-link { width: 56px; height: 56px; margin: -28px 0 0 -28px; background: rgba(255, 255, 255, .12); }
-.pc-cursor.is-glow { width: 220px; height: 220px; margin: -110px 0 0 -110px; border-radius: 50%; background: radial-gradient(circle, rgba(185, 92, 255, .35), rgba(91, 140, 255, .15) 40%, transparent 70%); mix-blend-mode: screen; }
+.pc-cursor.is-glow { width: 220px; height: 220px; margin: -110px 0 0 -110px; border-radius: 50%; background: radial-gradient(circle, rgba(185, 92, 255, .35), rgba(76, 141, 255, .15) 40%, transparent 70%); mix-blend-mode: screen; }
 .pc-cursor.is-emoji { font-size: 28px; line-height: 1; margin: -14px 0 0 -14px; }
 .pc-cursor.is-emoji.is-link { font-size: 40px; margin: -20px 0 0 -20px; }
 

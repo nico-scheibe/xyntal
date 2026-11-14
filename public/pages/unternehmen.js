@@ -277,7 +277,7 @@
     const x = (n) => m.l + (n / xmax) * (W - m.l - m.r);
     const y = (c) => H - m.b - (c / ymax) * (H - m.t - m.b);
     const f = (v) => v.toFixed(1);
-    let g = `<defs><linearGradient id="xu-cg" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${W}" y2="0"><stop offset="0" stop-color="#B36BFF"/><stop offset=".5" stop-color="#3A8AFF"/><stop offset="1" stop-color="#3FE0F0"/></linearGradient><linearGradient id="xu-ca" gradientUnits="userSpaceOnUse" x1="0" y1="${m.t}" x2="0" y2="${H - m.b}"><stop offset="0" stop-color="rgba(63,224,240,.16)"/><stop offset="1" stop-color="rgba(63,224,240,0)"/></linearGradient></defs>`;
+    let g = `<defs><linearGradient id="xu-cg" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${W}" y2="0"><stop offset="0" stop-color="#B36BFF"/><stop offset=".5" stop-color="#4C8DFF"/><stop offset="1" stop-color="#4C8DFF"/></linearGradient><linearGradient id="xu-ca" gradientUnits="userSpaceOnUse" x1="0" y1="${m.t}" x2="0" y2="${H - m.b}"><stop offset="0" stop-color="rgba(76,141,255,.16)"/><stop offset="1" stop-color="rgba(76,141,255,0)"/></linearGradient></defs>`;
     for (let c = yStep; c <= ymax + 1; c += yStep) g += `<line class="c-grid" x1="${m.l}" x2="${W - m.r}" y1="${f(y(c))}" y2="${f(y(c))}"/><text x="${m.l + 2}" y="${f(y(c) - 6)}">${esc(euro(c, 0))}</text>`;
     g += `<line class="c-axis" x1="${m.l}" x2="${W - m.r}" y1="${f(y(0))}" y2="${f(y(0))}"/>`;
     const xStep = niceStep(xmax, W < 520 ? 4 : 5);

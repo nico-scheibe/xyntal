@@ -47,7 +47,7 @@ button, input { font: inherit; color: inherit; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .skip { position: absolute; left: 16px; top: 10px; z-index: 100; padding: 10px 14px; background: var(--text); color: var(--bg); font: 600 14px/1 var(--f-sans); text-decoration: none; transform: translateY(-200%); }
 .skip:focus { transform: none; }
-.mono { font: 500 11.5px/1 var(--f-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); }
+.mono { font: 500 12px/1 var(--f-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); }
 
 .front-main { width: min(1120px, 100% - 2 * var(--gutter)); margin: 0 auto; }
 
@@ -243,7 +243,7 @@ body.front .site-footer a { text-decoration: none; }
 .swap-intro em { font-style: italic; color: var(--text-2); }
 .ledger { font-size: 15.5px; }
 .ledger-head, .ledger li, .ledger-sum { display: flex; align-items: baseline; gap: 12px; }
-.ledger-head { justify-content: space-between; padding-bottom: 12px; border-bottom: 1px solid var(--line-2); font: 500 11px/1 var(--f-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3); }
+.ledger-head { justify-content: space-between; padding-bottom: 12px; border-bottom: 1px solid var(--line-2); font: 500 12px/1 var(--f-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3); }
 .ledger li { padding: 16px 0; border-bottom: 1px solid var(--line); }
 .ledger-old { color: var(--text-2); max-width: 58%; }
 .ledger-dots { flex: 1 1 24px; min-width: 24px; border-bottom: 1px dotted var(--line-2); transform: translateY(-4px); }
@@ -272,7 +272,7 @@ body.front .site-footer a { text-decoration: none; }
 .diff-lead { color: var(--text-2); max-width: 48ch; }
 .places { display: grid; gap: 40px; padding: 0; margin: 0; list-style: none; }
 .place { display: grid; grid-template-rows: auto 1fr auto; gap: 14px; }
-.place-where { font: 500 11.5px/1 var(--f-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3); }
+.place-where { font: 500 12px/1 var(--f-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3); }
 .place-view { display: grid; align-content: start; gap: 6px; padding: 20px; background: var(--bg-2); border: 1px solid var(--line); border-radius: 2px; font-size: 15px; }
 .pv-name { font: 500 17px/1.3 var(--f-sans); }
 .pv-line { color: var(--text-2); }
@@ -303,7 +303,7 @@ body.front .site-footer a { text-decoration: none; }
    vorher klärt: bei Lea, bei den Arten von Leuten, beim Zugang. */
 .facts { display: grid; gap: 6px; margin: 0; padding-top: 12px; border-top: 1px solid var(--line); }
 .facts div { display: grid; grid-template-columns: 5.5rem 1fr; gap: 10px; align-items: baseline; }
-.facts dt { font: 500 11px/1.6 var(--f-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); }
+.facts dt { font: 500 12px/1.6 var(--f-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); }
 .facts dd { margin: 0; color: var(--text); font-size: 15px; line-height: 1.45; }
 .facts-empty dd { color: var(--text-3); font-family: var(--f-mono); }
 .place-view .facts { margin: 10px 0 4px; }

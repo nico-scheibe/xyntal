@@ -80,7 +80,7 @@
     if (typeof logo === "string" && /^data:image\/(png|jpeg);base64,[A-Za-z0-9+/=]+$/.test(logo)) {
       return `<img class="live-avatar" src="${logo}" alt="" width="40" height="40">`;
     }
-    return `<span class="live-avatar live-avatar-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 3Q15.41 8.59 21 21" fill="none" stroke="#3FE0F0" stroke-width="3.6" stroke-linecap="round"/><path d="M3 21Q8.59 8.59 21 3" fill="none" stroke="#B36BFF" stroke-width="3.6" stroke-linecap="round"/></svg></span>`;
+    return `<span class="live-avatar live-avatar-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 3Q15.41 8.59 21 21" fill="none" stroke="#4C8DFF" stroke-width="3.6" stroke-linecap="round"/><path d="M3 21Q8.59 8.59 21 3" fill="none" stroke="#B36BFF" stroke-width="3.6" stroke-linecap="round"/></svg></span>`;
   }
 
   function postHtml(p) {

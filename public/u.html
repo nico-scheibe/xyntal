@@ -104,8 +104,8 @@
 /* „Ich biete“ / „Ich suche“ nebeneinander */
 .pf-duo { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
 .pf-tile { position: relative; display: grid; align-content: start; gap: 10px; padding: 20px 22px; border: 1px solid var(--line); border-radius: 18px; background: rgba(255, 255, 255, .02); overflow: hidden; }
-.pf-tile::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 3px; background: var(--pf-tone, #3FE0F0); opacity: .8; }
-.pf-tile-offer { --pf-tone: #3FE0F0; }
+.pf-tile::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 3px; background: var(--pf-tone, #4C8DFF); opacity: .8; }
+.pf-tile-offer { --pf-tone: #4C8DFF; }
 .pf-tile-seek { --pf-tone: #B36BFF; }
 .pf-tile p { color: var(--text-2); font-size: 15px; line-height: 1.65; white-space: pre-line; overflow-wrap: anywhere; }
 
@@ -126,11 +126,11 @@
 .public-activity:empty { display: none; }
 .public-section { display: grid; gap: 12px; scroll-margin-top: 92px; }
 .public-section h2 { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 650; letter-spacing: -.02em; }
-.public-count { display: inline-grid; place-items: center; min-width: 24px; height: 24px; padding: 0 7px; border-radius: 12px; background: rgba(63,224,240,.12); color: #3FE0F0; font-size: 12px; font-weight: 600; }
+.public-count { display: inline-grid; place-items: center; min-width: 24px; height: 24px; padding: 0 7px; border-radius: 12px; background: rgba(76,141,255,.12); color: #4C8DFF; font-size: 12px; font-weight: 600; }
 .public-items { display: grid; border-radius: 18px; border: 1px solid var(--line); background: rgba(0, 0, 0, .02); overflow: hidden; }
 .public-item { display: flex; align-items: center; gap: 16px; padding: 18px 22px; color: inherit; text-decoration: none; transition: background .2s; }
 .public-item + .public-item { border-top: 1px solid var(--line); }
-.public-item:hover { background: rgba(63,224,240,.06); }
+.public-item:hover { background: rgba(76,141,255,.06); }
 .public-item:focus-visible { outline: 2px solid var(--c); outline-offset: -2px; }
 .public-item-body { display: grid; gap: 5px; flex: 1; min-width: 0; }
 .public-item-meta { color: #D6B7FF; font-size: 12px; letter-spacing: .04em; }
@@ -155,10 +155,10 @@
 
 /* Admin-Profil: exklusive Seite für Konten mit is_admin – ruhig, dunkel, in den Farben des Xyntal-Zeichens (Violett, Blau, Cyan) */
 @property --pfa-angle { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
-body.admin-profile { --pfa-v: #B36BFF; --pfa-b: #3A8AFF; --pfa-c: #3FE0F0; --pfa-hair: rgba(150, 170, 255, .16); --pfa-mono: "JetBrains Mono", var(--f-mono, ui-monospace, monospace); }
+body.admin-profile { --pfa-v: #B36BFF; --pfa-b: #4C8DFF; --pfa-c: #4C8DFF; --pfa-hair: rgba(150, 170, 255, .16); --pfa-mono: "JetBrains Mono", var(--f-mono, ui-monospace, monospace); }
 /* Bühne: Lichtkegel von oben und ein feines Raster, das nach unten ausläuft */
 body.admin-profile::before { content: ""; position: fixed; inset: 0 0 auto; height: 90vh; z-index: -1; pointer-events: none;
-  background: radial-gradient(42% 55% at 24% -6%, rgba(179, 107, 255, .2), transparent 70%), radial-gradient(40% 50% at 76% -8%, rgba(58, 138, 255, .16), transparent 70%),
+  background: radial-gradient(42% 55% at 24% -6%, rgba(179, 107, 255, .2), transparent 70%), radial-gradient(40% 50% at 76% -8%, rgba(76, 141, 255, .16), transparent 70%),
     linear-gradient(rgba(255, 255, 255, .035) 1px, transparent 1px) 0 0 / 56px 56px, linear-gradient(90deg, rgba(255, 255, 255, .035) 1px, transparent 1px) 0 0 / 56px 56px;
   -webkit-mask: linear-gradient(#000, transparent 85%); mask: linear-gradient(#000, transparent 85%); }
 
@@ -179,7 +179,7 @@ body.admin-profile::before { content: ""; position: fixed; inset: 0 0 auto; heig
 .pf-admin-stage .mc-badge-admin::after { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, .55) 50%, transparent 70%) no-repeat; background-size: 250% 100%; animation: pfa-shine 5s ease-in-out infinite; }
 @keyframes pfa-spin { to { --pfa-angle: 360deg; } }
 @keyframes pfa-shine { 0%, 45% { background-position: 130% 0; } 80%, 100% { background-position: -30% 0; } }
-@keyframes pfa-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(63, 224, 240, .55); } 70% { box-shadow: 0 0 0 6px rgba(63, 224, 240, 0); } }
+@keyframes pfa-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(76, 141, 255, .55); } 70% { box-shadow: 0 0 0 6px rgba(76, 141, 255, 0); } }
 
 /* Kopf: Adresse mit Kennzeichen, Überschrift, Linie im Verlauf */
 .pf-address { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
@@ -195,19 +195,19 @@ body.admin-profile .pf-section > h2, body.admin-profile .pf-tile h2, body.admin-
 
 /* Ausweis „Team Xyntal“: Siegel, Titel, Kennzahlen unten in einer Leiste */
 .pf-admin { position: relative; display: grid; border-radius: 20px; overflow: hidden;
-  border: 1px solid transparent; background: linear-gradient(180deg, #17161F, #111117) padding-box, linear-gradient(135deg, rgba(233, 228, 255, .55), rgba(179, 107, 255, .35) 30%, rgba(58, 138, 255, .18) 60%, rgba(63, 224, 240, .4)) border-box;
-  box-shadow: 0 30px 70px -40px rgba(58, 138, 255, .6), inset 0 1px rgba(255, 255, 255, .05); }
+  border: 1px solid transparent; background: linear-gradient(180deg, #17161F, #111117) padding-box, linear-gradient(135deg, rgba(233, 228, 255, .55), rgba(179, 107, 255, .35) 30%, rgba(76, 141, 255, .18) 60%, rgba(76, 141, 255, .4)) border-box;
+  box-shadow: 0 30px 70px -40px rgba(76, 141, 255, .6), inset 0 1px rgba(255, 255, 255, .05); }
 .pf-admin::before { content: ""; position: absolute; inset: 0; pointer-events: none;
-  background: radial-gradient(50% 90% at 0% 0%, rgba(179, 107, 255, .16), transparent 70%), radial-gradient(40% 80% at 100% 100%, rgba(63, 224, 240, .07), transparent 70%); }
+  background: radial-gradient(50% 90% at 0% 0%, rgba(179, 107, 255, .16), transparent 70%), radial-gradient(40% 80% at 100% 100%, rgba(76, 141, 255, .07), transparent 70%); }
 .pf-admin::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, .06) 50%, transparent 60%) no-repeat; background-size: 250% 100%; animation: pfa-shine 7s ease-in-out infinite; }
 .pf-admin-top { position: relative; display: flex; align-items: center; gap: 26px; padding: 26px 28px; }
 .pf-admin-seal { position: relative; flex: none; display: grid; place-items: center; width: 108px; height: 108px; border-radius: 50%;
-  background: radial-gradient(circle at 50% 35%, #24223A, #0E0E14 70%); box-shadow: inset 0 0 0 1px rgba(233, 228, 255, .14), 0 0 40px -6px rgba(91, 140, 255, .45); }
+  background: radial-gradient(circle at 50% 35%, #24223A, #0E0E14 70%); box-shadow: inset 0 0 0 1px rgba(233, 228, 255, .14), 0 0 40px -6px rgba(76, 141, 255, .45); }
 .pf-admin-seal::before { content: ""; position: absolute; inset: -1px; border-radius: 50%; padding: 1px; background: conic-gradient(from var(--pfa-angle), var(--pfa-v), var(--pfa-b), var(--pfa-c), transparent 70%, var(--pfa-v));
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); animation: pfa-spin 6s linear infinite; }
 .pf-admin-ring { position: absolute; inset: 0; width: 100%; height: 100%; animation: pfa-rotate 40s linear infinite; }
 .pf-admin-ring text { fill: #A9B4DA; font: 500 8.4px var(--pfa-mono); letter-spacing: .1em; }
-.pf-admin-logo { position: relative; width: 40px; height: 40px; filter: drop-shadow(0 0 12px rgba(91, 140, 255, .6)); }
+.pf-admin-logo { position: relative; width: 40px; height: 40px; filter: drop-shadow(0 0 12px rgba(76, 141, 255, .6)); }
 @keyframes pfa-rotate { to { transform: rotate(360deg); } }
 .pf-admin-body { position: relative; display: grid; gap: 8px; min-width: 0; }
 .pf-admin-kicker { display: inline-flex; align-items: center; gap: 9px; color: #9FDDF0; font: 500 11px/1.2 var(--pfa-mono); letter-spacing: .18em; text-transform: uppercase; }
@@ -230,7 +230,7 @@ body.admin-profile .lp-link::after { content: ""; position: absolute; inset: 0; 
 body.admin-profile .lp-ico { transition: background .25s ease, color .25s ease, transform .25s cubic-bezier(.2, .7, .2, 1), box-shadow .25s ease; }
 body.admin-profile .lp-link:hover, body.admin-profile .lp-link:focus-visible {
   transform: translateY(-3px); background: rgba(20, 22, 40, .8);
-  box-shadow: 0 18px 40px -22px rgba(58, 138, 255, .75), 0 0 0 1px transparent; }
+  box-shadow: 0 18px 40px -22px rgba(76, 141, 255, .75), 0 0 0 1px transparent; }
 body.admin-profile .lp-link:hover::before, body.admin-profile .lp-link:focus-visible::before { opacity: 1; }
 body.admin-profile .lp-link:hover::after, body.admin-profile .lp-link:focus-visible::after { transform: translateX(120%); }
 body.admin-profile .lp-link:hover .lp-ico, body.admin-profile .lp-link:focus-visible .lp-ico {
@@ -264,7 +264,7 @@ body.admin-profile .lp-link:hover .lp-arrow { color: var(--pfa-c); }
 <div class="xy-bg" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i><span class="xy-grid"></span><span class="xy-stars"></span><span class="xy-stars"></span></div>
 <header class="nav">
   <div class="wrap">
-    <a class="logo" href="/" aria-label="Xyntal – Startseite"><svg class="logo-mark" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="xm-a1" x1="3" y1="21" x2="21" y2="3" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#B36BFF"/><stop offset="1" stop-color="#3A8AFF"/></linearGradient><linearGradient id="xm-b1" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#3A8AFF"/><stop offset="1" stop-color="#3FE0F0"/></linearGradient><mask id="xm-g1" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><path d="M3 21Q8.59 8.59 21 3" fill="none" stroke="#000" stroke-width="7.4" stroke-linecap="round"/></mask></defs><path d="M3 3Q15.41 8.59 21 21" fill="none" stroke="url(#xm-b1)" stroke-width="4.6" stroke-linecap="round" mask="url(#xm-g1)"/><path d="M3 21Q8.59 8.59 21 3" fill="none" stroke="url(#xm-a1)" stroke-width="4.6" stroke-linecap="round"/></svg>xyntal</a>
+    <a class="logo" href="/" aria-label="Xyntal – Startseite"><svg class="logo-mark" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="xm-a1" x1="3" y1="21" x2="21" y2="3" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#B36BFF"/><stop offset="1" stop-color="#4C8DFF"/></linearGradient><linearGradient id="xm-b1" x1="3" y1="3" x2="21" y2="21" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#4C8DFF"/><stop offset="1" stop-color="#4C8DFF"/></linearGradient><mask id="xm-g1" maskUnits="userSpaceOnUse" x="0" y="0" width="24" height="24"><rect width="24" height="24" fill="#fff"/><path d="M3 21Q8.59 8.59 21 3" fill="none" stroke="#000" stroke-width="7.4" stroke-linecap="round"/></mask></defs><path d="M3 3Q15.41 8.59 21 21" fill="none" stroke="url(#xm-b1)" stroke-width="4.6" stroke-linecap="round" mask="url(#xm-g1)"/><path d="M3 21Q8.59 8.59 21 3" fill="none" stroke="url(#xm-a1)" stroke-width="4.6" stroke-linecap="round"/></svg>xyntal</a>
     <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="main-nav">Menü</button>
     <nav class="nav-links" id="main-nav" aria-label="Hauptnavigation">
       <a class="nav-main" href="/demo">App-Demo</a>
@@ -283,8 +283,8 @@ body.admin-profile .lp-link:hover .lp-arrow { color: var(--pfa-c); }
 </main>
 <svg width="0" height="0" class="defs" aria-hidden="true" focusable="false">
   <defs>
-    <linearGradient id="xa" x1="140" y1="372" x2="372" y2="140" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#B36BFF"/><stop offset="1" stop-color="#3A8AFF"/></linearGradient>
-    <linearGradient id="xb" x1="140" y1="140" x2="372" y2="372" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#3A8AFF"/><stop offset="1" stop-color="#3FE0F0"/></linearGradient>
+    <linearGradient id="xa" x1="140" y1="372" x2="372" y2="140" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#B36BFF"/><stop offset="1" stop-color="#4C8DFF"/></linearGradient>
+    <linearGradient id="xb" x1="140" y1="140" x2="372" y2="372" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#4C8DFF"/><stop offset="1" stop-color="#4C8DFF"/></linearGradient>
     <mask id="xgap" maskUnits="userSpaceOnUse" x="0" y="0" width="512" height="512">
       <rect width="512" height="512" fill="#fff"/>
       <path d="M140 372 Q 212 212 372 140" fill="none" stroke="#000" stroke-width="96" stroke-linecap="round"/>

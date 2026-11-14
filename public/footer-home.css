@@ -16,8 +16,8 @@
   --line: rgba(var(--t-rgb), .10);
   --line-2: rgba(var(--t-rgb), .22);
   --pu: #B36BFF;
-  --bl: #3A8AFF;
-  --cy: #3FE0F0;
+  --bl: #4C8DFF;
+  --cy: #4C8DFF;
   --grad: linear-gradient(90deg, var(--pu), var(--bl) 50%, var(--cy));
   --f-display: "Archivo", "Arial Narrow", Arial, sans-serif;
   --f-text: "IBM Plex Sans", -apple-system, "Segoe UI", Roboto, sans-serif;

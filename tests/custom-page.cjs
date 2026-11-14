@@ -424,7 +424,7 @@ const stub = `window.supabase = { createClient: () => ({
   assert.equal(await pg.locator('.pc-ov-snow').count(), 0, 'ohne Freischaltung kein Schnee in der Vorschau');
   await pg.click('[data-add="bg"]'); await pg.click('[data-ov="grain"]'); await pg.click('[data-ov="grain"]'); await pg.click('[data-add="bg"]');
   await pg.click('[data-save]');
-  await pg.waitForFunction(() => document.querySelector('[data-status]').textContent.includes('nicht freigeschaltet'));
+  await pg.waitForFunction(() => document.querySelector('[data-status]').textContent.includes('nicht freigeschaltet'), null, { polling: 100, timeout: 10000 });
   assert.equal(await pg.locator('[data-status]').textContent(), 'Das Design Schnee ist für dein Konto nicht freigeschaltet. Wähle ein anderes Design.', 'Speichern-Meldung');
   await pg.click('[data-add="bg"]');
   assert.equal(await pg.locator('[data-ov="snow"]').count(), 0, 'Schnee nach dem Fehler aus der Seite genommen');

@@ -344,7 +344,7 @@ struct XyntalCardView: View {
     /// 18 pt Kreis im Verlauf #4CB7FF nach #6E6CFF mit weißem Haken und blauem Schein, wie im Desktop.
     private var verifiedMark: some View {
         Image(systemName: "checkmark")
-            .font(.system(size: 10, weight: .bold))
+            .font(.system(size: 11, weight: .bold))
             .foregroundStyle(.white)
             .frame(width: 18, height: 18)
             .background(

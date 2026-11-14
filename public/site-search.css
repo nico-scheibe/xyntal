@@ -44,14 +44,14 @@
   color: var(--ss-1); text-align: left;
 }
 .site-search__panel[hidden] { display: none; }
-.site-search__group { padding: 10px 10px 4px; font: 500 11px/1.4 "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace; color: var(--ss-3); }
+.site-search__group { padding: 10px 10px 4px; font: 500 12px/1.4 "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace; color: var(--ss-3); }
 .site-search .site-search__item {
   display: flex; align-items: baseline; justify-content: space-between; gap: 14px; width: 100%; margin: 0; padding: 9px 10px;
   border: 0; border-radius: 2px; background: transparent; box-shadow: none; cursor: pointer;
   font-family: inherit; font-size: 14.5px; font-weight: 400; line-height: 1.35; letter-spacing: 0; color: var(--ss-2); text-align: left;
 }
 .site-search__item span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.site-search__item span:last-child { flex: none; font: 11px/1 "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace; color: var(--ss-3); }
+.site-search__item span:last-child { flex: none; font: 12px/1 "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace; color: var(--ss-3); }
 .site-search .site-search__item[aria-selected="true"] { background: rgba(236, 234, 228, .09); color: var(--ss-1); }
 .site-search__empty { padding: 22px 12px; text-align: center; font-size: 14px; color: var(--ss-3); }
 

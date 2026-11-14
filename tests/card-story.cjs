@@ -73,7 +73,7 @@ async function analyse(pg, buf) {
       if (near(i, 255, 0, 0)) red++;
       if (near(i, 0, 0, 255)) blue++;
       if (d[i + 1] > 100 && d[i] < 30 && d[i + 2] < 30) green++; // Banner (unter der Abdunklung der Karte)
-      if (near(i, 0x8F, 0xB8, 0xFF)) accent++;
+      if (near(i, 0x4C, 0x8D, 0xFF)) accent++;
       if ((y < 250 || y >= c.height - 340) && !(d[i] === 28 && d[i + 1] === 28 && d[i + 2] === 28)) edge++;
     }
     return { red, blue, green, edge, accent };

@@ -254,7 +254,7 @@
     text: { w: 240, h: 56, text: "Dein Text", size: 24, weight: 700, align: "left", font: "sans", color: "#eceae4", bg: "", radius: 0 },
     link: { w: 280, h: 56, size: 16, color: "#eceae4", bg: "#2a2a2a", radius: 14, icon: true },
     image: { w: 180, h: 180, radius: 16, fit: "cover" },
-    shape: { w: 200, h: 200, radius: 24, bg: "#5b8cff" },
+    shape: { w: 200, h: 200, radius: 24, bg: "#4C8DFF" },
     button: { w: 240, h: 56, size: 17, color: "#1c1c1c", bg: "#eceae4", radius: 999, text: "Schreib mir" },
     embed: { w: 480, h: 270, radius: 16 },
     icons: { w: 320, h: 56, size: 22, color: "#eceae4", bg: "#2a2a2a", radius: 999, align: "center" },

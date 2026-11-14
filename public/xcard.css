@@ -38,14 +38,14 @@
   height: 96px; margin: 0 -24px; padding: 16px 18px;
   background: linear-gradient(180deg, rgba(10, 10, 16, 0.02), rgba(26, 26, 35, 0.6)), var(--tg);
 }
-.mc-badge { padding: 6px 11px; border-radius: 999px; background: rgba(0, 0, 0, 0.32); font: 600 11.5px/1 var(--f-text); color: #fff; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.mc-badge { padding: 6px 11px; border-radius: 999px; background: rgba(0, 0, 0, 0.32); font: 600 12px/1 var(--f-text); color: #fff; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
 .mc-badge-beta-tester { margin-left: 6px; border: 1px solid rgba(119, 210, 255, .42); background: rgba(63, 224, 240, .2); color: #F2FAFF; box-shadow: none; }
 .mc-badge-admin {
   display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px 6px 8px;
   border: 1px solid transparent; border-radius: 999px;
   background: linear-gradient(rgba(10, 12, 22, .74), rgba(10, 12, 22, .74)) padding-box,
               linear-gradient(120deg, #8FD0FF, #6D7BFF 55%, #B07CFF) border-box;
-  color: #fff; font: 700 10.5px/1 var(--f-text); letter-spacing: .1em; text-transform: uppercase;
+  color: #fff; font: 700 12px/1 var(--f-text); letter-spacing: .1em; text-transform: uppercase;
   box-shadow: 0 6px 18px rgba(64, 104, 255, .3), inset 0 1px rgba(255, 255, 255, .1);
 }
 .mc-badge-admin svg { width: 14px; height: 14px; flex: none; }
@@ -106,7 +106,7 @@
 .mc-skills.is-ghost li { opacity: 0.45; }
 .mc-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .mc-stats > div { display: grid; gap: 3px; padding: 11px 12px 12px; border-radius: 16px; background: var(--mc-panel); }
-.mc-stats span { font-size: 11.5px; color: var(--mc-text3); }
+.mc-stats span { font-size: 12px; color: var(--mc-text3); }
 .mc-stats b { font: 600 14px/1.3 var(--f-text); color: var(--mc-text); font-variant-numeric: tabular-nums; }
 .mc-bar { display: block; height: 4px; margin-top: 5px; border-radius: 4px; background: var(--mc-track); overflow: hidden; }
 .mc-bar i { display: block; height: 100%; border-radius: 4px; background: var(--tg); transition: width 300ms var(--ease); }
@@ -134,7 +134,7 @@
 .launch-card .mc-avatar img, .launch-card .mc-avatar video { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
 .mc-link-button { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 8px 16px; border: 1px solid var(--mc-text2); border-radius: 999px; color: var(--mc-text); text-decoration: none; font-weight: 600; flex-shrink: 0; }
 .mc-link-button:hover { background: rgba(128,128,128,.12); }
-.mc-message { order: 2; min-height: 34px; padding: 6px 10px; font: 600 10px/1 var(--f-text); white-space: nowrap; }
+.mc-message { order: 2; min-height: 34px; padding: 6px 10px; font: 600 12px/1 var(--f-text); white-space: nowrap; }
 .mc-link-button:focus-visible { outline: 2px solid var(--mc-text); outline-offset: 3px; }
 .mc-link-button[hidden] { display: none; }
 

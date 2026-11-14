@@ -182,17 +182,17 @@
       { key: "sticker", group: "text", icon: "🚀", label: "Sticker", type: "text", v: { text: "🚀", w: 120, h: 120, size: 88, align: "center" } },
       { key: "badge", group: "text", icon: "●", label: "Badge", type: "text", v: { text: "Offen für Projekte", w: 220, h: 44, size: 15, weight: 700, align: "center", bg: "#2f6b4f", color: "#d9ffe9", radius: 999 } },
       { key: "card", group: "text", icon: "▭", label: "Info-Fenster", type: "text", v: { text: "Titel\nEin paar Sätze über ein Projekt, ein Angebot oder eine Neuigkeit.", w: 320, h: 150, size: 17, weight: 400, bg: "#262633", radius: 20, bw: 1, bc: "#3d3d52", sh: true } },
-      { key: "rect", group: "shape", icon: "■", label: "Rechteck", type: "shape", v: { kind: "rect", w: 260, h: 160, radius: 24, bg: "#5b8cff" } },
-      { key: "circle", group: "shape", icon: "●", label: "Kreis", type: "shape", v: { kind: "circle", w: 180, h: 180, bg: "#b95cff", bg2: "#3fd8ff" } },
+      { key: "rect", group: "shape", icon: "■", label: "Rechteck", type: "shape", v: { kind: "rect", w: 260, h: 160, radius: 24, bg: "#4C8DFF" } },
+      { key: "circle", group: "shape", icon: "●", label: "Kreis", type: "shape", v: { kind: "circle", w: 180, h: 180, bg: "#b95cff", bg2: "#4C8DFF" } },
       { key: "line", group: "shape", icon: "―", label: "Linie", type: "shape", v: { kind: "line", w: 360, h: 4, bg: "#eceae4" } },
-      { key: "glow", group: "shape", icon: "◐", label: "Verlauf", type: "shape", v: { kind: "rect", w: 420, h: 260, radius: 32, bg: "#ff5fd2", bg2: "#5b8cff", o: 0.35 } },
+      { key: "glow", group: "shape", icon: "◐", label: "Verlauf", type: "shape", v: { kind: "rect", w: 420, h: 260, radius: 32, bg: "#ff5fd2", bg2: "#4C8DFF", o: 0.35 } },
       { key: "button", group: "act", icon: "⬭", label: "Knopf", type: "button", v: {} },
       { key: "icons", group: "act", icon: "◎", label: "Link-Symbole", type: "icons", v: {} },
       { key: "countdown", group: "act", icon: "⏱", label: "Countdown", type: "countdown", v: {} },
       { key: "contact", group: "act", icon: "✉", label: "Kontakt", type: "contact", v: {} },
       { key: "counter", group: "act", icon: "👁", label: "Aufrufe", type: "counter", v: {} },
       { key: "status", group: "text", icon: "🟢", label: "Status", type: "text", v: { text: "● Open to Work", w: 220, h: 44, size: 15, weight: 700, align: "center", bg: "#123d2a", color: "#7dffb2", radius: 999, anim: { p: "pulse", trig: "load", d: 1.8, loop: true } } },
-      { key: "gradtext", group: "text", icon: "🌈", label: "Verlaufstext", type: "text", v: { text: "Bau was Großes", w: 560, h: 80, size: 56, weight: 700, align: "center", color: "#ff5fd2", c2: "#5b8cff", tfx: "gradient" } },
+      { key: "gradtext", group: "text", icon: "🌈", label: "Verlaufstext", type: "text", v: { text: "Bau was Großes", w: 560, h: 80, size: 56, weight: 700, align: "center", color: "#ff5fd2", c2: "#4C8DFF", tfx: "gradient" } },
       { key: "glass", group: "text", icon: "◫", label: "Glas-Fenster", type: "text", v: { text: "Glas-Fenster\nLiegt halbdurchsichtig über allem dahinter.", w: 320, h: 140, size: 17, weight: 400, bg: "#ffffff", radius: 22, glass: true } },
     ];
     // Video / Musik: nur eigene Projekte – vor dem Einbetten bestätigen (Community-Richtlinien, Regel 8)
@@ -481,7 +481,7 @@
       const it = current();
       if (!it) return;
       if (e.target.dataset.bgon !== undefined) { touch(); it.bg = e.target.checked ? "#2a2a2a" : ""; drawAll(); }
-      else if (e.target.dataset.bg2on !== undefined) { touch(); it.bg2 = e.target.checked ? "#3fd8ff" : ""; drawAll(); }
+      else if (e.target.dataset.bg2on !== undefined) { touch(); it.bg2 = e.target.checked ? "#4C8DFF" : ""; drawAll(); }
       else if (e.target.dataset.p === "url") { touch(); setProp(it, "url", e.target.value); if (!it.url && e.target.value.trim()) say(t("Bitte eine Adresse mit https:// angeben."), "error"); drawCanvas(); }
       else if (e.target.dataset.ownConfirm !== undefined) { touch(); it.own = e.target.checked; drawAll(); }
       else if (e.target.dataset.embedChange !== undefined) {
@@ -1002,7 +1002,7 @@
       pastel: { name: "Pastel", bg: ["#2a2340", "#3d2f57"], ov: ["aurora"], flow: true, text: "#fde7f3", panel: "#382c52", accent: "#ffc4e1", accent2: "#b7e4ff", font: "serif", hover: "pop" },
       retro: { name: "Retro", bg: ["#1b120a", "#3a2210"], ov: ["grain", "vignette"], flow: false, text: "#ffe2b3", panel: "#2a1a0c", accent: "#ffb347", accent2: "#ff6b3d", font: "serif", hover: "shine" },
       ocean: { name: "Ocean", bg: ["#021a26", "#05445e"], ov: ["network"], flow: true, text: "#d8f7ff", panel: "#06293a", accent: "#7ee7ff", accent2: "#3fa9ff", font: "sans", hover: "glow" },
-      space: { name: "Space", bg: ["#05050c", "#140a30"], ov: ["stars", "aurora"], flow: false, text: "#ecebff", panel: "#12122a", accent: "#b95cff", accent2: "#5b8cff", font: "sans", hover: "spotlight" },
+      space: { name: "Space", bg: ["#05050c", "#140a30"], ov: ["stars", "aurora"], flow: false, text: "#ecebff", panel: "#12122a", accent: "#b95cff", accent2: "#4C8DFF", font: "sans", hover: "spotlight" },
       snow: { name: "Schnee", bg: ["#0b1a2b", "#1c3350"], ov: ["snow", "vignette"], flow: false, text: "#f2f7fc", panel: "#14263b", accent: "#bfe3ff", accent2: "#8fb8e8", font: "sans", hover: "glow" },
     };
     // Themes für die Kacheln: gesperrte fehlen; freigeschaltete exklusive stehen vorn, mit Badge und Hinweis darunter

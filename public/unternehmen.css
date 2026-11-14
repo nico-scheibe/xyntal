@@ -45,7 +45,7 @@
 .xu-fold__one ul { display: grid; grid-auto-rows: 1fr; padding: 4px 18px; }
 .xu-fold__one li { display: flex; align-items: center; border-bottom: 1px solid var(--line); font: 600 clamp(1rem, 1.5vw, 1.45rem)/1 var(--f-display); font-stretch: 84%; }
 .xu-fold__one li:last-child { border-bottom: 0; }
-.xu-fold__fix { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 14px 18px 16px; border-top: 1px solid var(--line-2); background: linear-gradient(180deg, rgba(58, 138, 255, .1), transparent); }
+.xu-fold__fix { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 14px 18px 16px; border-top: 1px solid var(--line-2); background: linear-gradient(180deg, rgba(76, 141, 255, .1), transparent); }
 .xu-fold__fix .xs-mono { color: var(--cy); }
 .xu-fold__fix b { font: 800 clamp(1.5rem, 2.6vw, 2.6rem)/1 var(--f-display); font-stretch: 62%; white-space: nowrap; }
 .xu-fold__cap { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-top: 18px; min-height: 48px; }
@@ -122,7 +122,7 @@
 .xu-chart__plot svg { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; overflow: visible; }
 .xu-chart .c-grid { stroke: var(--line); stroke-width: 1; }
 .xu-chart .c-axis { stroke: var(--line-2); stroke-width: 1; }
-.xu-chart text { font: 400 10.5px var(--f-mono); letter-spacing: .04em; fill: var(--t-3); text-transform: uppercase; font-variant-numeric: tabular-nums; }
+.xu-chart text { font: 400 12px var(--f-mono); letter-spacing: .04em; fill: var(--t-3); text-transform: uppercase; font-variant-numeric: tabular-nums; }
 .xu-chart .c-today { fill: none; stroke: var(--t-2); stroke-width: 1.5; }
 .xu-chart .c-xy { fill: none; stroke: url(#xu-cg); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
 .xu-chart .c-xy-open { fill: none; stroke: var(--t-3); stroke-width: 1.5; stroke-dasharray: 3 5; }
@@ -131,8 +131,8 @@
 .xu-chart .c-gap { stroke: var(--cy); stroke-width: 1.5; }
 .xu-chart .c-dot-t { fill: var(--g-2); stroke: var(--t-1); stroke-width: 1.5; }
 .xu-chart .c-dot-x { fill: var(--cy); }
-.xu-chart text.c-label { fill: var(--t-1); font-size: 11px; }
-.xu-chart text.c-save { fill: var(--cy); font-size: 11px; }
+.xu-chart text.c-label { fill: var(--t-1); font-size: 12px; }
+.xu-chart text.c-save { fill: var(--cy); font-size: 12px; }
 .xu-chart text.c-plan { fill: var(--t-2); }
 @media (scripting: enabled) { .xu-chart:not(.is-in) .c-today, .xu-chart:not(.is-in) .c-xy { stroke-dasharray: 1; stroke-dashoffset: 1; } }
 @media (scripting: enabled) { .xu-chart.is-draw .c-today, .xu-chart.is-draw .c-xy { stroke-dasharray: 1; stroke-dashoffset: 0; transition: stroke-dashoffset 1.5s var(--ease-io); } }
@@ -156,7 +156,7 @@
 .xu-node.is-hot { background: var(--g-3); box-shadow: inset 0 0 0 1px var(--t-2); }
 @media (hover: hover) { .xu-node:hover { background: var(--g-3); box-shadow: inset 0 0 0 1px var(--line-2); } }
 .xu-net__hub { position: relative; z-index: 1; display: grid; justify-items: center; align-content: center; gap: 14px; padding: 24px 0; text-align: center; }
-.xu-net__mark { display: grid; place-items: center; width: clamp(84px, 9vw, 128px); aspect-ratio: 1; border-radius: 50%; background: var(--g-1); box-shadow: inset 0 0 0 1px var(--line-2), 0 0 60px -10px rgba(58, 138, 255, .35); }
+.xu-net__mark { display: grid; place-items: center; width: clamp(84px, 9vw, 128px); aspect-ratio: 1; border-radius: 50%; background: var(--g-1); box-shadow: inset 0 0 0 1px var(--line-2), 0 0 60px -10px rgba(76, 141, 255, .35); }
 .xu-net__mark svg { width: 42%; height: 42%; }
 .xu-net__says { display: grid; gap: 2px; margin-top: 10px; }
 .xu-net__says button { padding: 7px 12px; border-radius: 8px; font: 500 clamp(1rem, 1.35vw, 1.3rem)/1.2 var(--f-display); font-stretch: 90%; color: var(--t-2); transition: color .3s, background .3s; }
@@ -176,7 +176,7 @@
 .xu-stack__iso { position: relative; width: clamp(150px, 15vw, 210px); aspect-ratio: 1; transform: translateY(18%) rotateX(58deg) rotateZ(-45deg); transform-style: preserve-3d; }
 .xu-stack__iso i { position: absolute; inset: 0; border: 1px solid var(--line-2); background: linear-gradient(rgba(31, 31, 33, .82), rgba(31, 31, 33, .82)), repeating-linear-gradient(0deg, var(--line-2) 0 1px, transparent 1px 25%), repeating-linear-gradient(90deg, var(--line-2) 0 1px, transparent 1px 25%); transform: translateZ(calc(var(--z) * var(--lift, 52px))); transition: transform .8s var(--spring), border-color .3s, background-color .3s; }
 .xu-stack__iso i[data-plate="0"] { --z: 3; } .xu-stack__iso i[data-plate="1"] { --z: 2; } .xu-stack__iso i[data-plate="2"] { --z: 1; } .xu-stack__iso i[data-plate="3"] { --z: 0; }
-.xu-stack__iso i.is-on { border: 2px solid; border-image: linear-gradient(135deg, var(--pu), var(--bl), var(--cy)) 1; transform: translateZ(calc(var(--z) * var(--lift, 52px) + 22px)); background: linear-gradient(135deg, rgba(58, 138, 255, .22), rgba(63, 224, 240, .08)), linear-gradient(rgba(31, 31, 33, .9), rgba(31, 31, 33, .9)); }
+.xu-stack__iso i.is-on { border: 2px solid; border-image: linear-gradient(135deg, var(--pu), var(--bl), var(--cy)) 1; transform: translateZ(calc(var(--z) * var(--lift, 52px) + 22px)); background: linear-gradient(135deg, rgba(76, 141, 255, .22), rgba(76, 141, 255, .08)), linear-gradient(rgba(31, 31, 33, .9), rgba(31, 31, 33, .9)); }
 .xu-stack__iso i.is-above { transform: translateZ(calc(var(--z) * var(--lift, 52px) + 44px)); }
 .xu-sec__tabs { display: grid; border-top: 1px solid var(--line); }
 .xu-sec__tabs button { position: relative; display: grid; grid-template-columns: 2.4em minmax(0, 1fr); gap: 2px 6px; padding: 16px 0 16px 16px; border-bottom: 1px solid var(--line); color: var(--t-2); transition: color .3s; }
@@ -210,7 +210,7 @@
 .xu-plans__bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 10px 24px; padding-bottom: 16px; min-height: 2.6em; }
 .xu-rec { font: 500 clamp(1.15rem, 1.7vw, 1.6rem)/1.2 var(--f-display); font-stretch: 90%; }
 .xu-rec b { font-weight: 700; }
-.xu-rec i { display: inline-block; width: 9px; height: 9px; margin-right: 12px; border-radius: 50%; background: var(--cy); box-shadow: 0 0 10px 1px rgba(63, 224, 240, .5); vertical-align: .1em; }
+.xu-rec i { display: inline-block; width: 9px; height: 9px; margin-right: 12px; border-radius: 50%; background: var(--cy); box-shadow: 0 0 10px 1px rgba(76, 141, 255, .5); vertical-align: .1em; }
 .xu-sheet thead th { border-top: 1px solid var(--line-2); }
 .xu-ph { display: grid; gap: 4px; }
 .xu-ph__name { font: 700 clamp(1.2rem, 1.9vw, 1.9rem)/1 var(--f-display); font-stretch: 70%; }

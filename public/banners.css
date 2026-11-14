@@ -119,10 +119,10 @@
   outline: 2px solid transparent; outline-offset: 2px; transition: outline-color .15s;
 }
 .bf-banners .bf-bsw .mc-cover { height: 100%; margin: 0; padding: 0; }
-.bf-banners input:checked + .bf-bsw { outline-color: var(--grad, #3FE0F0); }
+.bf-banners input:checked + .bf-bsw { outline-color: var(--grad, #4C8DFF); }
 .bf-banners input:focus-visible + .bf-bsw { outline-color: #fff; }
 .bf-banners .is-locked { cursor: not-allowed; }
 .bf-banners .is-locked .bf-bsw { opacity: .55; }
-.bf-banners .bf-btag { position: absolute; top: 5px; right: 5px; padding: 2px 6px; border-radius: 999px; background: rgba(0, 0, 0, .6); color: #fff; font: 700 9.5px/1.2 var(--f-text, sans-serif); letter-spacing: .04em; }
+.bf-banners .bf-btag { position: absolute; top: 5px; right: 5px; padding: 2px 6px; border-radius: 999px; background: rgba(0, 0, 0, .6); color: #fff; font: 700 12px/1.2 var(--f-text, sans-serif); letter-spacing: .04em; }
 .bf-banner-upload { margin-top: 10px; display: grid; gap: 8px; }
 .bf-banner-actions { display: flex; gap: 8px; flex-wrap: wrap; }

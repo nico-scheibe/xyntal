@@ -10,7 +10,7 @@
 .sc button { font: inherit; color: inherit; cursor: pointer; }
 .sc a { color: var(--sc-key); }
 .sc-sr { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.sc-mono { margin: 0; font: 500 11px/1 "JetBrains Mono", ui-monospace, Menlo, monospace; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sc-text-3); }
+.sc-mono { margin: 0; font: 500 12px/1 "JetBrains Mono", ui-monospace, Menlo, monospace; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sc-text-3); }
 
 .sc-open { display: inline-flex; align-items: center; gap: 10px; height: 44px; padding: 0 16px; border: 1px solid var(--sc-line-2); border-radius: 2px; background: var(--sc-bg); font-size: 14px; font-weight: 600; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45); transition: border-color 0.15s, background 0.15s; }
 .sc-open:hover { border-color: var(--sc-text); }
@@ -71,7 +71,7 @@
 .sc-form textarea:focus { border-color: var(--sc-text); box-shadow: none; }
 .sc-send { height: 40px; padding: 0 14px; border: 1px solid var(--sc-text); border-radius: 2px; background: var(--sc-text); color: var(--sc-bg) !important; font-size: 14px !important; font-weight: 600 !important; }
 .sc-send:hover { background: transparent; color: var(--sc-text) !important; }
-.sc-note { margin: 0; padding: 0 16px 12px; color: var(--sc-text-3); font-size: 11.5px; line-height: 1.45; }
+.sc-note { margin: 0; padding: 0 16px 12px; color: var(--sc-text-3); font-size: 12px; line-height: 1.45; }
 
 @media (max-width: 480px) {
   .sc { right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); }

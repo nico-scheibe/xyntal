@@ -6,7 +6,7 @@
   --nh-bg: 31, 31, 33; --nh-1: #ECEAE4; --nh-2: #B9B7B0; --nh-3: #918F89;
   --nh-line: rgba(236, 234, 228, .10); --nh-line-2: rgba(236, 234, 228, .22);
   --nh-pad: clamp(20px, 4.2vw, 76px); --nh-h: 76px;
-  --nh-grad: linear-gradient(90deg, #B36BFF, #3A8AFF 50%, #3FE0F0);
+  --nh-grad: linear-gradient(90deg, #B36BFF, #4C8DFF 50%, #4C8DFF);
   position: sticky; top: 0; z-index: 50;
   padding-top: env(safe-area-inset-top);
   background: transparent !important; border-bottom: 0 !important;
@@ -81,14 +81,14 @@
     border-radius: 50%; background: rgba(236, 234, 228, .08); color: var(--nh-1); transition: background-color .3s ease;
   }
   .nav .nav-links .notifications summary:hover, .nav .nav-links .notifications[open] summary { background: rgba(236, 234, 228, .18); }
-  .nav .nav-links .notifications summary:focus-visible { outline: 2px solid #3FE0F0; outline-offset: 4px; }
+  .nav .nav-links .notifications summary:focus-visible { outline: 2px solid #4C8DFF; outline-offset: 4px; }
   .nav .nav-links .notifications summary svg { width: 18px; height: 18px; }
   .nav .nav-links .notifications .badge { position: absolute; top: -5px; right: -7px; margin: 0; min-width: 16px; height: 16px; padding: 0 4px; font-size: 10px; }
   .nav .nav-links .notification-panel { left: auto; right: 0; }
 }
 /* Login steckt im Konto-Symbol; als Text nur im ausgeklappten Menü */
 .nav .nav-links:not(.open) [data-account] { display: none; }
-.nav a:focus-visible, .nav button:focus-visible { outline: 2px solid #3FE0F0; outline-offset: 4px; border-radius: 4px; }
+.nav a:focus-visible, .nav button:focus-visible { outline: 2px solid #4C8DFF; outline-offset: 4px; border-radius: 4px; }
 .nav .nav-cta:focus-visible, .nav .nav-toggle:focus-visible { border-radius: 999px; }
 
 /* Menü-Knopf (bis 1000 px) */
@@ -127,7 +127,7 @@
   display: inline-flex; align-items: center; flex: none; order: 6; height: 32px; padding: 3px; box-sizing: border-box;
   border-radius: 999px; background: transparent; border: 0; box-shadow: inset 0 0 0 1px var(--nh-line); margin: 0 0 0 22px;
 }
-.nav .lang-switch button { height: 26px; min-width: 34px; padding: 0 9px; border: 0; border-radius: 999px; background: transparent; color: var(--nh-3); font: 500 11.5px/1 "JetBrains Mono", ui-monospace, monospace; cursor: pointer; transition: color .2s, background .2s; }
+.nav .lang-switch button { height: 26px; min-width: 34px; padding: 0 9px; border: 0; border-radius: 999px; background: transparent; color: var(--nh-3); font: 500 12px/1 "JetBrains Mono", ui-monospace, monospace; cursor: pointer; transition: color .2s, background .2s; }
 .nav .lang-switch button:hover { color: var(--nh-1); }
 .nav .lang-switch button[aria-pressed="true"] { background: rgba(236, 234, 228, .12); color: var(--nh-1); }
 .nav .lang-switch button:focus-visible { outline-offset: 2px; border-radius: 999px; }
@@ -141,7 +141,7 @@
 @media (max-width: 480px) { .nav .lang-switch button { width: 36px; height: 36px; } }
 .nav .wrap > .acct { order: 8; margin-left: 16px !important; }
 @media (min-width: 1001px) { .nav .wrap > .acct { margin-left: 22px !important; } }
-.nav .badge { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 4px; border-radius: 999px; background: var(--nh-1); color: #151516; font-size: 11px; font-weight: 700; }
+.nav .badge { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 4px; border-radius: 999px; background: var(--nh-1); color: #151516; font-size: 12px; font-weight: 700; }
 
 @media (prefers-reduced-motion: reduce) { .nav::before, .nav .nav-links a, .nav .nav-links .nav-cta, .nav .nav-links .nav-cta::after { transition: none; } }
 

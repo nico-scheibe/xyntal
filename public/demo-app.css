@@ -663,7 +663,7 @@
 .demo-section .xa-host { --xa-h: 700px; }
 .app-demo-full { display: flex; justify-content: center; margin: 18px 0 clamp(48px, 7vw, 88px); }
 .app-demo-full a { display: inline-flex; align-items: center; gap: 8px; color: #F5F5F7; font-weight: 600; font-size: 14.5px; text-decoration: none; border-bottom: 1px solid rgba(255, 255, 255, 0.25); padding-bottom: 2px; }
-.app-demo-full a:hover { border-bottom-color: #3FD8FF; }
+.app-demo-full a:hover { border-bottom-color: #4C8DFF; }
 
 /* Listen-Raster: Spalte darf nicht mit nicht umbrechendem Text wachsen */
 .xa-rows, .xa-tasks, .xa-convos, .xa-queue, .xa-people, .xa-feed, .xa-flist, .xa-alist, .xa-kcards, .xa-wslist, .xa-quick, .xa-events, .xa-brief, .xa-tips, .xa-switches, .xa-recent { grid-template-columns: minmax(0, 1fr); }
@@ -1405,7 +1405,7 @@ p.xa-ai-pane { flex: none; padding-top: 0; }
 .xa-ppill.is-st i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 .xa-pdesc { max-width: 720px; color: var(--xa-muted); font-size: 14px; }
 .xa-pai { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
-.xa-pai-ic { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(140deg, #B36BFF, #4C8DFF 60%, #3FE0F0); color: #fff; font-size: 16px; }
+.xa-pai-ic { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(140deg, #B36BFF, #4C8DFF 60%, #4C8DFF); color: #fff; font-size: 16px; }
 .xa-pai b { display: block; font-size: 14px; } .xa-pai small { display: block; color: var(--xa-faint); font-size: 12px; }
 .xa-pai-act { display: flex; flex-wrap: wrap; gap: 8px; flex: 1 1 100%; }
 .xa-workbar { margin-bottom: 16px; }

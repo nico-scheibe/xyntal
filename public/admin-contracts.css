@@ -4,11 +4,11 @@
 .ct-editor { display:grid; grid-template-columns:minmax(340px,1fr) minmax(0,1.15fr); gap:24px; align-items:start; }
 .admin-app .ct-form { display:grid; gap:16px; min-width:0; margin:0; padding:0; border:0; border-radius:0; background:none; }
 .ct-form fieldset { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin:0; padding:18px; border:1px solid var(--admin-line); border-radius:2px; background:#111119; min-width:0; }
-.ct-form legend { padding:0 6px; color:#ECEAE4; font:600 11px/1.5 var(--f-text); letter-spacing:.1em; text-transform:uppercase; }
+.ct-form legend { padding:0 6px; color:#ECEAE4; font:600 12px/1.5 var(--f-text); letter-spacing:.1em; text-transform:uppercase; }
 .ct-form .ct-wide { grid-column:1 / -1; }
 .ct-form input, .ct-form select, .ct-form textarea, .admin-app .panel-heading select { width:100%; min-height:40px; padding:9px 11px; border:1px solid var(--admin-line); border-radius:2px; background:#0B0B12; color:#ECEAE4; font:400 13px/1.4 var(--f-text); color-scheme:dark; }
 .ct-form textarea { resize:vertical; min-height:64px; }
-.ct-form small { color:#8D899C; font-size:11px; }
+.ct-form small { color:#8D899C; font-size:12px; }
 .ct-form .ct-check { display:flex; align-items:center; gap:9px; grid-column:1 / -1; font-size:13px; color:#ECEAE4; }
 .ct-form .ct-check input { width:18px; min-height:18px; height:18px; accent-color:#ECEAE4; }
 .ct-item { display:grid; grid-template-columns:72px minmax(0,1fr) minmax(0,1.2fr) 40px; gap:8px; align-items:end; margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid var(--admin-line); }
@@ -18,7 +18,7 @@
 .ct-actions { display:flex; flex-wrap:wrap; gap:8px; }
 #admin-view .ct-primary { background:#ECEAE4 !important; color:#111 !important; border-color:#ECEAE4 !important; font-weight:600 !important; }
 .admin-message.is-error { color:#E0705F; }
-.ct-status { display:inline-flex; padding:5px 9px; border-radius:2px; font-size:11px; white-space:nowrap; color:#ECEAE4; background:rgba(236,234,228,.1); }
+.ct-status { display:inline-flex; padding:5px 9px; border-radius:2px; font-size:12px; white-space:nowrap; color:#ECEAE4; background:rgba(236,234,228,.1); }
 .ct-status-verschickt { color:#8DD9F5; }
 .ct-status-unterschrieben { color:#7DE6BF; background:rgba(52,211,153,.1); }
 .ct-status-gekuendigt { color:#E0705F; background:rgba(245,106,143,.08); }

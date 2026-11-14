@@ -79,7 +79,7 @@
   const svg = document.createElementNS(NS, "svg");
   svg.setAttribute("class", "st-lines");
   svg.innerHTML = `<defs><linearGradient id="st-grad" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0" stop-color="#B36BFF"/><stop offset=".55" stop-color="#3A8AFF"/><stop offset="1" stop-color="#3FE0F0"/></linearGradient></defs>`;
+    <stop offset="0" stop-color="#B36BFF"/><stop offset=".55" stop-color="#4C8DFF"/><stop offset="1" stop-color="#4C8DFF"/></linearGradient></defs>`;
   const path = (cls) => { const p = document.createElementNS(NS, "path"); p.setAttribute("class", cls); svg.append(p); return p; };
 
   const brief = el("div", "st-brief");

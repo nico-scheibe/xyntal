@@ -13,7 +13,7 @@
   --g-0: #151516; --g-1: #1A1A1C; --g-2: #1F1F21; --g-3: #262629; --g-4: #2E2E32; --g-5: #3A3A3F;
   --t-1: #ECEAE4; --t-2: #B9B7B0; --t-3: #918F89; --t-rgb: 236, 234, 228;
   --line: rgba(var(--t-rgb), .10); --line-2: rgba(var(--t-rgb), .22);
-  --pu: #B36BFF; --bl: #3A8AFF; --cy: #3FE0F0;
+  --pu: #B36BFF; --bl: #4C8DFF; --cy: #4C8DFF;
   --grad: linear-gradient(90deg, var(--pu), var(--bl) 50%, var(--cy));
   --err: #E8907F;
   --f-display: "Archivo", "Arial Narrow", Arial, sans-serif;

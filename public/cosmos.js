@@ -5,6 +5,6 @@
   defs.setAttribute("width", "0"); defs.setAttribute("height", "0"); defs.setAttribute("aria-hidden", "true");
   defs.style.position = "absolute";
   defs.innerHTML = '<defs><linearGradient id="x-mark-grad" gradientUnits="userSpaceOnUse" x1="4" y1="4" x2="20" y2="20">'
-    + '<stop offset="0" stop-color="#B95CFF"/><stop offset=".45" stop-color="#FF5FD2"/><stop offset="1" stop-color="#3FD8FF"/></linearGradient></defs>';
+    + '<stop offset="0" stop-color="#B95CFF"/><stop offset=".45" stop-color="#FF5FD2"/><stop offset="1" stop-color="#4C8DFF"/></linearGradient></defs>';
   document.body.prepend(defs);
 })();
