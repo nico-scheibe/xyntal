@@ -1,0 +1,11 @@
+node_modules/
+out/
+# generated audio (score.py, sfx.mjs, mix.mjs rebuild these)
+verbunden/audio/*.wav
+verbunden/audio/vorschau_ton.mp3
+# voice samples and the TikTok reference (third-party material, not ours to commit)
+verbunden/audio/vo/samples/
+verbunden/docs/reference/
+# website captures from gather.mjs (re-run to refresh)
+verbunden/assets/shots/
+verbunden/assets/app/*.png
