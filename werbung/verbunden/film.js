@@ -82,7 +82,12 @@ const HITS = [
   [113.64, 'alone + links', 'tick', { gain: 0.15 }],
   [112.1, 'crowd rises', 'swell', { len: 0.8, gain: 0.12 }],
   ...[112.3, 112.5, 112.75, 113.0].map((b, i) => [b, `crowd ${i}`, 'pop', { pitch: ['D5', 'F5', 'A5', 'D6'][i], gain: 0.07 }]),
-  [114.95, 'logo', 'bell', { pitch: 'D6', gain: 0.22 }],
+  [101.0, 'X resolves', 'thud+bell', { pitch: 'A6', gain: 0.18 }],
+  [114.85, 'streaks rise', 'riser', { len: 0.5, gain: 0.14 }],
+  [115.2, 'stroke B', 'whoosh', { len: 0.25, from: 900, to: 4000, pan: -0.3, gain: 0.2 }],
+  [115.5, 'stroke A', 'whoosh', { len: 0.25, from: 900, to: 4000, pan: 0.3, gain: 0.2 }],
+  [115.8, 'logo hit', 'impact', { gain: 0.55 }],
+  [116.3, 'sheen', 'bell', { pitch: 'D7', gain: 0.12 }],
 ];
 
 // ---------------------------------------------------------------- helpers
@@ -670,20 +675,78 @@ function particlesX(ctx, u, srcAt) {
     x += noise1(u * 1.4 + p.ph, 3) * 4 * k; y += noise1(u * 1.4 + p.ph, 7) * 4 * k;
     // fly out toward the screen edges at the end
     if (out > 0) { x += (x - 540) * out * 2.2; y += (y - 860) * out * 2.2 + 900 * out; }
-    const a = (k > 0 ? 0.35 + 0.65 * Math.min(1, k) : 0) * (1 - out) * flash;
+    const a = (k > 0 ? 0.35 + 0.65 * Math.min(1, k) : 0) * (1 - out) * flash * (1 - 0.8 * E.outCubic(prog(u, 101.0, 101.45)));
     if (a <= 0.01) continue;
     ctx.fillStyle = rgba(p.col, a);
     ctx.beginPath(); ctx.arc(x, y, p.r, 0, TAU); ctx.fill();
   }
-  // wordmark under the X
-  const wm = 'xyntal';
-  const f = font(150, 600, DISPLAY);
-  const L = layout(ctx, wm, f, -3);
-  const x0 = 540 - L.width / 2, base = 1335;
+  // the cloud snaps into the solid mark, a flash, a light band across it
+  const res = E.outCubic(prog(u, 101.0, 101.45));
+  if (res > 0 && out < 1) {
+    bloom(ctx, XC[0], XC[1], 560, 0.55 * Math.exp(-Math.max(0, u - 101.0) * 5) * (1 - out));
+    ctx.save(); ctx.translate(XC[0], XC[1] + 900 * out); const zs = 1 + 0.06 * (1 - res) + 0.5 * out; ctx.scale(zs, zs); ctx.translate(-XC[0], -XC[1]);
+    logoMark(ctx, XC[0], XC[1], XS * 0.9, { alpha: res * (1 - out), sheen: prog(u, 101.5, 102.7), heads: false });
+    ctx.restore();
+  }
+  wordmarkIn(ctx, u, WORD0, 540, 1335 + out * 900, 150, 1 - out);
+}
+
+// The Xyntal mark from its own SVG geometry (assets/logo/icon_0.svg): stroke B (blue -> cyan), a dark
+// gap, stroke A (purple -> blue) over it. pB / pA draw each stroke; heads light the drawing tips;
+// sheen (0..1) runs a light band across the mark.
+function logoMark(ctx, cx, cy, size, { pB = 1, pA = 1, alpha = 1, sheen = -1, heads = true, gapC = C.bg } = {}) {
+  if (alpha <= 0.002) return;
+  const s = size / 512;
+  const pts = (P) => Array.from({ length: 48 }, (_, i) => qpt(...P, i / 47));
+  const PB = pts(XB), PA = pts(XA);
+  const tip = (P, p) => qpt(...P, clamp(p));
+  ctx.save(); ctx.translate(cx - 256 * s, cy - 256 * s); ctx.scale(s, s);
+  ctx.globalAlpha *= alpha; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  const gb = ctx.createLinearGradient(140, 140, 372, 372); gb.addColorStop(0, C.bl); gb.addColorStop(1, C.cy);
+  const ga = ctx.createLinearGradient(140, 372, 372, 140); ga.addColorStop(0, C.pu); ga.addColorStop(1, C.bl);
+  const band = () => {
+    const a = -0.6, d = [Math.cos(a), Math.sin(a)], t = -260 + sheen * 520;
+    const g = ctx.createLinearGradient(256 + d[0] * (t - 70), 256 + d[1] * (t - 70), 256 + d[0] * (t + 70), 256 + d[1] * (t + 70));
+    g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(0.5, 'rgba(255,255,255,0.75)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+    return g;
+  };
+  const sh = sheen > 0 && sheen < 1;
+  ctx.lineWidth = 60; ctx.strokeStyle = gb; drawPoly(ctx, PB, pB);
+  if (sh) { ctx.strokeStyle = band(); drawPoly(ctx, PB, pB); }
+  if (pA > 0) {
+    ctx.lineWidth = 96; ctx.strokeStyle = gapC; drawPoly(ctx, PA, pA);
+    ctx.lineWidth = 60; ctx.strokeStyle = ga; drawPoly(ctx, PA, pA);
+    if (sh) { ctx.strokeStyle = band(); drawPoly(ctx, PA, pA); }
+  }
+  if (heads) {
+    ctx.globalCompositeOperation = 'lighter';
+    for (const [P, p, col] of [[XB, pB, C.cy], [XA, pA, C.bl]]) {
+      if (p <= 0 || p >= 1) continue;
+      const [x, y] = tip(P, p);
+      const g = ctx.createRadialGradient(x, y, 0, x, y, 110);
+      g.addColorStop(0, 'rgba(255,255,255,0.95)'); g.addColorStop(0.25, rgba(col, 0.6)); g.addColorStop(1, rgba(col, 0));
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, 110, 0, TAU); ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+function bloom(ctx, x, y, r, a, col = '#FFFFFF') {
+  if (a <= 0.01) return;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+  g.addColorStop(0, rgba(col, a)); g.addColorStop(0.35, rgba(C.bl, a * 0.35)); g.addColorStop(1, rgba(C.bl, 0));
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+  ctx.restore();
+}
+// wordmark that tracks in: letters start spread and faint, close up to the brand's tracking
+function wordmarkIn(ctx, u, t0, x, base, size, a = 1) {
+  const wf = font(size, 600, DISPLAY);
+  const L = layout(ctx, 'xyntal', wf, -size * 0.02);
   L.glyphs.forEach((g, j) => {
-    const k = springU(u, WORD0 + j * 0.05, SPRING.bouncy);
+    const k = clamp(springU(u, t0 + j * 0.035, SPRING.snappy), 0, 1.05);
     if (k <= 0) return;
-    glyph(ctx, g.ch, x0 + g.cx, base + (1 - k) * 60 + out * 900, f, rgba(C.ink, clamp(k) * (1 - out)));
+    const spread = (j - 2.5) * size * 0.3 * (1 - k);
+    glyph(ctx, g.ch, x - L.width / 2 + g.cx + spread, base + (1 - k) * size * 0.12, wf, rgba(C.ink, clamp(k) * a));
   });
 }
 
@@ -950,7 +1013,7 @@ function crowd(ctx, u) {
   const t0 = 112.0;
   if (u < t0) return;
   const sink = springU(u, 114.85, SPRING.gentle);
-  const dim = lerp(1, 0.55, clamp(sink));
+  const dim = lerp(1, 0.55, clamp(sink)) + 0.5 * bump(u, TE.card + 1.3, 0.5);
   ctx.save(); ctx.translate(0, 560 * sink);
   // links between neighbours on "alone"
   const byRow = new Map();
@@ -1006,30 +1069,50 @@ function sceneEnd(ctx, u) {
     });
   });
   ctx.restore();
-  if (u > TE.card) {
-    const t0 = TE.card + 0.15;
-    const k = prog(u, t0, t0 + 0.9);
-    const cx = 540, cy = 930, size = 360;
-    const s = size / 512;
-    ctx.save(); ctx.translate(cx - 256 * s, cy - 256 * s); ctx.scale(s, s);
-    ctx.lineCap = 'round';
-    const drawQ = (P, p, style, lw) => {
-      const pts = Array.from({ length: 40 }, (_, i) => qpt(...P, i / 39));
-      ctx.strokeStyle = style; ctx.lineWidth = lw; drawPoly(ctx, pts, p);
-    };
-    const gb = ctx.createLinearGradient(140, 140, 372, 372); gb.addColorStop(0, C.bl); gb.addColorStop(1, C.cy);
-    const ga = ctx.createLinearGradient(140, 372, 372, 140); ga.addColorStop(0, C.pu); ga.addColorStop(1, C.bl);
-    drawQ(XB, E.outCubic(k), gb, 60);
-    drawQ(XA, E.outCubic(prog(u, t0 + 0.3, t0 + 1.2)), C.bg, 96);
-    drawQ(XA, E.outCubic(prog(u, t0 + 0.3, t0 + 1.2)), ga, 60);
+  if (u > TE.card - 0.4) {
+    const t0 = TE.card + 0.15, hit = t0 + 0.8;
+    const LX = 540, LY = 910, LS = 460;
+    // light streaks rise from the crowd into the mark
+    const sink = springU(u, TE.card, SPRING.gentle);
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+    for (let n = 0; n < 56; n++) {
+      const c = CROWD[Math.floor(hash01(n, 41) * CROWD.length)];
+      const d = hash01(n, 42);
+      const a0 = t0 - 0.35 + d * 0.3, a1 = a0 + 0.55;
+      const pt = prog(u, a0, a1);
+      if (pt <= 0 || pt >= 1) continue;
+      const hx = c.x, hy = c.y - c.s * 1.5 + 560 * sink;
+      const at = (q) => { const e = E.inCubic(q); return [lerp(hx, LX, e), lerp(hy, LY, e) - Math.sin(Math.PI * q) * 120 * (d - 0.5)]; };
+      const [x1, y1] = at(pt), [x0, y0] = at(Math.max(0, pt - 0.22));
+      const g = ctx.createLinearGradient(x0, y0, x1, y1);
+      g.addColorStop(0, rgba(gradAt(d), 0)); g.addColorStop(1, rgba(gradAt(d), 0.9));
+      ctx.strokeStyle = g; ctx.lineWidth = 3 + 3 * d;
+      ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+    }
     ctx.restore();
-    const wf = font(132, 600, DISPLAY);
-    const L = layout(ctx, 'xyntal', wf, -3);
-    L.glyphs.forEach((g, j) => {
-      const kk = springU(u, t0 + 0.7 + j * 0.04, SPRING.snappy);
-      if (kk <= 0) return;
-      glyph(ctx, g.ch, 540 - L.width / 2 + g.cx, 1240 + (1 - kk) * 50, wf, rgba(C.ink, clamp(kk)));
-    });
+    if (u > t0) {
+      // two strokes slash in, then the hit: flash, a jolt, a ring of the gradient going out
+      ctx.save();
+      M.shake(ctx, u, hit, 12, 5, 0.1);
+      const pB = E.outExpo(prog(u, t0 + 0.2, t0 + 0.5)), pA = E.outExpo(prog(u, t0 + 0.5, hit));
+      const sc = 1 + 0.25 * (1 - clamp(springU(u, t0 + 0.2, { stiffness: 210, damping: 13 }), 0, 1.3)) + 0.012 * Math.sin(u * 1.6);
+      ctx.translate(LX, LY); ctx.scale(sc, sc); ctx.translate(-LX, -LY);
+      bloom(ctx, LX, LY, 520, 0.6 * Math.exp(-Math.max(0, u - hit) * 5) * (u > hit ? 1 : 0));
+      const halo = ctx.createRadialGradient(LX, LY, 0, LX, LY, 330);
+      halo.addColorStop(0, rgba(C.bl, 0.16 * clamp(prog(u, hit, hit + 0.6)))); halo.addColorStop(1, rgba(C.bl, 0));
+      ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(LX, LY, 330, 0, TAU); ctx.fill();
+      logoMark(ctx, LX, LY, LS, { pB, pA, sheen: prog(u, hit + 0.45, hit + 1.5) });
+      ctx.restore();
+      const rp = prog(u, hit, hit + 1.7);
+      if (rp > 0 && rp < 1) {
+        const r = 140 + 1100 * E.outCubic(rp);
+        ctx.save(); ctx.globalCompositeOperation = 'lighter';
+        ctx.strokeStyle = grad(ctx, LX - r, LY, LX + r, LY, 0.8 * (1 - rp)); ctx.lineWidth = 5 * (1 - rp) + 1;
+        ctx.beginPath(); ctx.arc(LX, LY, r, 0, TAU); ctx.stroke();
+        ctx.restore();
+      }
+      wordmarkIn(ctx, u, hit + 0.15, 540, 1240, 132);
+    }
     const t1 = E.outQuint(prog(u, t0 + 1.4, t0 + 2.2));
     if (t1 > 0) {
       const tf = font(44, 400, DISPLAY);

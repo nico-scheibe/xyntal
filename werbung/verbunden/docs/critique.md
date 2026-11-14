@@ -39,3 +39,10 @@ Worst three, fixed:
 1. Tagline and URL sat on top of the crowd. -> the crowd sinks 560 px and dims under the end card.
 2. Links between neighbours nearly invisible. -> 0.85 alpha, 1.5-4 px, ~60 % of neighbours linked.
 3. Crowd entrance had no sound. -> swell + four pops on the wave.
+
+## Round 6 – logo animation (strips 71.6-73.6 s, 81.7-83.8 s)
+Feedback: the logo animation looked flat (strokes simply drawing on).
+- Particle X now snaps into the solid mark (flash, slight settle, light band across it); the wordmark tracks in.
+- End card: light streaks rise from the crowd, stroke B and stroke A slash in with lit tips, the hit lands with a
+  flash, a jolt and a gradient ring that lights the crowd as it passes, then a sheen; wordmark tracks in.
+Scores: hook 8 · readability 8 · motion 9 · variety 9 · brand 9 · sync 8
