@@ -7,6 +7,11 @@
 (() => {
   const KEY = "xyntal-lang";
   const ATTRS = ["placeholder", "aria-label", "title", "alt"];
+  // App-Screenshots mit englischer Oberfläche liegen unter assets/img/en/ (gleicher Dateiname).
+  // Die Liste muss zu diesem Ordner passen; der Server übernimmt dieselbe Zuordnung für /en-Adressen.
+  const EN_IMAGES = new Set(["chat-960.webp", "chat-1920.webp", "discover-1440.webp", "discover-2880.webp", "home-960.webp", "home-1920.webp", "profil-1440.webp", "profil-2880.webp", "projects-960.webp", "projects-1920.webp"]);
+  const IMG_RE = /(^|\/)assets\/img\/([a-z0-9-]+\.(?:webp|png|jpg))(\?[^\s,]*)?/gi;
+  const origImg = new WeakMap();    // Bild -> { src, srcset } deutsche Originalwerte
   const SKIP = new Set(["SCRIPT", "STYLE", "NOSCRIPT", "TEXTAREA", "CODE"]);
   const DICT = window.XYNTAL_EN || {};
   const PATTERNS = window.XYNTAL_EN_PATTERNS || [];
@@ -52,7 +57,20 @@
     const want = lang === "en" ? translate(de) : de;
     if (node.data !== want) node.data = want;
   }
+  function applyImg(el) {
+    let store = origImg.get(el);
+    for (const a of ["src", "srcset"]) {
+      if (!el.hasAttribute(a)) continue;
+      if (!store) { store = {}; origImg.set(el, store); tracked.add(el); }
+      if (!(a in store)) store[a] = el.getAttribute(a);
+      const want = lang === "en"
+        ? store[a].replace(IMG_RE, (all, pre, file, q) => (EN_IMAGES.has(file.toLowerCase()) ? `${pre}assets/img/en/${file}${q || ""}` : all))
+        : store[a];
+      if (el.getAttribute(a) !== want) el.setAttribute(a, want);
+    }
+  }
   function applyAttrs(el) {
+    if (el.tagName === "IMG") applyImg(el);
     let store = origAttr.get(el);
     for (const a of ATTRS) {
       if (!el.hasAttribute(a)) continue;
