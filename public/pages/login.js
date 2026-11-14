@@ -26,13 +26,26 @@ function showMfa() {
 })();
 mfaForm.addEventListener("submit", (e) => {
   e.preventDefault();
+  markFormField(mfaForm, "code");
   submitWith(mfaForm, mfaStatus, async (data) => {
     const code = (data.code || "").replace(/\s/g, "");
-    if (!/^\d{6}$/.test(code)) throw new Error("Bitte gib den 6-stelligen Code aus deiner App ein.");
+    if (!/^\d{6}$/.test(code)) {
+      // Nur das Feld markieren; die Gesamtmeldung bleibt frei (submitWith hat sie gerade auf „Einen Moment …“ gesetzt)
+      markFormField(mfaForm, "code", trLogin("Bitte gib den 6-stelligen Code aus deiner App ein."));
+      mfaForm.elements.code.focus();
+      setStatus(mfaStatus, "");
+      return;
+    }
     const factors = unwrap(await sb.auth.mfa.listFactors());
     const factor = (factors.totp || []).find((f) => f.status === "verified");
     if (!factor) throw new Error("Für dein Konto ist keine Authenticator-App eingerichtet.");
-    unwrap(await sb.auth.mfa.challengeAndVerify({ factorId: factor.id, code }));
+    try {
+      unwrap(await sb.auth.mfa.challengeAndVerify({ factorId: factor.id, code }));
+    } catch (err) {
+      markFormField(mfaForm, "code", "", "mfa-status");
+      mfaForm.elements.code.focus();
+      throw err;
+    }
     location.href = NEXT;
   });
 });
@@ -57,6 +70,18 @@ function markLoginField(name, text = "", describedBy = "") {
   err.hidden = !text;
   if (text || describedBy) input.setAttribute("aria-invalid", "true"); else input.removeAttribute("aria-invalid");
   input.setAttribute("aria-describedby", describedBy || err.id);
+}
+// Gleiche Feldbindung für Registrierung und MFA: das Fehler-<p> heißt "<formid>-<feld>-error"
+function markFormField(formEl, name, text = "", describedBy = "") {
+  const input = formEl.elements[name], err = document.getElementById(`${formEl.id}-${name}-error`);
+  if (!input || !err) return;
+  err.textContent = text;
+  err.hidden = !text;
+  if (text || describedBy) input.setAttribute("aria-invalid", "true"); else input.removeAttribute("aria-invalid");
+  // Vorhandene Beschreibung des Feldes (z. B. Passwortstärke bei pw-strength) bleibt erhalten; jede ID nur einmal
+  if (!("descBase" in input.dataset)) input.dataset.descBase = input.getAttribute("aria-describedby") || "";
+  const ids = [...new Set([input.dataset.descBase, err.id].join(" ").split(/\s+/).filter(Boolean))];
+  input.setAttribute("aria-describedby", describedBy || ids.join(" "));
 }
 form.addEventListener("submit", (e) => {
   e.preventDefault();
@@ -122,9 +147,17 @@ let providersShown = false;
 function showProviders(on) {
   for (const id of ["auth-options", "auth-divider", "auth-note"]) document.getElementById(id).hidden = !(on && providersShown);
 }
+// Beim Wechsel die Feldfehler beider Formulare zurücksetzen (Text, aria-invalid, aria-describedby)
+function clearFieldErrors() {
+  markLoginField("email");
+  markLoginField("password");
+  for (const f of ["name", "email", "password", "birthdate", "code"]) markFormField(signupForm, f);
+}
 function setMode(next, focus = false) {
   if (!mfaForm.hidden) return;
-  mode = next === "signup" ? "signup" : "login";
+  const target = next === "signup" ? "signup" : "login";
+  if (target !== mode) clearFieldErrors();
+  mode = target;
   panel.dataset.mode = mode;
   // Anbieter-Buttons wandern zur sichtbaren Seite des Panels
   panel.querySelector(`.auth-pane--${mode}`).prepend(document.getElementById("auth-stack"));
@@ -203,12 +236,23 @@ signupForm.addEventListener("submit", (e) => {
   e.preventDefault();
   submitWith(signupForm, signupStatus, async (d) => {
     if (d.company) return; // Bots füllen das versteckte Feld aus
-    requireFields(d, ["name", "email", "password"], "Bitte gib Name, E-Mail und ein Passwort an.");
-    if (d.name.trim().length < 2) throw new Error("Bitte gib deinen Namen an.");
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email.trim())) throw new Error("Bitte gib eine gültige E-Mail-Adresse an.");
-    if (d.password.length < 8) throw new Error("Dein Passwort braucht mindestens 8 Zeichen.");
-    const birthProblem = birthdateProblem(d.birthdate);
-    if (birthProblem) { signupForm.elements.birthdate.focus(); throw new Error(birthProblem); }
+    // Pro Feld eine Meldung; die Gesamtmeldung in #signup-status nennt den ersten Fehler
+    const fieldErrors = {
+      name: d.name.trim().length < 2 ? "Bitte gib deinen Namen an." : "",
+      email: !d.email ? "Bitte gib deine E-Mail-Adresse ein." : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email.trim()) ? "Bitte gib eine gültige E-Mail-Adresse an." : "",
+      password: !d.password ? "Bitte gib dein Passwort ein." : d.password.length < 8 ? "Dein Passwort braucht mindestens 8 Zeichen." : "",
+      birthdate: birthdateProblem(d.birthdate),
+    };
+    const order = ["name", "email", "password", "birthdate"];
+    for (const f of [...order, "code"]) markFormField(signupForm, f, fieldErrors[f] ? trLogin(fieldErrors[f]) : "");
+    const first = order.find((f) => fieldErrors[f]);
+    if (first) {
+      // Gesamtmeldung nur bei mehr als einem leeren Pflichtfeld; bei einem Feld steht der Feldtext in der Meldung
+      const empty = ["name", "email", "password"].filter((f) => !d[f]);
+      if (empty.length > 1) throw new Error("Bitte gib Name, E-Mail und ein Passwort an.");
+      signupForm.elements[first].focus();
+      throw new Error(fieldErrors[first]);
+    }
     const result = unwrap(await sb.auth.signUp({
       email: d.email.trim(), password: d.password,
       options: {
