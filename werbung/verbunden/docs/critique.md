@@ -31,3 +31,11 @@ Worst three, fixed:
 1. Blank frame between the network and the X: the particles were drawn inside the globe's early return. -> globe body and particles split.
 2. "building alone." overflowed and read grey: fitSize got a pixel tracking. -> fit to 860 px, weight 300.
 3. Dim gap in the city -> globe handover. -> globe fades in from 68.3, city out from 69.0.
+
+## Round 5 – the crowd (stills at 81.5 / 85.5 s, strip 79.6-85.5 s)
+Asked for: many users at the end, not two. Built as an illustration (hundreds of person symbols in rows of depth,
+each with a spark, links in the gradient on "alone"), not as a product screen: no names, no member count.
+Worst three, fixed:
+1. Tagline and URL sat on top of the crowd. -> the crowd sinks 560 px and dims under the end card.
+2. Links between neighbours nearly invisible. -> 0.85 alpha, 1.5-4 px, ~60 % of neighbours linked.
+3. Crowd entrance had no sound. -> swell + four pops on the wave.

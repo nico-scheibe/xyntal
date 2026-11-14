@@ -79,7 +79,9 @@ const HITS = [
   [109.16, 'match cards', 'pop', { pitch: 'F5', gain: 0.2 }], [109.46, 'complement', 'pop', { pitch: 'A5', gain: 0.16 }],
   [112.05, 'cards fall', 'whoosh', { len: 0.5, from: 1800, to: 400, gain: 0.14 }],
   [112.53, 'Stop', 'thud', { gain: 0.25 }],
-  [113.64, 'alone', 'tick', { gain: 0.15 }],
+  [113.64, 'alone + links', 'tick', { gain: 0.15 }],
+  [112.1, 'crowd rises', 'swell', { len: 0.8, gain: 0.12 }],
+  ...[112.3, 112.5, 112.75, 113.0].map((b, i) => [b, `crowd ${i}`, 'pop', { pitch: ['D5', 'F5', 'A5', 'D6'][i], gain: 0.07 }]),
   [114.95, 'logo', 'bell', { pitch: 'D6', gain: 0.22 }],
 ];
 
@@ -925,6 +927,57 @@ function sceneApp(ctx, u, IMG) {
   }
 }
 
+// ======================================================================= the crowd (end)
+// Hundreds of builders in rows of depth, each with a spark: an illustration of the community, not a
+// product screen (no names, no counts). They rise in a wave as the app cards fall, link up on "alone",
+// and stay as a dim base under the end card.
+const CROWD = (() => {
+  const out = [];
+  const R = 13;
+  for (let r = 0; r <= R; r++) {
+    const p = (r / R) ** 1.55;
+    const y = 1010 + 930 * p, s = 17 + 78 * p, gap = s * 1.22;
+    const n = Math.ceil((W + 2 * gap) / gap);
+    for (let i = 0; i < n; i++) {
+      const x = -gap + i * gap + (r % 2 ? gap / 2 : 0) + (hash01(r * 97 + i, 5) - 0.5) * gap * 0.25;
+      const d = Math.hypot((x - 540) / 540, (y - 1500) / 600);
+      out.push({ x, y, s, r, i, d, spk: hash01(r * 97 + i, 6), link: hash01(r * 97 + i, 7) });
+    }
+  }
+  return out;
+})();
+function crowd(ctx, u) {
+  const t0 = 112.0;
+  if (u < t0) return;
+  const sink = springU(u, 114.85, SPRING.gentle);
+  const dim = lerp(1, 0.55, clamp(sink));
+  ctx.save(); ctx.translate(0, 560 * sink);
+  // links between neighbours on "alone"
+  const byRow = new Map();
+  for (const c of CROWD) { if (!byRow.has(c.r)) byRow.set(c.r, []); byRow.get(c.r).push(c); }
+  ctx.lineCap = 'round';
+  for (const c of CROWD) {
+    if (c.link > 0.62) continue;
+    const row = byRow.get(c.r), nb = row[c.i + 1];
+    const lp = E.outCubic(prog(u, 113.6 + c.d * 0.5, 114.1 + c.d * 0.5));
+    if (!nb || lp <= 0) continue;
+    const hy = c.y - c.s * 1.25, hy2 = nb.y - nb.s * 1.25;
+    ctx.strokeStyle = grad(ctx, c.x, hy, nb.x, hy2, 0.85 * dim * (0.45 + 0.55 * c.r / 13));
+    ctx.lineWidth = 1.5 + 2.5 * (c.r / 13);
+    drawPoly(ctx, [[c.x, hy], [nb.x, hy2]], lp);
+  }
+  for (const c of CROWD) {
+    const k = clamp(springU(u, t0 + c.d * 1.1, SPRING.bouncy), 0, 1.15);
+    if (k <= 0.01) continue;
+    const depth = 0.35 + 0.65 * (c.r / 13);
+    const col = rgba(mix(C.gray2, C.ink, depth * 0.85), Math.min(1, k) * dim);
+    person(ctx, c.x, c.y + (1 - k) * c.s * 0.9, c.s, col, 0.04 * wobble(u - t0 - c.d * 1.1, 2, 4));
+    const sk = clamp(springU(u, t0 + 0.35 + c.d * 1.1 + c.spk * 0.4, SPRING.bouncy));
+    if (sk > 0 && c.spk > 0.25) spark(ctx, c.x, c.y - c.s * 1.5 + (1 - k) * c.s * 0.9, Math.max(3, c.s * 0.11) * sk, u + c.spk * 5, 0, dim);
+  }
+  ctx.restore();
+}
+
 // ======================================================================= the line + end card
 const TE = { words: [['Stop', 112.53, 0], ['building', 112.71, 1], ['alone.', 113.64, 1]], card: 114.85 };
 function sceneEnd(ctx, u) {
@@ -1018,6 +1071,7 @@ M.film({
       sceneApp(ctx, u, IMG);
     } else {
       fill(ctx, C.bg);
+      crowd(ctx, u);
       if (u < 112.9) sceneApp(ctx, u, IMG);
       sceneEnd(ctx, u);
     }
