@@ -5,9 +5,12 @@ struct CommunityDirectoryView: View {
     @Environment(SessionStore.self) private var session
 
     @State private var store: CommunityDirectoryStore?
+    /// Navigationspfad. Nach dem Gründen öffnet die App damit direkt die neue Community.
+    @State private var path: [DiscoverCommunity] = []
+    @State private var showCreate = false
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             Group {
                 if let store {
                     CommunityListContent(store: store)
@@ -24,6 +27,25 @@ struct CommunityDirectoryView: View {
                     CommunityDetailView(community: community, store: store)
                 }
             }
+            .toolbar {
+                if store != nil {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button {
+                            showCreate = true
+                        } label: {
+                            Image(systemName: "plus")
+                        }
+                        .accessibilityLabel("Community gründen")
+                    }
+                }
+            }
+            .sheet(isPresented: $showCreate) {
+                if let store {
+                    CreateCommunitySheet(store: store) { created in
+                        Task { await openCreatedCommunity(created, store: store) }
+                    }
+                }
+            }
             .task {
                 if store == nil {
                     store = CommunityDirectoryStore(session: session)
@@ -33,6 +55,15 @@ struct CommunityDirectoryView: View {
                 }
             }
         }
+    }
+
+    /// Lädt die Liste neu und öffnet die neue Community.
+    /// Erste Wahl ist der Eintrag aus der frisch geladenen Liste, der hat die echten Werte. Fehlt er, springt die App
+    /// mit dem Eintrag aus der Antwort des Servers. Der Grund: GET /communities/discover liefert höchstens 50 Einträge,
+    /// sortiert nach Mitgliederzahl. Eine neue Community mit einem Mitglied steht ganz hinten und fehlt dann.
+    private func openCreatedCommunity(_ created: DiscoverCommunity, store: CommunityDirectoryStore) async {
+        await store.load()
+        path = [store.community(id: created.id) ?? created]
     }
 }
 
@@ -154,6 +185,12 @@ struct CommunityDetailView: View {
                 nonMemberList
             }
         }
+        // Der Titel steht hier aussen und nicht nur in den beiden Zweigen: Beim Sprung direkt nach dem
+        // Gründen ist die Navigationsleiste schon gebaut, wenn der innere Inhalt seinen Titel setzt,
+        // und der Bildschirm bleibt dann ohne Überschrift. Gemessen: von der Liste geöffnet war der
+        // Titel da, nach dem Gründen nicht.
+        .navigationTitle(current.name.nonEmptyText ?? "Community")
+        .navigationBarTitleDisplayMode(.inline)
         .onChange(of: current.isMember) { _, isMember in
             // Nach dem Beitritt erscheint der Strom auf diesem Bildschirm, mit einem kurzen Hinweis.
             guard isMember else { return }

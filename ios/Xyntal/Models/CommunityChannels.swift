@@ -23,8 +23,10 @@ struct MemberCommunity: Decodable {
         }
     }
 
-    /// Moderatoren und Eigentümer: dürfen fremde Beiträge löschen.
+    /// Moderatoren und Eigentümer: dürfen fremde Beiträge löschen und Umfragen schließen.
     var canManage: Bool
+    /// Darf Umfragen starten. Ein eigenes Recht, auch wenn der Server es heute gleich canManage setzt.
+    var canPoll: Bool
     /// Kanäle in der Reihenfolge des Servers. Leere Namen fallen weg.
     var channels: [Channel]
 
@@ -34,11 +36,13 @@ struct MemberCommunity: Decodable {
 
     private struct Info: Decodable {
         let canManage: Bool?
+        let canPoll: Bool?
     }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         canManage = container.lenient(Info.self, .community)?.canManage ?? false
+        canPoll = container.lenient(Info.self, .community)?.canPoll ?? false
         channels = (container.lenient(LossyArray<Channel>.self, .channels)?.elements ?? [])
             .filter { !$0.name.isEmpty }
     }
@@ -64,7 +68,7 @@ struct ChannelReaction: Decodable, Hashable {
     }
 }
 
-/// Ein Beitrag in einem Kanal. Umfragen werden hier nicht gelesen; ihr Text erscheint wie jeder andere Text.
+/// Ein Beitrag in einem Kanal. poll ist nil, wenn der Beitrag keine Umfrage hat.
 struct ChannelPost: Decodable, Identifiable, Equatable {
     /// Die einzige Reaktion, die die App anbietet.
     static let likeEmoji = "👍"
@@ -81,9 +85,10 @@ struct ChannelPost: Decodable, Identifiable, Equatable {
     var createdAt: String?
     var reactions: [ChannelReaction]
     var attachments: [Attachment]
+    var poll: CommunityPoll?
 
     private enum CodingKeys: String, CodingKey {
-        case id, author, authorId, authorIsTeam, mine, body, createdAt, reactions, attachments
+        case id, author, authorId, authorIsTeam, mine, body, createdAt, reactions, attachments, poll
     }
 
     init(from decoder: Decoder) throws {
@@ -97,6 +102,7 @@ struct ChannelPost: Decodable, Identifiable, Equatable {
         createdAt = container.lenient(String.self, .createdAt)
         reactions = container.lenient(LossyArray<ChannelReaction>.self, .reactions)?.elements ?? []
         attachments = container.lenient(LossyArray<Attachment>.self, .attachments)?.elements ?? []
+        poll = container.lenient(CommunityPoll.self, .poll)
     }
 
     var authorName: String { author.nonEmptyText ?? "Mitglied" }

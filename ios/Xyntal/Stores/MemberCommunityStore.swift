@@ -25,6 +25,8 @@ final class MemberCommunityStore {
 
     private(set) var channels: [MemberCommunity.Channel] = []
     private(set) var canManage = false
+    /// Darf Umfragen starten. Steuert nur den Eintrag „Umfrage“ im „+“-Menü.
+    private(set) var canPoll = false
     /// nil, solange keine Kanäle bekannt sind.
     private(set) var selectedChannelId: String?
     /// Alle Beiträge des gewählten Kanals, neueste zuerst.
@@ -45,6 +47,8 @@ final class MemberCommunityStore {
     private var postsGeneration = 0
     private var likingPostIds: Set<String> = []
     private var deletingPostIds: Set<String> = []
+    /// Ids der Umfragen, für die gerade abgestimmt oder geschlossen wird. Je Umfrage nur eine Anfrage zur Zeit.
+    private var pollBusyIds: Set<String> = []
     /// Entwürfe je Kanal. Angelegt, sobald die Kanäle bekannt sind.
     private var drafts: [String: PostDraft] = [:]
 
@@ -120,6 +124,7 @@ final class MemberCommunityStore {
             guard generation == detailGeneration else { return }
             channels = community.channels
             canManage = community.canManage
+            canPoll = community.canPoll
             for channel in channels where drafts[channel.id] == nil {
                 drafts[channel.id] = PostDraft(channelId: channel.id)
             }
@@ -132,6 +137,9 @@ final class MemberCommunityStore {
         } catch {
             guard generation == detailGeneration else { return }
             loadError = AppError.displayText(for: error)
+            // Ohne frische Rechte nichts anbieten, das der Server danach ablehnen könnte.
+            canManage = false
+            canPoll = false
             hasLoaded = true
             return
         }
@@ -144,6 +152,8 @@ final class MemberCommunityStore {
         // Was im verlassenen Kanal zugestellt wurde, zeigt er nicht mehr. Der Kanal lädt beim Zurückkommen neu.
         dropDeliveredPosts()
         selectedChannelId = channelId
+        // Ein Fehler aus dem alten Kanal gehört nicht in den neuen.
+        actionError = nil
         posts = []
         visibleCount = Self.pageSize
         await loadPosts()
@@ -234,6 +244,81 @@ final class MemberCommunityStore {
         } catch {
             actionError = AppError.displayText(for: error)
         }
+    }
+
+    /// Startet eine Umfrage im Kanal. Sie kommt als eigener Beitrag ohne Text und ohne Anhänge. Danach lädt der Kanal neu.
+    /// Dieselbe Kanal-Prüfung wie beim Senden eines Beitrags (submitPost): Schreibrecht im Kanal ist Pflicht.
+    func createPoll(channelId: String, question: String, options: [String]) async throws {
+        guard canPoll, channels.contains(where: { $0.id == channelId && $0.canPost }) else {
+            throw AppError.message("Du darfst in diesem Kanal keine Umfrage starten.")
+        }
+        try await session.withAccess { token in
+            try await self.session.api.sendChannelPost(channelId: channelId,
+                                                       body: "",
+                                                       attachmentIds: [],
+                                                       poll: ChannelPollInput(question: question, options: options),
+                                                       token: token)
+        }
+        // Der Server hat den Beitrag angenommen. Der Kanal lädt im Hintergrund nach, das Blatt wartet nicht darauf.
+        Task { await loadPosts() }
+    }
+
+    /// Läuft gerade eine Abstimmung oder das Schließen für diese Umfrage? Dann sind ihre Antworten gesperrt.
+    func isPollBusy(_ post: ChannelPost) -> Bool {
+        guard let pollId = post.poll?.id else { return false }
+        return pollBusyIds.contains(pollId)
+    }
+
+    /// Setzt oder ändert deine Stimme. Der Server ersetzt eine alte Stimme; die Antwort ist die frische Umfrage.
+    /// Dieselbe Antwort noch einmal anzutippen ändert nichts und schickt nichts.
+    func vote(on post: ChannelPost, option: Int) async {
+        guard let poll = post.poll, let pollId = poll.id, poll.canVote,
+              poll.myChoice != option, !pollBusyIds.contains(pollId) else { return }
+        pollBusyIds.insert(pollId)
+        defer { pollBusyIds.remove(pollId) }
+        do {
+            let fresh = try await session.withAccess { token in
+                try await self.session.api.votePoll(pollId: pollId, option: option, token: token)
+            }
+            replacePoll(ofPost: post.id, with: fresh)
+            actionError = nil
+        } catch is CancellationError {
+            return
+        } catch {
+            actionError = AppError.displayText(for: error)
+            // Nur bei veralteter Anzeige (etwa schon geschlossen) neu laden. Bei Netzfehler bleibt der Kanal stehen.
+            if isStale(error) { await loadPosts() }
+        }
+    }
+
+    private func isStale(_ error: Error) -> Bool {
+        if let appError = error as? AppError, case .stale = appError { return true }
+        return false
+    }
+
+    /// Schließt eine offene Umfrage endgültig. Nur mit Moderatorenrecht (canManage). Der Server prüft dasselbe.
+    func closePoll(_ post: ChannelPost) async {
+        guard canManage, let poll = post.poll, let pollId = poll.id, poll.canVote,
+              !pollBusyIds.contains(pollId) else { return }
+        pollBusyIds.insert(pollId)
+        defer { pollBusyIds.remove(pollId) }
+        do {
+            let fresh = try await session.withAccess { token in
+                try await self.session.api.closePoll(pollId: pollId, token: token)
+            }
+            replacePoll(ofPost: post.id, with: fresh)
+            actionError = nil
+        } catch is CancellationError {
+            return
+        } catch {
+            actionError = AppError.displayText(for: error)
+            if isStale(error) { await loadPosts() }
+        }
+    }
+
+    private func replacePoll(ofPost postId: String, with poll: CommunityPoll) {
+        guard let index = posts.firstIndex(where: { $0.id == postId }) else { return }
+        posts[index].poll = poll
     }
 
     /// Löscht einen Beitrag, den du löschen darfst. Danach verschwindet er aus der Liste.

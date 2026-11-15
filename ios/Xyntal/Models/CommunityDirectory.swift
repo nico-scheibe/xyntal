@@ -41,6 +41,28 @@ struct DiscoverCommunity: Decodable, Identifiable, Hashable {
     }
 }
 
+extension DiscoverCommunity {
+    /// Eintrag für eine eben gegründete Community. Die App braucht ihn nur, wenn die neu geladene Liste sie nicht enthält.
+    ///
+    /// Nur mit dem, was sicher bekannt ist: id, name, category und tags kommen aus der Antwort des Servers
+    /// (POST /communities), die Beschreibung aus dem Blatt. memberCount 1 und channelCount 1 sind keine Schätzung:
+    /// der Server legt in derselben Transaktion den Gründer als Eigentümer und genau einen Kanal „general“ an.
+    /// Die echten Werte gewinnen beim nächsten Laden, weil die Detailansicht den Store-Eintrag bevorzugt.
+    init(justCreated created: CreatedCommunity, description: String) {
+        id = created.id
+        name = created.name
+        self.description = description
+        category = created.category
+        tags = created.tags
+        official = false
+        avatar = nil
+        memberCount = 1
+        channelCount = 1
+        isMember = true
+        pinned = false
+    }
+}
+
 /// Antwort von GET /communities/discover: { communities: [...] }.
 struct CommunityDiscovery: Decodable {
     let communities: [DiscoverCommunity]

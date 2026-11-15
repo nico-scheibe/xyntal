@@ -120,6 +120,8 @@ struct AttachmentMenu: View {
     let onPhotos: () -> Void
     let onCamera: () -> Void
     let onFiles: () -> Void
+    /// Nur in Communitys mit Umfrage-Recht gesetzt. Im Chat bleibt der Eintrag weg (nil).
+    var onPoll: (() -> Void)? = nil
 
     var body: some View {
         Menu {
@@ -131,6 +133,9 @@ struct AttachmentMenu: View {
             }
             Button("Datei", systemImage: "doc", action: onFiles)
                 .disabled(isFull)
+            if let onPoll {
+                Button("Umfrage", systemImage: "chart.bar", action: onPoll)
+            }
         } label: {
             Image(systemName: "plus")
                 .font(.system(size: 20, weight: .medium))

@@ -77,6 +77,18 @@ final class CommunityDirectoryStore {
         }
     }
 
+    /// Gründet eine Community; du wirst Eigentümer. Gibt die Antwort des Servers zurück. Fehler gehen an das Blatt, nicht an die Liste.
+    /// Die Liste lädt der Aufrufer danach neu.
+    func createCommunity(name: String, description: String, category: String, tags: [String]) async throws -> CreatedCommunity {
+        try await session.withAccess { token in
+            try await self.session.api.createCommunity(name: name,
+                                                       description: description,
+                                                       category: category,
+                                                       tags: tags,
+                                                       token: token)
+        }
+    }
+
     /// Nach dem Arbeitsstil-Test: der Hinweis zum fehlenden Test ist überholt, „Beitreten“ ist wieder frei.
     func assessmentCompleted() {
         joinError = nil

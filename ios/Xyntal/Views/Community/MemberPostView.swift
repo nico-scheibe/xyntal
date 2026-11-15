@@ -1,14 +1,22 @@
 import SwiftUI
 
 /// Ein Beitrag in einem Kanal einer Community, in der du Mitglied bist: Kopf mit Autor und Zeit, Text,
-/// Bilder und „Gefällt mir“. Das „…“-Menü erscheint nur, wenn du löschen oder melden darfst.
+/// Umfrage, Bilder und „Gefällt mir“. Das „…“-Menü erscheint nur, wenn du etwas davon darfst.
 struct MemberPostView: View {
     let post: ChannelPost
     let canDelete: Bool
+    /// Moderatoren dürfen Umfragen schließen (Server: canManage).
+    let canClosePoll: Bool
+    /// Für diese Umfrage läuft gerade eine Abstimmung oder das Schließen. Die Antworten sind dann gesperrt.
+    let pollBusy: Bool
     let onToggleLike: () -> Void
     let onDelete: () -> Void
+    /// Tippen auf eine Antwort: Index der Antwort.
+    let onVote: (Int) -> Void
+    let onClosePoll: () -> Void
 
     @State private var confirmDelete = false
+    @State private var confirmClosePoll = false
     @State private var showReport = false
     @State private var viewer: ImageViewerRequest?
 
@@ -17,11 +25,19 @@ struct MemberPostView: View {
         !post.mine && post.authorId.nonEmptyText != nil
     }
 
+    /// Umfrage schließen: nur Moderatoren, nur offene Umfragen mit Id. Der Server prüft dasselbe.
+    private var canCloseThisPoll: Bool {
+        canClosePoll && (post.poll?.canVote ?? false)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             header
             if !post.body.isEmpty {
                 ExpandableBody(text: post.body)
+            }
+            if let poll = post.poll {
+                PollBlock(poll: poll, isBusy: pollBusy, onVote: onVote)
             }
             if !post.images.isEmpty {
                 PostImageGrid(images: post.images, senderTrusted: post.mine) { index in
@@ -39,6 +55,12 @@ struct MemberPostView: View {
         .alert("Beitrag löschen?", isPresented: $confirmDelete) {
             Button("Löschen", role: .destructive, action: onDelete)
             Button("Abbrechen", role: .cancel) {}
+        }
+        .alert("Umfrage schließen?", isPresented: $confirmClosePoll) {
+            Button("Schließen", role: .destructive, action: onClosePoll)
+            Button("Abbrechen", role: .cancel) {}
+        } message: {
+            Text("Danach kann niemand mehr abstimmen. Das lässt sich nicht rückgängig machen.")
         }
         .sheet(isPresented: $showReport) {
             ReportPostSheet(post: post)
@@ -73,12 +95,19 @@ struct MemberPostView: View {
                 }
             }
             Spacer(minLength: 8)
-            if canDelete || canReport {
+            if canDelete || canReport || canCloseThisPoll {
                 Menu {
                     if canReport {
                         Button("Melden", systemImage: "flag") {
                             showReport = true
                         }
+                    }
+                    if canCloseThisPoll {
+                        // Während eine Stimme läuft, nicht anbieten: sonst bestätigt man einen Dialog ohne Folge.
+                        Button("Umfrage schließen", systemImage: "lock") {
+                            confirmClosePoll = true
+                        }
+                        .disabled(pollBusy)
                     }
                     if canDelete {
                         Button("Löschen", systemImage: "trash", role: .destructive) {
@@ -221,6 +250,104 @@ private struct ReportPostSheet: View {
         } catch {
             sendError = AppError.displayText(for: error)
         }
+    }
+}
+
+/// Umfrage unter dem Text: Frage, Antworten mit Balken und Stimmenzahl, deine Stimme markiert, darunter die Gesamtzahl.
+/// Die Ergebnisse sind immer sichtbar, auch vor deiner Stimme. Antippbar nur, solange die Umfrage offen ist und eine Id hat.
+private struct PollBlock: View {
+    let poll: CommunityPoll
+    let isBusy: Bool
+    let onVote: (Int) -> Void
+
+    private var votable: Bool { poll.canVote }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(verbatim: poll.question)
+                .font(.subheadline.weight(.semibold))
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            VStack(spacing: 6) {
+                ForEach(Array(poll.options.enumerated()), id: \.offset) { index, option in
+                    optionRow(index: index, option: option)
+                }
+            }
+
+            Text(verbatim: totalLine)
+                .font(.caption)
+                .foregroundStyle(Theme.muted)
+
+            if votable {
+                Text(poll.myChoice == nil
+                     ? "Tippe eine Antwort an, um abzustimmen."
+                     : "Tippe eine andere Antwort an, um deine Stimme zu ändern.")
+                    .font(.caption)
+                    .foregroundStyle(Theme.muted)
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(.tertiarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
+    }
+
+    /// „4 Stimmen“, dahinter „· Umfrage geschlossen“, wenn sie zu ist.
+    private var totalLine: String {
+        poll.closed ? "\(poll.voteCountText) · Umfrage geschlossen" : poll.voteCountText
+    }
+
+    @ViewBuilder
+    private func optionRow(index: Int, option: PollOption) -> some View {
+        // myChoice ist nil bei -1 (keine Stimme). Nur ein echter Index markiert eine Antwort als deine.
+        let mine = poll.myChoice == index
+        let label = optionLabel(option, mine: mine, fraction: Double(poll.percent(for: option)) / 100)
+        if votable {
+            Button {
+                onVote(index)
+            } label: {
+                label
+            }
+            .buttonStyle(.plain)
+            .disabled(isBusy)
+        } else {
+            label
+        }
+    }
+
+    private func optionLabel(_ option: PollOption, mine: Bool, fraction: Double) -> some View {
+        HStack(spacing: 8) {
+            if mine {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(Theme.accent)
+                    .accessibilityHidden(true)
+            }
+            Text(verbatim: option.label)
+                .font(.subheadline.weight(mine ? .semibold : .regular))
+                .foregroundStyle(.primary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Text(verbatim: "\(option.votes)")
+                .font(.subheadline.monospacedDigit())
+                .foregroundStyle(Theme.muted)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 9)
+        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+        .background {
+            GeometryReader { proxy in
+                ZStack(alignment: .leading) {
+                    Color(.secondarySystemGroupedBackground)
+                    Rectangle()
+                        .fill(mine ? Theme.accent.opacity(0.35) : Color(.systemGray4))
+                        .frame(width: proxy.size.width * fraction)
+                }
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(mine ? Theme.accent : Color(.separator), lineWidth: 1))
+        .contentShape(RoundedRectangle(cornerRadius: 10))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(mine ? "\(option.label), deine Stimme" : option.label)
+        .accessibilityValue("\(option.votes) Stimmen")
     }
 }
 

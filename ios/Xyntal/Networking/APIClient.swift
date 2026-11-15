@@ -25,6 +25,9 @@ enum AppError: LocalizedError {
     case storageFull
     /// Die Upload-Sitzung ist auf dem Server nicht mehr bekannt (404), etwa nach Ablauf.
     case uploadExpired
+    /// Der Server meldet, dass sich die Sache geändert hat (409 oder 404, etwa eine Umfrage ist schon geschlossen
+    /// oder weg). Die Anzeige muss dann neu geladen werden. Der Text ist deutsch und für den Nutzer.
+    case stale(String)
     case message(String)
 
     var errorDescription: String? {
@@ -37,7 +40,7 @@ enum AppError: LocalizedError {
             return AppError.genericMessage
         case .appleBilling(let failure):
             return failure.text
-        case .twoFactor(let text, _), .birthDateRequired(let text, _), .underage(let text), .message(let text), .accountExists(let text), .assessmentRequired(let text):
+        case .twoFactor(let text, _), .birthDateRequired(let text, _), .underage(let text), .message(let text), .accountExists(let text), .assessmentRequired(let text), .stale(let text):
             return text
         }
     }

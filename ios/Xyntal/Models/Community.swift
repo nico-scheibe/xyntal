@@ -133,30 +133,55 @@ struct PollOption: Decodable, Hashable {
     }
 }
 
-/// Umfrage in einem Beitrag. Abstimmen geht nur in der Desktop-App; hier wird nur das Ergebnis gezeigt.
+/// Umfrage in einem Beitrag. Im öffentlichen Feed fehlen id und myVote: dann gibt es nur das Ergebnis, kein Abstimmen.
 struct CommunityPoll: Decodable, Hashable {
+    /// Id für Abstimmen und Schließen. Nur in der Mitglieder-Ansicht vorhanden.
+    var id: String?
     var question: String
     var totalVotes: Int?
     var closed: Bool
     var options: [PollOption]
+    /// Index deiner Stimme. Der Server schickt -1, wenn du nicht abgestimmt hast. Lies ihn über myChoice.
+    var myVote: Int?
 
     private enum CodingKeys: String, CodingKey {
-        case question, totalVotes, closed, options
+        case id, question, totalVotes, closed, options, myVote
     }
 
-    init(question: String, totalVotes: Int? = nil, closed: Bool = false, options: [PollOption]) {
+    init(id: String? = nil,
+         question: String,
+         totalVotes: Int? = nil,
+         closed: Bool = false,
+         options: [PollOption],
+         myVote: Int? = nil) {
+        self.id = id
         self.question = question
         self.totalVotes = totalVotes.map { clampedCount($0) }
         self.closed = closed
         self.options = options
+        self.myVote = myVote
     }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = container.lenient(String.self, .id)
         question = container.lenient(String.self, .question) ?? ""
         totalVotes = container.lenient(Int.self, .totalVotes).map { clampedCount($0) }
         closed = container.lenient(Bool.self, .closed) ?? false
         options = container.lenient(LossyArray<PollOption>.self, .options)?.elements ?? []
+        myVote = container.lenient(Int.self, .myVote)
+    }
+
+    /// Index deiner Stimme, oder nil, wenn du nicht abgestimmt hast. Der Server schickt dafür -1; das ist kein Index.
+    /// Ein Index außerhalb der Antworten zählt ebenfalls als keine Stimme.
+    var myChoice: Int? {
+        guard let myVote, myVote >= 0, myVote < options.count else { return nil }
+        return myVote
+    }
+
+    /// Abstimmen geht nur mit Id und solange die Umfrage offen ist.
+    var canVote: Bool {
+        id != nil && !closed
     }
 
     /// Stimmen insgesamt: vom Server, sonst Summe der Optionen. Die Summe bleibt geklemmt (kein Überlauf).

@@ -177,8 +177,12 @@ private struct MemberFeedContent: View {
             ForEach(store.visiblePosts) { post in
                 MemberPostView(post: post,
                                canDelete: store.canDelete(post),
+                               canClosePoll: store.canManage,
+                               pollBusy: store.isPollBusy(post),
                                onToggleLike: { Task { await store.toggleLike(post) } },
-                               onDelete: { Task { await store.delete(post) } })
+                               onDelete: { Task { await store.delete(post) } },
+                               onVote: { option in Task { await store.vote(on: post, option: option) } },
+                               onClosePoll: { Task { await store.closePoll(post) } })
                     .listRowSeparator(.hidden)
                     .listRowBackground(Color.clear)
                     .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
@@ -231,6 +235,7 @@ private struct PostComposer: View {
     @State private var showCamera = false
     @State private var showCameraDenied = false
     @State private var previewAttachment: ComposerAttachment?
+    @State private var showPoll = false
 
     /// Der Server übernimmt höchstens so viele Zeichen und kürzt still. Die App kürzt vorher, damit man es beim Tippen sieht.
     private static let bodyLimit = 8000
@@ -284,7 +289,8 @@ private struct PostComposer: View {
                                cameraAvailable: UIImagePickerController.isSourceTypeAvailable(.camera),
                                onPhotos: { showPhotoPicker = true },
                                onCamera: openCamera,
-                               onFiles: { showFileImporter = true })
+                               onFiles: { showFileImporter = true },
+                               onPoll: store.canPoll ? openPoll : nil)
 
                 TextField(composer.items.isEmpty ? "Schreib einen Beitrag" : "Beschriftung (optional)",
                           text: $draft.text, axis: .vertical)
@@ -336,6 +342,9 @@ private struct PostComposer: View {
         .fullScreenCover(item: $previewAttachment) { attachment in
             AttachmentPreview(attachment: attachment)
         }
+        .sheet(isPresented: $showPoll) {
+            PollCreateSheet(store: store, channelId: draft.channelId)
+        }
         .alert(AttachmentRules.cameraDeniedTitle, isPresented: $showCameraDenied) {
             Button("Einstellungen öffnen") { openSettings() }
             Button("Abbrechen", role: .cancel) {}
@@ -381,6 +390,11 @@ private struct PostComposer: View {
     private func addFiles(_ urls: [URL]) async {
         await outgoing.refreshLimits()
         await composer.addFiles(urls, limits: outgoing.limits)
+    }
+
+    /// Umfrage-Blatt für den Kanal dieses Entwurfs.
+    private func openPoll() {
+        showPoll = true
     }
 
     /// Kamera nur mit Erlaubnis. Ohne Erlaubnis erklärt ein Hinweis, wo man sie einschaltet.
