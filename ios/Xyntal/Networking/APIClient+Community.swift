@@ -32,6 +32,39 @@ extension APIClient {
                            mapFailure: Self.communityJoinFailure)
     }
 
+    /// GET /communities/:id (mit Token): deine Rechte und die Kanäle, die du lesen darfst. Nicht-Mitglieder bekommen 404.
+    func memberCommunity(id: String, token: String) async throws -> MemberCommunity {
+        let communityId = try Self.validatedPathId(id)
+        return try await send("communities/\(communityId)", token: token, as: MemberCommunity.self)
+    }
+
+    /// GET /channels/:id/posts (mit Token): alle Beiträge des Kanals, neueste zuerst. Der Server blättert nicht.
+    func channelPosts(channelId: String, token: String) async throws -> [ChannelPost] {
+        let id = try Self.validatedPathId(channelId)
+        let result = try await send("channels/\(id)/posts",
+                                    token: token,
+                                    as: ChannelPostsResult.self,
+                                    maxBytes: Self.maxListResponseBytes)
+        return result.posts
+    }
+
+    /// POST /posts/:id/reactions (mit Token): schaltet deine Reaktion um. Liefert alle Reaktionen des Beitrags neu.
+    func toggleReaction(postId: String, emoji: String, token: String) async throws -> [ChannelReaction] {
+        let id = try Self.validatedPathId(postId)
+        let result = try await send("posts/\(id)/reactions",
+                                    method: "POST",
+                                    token: token,
+                                    body: ChannelReactionRequest(emoji: emoji),
+                                    as: ChannelReactionsResult.self)
+        return result.reactions
+    }
+
+    /// DELETE /posts/:id (mit Token). Der Server erlaubt es dem Autor und Moderatoren.
+    func deleteChannelPost(id: String, token: String) async throws {
+        let postId = try Self.validatedPathId(id)
+        _ = try await send("posts/\(postId)", method: "DELETE", token: token, as: ChannelDeletedResult.self)
+    }
+
     /// Fehler von POST /communities/:id/join. Der Server-Text ist englisch, deshalb steht hier der deutsche Text.
     private static func communityJoinFailure(status: Int, code: String, message: String) -> AppError? {
         switch (status, code) {
@@ -44,3 +77,22 @@ extension APIClient {
         }
     }
 }
+
+private struct ChannelReactionRequest: Encodable {
+    let emoji: String
+}
+
+private struct ChannelReactionsResult: Decodable {
+    let reactions: [ChannelReaction]
+
+    private enum CodingKeys: String, CodingKey {
+        case reactions
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        reactions = container.lenient(LossyArray<ChannelReaction>.self, .reactions)?.elements ?? []
+    }
+}
+
+private struct ChannelDeletedResult: Decodable {}

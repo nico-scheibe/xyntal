@@ -130,6 +130,9 @@ struct CommunityDetailView: View {
     let community: DiscoverCommunity
     let store: CommunityDirectoryStore
 
+    /// Name für den Hinweis „Willkommen in …“ direkt nach dem Beitritt. nil, wenn gerade kein Hinweis steht.
+    @State private var welcomeName: String?
+
     /// Die aktuelle Fassung aus dem Store, damit „Beitreten“ sofort sichtbar wirkt.
     private var current: DiscoverCommunity {
         store.community(id: community.id) ?? community
@@ -144,6 +147,25 @@ struct CommunityDetailView: View {
     }
 
     var body: some View {
+        Group {
+            if current.isMember {
+                CommunityMemberView(community: current, welcome: welcomeName)
+            } else {
+                nonMemberList
+            }
+        }
+        .onChange(of: current.isMember) { _, isMember in
+            // Nach dem Beitritt erscheint der Strom auf diesem Bildschirm, mit einem kurzen Hinweis.
+            guard isMember else { return }
+            welcomeName = current.name.nonEmptyText ?? "Community"
+            Task {
+                try? await Task.sleep(for: .seconds(4))
+                welcomeName = nil
+            }
+        }
+    }
+
+    private var nonMemberList: some View {
         List {
             Section {
                 VStack(alignment: .leading, spacing: 10) {
@@ -201,6 +223,16 @@ struct CommunityDetailView: View {
                         }
                     }
                 }
+            }
+
+            // Beiträge sieht nur, wer Mitglied ist. Der Platz zeigt, was nach dem Beitritt kommt.
+            Section {
+                ContentUnavailableView {
+                    Label("Noch keine Beiträge", systemImage: "bubble.left.and.bubble.right")
+                } description: {
+                    Text("Tritt bei und schreib den ersten.")
+                }
+                .listRowBackground(Color.clear)
             }
         }
         .navigationTitle(current.name.nonEmptyText ?? "Community")

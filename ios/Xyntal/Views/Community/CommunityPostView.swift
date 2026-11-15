@@ -17,9 +17,6 @@ struct CommunityPostView: View {
         VStack(alignment: .leading, spacing: 10) {
             header
             bodyText
-            if let poll = post.poll {
-                CommunityPollView(poll: poll)
-            }
             footer
         }
         .padding(14)
@@ -117,52 +114,6 @@ struct CommunityPostView: View {
                     .foregroundStyle(Theme.muted)
                     .accessibilityLabel(date.formatted(date: .long, time: .shortened))
             }
-        }
-    }
-}
-
-/// Ergebnis einer Umfrage. Abstimmen geht nur in der Desktop-App.
-struct CommunityPollView: View {
-    let poll: CommunityPoll
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            if !poll.question.isEmpty {
-                Text(verbatim: poll.question)
-                    .font(.subheadline.weight(.semibold))
-            }
-            ForEach(Array(poll.options.enumerated()), id: \.offset) { _, option in
-                optionRow(option)
-            }
-            HStack {
-                Text(poll.voteCountText)
-                Text("·")
-                Text(poll.statusText)
-            }
-            .font(.caption)
-            .foregroundStyle(Theme.muted)
-        }
-        .padding(12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(.tertiarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
-        .accessibilityElement(children: .combine)
-    }
-
-    private func optionRow(_ option: PollOption) -> some View {
-        let percent = poll.percent(for: option)
-        let leading = poll.isLeading(option)
-        return VStack(alignment: .leading, spacing: 4) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(verbatim: option.label.isEmpty ? "–" : option.label)
-                    .font(leading ? .subheadline.weight(.semibold) : .subheadline)
-                Spacer(minLength: 8)
-                Text(verbatim: "\(percent) %")
-                    .font(leading ? .subheadline.weight(.semibold) : .subheadline)
-                    .foregroundStyle(leading ? .primary : Theme.muted)
-                    .monospacedDigit()
-            }
-            ProgressView(value: Double(percent), total: 100)
-                .tint(leading ? Theme.accent : Theme.muted.opacity(0.6))
         }
     }
 }

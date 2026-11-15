@@ -121,15 +121,6 @@ private struct CommunityFeedContent: View {
                             .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
                     }
                 }
-
-                Text("Mitreden, reagieren und abstimmen kannst du in der Xyntal-Desktop-App.")
-                    .font(.footnote)
-                    .foregroundStyle(Theme.muted)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .listRowSeparator(.hidden)
-                    .listRowBackground(Color.clear)
             }
             .listStyle(.plain)
             .refreshable { await store.load() }
