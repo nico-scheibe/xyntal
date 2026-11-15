@@ -9,3 +9,8 @@ verbunden/docs/reference/
 # website captures from gather.mjs (re-run to refresh)
 verbunden/assets/shots/
 verbunden/assets/app/*.png
+# second spot: the same rules
+weltweit/audio/*.wav
+weltweit/audio/*.mp3
+weltweit/docs/reference/
+weltweit/assets/app/*.png
