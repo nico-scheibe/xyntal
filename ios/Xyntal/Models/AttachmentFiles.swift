@@ -1,3 +1,4 @@
+import AVFoundation
 import Foundation
 import ImageIO
 import UIKit
@@ -15,6 +16,11 @@ struct ComposerAttachment: Identifiable {
     let isImage: Bool
     /// Vorschau für Bilder, nil bei Dateien.
     let preview: UIImage?
+}
+
+/// Fehler bei der Vorbereitung, die der Nutzer sieht.
+enum AttachmentPreparationError: Error {
+    case videoNotPrepared
 }
 
 /// Dateien für Anhänge: Temp-Ordner, Fotovorbereitung und Teile zum Hochladen. Ohne UI.
@@ -67,7 +73,22 @@ enum AttachmentFiles {
     }
 
     /// Foto aus Daten (Mediathek, Kamera oder Dateien-App) als Anhang. nil, wenn sich das Bild nicht lesen lässt.
+    /// Animierte GIFs bleiben unverändert, siehe `isAnimatedGIF`.
     static func imageAttachment(fromData data: Data) -> ComposerAttachment? {
+        if let source = CGImageSourceCreateWithData(data as CFData, nil), isAnimatedGIF(source) {
+            let url = newFileURL(ext: "gif")
+            do {
+                try data.write(to: url, options: .atomic)
+            } catch {
+                return nil
+            }
+            return ComposerAttachment(fileURL: url,
+                                      name: "Foto-\(UUID().uuidString.prefix(8)).gif",
+                                      mimeType: "image/gif",
+                                      size: data.count,
+                                      isImage: true,
+                                      preview: thumbnail(of: data))
+        }
         guard let jpeg = jpegWithoutMetadata(data) else { return nil }
         let url = newFileURL(ext: "jpg")
         do {
@@ -83,18 +104,57 @@ enum AttachmentFiles {
                                   preview: thumbnail(of: jpeg))
     }
 
-    /// Datei aus der Dateien-App in den Temp-Ordner kopieren. Bilder laufen durch die Fotovorbereitung.
-    static func attachment(fromFile source: URL, name: String, mimeType: String, kind: AttachmentRules.Kind) throws -> ComposerAttachment? {
+    /// Ein GIF mit mehr als einem Einzelbild.
+    ///
+    /// Hier wird bewusst nicht umgewandelt. Jede Umwandlung (JPEG, Verkleinern, Neu-Kodieren) würde die Bewegung
+    /// vernichten, und genau die ist der Inhalt: Der Empfänger bekäme ein eingefrorenes Standbild, ohne es zu merken.
+    /// Deshalb geht die Datei unverändert als image/gif hoch. Ist sie zu groß, greift die normale Tarifmeldung.
+    /// Ein GIF mit nur einem Bild wird dagegen wie ein Foto behandelt (JPEG, ohne Metadaten).
+    static func isAnimatedGIF(_ source: CGImageSource) -> Bool {
+        CGImageSourceGetType(source) as String? == "com.compuserve.gif" && CGImageSourceGetCount(source) > 1
+    }
+
+    /// Datei aus der Dateien-App in den Temp-Ordner bringen. Bilder laufen durch die Fotovorbereitung,
+    /// Videos durch den Export ohne Ortsdaten. Alles andere wird unverändert kopiert.
+    static func attachment(fromFile source: URL, name: String, mimeType: String, kind: AttachmentRules.Kind) async throws -> ComposerAttachment? {
         let scoped = source.startAccessingSecurityScopedResource()
         defer { if scoped { source.stopAccessingSecurityScopedResource() } }
         if kind == .image {
             let data = try Data(contentsOf: source)
             return imageAttachment(fromData: data)
         }
-        let url = newFileURL(ext: MediaFormat.fileExtension(name))
-        try FileManager.default.copyItem(at: source, to: url)
+        let ext = MediaFormat.fileExtension(name)
+        let url = newFileURL(ext: ext)
+        if kind == .video {
+            try await exportVideoForSharing(from: source, to: url)
+        } else {
+            try FileManager.default.copyItem(at: source, to: url)
+        }
         let size = (try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int) ?? 0
         return ComposerAttachment(fileURL: url, name: name, mimeType: mimeType, size: size, isImage: false, preview: nil)
+    }
+
+    /// Video ohne Ortsdaten und identifizierende Angaben: Export mit dem Filter für die Weitergabe.
+    /// Ein Video wird nie unverändert hochgeladen. Scheitert der Export, wirft die Funktion einen Fehler.
+    static func exportVideoForSharing(from source: URL, to target: URL) async throws {
+        let session = AVAssetExportSession(asset: AVURLAsset(url: source), presetName: AVAssetExportPresetPassthrough)
+        guard let session else { throw AttachmentPreparationError.videoNotPrepared }
+        switch target.pathExtension.lowercased() {
+        case "mp4": session.outputFileType = .mp4
+        case "m4v": session.outputFileType = .m4v
+        default: session.outputFileType = .mov
+        }
+        session.outputURL = target
+        session.metadataItemFilter = AVMetadataItemFilter.forSharing()
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            session.exportAsynchronously {
+                if session.status == .completed {
+                    continuation.resume()
+                } else {
+                    continuation.resume(throwing: session.error ?? AttachmentPreparationError.videoNotPrepared)
+                }
+            }
+        }
     }
 
     /// Ein Stück einer Datei lesen, für den Upload. Höchstens ein Stück liegt je Aufruf im Speicher.

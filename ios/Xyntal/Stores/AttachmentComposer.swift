@@ -51,13 +51,16 @@ final class AttachmentComposer {
             let mime = AttachmentRules.mimeType(forName: entry.name)
             do {
                 let item = try await Task.detached(priority: .userInitiated) {
-                    try AttachmentFiles.attachment(fromFile: entry.url, name: entry.name, mimeType: mime, kind: entry.kind)
+                    try await AttachmentFiles.attachment(fromFile: entry.url, name: entry.name, mimeType: mime, kind: entry.kind)
                 }.value
                 if let item {
                     accepted.append(item)
                 } else {
                     errorText = AttachmentRules.uploadFailedText
                 }
+            } catch is AttachmentPreparationError {
+                // Ein Video ohne Ortsdaten gibt es nicht: Es wird dann gar nicht hochgeladen.
+                errorText = AttachmentRules.videoPreparationFailedText
             } catch {
                 errorText = AttachmentRules.uploadFailedText
             }

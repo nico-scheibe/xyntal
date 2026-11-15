@@ -63,6 +63,7 @@ enum AttachmentRules {
 
     static let offlineText = "Du bist offline. Verbinde dich mit dem Internet und sende dann noch mal."
     static let uploadFailedText = "Senden fehlgeschlagen. Prüfe deine Verbindung und versuch es noch mal."
+    static let videoPreparationFailedText = "Dieses Video lässt sich gerade nicht vorbereiten. Versuch es noch mal."
     static let tooManyText = "Du kannst bis zu 10 Anhänge pro Nachricht senden."
     static let cameraDeniedTitle = "Kamera ist aus"
     static let cameraDeniedText = "Xyntal braucht die Kamera für Fotos. Du kannst sie in den Einstellungen erlauben."
