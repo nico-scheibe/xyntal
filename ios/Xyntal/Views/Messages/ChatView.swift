@@ -778,7 +778,7 @@ private struct ChatTranscriptView: View {
                                    attachments: [file],
                                    voiceDurationMs: draft.durationMs)
         if sent {
-            voice.didSend()
+            voice.didSend(draft)
             replyTo = nil
         } else {
             // Offline wird nichts gestartet. Der Entwurf bleibt, damit nichts verloren geht.

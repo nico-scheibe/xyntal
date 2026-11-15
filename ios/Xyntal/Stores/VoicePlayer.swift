@@ -1,14 +1,33 @@
 import AVFoundation
 import Observation
 
+/// Was die Sprachblase zum Abspielen braucht. Erfüllt von VoicePlayer (Nachrichten vom Server) und von
+/// VoiceDraftPlayer (Vorhören vor dem Senden, ohne fertige Datei).
+@MainActor
+protocol VoicePlayback: AnyObject {
+    var isPlaying: Bool { get }
+    var isLoaded: Bool { get }
+    var isLoading: Bool { get }
+    var loadFailed: Bool { get }
+    var currentTime: TimeInterval { get }
+    var displayDuration: TimeInterval { get }
+    var waveform: [Double]? { get }
+    var rateLabel: String { get }
+    func togglePlayback(loadData: () async throws -> Data) async
+    func pause()
+    func seek(to seconds: TimeInterval)
+    func seek(by delta: TimeInterval)
+    func cycleRate()
+}
+
 /// Hält nur die zuletzt gestartete Sprachnachricht. Beginnt eine andere, pausiert die bisherige.
 @MainActor
 final class VoicePlaybackCoordinator {
     static let shared = VoicePlaybackCoordinator()
 
-    private weak var active: VoicePlayer?
+    private weak var active: (any VoicePlayback)?
 
-    func activate(_ player: VoicePlayer) {
+    func activate(_ player: any VoicePlayback) {
         if let active, active !== player {
             active.pause()
         }
@@ -20,7 +39,7 @@ final class VoicePlaybackCoordinator {
 /// Kein Hintergrund-Audio: Die Ansicht ruft pause() auf, sobald die App nicht mehr aktiv ist.
 @MainActor
 @Observable
-final class VoicePlayer {
+final class VoicePlayer: VoicePlayback {
     enum State: Equatable {
         case idle
         case loading
@@ -51,6 +70,7 @@ final class VoicePlayer {
 
     var isPlaying: Bool { state == .playing }
     var isLoaded: Bool { player != nil }
+    var isLoading: Bool { state == .loading }
 
     /// Zeigt die Geschwindigkeit, z. B. "1×", "1,5×", "2×".
     var rateLabel: String {

@@ -2,11 +2,11 @@ import AVFoundation
 import Observation
 import UIKit
 
-/// Ein fertiger Entwurf: eine M4A-Datei, die beim Senden in den Versand geht.
+/// Ein fertiger Versandentwurf: eine M4A-Datei, die beim Senden in den Versand geht.
 struct VoiceDraft: Equatable {
     let url: URL
     let durationMs: Int
-    /// Id für Wellenform-Cache und Vorhören.
+    /// Id, damit der Entwurf eindeutig bleibt.
     let id: String
 }
 
@@ -21,8 +21,8 @@ private enum VoiceError: Error {
     case failed
 }
 
-/// Sprachaufnahme eines Gesprächs. Nimmt nur auf, solange sie läuft. Eine Pause hält die Aufnahme als Entwurf,
-/// der beim Weiteraufnehmen verlängert wird. Gesendet wird nur auf ausdrücklichen Befehl.
+/// Sprachaufnahme eines Gesprächs. Jede Aufnahme liegt als Teile auf der Platte. Eine Pause fügt nichts zusammen
+/// und kodiert nichts neu. Zusammengefügt und kodiert wird einmal, beim Senden.
 @MainActor
 @Observable
 final class VoiceRecorder {
@@ -33,14 +33,14 @@ final class VoiceRecorder {
     }
 
     private(set) var phase: Phase = .idle
-    /// Gesamtlänge bisher in Sekunden. Läuft während der Aufnahme mit.
+    /// Gesamtlänge bisher in Sekunden. Summe der Teile, während der Aufnahme plus laufendes Teil.
     private(set) var elapsed: TimeInterval = 0
     /// Pegel der letzten Momente, 0...1, älteste zuerst. Nur während der Aufnahme gefüllt.
     private(set) var levels: [Double] = []
-    /// Entwurf, sobald die Teile zusammengefügt sind. nil, solange das noch läuft.
-    private(set) var draft: VoiceDraft?
-    /// Vorhören des Entwurfs.
-    private(set) var preview: VoicePlayer?
+    /// Teile in Reihenfolge. Leer heißt: kein Entwurf.
+    private(set) var segments: [VoiceSegment] = []
+    /// Vorhören des Entwurfs, direkt aus den Teilen.
+    let preview = VoiceDraftPlayer()
     private(set) var note: VoiceNote?
     private(set) var isMerging = false
     /// Meldung in der Leiste, z. B. Speicher voll.
@@ -48,25 +48,23 @@ final class VoiceRecorder {
 
     private var recorder: AVAudioRecorder?
     private var currentURL: URL?
-    /// Fertige Teile in Reihenfolge. Nach dem Zusammenfügen liegt nur noch eine Datei darin.
-    private var segments: [URL] = []
     /// Länge aller fertigen Teile in Sekunden.
     private var baseSeconds: TimeInterval = 0
     private var ticker: Task<Void, Never>?
-    private var merging: Task<Void, Never>?
     private var isStarting = false
-    /// Steigt bei Verwerfen. Ein laufendes Zusammenfügen merkt das und räumt seine Datei weg.
+    /// Der einmal zusammengefügte Entwurf zum Senden. Bleibt erhalten, bis sich die Teile ändern.
+    private var sendDraft: VoiceDraft?
+    /// Steigt bei Verwerfen und Ende. Laufende Zusammenfügungen merken das und räumen ihre Datei weg.
     private var generation = 0
 
     // MARK: - Starten und Pausieren
 
     /// Startet die Aufnahme oder setzt eine pausierte fort. Fragt beim ersten Mal nach dem Mikrofon.
     func startOrResume() async -> VoiceStart {
-        guard phase != .recording, !isStarting else { return .started }
+        guard phase != .recording, !isStarting, !isMerging else { return .started }
         isStarting = true
         defer { isStarting = false }
-        preview?.pause()
-        await merging?.value
+        preview.pause()
         guard await Self.microphoneAllowed() else { return .micDenied }
         guard hasFreeSpace else {
             errorText = VoiceRules.storageText
@@ -92,8 +90,6 @@ final class VoiceRecorder {
         phase = .recording
         errorText = nil
         note = nil
-        draft = nil
-        preview = nil
         elapsed = baseSeconds
         levels = []
         startTicker()
@@ -101,27 +97,49 @@ final class VoiceRecorder {
         return .started
     }
 
-    /// Hält die Aufnahme an und das Vorhören mit. Der Entwurf bleibt erhalten, gesendet wird nichts.
+    /// Hält die Aufnahme an und das Vorhören mit. Nichts wird zusammengefügt, der Entwurf bleibt.
     func pause(note reason: VoiceNote? = nil) {
-        preview?.pause()
+        preview.pause()
         stopRecording(note: reason, announce: true)
     }
 
     // MARK: - Senden und Verwerfen
 
-    /// Vor dem Senden: Aufnahme anhalten und den Entwurf fertigstellen. nil, wenn das misslingt.
+    /// Vor dem Senden: Aufnahme anhalten und die Teile einmal zu einer Datei zusammenfügen. nil, wenn das misslingt.
+    /// Ein erneuter Aufruf ohne Änderung nimmt den fertigen Entwurf, ohne neu zu kodieren.
     func prepareSend() async -> VoiceDraft? {
         stopRecording(note: nil, announce: false)
-        await merging?.value
-        if draft == nil, !segments.isEmpty {
-            scheduleMerge()
-            await merging?.value
+        if let sendDraft { return sendDraft }
+        guard !segments.isEmpty, !isMerging else { return nil }
+        let target = AttachmentFiles.newFileURL(ext: VoiceRules.fileExtension)
+        let inputs = segments.map(\.url)
+        let gen = generation
+        isMerging = true
+        let seconds = try? await Self.join(inputs, into: target)
+        guard gen == generation else {
+            AttachmentFiles.remove(target)
+            return nil
         }
+        isMerging = false
+        guard let seconds else {
+            AttachmentFiles.remove(target)
+            errorText = hasFreeSpace ? VoiceRules.failedText : VoiceRules.storageText
+            return nil
+        }
+        let draft = VoiceDraft(url: target,
+                               durationMs: Int((seconds * 1000).rounded()),
+                               id: UUID().uuidString)
+        sendDraft = draft
         return draft
     }
 
-    /// Der Entwurf ist angenommen. Die Datei gehört jetzt dem Versand, der sie danach löscht.
-    func didSend() {
+    /// Der Entwurf ist angenommen. Die Teile gehören nicht mehr dem Recorder. Die gesendete Datei
+    /// gehört dem Versand, der sie danach löscht.
+    func didSend(_ sent: VoiceDraft) {
+        for segment in segments where segment.url != sent.url {
+            AttachmentFiles.remove(segment.url)
+        }
+        sendDraft = nil
         reset(removingFiles: false)
     }
 
@@ -132,17 +150,16 @@ final class VoiceRecorder {
 
     /// Holt eine abgebrochene Sprachnachricht zurück in den Entwurf. Nur, wenn gerade nichts läuft.
     func restore(url: URL, durationMs: Int) async -> Bool {
-        let id = UUID().uuidString
-        let bars = await Self.analyze(url)
+        let seconds = TimeInterval(durationMs) / 1000
+        let buckets = await VoiceAudioAnalysis.rmsBuckets(of: url)
         guard phase == .idle else { return false }
-        if let bars {
-            WaveformCache.shared.store(bars, for: id)
-        }
-        segments = [url]
-        baseSeconds = TimeInterval(durationMs) / 1000
-        elapsed = baseSeconds
-        draft = VoiceDraft(url: url, durationMs: durationMs, id: id)
-        preview = VoicePlayer(attachmentId: id, durationMs: durationMs)
+        preview.pause()
+        segments = [VoiceSegment(url: url, seconds: seconds, buckets: buckets)]
+        preview.setSegments(segments)
+        // Die zurückgeholte Datei ist schon zusammengefügt: nichts neu kodieren.
+        sendDraft = VoiceDraft(url: url, durationMs: durationMs, id: UUID().uuidString)
+        baseSeconds = seconds
+        elapsed = seconds
         note = nil
         errorText = nil
         phase = .paused
@@ -160,6 +177,7 @@ final class VoiceRecorder {
 
     private func stopRecording(note reason: VoiceNote?, announce: Bool) {
         guard phase == .recording, let rec = recorder, let url = currentURL else { return }
+        // Die Länge kommt aus dem Recorder selbst. Gelesen wird vor dem Stopp.
         let length = rec.currentTime
         rec.stop()
         recorder = nil
@@ -170,12 +188,16 @@ final class VoiceRecorder {
         levels = []
         note = reason
         if length >= 0.2 {
-            segments.append(url)
+            invalidateSendDraft()
+            let segment = VoiceSegment(url: url, seconds: length, buckets: nil)
+            segments.append(segment)
             baseSeconds += length
+            analyze(segment.id)
         } else {
             AttachmentFiles.remove(url)
         }
         elapsed = baseSeconds
+        preview.setSegments(segments)
         guard !segments.isEmpty else {
             phase = .idle
             return
@@ -185,50 +207,34 @@ final class VoiceRecorder {
             UIAccessibility.post(notification: .announcement,
                                  argument: VoiceRules.pausedAnnouncement(seconds: Int(baseSeconds)))
         }
-        scheduleMerge()
     }
 
-    /// Fügt alle Teile zu einer Datei zusammen, im Hintergrund. Danach gibt es einen Entwurf mit Vorhören.
-    private func scheduleMerge() {
-        let inputs = segments
-        let target = AttachmentFiles.newFileURL(ext: VoiceRules.fileExtension)
+    /// Lautstärke des neuen Teils im Hintergrund auswerten. Die Wellenform steht danach da.
+    private func analyze(_ id: UUID) {
+        guard let url = segments.first(where: { $0.id == id })?.url else { return }
         let gen = generation
-        isMerging = true
-        merging = Task { [weak self] in
-            let seconds = try? await Self.join(inputs, into: target)
-            var bars: [Double]?
-            if seconds != nil {
-                bars = await Self.analyze(target)
-            }
-            guard let self, gen == self.generation else {
-                AttachmentFiles.remove(target)
-                return
-            }
-            self.isMerging = false
-            self.merging = nil
-            guard let seconds else {
-                AttachmentFiles.remove(target)
-                self.errorText = self.hasFreeSpace ? VoiceRules.failedText : VoiceRules.storageText
-                return
-            }
-            inputs.forEach { AttachmentFiles.remove($0) }
-            let id = UUID().uuidString
-            let ms = Int((seconds * 1000).rounded())
-            self.segments = [target]
-            self.baseSeconds = seconds
-            self.elapsed = seconds
-            if let bars {
-                WaveformCache.shared.store(bars, for: id)
-            }
-            self.draft = VoiceDraft(url: target, durationMs: ms, id: id)
-            self.preview = VoicePlayer(attachmentId: id, durationMs: ms)
+        Task { [weak self] in
+            let buckets = await VoiceAudioAnalysis.rmsBuckets(of: url)
+            guard let self, gen == self.generation,
+                  let index = self.segments.firstIndex(where: { $0.id == id }) else { return }
+            // Ließ sich nichts auswerten, bleibt eine gleichmäßige Linie statt einer leeren Anzeige.
+            let fallback = Array(repeating: 0.5, count: Int(self.segments[index].seconds / VoiceAudioAnalysis.bucketSeconds))
+            self.segments[index].buckets = buckets ?? fallback
+            self.preview.setSegments(self.segments)
+        }
+    }
+
+    /// Ein fertig zusammengefügter Entwurf passt nicht mehr, wenn sich die Teile ändern.
+    private func invalidateSendDraft() {
+        guard let draft = sendDraft else { return }
+        sendDraft = nil
+        if !segments.contains(where: { $0.url == draft.url }) {
+            AttachmentFiles.remove(draft.url)
         }
     }
 
     private func reset(removingFiles: Bool) {
         generation += 1
-        merging = nil
-        isMerging = false
         ticker?.cancel()
         ticker = nil
         recorder?.stop()
@@ -237,20 +243,22 @@ final class VoiceRecorder {
             AttachmentFiles.remove(currentURL)
         }
         currentURL = nil
-        preview?.pause()
+        preview.pause()
         if removingFiles {
-            segments.forEach { AttachmentFiles.remove($0) }
+            segments.forEach { AttachmentFiles.remove($0.url) }
+            if let sendDraft { AttachmentFiles.remove(sendDraft.url) }
         }
-        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        sendDraft = nil
         segments = []
+        preview.setSegments([])
         baseSeconds = 0
         elapsed = 0
         levels = []
-        draft = nil
-        preview = nil
         note = nil
         errorText = nil
+        isMerging = false
         phase = .idle
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
 
     private func startTicker() {
@@ -301,7 +309,7 @@ final class VoiceRecorder {
         }
     }
 
-    /// Fügt die Teile hintereinander in eine M4A-Datei. Gibt die Länge in Sekunden zurück.
+    /// Fügt die Teile hintereinander in eine M4A-Datei. Einmal beim Senden. Gibt die Länge in Sekunden zurück.
     nonisolated private static func join(_ inputs: [URL], into target: URL) async throws -> TimeInterval {
         let composition = AVMutableComposition()
         guard let track = composition.addMutableTrack(withMediaType: .audio,
@@ -333,13 +341,5 @@ final class VoiceRecorder {
             }
         }
         return cursor.seconds
-    }
-
-    /// Wellenform der Datei, im Hintergrund. nil, wenn sie sich nicht lesen lässt.
-    nonisolated private static func analyze(_ url: URL) async -> [Double]? {
-        await Task.detached(priority: .utility) {
-            guard let data = try? Data(contentsOf: url) else { return nil }
-            return Waveform.bars(fromAudioData: data, id: url.deletingPathExtension().lastPathComponent)
-        }.value
     }
 }

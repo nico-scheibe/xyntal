@@ -37,7 +37,6 @@ final class VoiceRecorders {
     func pauseAll(note: VoiceNote? = nil) {
         for recorder in byConversation.values {
             recorder.pause(note: note)
-            recorder.preview?.pause()
         }
     }
 

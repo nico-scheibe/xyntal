@@ -1,20 +1,21 @@
 import SwiftUI
 
+/// Balken der Wellenform in der Sprachblase.
+private let voiceBarCount = 40
+
 /// Sprachnachricht: Wiedergabe-Kreis, Wellenform mit Fortschritt, Dauer und Geschwindigkeit.
 /// Die Bubble liefert die VoiceOver-Beschriftung; hier ist alles für Sehende.
 /// Dieselbe Ansicht spielt Nachrichten vom Server und das Vorhören vor dem Senden. `loadData` liefert die Aufnahme.
-struct VoiceMessageView: View {
+struct VoiceMessageView<Player: VoicePlayback>: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @ScaledMetric(relativeTo: .body) private var buttonSize: CGFloat = 40
 
-    let player: VoicePlayer
+    let player: Player
     let foreground: Color
     /// Liefert die Aufnahme beim ersten Abspielen.
     let loadData: () async throws -> Data
     /// Geschwindigkeit nur bei Nachrichten. Beim Vorhören entfällt sie.
     var showsRate = true
-
-    private static let barCount = 40
 
     private var progress: Double {
         let total = player.displayDuration
@@ -73,7 +74,7 @@ struct VoiceMessageView: View {
             ZStack {
                 Circle()
                     .fill(foreground.opacity(0.18))
-                if player.state == .loading {
+                if player.isLoading {
                     ProgressView()
                 } else {
                     Image(systemName: player.isPlaying ? "pause.fill" : "play.fill")
@@ -91,7 +92,7 @@ struct VoiceMessageView: View {
     /// damit der Fortschritt auch ohne Farbunterschied zu erkennen ist.
     private var waveform: some View {
         // Vor dem Laden gleich hohe Balken als Platzhalter; danach die echte Wellenform.
-        let bars = player.waveform ?? Array(repeating: 0.4, count: Self.barCount)
+        let bars = player.waveform ?? Array(repeating: 0.4, count: voiceBarCount)
         return GeometryReader { proxy in
             ZStack(alignment: .leading) {
                 HStack(spacing: 1) {

@@ -125,7 +125,8 @@ struct VoiceRecordBar: View {
 
     @ViewBuilder
     private var playback: some View {
-        if let draft = recorder.draft, let preview = recorder.preview {
+        if !recorder.segments.isEmpty {
+            let preview = recorder.preview
             VStack(alignment: .leading, spacing: 0) {
                 Text(VoiceRules.pausedLabel)
                     .font(.caption2)
@@ -134,7 +135,7 @@ struct VoiceRecordBar: View {
                     .padding(.top, 6)
                 VoiceMessageView(player: preview,
                                  foreground: .primary,
-                                 loadData: { try Data(contentsOf: draft.url) },
+                                 loadData: VoiceDraftPlayer.noLoad,
                                  showsRate: false)
             }
             .accessibilityElement(children: .ignore)
@@ -142,7 +143,7 @@ struct VoiceRecordBar: View {
             .accessibilityValue("\(Int(preview.displayDuration)) Sekunden")
             .accessibilityHint("Doppeltippen zum Abspielen")
             .accessibilityAction(.default) {
-                Task { await preview.togglePlayback { try Data(contentsOf: draft.url) } }
+                Task { await preview.togglePlayback(loadData: VoiceDraftPlayer.noLoad) }
             }
             .accessibilityAdjustableAction { direction in
                 switch direction {
