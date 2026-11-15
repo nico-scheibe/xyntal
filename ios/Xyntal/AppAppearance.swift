@@ -34,6 +34,7 @@ final class AppAppearance {
 
     private static let modeKey = "appearance.mode"
     private static let accentKey = "appearance.accent"
+    private static let gifAutoplayKey = "appearance.gifAutoplay"
 
     var mode: AppearanceMode {
         didSet { UserDefaults.standard.set(mode.rawValue, forKey: Self.modeKey) }
@@ -43,10 +44,16 @@ final class AppAppearance {
         didSet { UserDefaults.standard.set(accent.rawValue, forKey: Self.accentKey) }
     }
 
+    /// GIFs in Chats von selbst abspielen. Wirkt nur, wenn „Bewegung reduzieren“ und die Datenreduzierung aus sind.
+    var gifAutoplay: Bool {
+        didSet { UserDefaults.standard.set(gifAutoplay, forKey: Self.gifAutoplayKey) }
+    }
+
     private init() {
         let defaults = UserDefaults.standard
         mode = AppearanceMode(rawValue: defaults.string(forKey: Self.modeKey) ?? "") ?? .system
         accent = AccentColor(rawValue: defaults.string(forKey: Self.accentKey) ?? "") ?? .xyntalBlue
+        gifAutoplay = defaults.object(forKey: Self.gifAutoplayKey) as? Bool ?? true
     }
 }
 

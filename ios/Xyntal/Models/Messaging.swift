@@ -133,10 +133,81 @@ struct Reaction: Decodable, Hashable {
     }
 }
 
+/// Anhang aus GET /conversations/:id/messages (Feld attachments). Der Server schickt id, name, mimeType,
+/// size und bei Sprachnachrichten durationMs. Breite und Höhe schickt er für Anhänge heute nicht; sie sind
+/// nur tolerant mitgelesen, damit ein späterer Server-Stand ohne App-Änderung wirkt.
+struct Attachment: Decodable, Identifiable, Hashable {
+    let id: String
+    var name: String?
+    var mimeType: String?
+    var size: Int?
+    var width: Int?
+    var height: Int?
+    var durationMs: Int?
+
+    private enum CodingKeys: String, CodingKey {
+        case id, name, mimeType, size, width, height, durationMs
+    }
+
+    init(id: String,
+         name: String? = nil,
+         mimeType: String? = nil,
+         size: Int? = nil,
+         width: Int? = nil,
+         height: Int? = nil,
+         durationMs: Int? = nil) {
+        self.id = id
+        self.name = name
+        self.mimeType = mimeType
+        self.size = size
+        self.width = width
+        self.height = height
+        self.durationMs = durationMs
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decodeIdentifier(forKey: .id)
+        name = container.lenient(String.self, .name)
+        mimeType = container.lenient(String.self, .mimeType)
+        size = container.lenient(Int.self, .size)
+        width = container.lenient(Int.self, .width)
+        height = container.lenient(Int.self, .height)
+        durationMs = container.lenient(Int.self, .durationMs)
+    }
+
+    var isImage: Bool { mimeType?.lowercased().hasPrefix("image/") == true }
+    var isAudio: Bool { mimeType?.lowercased().hasPrefix("audio/") == true }
+    /// Anzeigename. Ohne Namen heißt die Datei "Datei".
+    var displayName: String { name.nonEmptyText ?? "Datei" }
+}
+
 /// Nachricht aus GET /conversations/:id/messages.
 struct Message: Decodable, Identifiable, Hashable {
     struct Gif: Decodable, Hashable {
         var url: String?
+        var title: String?
+        var width: Int?
+        var height: Int?
+
+        private enum CodingKeys: String, CodingKey {
+            case url, title, width, height
+        }
+
+        init(url: String? = nil, title: String? = nil, width: Int? = nil, height: Int? = nil) {
+            self.url = url
+            self.title = title
+            self.width = width
+            self.height = height
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            url = container.lenient(String.self, .url)
+            title = container.lenient(String.self, .title)
+            width = container.lenient(Int.self, .width)
+            height = container.lenient(Int.self, .height)
+        }
     }
 
     struct SystemInfo: Decodable, Hashable {
@@ -172,8 +243,10 @@ struct Message: Decodable, Identifiable, Hashable {
     var edited: Bool?
     var replyToId: String?
     var reactions: [Reaction]
-    /// true, wenn der Server Anhänge mitschickt. Die Anhänge selbst werden nicht geladen.
+    /// true, wenn der Server Anhänge mitschickt (auch dann, wenn ein Anhang nicht lesbar war).
     var hasAttachments: Bool
+    /// Lesbare Anhänge in Serverreihenfolge. Sprachnachrichten haben genau einen, als ersten.
+    var attachments: [Attachment]
     var gif: Gif?
     var system: SystemInfo?
 
@@ -192,6 +265,7 @@ struct Message: Decodable, Identifiable, Hashable {
          replyToId: String? = nil,
          reactions: [Reaction] = [],
          hasAttachments: Bool = false,
+         attachments: [Attachment] = [],
          gif: Gif? = nil,
          system: SystemInfo? = nil) {
         self.id = id
@@ -204,7 +278,8 @@ struct Message: Decodable, Identifiable, Hashable {
         self.edited = edited
         self.replyToId = replyToId
         self.reactions = reactions
-        self.hasAttachments = hasAttachments
+        self.attachments = attachments
+        self.hasAttachments = hasAttachments || !attachments.isEmpty
         self.gif = gif
         self.system = system
     }
@@ -221,7 +296,7 @@ struct Message: Decodable, Identifiable, Hashable {
         edited = container.lenient(Bool.self, .edited)
         replyToId = container.lenient(String.self, .replyToId)
         reactions = Reaction.deduplicated(container.lenient(LossyArray<Reaction>.self, .reactions)?.elements ?? [])
-        // Nur zählen, nicht lesen: Der Inhalt der Anhänge ist für die App egal.
+        // Zählen über die Rohelemente, damit auch ein unlesbarer Anhang den Hinweis "Anhang" auslöst.
         if var attachments = try? container.nestedUnkeyedContainer(forKey: .attachments) {
             var count = 0
             while !attachments.isAtEnd, (try? attachments.decode(IgnoredValue.self)) != nil {
@@ -231,6 +306,7 @@ struct Message: Decodable, Identifiable, Hashable {
         } else {
             hasAttachments = false
         }
+        attachments = (try? container.decode(LossyArray<Attachment>.self, forKey: .attachments))?.elements ?? []
         gif = container.lenient(Gif.self, .gif)
         system = container.lenient(SystemInfo.self, .system)
     }
@@ -240,13 +316,50 @@ struct Message: Decodable, Identifiable, Hashable {
     var isText: Bool { (kind ?? "text") == "text" && !hasAttachments && gif == nil }
     var isEdited: Bool { edited == true }
 
-    /// Platzhalter für Inhalte, die die App nicht darstellt. nil bei normalem Text.
+    /// GIF aus GIPHY (gif-Feld oder Art "gif").
+    var isGif: Bool { gif != nil || kind == "gif" }
+    /// Sprachnachricht: Art "voice", der Anhang ist die Aufnahme.
+    var isVoice: Bool { kind == "voice" }
+    var voiceAttachment: Attachment? { isVoice ? attachments.first : nil }
+    /// Bilder in Serverreihenfolge (ohne die Sprachaufnahme).
+    var imageAttachments: [Attachment] { isVoice ? [] : attachments.filter(\.isImage) }
+    /// Alle übrigen Anhänge, also Dateien.
+    var fileAttachments: [Attachment] { isVoice ? Array(attachments.dropFirst()) : attachments.filter { !$0.isImage } }
+
+    /// Platzhalter für Inhalte ohne Text, z. B. "Foto", "3 Fotos", "Datei: Angebot.pdf". nil bei normalem Text.
     var placeholderText: String? {
-        if kind == "gif" || gif != nil { return "[GIF]" }
-        if kind == "voice" { return "[Sprachnachricht]" }
-        if hasAttachments || (kind != nil && kind != "text" && kind != "system") { return "[Anhang]" }
-        return nil
+        if isGif { return "GIF" }
+        if isVoice {
+            guard let voice = voiceAttachment else { return "Sprachnachricht" }
+            let length = MediaFormat.duration(ms: voice.durationMs)
+            return length.isEmpty ? "Sprachnachricht" : "Sprachnachricht, \(length)"
+        }
+        guard hasAttachments || (kind != nil && kind != "text" && kind != "system") else { return nil }
+        if attachments.isEmpty { return "Anhang" }
+        let images = imageAttachments.count
+        let files = fileAttachments
+        if files.isEmpty { return images == 1 ? "Foto" : "\(images) Fotos" }
+        if images == 0 {
+            return files.count == 1 ? "Datei: \(files[0].displayName)" : "\(files.count) Dateien"
+        }
+        return "\(attachments.count) Anhänge"
     }
+
+    /// Kleines Symbol vor dem Platzhalter.
+    var placeholderSymbol: String? {
+        guard placeholderText != nil else { return nil }
+        if isGif { return "play.rectangle" }
+        if isVoice { return "waveform" }
+        if attachments.isEmpty { return "paperclip" }
+        let images = imageAttachments.count
+        let files = fileAttachments
+        if files.isEmpty { return images == 1 ? "photo" : "photo.stack" }
+        if images == 0 { return files.count == 1 ? MediaFormat.fileSymbol(for: files[0]) : "doc.on.doc" }
+        return "paperclip"
+    }
+
+    /// Symbol für Vorschauen und Zitate, nur wenn der Platzhalter statt eines Textes gezeigt wird.
+    var previewSymbol: String? { body.nonEmptyText == nil ? placeholderSymbol : nil }
 
     /// Text für Vorschauen und Zitate: Körper, sonst Platzhalter.
     var previewText: String {

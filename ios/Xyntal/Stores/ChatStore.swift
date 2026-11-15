@@ -49,6 +49,12 @@ final class ChatStore {
         return messages.first { $0.id == id }
     }
 
+    /// true, sobald du selbst eine Nachricht in diesem Gespräch geschrieben hast (im geladenen Verlauf).
+    /// Solange nicht, gelten Fotos und GIFs anderer als fremd und laden erst auf Tippen.
+    var hasWrittenHere: Bool {
+        messages.contains { isMine($0) }
+    }
+
     // MARK: - Laden
 
     /// Erste Seite. Ersetzt den Verlauf.

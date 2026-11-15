@@ -182,6 +182,16 @@ final class APIClient {
                            as: Ack.self)
     }
 
+    /// POST /reports mit targetType "message". Die Gründe sind dieselben wie bei Nutzern.
+    func reportMessage(id: String, reason: String, details: String?, token: String) async throws {
+        let messageId = try Self.validatedPathId(id)
+        _ = try await send("reports",
+                           method: "POST",
+                           token: token,
+                           body: ReportRequest(targetType: "message", targetId: messageId, reason: reason, details: details),
+                           as: Ack.self)
+    }
+
     /// GET /users/:id/ai-summary: kurze, von der KI geschriebene Vorstellung. 404 heißt, das Profil ist nicht sichtbar.
     /// 502 wird als eigener Text gemeldet, damit die Ansicht "Nochmal versuchen" anbietet. Sprache: Accept-Language aus send().
     func aiSummary(userId: String, token: String) async throws -> MemberSummary {
@@ -290,6 +300,52 @@ final class APIClient {
         let messageId = try Self.validatedPathId(id)
         _ = try await send("messages/\(messageId)", method: "DELETE", token: token, as: Ack.self)
     }
+
+    /// GET /files/:id: die Bytes einer Datei aus einer Nachricht. Lädt erst, wenn der Aufrufer es verlangt.
+    /// progress meldet 0...1, sofern der Server eine Größe nennt. Antworten über 100 MB gelten als Fehler.
+    func downloadFile(id: String, token: String, progress: @escaping (Double) -> Void) async throws -> Data {
+        let fileId = try Self.validatedPathId(id)
+        guard let baseURL else { throw AppError.message(AppError.genericMessage) }
+        var request = URLRequest(url: baseURL.appending(path: "files/\(fileId)"))
+        request.timeoutInterval = 120
+        request.cachePolicy = .reloadIgnoringLocalCacheData
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("de", forHTTPHeaderField: "Accept-Language")
+
+        return try await withCheckedThrowingContinuation { continuation in
+            var observation: NSKeyValueObservation?
+            let task = urlSession.downloadTask(with: request) { tempURL, response, error in
+                // Die temporäre Datei gibt URLSession nach dem Rückruf frei, deshalb wird sie hier gelesen.
+                defer { observation?.invalidate() }
+                if let urlError = error as? URLError, urlError.code == .cancelled {
+                    continuation.resume(throwing: CancellationError())
+                    return
+                }
+                guard error == nil, let http = response as? HTTPURLResponse, let tempURL else {
+                    continuation.resume(throwing: AppError.network)
+                    return
+                }
+                guard (200..<300).contains(http.statusCode) else {
+                    continuation.resume(throwing: http.statusCode == 401
+                        ? AppError.unauthorized
+                        : AppError.message(AppError.genericMessage))
+                    return
+                }
+                guard let data = try? Data(contentsOf: tempURL), data.count <= Self.maxFileResponseBytes else {
+                    continuation.resume(throwing: AppError.message(AppError.genericMessage))
+                    return
+                }
+                continuation.resume(returning: data)
+            }
+            observation = task.progress.observe(\.fractionCompleted) { progressInfo, _ in
+                progress(progressInfo.fractionCompleted)
+            }
+            task.resume()
+        }
+    }
+
+    /// Obergrenze für eine heruntergeladene Datei aus einer Nachricht.
+    private static let maxFileResponseBytes = 100 * 1024 * 1024
 
     /// POST /messages/:id/reactions: setzt oder entfernt die eigene Reaktion mit diesem Emoji.
     func toggleReaction(messageId: String, emoji: String, token: String) async throws {

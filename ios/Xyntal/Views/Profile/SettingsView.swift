@@ -3,11 +3,12 @@ import SwiftUI
 /// Einstellungen. Darstellung: Modus und Akzentfarbe. Beide Auswahlen wirken sofort in der ganzen App.
 struct SettingsView: View {
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Bindable private var appearance = AppAppearance.shared
 
     var body: some View {
         Form {
-            Section("Darstellung") {
+            Section {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Modus")
                         .font(.subheadline)
@@ -35,6 +36,16 @@ struct SettingsView: View {
                     }
                 }
                 .padding(.vertical, 4)
+
+                // Bewegung reduzieren schaltet GIF-Animation ab; der Schalter zeigt dann Aus und ist gesperrt.
+                Toggle("GIFs automatisch abspielen", isOn: reduceMotion ? .constant(false) : $appearance.gifAutoplay)
+                    .disabled(reduceMotion)
+            } header: {
+                Text("Darstellung")
+            } footer: {
+                if reduceMotion {
+                    Text("Aus, weil auf deinem iPhone „Bewegung reduzieren“ aktiv ist.")
+                }
             }
         }
         .navigationTitle("Einstellungen")

@@ -6,11 +6,14 @@ struct ChatView: View {
     @Environment(ConversationsStore.self) private var conversations
     @Environment(PushManager.self) private var push
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dismiss) private var dismiss
 
     let conversation: Conversation
 
     @State private var store: ChatStore?
     @State private var showGroupInfo = false
+    @State private var reportTarget: ReportTarget?
+    @State private var blockUserId: String?
     /// true zwischen onAppear und onDisappear. Nur dann wird als gelesen gemeldet.
     @State private var isVisible = false
 
@@ -55,9 +58,31 @@ struct ChatView: View {
                 .disabled(!current.isGroup)
                 .accessibilityLabel(current.isGroup ? "\(title), Gruppeninfo öffnen" : title)
             }
+            // Melden und Sperren im Chat, sonst nur im Mitgliedsprofil. Bei Gruppen gibt es kein Gegenüber.
+            if current.isDirect, let partnerId = current.partnerId {
+                ToolbarItem(placement: .primaryAction) {
+                    Menu {
+                        Button("Melden", systemImage: "flag") {
+                            reportTarget = .user(partnerId)
+                        }
+                        Button("Mitglied sperren", systemImage: "hand.raised", role: .destructive) {
+                            blockUserId = partnerId
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                    }
+                    .accessibilityLabel("Weitere Aktionen")
+                }
+            }
         }
         .sheet(isPresented: $showGroupInfo) {
             GroupInfoView(conversation: current, title: title)
+        }
+        .sheet(item: $reportTarget) { target in
+            ReportMemberSheet(target: target)
+        }
+        .blockConfirmation($blockUserId) {
+            dismiss()
         }
         .onAppear {
             isVisible = true
@@ -111,6 +136,10 @@ private struct ChatTranscriptView: View {
     @State private var replyTo: Message?
     @State private var messageToDelete: Message?
     @State private var lastTypingDraft = ""
+    @State private var reportTarget: ReportTarget?
+    @State private var blockUserId: String?
+    @State private var reactionTarget: Message?
+    @State private var viewer: ImageViewerRequest?
     @FocusState private var inputFocused: Bool
 
     private var typingText: String? {
@@ -142,6 +171,29 @@ private struct ChatTranscriptView: View {
                 guard editingMessage == nil, !newValue.isEmpty, newValue != lastTypingDraft else { return }
                 lastTypingDraft = newValue
                 Task { await store.sendTyping() }
+            }
+            .sheet(item: $reportTarget) { target in
+                ReportMemberSheet(target: target)
+            }
+            .blockConfirmation($blockUserId) {
+                Task { await store.refresh() }
+            }
+            .confirmationDialog("Reagieren",
+                                isPresented: Binding(
+                                    get: { reactionTarget != nil },
+                                    set: { if !$0 { reactionTarget = nil } }
+                                ),
+                                titleVisibility: .visible) {
+                ForEach(ChatStore.allowedReactions, id: \.self) { emoji in
+                    Button(emoji) {
+                        if let target = reactionTarget {
+                            Task { await store.toggleReaction(target, emoji: emoji) }
+                        }
+                    }
+                }
+            }
+            .fullScreenCover(item: $viewer) { request in
+                ImageViewer(images: request.images, start: request.start)
             }
     }
 
@@ -224,7 +276,18 @@ private struct ChatTranscriptView: View {
                           isMine: isMine,
                           showsAuthor: conversation.isGroup && !isMine,
                           replyTarget: store.message(withId: message.replyToId),
-                          onReact: { emoji in Task { await store.toggleReaction(message, emoji: emoji) } })
+                          senderTrusted: isMine || store.hasWrittenHere,
+                          onReact: { emoji in Task { await store.toggleReaction(message, emoji: emoji) } },
+                          onOpenImage: { index in
+                              viewer = ImageViewerRequest(images: message.imageAttachments, start: index)
+                          },
+                          onReply: {
+                              editingMessage = nil
+                              replyTo = message
+                              inputFocused = true
+                          },
+                          onRequestReaction: { reactionTarget = message },
+                          onReport: { reportTarget = .message(message.id) })
                 .contextMenu {
                     Menu("Reagieren") {
                         ForEach(ChatStore.allowedReactions, id: \.self) { emoji in
@@ -243,12 +306,25 @@ private struct ChatTranscriptView: View {
                             UIPasteboard.general.string = body
                         }
                     }
-                    if isMine && message.isText {
-                        Button("Bearbeiten", systemImage: "pencil") {
-                            replyTo = nil
-                            editingMessage = message
-                            draft = message.body ?? ""
-                            inputFocused = true
+                    if !isMine {
+                        Button("Melden", systemImage: "flag") {
+                            reportTarget = .message(message.id)
+                        }
+                        if let authorId = message.authorId {
+                            Button("Mitglied sperren", systemImage: "hand.raised", role: .destructive) {
+                                blockUserId = authorId
+                            }
+                        }
+                    }
+                    if isMine {
+                        // Bearbeiten nur bei Text. Löschen gilt für jede eigene Nachricht, auch Fotos, Dateien und Sprache.
+                        if message.isText {
+                            Button("Bearbeiten", systemImage: "pencil") {
+                                replyTo = nil
+                                editingMessage = message
+                                draft = message.body ?? ""
+                                inputFocused = true
+                            }
                         }
                         Button("Löschen", systemImage: "trash", role: .destructive) {
                             messageToDelete = message
@@ -285,12 +361,12 @@ private struct ChatTranscriptView: View {
             }
 
             if let editingMessage {
-                contextBar(title: "Nachricht bearbeiten", detail: editingMessage.previewText) {
+                contextBar(title: "Nachricht bearbeiten", detail: editingMessage.previewText, symbol: editingMessage.previewSymbol) {
                     self.editingMessage = nil
                     draft = ""
                 }
             } else if let replyTo {
-                contextBar(title: "Antwort an \(replyTo.author.nonEmptyText ?? "Unbekannt")", detail: replyTo.previewText) {
+                contextBar(title: "Antwort an \(replyTo.author.nonEmptyText ?? "Unbekannt")", detail: replyTo.previewText, symbol: replyTo.previewSymbol) {
                     self.replyTo = nil
                 }
             }
@@ -323,15 +399,20 @@ private struct ChatTranscriptView: View {
         .background(.bar)
     }
 
-    private func contextBar(title: String, detail: String, cancel: @escaping () -> Void) -> some View {
+    private func contextBar(title: String, detail: String, symbol: String?, cancel: @escaping () -> Void) -> some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(.caption.bold())
-                Text(detail)
-                    .font(.caption)
-                    .foregroundStyle(Theme.muted)
-                    .lineLimit(1)
+                HStack(spacing: 4) {
+                    if let symbol {
+                        Image(systemName: symbol)
+                    }
+                    Text(detail)
+                }
+                .font(.caption)
+                .foregroundStyle(Theme.muted)
+                .lineLimit(1)
             }
             Spacer()
             Button(action: cancel) {
@@ -404,17 +485,63 @@ private struct SystemMessageRow: View {
     }
 }
 
+/// Eine Nachricht als Blase. Text, Fotos, GIFs, Sprache und Dateien; eine Beschriftung steht als Text darunter.
 private struct MessageBubble: View {
+    @Environment(SessionStore.self) private var session
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     let message: Message
     let isMine: Bool
     let showsAuthor: Bool
     let replyTarget: Message?
+    /// Absender ist vertraut: eigene Nachricht oder Gespräch, in dem du selbst schon geschrieben hast.
+    let senderTrusted: Bool
     let onReact: (String) -> Void
+    let onOpenImage: (Int) -> Void
+    let onReply: () -> Void
+    let onRequestReaction: () -> Void
+    let onReport: () -> Void
 
     /// Längere Texte werden gekürzt, bis der Nutzer "Mehr anzeigen" tippt.
     static let collapsedLength = 4_000
 
     @State private var isExpanded = false
+    @State private var gifVisible = false
+    @State private var voice: VoicePlayer
+    @State private var files: [AttachmentFileModel]
+
+    init(message: Message,
+         isMine: Bool,
+         showsAuthor: Bool,
+         replyTarget: Message?,
+         senderTrusted: Bool,
+         onReact: @escaping (String) -> Void,
+         onOpenImage: @escaping (Int) -> Void,
+         onReply: @escaping () -> Void,
+         onRequestReaction: @escaping () -> Void,
+         onReport: @escaping () -> Void) {
+        self.message = message
+        self.isMine = isMine
+        self.showsAuthor = showsAuthor
+        self.replyTarget = replyTarget
+        self.senderTrusted = senderTrusted
+        self.onReact = onReact
+        self.onOpenImage = onOpenImage
+        self.onReply = onReply
+        self.onRequestReaction = onRequestReaction
+        self.onReport = onReport
+        _voice = State(initialValue: VoicePlayer(durationMs: message.voiceAttachment?.durationMs))
+        _files = State(initialValue: message.fileAttachments.map { AttachmentFileModel(attachment: $0) })
+    }
+
+    private var hasMedia: Bool { message.isGif || message.isVoice || !message.attachments.isEmpty }
+    private var foreground: Color { isMine ? Theme.ink : .primary }
+    private var bubbleColor: Color { isMine ? Theme.accent : Color(.systemGray5) }
+    private var caption: String? { message.body.nonEmptyText }
+    private var gifPlays: Bool {
+        GIFPolicy.animates(visible: gifVisible, isActive: scenePhase == .active, reduceMotion: reduceMotion)
+    }
 
     var body: some View {
         HStack {
@@ -427,25 +554,7 @@ private struct MessageBubble: View {
                         .padding(.horizontal, 4)
                 }
 
-                VStack(alignment: .leading, spacing: 4) {
-                    if let replyTarget {
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(replyTarget.author.nonEmptyText ?? "Unbekannt")
-                                .font(.caption2.bold())
-                            Text(replyTarget.previewText)
-                                .font(.caption2)
-                                .lineLimit(2)
-                        }
-                        .padding(6)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(.black.opacity(0.08), in: RoundedRectangle(cornerRadius: 8))
-                    }
-                    content
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .foregroundStyle(isMine ? Theme.ink : .primary)
-                .background(isMine ? Theme.accent : Color(.systemGray5), in: RoundedRectangle(cornerRadius: 18))
+                bubble
 
                 HStack(spacing: 4) {
                     Text(message.date.formatted(date: .omitted, time: .shortened))
@@ -463,15 +572,88 @@ private struct MessageBubble: View {
             }
             if !isMine { Spacer(minLength: 48) }
         }
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: hasMedia ? .contain : .combine)
+        .onChange(of: scenePhase) { _, phase in
+            // Kein Hintergrund-Audio: Sprache pausiert, sobald die App nicht mehr aktiv ist.
+            if phase != .active { voice.pause() }
+        }
     }
 
     @ViewBuilder
-    private var content: some View {
+    private var bubble: some View {
+        if hasMedia {
+            mediaAccessibility(mediaBubble)
+        } else {
+            textBubble
+        }
+    }
+
+    private var textBubble: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            if let replyTarget {
+                quote(replyTarget)
+            }
+            textContent
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .foregroundStyle(foreground)
+        .background(bubbleColor, in: RoundedRectangle(cornerRadius: 18))
+    }
+
+    /// Medien flächig bis zum Rand der Blase, Radius 18. Eigene Abstände haben die einzelnen Teile.
+    private var mediaBubble: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            if let replyTarget {
+                quote(replyTarget)
+                    .padding(.horizontal, 12)
+                    .padding(.top, 8)
+                    .padding(.bottom, 4)
+            }
+            MessageMediaContent(message: message,
+                                senderTrusted: senderTrusted,
+                                voice: voice,
+                                files: files,
+                                gifVisible: $gifVisible,
+                                foreground: foreground,
+                                onOpenImage: onOpenImage)
+            if let caption {
+                VStack(alignment: .leading, spacing: 4) {
+                    bodyText(caption)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+            }
+        }
+        .foregroundStyle(foreground)
+        .background(bubbleColor)
+        .clipShape(RoundedRectangle(cornerRadius: 18))
+    }
+
+    private func quote(_ target: Message) -> some View {
+        VStack(alignment: .leading, spacing: 1) {
+            Text(target.author.nonEmptyText ?? "Unbekannt")
+                .font(.caption2.bold())
+            HStack(spacing: 4) {
+                if let symbol = target.previewSymbol {
+                    Image(systemName: symbol)
+                }
+                Text(target.previewText)
+            }
+            .font(.caption2)
+            .lineLimit(2)
+        }
+        .padding(6)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.black.opacity(0.08), in: RoundedRectangle(cornerRadius: 8))
+    }
+
+    @ViewBuilder
+    private var textContent: some View {
         if let placeholder = message.placeholderText {
-            Text(placeholder)
+            Label(placeholder, systemImage: message.placeholderSymbol ?? "paperclip")
                 .italic()
-            if let body = message.body.nonEmptyText {
+            if let body = caption {
                 bodyText(body)
             }
         } else {
@@ -494,6 +676,114 @@ private struct MessageBubble: View {
             Text(body)
                 .textSelection(.enabled)
         }
+    }
+
+    // MARK: - VoiceOver
+
+    /// Jede Medienblase ist ein einziges Element mit eigener Beschriftung; die Teile darin sind ausgeblendet.
+    @ViewBuilder
+    private func mediaAccessibility<Content: View>(_ content: Content) -> some View {
+        if message.isVoice, let attachment = message.voiceAttachment {
+            let base = content
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(voiceLabel)
+                .accessibilityHint("Doppeltippen zum Abspielen")
+                .accessibilityValue(voice.isPlaying
+                    ? "Wiedergabe, \(Int(voice.currentTime)) Sekunden von \(Int(voice.displayDuration))"
+                    : "")
+                .accessibilityAction(.default) {
+                    Task {
+                        await voice.togglePlayback {
+                            try await MediaLoader.shared.fileData(for: attachment, session: session)
+                        }
+                    }
+                }
+                .accessibilityAdjustableAction { direction in
+                    switch direction {
+                    case .increment: voice.seek(by: 10)
+                    case .decrement: voice.seek(by: -10)
+                    @unknown default: break
+                    }
+                }
+                .accessibilityAction(named: "Geschwindigkeit ändern") { voice.cycleRate() }
+                .accessibilityAction(named: "Antworten") { onReply() }
+                .accessibilityAction(named: "Reagieren") { onRequestReaction() }
+            if isMine {
+                base
+            } else {
+                base.accessibilityAction(named: "Melden") { onReport() }
+            }
+        } else if message.isGif {
+            content
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(gifLabel)
+                .accessibilityValue(gifPlays ? "Wird abgespielt" : "Angehalten")
+        } else if message.fileAttachments.isEmpty && !message.imageAttachments.isEmpty {
+            content
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(imageLabel)
+                .accessibilityAction(.default) { onOpenImage(0) }
+        } else {
+            content
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(mediaLabel)
+                .accessibilityAction(.default) {
+                    if files.count == 1, let only = files.first {
+                        Task { await only.open(session: session) }
+                    }
+                }
+                .accessibilityActions {
+                    ForEach(files, id: \.attachment.id) { model in
+                        Button("Öffnen: \(model.attachment.displayName)") {
+                            Task { await model.open(session: session) }
+                        }
+                    }
+                }
+        }
+    }
+
+    private var senderPhrase: String {
+        isMine ? "von dir" : "von \(message.author.nonEmptyText ?? "Unbekannt")"
+    }
+
+    private var timePhrase: String {
+        "\(message.date.formatted(date: .omitted, time: .shortened)) Uhr"
+    }
+
+    private func withCaption(_ base: String) -> String {
+        guard let caption else { return base }
+        return base + ", Beschriftung: " + caption
+    }
+
+    private var voiceLabel: String {
+        let seconds = (message.voiceAttachment?.durationMs ?? 0) / 1000
+        return withCaption("Sprachnachricht \(senderPhrase), \(seconds) Sekunden, \(timePhrase)")
+    }
+
+    private var gifLabel: String {
+        let title = message.gif?.title.nonEmptyText
+        return withCaption("GIF \(senderPhrase)" + (title.map { ": \($0)" } ?? ""))
+    }
+
+    private var imageLabel: String {
+        let count = message.imageAttachments.count
+        let noun = count == 1 ? "Foto" : "\(count) Fotos"
+        return withCaption("\(noun) \(senderPhrase), \(timePhrase)")
+    }
+
+    private var mediaLabel: String {
+        if message.imageAttachments.isEmpty, message.fileAttachments.count == 1, let file = message.fileAttachments.first {
+            var parts = [file.displayName, MediaFormat.typeLabel(for: file)]
+            if let size = MediaFormat.spokenSize(file.size) {
+                parts.append(size)
+            }
+            return withCaption("Datei \(senderPhrase): " + parts.joined(separator: ", "))
+        }
+        let total = message.attachments.count
+        if message.imageAttachments.isEmpty {
+            return withCaption("\(total) Dateien \(senderPhrase), \(timePhrase)")
+        }
+        return withCaption("\(total) Anhänge \(senderPhrase), \(timePhrase)")
     }
 }
 

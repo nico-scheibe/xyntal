@@ -116,7 +116,7 @@ struct MemberDetailView: View {
             Text("Du siehst dieses Mitglied dann nicht mehr in der Liste.")
         }
         .sheet(isPresented: $showReport) {
-            ReportMemberSheet(userId: member.id)
+            ReportMemberSheet(target: .user(member.id))
         }
         .navigationDestination(item: $openConversation) { conversation in
             ChatView(conversation: conversation)
@@ -167,13 +167,33 @@ struct MemberDetailView: View {
     }
 }
 
+/// Was gemeldet wird: ein Mitglied oder eine Nachricht.
+enum ReportTarget: Identifiable, Hashable {
+    case user(String)
+    case message(String)
+
+    var id: String {
+        switch self {
+        case .user(let userId): return "user-\(userId)"
+        case .message(let messageId): return "message-\(messageId)"
+        }
+    }
+
+    var title: String {
+        switch self {
+        case .user: return "Mitglied melden"
+        case .message: return "Nachricht melden"
+        }
+    }
+}
+
 /// Meldeformular: Grund auswählen, optionale Notiz (max. 500 Zeichen), dann Absenden mit Bestätigung.
-/// Der Notiztext wird weder gespeichert noch geloggt.
-private struct ReportMemberSheet: View {
+/// Der Notiztext wird weder gespeichert noch geloggt. Dieselben Gründe für Mitglieder und Nachrichten.
+struct ReportMemberSheet: View {
     @Environment(SessionStore.self) private var session
     @Environment(\.dismiss) private var dismiss
 
-    let userId: String
+    let target: ReportTarget
 
     private static let noteLimit = 500
 
@@ -228,7 +248,7 @@ private struct ReportMemberSheet: View {
                     }
                 }
             }
-            .navigationTitle("Mitglied melden")
+            .navigationTitle(target.title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -269,10 +289,18 @@ private struct ReportMemberSheet: View {
         let trimmedNote = note.trimmingCharacters(in: .whitespacesAndNewlines)
         do {
             try await session.withAccess { token in
-                try await session.api.reportUser(id: userId,
-                                                 reason: reason.rawValue,
-                                                 details: trimmedNote.isEmpty ? nil : trimmedNote,
-                                                 token: token)
+                switch target {
+                case .user(let userId):
+                    try await session.api.reportUser(id: userId,
+                                                     reason: reason.rawValue,
+                                                     details: trimmedNote.isEmpty ? nil : trimmedNote,
+                                                     token: token)
+                case .message(let messageId):
+                    try await session.api.reportMessage(id: messageId,
+                                                        reason: reason.rawValue,
+                                                        details: trimmedNote.isEmpty ? nil : trimmedNote,
+                                                        token: token)
+                }
             }
             didSend = true
         } catch is CancellationError {
