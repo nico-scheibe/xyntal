@@ -5,7 +5,8 @@ leiten danach dauerhaft (308) auf `https://xyntal.com` weiter; `www.xyntal.com` 
 
 **Bleibt unverändert:**
 
-- Subdomains `api.xyntal.de`, `db.xyntal.de`, `admin.xyntal.de`, `bot.xyntal.de`. Installierte Apps haben `api.xyntal.de` fest eingebaut.
+- Subdomains `api.xyntal.de`, `db.xyntal.de`, `admin.xyntal.de`. Installierte Apps haben `api.xyntal.de` fest eingebaut.
+  Ausnahme: Das Bot-Panel zieht auf `bot.xyntal.com` (braucht das Anmelde-Cookie von `.xyntal.com`); `bot.xyntal.de` leitet weiter.
 - Alle E-Mail-Adressen (z. B. `hallo@xyntal.de`, `nico@xyntal.de`) und ihre DNS-Einträge (MX, SPF, DKIM, DMARC).
 - Die iPhone-App: ihre Links laufen über die Weiterleitung.
 

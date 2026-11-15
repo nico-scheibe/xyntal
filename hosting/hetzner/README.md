@@ -5,11 +5,11 @@ und den Cloudflare-Tunnel. Darauf laufen mit Docker Compose:
 
 | Dienst | Aufgabe |
 |---|---|
-| `caddy` | HTTPS (Let's Encrypt) für `xyntal.com`, `www.xyntal.com`, `api.xyntal.de`, `bot.xyntal.de` |
+| `caddy` | HTTPS (Let's Encrypt) für `xyntal.com`, `www.xyntal.com`, `api.xyntal.de`, `bot.xyntal.com` (und Weiterleitung von `bot.xyntal.de`) |
 | `website` | `hosting/daki/server.cjs`; holt `public/` weiterhin alle 30 s von `main`, ohne Neustart |
 | `api` | App-Backend aus `nico-scheibe/xyntal-app-windows` (`server/`), Daten in `/opt/xyntal/data/api` |
 | `backup` | Tägliches, geprüftes Wiederherstellungs-Bündel nach `/opt/xyntal/backups`, 14 bleiben |
-| `discord-guard` | Discord-Bot gegen Scam und Phishing mit Web-Panel auf `bot.xyntal.de` (`discord-bot/` in `xyntal-app-windows`); nur mit `COMPOSE_PROFILES=discord`, siehe unten |
+| `discord-guard` | Discord-Bot gegen Scam und Phishing mit Web-Panel auf `bot.xyntal.com` (`discord-bot/` in `xyntal-app-windows`); nur mit `COMPOSE_PROFILES=discord`, siehe unten |
 
 ## Automatische Updates
 
@@ -60,8 +60,9 @@ echo 'COMPOSE_PROFILES=discord' >> /opt/xyntal/site/hosting/hetzner/.env
 
 Der Einladungslink steht danach im Log: `docker compose logs discord-guard | grep Invite`.
 
-**Web-Panel:** In Cloudflare einen A-Record `bot` → `91.98.171.233` anlegen, „DNS only“ (graue Wolke),
-dann holt Caddy das Zertifikat selbst. Anmeldung mit dem Xyntal-Konto (nur Staff: Owner/Admin alles,
+**Web-Panel** auf `bot.xyntal.com`: bei IONOS (DNS von xyntal.com) A-Record `bot` → `91.98.171.233` und
+AAAA-Record `bot` → `2a01:4f8:1c19:5598::1` anlegen, dann holt Caddy das Zertifikat selbst. Die alte Adresse
+`bot.xyntal.de` (Cloudflare, „DNS only“) leitet weiter. Anmeldung mit dem Xyntal-Konto (nur Staff: Owner/Admin alles,
 Moderation Schutz und Vorfälle); die Staff-Prüfung läuft intern über `http://api:8787`.
 Die Datenbank (`/opt/xyntal/data/discord-guard/guard.db`) enthält nur Einstellungen und Vorfälle
 der letzten 30 Tage und ist nicht im täglichen Backup.
