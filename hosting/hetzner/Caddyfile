@@ -83,9 +83,16 @@ api.xyntal.de {
 }
 
 # Web-Panel von Xyntal Guard (Discord-Bot). Läuft nur mit COMPOSE_PROFILES=discord;
-# sonst antwortet diese Adresse mit 502. DNS: A-Record "bot", „DNS only“.
-bot.xyntal.de {
+# sonst antwortet diese Adresse mit 502. Auf .com, weil die gemeinsame Anmeldung
+# (public/session-share.js) ihr Cookie nur für .xyntal.com setzt.
+# DNS bei IONOS: A "bot" → 91.98.171.233, AAAA "bot" → 2a01:4f8:1c19:5598::1.
+bot.xyntal.com {
 	encode zstd gzip
 	header Strict-Transport-Security "max-age=31536000"
 	reverse_proxy discord-guard:8790
+}
+
+# Alte Panel-Adresse (Cloudflare, „DNS only“) leitet dauerhaft weiter.
+bot.xyntal.de {
+	redir https://bot.xyntal.com{uri} 308
 }
