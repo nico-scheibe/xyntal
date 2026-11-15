@@ -71,6 +71,10 @@ struct ChannelPost: Decodable, Identifiable, Equatable {
 
     let id: String
     var author: String?
+    /// Id des Autors. Ohne sie gibt es keine Meldung (die geht an den Autor).
+    var authorId: String?
+    /// true, wenn der Autor zum Xyntal-Team gehört. Das Abzeichen „Team“ hängt daran.
+    var authorIsTeam: Bool
     /// true, wenn du der Autor bist.
     var mine: Bool
     var body: String
@@ -79,13 +83,15 @@ struct ChannelPost: Decodable, Identifiable, Equatable {
     var attachments: [Attachment]
 
     private enum CodingKeys: String, CodingKey {
-        case id, author, mine, body, createdAt, reactions, attachments
+        case id, author, authorId, authorIsTeam, mine, body, createdAt, reactions, attachments
     }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decodeIdentifier(forKey: .id)
         author = container.lenient(String.self, .author)
+        authorId = container.lenient(String.self, .authorId)
+        authorIsTeam = container.lenient(Bool.self, .authorIsTeam) ?? false
         mine = container.lenient(Bool.self, .mine) ?? false
         body = container.lenient(String.self, .body) ?? ""
         createdAt = container.lenient(String.self, .createdAt)

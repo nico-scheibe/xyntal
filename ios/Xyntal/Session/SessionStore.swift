@@ -17,7 +17,15 @@ final class SessionStore {
 
     let api = APIClient()
 
+    /// Wird beim Beenden der Sitzung aufgerufen, solange das Token noch gilt. Darf nicht warten: Sie dient nur dazu,
+    /// Dinge auf dem Server aufzuräumen, bevor das Token weg ist.
+    var onSessionEnding: (@MainActor (String) -> Void)?
+
     private var token: String?
+
+    /// Kennung dieser Anmeldung. Ändert sich bei jedem Anmelden und Abmelden. Ausstehende Nachrichten gehören
+    /// zu genau einer Kennung, so bleibt nichts Fremdes für ein anderes Konto sichtbar (siehe OutgoingStore).
+    private(set) var sessionId = UUID()
     private var isSigningIn = false
 
     private static let expiredMessage = "Deine Anmeldung ist abgelaufen. Bitte melde dich erneut an."
@@ -36,14 +44,14 @@ final class SessionStore {
             state = .signedOut
             return
         }
-        token = String(decoding: data, as: UTF8.self)
+        setToken(String(decoding: data, as: UTF8.self))
         do {
             _ = try await withAccess { current in try await self.api.me(token: current) }
             state = .signedIn
             PushManager.shared.sync(session: self)
         } catch AppError.network {
             // Offline: Token bleibt im Schlüsselbund, die Prüfung läuft beim nächsten Start erneut.
-            token = nil
+            setToken(nil)
             notice = AppError.network.errorDescription
             state = .signedOut
         } catch is CancellationError {
@@ -53,7 +61,7 @@ final class SessionStore {
             return
         } catch {
             // Serverfehler oder unlesbare Antwort: Token bleibt im Schlüsselbund, der nächste Start prüft erneut.
-            token = nil
+            setToken(nil)
             notice = Self.unverifiedMessage
             state = .signedOut
         }
@@ -169,15 +177,25 @@ final class SessionStore {
 
     // MARK: - Speicher
 
+    /// Setzt das Token und erneuert die Sitzungskennung. Jeder Wechsel gilt als neue Anmeldung.
+    private func setToken(_ value: String?) {
+        token = value
+        sessionId = UUID()
+    }
+
     /// Setzt das Token im Speicher und im Schlüsselbund. Gibt false zurück, wenn der Schlüsselbund nicht schreiben konnte.
     @discardableResult
     private func store(_ newToken: String) -> Bool {
-        token = newToken
+        setToken(newToken)
         return KeychainStore.save(Data(newToken.utf8))
     }
 
     private func clearSession() {
-        token = nil
+        // Vor dem Löschen des Tokens: Aufräumen auf dem Server ist nur damit noch möglich.
+        if let token {
+            onSessionEnding?(token)
+        }
+        setToken(nil)
         KeychainStore.delete()
     }
 

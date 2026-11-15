@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Ein Beitrag in einem Kanal einer Community, in der du Mitglied bist: Kopf mit Autor und Zeit, Text,
-/// Bilder und „Gefällt mir“. Das „…“-Menü erscheint nur, wenn du löschen darfst.
+/// Bilder und „Gefällt mir“. Das „…“-Menü erscheint nur, wenn du löschen oder melden darfst.
 struct MemberPostView: View {
     let post: ChannelPost
     let canDelete: Bool
@@ -9,7 +9,13 @@ struct MemberPostView: View {
     let onDelete: () -> Void
 
     @State private var confirmDelete = false
+    @State private var showReport = false
     @State private var viewer: ImageViewerRequest?
+
+    /// Melden geht nur an einen bekannten Autor und nie am eigenen Beitrag.
+    private var canReport: Bool {
+        !post.mine && post.authorId.nonEmptyText != nil
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -34,6 +40,9 @@ struct MemberPostView: View {
             Button("Löschen", role: .destructive, action: onDelete)
             Button("Abbrechen", role: .cancel) {}
         }
+        .sheet(isPresented: $showReport) {
+            ReportPostSheet(post: post)
+        }
     }
 
     // MARK: - Kopf
@@ -42,9 +51,20 @@ struct MemberPostView: View {
         HStack(alignment: .center, spacing: 10) {
             AvatarView(name: post.authorName, avatar: nil, size: 36)
             VStack(alignment: .leading, spacing: 1) {
-                Text(verbatim: post.authorName)
-                    .font(.subheadline.bold())
-                    .lineLimit(1)
+                HStack(spacing: 6) {
+                    Text(verbatim: post.authorName)
+                        .font(.subheadline.bold())
+                        .lineLimit(1)
+                    // Nur das Wort „Team“. Eine Rangordnung gibt es in Xyntal bewusst nicht.
+                    if post.authorIsTeam {
+                        Text("Team")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(Theme.muted)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 1)
+                            .overlay(Capsule().stroke(Theme.muted.opacity(0.5), lineWidth: 1))
+                    }
+                }
                 if let date = post.date {
                     Text(MemberTimeFormat.text(for: date))
                         .font(.caption)
@@ -53,10 +73,17 @@ struct MemberPostView: View {
                 }
             }
             Spacer(minLength: 8)
-            if canDelete {
+            if canDelete || canReport {
                 Menu {
-                    Button("Löschen", systemImage: "trash", role: .destructive) {
-                        confirmDelete = true
+                    if canReport {
+                        Button("Melden", systemImage: "flag") {
+                            showReport = true
+                        }
+                    }
+                    if canDelete {
+                        Button("Löschen", systemImage: "trash", role: .destructive) {
+                            confirmDelete = true
+                        }
                     }
                 } label: {
                     Image(systemName: "ellipsis")
@@ -88,6 +115,111 @@ struct MemberPostView: View {
                     .font(.caption)
                     .foregroundStyle(Theme.muted)
             }
+        }
+    }
+}
+
+/// Meldeformular für einen Beitrag: Grund wählen, dann Absenden mit Bestätigung. Ohne Notizfeld.
+///
+/// Gemeldet wird der Autor über den Nutzer-Weg. Der laufende Server kennt den Beitragstyp für Meldungen noch nicht
+/// (nur Nutzer, Nachricht, Projekt, Community, Arbeitsbereich). Deshalb steht die Beitrags-Id im Freitext.
+/// Sobald der Zweig feat/apple-abo vereint ist, wird auf den Beitragstyp umgestellt.
+private struct ReportPostSheet: View {
+    @Environment(SessionStore.self) private var session
+    @Environment(\.dismiss) private var dismiss
+
+    let post: ChannelPost
+
+    @State private var reason: ReportReason?
+    @State private var showSendConfirmation = false
+    @State private var isSending = false
+    @State private var didSend = false
+    @State private var sendError: String?
+
+    /// Der Freitext nennt den Beitrag, damit die Moderation ihn findet: die Id und der Anfang des Textes.
+    private var details: String {
+        let excerpt = String(post.body.prefix(200)).trimmingCharacters(in: .whitespacesAndNewlines)
+        return excerpt.isEmpty ? "Beitrag \(post.id)" : "Beitrag \(post.id)\n\n\(excerpt)"
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                if didSend {
+                    Section {
+                        Text("Danke. Wir prüfen die Meldung.")
+                    }
+                } else {
+                    Section("Grund") {
+                        ForEach(ReportReason.allCases) { option in
+                            Button {
+                                reason = option
+                            } label: {
+                                HStack {
+                                    Text(option.title)
+                                    Spacer()
+                                    if reason == option {
+                                        Image(systemName: "checkmark")
+                                            .foregroundStyle(.tint)
+                                    }
+                                }
+                            }
+                            .foregroundStyle(.primary)
+                            .accessibilityAddTraits(reason == option ? .isSelected : [])
+                        }
+                    }
+
+                    if let sendError {
+                        Section {
+                            Text(sendError)
+                                .foregroundStyle(.red)
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Beitrag melden")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(didSend ? "Fertig" : "Abbrechen") {
+                        dismiss()
+                    }
+                }
+                if !didSend {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Senden") {
+                            showSendConfirmation = true
+                        }
+                        .disabled(reason == nil || isSending || post.authorId.nonEmptyText == nil)
+                    }
+                }
+            }
+            .alert("Meldung absenden?", isPresented: $showSendConfirmation) {
+                Button("Absenden") {
+                    Task { await send() }
+                }
+                Button("Abbrechen", role: .cancel) {}
+            } message: {
+                Text("Bitte melde nur, was du selbst erlebt oder gesehen hast.")
+            }
+        }
+    }
+
+    private func send() async {
+        guard let reason, !isSending, let authorId = post.authorId.nonEmptyText else { return }
+        isSending = true
+        sendError = nil
+        defer { isSending = false }
+        do {
+            try await session.withAccess { token in
+                try await session.api.reportUser(id: authorId,
+                                                 reason: reason.rawValue,
+                                                 details: details,
+                                                 token: token)
+            }
+            didSend = true
+        } catch {
+            sendError = AppError.displayText(for: error)
         }
     }
 }

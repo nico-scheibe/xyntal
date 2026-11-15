@@ -129,10 +129,18 @@ func clampedCount(_ value: Int?) -> Int {
 
 extension String {
     /// Kürzt auf höchstens `limit` UTF-16-Einheiten, so wie der Server (JavaScript) Längen zählt.
-    /// Fällt der Schnitt in ein Surrogatpaar, bleibt der Text unverändert.
+    /// Fällt der Schnitt in ein Surrogatpaar (Emoji), wird eine Einheit früher geschnitten. Der Text bleibt
+    /// dann etwas kürzer, statt über die Grenze zu rutschen oder unverändert zurückzukommen.
     func truncatedToUTF16(_ limit: Int) -> String {
         guard utf16.count > limit else { return self }
-        return String(utf16.prefix(limit)) ?? self
+        var end = max(limit, 0)
+        while end > 0 {
+            if let cut = String(utf16.prefix(end)) {
+                return cut
+            }
+            end -= 1
+        }
+        return ""
     }
 }
 

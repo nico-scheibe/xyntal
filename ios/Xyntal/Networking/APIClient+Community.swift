@@ -65,6 +65,30 @@ extension APIClient {
         _ = try await send("posts/\(postId)", method: "DELETE", token: token, as: ChannelDeletedResult.self)
     }
 
+    /// POST /channels/:id/posts (mit Token): Text und Datei-Ids. Der Server verlangt Text oder Anhang und übernimmt
+    /// höchstens 10 Ids. Umfragen gehören nicht hierher, die kommen mit einem eigenen Paket.
+    func sendChannelPost(channelId: String, body: String, attachmentIds: [String], token: String) async throws {
+        let id = try Self.validatedPathId(channelId)
+        _ = try await send("channels/\(id)/posts",
+                           method: "POST",
+                           token: token,
+                           body: ChannelPostRequest(body: body, attachments: attachmentIds),
+                           as: ChannelPostCreatedResult.self,
+                           mapFailure: Self.channelPostFailure)
+    }
+
+    /// Fehler von POST /channels/:id/posts. Der Server-Text ist englisch, deshalb stehen hier deutsche Texte.
+    private static func channelPostFailure(status: Int, code: String, message: String) -> AppError? {
+        switch (status, code) {
+        case (403, "FORBIDDEN"):
+            return .message("Du darfst in diesem Kanal nicht schreiben.")
+        case (404, "NOT_FOUND"):
+            return .message("Diesen Kanal gibt es nicht mehr oder du kannst ihn nicht lesen.")
+        default:
+            return nil
+        }
+    }
+
     /// Fehler von POST /communities/:id/join. Der Server-Text ist englisch, deshalb steht hier der deutsche Text.
     private static func communityJoinFailure(status: Int, code: String, message: String) -> AppError? {
         switch (status, code) {
@@ -81,6 +105,15 @@ extension APIClient {
 private struct ChannelReactionRequest: Encodable {
     let emoji: String
 }
+
+/// Rumpf von POST /channels/:id/posts. Ein Umfrage-Feld gibt es hier bewusst nicht.
+private struct ChannelPostRequest: Encodable {
+    let body: String
+    let attachments: [String]
+}
+
+/// Antwort auf POST /channels/:id/posts. Der Inhalt wird nicht gebraucht, für den Erfolg zählt der Statuscode.
+private struct ChannelPostCreatedResult: Decodable {}
 
 private struct ChannelReactionsResult: Decodable {
     let reactions: [ChannelReaction]

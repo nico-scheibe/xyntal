@@ -8,6 +8,13 @@ struct UploadLimits: Equatable {
     let storage: Int?
 }
 
+/// Wohin eine ausstehende Nachricht geht: in ein Gespräch (Chat) oder als Beitrag in einen Community-Kanal.
+/// Der Upload ist für beide gleich, unterschieden wird erst beim letzten Schritt des Versands.
+enum OutgoingTarget: Hashable {
+    case conversation(String)
+    case channel(String)
+}
+
 /// Fehler des Versands, die eine eigene Meldung brauchen. Der Anhang steht dabei im Text.
 enum OutgoingProblem: Error {
     case tooLarge(String)
@@ -26,7 +33,9 @@ final class OutgoingMessage: Identifiable {
     }
 
     let id = UUID()
-    let conversationId: String
+    let target: OutgoingTarget
+    /// Anmeldung, in der die Nachricht entstanden ist. Nach Abmelden oder Kontowechsel ist sie nicht mehr sichtbar.
+    let sessionId: UUID
     let body: String
     let replyToId: String?
     let attachments: [ComposerAttachment]
@@ -48,8 +57,9 @@ final class OutgoingMessage: Identifiable {
     fileprivate var wasCancelled = false
     fileprivate var task: Task<Void, Never>?
 
-    init(conversationId: String, body: String, replyToId: String?, attachments: [ComposerAttachment], voiceDurationMs: Int?) {
-        self.conversationId = conversationId
+    init(target: OutgoingTarget, sessionId: UUID, body: String, replyToId: String?, attachments: [ComposerAttachment], voiceDurationMs: Int?) {
+        self.target = target
+        self.sessionId = sessionId
         self.body = body
         self.replyToId = replyToId
         self.attachments = attachments
@@ -66,8 +76,17 @@ final class OutgoingMessage: Identifiable {
 
     // MARK: - Vom Store gesteuert
 
+    /// true, sobald die abschließende Anfrage (Nachricht oder Beitrag) abgesetzt ist. Ab dann gibt es keinen
+    /// Abbrechen-Knopf mehr: Der Server kann die Nachricht dann schon annehmen. Vorher bleibt Abbrechen erreichbar.
+    private(set) var isSubmitting = false
+
+    fileprivate func beginSubmitting() {
+        isSubmitting = true
+    }
+
     fileprivate func beginAttempt() {
         state = .sending
+        isSubmitting = false
         failureText = nil
         announcedStep = 0
         UIAccessibility.post(notification: .announcement, argument: "Wird gesendet")
@@ -131,18 +150,62 @@ final class OutgoingMessage: Identifiable {
 final class OutgoingStore {
     private let session: SessionStore
     private(set) var messages: [OutgoingMessage] = []
-    /// Zähler je Gespräch. Steigt, sobald eine Nachricht angekommen ist, damit die Chatansicht neu lädt.
-    private(set) var deliveredEvents: [String: Int] = [:]
+    /// Zähler je Ziel. Steigt, sobald eine Nachricht angekommen ist, damit die Chat- oder Kanalansicht neu lädt.
+    private(set) var deliveredEvents: [OutgoingTarget: Int] = [:]
     /// Tarifgrenzen. nil, solange sie nicht geladen sind.
     private(set) var limits: UploadLimits?
 
     init(session: SessionStore) {
         self.session = session
+        // Beim Abmelden läuft das Token noch: dann lassen sich die offenen Upload-Sitzungen freigeben.
+        session.onSessionEnding = { [weak self] token in
+            self?.releaseUploads(token: token)
+        }
     }
 
-    /// Ausstehende Nachrichten eines Gesprächs. Zugestellte fehlen, die lädt der Verlauf schon.
-    func messages(in conversationId: String) -> [OutgoingMessage] {
-        messages.filter { $0.conversationId == conversationId && $0.state != .delivered }
+    /// Gibt die offenen Upload-Sitzungen auf dem Server frei, solange das Token noch gilt. Läuft im Hintergrund und wird
+    /// nicht abgewartet: Scheitert es (kein Netz, Server antwortet nicht), hält es die Abmeldung weder auf noch verzögert es sie.
+    /// Eine verwaiste Sitzung räumt der Server irgendwann ab.
+    private func releaseUploads(token: String) {
+        let tickets = messages.flatMap { Array($0.tickets.values) }
+        guard !tickets.isEmpty else { return }
+        let api = session.api
+        Task {
+            for ticket in tickets {
+                _ = try? await api.abortUpload(uploadId: ticket.id, token: token)
+            }
+        }
+    }
+
+    /// Hinweise nach dem Abbrechen, je Ziel. Der Nutzer blendet sie aus.
+    private(set) var notices: [OutgoingTarget: String] = [:]
+
+    /// Ausstehende Nachrichten eines Ziels der aktuellen Anmeldung. Zugestellte fehlen, die lädt der Verlauf oder der Kanal schon.
+    /// Nachrichten einer früheren Anmeldung bleiben unsichtbar, auch wenn sie noch im Speicher liegen.
+    func messages(for target: OutgoingTarget) -> [OutgoingMessage] {
+        messages.filter { $0.target == target && $0.sessionId == session.sessionId && $0.state != .delivered }
+    }
+
+    func notice(for target: OutgoingTarget) -> String? {
+        notices[target]
+    }
+
+    func dismissNotice(for target: OutgoingTarget) {
+        notices[target] = nil
+    }
+
+    /// Verwirft alles Ausstehende. Aufruf beim Abmelden und beim Löschen des Kontos, sobald das Token weg ist.
+    /// Laufende Versände werden gestoppt und die Anhang-Dateien gelöscht, damit der nächste Nutzer nichts davon sieht.
+    func clear() {
+        for message in messages {
+            stop(message)
+            for attachment in message.attachments {
+                AttachmentFiles.remove(attachment.fileURL)
+            }
+        }
+        messages = []
+        deliveredEvents = [:]
+        notices = [:]
     }
 
     /// Liest die Tarifgrenzen neu aus GET /billing. Schlägt der Abruf fehl, bleibt der alte Stand.
@@ -155,9 +218,9 @@ final class OutgoingStore {
 
     /// Startet den Versand. false, wenn gerade keine Verbindung besteht: dann ist nichts gestartet, und die
     /// Anhänge bleiben beim Aufrufer.
-    func submit(conversationId: String, body: String, replyToId: String?, attachments: [ComposerAttachment], voiceDurationMs: Int? = nil) -> Bool {
+    func submit(target: OutgoingTarget, body: String, replyToId: String?, attachments: [ComposerAttachment], voiceDurationMs: Int? = nil) -> Bool {
         guard NetworkReachability.shared.isOnline else { return false }
-        let message = OutgoingMessage(conversationId: conversationId, body: body, replyToId: replyToId,
+        let message = OutgoingMessage(target: target, sessionId: session.sessionId, body: body, replyToId: replyToId,
                                       attachments: attachments, voiceDurationMs: voiceDurationMs)
         messages.append(message)
         start(message)
@@ -190,9 +253,19 @@ final class OutgoingStore {
         }
     }
 
-    /// Entfernt zugestellte Nachrichten eines Gesprächs, sobald der Verlauf sie selbst zeigt.
-    func dropDelivered(conversationId: String) {
-        messages.removeAll { $0.conversationId == conversationId && $0.state == .delivered }
+    /// Entfernt zugestellte Nachrichten eines Ziels, sobald der Verlauf oder der Kanal sie selbst zeigt.
+    func dropDelivered(for target: OutgoingTarget) {
+        messages.removeAll { $0.target == target && $0.state == .delivered }
+    }
+
+    /// Satz für den Fall, dass der Versand nach dem Abbrechen doch angekommen ist. Im Chat und im Kanal ist er verschieden.
+    private static func acceptedAfterCancelText(for target: OutgoingTarget) -> String {
+        switch target {
+        case .conversation:
+            return "Die Nachricht war schon abgeschickt und steht jetzt im Verlauf."
+        case .channel:
+            return "Der Beitrag war schon abgeschickt und steht jetzt im Kanal."
+        }
     }
 
     // MARK: - Versand
@@ -222,24 +295,42 @@ final class OutgoingStore {
                 message.fileIds[attachment.id] = try await upload(attachment, in: message)
             }
             let ids = message.attachments.compactMap { message.fileIds[$0.id] }
+            // Ab hier ist die Anfrage auf dem Weg: Der Abbrechen-Knopf verschwindet. Bis hierher war Abbrechen möglich.
+            message.beginSubmitting()
+            // Nur dieser letzte Schritt unterscheidet Chat und Community. Den Upload davor teilen sich beide.
             try await session.withAccess { token in
-                try await session.api.sendAttachmentMessage(conversationId: message.conversationId,
-                                                            body: message.body,
-                                                            replyToId: message.replyToId,
-                                                            attachmentIds: ids,
-                                                            voiceDurationMs: message.voiceDurationMs,
-                                                            token: token)
+                switch message.target {
+                case .conversation(let conversationId):
+                    try await session.api.sendAttachmentMessage(conversationId: conversationId,
+                                                                body: message.body,
+                                                                replyToId: message.replyToId,
+                                                                attachmentIds: ids,
+                                                                voiceDurationMs: message.voiceDurationMs,
+                                                                token: token)
+                case .channel(let channelId):
+                    // Beiträge haben keine Antwort und keine Sprachnachricht.
+                    try await session.api.sendChannelPost(channelId: channelId,
+                                                          body: message.body,
+                                                          attachmentIds: ids,
+                                                          token: token)
+                }
             }
-            for attachment in message.attachments {
-                AttachmentFiles.remove(attachment.fileURL)
+            if message.wasCancelled {
+                // Angekommen, obwohl der Nutzer schon abgebrochen hat. Die Anhänge liegen dann in der Eingabe
+                // und ihre Dateien werden gebraucht, also bleiben sie. Der Nutzer sieht, dass es schon abgeschickt ist.
+                notices[message.target] = Self.acceptedAfterCancelText(for: message.target)
+            } else {
+                for attachment in message.attachments {
+                    AttachmentFiles.remove(attachment.fileURL)
+                }
             }
             message.markDelivered()
-            deliveredEvents[message.conversationId, default: 0] += 1
+            deliveredEvents[message.target, default: 0] += 1
         } catch is CancellationError {
             return
         } catch {
             guard !message.wasCancelled else { return }
-            message.markFailed(failureText(for: error))
+            message.markFailed(failureText(for: error, target: message.target))
         }
     }
 
@@ -312,7 +403,7 @@ final class OutgoingStore {
         return index
     }
 
-    private func failureText(for error: Error) -> String {
+    private func failureText(for error: Error, target: OutgoingTarget) -> String {
         if !NetworkReachability.shared.isOnline {
             return AttachmentRules.offlineText
         }
@@ -323,6 +414,11 @@ final class OutgoingStore {
             case .storageFull:
                 return AttachmentRules.storageFullText(limit: limits?.storage)
             }
+        }
+        // Im Kanal sagt der Server, warum es nicht geht (z. B. nicht erlaubt). Die Texte dafür sind schon deutsch.
+        // Im Chat bleibt es beim allgemeinen Text, wie bisher.
+        if case .channel = target, let appError = error as? AppError, case .message(let text) = appError {
+            return text
         }
         return AttachmentRules.uploadFailedText
     }

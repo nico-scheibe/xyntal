@@ -11,6 +11,7 @@ struct XyntalApp: App {
     @State private var outgoing: OutgoingStore
 
     init() {
+        AttachmentFiles.removeAllAtLaunch()
         let session = SessionStore()
         _session = State(initialValue: session)
         _conversations = State(initialValue: ConversationsStore(session: session))

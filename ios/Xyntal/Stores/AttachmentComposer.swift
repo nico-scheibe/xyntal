@@ -81,9 +81,17 @@ final class AttachmentComposer {
         return taken
     }
 
-    /// Bringt Anhänge zurück in die Leiste, z. B. nach Abbrechen einer Nachricht.
+    /// Bringt Anhänge zurück in die Leiste, z. B. nach Abbrechen einer Nachricht. Die Obergrenze gilt auch hier:
+    /// was nicht mehr passt, wird gemeldet und seine Datei gelöscht, sonst überschreitet die Leiste die 10.
     func restore(_ attachments: [ComposerAttachment]) {
-        items.append(contentsOf: attachments)
+        for attachment in attachments {
+            if isFull {
+                errorText = AttachmentRules.tooManyText
+                AttachmentFiles.remove(attachment.fileURL)
+                continue
+            }
+            items.append(attachment)
+        }
     }
 
     func clearError() {

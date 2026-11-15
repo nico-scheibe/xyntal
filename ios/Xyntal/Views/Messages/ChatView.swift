@@ -304,11 +304,11 @@ private struct ChatTranscriptView: View {
                 // Die angekommene Nachricht steht jetzt auf dem Server: Verlauf holen, dann die eigene Blase entfernen.
                 Task {
                     await store.refresh()
-                    outgoing.dropDelivered(conversationId: conversation.id)
+                    outgoing.dropDelivered(for: .conversation(conversation.id))
                 }
             }
             .onAppear {
-                outgoing.dropDelivered(conversationId: conversation.id)
+                outgoing.dropDelivered(for: .conversation(conversation.id))
             }
     }
 
@@ -320,14 +320,14 @@ private struct ChatTranscriptView: View {
     }
 
     private var deliveredCount: Int {
-        outgoing.deliveredEvents[conversation.id] ?? 0
+        outgoing.deliveredEvents[.conversation(conversation.id)] ?? 0
     }
 
     // MARK: - Verlauf
 
     /// Eigene Nachrichten mit Anhängen, die noch nicht beim Server angekommen sind. Stehen unten im Verlauf.
     private var outgoingMessages: [OutgoingMessage] {
-        outgoing.messages(in: conversation.id)
+        outgoing.messages(for: .conversation(conversation.id))
     }
 
     /// Id der untersten Zeile, damit der Verlauf beim Senden nach unten rollt.
@@ -512,6 +512,22 @@ private struct ChatTranscriptView: View {
                 }
             }
 
+            if let notice = outgoing.notice(for: .conversation(conversation.id)) {
+                // Nach einem Abbruch ist die Nachricht trotzdem angekommen. Der Hinweis sagt das, statt es still zu verschweigen.
+                HStack {
+                    Text(notice)
+                        .font(.caption)
+                        .foregroundStyle(Theme.muted)
+                    Spacer()
+                    Button {
+                        outgoing.dismissNotice(for: .conversation(conversation.id))
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                    }
+                    .accessibilityLabel("Hinweis ausblenden")
+                }
+            }
+
             if let typingText {
                 Text(typingText)
                     .font(.caption)
@@ -655,7 +671,7 @@ private struct ChatTranscriptView: View {
         }
         let text = draft.trimmingCharacters(in: .whitespacesAndNewlines)
         let items = composer.takeAll()
-        if outgoing.submit(conversationId: conversation.id, body: text, replyToId: replyTo?.id, attachments: items) {
+        if outgoing.submit(target: .conversation(conversation.id), body: text, replyToId: replyTo?.id, attachments: items) {
             draft = ""
             lastTypingDraft = ""
             replyTo = nil
@@ -772,7 +788,7 @@ private struct ChatTranscriptView: View {
                                       size: size,
                                       isImage: false,
                                       preview: nil)
-        let sent = outgoing.submit(conversationId: conversation.id,
+        let sent = outgoing.submit(target: .conversation(conversation.id),
                                    body: "",
                                    replyToId: replyTo?.id,
                                    attachments: [file],

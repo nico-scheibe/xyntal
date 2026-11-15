@@ -1,6 +1,20 @@
 import Foundation
 import Observation
 
+/// Entwurf einer Schreibzeile für genau einen Kanal: Text und Anhänge. Je Kanal ein eigener, damit nichts in einen
+/// anderen Kanal wandert. Wer den Kanal wechselt und zurückkommt, findet seinen Entwurf wieder.
+@MainActor
+@Observable
+final class PostDraft {
+    let channelId: String
+    var text = ""
+    let composer = AttachmentComposer()
+
+    init(channelId: String) {
+        self.channelId = channelId
+    }
+}
+
 /// Eine Community, in der du Mitglied bist: Kanäle, Beiträge des gewählten Kanals, „Gefällt mir“ und Löschen.
 /// Braucht ein Konto. Der Server liefert pro Kanal alle Beiträge auf einmal; gezeigt werden davon 20 je Seite.
 @MainActor
@@ -25,20 +39,58 @@ final class MemberCommunityStore {
 
     private let session: SessionStore
     private let communityId: String
+    /// Der gemeinsame Versand. Beiträge laufen über ihn, damit Upload und Wiederaufnahme wie im Chat funktionieren.
+    private let outgoing: OutgoingStore
     private var detailGeneration = 0
     private var postsGeneration = 0
     private var likingPostIds: Set<String> = []
     private var deletingPostIds: Set<String> = []
+    /// Entwürfe je Kanal. Angelegt, sobald die Kanäle bekannt sind.
+    private var drafts: [String: PostDraft] = [:]
 
-    init(session: SessionStore, communityId: String) {
+    init(session: SessionStore, communityId: String, outgoing: OutgoingStore) {
         self.session = session
         self.communityId = communityId
+        self.outgoing = outgoing
     }
 
     // MARK: - Abgeleitete Werte
 
     var selectedChannel: MemberCommunity.Channel? {
         channels.first { $0.id == selectedChannelId }
+    }
+
+    /// Schreibzeile nur, wenn du im gewählten Kanal schreiben darfst. Die Rechte gelten pro Kanal, nicht pro Community.
+    var canPostHere: Bool {
+        selectedChannel?.canPost == true
+    }
+
+    /// Ausstehende Beiträge des gewählten Kanals, die noch hochladen oder fehlgeschlagen sind.
+    var pendingPosts: [OutgoingMessage] {
+        guard let selectedChannelId else { return [] }
+        return outgoing.messages(for: .channel(selectedChannelId))
+    }
+
+    /// Entwurf des gewählten Kanals. nil, solange der Kanal nicht bekannt ist.
+    var selectedDraft: PostDraft? {
+        selectedChannelId.flatMap { drafts[$0] }
+    }
+
+    /// Hinweis nach einem Abbruch, der zum gewählten Kanal gehört.
+    var selectedNotice: String? {
+        guard let selectedChannelId else { return nil }
+        return outgoing.notice(for: .channel(selectedChannelId))
+    }
+
+    func dismissSelectedNotice() {
+        guard let selectedChannelId else { return }
+        outgoing.dismissNotice(for: .channel(selectedChannelId))
+    }
+
+    /// Steigt, sobald ein Beitrag im gewählten Kanal angekommen ist. Die Ansicht lädt daraufhin neu.
+    var deliveredCount: Int {
+        guard let selectedChannelId else { return 0 }
+        return outgoing.deliveredEvents[.channel(selectedChannelId)] ?? 0
     }
 
     /// Die Beiträge der aktuellen Seite.
@@ -68,6 +120,9 @@ final class MemberCommunityStore {
             guard generation == detailGeneration else { return }
             channels = community.channels
             canManage = community.canManage
+            for channel in channels where drafts[channel.id] == nil {
+                drafts[channel.id] = PostDraft(channelId: channel.id)
+            }
             if !channels.contains(where: { $0.id == selectedChannelId }) {
                 selectedChannelId = channels.first?.id
             }
@@ -86,6 +141,8 @@ final class MemberCommunityStore {
     /// Wechselt den Kanal. Die Beiträge des alten Kanals verschwinden sofort.
     func select(channelId: String) async {
         guard channelId != selectedChannelId, channels.contains(where: { $0.id == channelId }) else { return }
+        // Was im verlassenen Kanal zugestellt wurde, zeigt er nicht mehr. Der Kanal lädt beim Zurückkommen neu.
+        dropDeliveredPosts()
         selectedChannelId = channelId
         posts = []
         visibleCount = Self.pageSize
@@ -128,6 +185,36 @@ final class MemberCommunityStore {
     }
 
     // MARK: - Aktionen
+
+    /// Schickt einen Beitrag in den Kanal des Entwurfs. false, wenn gerade keine Verbindung besteht. Dann bleibt alles
+    /// beim Aufrufer. Ohne Schreibrecht in diesem Kanal wird nichts gestartet.
+    func submitPost(from draft: PostDraft, body: String, attachments: [ComposerAttachment]) -> Bool {
+        guard channels.contains(where: { $0.id == draft.channelId && $0.canPost }) else { return false }
+        return outgoing.submit(target: .channel(draft.channelId), body: body, replyToId: nil, attachments: attachments)
+    }
+
+    /// Abbrechen eines Beitrags: Anhänge und Text kommen zurück in den Entwurf seines Kanals, nicht in den gerade offenen.
+    func cancelPost(_ message: OutgoingMessage) {
+        let restored = outgoing.cancel(message)
+        guard case .channel(let channelId) = message.target, let draft = drafts[channelId] else {
+            for attachment in restored.attachments {
+                AttachmentFiles.remove(attachment.fileURL)
+            }
+            return
+        }
+        draft.composer.restore(restored.attachments)
+        if !restored.body.isEmpty {
+            draft.text = draft.text.isEmpty ? restored.body : draft.text + "\n" + restored.body
+        }
+    }
+
+    /// Entfernt zugestellte Beiträge aus dem Versand, und zwar aller Kanäle der Community. Ein Beitrag, der in einem
+    /// Kanal ankam, während man woanders war, bleibt sonst für immer liegen.
+    func dropDeliveredPosts() {
+        for channel in channels {
+            outgoing.dropDelivered(for: .channel(channel.id))
+        }
+    }
 
     /// Schaltet dein „Gefällt mir“ um. Die Reaktionen kommen vom Server zurück.
     func toggleLike(_ post: ChannelPost) async {

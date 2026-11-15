@@ -181,10 +181,12 @@ final class APIClient {
 
     /// POST /reports mit targetType "user". Der Server prüft nur, ob ein Grund da ist (höchstens 200 Zeichen).
     func reportUser(id: String, reason: String, details: String?, token: String) async throws {
+        // Die Id kommt teils aus Serverantworten (z. B. Autor eines Beitrags). Wie bei blockUser nur UUIDs zulassen.
+        let userId = try Self.validatedUserId(id)
         _ = try await send("reports",
                            method: "POST",
                            token: token,
-                           body: ReportRequest(targetType: "user", targetId: id, reason: reason, details: details),
+                           body: ReportRequest(targetType: "user", targetId: userId, reason: reason, details: details),
                            as: Ack.self)
     }
 

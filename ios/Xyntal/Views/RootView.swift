@@ -6,6 +6,7 @@ struct RootView: View {
     @Environment(SessionStore.self) private var session
     @Environment(ConversationsStore.self) private var conversations
     @Environment(SubscriptionStore.self) private var subscription
+    @Environment(OutgoingStore.self) private var outgoing
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -23,8 +24,12 @@ struct RootView: View {
         .onChange(of: scenePhase, initial: true) { _, phase in
             conversations.update(isSceneActive: phase == .active)
         }
-        .onChange(of: session.state) { _, _ in
+        .onChange(of: session.state) { _, state in
             conversations.update(isSceneActive: scenePhase == .active)
+            // Ausstehende Beiträge und Nachrichten gehören zur Anmeldung. Beim Abmelden verschwinden sie samt Dateien.
+            if state != .signedIn {
+                outgoing.clear()
+            }
         }
         .onChange(of: session.state, initial: true) { _, state in
             subscription.update(isSignedIn: state == .signedIn)

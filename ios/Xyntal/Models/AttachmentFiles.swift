@@ -37,6 +37,13 @@ enum AttachmentFiles {
         return url
     }
 
+    /// Leert den Anhang-Ordner. Nur beim App-Start aufrufen: Dann hängt nichts mehr daran, weil der Versand leer ist.
+    /// So verschwinden Reste jeder Herkunft (Abbruch, Absturz, Abmelden) mit einer einzigen Stelle.
+    static func removeAllAtLaunch() {
+        let url = FileManager.default.temporaryDirectory.appending(path: "Anhaenge", directoryHint: .isDirectory)
+        try? FileManager.default.removeItem(at: url)
+    }
+
     static func newFileURL(ext: String) -> URL {
         directory.appending(path: UUID().uuidString).appendingPathExtension(ext)
     }

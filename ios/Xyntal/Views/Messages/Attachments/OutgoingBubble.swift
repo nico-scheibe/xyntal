@@ -61,7 +61,8 @@ struct OutgoingBubble: View {
         .foregroundStyle(foreground)
         .background(background, in: RoundedRectangle(cornerRadius: 18))
         .overlay(alignment: .topTrailing) {
-            if message.state == .sending {
+            // Der Knopf verschwindet, sobald die Sende-Anfrage läuft. Während des Hochladens bleibt er da.
+            if message.state == .sending && !message.isSubmitting {
                 Button(action: onCancel) {
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: 22))
