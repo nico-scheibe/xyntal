@@ -64,6 +64,10 @@ struct BillingInfo: Decodable, Hashable {
     var renewsAt: String?
     /// entitlements.ai: false heißt, Xyntal AI ist im Tarif nicht enthalten.
     var aiEntitled: Bool?
+    /// entitlements.maxUploadBytes: größte Datei, die der Tarif erlaubt. nil heißt unbegrenzt oder unbekannt.
+    var maxUploadBytes: Int?
+    /// entitlements.storageBytes: Speicher des Kontos insgesamt. nil heißt unbegrenzt oder unbekannt.
+    var storageBytes: Int?
     var ai: AIBudget?
     /// Woher das aktive Abo kommt: "stripe", "apple", "grant" oder nil (Free). Fehlt der Wert, gilt nil.
     var source: String?
@@ -77,14 +81,18 @@ struct BillingInfo: Decodable, Hashable {
 
     private struct Entitlements: Decodable {
         var ai: Bool?
+        var maxUploadBytes: Int?
+        var storageBytes: Int?
 
         private enum CodingKeys: String, CodingKey {
-            case ai
+            case ai, maxUploadBytes, storageBytes
         }
 
         init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             ai = container.lenient(Bool.self, .ai)
+            maxUploadBytes = container.lenient(Int.self, .maxUploadBytes)
+            storageBytes = container.lenient(Int.self, .storageBytes)
         }
     }
 
@@ -114,7 +122,10 @@ struct BillingInfo: Decodable, Hashable {
         locked = container.lenient(Bool.self, .locked)
         configured = container.lenient(Bool.self, .configured)
         renewsAt = container.lenient(String.self, .renewsAt)
-        aiEntitled = container.lenient(Entitlements.self, .entitlements)?.ai
+        let entitlements = container.lenient(Entitlements.self, .entitlements)
+        aiEntitled = entitlements?.ai
+        maxUploadBytes = entitlements?.maxUploadBytes
+        storageBytes = entitlements?.storageBytes
         ai = container.lenient(AIBudget.self, .ai)
         source = container.lenient(String.self, .source)
         canPurchaseInApp = container.lenient(Bool.self, .canPurchaseInApp)

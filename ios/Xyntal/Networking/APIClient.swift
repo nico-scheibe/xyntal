@@ -19,6 +19,12 @@ enum AppError: LocalizedError {
     case rejected
     /// Abo über den In-App-Kauf: einer der Fehlercodes aus dem Abo-Vertrag (siehe APIClient+Billing.swift).
     case appleBilling(AppleBillingFailure)
+    /// Anhang ist größer als die Obergrenze des Tarifs (400 PLAN_LIMIT beim Start eines Uploads). Die Grenze steht in GET /billing.
+    case attachmentTooLarge
+    /// Speicher des Kontos ist voll (403 PLAN_LIMIT beim Start eines Uploads).
+    case storageFull
+    /// Die Upload-Sitzung ist auf dem Server nicht mehr bekannt (404), etwa nach Ablauf.
+    case uploadExpired
     case message(String)
 
     var errorDescription: String? {
@@ -27,7 +33,7 @@ enum AppError: LocalizedError {
             return "Keine Verbindung zum Server. Prüfe dein Netz und versuche es erneut."
         case .unauthorized:
             return "Deine Anmeldung ist abgelaufen. Bitte melde dich erneut an."
-        case .rejected:
+        case .rejected, .attachmentTooLarge, .storageFull, .uploadExpired:
             return AppError.genericMessage
         case .appleBilling(let failure):
             return failure.text
@@ -482,6 +488,8 @@ final class APIClient {
                             token: String? = nil,
                             query: [URLQueryItem]? = nil,
                             body: (any Encodable)? = nil,
+                            /// Rohe Bytes statt JSON (Upload-Teile). Hat Vorrang vor body.
+                            rawBody: Data? = nil,
                             as type: T.Type,
                             mapFailure: ((Int, String, String) -> AppError?)? = nil,
                             mapFailureDetail: ((Int, String, Bool?) -> AppError?)? = nil,
@@ -507,7 +515,10 @@ final class APIClient {
         if let token {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
-        if let body {
+        if let rawBody {
+            request.httpBody = rawBody
+            request.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
+        } else if let body {
             request.httpBody = try Self.encoder.encode(body)
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         }

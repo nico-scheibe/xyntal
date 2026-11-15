@@ -1,3 +1,5 @@
+import AVFoundation
+import PhotosUI
 import SwiftUI
 
 /// Verlauf eines Gesprächs mit Eingabezeile. Erstellt den ChatStore für genau dieses Gespräch.
@@ -127,6 +129,7 @@ struct ChatView: View {
 /// Nachrichtenliste und Eingabe. Bekommt einen fertigen Store.
 private struct ChatTranscriptView: View {
     @Environment(ConversationsStore.self) private var conversations
+    @Environment(OutgoingStore.self) private var outgoing
 
     let store: ChatStore
     let conversation: Conversation
@@ -140,6 +143,14 @@ private struct ChatTranscriptView: View {
     @State private var blockUserId: String?
     @State private var reactionTarget: Message?
     @State private var viewer: ImageViewerRequest?
+    @State private var composer = AttachmentComposer()
+    @State private var showPhotoPicker = false
+    @State private var photoItems: [PhotosPickerItem] = []
+    @State private var showFileImporter = false
+    @State private var showCamera = false
+    @State private var showCameraDenied = false
+    @State private var previewAttachment: ComposerAttachment?
+    @State private var failedMessage: OutgoingMessage?
     @FocusState private var inputFocused: Bool
 
     private var typingText: String? {
@@ -150,6 +161,10 @@ private struct ChatTranscriptView: View {
     }
 
     var body: some View {
+        attachmentDialogs(attachmentPickers(transcriptChrome))
+    }
+
+    private var transcriptChrome: some View {
         transcript
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 inputArea
@@ -197,14 +212,100 @@ private struct ChatTranscriptView: View {
             }
     }
 
+    /// Fotos-, Datei- und Kameraauswahl sowie die Vorschau der Eingabeleiste.
+    private func attachmentPickers(_ content: some View) -> some View {
+        content
+            .photosPicker(isPresented: $showPhotoPicker,
+                          selection: $photoItems,
+                          maxSelectionCount: max(1, composer.remaining),
+                          matching: .images)
+            .onChange(of: photoItems) { _, items in
+                guard !items.isEmpty else { return }
+                photoItems = []
+                Task { await addPhotos(items) }
+            }
+            .fileImporter(isPresented: $showFileImporter,
+                          allowedContentTypes: [.item],
+                          allowsMultipleSelection: true) { result in
+                guard case .success(let urls) = result else { return }
+                Task { await addFiles(urls) }
+            }
+            .fullScreenCover(isPresented: $showCamera) {
+                CameraCapture { image in
+                    showCamera = false
+                    guard let image, let data = image.jpegData(compressionQuality: 0.95) else { return }
+                    Task { await addPhotoData([data]) }
+                }
+                .ignoresSafeArea()
+            }
+            .fullScreenCover(item: $previewAttachment) { attachment in
+                AttachmentPreview(attachment: attachment)
+            }
+    }
+
+    /// Kamera-Hinweis, Dialog für fehlgeschlagene Nachrichten und das Nachladen nach Zustellung.
+    private func attachmentDialogs(_ content: some View) -> some View {
+        content
+            .alert(AttachmentRules.cameraDeniedTitle, isPresented: $showCameraDenied) {
+                Button("Einstellungen öffnen") { openSettings() }
+                Button("Abbrechen", role: .cancel) {}
+            } message: {
+                Text(AttachmentRules.cameraDeniedText)
+            }
+            .confirmationDialog("Nachricht nicht gesendet",
+                                isPresented: failedDialogBinding,
+                                titleVisibility: .visible,
+                                presenting: failedMessage) { message in
+                Button("Erneut senden") { outgoing.retry(message) }
+                Button("Löschen", role: .destructive) { outgoing.discard(message) }
+                Button("Abbrechen", role: .cancel) {}
+            } message: { message in
+                Text(message.failureText ?? AttachmentRules.uploadFailedText)
+            }
+            .onChange(of: deliveredCount) { _, _ in
+                // Die angekommene Nachricht steht jetzt auf dem Server: Verlauf holen, dann die eigene Blase entfernen.
+                Task {
+                    await store.refresh()
+                    outgoing.dropDelivered(conversationId: conversation.id)
+                }
+            }
+            .onAppear {
+                outgoing.dropDelivered(conversationId: conversation.id)
+            }
+    }
+
+    private var failedDialogBinding: Binding<Bool> {
+        Binding(
+            get: { failedMessage != nil },
+            set: { if !$0 { failedMessage = nil } }
+        )
+    }
+
+    private var deliveredCount: Int {
+        outgoing.deliveredEvents[conversation.id] ?? 0
+    }
+
     // MARK: - Verlauf
+
+    /// Eigene Nachrichten mit Anhängen, die noch nicht beim Server angekommen sind. Stehen unten im Verlauf.
+    private var outgoingMessages: [OutgoingMessage] {
+        outgoing.messages(in: conversation.id)
+    }
+
+    /// Id der untersten Zeile, damit der Verlauf beim Senden nach unten rollt.
+    private var lastRowId: String? {
+        if let last = outgoingMessages.last {
+            return last.id.uuidString
+        }
+        return store.messages.last?.id
+    }
 
     @ViewBuilder
     private var transcript: some View {
-        if store.messages.isEmpty && !store.hasLoaded {
+        if store.messages.isEmpty && !store.hasLoaded && outgoingMessages.isEmpty {
             ProgressView()
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-        } else if store.messages.isEmpty, let loadError = store.loadError {
+        } else if store.messages.isEmpty, outgoingMessages.isEmpty, let loadError = store.loadError {
             ContentUnavailableView {
                 Label("Verlauf nicht geladen", systemImage: "wifi.exclamationmark")
             } description: {
@@ -212,7 +313,7 @@ private struct ChatTranscriptView: View {
             } actions: {
                 Button("Erneut versuchen") { Task { await store.loadInitial() } }
             }
-        } else if store.messages.isEmpty {
+        } else if store.messages.isEmpty && outgoingMessages.isEmpty {
             ContentUnavailableView {
                 Label("Noch keine Nachrichten", systemImage: "bubble.left.and.bubble.right")
             } description: {
@@ -250,13 +351,20 @@ private struct ChatTranscriptView: View {
                                     .id(message.id)
                             }
                         }
+
+                        ForEach(outgoingMessages) { message in
+                            OutgoingBubble(message: message,
+                                           onCancel: { cancel(message) },
+                                           onTapFailed: { failedMessage = message })
+                                .id(message.id.uuidString)
+                        }
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
                 }
                 .defaultScrollAnchor(.bottom)
                 .scrollDismissesKeyboard(.interactively)
-                .onChange(of: store.messages.last?.id) { _, newValue in
+                .onChange(of: lastRowId) { _, newValue in
                     guard let newValue else { return }
                     withAnimation {
                         proxy.scrollTo(newValue, anchor: .bottom)
@@ -371,27 +479,44 @@ private struct ChatTranscriptView: View {
                 }
             }
 
+            if let errorText = composer.errorText {
+                HStack {
+                    Text(errorText)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                    Spacer()
+                    Button {
+                        composer.clearError()
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                    }
+                    .accessibilityLabel("Fehler ausblenden")
+                }
+            }
+
+            if editingMessage == nil && !composer.items.isEmpty {
+                AttachmentStrip(attachments: composer.items,
+                                onRemove: { composer.remove($0) },
+                                onPreview: { previewAttachment = $0 })
+            }
+
             HStack(alignment: .bottom, spacing: 8) {
-                TextField("Nachricht", text: $draft, axis: .vertical)
+                if editingMessage == nil {
+                    AttachmentMenu(isFull: composer.isFull,
+                                   cameraAvailable: UIImagePickerController.isSourceTypeAvailable(.camera),
+                                   onPhotos: { showPhotoPicker = true },
+                                   onCamera: openCamera,
+                                   onFiles: { showFileImporter = true })
+                }
+
+                TextField(composer.items.isEmpty ? "Nachricht" : "Beschriftung (optional)", text: $draft, axis: .vertical)
                     .lineLimit(1...5)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
                     .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18))
                     .focused($inputFocused)
 
-                Button {
-                    Task { await submit() }
-                } label: {
-                    if store.isSending {
-                        ProgressView()
-                            .frame(width: 32, height: 32)
-                    } else {
-                        Image(systemName: editingMessage == nil ? "arrow.up.circle.fill" : "checkmark.circle.fill")
-                            .font(.system(size: 32))
-                    }
-                }
-                .disabled(!canSend)
-                .accessibilityLabel(editingMessage == nil ? "Senden" : "Änderung speichern")
+                trailingButton
             }
         }
         .padding(.horizontal, 12)
@@ -424,12 +549,124 @@ private struct ChatTranscriptView: View {
         .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 10))
     }
 
+    private var hasText: Bool {
+        !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     private var canSend: Bool {
-        !store.isSending && !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        guard !store.isSending else { return false }
+        if editingMessage != nil { return hasText }
+        return hasText || !composer.items.isEmpty
+    }
+
+    /// Rechts in der Eingabezeile: Senden, sobald Text oder Anhänge da sind. Sonst der Platz für die Sprachnachricht.
+    @ViewBuilder
+    private var trailingButton: some View {
+        if editingMessage == nil && !hasText && composer.items.isEmpty {
+            // Platzhalter für die Sprachnachricht, kommt in einem eigenen Schritt.
+            Image(systemName: "mic.fill")
+                .font(.system(size: 20, weight: .medium))
+                .foregroundStyle(Theme.muted)
+                .frame(width: 44, height: 44)
+                .accessibilityLabel("Sprachnachricht")
+                .accessibilityHint("Noch nicht verfügbar")
+        } else {
+            Button {
+                Task { await submit() }
+            } label: {
+                if store.isSending {
+                    ProgressView()
+                        .frame(width: 44, height: 44)
+                } else {
+                    Image(systemName: editingMessage == nil ? "arrow.up.circle.fill" : "checkmark.circle.fill")
+                        .font(.system(size: 32))
+                        .frame(width: 44, height: 44)
+                }
+            }
+            .disabled(!canSend)
+            .accessibilityLabel(editingMessage == nil ? "Senden" : "Änderung speichern")
+        }
+    }
+
+    /// Anhänge kommen aus der Leiste. Der Versand läuft im Hintergrund weiter, die Eingabe ist sofort wieder frei.
+    private func sendWithAttachments() {
+        guard composer.items.count <= AttachmentRules.maxPerMessage else {
+            composer.errorText = AttachmentRules.tooManyText
+            return
+        }
+        let text = draft.trimmingCharacters(in: .whitespacesAndNewlines)
+        let items = composer.takeAll()
+        if outgoing.submit(conversationId: conversation.id, body: text, replyToId: replyTo?.id, attachments: items) {
+            draft = ""
+            lastTypingDraft = ""
+            replyTo = nil
+            composer.clearError()
+        } else {
+            // Offline wird nichts gestartet. Anhänge und Text bleiben in der Eingabe.
+            composer.restore(items)
+            composer.errorText = AttachmentRules.offlineText
+        }
+    }
+
+    /// Abbrechen einer laufenden Nachricht: Anhänge zurück in die Leiste, Beschriftung zurück ins Textfeld.
+    private func cancel(_ message: OutgoingMessage) {
+        let restored = outgoing.cancel(message)
+        composer.restore(restored.attachments)
+        let caption = restored.body
+        if !caption.isEmpty {
+            draft = draft.isEmpty ? caption : draft + "\n" + caption
+        }
+    }
+
+    private func addPhotos(_ items: [PhotosPickerItem]) async {
+        var datas: [Data] = []
+        for item in items {
+            if let data = try? await item.loadTransferable(type: Data.self) {
+                datas.append(data)
+            }
+        }
+        await addPhotoData(datas)
+    }
+
+    private func addPhotoData(_ datas: [Data]) async {
+        await outgoing.refreshLimits()
+        await composer.addPhotos(datas, limits: outgoing.limits)
+    }
+
+    private func addFiles(_ urls: [URL]) async {
+        await outgoing.refreshLimits()
+        await composer.addFiles(urls, limits: outgoing.limits)
+    }
+
+    /// Kamera nur mit Erlaubnis. Ohne Erlaubnis erklärt ein Hinweis, wo man sie einschaltet.
+    private func openCamera() {
+        switch AVCaptureDevice.authorizationStatus(for: .video) {
+        case .authorized:
+            showCamera = true
+        case .notDetermined:
+            Task {
+                if await AVCaptureDevice.requestAccess(for: .video) {
+                    showCamera = true
+                } else {
+                    showCameraDenied = true
+                }
+            }
+        default:
+            showCameraDenied = true
+        }
+    }
+
+    private func openSettings() {
+        guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+        UIApplication.shared.open(url)
     }
 
     private func submit() async {
         guard canSend else { return }
+        if editingMessage == nil && !composer.items.isEmpty {
+            sendWithAttachments()
+            return
+        }
         let text = draft
         let success: Bool
         if let editingMessage {
