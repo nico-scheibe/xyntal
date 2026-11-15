@@ -168,11 +168,11 @@ function setupAvatarEditor(member, onChange) {
   const save = form.querySelector('[data-avatar-save]');
   const remove = form.querySelector('[data-avatar-remove]');
   const cancel = form.querySelector('[data-avatar-cancel]');
-  const status = form.querySelector('[role=status]');
+  const status = form.querySelector('[data-avatar-status]'); // Foto-Status; Symbol-Auswahl hat ihr eigenes Element
   function renderPreview() {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     previewUrl = null;
-    preview.innerHTML = avatar(current.name, 'avatar-lg', current.avatar_path);
+    preview.innerHTML = avatar(current.name, 'avatar-lg', current.avatar_path, current.avatar_item);
     if (selected) {
       previewUrl = URL.createObjectURL(selected);
       preview.innerHTML = selected.type.startsWith('video/')
@@ -292,5 +292,77 @@ function setupAvatarEditor(member, onChange) {
     } catch (err) { setStatus(status, friendlyError(err), 'error'); }
     finally { busy = false; renderPreview(); }
   });
+  // Symbol wählen (profiles.avatar_item): schreibt nur diese Spalte, ein Foto bleibt unberührt.
+  // Freischaltung zeigt die Oberfläche aus den Profilfeldern; der Server prüft beim Speichern (Trigger).
+  const itemBox = form.querySelector('[data-avatar-items]');
+  const itemStatus = form.querySelector('[data-avatar-item-status]');
+  const itemClear = form.querySelector('[data-avatar-item-clear]');
+  let itemRows = [];
+  // Gleiche Zeichenmenge wie avatar_blank_chars in der Migration (Leerraum und unsichtbare Zeichen an den Rändern):
+  // Tab, LF, VT, FF, CR, Leerzeichen, U+00A0, U+00AD, U+1680, U+2000–U+200D, U+2028, U+2029, U+202F, U+205F, U+2060, U+3000, U+FEFF
+  const itemBlankCodes = new Set([9, 10, 11, 12, 13, 32, 160, 173, 5760, 8232, 8233, 8239, 8287, 8288, 12288, 65279]);
+  for (let c = 8192; c <= 8205; c++) itemBlankCodes.add(c);
+  // Mindestlängen für Stufe 2, gleich wie avatar_profile_min in der Migration
+  const itemMin = { headline: 10, about: 40, offer: 10, seek: 10, linkedin: 8, website: 8 };
+  // Länge nach dem Bereinigen der Ränder, in Zeichen (Code-Punkte) wie char_length in Postgres.
+  // Schleife statt Regex: linear, ohne Rückverfolgung bei langen Leerraum-Folgen; Innenleerraum bleibt.
+  function itemLen(v) {
+    const cps = [...String(v || '')];
+    let a = 0, b = cps.length;
+    while (a < b && itemBlankCodes.has(cps[a].codePointAt(0))) a++;
+    while (b > a && itemBlankCodes.has(cps[b - 1].codePointAt(0))) b--;
+    return b - a;
+  }
+  const itemFilled = (v, field) => itemLen(v) >= itemMin[field];
+  function itemTier(m) {
+    if (m.status !== 'approved') return 0;
+    const complete = itemFilled(m.headline, 'headline') && itemFilled(m.about, 'about')
+      && (itemFilled(m.offer, 'offer') || itemFilled(m.seek, 'seek'))
+      && (itemFilled(m.linkedin, 'linkedin') || itemFilled(m.website, 'website'));
+    return complete ? 2 : 1;
+  }
+  // Hinweis auf gesperrten Kacheln: ohne Freigabe des Kontos nicht „Profil ausfüllen“
+  const itemLockText = reached => reached === 0 ? 'Dein Konto muss zuerst freigeschaltet werden.' : 'Profil ausfüllen';
+  function renderItems() {
+    if (!itemBox) return;
+    const reached = itemTier(current);
+    const tone = avatarTone(current.name);
+    const groups = [[1, 'Für alle Mitglieder'], [2, 'Mit vollständigem Profil']];
+    itemBox.querySelector('[data-avatar-items-groups]').innerHTML = groups.map(([tier, title]) => {
+      const cells = itemRows.filter(row => row.tier === tier && window.AVATAR_ITEMS?.[row.item]).map(row => {
+        const meta = window.AVATAR_ITEMS[row.item];
+        const open = reached >= tier;
+        const chosen = current.avatar_item === row.item;
+        const lock = itemLockText(reached);
+        const label = open ? meta.name : `${meta.name} (gesperrt: ${lock})`;
+        return `<div class="avatar-item-cell"><button type="button" class="avatar avatar-item-tile ${tone}" data-avatar-item="${esc(row.item)}" aria-pressed="${chosen}" aria-label="${esc(label)}" title="${esc(label)}"${open && !busy ? '' : ' disabled'}>${meta.svg}</button>${open ? '' : `<small>${esc(lock)}</small>`}</div>`;
+      }).join('');
+      return cells ? `<h3 class="avatar-items-title">${esc(title)}</h3><div class="avatar-items-grid">${cells}</div>` : '';
+    }).join('');
+    if (itemClear) itemClear.disabled = busy || !current.avatar_item;
+  }
+  async function loadItems() {
+    try { itemRows = unwrap(await sb.rpc('avatar_items')) || []; renderItems(); }
+    catch (err) { setStatus(itemStatus, friendlyError(err), 'error'); }
+  }
+  async function pickItem(item) {
+    if (busy) return;
+    busy = true; renderItems(); setStatus(itemStatus, 'Symbol wird gespeichert …');
+    try {
+      const updated = unwrap(await sb.from('profiles').update({ avatar_item: item }).eq('id', current.id).select().single());
+      current = { ...current, ...updated };
+      onChange(current);
+      setStatus(itemStatus, !item ? 'Ohne Symbol zeigen wir wieder deine Initialen.'
+        : current.avatar_path ? 'Dein Symbol ist gespeichert. Solange ein Foto gesetzt ist, zeigen wir das Foto.'
+        : 'Dein Symbol ist gespeichert.', 'ok');
+    } catch (err) { setStatus(itemStatus, friendlyError(err), 'error'); }
+    finally { busy = false; renderItems(); renderPreview(); }
+  }
+  itemBox?.addEventListener('click', e => {
+    const tile = e.target.closest('[data-avatar-item]');
+    if (tile && !tile.disabled) pickItem(tile.dataset.avatarItem);
+  });
+  itemClear?.addEventListener('click', () => { if (current.avatar_item) pickItem(''); });
+  loadItems();
   renderPreview();
 }

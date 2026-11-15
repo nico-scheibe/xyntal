@@ -17,3 +17,4 @@ supabase/.temp/
 .app-data/
 auto-app-backend.cjs
 .mail-preview/
+supabase/AUSFUEHREN_2026-11-13.sql

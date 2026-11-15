@@ -25,7 +25,7 @@
   <link rel="stylesheet" href="/site-footer.css?v=4">
   <link rel="stylesheet" href="/site-header.css?v=12">
   <link rel="stylesheet" href="/site-search.css?v=2">
-<link rel="stylesheet" href="/profile-layout.css?v=101">
+<link rel="stylesheet" href="/profile-layout.css?v=102">
 <link rel="stylesheet" href="/matching.css?v=104">
 <link rel="stylesheet" href="/invite.css?v=2">
 <link rel="stylesheet" href="/linkpage.css?v=10">
@@ -101,7 +101,14 @@
 <button type="button" data-avatar-cancel hidden>Auswahl verwerfen</button>
 <button class="btn btn-small btn-ghost" type="button" data-avatar-remove disabled>Bild entfernen</button>
 <button class="btn btn-small btn-ghost" type="button" data-avatar-cleanup hidden>Alte Dateien aufräumen</button>
-<p class="form-status" role="status" aria-live="polite"></p></form>
+<fieldset class="avatar-items" data-avatar-items>
+<legend>Symbol wählen</legend>
+<p class="hint" id="avatar-items-hint">Ohne Foto zeigt dein Profil ein Symbol statt deiner Initialen. Ein Foto hat immer Vorrang; dein Symbol bleibt trotzdem gespeichert. Die Basis-Symbole sind für alle freigeschalteten Mitglieder frei. Die weiteren schaltest du mit einem vollständigen Profil frei: „Woran arbeitest du?“ ab 10 Zeichen, „Erzähl mehr“ ab 40 Zeichen, Angebot oder Suche ab 10 Zeichen, LinkedIn oder Website ab 8 Zeichen.</p>
+<div data-avatar-items-groups></div>
+<button class="btn btn-small btn-ghost" type="button" data-avatar-item-clear disabled>Kein Symbol, Initialen zeigen</button>
+<p class="form-status" data-avatar-item-status role="status" aria-live="polite"></p>
+</fieldset>
+<p class="form-status" data-avatar-status role="status" aria-live="polite"></p></form>
         <form id="birthdate-form" class="card-form" novalidate hidden>
           <fieldset>
             <legend>Dein Geburtsdatum</legend>
@@ -438,8 +445,9 @@
 
 <script src="vendor/supabase.js?v=31"></script>
 <script src="config.js?v=31"></script>
-<script src="app.js?v=43"></script>
-<script src="avatars.js?v=35"></script>
+<script src="avatar-items.js?v=1"></script>
+<script src="app.js?v=44"></script>
+<script src="avatars.js?v=36"></script>
 <script src="notifications.js?v=35"></script>
 <script src="effects.js?v=40"></script>
 <script src="/app-api.js?v=8"></script>

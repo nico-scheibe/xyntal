@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" class="no-js">
+<html lang="de" class="no-js">
 <head>
   <meta charset="utf-8">
   <script src="/session-share.js?v=1"></script>
@@ -26,7 +26,7 @@
   <!-- Schriften liegen lokal. Die zwei, die der erste Bildschirm braucht, werden vorgeladen. -->
   <link rel="preload" href="fonts/archivo-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="fonts/plexsans-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/neu.css?v=2">
+  <link rel="stylesheet" href="css/neu.css?v=3">
   <link rel="stylesheet" href="/site-search.css?v=2">
 
   <!-- Vor dem ersten Zeichnen: JS-Klasse setzen (eigene Datei wegen CSP). -->
@@ -35,7 +35,7 @@
   <link rel="alternate" hreflang="de" href="https://xyntal.com/">
   <link rel="alternate" hreflang="en" href="https://xyntal.com/en">
   <link rel="alternate" hreflang="x-default" href="https://xyntal.com/">
-  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://xyntal.com/#organisation","name":"Xyntal","url":"https://xyntal.com/","logo":"https://xyntal.com/apple-touch-icon.png","email":"admin@xyntal.com"},{"@type":"WebSite","@id":"https://xyntal.com/#website","name":"Xyntal","url":"https://xyntal.com/","inLanguage":"de","publisher":{"@id":"https://xyntal.com/#organisation"}},{"@type":"SoftwareApplication","@id":"https://xyntal.com/#app","name":"Xyntal","url":"https://xyntal.com/","applicationCategory":"BusinessApplication","operatingSystem":"macOS, Windows","inLanguage":"de","description":"Xyntal zeigt dir Mitgründer und Projektpartner, die zu deinem Vorhaben passen, und begründet jeden Vorschlag. Profile, Projekte mit offenen Rollen und Nachrichten in einer App.","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR","description":"In der Beta kostenlos"},"publisher":{"@id":"https://xyntal.com/#organisation"}},{"@type":"FAQPage","@id":"https://xyntal.com/#fragen","mainEntity":[{"@type":"Question","name":"Für wen ist das?","acceptedAnswer":{"@type":"Answer","text":"Für Leute mit einem konkreten Vorhaben, meist ein digitales Produkt, die dafür jemanden suchen. Und für Leute, die mitbauen wollen: als Mitgründer:in, bezahlt für eine klare Aufgabe oder als Nebenprojekt mit abgesprochenen Stunden."}},{"@type":"Question","name":"Worauf läuft es?","acceptedAnswer":{"@type":"Answer","text":"Als App für Mac und Windows. Profil anlegen und bewerben kannst du hier auf der Website. Linux und Handy gibt es noch nicht."}},{"@type":"Question","name":"Wie komme ich rein?","acceptedAnswer":{"@type":"Answer","text":"Per Bewerbung: Konto anlegen und drei Fragen beantworten. Die Antwort kommt per Mail."}},{"@type":"Question","name":"Was kostet das?","acceptedAnswer":{"@type":"Answer","text":"In der Beta nichts. Was danach kommt, steht offen unter Preise."}}]}]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://xyntal.com/#organisation","name":"Xyntal","url":"https://xyntal.com/","logo":"https://xyntal.com/apple-touch-icon.png","email":"admin@xyntal.com"},{"@type":"WebSite","@id":"https://xyntal.com/#website","name":"Xyntal","url":"https://xyntal.com/","inLanguage":"de","publisher":{"@id":"https://xyntal.com/#organisation"}},{"@type":"SoftwareApplication","@id":"https://xyntal.com/#app","name":"Xyntal","url":"https://xyntal.com/","applicationCategory":"BusinessApplication","operatingSystem":"macOS, Windows","inLanguage":"de","description":"Xyntal zeigt dir Mitgründer und Projektpartner, die zu deinem Vorhaben passen, und begründet jeden Vorschlag. Profile, Projekte mit offenen Rollen und Nachrichten in einer App.","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR","description":"In der Beta kostenlos"},"publisher":{"@id":"https://xyntal.com/#organisation"}},{"@type":"FAQPage","@id":"https://xyntal.com/#fragen","mainEntity":[{"@type":"Question","name":"Wie komme ich rein?","acceptedAnswer":{"@type":"Answer","text":"Per Bewerbung. Die Antwort kommt per Mail."}},{"@type":"Question","name":"Worauf läuft es?","acceptedAnswer":{"@type":"Answer","text":"Auf Mac und Windows. Linux und Handy gibt es noch nicht."}},{"@type":"Question","name":"Was kostet das?","acceptedAnswer":{"@type":"Answer","text":"In der Beta nichts. Danach: siehe Preise."}}]}]}</script>
 </head>
 <body>
 
@@ -78,301 +78,244 @@
 
 <main id="inhalt">
 
-  <!-- ============ SZENE 0 · EINSTIEG ============ -->
+  <!-- ============ EINSTIEG ============ -->
   <section class="hero" data-hero aria-labelledby="hero-title">
     <canvas class="hero__gl" data-hero-gl aria-hidden="true"></canvas>
-    <!-- Ersatz, falls WebGL fehlt: das Logo als SVG -->
+    <!-- Ersatz ohne WebGL (Handy, schmale Fenster, reduzierte Bewegung): das Logo als SVG -->
     <svg class="hero__fallback" aria-hidden="true"><use href="#mark"/></svg>
 
-    <h1 class="hero__h" id="hero-title" aria-label="Du hast die Idee. Dir fehlt jemand, der sie mit dir baut.">
-      <span class="hero__l hero__l--a" data-split>Du hast die Idee.</span>
-      <span class="hero__l hero__l--b" data-split>Dir fehlt</span>
-      <span class="hero__l hero__l--c" data-split>jemand,</span>
-      <span class="hero__l hero__l--d" data-split>der sie mit dir baut.</span>
+    <p class="mono label hero__tag">Beta · App für Mac und Windows</p>
+    <h1 class="hero__h" id="hero-title">
+      <span class="hero__l hero__l--a"><span>Du hast die Idee.</span></span>
+      <span class="hero__l hero__l--b"><span>Dir fehlt</span></span>
+      <span class="hero__l hero__l--c"><span>jemand,</span></span>
+      <span class="hero__l hero__l--d"><span>der sie mit dir baut.</span></span>
     </h1>
 
     <div class="hero__foot">
-      <p class="hero__p">Du beschreibst, was du vorhast, und Xyntal zeigt dir, wer dazu passt und warum.</p>
+      <p class="hero__p">Xyntal zeigt dir, wer zu deinem Vorhaben passt – und warum.</p>
       <div class="hero__cta">
         <a class="pill" href="/beta" data-apply>Für die Beta bewerben <span class="pill__arr" aria-hidden="true">→</span></a>
         <!-- Stattdessen, wenn jemand schon dabei ist oder sich beworben hat (js/neu-konto.js) -->
         <a class="pill" href="/mitglieder" data-if="in">Mitglieder ansehen <span class="pill__arr" aria-hidden="true">→</span></a>
         <a class="pill" href="/beta" data-if="applied">Stand deiner Bewerbung <span class="pill__arr" aria-hidden="true">→</span></a>
-        <a class="tlink" href="/ueber-uns"><span data-apply>Oder erst mehr über Xyntal lesen</span><span data-if="in applied">Mehr über Xyntal</span></a>
+        <a class="tlink" href="/ueber-uns">Mehr über Xyntal</a>
       </div>
     </div>
   </section>
 
-  <!-- Laufband: sagt, wen man hier suchen kann. Läuft mit dem Scrolltempo. -->
-  <div class="band" data-band aria-label="Wen du hier suchen kannst: Mitgründer:in, Projektpartner, jemanden für eine bezahlte Aufgabe, ein Nebenprojekt mit abgesprochenen Stunden, Leute, die schon weiter sind.">
-    <div class="band__track" data-band-track aria-hidden="true">
-      <span>Mitgründer:in</span><i></i><span>Projektpartner</span><i></i><span>Bezahlt für eine klare Aufgabe</span><i></i><span>Nebenprojekt mit abgesprochenen Stunden</span><i></i><span>Leute, die schon weiter sind</span><i></i>
-    </div>
-  </div>
-
-  <!-- ============ SZENE 2 · MATCHING (bleibt stehen, Text und Bild wechseln) ============ -->
-  <section class="pin" id="matching" data-pin aria-labelledby="pin-title">
-    <div class="pin__stick">
-      <header class="pin__head">
-        <p class="mono label">Matching</p>
-        <h2 class="pin__title" id="pin-title">Wer zu dir passt<br><span class="thin">und warum.</span></h2>
-      </header>
-
-      <div class="pin__steps">
-        <article class="step is-on" data-step>
-          <h3>Erst mal: Wer ist überhaupt da?</h3>
-          <p>Unter „Entdecken“ siehst du Leute, Projekte und Communities, sortiert danach, wie gut sie zu dir passen.</p>
-        </article>
-        <article class="step" data-step>
-          <h3>Eine Zahl, die für alle gleich gerechnet wird.</h3>
-          <p>Zehn Bereiche, gewichtet zusammengezählt. Dieselben Angaben ergeben immer dieselbe Zahl, und eine bessere Platzierung kann niemand kaufen.</p>
-        </article>
-        <article class="step" data-step>
-          <h3>Dazu steht der Grund.</h3>
-          <p>Bei jedem Vorschlag liest du, was die Person mitbringt, was deinem Profil fehlt und was der nächste Schritt wäre.</p>
-        </article>
-        <article class="step" data-step>
-          <h3>Die Rechnung kannst du einsehen.</h3>
-          <p>Jeder Bereich steht einzeln da, mit Punkten. Wenn dich eine Zahl wundert, schaust du nach, woher sie kommt.</p>
-        </article>
-        <div class="pin__count mono" aria-hidden="true"><b data-pin-now>01</b><i><u data-pin-bar></u></i><span>04</span></div>
-      </div>
-
-      <figure class="pin__stage">
-        <div class="win" data-win>
-          <div class="win__cam" data-cam>
-            <picture>
-              <img class="win__img is-on" data-shot src="assets/img/discover-2880.webp?v=2" srcset="assets/img/discover-1440.webp?v=2 1440w, assets/img/discover-2880.webp?v=2 2880w" sizes="(min-width: 860px) 150vw, 300vw" width="2880" height="1800" loading="lazy" decoding="async"
-                   alt="Xyntal-App, Bereich Entdecken: zwei Profilkarten mit „Für dich empfohlen“, 89 % und 71 % Passung, Zeit pro Woche und wonach die Person sucht.">
-            </picture>
-            <picture>
-              <img class="win__img" data-shot src="assets/img/profil-2880.webp?v=2" srcset="assets/img/profil-1440.webp?v=2 1440w, assets/img/profil-2880.webp?v=2 2880w" sizes="(min-width: 860px) 110vw, 300vw" width="2880" height="2800" loading="lazy" decoding="async"
-                   alt="Xyntal-App, Profil mit „Wie gut du und Selin Kaya zusammenpasst“: 89 % Match, ein Satz Begründung, vorgeschlagene Rolle, nächster Schritt und die Aufschlüsselung nach Bereichen wie Vision, Ergänzende Fähigkeiten, Absicht und Umsetzung.">
-            </picture>
-          </div>
-        </div>
-        <figcaption class="mono">Echte App · Beispieldaten</figcaption>
-      </figure>
-    </div>
+  <!-- ============ PROBLEM ============ -->
+  <section class="problem" id="problem">
+    <p class="problem__text" data-rv>Gute Ideen scheitern selten an der Idee, sondern an den <span class="problem__hi">fehlenden Menschen</span>.</p>
   </section>
 
-  <!-- ============ SZENE 3 · WAS NIE ZÄHLT ============ -->
-  <section class="calc calc--never" id="zaehlt-nie" aria-label="Was beim Matching nie zählt">
-    <div class="never">
-      <p class="mono label">Zählt nie</p>
-      <ul>
-        <li><span><span data-strike>Dein Tarif</span></span><i></i><b class="mono">0 %</b></li>
-        <li><span><span data-strike>Der Inhalt deiner Nachrichten</span></span><i></i><b class="mono">0 %</b></li>
-        <li><span><span data-strike>Aussehen, Name, Alter, Geschlecht, Herkunft</span></span><i></i><b class="mono">0 %</b></li>
-        <li><span><span data-strike>Wie viele Follower jemand hat</span></span><i></i><b class="mono">0 %</b></li>
-      </ul>
-    </div>
-  </section>
-
-  <!-- ============ SZENE 4 · DER WEG (läuft quer) ============ -->
-  <section class="way" id="weg" data-way aria-labelledby="way-title">
-    <div class="way__stick">
-      <div class="way__scroller" data-way-scroller tabindex="0" aria-label="Der Weg in sechs Schritten, seitlich scrollbar">
-        <div class="way__track" data-way-track>
-          <!-- Eine Linie: sie läuft unter den Ziffern durch. Ihre Höhe und ihr Anfang setzt js/neu.js. Mobil wird daraus die senkrechte Linie am Rand (span). -->
-          <svg class="way__lines" aria-hidden="true">
-            <defs>
-              <linearGradient id="wl-a" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="1" y2="0" data-way-grad><stop offset="0" stop-color="#4C8DFF" stop-opacity="0"/><stop offset="1" stop-color="#4C8DFF"/></linearGradient>
-            </defs>
-            <path data-way-line pathLength="1" stroke="url(#wl-a)" d="M0 0 L1 0"/>
-          </svg>
-
-          <div class="way__panel way__panel--title">
-            <p class="mono label">Der Weg</p>
-            <h2 class="way__title" id="way-title">Von der Bewerbung<br><span class="thin">bis zum Projekt.</span></h2>
-            <p class="way__hint mono"><span class="way__hint-d">Weiterscrollen</span><span class="way__hint-m">Wischen</span> →</p>
-          </div>
-
-          <div class="way__steps" data-way-steps>
-            <span class="way__vline" data-way-vline aria-hidden="true"></span>
-            <article class="way__panel" data-way-step>
-              <header><span class="way__n">1</span><h3>Bewerben</h3></header>
-              <p>Konto anlegen, drei Fragen beantworten: Was baust du? Wen suchst du? Wie viel Zeit hast du? Jede Bewerbung wird geprüft und per Mail beantwortet.</p>
-              <i class="way__dot" aria-hidden="true"></i>
-            </article>
-            <article class="way__panel" data-way-step>
-              <header><span class="way__n">2</span><h3>Profil</h3></header>
-              <p>Skills, Tech-Stack, Ziele, Sprachen, Stunden pro Woche. Und unter welchen Bedingungen du einsteigst: als Mitgründer:in, bezahlt oder als Nebenprojekt.</p>
-              <i class="way__dot" aria-hidden="true"></i>
-            </article>
-            <article class="way__panel" data-way-step>
-              <header><span class="way__n">3</span><h3>Arbeitsstil</h3></header>
-              <p>28 Blöcke. Jedes Mal wählst du, was am meisten und was am wenigsten zu dir passt. Zwei, die beide nur antreiben, sind nicht automatisch das beste Team.</p>
-              <i class="way__dot" aria-hidden="true"></i>
-            </article>
-            <article class="way__panel" data-way-step>
-              <header><span class="way__n">4</span><h3>Vorschlag</h3></header>
-              <p>Ab 65 Punkten taucht jemand bei dir auf, mit Zahl, Begründung und den zehn Bereichen einzeln.</p>
-              <i class="way__dot" aria-hidden="true"></i>
-            </article>
-            <article class="way__panel" data-way-step>
-              <header><span class="way__n">5</span><h3>Nachricht</h3></header>
-              <p>Du schreibst direkt. Damit das kein Spam-Kanal wird, gibt es Grenzen: höchstens drei neue Gespräche pro Stunde.</p>
-              <i class="way__dot" aria-hidden="true"></i>
-            </article>
-            <article class="way__panel" data-way-step>
-              <header><span class="way__n">6</span><h3>Projekt</h3></header>
-              <p>Projekt anlegen, offene Rollen eintragen. Wer mitmachen will, meldet sich mit „Ich wäre dabei“.</p>
-              <i class="way__dot" aria-hidden="true"></i>
-            </article>
-          </div>
-          <div class="way__panel way__panel--end" aria-hidden="true"></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ SZENE 5 · DIE APP ============ -->
-  <section class="app" id="app" aria-labelledby="app-title">
-    <header class="app__head">
-      <p class="mono label">Die App</p>
-      <h2 class="app__title" id="app-title">Die Website ist nur der Eingang.</h2>
-      <p class="app__lead">Gearbeitet wird in der App für Mac und Windows. Vorschläge, Projekte und Nachrichten an einem Ort. Die Bilder sind aus der echten App, mit Beispieldaten.</p>
+  <!-- ============ STATT ============ -->
+  <section class="cmp" id="statt" aria-labelledby="statt-title">
+    <header class="sec-head">
+      <p class="mono label">Ersetzt</p>
+      <h2 class="sec-title" id="statt-title">Statt sechs Umwegen: eine App.</h2>
     </header>
-
-    <div class="shots">
-      <figure class="shot shot--a" data-par="-0.06">
-        <div class="win" data-glare>
-          <picture>
-            <img src="assets/img/home-1920.webp" srcset="assets/img/home-960.webp 960w, assets/img/home-1920.webp 1920w" sizes="(min-width: 860px) 62vw, 165vw" width="1920" height="1200" loading="lazy" decoding="async"
-                 alt="Xyntal-App, Startseite: Begrüßung, offene Tasks, Fokus für heute, Meilensteine und Projektstand.">
-          </picture>
-          <i class="win__glare" aria-hidden="true"></i>
-        </div>
-        <figcaption class="mono"><b>Start</b> Was heute ansteht</figcaption>
-      </figure>
-      <figure class="shot shot--b" data-par="0.10">
-        <div class="win" data-glare>
-          <picture>
-            <img src="assets/img/chat-1920.webp?v=2" srcset="assets/img/chat-960.webp?v=2 960w, assets/img/chat-1920.webp?v=2 1920w" sizes="(min-width: 860px) 44vw, 92vw" width="1920" height="1200" loading="lazy" decoding="async"
-                 alt="Xyntal-App, Nachrichten: Liste der Gespräche links, ein Gruppenchat mit vier Mitgliedern in der Mitte, die Mitgliederliste rechts.">
-          </picture>
-          <i class="win__glare" aria-hidden="true"></i>
-        </div>
-        <figcaption class="mono"><b>Nachrichten</b> Privat und im Team</figcaption>
-      </figure>
-      <figure class="shot shot--c" data-par="-0.14">
-        <div class="win" data-glare>
-          <picture>
-            <img src="assets/img/projects-1920.webp" srcset="assets/img/projects-960.webp 960w, assets/img/projects-1920.webp 1920w" sizes="(min-width: 860px) 38vw, 215vw" width="1920" height="1200" loading="lazy" decoding="async"
-                 alt="Xyntal-App, Projekte: drei Projekte mit Fortschritt, offenen Aufgaben und den Leuten, die daran arbeiten.">
-          </picture>
-          <i class="win__glare" aria-hidden="true"></i>
-        </div>
-        <figcaption class="mono"><b>Projekte</b> Wer was macht</figcaption>
-      </figure>
+    <div class="cmp__scroller" data-cmp tabindex="0" aria-label="Sechs Vergleiche, seitlich scrollbar">
+      <ol class="cmp__list">
+        <li class="cmp__card">
+          <h3 class="cmp__old"><span data-strike>LinkedIn</span></h3>
+          <p class="cmp__row cmp__row--miss"><span class="mono">fehlt</span> Titel, aber keine Zeit und keine Absicht.</p>
+          <p class="cmp__row cmp__row--new"><span class="mono">Xyntal</span> Profile mit Zeit und Bedingungen.</p>
+        </li>
+        <li class="cmp__card">
+          <h3 class="cmp__old"><span data-strike>Discord-Server</span></h3>
+          <p class="cmp__row cmp__row--miss"><span class="mono">fehlt</span> In die Runde fragen und hoffen.</p>
+          <p class="cmp__row cmp__row--new"><span class="mono">Xyntal</span> Vorschläge ab 65 Punkten.</p>
+        </li>
+        <li class="cmp__card">
+          <h3 class="cmp__old"><span data-strike>Freunde von Freunden</span></h3>
+          <p class="cmp__row cmp__row--miss"><span class="mono">fehlt</span> Nur, wen dein Umfeld kennt.</p>
+          <p class="cmp__row cmp__row--new"><span class="mono">Xyntal</span> Auch Leute außerhalb deines Umfelds.</p>
+        </li>
+        <li class="cmp__card">
+          <h3 class="cmp__old"><span data-strike>Freelancer-Plattformen</span></h3>
+          <p class="cmp__row cmp__row--miss"><span class="mono">fehlt</span> Aufträge, aber keine Mitgründung.</p>
+          <p class="cmp__row cmp__row--new"><span class="mono">Xyntal</span> Mitgründung, Aufgabe oder Nebenprojekt.</p>
+        </li>
+        <li class="cmp__card">
+          <h3 class="cmp__old"><span data-strike>Kaltakquise-Calls</span></h3>
+          <p class="cmp__row cmp__row--miss"><span class="mono">fehlt</span> Viele Calls, bis die Passung klar ist.</p>
+          <p class="cmp__row cmp__row--new"><span class="mono">Xyntal</span> Zeit und Erwartung vorab im Profil.</p>
+        </li>
+        <li class="cmp__card">
+          <h3 class="cmp__old"><span data-strike>Gruppenchats</span></h3>
+          <p class="cmp__row cmp__row--miss"><span class="mono">fehlt</span> Zusagen gehen im Chat unter.</p>
+          <p class="cmp__row cmp__row--new"><span class="mono">Xyntal</span> Ein Projekt mit offenen Rollen.</p>
+        </li>
+      </ol>
     </div>
-
-    <div class="stand">
-      <div class="stand__say">
-        <p class="mono label">Stand heute</p>
-        <p class="stand__h">Was schon läuft und was noch fehlt.</p>
-      </div>
-      <ul class="stand__list">
-        <li><span>Profile, Mitglieder, Community, Nachrichten</span><em class="mono st st--on">läuft</em></li>
-        <li><span>Vorschläge mit Begründung</span><em class="mono st st--on">läuft</em></li>
-        <li><span>Projekte mit offenen Rollen</span><em class="mono st st--on">läuft</em></li>
-        <li><span>Gemeinsame Arbeitsbereiche</span><em class="mono st st--wip">in Arbeit</em></li>
-        <li><span>Linux und Handy</span><em class="mono st st--off">gibt es noch nicht</em></li>
-      </ul>
-    </div>
+    <div class="cmp__dots" data-cmp-dots aria-hidden="true"><i class="is-on"></i><i></i><i></i><i></i><i></i><i></i></div>
   </section>
 
-  <!-- ============ SZENE 6 · STATT ============ -->
-  <section class="swap" id="statt" aria-labelledby="swap-title">
-    <header class="swap__head">
-      <p class="mono label">Statt</p>
-      <h2 class="swap__title" id="swap-title">Wo man sonst sucht,<br><span class="thin">und was dort fehlt.</span></h2>
+  <!-- ============ FÜR WEN ============ -->
+  <section class="who" id="fuer-wen" aria-labelledby="who-title">
+    <header class="sec-head">
+      <p class="mono label">Für wen</p>
+      <h2 class="sec-title" id="who-title">Für alle, die etwas vorhaben.</h2>
     </header>
-    <ol class="swap__list">
-      <li class="row" tabindex="0">
-        <h3 class="row__old"><span data-strike>LinkedIn</span></h3>
-        <p class="row__why">Du siehst Titel und Fähigkeiten. Ob jemand gerade Zeit hat oder überhaupt mitmachen will, siehst du nicht.</p>
-        <p class="row__new">Profile enthalten Zeit, Erwartungen und die Bedingungen, zu denen jemand einsteigt.</p>
+    <ul class="who__grid">
+      <li class="who__card" data-rv>
+        <h3 class="who__name">Der junge Hungrige</h3>
+        <p class="mono who__age">16–21</p>
+        <p class="who__say">Du fängst gerade an? Finde Leute, die auch etwas vorhaben.</p>
       </li>
-      <li class="row" tabindex="0">
-        <h3 class="row__old"><span data-strike>Discord-Server</span></h3>
-        <p class="row__why">Viele Leute, kein Filter. Du fragst in die Runde und hoffst, dass sich jemand Passendes meldet.</p>
-        <p class="row__new">Du beschreibst, wen du suchst. Vorgeschlagen wird dir nur, wer mindestens 65 Punkte erreicht.</p>
+      <li class="who__card" data-rv>
+        <h3 class="who__name">Der Aufsteiger</h3>
+        <p class="mono who__age">22–35</p>
+        <p class="who__say">Du baust etwas auf? Finde Mitgründer:innen oder jemanden für eine klare Aufgabe.</p>
       </li>
-      <li class="row" tabindex="0">
-        <h3 class="row__old"><span data-strike>Freunde von Freunden</span></h3>
-        <p class="row__why">Ob du jemanden findest, hängt davon ab, wen dein Umfeld zufällig kennt.</p>
-        <p class="row__new">Du erreichst auch Leute, die in deinem Umfeld niemand kennt.</p>
+      <li class="who__card" data-rv>
+        <h3 class="who__name">Der etablierte Unternehmer</h3>
+        <p class="mono who__age">35+</p>
+        <p class="who__say">Du hast schon etwas aufgebaut? Finde Talente, die zu deinem Vorhaben passen.</p>
       </li>
-      <li class="row" tabindex="0">
-        <h3 class="row__old"><span data-strike>Freelancer-Plattformen</span></h3>
-        <p class="row__why">Dort gibt es bezahlte Aufträge. Mitgründung oder ein Nebenprojekt kommt nicht vor.</p>
-        <p class="row__new">Mitgründung, bezahlte Aufgabe und Nebenprojekt sind gleichwertige Wege.</p>
+    </ul>
+  </section>
+
+  <!-- ============ ABLAUF ============ -->
+  <section class="how" id="ablauf" aria-labelledby="how-title">
+    <header class="sec-head">
+      <p class="mono label">So funktioniert es</p>
+      <h2 class="sec-title" id="how-title">In drei Schritten zum Projekt.</h2>
+    </header>
+    <ol class="how__steps">
+      <li class="how__step" data-rv>
+        <span class="how__node mono">1</span>
+        <h3 class="how__title">Bewerben</h3>
+        <p class="how__text">Konto anlegen, drei Fragen beantworten. Die Antwort kommt per Mail.</p>
       </li>
-      <li class="row" tabindex="0">
-        <h3 class="row__old"><span data-strike>Drei Calls zum Aussortieren</span></h3>
-        <p class="row__why">Erst nach dem dritten Gespräch stellt sich heraus: keine Zeit, andere Erwartung.</p>
-        <p class="row__new">Zeit und Erwartung stehen im Profil, bevor ihr euch schreibt.</p>
+      <li class="how__step" data-rv>
+        <span class="how__node mono">2</span>
+        <h3 class="how__title">Profil und Arbeitsstil</h3>
+        <p class="how__text">Dein Vorhaben, deine Zeit, deine Art zu arbeiten.</p>
       </li>
-      <li class="row" tabindex="0">
-        <h3 class="row__old"><span data-strike>Gruppenchats</span></h3>
-        <p class="row__why">Wer wollte mitmachen? Steht irgendwo zwischen zweihundert anderen Nachrichten.</p>
-        <p class="row__new">Ein Projekt, offene Rollen und alle Meldungen an einem Ort.</p>
+      <li class="how__step" data-rv>
+        <span class="how__node mono">3</span>
+        <h3 class="how__title">Vorschläge und Nachricht</h3>
+        <p class="how__text">Du siehst, wer passt und warum, und schreibst direkt.</p>
       </li>
     </ol>
   </section>
 
-  <!-- ============ SZENE 7 · ÜBER XYNTAL ============ -->
-  <section class="me" id="ueber" aria-labelledby="me-title">
-    <p class="mono label">Über Xyntal</p>
-    <blockquote class="me__quote" id="me-title" data-reveal-lines>
-      <p>Gute Ideen scheitern selten an der Idee, sondern an den fehlenden Menschen. Xyntal bringt sie zusammen.</p>
-    </blockquote>
-    <div class="me__body">
-      <p>Xyntal ist in der Beta. Jede Bewerbung wird geprüft und per E-Mail beantwortet.</p>
-      <p>Wenn du etwas vorhast, bewirb dich. Wir sind gespannt, was du baust.</p>
-      <a class="tlink" href="/ueber-uns">Mehr über Xyntal</a>
-    </div>
+  <!-- ============ VERTRAUEN ============ -->
+  <section class="facts" id="fakten" aria-labelledby="facts-title">
+    <header class="sec-head">
+      <p class="mono label">Vertrauen</p>
+      <h2 class="sec-title" id="facts-title">Klar auf den Tisch.</h2>
+    </header>
+    <ul class="facts__grid">
+      <li class="fact" data-rv>
+        <p class="fact__v">Beta</p>
+        <p class="fact__t">Nur per Bewerbung. Antwort per Mail.</p>
+      </li>
+      <li class="fact" data-rv>
+        <p class="fact__v">Mac + Windows</p>
+        <p class="fact__t">Kein Linux, kein Handy.</p>
+      </li>
+      <li class="fact" data-rv>
+        <p class="fact__v">0 €</p>
+        <p class="fact__t">In der Beta kostenlos.</p>
+      </li>
+      <li class="fact" data-rv>
+        <p class="fact__v">10 Bereiche</p>
+        <p class="fact__t">Gewichtet. Vorschlag ab 65 Punkten.</p>
+      </li>
+      <li class="fact" data-rv>
+        <p class="fact__v">28 Blöcke</p>
+        <p class="fact__t">Dein Arbeitsstil.</p>
+      </li>
+      <li class="fact" data-rv>
+        <p class="fact__v">3 pro Stunde</p>
+        <p class="fact__t">Höchstens drei neue Gespräche.</p>
+      </li>
+    </ul>
+  </section>
+
+  <!-- ============ DIE APP ============ -->
+  <section class="app" id="app" aria-labelledby="app-title">
+    <header class="sec-head">
+      <p class="mono label">Die App</p>
+      <h2 class="sec-title" id="app-title">So sieht es aus.</h2>
+      <p class="app__lead">Echte App, Beispieldaten.</p>
+    </header>
+    <ul class="app__shots">
+      <li class="app__shot">
+        <figure class="app__fig">
+          <div class="win">
+            <picture>
+              <img src="assets/img/discover-1440.webp?v=2" srcset="assets/img/discover-1440.webp?v=2 1440w, assets/img/discover-2880.webp?v=2 2880w" sizes="(min-width: 860px) 33vw, 82vw" width="1440" height="900" loading="lazy" decoding="async"
+                   alt="Xyntal-App, Bereich Entdecken: zwei Profilkarten mit „Für dich empfohlen“, 89 % und 71 % Passung, Zeit pro Woche und wonach die Person sucht.">
+            </picture>
+          </div>
+          <figcaption class="mono">Entdecken: Vorschläge mit Begründung</figcaption>
+        </figure>
+      </li>
+      <li class="app__shot">
+        <figure class="app__fig">
+          <div class="win">
+            <picture>
+              <img src="assets/img/chat-960.webp?v=2" srcset="assets/img/chat-960.webp?v=2 960w, assets/img/chat-1920.webp?v=2 1920w" sizes="(min-width: 860px) 33vw, 82vw" width="960" height="600" loading="lazy" decoding="async"
+                   alt="Xyntal-App, Nachrichten: Liste der Gespräche links, ein Gruppenchat mit vier Mitgliedern in der Mitte, die Mitgliederliste rechts.">
+            </picture>
+          </div>
+          <figcaption class="mono">Nachrichten: privat und im Team</figcaption>
+        </figure>
+      </li>
+      <li class="app__shot">
+        <figure class="app__fig">
+          <div class="win">
+            <picture>
+              <img src="assets/img/projects-960.webp" srcset="assets/img/projects-960.webp 960w, assets/img/projects-1920.webp 1920w" sizes="(min-width: 860px) 33vw, 82vw" width="960" height="600" loading="lazy" decoding="async"
+                   alt="Xyntal-App, Projekte: drei Projekte mit Fortschritt, offenen Aufgaben und den Leuten, die daran arbeiten.">
+            </picture>
+          </div>
+          <figcaption class="mono">Projekte: wer was macht</figcaption>
+        </figure>
+      </li>
+    </ul>
   </section>
 
   <!-- ============ FRAGEN ============ -->
   <section class="faq" id="fragen" aria-labelledby="faq-title">
-    <div class="faq__head">
-      <h2 class="faq__title" id="faq-title">Kurz gefragt.</h2>
+    <h2 class="sec-title faq__title" id="faq-title">Kurz gefragt.</h2>
+    <div class="faq__list">
+      <div class="qa">
+        <h3 class="qa__q"><button class="qa__btn" type="button" aria-expanded="false" aria-controls="qa-1">Wie komme ich rein?<span class="qa__icon" aria-hidden="true"></span></button></h3>
+        <div class="qa__a" id="qa-1"><p>Per Bewerbung. Die Antwort kommt per Mail.</p></div>
+      </div>
+      <div class="qa">
+        <h3 class="qa__q"><button class="qa__btn" type="button" aria-expanded="false" aria-controls="qa-2">Worauf läuft es?<span class="qa__icon" aria-hidden="true"></span></button></h3>
+        <div class="qa__a" id="qa-2"><p>Auf Mac und Windows. Linux und Handy gibt es noch nicht.</p></div>
+      </div>
+      <div class="qa">
+        <h3 class="qa__q"><button class="qa__btn" type="button" aria-expanded="false" aria-controls="qa-3">Was kostet das?<span class="qa__icon" aria-hidden="true"></span></button></h3>
+        <div class="qa__a" id="qa-3"><p>In der Beta nichts. Danach: siehe <a href="/preise">Preise</a>.</p></div>
+      </div>
     </div>
-    <dl class="faq__list">
-      <div class="qa"><dt>Für wen ist das?</dt>
-        <dd>Für Leute mit einem konkreten Vorhaben, meist ein digitales Produkt, die dafür jemanden suchen. Und für Leute, die mitbauen wollen: als Mitgründer:in, bezahlt für eine klare Aufgabe oder als Nebenprojekt mit abgesprochenen Stunden.</dd></div>
-      <div class="qa"><dt>Worauf läuft es?</dt>
-        <dd>Als App für Mac und Windows. Profil anlegen und bewerben kannst du hier auf der Website. Linux und Handy gibt es noch nicht.</dd></div>
-      <div class="qa"><dt>Wie komme ich rein?</dt>
-        <dd>Per Bewerbung: Konto anlegen und drei Fragen beantworten. Die Antwort kommt per Mail.</dd></div>
-      <div class="qa"><dt>Was kostet das?</dt>
-        <dd>In der Beta nichts. Was danach kommt, steht offen unter <a href="/preise">Preise</a>.</dd></div>
-    </dl>
   </section>
 
-  <!-- ============ SCHLUSS ============ -->
-  <section class="end" id="bewerben" data-end aria-labelledby="end-title">
+  <!-- ============ BEWERBEN ============ -->
+  <section class="end" id="bewerben" aria-labelledby="end-title">
     <p class="end__pre">Du hast die Idee.</p>
-    <h2 class="end__h" id="end-title" data-flex aria-label="Such dir die Leute dazu.">
-      <span data-flex-line>Such dir</span>
-      <span data-flex-line>die Leute</span>
-      <span data-flex-line>dazu.</span>
-    </h2>
+    <h2 class="end__h" id="end-title">Such dir die Leute dazu.</h2>
     <div class="end__foot">
       <a class="pill pill--lg" href="/beta" data-apply>Für die Beta bewerben <span class="pill__arr" aria-hidden="true">→</span></a>
-      <p data-apply>In der Beta kostet Xyntal nichts.</p>
       <a class="pill pill--lg" href="/mitglieder" data-if="in">Mitglieder ansehen <span class="pill__arr" aria-hidden="true">→</span></a>
-      <p data-if="in">Du bist schon dabei. Schön, dass du da bist.</p>
       <a class="pill pill--lg" href="/beta" data-if="applied">Stand deiner Bewerbung <span class="pill__arr" aria-hidden="true">→</span></a>
-      <p data-if="applied">Deine Bewerbung ist da. Wir prüfen sie und antworten per Mail.</p>
+      <p class="end__note" data-apply>In der Beta kostet Xyntal nichts.</p>
+      <p class="end__note" data-if="in">Du bist schon dabei. Schön, dass du da bist.</p>
+      <p class="end__note" data-if="applied">Deine Bewerbung ist da. Wir prüfen sie und antworten per Mail.</p>
+      <button class="tlink end__wl" type="button" data-wl-toggle data-wl-closed="Noch nicht bereit? Auf die Warteliste" data-wl-open="Warteliste schließen" aria-expanded="false" aria-controls="warteliste" data-apply>Noch nicht bereit? Auf die Warteliste</button>
     </div>
 
-    <!-- Newsletter: dasselbe Formular wie bisher (landing.js, Brevo, Double-Opt-in) -->
-    <div class="news" id="warteliste" role="group" aria-labelledby="news-title" data-apply>
-      <p id="news-title">Noch nichts Konkretes vor? Wir sagen dir Bescheid, wenn Xyntal für alle offen ist, und schreiben nur, wenn es etwas Neues gibt.</p>
+    <!-- Warteliste: dasselbe Formular wie bisher (landing.js, Brevo, Double-Opt-in). Der Textlink oben klappt es auf. -->
+    <div class="news" id="warteliste" role="group" aria-labelledby="news-title" data-apply hidden>
+      <p id="news-title">Wir melden uns, wenn Xyntal für alle offen ist.</p>
       <form class="waitlist-form" data-waitlist novalidate>
         <div class="waitlist-row">
           <label class="sr-only" for="wl-email">E-Mail-Adresse</label>
@@ -390,7 +333,6 @@
     </div>
   </section>
 </main>
-
 <footer class="foot">
   <div class="foot__main">
     <div class="foot__brand">
@@ -424,10 +366,10 @@
 </footer>
 
 <script src="js/vendor/lenis.min.js" defer></script>
-<script src="js/hero-gl.js" defer></script>
+<script src="js/hero-gl.js?v=2" defer></script>
 <script src="/i18n-en.js?v=133" defer></script>
 <script src="/i18n.js?v=34" defer></script>
-<script src="js/neu.js?v=3" defer></script>
+<script src="js/neu.js?v=4" defer></script>
 <!-- Bestehende Funktionen der Website: Newsletter, Einladungslink, Konto-Menü -->
 <script src="landing.js?v=swipe-58" defer></script>
 <script src="invite.js?v=4" defer></script>

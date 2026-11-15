@@ -5,6 +5,8 @@
   d.classList.remove('no-js'); d.classList.add('js');
   var calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (calm) d.classList.add('calm');
+  // Logo-Animation (WebGL) nur ab 860 px und ohne reduzierte Bewegung. Sonst steht das SVG (js/hero-gl.js).
+  if (calm || !window.matchMedia('(min-width: 860px)').matches) d.classList.add('no-gl');
   // Schon in der Beta oder beworben? Gemerkten Stand sofort anwenden, damit der
   // „Bewerben“-Knopf gar nicht erst aufblitzt. Abgeglichen wird in neu-konto.js.
   try {

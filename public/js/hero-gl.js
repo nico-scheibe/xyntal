@@ -22,6 +22,13 @@
 
   var calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var small = window.matchMedia('(max-width: 760px)').matches;
+  // WebGL nur ab 860 px und ohne reduzierte Bewegung. Sonst bleibt das Logo als SVG stehen (Klasse „no-gl“).
+  var wide = window.matchMedia('(min-width: 860px)');
+  if (calm || !wide.matches) { document.documentElement.classList.add('no-gl'); return; }
+  // Wird das Fenster unter 860 px verkleinert, hört die Animation auf und das SVG erscheint.
+  function narrowed() { stop(); document.documentElement.classList.add('no-gl'); }
+  if (wide.addEventListener) wide.addEventListener('change', function (e) { if (!e.matches) narrowed(); });
+  else if (wide.addListener) wide.addListener(function (e) { if (!e.matches) narrowed(); });
 
   // ---------- Zeichner 1: WebGL ----------
   var VS = [

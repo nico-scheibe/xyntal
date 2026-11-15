@@ -23,7 +23,9 @@ function friendlyError(err) {
     [/XYNTAL_MODERATION:abzocke/, "Dein Text sieht nach Abzocke aus (z. B. MLM, Krypto-Pump oder Werde-reich-Versprechen) und wurde blockiert."],
     [/XYNTAL_MODERATION:daten/, "Bitte keine Bankdaten wie eine IBAN öffentlich posten. Teile sie nur direkt per Nachricht."],
     [/XYNTAL_MODERATION:kontaktdaten/, "Bitte keine Telefonnummern, E-Mail-Adressen oder Messenger-Kontakte in Profil, Projekten oder Börse. Kontakt läuft über Xyntal, deine Website kannst du im Profil verlinken."],
-    [/XYNTAL_TIMEOUT/, "Das hat zu lange gedauert. Prüfe deine Verbindung und versuch es noch einmal."],
+    // Profil-Symbol (supabase/migrations/20261115120000_avatar_items.sql, guard_avatar_item)
+    [/XYNTAL_AVATAR:locked/, "Dieses Symbol ist in deinem Profil noch nicht freigeschaltet."],
+    [/XYNTAL_TIMEOUT/,"Das hat zu lange gedauert. Prüfe deine Verbindung und versuch es noch einmal."],
     [/bucket not found/i, "Der Bildspeicher ist noch nicht eingerichtet. Bitte versuch es später erneut."],
     [/payload too large|maximum allowed size|exceeded.*size/i, "Das Bild ist zu groß. Bitte wähle eine kleinere Datei."],
     [/mime type.*not supported|invalid.*mime/i, "Dieses Bildformat wird nicht unterstützt. Bitte wähle JPG, PNG oder WebP."],
@@ -173,7 +175,7 @@ function memberCard(m, opts = {}) {
   return `
     <article class="member">
       <div class="member-head">
-        ${avatar(m.name, "", m.avatar_path)}
+        ${avatar(m.name, "", m.avatar_path, m.avatar_item)}
         <div>
           <h3>${esc(m.name)}${m.is_verified === true ? ' <span class="verified-mark" role="img" aria-label="Verifiziertes Mitglied" title="Verifiziertes Mitglied"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5.2 10.3 3.1 3.1 6.7-7"/></svg></span>' : ""}${m.is_admin === true ? ' <span class="member-admin-badge" aria-label="Admin">Admin</span>' : ""}</h3>
           <p class="member-headline">${esc(m.headline)}</p>
@@ -354,9 +356,12 @@ function avatarTone(name) {
   return "av-" + ((h % 6) + 1);
 }
 
-function avatar(name, cls = "", path = "") {
+// item: Profil-Symbol (profiles.avatar_item, Katalog in avatar-items.js). Foto hat Vorrang; ohne Foto und mit
+// bekanntem Symbol zeigen wir das SVG, sonst die Initialen.
+function avatar(name, cls = "", path = "", item = "") {
   const safePath = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|gif|webp|mp4|webm)$/.test(path || "") ? path : "";
-  return `<div class="avatar ${avatarTone(name)} ${esc(cls)}" ${safePath ? `data-avatar-path="${esc(safePath)}"` : ""} aria-hidden="true"><span>${esc(initials(name))}</span></div>`;
+  const symbol = !safePath && window.AVATAR_ITEMS && Object.prototype.hasOwnProperty.call(window.AVATAR_ITEMS, item || "") ? window.AVATAR_ITEMS[item] : null;
+  return `<div class="avatar ${avatarTone(name)} ${esc(cls)}${symbol ? " avatar-symbol" : ""}" ${safePath ? `data-avatar-path="${esc(safePath)}"` : ""} aria-hidden="true">${symbol ? symbol.svg : `<span>${esc(initials(name))}</span>`}</div>`;
 }
 
 // Wer schaut gerade? { me, isMember (freigeschaltet), canAct (Konto, nicht abgelehnt), isAdmin }
