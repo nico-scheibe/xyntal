@@ -42,7 +42,8 @@ private struct MemberFeedContent: View {
     let store: MemberCommunityStore
     let welcome: String?
 
-    @State private var failedMessage: OutgoingMessage?
+    /// Der Schreibanstoß im leeren Kanal setzt den Cursor ins Eingabefeld der Schreibzeile.
+    @FocusState private var composerFocused: Bool
 
     var body: some View {
         List {
@@ -64,8 +65,11 @@ private struct MemberFeedContent: View {
 
             // Hat die Community nur einen Kanal, entfällt die Leiste: es wirkt wie ein einfacher Feed.
             if store.channels.count > 1 {
-                ChannelCapsules(channels: store.channels, selectedId: store.selectedChannelId) { channelId in
-                    Task { await store.select(channelId: channelId) }
+                ChannelCapsules(options: store.channels.map { ChannelCapsuleOption(id: $0.id, title: $0.name) },
+                                selectedId: store.selectedChannelId) { channelId in
+                    if let channelId {
+                        Task { await store.select(channelId: channelId) }
+                    }
                 }
                 .listRowInsets(EdgeInsets())
                 .listRowSeparator(.hidden)
@@ -96,19 +100,9 @@ private struct MemberFeedContent: View {
         .safeAreaInset(edge: .bottom, spacing: 0) {
             // Der Entwurf gehört zum Kanal. Die Id sorgt dafür, dass Fotoauswahl und Vorschau beim Kanalwechsel zurückgesetzt werden.
             if store.canPostHere, let draft = store.selectedDraft {
-                PostComposer(store: store, draft: draft)
+                PostComposer(store: store, draft: draft, isFocused: $composerFocused)
                     .id(draft.channelId)
             }
-        }
-        .confirmationDialog("Nachricht nicht gesendet",
-                            isPresented: failedBinding,
-                            titleVisibility: .visible,
-                            presenting: failedMessage) { message in
-            Button("Erneut senden") { outgoing.retry(message) }
-            Button("Löschen", role: .destructive) { outgoing.discard(message) }
-            Button("Abbrechen", role: .cancel) {}
-        } message: { message in
-            Text(message.failureText ?? AttachmentRules.uploadFailedText)
         }
         .onChange(of: store.deliveredCount) { _, _ in
             // Der Beitrag steht jetzt auf dem Server: Kanal neu laden, dann die eigene Blase entfernen.
@@ -122,28 +116,23 @@ private struct MemberFeedContent: View {
         }
     }
 
-    private var failedBinding: Binding<Bool> {
-        Binding(
-            get: { failedMessage != nil },
-            set: { if !$0 { failedMessage = nil } }
-        )
-    }
-
     /// Abbrechen während des Hochladens: Anhänge und Text kommen zurück in den Entwurf des Kanals.
     private func cancel(_ message: OutgoingMessage) {
         store.cancelPost(message)
     }
 
-    /// Beiträge, die noch hochladen oder nicht angekommen sind. Sie stehen oben im Strom, wie unten im Chat.
+    /// Beiträge, die noch hochladen oder nicht angekommen sind. Sie stehen oben im Strom.
+    /// Im Strom wie ein Beitrag gezeigt, nicht als Chat-Blase: die Blase bleibt dem Chat vorbehalten.
     @ViewBuilder
     private var pendingRows: some View {
         ForEach(store.pendingPosts) { message in
-            OutgoingBubble(message: message,
+            PendingPostRow(message: message,
                            onCancel: { cancel(message) },
-                           onTapFailed: { failedMessage = message })
-                .listRowSeparator(.hidden)
+                           onRetry: { outgoing.retry(message) },
+                           onDiscard: { outgoing.discard(message) })
+                .listRowSeparatorTint(Color.primary.opacity(0.12))
                 .listRowBackground(Color.clear)
-                .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+                .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
         }
     }
 
@@ -173,6 +162,7 @@ private struct MemberFeedContent: View {
             emptyState
                 .listRowSeparator(.hidden)
                 .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16))
         } else {
             ForEach(store.visiblePosts) { post in
                 MemberPostView(post: post,
@@ -183,9 +173,10 @@ private struct MemberFeedContent: View {
                                onDelete: { Task { await store.delete(post) } },
                                onVote: { option in Task { await store.vote(on: post, option: option) } },
                                onClosePoll: { Task { await store.closePoll(post) } })
-                    .listRowSeparator(.hidden)
+                    // Flach statt Platte: Der Beitrag braucht keine Fläche, der Trenner trennt die Beiträge.
+                    .listRowSeparatorTint(Color.primary.opacity(0.12))
                     .listRowBackground(Color.clear)
-                    .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+                    .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
                     .onAppear {
                         // Der letzte sichtbare Beitrag blendet die nächste Seite ein.
                         if post.id == store.visiblePosts.last?.id {
@@ -201,22 +192,39 @@ private struct MemberFeedContent: View {
         if store.channels.count > 1, let channel = store.selectedChannel {
             return "In \(channel.name) ist noch nichts"
         }
-        return store.canPostHere ? "Hier ist noch nichts los" : "Noch keine Beiträge"
+        return "Mach den Anfang"
     }
 
+    /// Der leere Kanal ist die erste Begegnung des Gründers mit dem Kanal. Die Aufforderung hängt allein am
+    /// Schreibrecht, nicht an der Zahl der Kanäle. Wer nur lesen darf, bekommt keine Knöpfe.
     @ViewBuilder
     private var emptyState: some View {
-        // Die Aufforderung hängt allein am Schreibrecht, nicht an der Zahl der Kanäle: Wer schreiben darf,
-        // soll sie auch in einer Community mit mehreren Kanälen sehen. Wer nicht darf, wird nicht aufgefordert.
         if store.canPostHere {
-            ContentUnavailableView {
-                Label(emptyTitle, systemImage: "bubble.left.and.bubble.right")
-            } description: {
-                Text("Schreib den ersten Beitrag: eine Frage, eine Idee oder ein kurzes Hallo.")
-            }
+            CommunityEmptyCard(
+                title: emptyTitle,
+                text: "Der erste Beitrag gibt den Ton an. Stell dich vor oder stell eine Frage.",
+                starters: [
+                    WritingStarter(label: "Stell dich vor", opening: "Hallo zusammen! Ich arbeite gerade an "),
+                    WritingStarter(label: "Frage stellen", opening: "Ich habe eine Frage: ")
+                ],
+                onStarter: { insertStarter($0.opening) }
+            )
         } else {
-            ContentUnavailableView(emptyTitle, systemImage: "bubble.left")
+            CommunityEmptyCard(
+                title: "In diesem Kanal kannst du nur lesen",
+                text: "Sobald jemand etwas schreibt, siehst du es hier."
+            )
         }
+    }
+
+    /// Schreibt den Anfang in den Entwurf des Kanals und setzt den Cursor ans Ende. Rein lokal: der Server sieht nichts davon.
+    /// Steht schon Text im Entwurf, bleibt er unangetastet. Der Anfang kommt dann in eine neue Zeile dahinter.
+    private func insertStarter(_ opening: String) {
+        guard let draft = store.selectedDraft else { return }
+        let combined = draft.text.isEmpty ? opening : draft.text + "\n" + opening
+        // Dieselbe Grenze wie beim Tippen. Der Server kürzt still, die App kürzt vorher und zeigt es.
+        draft.text = combined.truncatedToUTF16(PostComposer.bodyLimit)
+        composerFocused = true
     }
 }
 
@@ -228,6 +236,11 @@ private struct PostComposer: View {
 
     let store: MemberCommunityStore
     @Bindable var draft: PostDraft
+    /// Fokus des Eingabefelds, vom Kopf der Liste gesteuert (Schreibanstoß im leeren Kanal).
+    var isFocused: FocusState<Bool>.Binding
+
+    /// Durchmesser des Senden-Kreises. Skaliert mit der Schrift, das Tipp-Ziel bleibt 44 pt.
+    @ScaledMetric(relativeTo: .body) private var sendSize: CGFloat = 36
 
     @State private var showPhotoPicker = false
     @State private var photoItems: [PhotosPickerItem] = []
@@ -238,7 +251,7 @@ private struct PostComposer: View {
     @State private var showPoll = false
 
     /// Der Server übernimmt höchstens so viele Zeichen und kürzt still. Die App kürzt vorher, damit man es beim Tippen sieht.
-    private static let bodyLimit = 8000
+    static let bodyLimit = 8000
 
     private var composer: AttachmentComposer { draft.composer }
 
@@ -298,12 +311,23 @@ private struct PostComposer: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
                     .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18))
+                    .focused(isFocused)
 
+                // Eigener Kreis statt des Symbols: Der weiße Pfeil lag bei hellem Akzent schlecht lesbar.
+                // Theme.ink rechnet den Kontrast auf den gewählten Akzent aus.
                 Button(action: send) {
-                    Image(systemName: "arrow.up.circle.fill")
-                        .font(.system(size: 32))
-                        .frame(width: 44, height: 44)
+                    ZStack {
+                        Circle()
+                            .fill(canSend ? Theme.accent : Color.primary.opacity(0.15))
+                            .frame(width: sendSize, height: sendSize)
+                        Image(systemName: "arrow.up")
+                            .font(.body.weight(.bold))
+                            .foregroundStyle(canSend ? Theme.ink : Theme.muted)
+                    }
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
                 .disabled(!canSend)
                 .accessibilityLabel("Senden")
             }
@@ -421,63 +445,347 @@ private struct PostComposer: View {
     }
 }
 
-/// Avatar, Name und dein Status als Mitglied.
+/// Avatar, Name, Abzeichen „Mitglied“, Kategorie und Mitgliederzahl, Beschreibung.
 private struct MemberHeader: View {
     let community: DiscoverCommunity
 
     var body: some View {
-        HStack(spacing: 12) {
-            AvatarView(name: community.name, avatar: community.avatar, size: 48)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(community.name.nonEmptyText ?? "Community")
-                    .font(.headline)
-                Text("Du bist Mitglied")
-                    .font(.subheadline)
-                    .foregroundStyle(Theme.muted)
-            }
+        CommunityIdentityHeader(name: community.name.nonEmptyText ?? "Community",
+                                avatar: community.avatar,
+                                badge: "Mitglied",
+                                subline: sublineText,
+                                description: community.description.nonEmptyText)
+    }
+
+    /// „Technik · 1 Mitglied“. Die Kategorie entfällt, wenn es keine gibt. Nichts wird erfunden.
+    private var sublineText: String {
+        var parts: [String] = []
+        if let category = community.category.nonEmptyText {
+            parts.append(category)
         }
-        .padding(.vertical, 4)
-        .accessibilityElement(children: .combine)
+        parts.append(community.memberCount == 1 ? "1 Mitglied" : "\(community.memberCount) Mitglieder")
+        return parts.joined(separator: " · ")
     }
 }
 
-/// Kanäle als waagerecht scrollende Kapseln, ohne „#“. 36 pt hoch, wächst mit Dynamic Type.
-private struct ChannelCapsules: View {
-    let channels: [MemberCommunity.Channel]
+/// Schichtung von Kachel und Text. Nebeneinander, ab Accessibility-Größe untereinander (R5). Für alle Community-Zeilen
+/// und Köpfe dieselbe Funktion, damit sie nicht wieder auseinanderlaufen.
+func communityTileLayout(accessibility: Bool, alignment: VerticalAlignment = .top, spacing: CGFloat = 14) -> AnyLayout {
+    accessibility
+        ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12))
+        : AnyLayout(HStackLayout(alignment: alignment, spacing: spacing))
+}
+
+/// Schichtung von Name und Abzeichen (Kapsel). Nebeneinander, ab Accessibility-Größe untereinander, damit der Name
+/// die volle Breite hat und nicht mitten im Wort umbricht. Dieselbe Regel für Kopf, Beitrag und Karte.
+func communityTitleLayout(accessibility: Bool) -> AnyLayout {
+    accessibility
+        ? AnyLayout(VStackLayout(alignment: .leading, spacing: 6))
+        : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: 8))
+}
+
+/// Kachel und Text in der Schichtung von communityTileLayout, mit Inhalt als Closure. Für Aufrufe mit nachgestelltem Closure.
+func communityTileStack<Content: View>(accessibility: Bool,
+                                       alignment: VerticalAlignment = .top,
+                                       spacing: CGFloat = 14,
+                                       @ViewBuilder content: () -> Content) -> some View {
+    let layout = communityTileLayout(accessibility: accessibility, alignment: alignment, spacing: spacing)
+    return layout {
+        content()
+    }
+}
+
+/// Name und Abzeichen in der Schichtung von communityTitleLayout, mit Inhalt als Closure.
+func communityTitleStack<Content: View>(accessibility: Bool, @ViewBuilder content: () -> Content) -> some View {
+    let layout = communityTitleLayout(accessibility: accessibility)
+    return layout {
+        content()
+    }
+}
+
+/// Kopf einer Community: Kachel, Name mit Abzeichen, Zeile darunter und Beschreibung. Für die Mitglieder-Ansicht
+/// („Mitglied“) und den offiziellen Strom („Offiziell“) dieselbe Form. Nur das Abzeichen wechselt.
+struct CommunityIdentityHeader: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    let name: String
+    let avatar: String?
+    let badge: String
+    /// Zeile unter dem Namen. nil, wenn die Quelle nichts liefert (die offizielle Community hat keine Kategorie).
+    var subline: String? = nil
+    var description: String? = nil
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            communityTileStack(accessibility: dynamicTypeSize.isAccessibilitySize) {
+                // Ruhige Kachel: die Tönung tritt hinter den Namen zurück, Akzent bleibt dem Abzeichen.
+                AvatarView(name: name, avatar: avatar, size: 56, shape: .roundedSquare, tone: .calm)
+                VStack(alignment: .leading, spacing: 6) {
+                    communityTitleStack(accessibility: dynamicTypeSize.isAccessibilitySize) {
+                        Text(name)
+                            .font(.title2.bold())
+                        badgeView
+                    }
+                    if let subline {
+                        Text(subline)
+                            .font(.footnote)
+                            .foregroundStyle(Theme.muted)
+                    }
+                }
+                // Nur Name und Zeile darunter werden zu einem Element. Die Beschreibung bleibt getrennt,
+                // damit „Mehr anzeigen“ für VoiceOver als eigener Knopf erreichbar bleibt.
+                .accessibilityElement(children: .combine)
+            }
+            if let description, !description.isEmpty {
+                ExpandableBody(text: description, collapsedLines: 3, font: .subheadline)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// Kapsel mit Häkchen. Der Akzent liegt nur auf Kontur und Symbol, der Text bleibt in .primary (Regel R1).
+    private var badgeView: some View {
+        HStack(spacing: 4) {
+            Image(systemName: "checkmark")
+                .foregroundStyle(Theme.accent)
+                .accessibilityHidden(true)
+            Text(badge)
+                .foregroundStyle(.primary)
+        }
+        .font(.caption.weight(.semibold))
+        .padding(.horizontal, 10)
+        .padding(.vertical, 4)
+        .overlay(Capsule().stroke(Theme.accent, lineWidth: 1))
+    }
+}
+
+/// Eine Kapsel der Kanalleiste. Die id nil steht für „Alle“ und gibt es nur im offiziellen Strom.
+struct ChannelCapsuleOption: Identifiable {
+    let id: String?
+    let title: String
+}
+
+/// Kanal-Kapseln als waagerecht scrollende Leiste. Für die Mitglieder-Ansicht und den offiziellen Strom gemeinsam.
+/// Gewählt: die einzige Akzentfläche im Strom, sie markiert eine Auswahl. Text darauf in Theme.ink.
+/// Nicht gewählt: Haarlinie, Text in .primary. Ohne „#“.
+/// Sichtbar 36 pt. Der Abstand darum macht das Tipp-Ziel 44 pt (Regel R4), ohne die Kapsel zu vergrößern.
+struct ChannelCapsules: View {
+    let options: [ChannelCapsuleOption]
     let selectedId: String?
-    let onSelect: (String) -> Void
+    let onSelect: (String?) -> Void
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                ForEach(channels) { channel in
-                    capsule(channel)
+                ForEach(options) { option in
+                    capsule(option)
                 }
             }
             .padding(.horizontal, 16)
-            .padding(.vertical, 6)
         }
     }
 
-    private func capsule(_ channel: MemberCommunity.Channel) -> some View {
-        let isSelected = channel.id == selectedId
+    private func capsule(_ option: ChannelCapsuleOption) -> some View {
+        let isSelected = option.id == selectedId
         return Button {
-            onSelect(channel.id)
+            onSelect(option.id)
         } label: {
-            Text(verbatim: channel.name)
+            Text(verbatim: option.title)
                 .font(.subheadline.weight(isSelected ? .semibold : .regular))
                 .lineLimit(1)
-                .foregroundStyle(isSelected ? Theme.ink : .primary)
+                .foregroundStyle(isSelected ? Theme.ink : Color.primary)
                 .padding(.horizontal, 14)
                 .frame(minHeight: 36)
-                .background(isSelected ? Theme.accent : Color(.secondarySystemBackground), in: Capsule())
+                .background(isSelected ? Theme.accent : Color.clear, in: Capsule())
                 .overlay {
                     if !isSelected {
-                        Capsule().stroke(Color(.separator), lineWidth: 1)
+                        Capsule().stroke(Color.primary.opacity(0.08), lineWidth: 1)
                     }
                 }
+                .padding(.vertical, 4)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])
+    }
+}
+
+/// Ein eigener Beitrag, der noch hochlädt oder nicht angekommen ist. Gleiche Form wie ein fertiger Beitrag:
+/// links, flach, gleiche Abstände und Trenner. Gedämpft, damit man sieht, dass er noch nicht veröffentlicht ist.
+/// Die Chat-Blase (OutgoingBubble) bleibt im Chat unverändert.
+private struct PendingPostRow: View {
+    let message: OutgoingMessage
+    let onCancel: () -> Void
+    let onRetry: () -> Void
+    let onDiscard: () -> Void
+
+    @ScaledMetric(relativeTo: .body) private var thumbnail: CGFloat = 56
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            // Der eigene Name ist hier nicht bekannt, deshalb steht nur „Du“. Kein Bild, keine erfundene Person.
+            Text("Du")
+                .font(.subheadline.weight(.semibold))
+            if !message.body.isEmpty {
+                Text(message.body)
+                    .font(.body)
+                    .lineSpacing(3)
+                    .foregroundStyle(.primary)
+                    .textSelection(.enabled)
+            }
+            ForEach(message.attachments) { attachment in
+                attachmentRow(attachment)
+            }
+            if message.state == .sending && !message.attachments.isEmpty {
+                ProgressView(value: uploadFraction)
+                    .accessibilityLabel("Hochladen")
+            }
+            statusLine
+            actions
+        }
+        .padding(.vertical, 14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .opacity(0.6)
+    }
+
+    /// Mittelwert der Anhänge. Ohne Anhang gibt es keinen Balken.
+    private var uploadFraction: Double {
+        let values = message.attachments.map { message.progress[$0.id] ?? 0 }
+        guard !values.isEmpty else { return 0 }
+        return values.reduce(0, +) / Double(values.count)
+    }
+
+    private func attachmentRow(_ attachment: ComposerAttachment) -> some View {
+        HStack(spacing: 10) {
+            if attachment.isImage, let preview = attachment.preview {
+                Image(uiImage: preview)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: thumbnail, height: thumbnail)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            } else {
+                Image(systemName: message.voiceDurationMs != nil ? "waveform" : AttachmentRules.symbol(forName: attachment.name))
+                    .font(.title3)
+                    .foregroundStyle(.primary)
+                    .frame(width: thumbnail, height: thumbnail)
+            }
+            Text(message.voiceDurationMs != nil ? "Sprachnachricht" : MediaFormat.middleTruncated(attachment.name, limit: 40))
+                .font(.subheadline)
+                .foregroundStyle(.primary)
+                .lineLimit(2)
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    @ViewBuilder
+    private var statusLine: some View {
+        switch message.state {
+        case .sending:
+            Text("Wird gesendet …")
+                .font(.caption)
+                .foregroundStyle(Theme.muted)
+        case .failed:
+            Label {
+                Text(message.failureText ?? AttachmentRules.uploadFailedText)
+                    .foregroundStyle(.primary)
+            } icon: {
+                Image(systemName: "exclamationmark.circle")
+                    .foregroundStyle(.red)
+            }
+            .font(.caption)
+        case .delivered:
+            EmptyView()
+        }
+    }
+
+    /// Während des Hochladens: Abbrechen. Nach einem Fehler: erneut senden oder löschen.
+    @ViewBuilder
+    private var actions: some View {
+        switch message.state {
+        case .sending:
+            // Der Knopf verschwindet, sobald die Sende-Anfrage läuft. Dann ist das Hochladen durch.
+            if !message.isSubmitting {
+                Button("Abbrechen", action: onCancel)
+                    .textButton()
+            }
+        case .failed:
+            HStack(spacing: 16) {
+                Button("Erneut senden", action: onRetry)
+                    .textButton()
+                Button("Löschen", role: .destructive, action: onDiscard)
+                    .textButton()
+            }
+        case .delivered:
+            EmptyView()
+        }
+    }
+}
+
+/// Textknopf für Zeilen im Strom: Text in .primary, Tipp-Ziel mindestens 44 pt (R1, R4).
+@MainActor
+private extension Button {
+    func textButton() -> some View {
+        self
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(.primary)
+            .frame(minHeight: 44, alignment: .leading)
+            .contentShape(Rectangle())
+            .buttonStyle(.plain)
+    }
+}
+
+/// Ein Schreibanstoß im leeren Kanal: die Kapsel steht für den Anfang, der in den Entwurf geschrieben wird.
+struct WritingStarter: Identifiable {
+    let label: String
+    let opening: String
+
+    var id: String { label }
+}
+
+/// Leerer Zustand eines Kanals: eine Fläche mit Symbol, Titel und Text. Schreibanstöße gibt es nur für Schreibende.
+struct CommunityEmptyCard: View {
+    @ScaledMetric(relativeTo: .title) private var iconSize: CGFloat = 36
+
+    var icon: String = "text.bubble"
+    let title: String
+    let text: String
+    var starters: [WritingStarter] = []
+    var onStarter: (WritingStarter) -> Void = { _ in }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: iconSize))
+                .foregroundStyle(Theme.accent)
+                .accessibilityHidden(true)
+            Text(title)
+                .font(.title3.weight(.semibold))
+            Text(text)
+                .font(.body)
+                .foregroundStyle(Theme.muted)
+            if !starters.isEmpty {
+                ChipFlow(spacing: 8) {
+                    ForEach(starters) { starter in
+                        Button {
+                            onStarter(starter)
+                        } label: {
+                            Text(starter.label)
+                                .font(.subheadline.weight(.medium))
+                                .foregroundStyle(.primary)
+                                .padding(.horizontal, 14)
+                                .frame(minHeight: 44)
+                                .background(Color.primary.opacity(0.08), in: Capsule())
+                                .contentShape(Capsule())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.top, 4)
+            }
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.primary.opacity(0.08), lineWidth: 1))
     }
 }

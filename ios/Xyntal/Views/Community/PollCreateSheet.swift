@@ -36,6 +36,11 @@ struct PollCreateSheet: View {
             .filter { !$0.isEmpty }
     }
 
+    /// Ist noch gar nichts eingetragen? Dann bleibt der Hinweis weg: „Senden“ ist ohnehin gesperrt.
+    private var hasInput: Bool {
+        !trimmedQuestion.isEmpty || !cleanedOptions.isEmpty
+    }
+
     /// Der Grund, warum Senden noch nicht geht. nil, wenn alles passt.
     private var problem: String? {
         if trimmedQuestion.isEmpty {
@@ -69,13 +74,16 @@ struct PollCreateSheet: View {
                 } header: {
                     Text("Frage")
                 } footer: {
-                    Text("Höchstens \(Self.questionLimit) Zeichen.")
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Höchstens \(Self.questionLimit) Zeichen.")
+                        CharacterLimitNote(used: question.utf16.count, limit: Self.questionLimit)
+                    }
                 }
 
                 Section {
                     ForEach($options) { $option in
                         HStack(spacing: 10) {
-                            TextField("Antwort", text: $option.text)
+                            TextField(placeholder(for: option.id), text: $option.text)
                                 .onChange(of: option.text) { _, value in
                                     if value.utf16.count > Self.optionLimit {
                                         $option.text.wrappedValue = value.truncatedToUTF16(Self.optionLimit)
@@ -100,15 +108,20 @@ struct PollCreateSheet: View {
                             options.append(OptionDraft())
                         } label: {
                             Label("Antwort hinzufügen", systemImage: "plus")
+                                // Textknopf in .primary, nicht in Akzent (Regel R1). Tipp-Ziel mindestens 44 pt (R4).
+                                .foregroundStyle(.primary)
+                                .frame(minHeight: 44, alignment: .leading)
+                                .contentShape(Rectangle())
                         }
                     }
                 } header: {
                     Text("Antworten")
                 } footer: {
-                    Text("Mindestens \(Self.minOptions), höchstens \(Self.maxOptions). Jede Antwort muss anders sein.")
+                    Text("2 bis 8 Antworten, jede anders.")
                 }
 
-                if let problem {
+                // Der Hinweis erscheint erst, sobald etwas eingetragen ist. Vorher genügt das gesperrte „Senden“.
+                if hasInput, let problem {
                     Section {
                         Text(verbatim: problem)
                             .foregroundStyle(.secondary)
@@ -140,6 +153,14 @@ struct PollCreateSheet: View {
             }
             .interactiveDismissDisabled(isSending)
         }
+        // Werkzeugleisten-Knöpfe als Text: Akzent, aber auf 4,5:1 abgesichert (Theme.accentText).
+        .tint(Theme.accentText)
+    }
+
+    /// „Antwort 1“, „Antwort 2“ … nach der Position der Zeile. Der Platzhalter verschiebt sich, wenn eine Zeile fällt.
+    private func placeholder(for id: UUID) -> String {
+        let number = (options.firstIndex { $0.id == id } ?? 0) + 1
+        return "Antwort \(number)"
     }
 
     private func send() async {

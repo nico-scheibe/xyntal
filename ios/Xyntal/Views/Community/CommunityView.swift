@@ -14,6 +14,8 @@ struct CommunityView: View {
             NavigationStack {
                 CommunityFeedScreen(onDone: onDone)
             }
+            // „Fertig“ in der Werkzeugleiste als Text: Akzent, aber auf 4,5:1 abgesichert (Theme.accentText).
+            .tint(Theme.accentText)
         }
     }
 }
@@ -80,13 +82,18 @@ private struct CommunityFeedContent: View {
             }
         } else {
             List {
-                CommunityHeader(avatar: store.communityAvatar)
+                CommunityIdentityHeader(name: "Xyntal",
+                                        avatar: store.communityAvatar,
+                                        badge: "Offiziell",
+                                        description: "Updates, Roadmap und Umfragen vom Xyntal-Team.")
                     .listRowSeparator(.hidden)
                     .listRowBackground(Color.clear)
 
-                // Kanal-Chips als normale Zeile direkt unter dem Kopf; ohne Zeileneinzug, damit sie bis zum Rand scrollen.
+                // Kanal-Kapseln als normale Zeile direkt unter dem Kopf; ohne Zeileneinzug, damit sie bis zum Rand scrollen.
                 if !store.channels.isEmpty {
-                    ChannelChips(channels: store.channels, selected: store.selectedChannel) { channel in
+                    ChannelCapsules(options: [ChannelCapsuleOption(id: nil, title: "Alle")]
+                                        + store.channels.map { ChannelCapsuleOption(id: $0, title: $0) },
+                                    selectedId: store.selectedChannel) { channel in
                         store.select(channel: channel)
                     }
                     .listRowInsets(EdgeInsets())
@@ -102,82 +109,31 @@ private struct CommunityFeedContent: View {
                 }
 
                 if posts.isEmpty {
-                    ContentUnavailableView {
-                        Label("Noch nichts hier", systemImage: "person.3")
-                    } description: {
-                        Text(store.selectedChannel == nil
-                             ? "Noch keine Neuigkeiten aus der App."
-                             : "In diesem Kanal gibt es noch keine Beiträge.")
-                    }
+                    // Dieselbe Fläche wie im Mitglieder-Kanal, aber ohne Schreibanstöße: Der Strom ist nur lesbar.
+                    CommunityEmptyCard(
+                        icon: "person.3",
+                        title: "Noch nichts hier",
+                        text: store.selectedChannel == nil
+                            ? "Hier erscheinen Neuigkeiten vom Xyntal-Team."
+                            : "In diesem Kanal gibt es noch keine Beiträge."
+                    )
                     .listRowSeparator(.hidden)
                     .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16))
                 } else {
                     ForEach(posts) { post in
                         CommunityPostView(post: post,
                                           communityAvatar: store.communityAvatar,
                                           isNew: store.isNew(post))
-                            .listRowSeparator(.hidden)
+                            // Flach wie im Mitglieder-Kanal: Trenner zwischen den Beiträgen, keine Fläche dahinter.
+                            .listRowSeparatorTint(Color.primary.opacity(0.12))
                             .listRowBackground(Color.clear)
-                            .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+                            .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
                     }
                 }
             }
             .listStyle(.plain)
             .refreshable { await store.load() }
         }
-    }
-}
-
-/// Avatar, Name und ein Satz, worum es hier geht.
-private struct CommunityHeader: View {
-    let avatar: String?
-
-    var body: some View {
-        HStack(spacing: 12) {
-            AvatarView(name: "Xyntal", avatar: avatar, size: 48)
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Xyntal")
-                    .font(.headline)
-                Text("Updates, Roadmap und Umfragen vom Xyntal-Team.")
-                    .font(.subheadline)
-                    .foregroundStyle(Theme.muted)
-            }
-        }
-        .padding(.vertical, 4)
-        .accessibilityElement(children: .combine)
-    }
-}
-
-/// Horizontale Chips: „Alle“ plus ein Chip je Kanal mit „#“.
-private struct ChannelChips: View {
-    let channels: [String]
-    let selected: String?
-    let onSelect: (String?) -> Void
-
-    var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                chip(title: "Alle", isSelected: selected == nil) { onSelect(nil) }
-                ForEach(channels, id: \.self) { channel in
-                    chip(title: "#\(channel)", isSelected: selected == channel) { onSelect(channel) }
-                }
-            }
-            .padding(.horizontal)
-            .padding(.vertical, 8)
-        }
-    }
-
-    private func chip(title: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(verbatim: title)
-                .font(.subheadline.weight(isSelected ? .semibold : .regular))
-                .lineLimit(1)
-                .foregroundStyle(isSelected ? Theme.ink : .primary)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(isSelected ? Theme.accent : Color(.secondarySystemBackground), in: Capsule())
-        }
-        .buttonStyle(.plain)
-        .accessibilityAddTraits(isSelected ? [.isSelected] : [])
     }
 }

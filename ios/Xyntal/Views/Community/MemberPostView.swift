@@ -15,6 +15,7 @@ struct MemberPostView: View {
     let onVote: (Int) -> Void
     let onClosePoll: () -> Void
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var confirmDelete = false
     @State private var confirmClosePoll = false
     @State private var showReport = false
@@ -31,13 +32,16 @@ struct MemberPostView: View {
     }
 
     var body: some View {
+        // Flach: keine Fläche um den Beitrag. Der Abstand nach oben und unten kommt von hier, der seitliche von der Zeile.
         VStack(alignment: .leading, spacing: 10) {
             header
             if !post.body.isEmpty {
-                ExpandableBody(text: post.body)
+                ExpandableBody(text: post.body, font: .body, lineSpacing: 3)
             }
             if let poll = post.poll {
+                // Die Frage steht mit 12 pt Abstand unter dem Text (10 pt aus dem Stapel plus 2).
                 PollBlock(poll: poll, isBusy: pollBusy, onVote: onVote)
+                    .padding(.top, 2)
             }
             if !post.images.isEmpty {
                 PostImageGrid(images: post.images, senderTrusted: post.mine) { index in
@@ -46,9 +50,8 @@ struct MemberPostView: View {
             }
             footer
         }
-        .padding(14)
+        .padding(.vertical, 14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
         .fullScreenCover(item: $viewer) { request in
             ImageViewer(images: request.images, start: request.start)
         }
@@ -71,16 +74,17 @@ struct MemberPostView: View {
 
     private var header: some View {
         HStack(alignment: .center, spacing: 10) {
-            AvatarView(name: post.authorName, avatar: nil, size: 36)
+            AvatarView(name: post.authorName, avatar: nil, size: 32, tone: .calm)
             VStack(alignment: .leading, spacing: 1) {
-                HStack(spacing: 6) {
+                // Ab Accessibility-Größe steht „Team“ unter dem Namen, damit der Name nicht gekürzt wird (R5).
+                communityTitleStack(accessibility: dynamicTypeSize.isAccessibilitySize) {
                     Text(verbatim: post.authorName)
-                        .font(.subheadline.bold())
+                        .font(.subheadline.weight(.semibold))
                         .lineLimit(1)
                     // Nur das Wort „Team“. Eine Rangordnung gibt es in Xyntal bewusst nicht.
                     if post.authorIsTeam {
                         Text("Team")
-                            .font(.caption2.weight(.semibold))
+                            .font(.caption.weight(.medium))
                             .foregroundStyle(Theme.muted)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 1)
@@ -118,9 +122,13 @@ struct MemberPostView: View {
                     Image(systemName: "ellipsis")
                         .font(.body.weight(.semibold))
                         .foregroundStyle(Theme.muted)
-                        .frame(width: 36, height: 36)
+                        .frame(width: 44, height: 44)
                         .contentShape(Rectangle())
                 }
+                // Das Tipp-Ziel ist 44 pt, aber die Zeile soll nicht höher werden als der Kopf. Negatives Padding
+                // hält das Layout klein, das Ziel bleibt. Seitlich rückt es an den Rand, damit das Symbol bündig bleibt.
+                .padding(.vertical, -6)
+                .padding(.trailing, -8)
                 .accessibilityLabel("Weitere Optionen")
             }
         }
@@ -128,15 +136,23 @@ struct MemberPostView: View {
 
     // MARK: - Fuß
 
+    /// Daumen und Beschriftung in einer Zeile. Bei wenig Platz steht die Beschriftung unter dem Daumen.
+    /// Am Knopf steht bewusst keine Zahl. Die Zeile darunter (likeCaption) bleibt, wie sie war.
     private var footer: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 4) {
             Button(action: onToggleLike) {
-                Label(post.likedByMe ? "Gefällt dir" : "Gefällt mir",
-                      systemImage: post.likedByMe ? "hand.thumbsup.fill" : "hand.thumbsup")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(post.likedByMe ? Theme.accent : Theme.muted)
-                    .padding(.vertical, 4)
-                    .contentShape(Rectangle())
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 12) {
+                        likeMark
+                        likeLabel
+                    }
+                    VStack(alignment: .leading, spacing: 4) {
+                        likeMark
+                        likeLabel
+                    }
+                }
+                .frame(minHeight: 44, alignment: .leading)
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             if let caption = post.likeCaption {
@@ -145,6 +161,21 @@ struct MemberPostView: View {
                     .foregroundStyle(Theme.muted)
             }
         }
+    }
+
+    /// Der Daumen. Gelikt in Akzent, sonst grau. Das Symbol ist keine Schrift, deshalb ist Akzent hier erlaubt.
+    private var likeMark: some View {
+        Image(systemName: post.likedByMe ? "hand.thumbsup.fill" : "hand.thumbsup")
+            .font(.title3)
+            .foregroundStyle(post.likedByMe ? Theme.accent : Theme.muted)
+            .frame(width: 44, height: 44)
+            .accessibilityHidden(true)
+    }
+
+    private var likeLabel: some View {
+        Text(post.likedByMe ? "Gefällt dir" : "Gefällt mir")
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(post.likedByMe ? Color.primary : Theme.muted)
     }
 }
 
@@ -232,6 +263,8 @@ private struct ReportPostSheet: View {
                 Text("Bitte melde nur, was du selbst erlebt oder gesehen hast.")
             }
         }
+        // Knöpfe der Werkzeugleiste als Text: Akzent, aber auf 4,5:1 abgesichert (Theme.accentText).
+        .tint(Theme.accentText)
     }
 
     private func send() async {
@@ -254,7 +287,9 @@ private struct ReportPostSheet: View {
 }
 
 /// Umfrage unter dem Text: Frage, Antworten mit Balken und Stimmenzahl, deine Stimme markiert, darunter die Gesamtzahl.
-/// Die Ergebnisse sind immer sichtbar, auch vor deiner Stimme. Antippbar nur, solange die Umfrage offen ist und eine Id hat.
+/// Keine Box um die Umfrage, die Antworten sind die Flächen. Die Reihenfolge ist die des Autors, nie nach Stimmen,
+/// sonst wäre es eine Rangliste. Die Ergebnisse sind immer sichtbar, auch vor deiner Stimme.
+/// Antippbar nur, solange die Umfrage offen ist und eine Id hat.
 private struct PollBlock: View {
     let poll: CommunityPoll
     let isBusy: Bool
@@ -262,10 +297,14 @@ private struct PollBlock: View {
 
     private var votable: Bool { poll.canVote }
 
+    /// Radius der Antwortflächen, wie der Rest der Community kontinuierlich gerundet.
+    private static let optionCorner: CGFloat = 12
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(verbatim: poll.question)
-                .font(.subheadline.weight(.semibold))
+                .font(.headline)
+                .foregroundStyle(.primary)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             VStack(spacing: 6) {
@@ -275,20 +314,18 @@ private struct PollBlock: View {
             }
 
             Text(verbatim: totalLine)
-                .font(.caption)
+                .font(.footnote)
                 .foregroundStyle(Theme.muted)
 
-            if votable {
-                Text(poll.myChoice == nil
-                     ? "Tippe eine Antwort an, um abzustimmen."
-                     : "Tippe eine andere Antwort an, um deine Stimme zu ändern.")
-                    .font(.caption)
+            // Der Hinweis gilt nur vor der ersten Stimme. Danach zeigt das Häkchen, was los ist.
+            // Für VoiceOver bleibt der Hinweis als accessibilityHint an den Antworten.
+            if votable && poll.myChoice == nil {
+                Text("Tippe eine Antwort an, um abzustimmen.")
+                    .font(.footnote)
                     .foregroundStyle(Theme.muted)
             }
         }
-        .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color(.tertiarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
     }
 
     /// „4 Stimmen“, dahinter „· Umfrage geschlossen“, wenn sie zu ist.
@@ -309,13 +346,19 @@ private struct PollBlock: View {
             }
             .buttonStyle(.plain)
             .disabled(isBusy)
+            .accessibilityHint(poll.myChoice == nil
+                               ? "Tippe eine Antwort an, um abzustimmen."
+                               : "Tippe eine andere Antwort an, um deine Stimme zu ändern.")
         } else {
             label
         }
     }
 
+    /// Eine Antwort: Spur mit Balken als Anteil an den Stimmen. Der Balken ändert sich ohne Animation.
+    /// Beschriftung und Zahl stehen beide in .primary, weil die Zahl teils auf dem Balken liegt (Regel R2).
     private func optionLabel(_ option: PollOption, mine: Bool, fraction: Double) -> some View {
-        HStack(spacing: 8) {
+        let shape = RoundedRectangle(cornerRadius: Self.optionCorner, style: .continuous)
+        return HStack(spacing: 8) {
             if mine {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundStyle(Theme.accent)
@@ -327,7 +370,7 @@ private struct PollBlock: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             Text(verbatim: "\(option.votes)")
                 .font(.subheadline.monospacedDigit())
-                .foregroundStyle(Theme.muted)
+                .foregroundStyle(.primary)
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 9)
@@ -335,28 +378,37 @@ private struct PollBlock: View {
         .background {
             GeometryReader { proxy in
                 ZStack(alignment: .leading) {
-                    Color(.secondarySystemGroupedBackground)
                     Rectangle()
-                        .fill(mine ? Theme.accent.opacity(0.35) : Color(.systemGray4))
+                        .fill(Color.primary.opacity(0.07))
+                    Rectangle()
+                        .fill(mine ? Theme.accent.opacity(0.35) : Color.primary.opacity(0.16))
                         .frame(width: proxy.size.width * fraction)
                 }
             }
         }
-        .clipShape(RoundedRectangle(cornerRadius: 10))
-        .overlay(RoundedRectangle(cornerRadius: 10).stroke(mine ? Theme.accent : Color(.separator), lineWidth: 1))
-        .contentShape(RoundedRectangle(cornerRadius: 10))
+        .clipShape(shape)
+        .overlay {
+            // Nur die eigene Antwort hat eine Kontur. Sonst steht die Antwort ohne Box auf dem Schwarz.
+            if mine {
+                shape.stroke(Theme.accent, lineWidth: 1.5)
+            }
+        }
+        .contentShape(shape)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(mine ? "\(option.label), deine Stimme" : option.label)
         .accessibilityValue("\(option.votes) Stimmen")
     }
 }
 
-/// Text in .body, höchstens 8 Zeilen. Ist der Text länger, folgt „Mehr anzeigen“.
-/// Die volle Höhe misst ein unsichtbarer Zwilling ohne Zeilenbegrenzung.
-private struct ExpandableBody: View {
+/// Text, höchstens `collapsedLines` Zeilen. Ist der Text länger, folgt „Mehr anzeigen“.
+/// Beiträge zeigen 8 Zeilen in .body, der Kopf einer Community 3 Zeilen in .subheadline.
+/// Die volle Höhe misst ein unsichtbarer Zwilling ohne Zeilenbegrenzung. Er braucht dieselbe Schrift und
+/// denselben Zeilenabstand, sonst stimmt die Messung nicht.
+struct ExpandableBody: View {
     let text: String
-
-    static let collapsedLines = 8
+    var collapsedLines: Int = 8
+    var font: Font = .body
+    var lineSpacing: CGFloat = 0
 
     @State private var isExpanded = false
     @State private var collapsedHeight: CGFloat = 0
@@ -369,8 +421,10 @@ private struct ExpandableBody: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(verbatim: text)
-                .font(.body)
-                .lineLimit(isExpanded ? nil : Self.collapsedLines)
+                .font(font)
+                .lineSpacing(lineSpacing)
+                .foregroundStyle(.primary)
+                .lineLimit(isExpanded ? nil : collapsedLines)
                 .textSelection(.enabled)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(
@@ -380,7 +434,8 @@ private struct ExpandableBody: View {
                 )
                 .background(
                     Text(verbatim: text)
-                        .font(.body)
+                        .font(font)
+                        .lineSpacing(lineSpacing)
                         .fixedSize(horizontal: false, vertical: true)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .opacity(0)
@@ -396,6 +451,8 @@ private struct ExpandableBody: View {
                     isExpanded = true
                 }
                 .font(.subheadline.weight(.semibold))
+                // Textknopf in .primary, nicht in Akzent: Der Akzent ist frei wählbar und zu hell für kleine Schrift (R1).
+                .foregroundStyle(.primary)
                 .buttonStyle(.plain)
             }
         }
@@ -437,7 +494,7 @@ private struct PostImageGrid: View {
         VStack(alignment: .leading, spacing: 0) {
             if width > 0 {
                 grid(width: width)
-                    .clipShape(RoundedRectangle(cornerRadius: Self.corner))
+                    .clipShape(RoundedRectangle(cornerRadius: Self.corner, style: .continuous))
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

@@ -583,14 +583,16 @@ private struct CardThemeFill: View {
 }
 
 /// Ausrichtung der Zeilen in ChipFlow.
-private enum ChipFlowAlignment {
+/// Ist internal, weil die Community-Ansicht die Schlagwort-Kapseln mit demselben Layout setzt.
+enum ChipFlowAlignment {
     case leading, center, trailing
 }
 
 /// Legt Teile nebeneinander und bricht in die nächste Zeile um, wenn der Platz nicht reicht.
 /// Jede Zeile richtet sich nach `alignment` aus. Rechtsbündig füllt die Fläche die volle Breite,
 /// damit die Abzeichen am rechten Rand der Karte bleiben.
-private struct ChipFlow: Layout {
+/// Internal, damit die Community-Ansicht dasselbe Layout für ihre Schlagwörter nutzt.
+struct ChipFlow: Layout {
     var spacing: CGFloat = 6
     var alignment: ChipFlowAlignment = .leading
 

@@ -28,7 +28,9 @@ struct ReloadErrorBanner: View {
             Text(message)
                 .font(.subheadline)
                 .foregroundStyle(.red)
+            // Eigenständiger Knopf, kein Fließtext: Akzent als Text, aber auf 4,5:1 abgesichert (Theme.accentText).
             Button("Erneut versuchen", action: retry)
+                .foregroundStyle(Theme.accentText)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()
@@ -70,32 +72,66 @@ struct PrimaryButton: View {
     }
 }
 
+/// Form des Avatars: Kreis für Personen, abgerundetes Quadrat für Gruppen und Communitys.
+enum AvatarShape {
+    case circle
+    case roundedSquare
+}
+
+/// Farbe des Avatars ohne Bild. `accent` ist voll gefüllt und laut, `calm` ist eine leise Tönung für viele Avatare untereinander.
+enum AvatarTone {
+    case accent
+    case calm
+}
+
 /// Runder Avatar. Der Server liefert Bilder als data:image/(jpeg|png);base64-String, der hier dekodiert wird.
 /// Es wird nichts aus dem Netz geladen. Ohne gültiges Bild: Emoji (falls übergeben), sonst Initialen auf Akzentfarbe.
+/// shape und tone haben Standardwerte, damit alle bestehenden Aufrufer unverändert bleiben.
 struct AvatarView: View {
     let name: String?
     let avatar: String?
     var size: CGFloat = 40
     /// Ersatzzeichen vor den Initialen, z. B. das Emoji einer Gruppe.
     var emoji: String? = nil
+    var shape: AvatarShape = .circle
+    var tone: AvatarTone = .accent
+
+    /// Die Form als Clip und Hintergrund. Radius 0,28 wie der abgerundete Avatar der Karte in XyntalCardView.
+    private var clip: AnyShape {
+        switch shape {
+        case .circle:
+            AnyShape(Circle())
+        case .roundedSquare:
+            AnyShape(RoundedRectangle(cornerRadius: size * 0.28, style: .continuous))
+        }
+    }
+
+    /// Ruhig heißt: nur eine leichte Tönung, damit der Avatar hinter dem Namen zurücktritt.
+    private var fill: Color {
+        switch tone {
+        case .accent: Theme.accent
+        case .calm: Theme.accent.opacity(0.16)
+        }
+    }
 
     var body: some View {
         ZStack {
-            Circle()
-                .fill(Theme.accent)
+            clip
+                .fill(fill)
             if let image = AvatarImage.image(from: avatar) {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFill()
                     .frame(width: size, height: size)
-                    .clipShape(Circle())
+                    .clipShape(clip)
             } else if let emoji = emoji.nonEmptyText {
                 Text(emoji)
                     .font(.system(size: size * 0.5))
             } else {
+                // Auf der ruhigen Tönung ist der Akzent als Textfarbe zu hell (Regel R1), dort steht Primärfarbe.
                 Text(Self.initials(from: name))
                     .font(.system(size: size * 0.4, weight: .semibold, design: .rounded))
-                    .foregroundStyle(Theme.ink)
+                    .foregroundStyle(tone == .calm ? Color.primary : Theme.ink)
             }
         }
         .frame(width: size, height: size)

@@ -22,6 +22,23 @@ enum Theme {
         return adaptive { dark in accent.appliedHex(dark: dark) }
     }
 
+    /// Der Akzent als TEXTfarbe: dieselbe Farbe, aber auf 4,5:1 gerechnet statt auf 3:1.
+    ///
+    /// `accent` ist für Flächen, Symbole und Linien gedacht und erfüllt nur die WCAG-Schwelle für
+    /// UI-Elemente. Kleine Schrift braucht 4,5:1. Weil die Akzentfarbe frei wählbar ist, wäre eine
+    /// Beschriftung in `accent` bei hellen Tönen wie Grün, Cyan oder Orange schlecht zu lesen —
+    /// `readable` hellt sie so weit auf, bis der Textkontrast stimmt. Bei dunklen Akzenten ändert
+    /// sich nichts, dort ist die Schwelle schon erfüllt.
+    static var accentText: Color {
+        let accent = AppAppearance.shared.accent
+        return adaptive { dark in
+            AccentContrast.readable(accent.rawHex(dark: dark),
+                                    on: AccentContrast.grounds(dark: dark),
+                                    dark: dark,
+                                    minimum: AccentContrast.minText)
+        }
+    }
+
     /// Grau für Sekundärtext. Mindestens 4,5:1 auf den Hintergründen beider Modi.
     static var muted: Color {
         adaptive { dark in dark ? 0x8F8B83 : 0x686868 }
