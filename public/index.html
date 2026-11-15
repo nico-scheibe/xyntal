@@ -174,14 +174,12 @@
     <div class="way__stick">
       <div class="way__scroller" data-way-scroller tabindex="0" aria-label="Der Weg in sechs Schritten, seitlich scrollbar">
         <div class="way__track" data-way-track>
-          <!-- Zwei Linien: du und jemand anderes. Beim Vorschlag kreuzen sie sich, danach laufen sie zusammen. -->
-          <svg class="way__lines" viewBox="0 0 6000 1000" preserveAspectRatio="none" aria-hidden="true">
+          <!-- Eine Linie: sie läuft unter den Ziffern durch. Ihre Höhe und ihr Anfang setzt js/neu.js. Mobil wird daraus die senkrechte Linie am Rand (span). -->
+          <svg class="way__lines" aria-hidden="true">
             <defs>
-              <linearGradient id="wl-a" x1="0" x2="1"><stop offset="0" stop-color="#B36BFF"/><stop offset="1" stop-color="#4C8DFF"/></linearGradient>
-              <linearGradient id="wl-b" x1="0" x2="1"><stop offset="0" stop-color="#4C8DFF"/><stop offset="1" stop-color="#4C8DFF"/></linearGradient>
+              <linearGradient id="wl-a" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="1" y2="0" data-way-grad><stop offset="0" stop-color="#4C8DFF" stop-opacity="0"/><stop offset="1" stop-color="#4C8DFF"/></linearGradient>
             </defs>
-            <path data-way-line pathLength="1" stroke="url(#wl-a)" d="M0 430 C 500 430, 800 395, 1400 425 S 2400 465, 2900 430 S 3400 405, 3650 500 S 4050 550, 4600 514 S 5500 503, 6000 503"/>
-            <path data-way-line pathLength="1" stroke="url(#wl-b)" d="M0 570 C 500 570, 800 605, 1400 575 S 2400 535, 2900 570 S 3400 595, 3650 500 S 4050 450, 4600 486 S 5500 497, 6000 497"/>
+            <path data-way-line pathLength="1" stroke="url(#wl-a)" d="M0 0 L1 0"/>
           </svg>
 
           <div class="way__panel way__panel--title">
@@ -190,30 +188,39 @@
             <p class="way__hint mono"><span class="way__hint-d">Weiterscrollen</span><span class="way__hint-m">Wischen</span> →</p>
           </div>
 
-          <article class="way__panel">
-            <header><span class="way__n">1</span><h3>Bewerben</h3></header>
-            <p>Konto anlegen, drei Fragen beantworten: Was baust du? Wen suchst du? Wie viel Zeit hast du? Jede Bewerbung wird geprüft und per Mail beantwortet.</p>
-          </article>
-          <article class="way__panel">
-            <header><span class="way__n">2</span><h3>Profil</h3></header>
-            <p>Skills, Tech-Stack, Ziele, Sprachen, Stunden pro Woche. Und unter welchen Bedingungen du einsteigst: als Mitgründer:in, bezahlt oder als Nebenprojekt.</p>
-          </article>
-          <article class="way__panel">
-            <header><span class="way__n">3</span><h3>Arbeitsstil</h3></header>
-            <p>28 Blöcke. Jedes Mal wählst du, was am meisten und was am wenigsten zu dir passt. Zwei, die beide nur antreiben, sind nicht automatisch das beste Team.</p>
-          </article>
-          <article class="way__panel way__panel--x">
-            <header><span class="way__n">4</span><h3>Vorschlag</h3></header>
-            <p>Ab 65 Punkten taucht jemand bei dir auf, mit Zahl, Begründung und den zehn Bereichen einzeln.</p>
-          </article>
-          <article class="way__panel">
-            <header><span class="way__n">5</span><h3>Nachricht</h3></header>
-            <p>Du schreibst direkt. Damit das kein Spam-Kanal wird, gibt es Grenzen: höchstens drei neue Gespräche pro Stunde.</p>
-          </article>
-          <article class="way__panel">
-            <header><span class="way__n">6</span><h3>Projekt</h3></header>
-            <p>Projekt anlegen, offene Rollen eintragen. Wer mitmachen will, meldet sich mit „Ich wäre dabei“.</p>
-          </article>
+          <div class="way__steps" data-way-steps>
+            <span class="way__vline" data-way-vline aria-hidden="true"></span>
+            <article class="way__panel" data-way-step>
+              <header><span class="way__n">1</span><h3>Bewerben</h3></header>
+              <p>Konto anlegen, drei Fragen beantworten: Was baust du? Wen suchst du? Wie viel Zeit hast du? Jede Bewerbung wird geprüft und per Mail beantwortet.</p>
+              <i class="way__dot" aria-hidden="true"></i>
+            </article>
+            <article class="way__panel" data-way-step>
+              <header><span class="way__n">2</span><h3>Profil</h3></header>
+              <p>Skills, Tech-Stack, Ziele, Sprachen, Stunden pro Woche. Und unter welchen Bedingungen du einsteigst: als Mitgründer:in, bezahlt oder als Nebenprojekt.</p>
+              <i class="way__dot" aria-hidden="true"></i>
+            </article>
+            <article class="way__panel" data-way-step>
+              <header><span class="way__n">3</span><h3>Arbeitsstil</h3></header>
+              <p>28 Blöcke. Jedes Mal wählst du, was am meisten und was am wenigsten zu dir passt. Zwei, die beide nur antreiben, sind nicht automatisch das beste Team.</p>
+              <i class="way__dot" aria-hidden="true"></i>
+            </article>
+            <article class="way__panel" data-way-step>
+              <header><span class="way__n">4</span><h3>Vorschlag</h3></header>
+              <p>Ab 65 Punkten taucht jemand bei dir auf, mit Zahl, Begründung und den zehn Bereichen einzeln.</p>
+              <i class="way__dot" aria-hidden="true"></i>
+            </article>
+            <article class="way__panel" data-way-step>
+              <header><span class="way__n">5</span><h3>Nachricht</h3></header>
+              <p>Du schreibst direkt. Damit das kein Spam-Kanal wird, gibt es Grenzen: höchstens drei neue Gespräche pro Stunde.</p>
+              <i class="way__dot" aria-hidden="true"></i>
+            </article>
+            <article class="way__panel" data-way-step>
+              <header><span class="way__n">6</span><h3>Projekt</h3></header>
+              <p>Projekt anlegen, offene Rollen eintragen. Wer mitmachen will, meldet sich mit „Ich wäre dabei“.</p>
+              <i class="way__dot" aria-hidden="true"></i>
+            </article>
+          </div>
           <div class="way__panel way__panel--end" aria-hidden="true"></div>
         </div>
       </div>

@@ -228,32 +228,74 @@
     });
   });
 
-  // 5.4 Der Weg: senkrechtes Scrollen wird zur Fahrt nach rechts. Die zwei Linien zeichnen sich mit.
+  // 5.4 Der Weg: ab 861 px wird senkrechtes Scrollen zur Fahrt nach rechts, die Linie zeichnet sich mit.
+  // Darunter und bei reduzierter Bewegung steht alles senkrecht; dort wächst nur die Linie am Rand mit dem Scrollen.
+  // Jede Abfrage ist einzeln geprüft: fehlt ein Element, bleibt der Rest ohne Fehler.
   (function () {
     var way = $('[data-way]'); if (!way) return;
-    var track = $('[data-way-track]', way), scroller = $('[data-way-scroller]', way), lines = $$('[data-way-line]', way);
-    var TW = 0, x = 0, pinned = false;
-    function setLines(px) {    // px = wie weit die Fahrt ist; die Linien laufen dem Bild etwas voraus
-      var d = 1 - clamp((px + vw * 0.72) / TW, 0, 1);
-      lines.forEach(function (l, k) { l.style.strokeDashoffset = clamp(d + k * 0.012, 0, 1).toFixed(4); });   // dashoffset: einzige Ausnahme von transform/opacity
+    var track = $('[data-way-track]', way);
+    var line = $('[data-way-line]', way), grad = $('[data-way-grad]', way), vline = $('[data-way-vline]', way), wrap = $('[data-way-steps]', way);
+    var svg = line ? line.parentNode : null;
+    var steps = $$('[data-way-step]', way);
+    var heads = steps.map(function (s) { return $('.way__n', s); });
+    var bodies = steps.map(function (s) { return $('p', s); });
+    var TW = 0, X0 = 0, x = 0, pinned = false;
+
+    // Linie: beginnt an der Kante des ersten Schritts (nicht auf dem Titel). Fortschritt über dashoffset.
+    function setLines(px) {    // px = wie weit die Fahrt ist; die Linie läuft dem Bild etwas voraus
+      if (!line) return;
+      var span = TW - X0 - vw * 0.28;
+      var f = clamp((px + vw * 0.72 - X0) / (span > 0 ? span : 1), 0, 1);
+      line.style.strokeDashoffset = (1 - f).toFixed(4);   // dashoffset: einzige Ausnahme von transform/opacity
     }
     function measure() {
-      TW = track.scrollWidth; pinned = !mqSmall.matches && !calm;
-      if (pinned) way.style.setProperty('--way-h', (TW - vw + vh) + 'px'); else { way.style.removeProperty('--way-h'); track.style.transform = ''; }
-      if (!calm) setLines(pinned ? 0 : scroller.scrollLeft);
+      pinned = !mqSmall.matches && !calm;
+      bodies.forEach(function (b) { if (b) b.style.minHeight = ''; });
+      if (!pinned) { way.style.removeProperty('--way-h'); if (track) track.style.transform = ''; return; }
+      if (!track) return;
+      TW = track.scrollWidth;
+      way.style.setProperty('--way-h', (TW - vw + vh) + 'px');
+      // Alle Textblöcke gleich hoch, damit alle Ziffern auf einer Höhe sitzen wie die Linie
+      var maxH = 0;
+      bodies.forEach(function (b) { if (b) maxH = Math.max(maxH, b.offsetHeight); });
+      bodies.forEach(function (b) { if (b) b.style.minHeight = maxH + 'px'; });
+      X0 = steps[0] ? steps[0].offsetLeft : 0;
+      var Y = heads[0] ? heads[0].getBoundingClientRect().bottom - track.getBoundingClientRect().top : track.offsetHeight / 2;
+      track.style.setProperty('--way-y', Y.toFixed(1) + 'px');
+      var H = track.offsetHeight;
+      if (svg) svg.setAttribute('viewBox', '0 0 ' + TW + ' ' + H);
+      if (line) line.setAttribute('d', 'M' + X0 + ' ' + Y.toFixed(1) + ' L' + TW + ' ' + Y.toFixed(1));
+      if (grad) { grad.setAttribute('x1', X0); grad.setAttribute('x2', X0 + vw * 0.3); }
+      setLines(x);
     }
     measure(); resizers.push(measure);
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
-    if (calm) return;
-    scroller.addEventListener('scroll', function () { if (!pinned) setLines(scroller.scrollLeft); }, { passive: true });
+    if (calm) { steps.forEach(function (s) { s.classList.add('is-passed'); }); return; }   // ruhige Fassung: alles steht, kein Ticker
+
     tickers.push(function () {
-      if (!pinned) return;
+      var mob = mqSmall.matches;
       var r = way.getBoundingClientRect();
       if (r.bottom < -100 || r.top > vh + 100) return;
-      var p = clamp(-r.top / (r.height - vh), 0, 1), tx = p * (TW - vw);
-      x = lerp(x, tx, .18); if (Math.abs(x - tx) < .1) x = tx;
-      track.style.transform = 'translate3d(' + (-x).toFixed(2) + 'px,0,0)';
-      setLines(x);
+      // Ein Schritt wird aktiv, sobald sein Panel die Bildschirmmitte passiert (mobil: bei 82 % der Höhe). Der zuletzt passierte ist der aktive.
+      var ref = mob ? vh * 0.82 : vw * 0.5, last = -1;
+      steps.forEach(function (s, i) { var b = s.getBoundingClientRect(); if ((mob ? b.top : b.left) <= ref) last = i; });
+      if (r.bottom <= vh + 1) last = steps.length - 1;   // Abschnittsende erreicht: der letzte Schritt ist aktiv
+      steps.forEach(function (s, i) {
+        var passed = i <= last;
+        s.classList.toggle('is-passed', passed);
+        s.classList.toggle('is-on', i === last);
+        s.classList.toggle('is-read', !mob && passed && i !== last);   // gelesen: gedämpft (nur am Desktop)
+      });
+      if (pinned && track) {
+        var p = clamp(-r.top / (r.height - vh), 0, 1), tx = p * (TW - vw);
+        x = lerp(x, tx, .18); if (Math.abs(x - tx) < .1) x = tx;
+        track.style.transform = 'translate3d(' + (-x).toFixed(2) + 'px,0,0)';
+        setLines(x);
+      } else if (vline && wrap) {
+        var sr = wrap.getBoundingClientRect();
+        var q = clamp((vh * 0.5 - sr.top) / Math.max(1, sr.height), 0, 1);
+        vline.style.transform = 'scaleY(' + q.toFixed(4) + ')';
+      }
     });
   })();
 
