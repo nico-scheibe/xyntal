@@ -26,7 +26,10 @@ enum VoiceAudioAnalysis {
             var result: [Double] = []
             var sum = 0.0
             var count = 0
-            while true {
+            // Genau bis zur Länge lesen. Darüber hinaus wirft AVAudioFile einen Fehler.
+            let total = file.length
+            var position: AVAudioFramePosition = 0
+            while position < total {
                 do {
                     try file.read(into: buffer, frameCount: buffer.frameCapacity)
                 } catch {
@@ -34,6 +37,7 @@ enum VoiceAudioAnalysis {
                 }
                 let frames = Int(buffer.frameLength)
                 if frames == 0 { break }
+                position += AVAudioFramePosition(frames)
                 guard let data = buffer.floatChannelData else { return nil }
                 for frame in 0..<frames {
                     var squares = 0.0
@@ -99,6 +103,8 @@ final class VoiceDraftPlayer: VoicePlayback {
     private var offsets: [TimeInterval] = []
     private var index = 0
     private var player: AVAudioPlayer?
+    /// Meldet das natürliche Ende des aktuellen Teils. Unterscheidet Ende von Unterbrechung.
+    private var endWatcher: SegmentEndWatcher?
     private var ticker: Task<Void, Never>?
 
     var isLoaded: Bool { !segments.isEmpty }
@@ -191,6 +197,9 @@ final class VoiceDraftPlayer: VoicePlayback {
 
     private func makePlayer(_ position: Int) -> AVAudioPlayer? {
         guard let player = try? AVAudioPlayer(contentsOf: segments[position].url) else { return nil }
+        let watcher = SegmentEndWatcher()
+        player.delegate = watcher
+        endWatcher = watcher
         player.enableRate = true
         player.rate = rate
         player.prepareToPlay()
@@ -223,24 +232,35 @@ final class VoiceDraftPlayer: VoicePlayback {
             currentTime = offsets[index] + current.currentTime
             return true
         }
-        // Teil zu Ende, aber nicht unterbrochen: mit dem nächsten Teil weiter.
-        if current.currentTime >= current.duration - 0.05 {
-            if index + 1 < segments.count, let next = makePlayer(index + 1) {
-                index += 1
-                player = next
-                next.play()
-                currentTime = offsets[index]
-                return true
-            }
-            // Ganz zu Ende: zurück an den Anfang, Symbol zeigt wieder Abspielen.
-            player = nil
-            isPlaying = false
-            currentTime = 0
-            ticker = nil
+        guard endWatcher?.finished == true else {
+            // Unterbrochen, etwa durch einen Anruf: anhalten, Position bleibt.
+            pause()
             return false
         }
-        // Unterbrochen, etwa durch einen Anruf: anhalten, Position bleibt.
-        pause()
+        // Teil wirklich zu Ende: mit dem nächsten Teil weiter.
+        if index + 1 < segments.count, let next = makePlayer(index + 1) {
+            index += 1
+            player = next
+            next.play()
+            currentTime = offsets[index]
+            return true
+        }
+        // Ganz zu Ende: Position auf der Gesamtdauer, Symbol zeigt wieder Abspielen. Ein neuer Start beginnt vorn.
+        player = nil
+        endWatcher = nil
+        isPlaying = false
+        currentTime = displayDuration
+        ticker = nil
         return false
+    }
+}
+
+/// Merkt sich, ob ein Teil bis zum Ende gespielt wurde. Bei einer Unterbrechung bleibt es false.
+@MainActor
+private final class SegmentEndWatcher: NSObject, AVAudioPlayerDelegate {
+    private(set) var finished = false
+
+    func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+        finished = flag
     }
 }
