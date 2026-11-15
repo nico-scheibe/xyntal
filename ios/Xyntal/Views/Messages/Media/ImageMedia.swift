@@ -185,6 +185,8 @@ final class GIFPlayback {
     /// Zu mindestens der Hälfte auf dem Bildschirm.
     var visible = false
     var override: Bool?
+    /// true, sobald mehr als ein Einzelbild vorliegt. Nur dann gibt es ein Abspiel-Symbol und einen Tipp, der etwas tut.
+    var canAnimate = false
 }
 
 /// Zwei getrennte Fragen für ein GIF:
@@ -204,7 +206,7 @@ enum GIFPolicy {
     }
 
     static func animates(_ playback: GIFPlayback, isActive: Bool, reduceMotion: Bool) -> Bool {
-        wantsAnimation(playback, reduceMotion: reduceMotion) && isAllowedNow(playback, isActive: isActive)
+        playback.canAnimate && wantsAnimation(playback, reduceMotion: reduceMotion) && isAllowedNow(playback, isActive: isActive)
     }
 }
 
@@ -230,7 +232,6 @@ struct GIFMediaView: View {
 
     private var animating: Bool {
         GIFPolicy.animates(playback, isActive: scenePhase == .active, reduceMotion: reduceMotion)
-            && animated != nil
     }
 
     var body: some View {
@@ -241,7 +242,8 @@ struct GIFMediaView: View {
                     .font(.caption.weight(.semibold))
             } else if let still {
                 AnimatedImageView(still: still, animated: animated, playing: animating)
-                if !animating {
+                // Das Symbol nur, wenn es wirklich etwas abzuspielen gibt.
+                if !animating && playback.canAnimate {
                     Image(systemName: "play.circle.fill")
                         .font(.system(size: 44))
                         .foregroundStyle(.white.opacity(0.9))
@@ -267,7 +269,7 @@ struct GIFMediaView: View {
         .onTapGesture {
             if still == nil {
                 Task { await load() }
-            } else {
+            } else if playback.canAnimate {
                 togglePlayback()
             }
         }
@@ -319,6 +321,7 @@ struct GIFMediaView: View {
             }
             still = decoded.still
             animated = decoded.animated
+            playback.canAnimate = decoded.animated != nil
         } catch is CancellationError {
             return
         } catch {
