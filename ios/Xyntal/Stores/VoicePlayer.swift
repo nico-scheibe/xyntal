@@ -36,12 +36,17 @@ final class VoicePlayer {
     private(set) var loadFailed = false
     /// Wiedergabegeschwindigkeit: 1, 1.5 oder 2.
     private(set) var rate: Float = 1
+    /// Echte Wellenform, sobald die Aufnahme geladen und dekodiert ist. Vorher nil.
+    private(set) var waveform: [Double]?
 
+    private let attachmentId: String
     private var player: AVAudioPlayer?
     private var ticker: Task<Void, Never>?
 
-    init(durationMs: Int?) {
+    init(attachmentId: String, durationMs: Int?) {
+        self.attachmentId = attachmentId
         duration = TimeInterval(max(durationMs ?? 0, 0)) / 1000
+        waveform = WaveformCache.shared.cached(attachmentId)
     }
 
     var isPlaying: Bool { state == .playing }
@@ -80,6 +85,16 @@ final class VoicePlayer {
                 newPlayer.prepareToPlay()
                 player = newPlayer
                 duration = newPlayer.duration
+                if waveform == nil {
+                    let id = attachmentId
+                    let bars = await Task.detached(priority: .utility) {
+                        Waveform.bars(fromAudioData: data, id: id)
+                    }.value
+                    if let bars {
+                        waveform = bars
+                        WaveformCache.shared.store(bars, for: id)
+                    }
+                }
             } catch is CancellationError {
                 state = .idle
                 return
@@ -156,18 +171,67 @@ final class VoicePlayer {
     }
 }
 
-/// Feste Balkenhöhen für die Wellenform. Der Server liefert keine Amplituden, daher ist das Muster
-/// aus der Anhang-ID abgeleitet: Es ist je Nachricht stabil, aber keine echte Aufnahme.
-enum WaveformPattern {
-    static func bars(seed: String, count: Int = 40) -> [Double] {
-        var state: UInt64 = 0xcbf29ce484222325
-        for byte in seed.utf8 {
-            state = (state ^ UInt64(byte)) &* 0x100000001b3
-        }
-        return (0..<count).map { _ in
-            state = state &* 6364136223846793005 &+ 1442695040888963407
-            let unit = Double(state >> 33) / Double(1 << 31)
-            return 0.25 + unit * 0.75
+/// Wellenform aus der echten Audiodatei: 40 Eimer, je Eimer der Effektivwert (RMS), auf 0…1 normiert.
+/// Läuft abseits des Hauptthreads und einmal pro Datei; das Ergebnis liegt im WaveformCache.
+enum Waveform {
+    static let barCount = 40
+
+    /// nil, wenn die Datei nicht dekodiert werden kann oder stumm ist. Dann bleiben die gleichmäßigen Balken.
+    static func bars(fromAudioData data: Data, id: String) -> [Double]? {
+        let folder = FileManager.default.temporaryDirectory.appending(path: "Xyntal-Wellenform", directoryHint: .isDirectory)
+        let safeId = String(id.map { $0.isLetter || $0.isNumber || $0 == "-" ? $0 : "_" })
+        let url = folder.appending(path: safeId + ".m4a")
+        do {
+            try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+            try data.write(to: url, options: .atomic)
+            defer { try? FileManager.default.removeItem(at: url) }
+
+            let file = try AVAudioFile(forReading: url)
+            let format = file.processingFormat
+            let total = file.length
+            guard total > 0 else { return nil }
+            let channels = Int(format.channelCount)
+            guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 32_768) else { return nil }
+
+            var sums = [Double](repeating: 0, count: barCount)
+            var counts = [Double](repeating: 0, count: barCount)
+            var position: AVAudioFramePosition = 0
+            while position < total {
+                try file.read(into: buffer, frameCount: buffer.frameCapacity)
+                let frames = Int(buffer.frameLength)
+                if frames == 0 { break }
+                guard let channelData = buffer.floatChannelData else { return nil }
+                for frame in 0..<frames {
+                    let absolute = position + AVAudioFramePosition(frame)
+                    let bucket = min(barCount - 1, Int(absolute * AVAudioFramePosition(barCount) / total))
+                    var squares = 0.0
+                    for channel in 0..<channels {
+                        let value = Double(channelData[channel][frame])
+                        squares += value * value
+                    }
+                    sums[bucket] += squares / Double(channels)
+                    counts[bucket] += 1
+                }
+                position += AVAudioFramePosition(frames)
+            }
+
+            let rms = (0..<barCount).map { counts[$0] > 0 ? (sums[$0] / counts[$0]).squareRoot() : 0 }
+            guard let peak = rms.max(), peak > 0 else { return nil }
+            return rms.map { $0 / peak }
+        } catch {
+            return nil
         }
     }
+}
+
+/// Wellenformen je Anhang-ID, damit eine Nachricht sie nach dem ersten Laden sofort zeigt.
+@MainActor
+final class WaveformCache {
+    static let shared = WaveformCache()
+
+    private var bars: [String: [Double]] = [:]
+
+    func cached(_ id: String) -> [Double]? { bars[id] }
+
+    func store(_ value: [Double], for id: String) { bars[id] = value }
 }

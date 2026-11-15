@@ -507,7 +507,7 @@ private struct MessageBubble: View {
     static let collapsedLength = 4_000
 
     @State private var isExpanded = false
-    @State private var gifVisible = false
+    @State private var gifPlayback = GIFPlayback()
     @State private var voice: VoicePlayer
     @State private var files: [AttachmentFileModel]
 
@@ -531,7 +531,8 @@ private struct MessageBubble: View {
         self.onReply = onReply
         self.onRequestReaction = onRequestReaction
         self.onReport = onReport
-        _voice = State(initialValue: VoicePlayer(durationMs: message.voiceAttachment?.durationMs))
+        _voice = State(initialValue: VoicePlayer(attachmentId: message.voiceAttachment?.id ?? "",
+                                                 durationMs: message.voiceAttachment?.durationMs))
         _files = State(initialValue: message.fileAttachments.map { AttachmentFileModel(attachment: $0) })
     }
 
@@ -540,7 +541,7 @@ private struct MessageBubble: View {
     private var bubbleColor: Color { isMine ? Theme.accent : Color(.systemGray5) }
     private var caption: String? { message.body.nonEmptyText }
     private var gifPlays: Bool {
-        GIFPolicy.animates(visible: gifVisible, isActive: scenePhase == .active, reduceMotion: reduceMotion)
+        GIFPolicy.animates(gifPlayback, isActive: scenePhase == .active, reduceMotion: reduceMotion)
     }
 
     var body: some View {
@@ -614,7 +615,7 @@ private struct MessageBubble: View {
                                 senderTrusted: senderTrusted,
                                 voice: voice,
                                 files: files,
-                                gifVisible: $gifVisible,
+                                gifPlayback: gifPlayback,
                                 foreground: foreground,
                                 onOpenImage: onOpenImage)
             if let caption {
@@ -718,6 +719,9 @@ private struct MessageBubble: View {
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(gifLabel)
                 .accessibilityValue(gifPlays ? "Wird abgespielt" : "Angehalten")
+                .accessibilityAction(.default) {
+                    gifPlayback.override = !gifPlays
+                }
         } else if message.fileAttachments.isEmpty && !message.imageAttachments.isEmpty {
             content
                 .accessibilityElement(children: .ignore)

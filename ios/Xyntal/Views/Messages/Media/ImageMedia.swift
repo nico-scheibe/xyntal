@@ -178,12 +178,24 @@ enum MediaPrompt {
 
 // MARK: - GIFs
 
-/// Ob ein GIF gerade läuft. Nur mit allen Bedingungen: Bewegung nicht reduziert, Datenreduzierung aus,
-/// Schalter an, zu mindestens der Hälfte sichtbar und die App ist aktiv. Sonst Standbild.
+/// Wiedergabe-Zustand eines GIFs in einer Bubble. override ist der Tipp des Nutzers; nil heißt: automatisch.
+@MainActor
+@Observable
+final class GIFPlayback {
+    /// Zu mindestens der Hälfte auf dem Bildschirm.
+    var visible = false
+    var override: Bool?
+}
+
+/// Ob ein GIF gerade läuft. Der Tipp des Nutzers gilt immer (Start und Anhalten). Ohne Tipp nur automatisch,
+/// mit allen Bedingungen: Bewegung nicht reduziert, Datenreduzierung aus, Schalter an. In jedem Fall nur,
+/// wenn das GIF zur Hälfte sichtbar und die App aktiv ist.
 @MainActor
 enum GIFPolicy {
-    static func animates(visible: Bool, isActive: Bool, reduceMotion: Bool) -> Bool {
-        visible && isActive && !reduceMotion && !LowDataMonitor.shared.isConstrained && AppAppearance.shared.gifAutoplay
+    static func animates(_ playback: GIFPlayback, isActive: Bool, reduceMotion: Bool) -> Bool {
+        guard playback.visible && isActive else { return false }
+        if let override = playback.override { return override }
+        return !reduceMotion && !LowDataMonitor.shared.isConstrained && AppAppearance.shared.gifAutoplay
     }
 }
 
@@ -195,7 +207,7 @@ struct GIFMediaView: View {
     let gif: Message.Gif?
     let allowAutoLoad: Bool
     let isStranger: Bool
-    @Binding var visible: Bool
+    let playback: GIFPlayback
 
     @State private var still: UIImage?
     @State private var animated: UIImage?
@@ -208,7 +220,7 @@ struct GIFMediaView: View {
     }
 
     private var animating: Bool {
-        GIFPolicy.animates(visible: visible, isActive: scenePhase == .active, reduceMotion: reduceMotion)
+        GIFPolicy.animates(playback, isActive: scenePhase == .active, reduceMotion: reduceMotion)
             && animated != nil
     }
 
@@ -244,7 +256,11 @@ struct GIFMediaView: View {
         }
         .contentShape(Rectangle())
         .onTapGesture {
-            if still == nil { Task { await load() } }
+            if still == nil {
+                Task { await load() }
+            } else {
+                togglePlayback()
+            }
         }
         .background(
             GeometryReader { proxy in
@@ -252,7 +268,7 @@ struct GIFMediaView: View {
             }
         )
         .onPreferenceChange(VisibleShareKey.self) { share in
-            visible = share >= 0.5
+            playback.visible = share >= 0.5
         }
         .task(id: allowAutoLoad) {
             if allowAutoLoad && isAllowedAddress { await load() }
@@ -273,6 +289,11 @@ struct GIFMediaView: View {
             Label("Foto laden", systemImage: "arrow.down.circle")
                 .font(.caption.weight(.semibold))
         }
+    }
+
+    /// Tipp auf ein geladenes GIF: startet oder hält an, unabhängig von den automatischen Bedingungen.
+    private func togglePlayback() {
+        playback.override = !GIFPolicy.animates(playback, isActive: scenePhase == .active, reduceMotion: reduceMotion)
     }
 
     private func load() async {

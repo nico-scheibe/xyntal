@@ -51,6 +51,9 @@ final class ChatStore {
 
     /// true, sobald du selbst eine Nachricht in diesem Gespräch geschrieben hast (im geladenen Verlauf).
     /// Solange nicht, gelten Fotos und GIFs anderer als fremd und laden erst auf Tippen.
+    /// Der Server liefert keine verlässliche Angabe dazu (die Gesprächsliste nennt keine eigenen Nachrichten).
+    /// Außerhalb des geladenen Verlaufs irrt die Einschätzung deshalb zur vorsichtigen Seite: Ein langjähriger
+    /// Kontakt wird dann als fremd behandelt und seine Medien laden auf Tippen. Das ist gewollt.
     var hasWrittenHere: Bool {
         messages.contains { isMine($0) }
     }

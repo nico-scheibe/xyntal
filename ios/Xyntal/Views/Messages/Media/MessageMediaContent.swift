@@ -12,7 +12,7 @@ struct MessageMediaContent: View {
     let senderTrusted: Bool
     let voice: VoicePlayer
     let files: [AttachmentFileModel]
-    @Binding var gifVisible: Bool
+    let gifPlayback: GIFPlayback
     let foreground: Color
     let onOpenImage: (Int) -> Void
 
@@ -29,7 +29,7 @@ struct MessageMediaContent: View {
                 GIFMediaView(gif: message.gif,
                              allowAutoLoad: allowAutoLoad,
                              isStranger: !senderTrusted,
-                             visible: $gifVisible)
+                             playback: gifPlayback)
             }
             if let attachment = message.voiceAttachment {
                 VoiceMessageView(attachment: attachment, player: voice, foreground: foreground)

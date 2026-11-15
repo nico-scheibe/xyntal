@@ -88,7 +88,8 @@ struct VoiceMessageView: View {
     /// 40 Balken. Abgespielter Teil in voller Farbe, Rest mit 60 % Deckkraft. Der Punkt markiert die Position,
     /// damit der Fortschritt auch ohne Farbunterschied zu erkennen ist.
     private var waveform: some View {
-        let bars = WaveformPattern.bars(seed: attachment.id, count: Self.barCount)
+        // Vor dem Laden gleich hohe Balken als Platzhalter; danach die echte Wellenform.
+        let bars = player.waveform ?? Array(repeating: 0.4, count: Self.barCount)
         return GeometryReader { proxy in
             ZStack(alignment: .leading) {
                 HStack(spacing: 1) {
@@ -97,7 +98,7 @@ struct VoiceMessageView: View {
                         Capsule()
                             .fill(foreground.opacity(played ? 1 : 0.6))
                             .frame(maxWidth: .infinity)
-                            .frame(height: 28 * bars[index])
+                            .frame(height: 28 * max(bars[index], 0.12))
                     }
                 }
                 .frame(maxHeight: .infinity)
