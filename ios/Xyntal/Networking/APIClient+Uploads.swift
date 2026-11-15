@@ -51,12 +51,17 @@ extension APIClient {
     }
 
     /// POST /conversations/:id/messages mit Text und Datei-Ids. Der Server übernimmt höchstens 10 Ids.
-    func sendAttachmentMessage(conversationId: String, body: String, replyToId: String?, attachmentIds: [String], token: String) async throws {
+    /// Mit voiceDurationMs ist es eine Sprachnachricht: genau eine Audio-Datei als Anhang.
+    func sendAttachmentMessage(conversationId: String, body: String, replyToId: String?, attachmentIds: [String],
+                               voiceDurationMs: Int? = nil, token: String) async throws {
         let id = try Self.validatedPathId(conversationId)
         _ = try await send("conversations/\(id)/messages",
                            method: "POST",
                            token: token,
-                           body: AttachmentMessageRequest(body: body, attachments: attachmentIds, replyToId: replyToId),
+                           body: AttachmentMessageRequest(body: body,
+                                                          attachments: attachmentIds,
+                                                          replyToId: replyToId,
+                                                          voice: voiceDurationMs.map { VoiceField(durationMs: $0) }),
                            as: UploadAck.self)
     }
 
@@ -99,4 +104,10 @@ private struct AttachmentMessageRequest: Encodable {
     let body: String
     let attachments: [String]
     let replyToId: String?
+    /// Nur bei Sprachnachrichten. Ohne Wert fehlt das Feld ganz.
+    let voice: VoiceField?
+}
+
+private struct VoiceField: Encodable {
+    let durationMs: Int
 }

@@ -30,6 +30,8 @@ final class OutgoingMessage: Identifiable {
     let body: String
     let replyToId: String?
     let attachments: [ComposerAttachment]
+    /// Länge in Millisekunden, wenn es eine Sprachnachricht ist. Der eine Anhang ist dann die Aufnahme.
+    let voiceDurationMs: Int?
 
     private(set) var state: State = .sending
     /// Meldung zum Fehler, im Dialog "Nachricht nicht gesendet".
@@ -46,11 +48,12 @@ final class OutgoingMessage: Identifiable {
     fileprivate var wasCancelled = false
     fileprivate var task: Task<Void, Never>?
 
-    init(conversationId: String, body: String, replyToId: String?, attachments: [ComposerAttachment]) {
+    init(conversationId: String, body: String, replyToId: String?, attachments: [ComposerAttachment], voiceDurationMs: Int?) {
         self.conversationId = conversationId
         self.body = body
         self.replyToId = replyToId
         self.attachments = attachments
+        self.voiceDurationMs = voiceDurationMs
     }
 
     /// Gesamtanteil über alle Anhänge, nach Größe gewichtet.
@@ -152,9 +155,10 @@ final class OutgoingStore {
 
     /// Startet den Versand. false, wenn gerade keine Verbindung besteht: dann ist nichts gestartet, und die
     /// Anhänge bleiben beim Aufrufer.
-    func submit(conversationId: String, body: String, replyToId: String?, attachments: [ComposerAttachment]) -> Bool {
+    func submit(conversationId: String, body: String, replyToId: String?, attachments: [ComposerAttachment], voiceDurationMs: Int? = nil) -> Bool {
         guard NetworkReachability.shared.isOnline else { return false }
-        let message = OutgoingMessage(conversationId: conversationId, body: body, replyToId: replyToId, attachments: attachments)
+        let message = OutgoingMessage(conversationId: conversationId, body: body, replyToId: replyToId,
+                                      attachments: attachments, voiceDurationMs: voiceDurationMs)
         messages.append(message)
         start(message)
         return true
@@ -223,6 +227,7 @@ final class OutgoingStore {
                                                             body: message.body,
                                                             replyToId: message.replyToId,
                                                             attachmentIds: ids,
+                                                            voiceDurationMs: message.voiceDurationMs,
                                                             token: token)
             }
             for attachment in message.attachments {

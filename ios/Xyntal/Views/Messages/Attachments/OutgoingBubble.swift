@@ -125,12 +125,12 @@ struct OutgoingBubble: View {
                 if isUploading(attachment) {
                     progressRing(for: attachment, dimmed: false)
                 } else {
-                    Image(systemName: AttachmentRules.symbol(forName: attachment.name))
+                    Image(systemName: message.voiceDurationMs != nil ? "waveform" : AttachmentRules.symbol(forName: attachment.name))
                         .font(.system(size: 18, weight: .medium))
                 }
             }
             .frame(width: fileTile, height: fileTile)
-            Text(MediaFormat.middleTruncated(attachment.name, limit: 40))
+            Text(message.voiceDurationMs != nil ? "Sprachnachricht" : MediaFormat.middleTruncated(attachment.name, limit: 40))
                 .font(.body)
                 .lineLimit(2)
                 .multilineTextAlignment(.leading)

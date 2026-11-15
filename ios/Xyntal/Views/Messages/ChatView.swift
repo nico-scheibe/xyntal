@@ -98,6 +98,16 @@ struct ChatView: View {
             if push.activeConversationId == conversation.id {
                 push.activeConversationId = nil
             }
+            // Das Mikrofon läuft nur, solange man den Chat sieht. Der Entwurf bleibt erhalten.
+            VoiceRecorders.shared.recorder(for: conversation.id).pause()
+        }
+        .onChange(of: scenePhase) { _, phase in
+            // Kein Hintergrund-Audio: Sobald die App nicht aktiv ist, pausiert jede Aufnahme.
+            if phase == .active {
+                VoiceRecorders.shared.appBecameActive()
+            } else {
+                VoiceRecorders.shared.pauseAll(note: .interrupted)
+            }
         }
         .task {
             if store == nil {
@@ -151,7 +161,25 @@ private struct ChatTranscriptView: View {
     @State private var showCameraDenied = false
     @State private var previewAttachment: ComposerAttachment?
     @State private var failedMessage: OutgoingMessage?
+    @State private var showDiscardDialog = false
+    @State private var showMicDenied = false
     @FocusState private var inputFocused: Bool
+
+    /// Die Sprachaufnahme dieses Gesprächs. Dieselbe Instanz über alle Aufrufe, der Entwurf bleibt erhalten.
+    private var voice: VoiceRecorder {
+        VoiceRecorders.shared.recorder(for: conversation.id)
+    }
+
+    /// Sprachnachrichten gehen in Gruppen immer. In Direktchats erst, wenn der andere geschrieben hat.
+    private var canRecordVoice: Bool {
+        conversation.isGroup || store.hasOtherWritten
+    }
+
+    /// Eine Sprachnachricht wartet noch auf den Versand. Dann gibt es kein Mikrofon, damit ein Abbruch sie
+    /// zurück in den Entwurf holen kann.
+    private var voicePending: Bool {
+        outgoingMessages.contains { $0.voiceDurationMs != nil }
+    }
 
     private var typingText: String? {
         let names = conversations.typingNames(in: conversation.id)
@@ -251,6 +279,16 @@ private struct ChatTranscriptView: View {
                 Button("Abbrechen", role: .cancel) {}
             } message: {
                 Text(AttachmentRules.cameraDeniedText)
+            }
+            .alert(VoiceRules.deniedTitle, isPresented: $showMicDenied) {
+                Button("Einstellungen öffnen") { openSettings() }
+                Button("Abbrechen", role: .cancel) {}
+            } message: {
+                Text(VoiceRules.deniedText)
+            }
+            .confirmationDialog(VoiceRules.discardTitle, isPresented: $showDiscardDialog, titleVisibility: .visible) {
+                Button(VoiceRules.discardLabel, role: .destructive) { voice.discard() }
+                Button(VoiceRules.resumeLabel, role: .cancel) { Task { await startVoice() } }
             }
             .confirmationDialog("Nachricht nicht gesendet",
                                 isPresented: failedDialogBinding,
@@ -444,7 +482,20 @@ private struct ChatTranscriptView: View {
 
     // MARK: - Eingabe
 
+    /// Solange eine Aufnahme läuft oder als Entwurf pausiert ist, ersetzt die Aufnahmeleiste die ganze Eingabezeile.
+    @ViewBuilder
     private var inputArea: some View {
+        if voice.phase != .idle {
+            VoiceRecordBar(recorder: voice,
+                           onDiscard: requestDiscard,
+                           onPauseOrResume: togglePause,
+                           onSend: { Task { await sendVoice() } })
+        } else {
+            textInputArea
+        }
+    }
+
+    private var textInputArea: some View {
         VStack(spacing: 6) {
             if let actionError = store.actionError {
                 HStack {
@@ -563,13 +614,21 @@ private struct ChatTranscriptView: View {
     @ViewBuilder
     private var trailingButton: some View {
         if editingMessage == nil && !hasText && composer.items.isEmpty {
-            // Platzhalter für die Sprachnachricht, kommt in einem eigenen Schritt.
-            Image(systemName: "mic.fill")
-                .font(.system(size: 20, weight: .medium))
-                .foregroundStyle(Theme.muted)
-                .frame(width: 44, height: 44)
-                .accessibilityLabel("Sprachnachricht")
-                .accessibilityHint("Noch nicht verfügbar")
+            // Ohne Erlaubnis des Gegenübers steht hier gar nichts.
+            if canRecordVoice && !voicePending {
+                Button {
+                    inputFocused = false
+                    Task { await startVoice() }
+                } label: {
+                    Image(systemName: "mic.fill")
+                        .font(.system(size: 20, weight: .medium))
+                        .foregroundStyle(Theme.muted)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Sprachnachricht aufnehmen")
+            }
         } else {
             Button {
                 Task { await submit() }
@@ -609,8 +668,13 @@ private struct ChatTranscriptView: View {
     }
 
     /// Abbrechen einer laufenden Nachricht: Anhänge zurück in die Leiste, Beschriftung zurück ins Textfeld.
+    /// Eine Sprachnachricht kommt zurück in den Entwurf der Aufnahmeleiste.
     private func cancel(_ message: OutgoingMessage) {
         let restored = outgoing.cancel(message)
+        if let durationMs = message.voiceDurationMs, let file = restored.attachments.first {
+            Task { await restoreVoice(file.fileURL, durationMs: durationMs) }
+            return
+        }
         composer.restore(restored.attachments)
         let caption = restored.body
         if !caption.isEmpty {
@@ -659,6 +723,74 @@ private struct ChatTranscriptView: View {
     private func openSettings() {
         guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
         UIApplication.shared.open(url)
+    }
+
+    // MARK: - Sprachnachricht
+
+    /// Mikrofon-Taste und "Weiter aufnehmen": Aufnahme starten oder fortsetzen. Ohne Erlaubnis kommt der Hinweis.
+    private func startVoice() async {
+        switch await voice.startOrResume() {
+        case .started:
+            break
+        case .micDenied:
+            showMicDenied = true
+        case .failed:
+            // Aus dem Entwurf heraus bleibt die Meldung in der Aufnahmeleiste. Ohne Aufnahme steht sie über der Eingabe.
+            if voice.phase == .idle {
+                composer.errorText = voice.errorText ?? VoiceRules.failedText
+                voice.errorText = nil
+            }
+        }
+    }
+
+    /// Pause-Taste während der Aufnahme, Weiter-Taste im Entwurf.
+    private func togglePause() {
+        if voice.phase == .recording {
+            voice.pause()
+        } else {
+            Task { await startVoice() }
+        }
+    }
+
+    /// Papierkorb. Unter 10 Sekunden sofort weg. Sonst pausieren und fragen.
+    private func requestDiscard() {
+        guard voice.elapsed >= VoiceRules.quickDiscardSeconds else {
+            voice.discard()
+            return
+        }
+        voice.pause()
+        showDiscardDialog = true
+    }
+
+    /// Senden: Die Aufnahme geht als Datei mit Dauer in den Versand, wie ein Anhang.
+    private func sendVoice() async {
+        guard let draft = await voice.prepareSend() else { return }
+        let size = (try? FileManager.default.attributesOfItem(atPath: draft.url.path)[.size] as? Int) ?? 0
+        let file = ComposerAttachment(fileURL: draft.url,
+                                      name: VoiceRules.fileName,
+                                      mimeType: VoiceRules.mimeType,
+                                      size: size,
+                                      isImage: false,
+                                      preview: nil)
+        let sent = outgoing.submit(conversationId: conversation.id,
+                                   body: "",
+                                   replyToId: replyTo?.id,
+                                   attachments: [file],
+                                   voiceDurationMs: draft.durationMs)
+        if sent {
+            voice.didSend()
+            replyTo = nil
+        } else {
+            // Offline wird nichts gestartet. Der Entwurf bleibt, damit nichts verloren geht.
+            voice.errorText = AttachmentRules.offlineText
+        }
+    }
+
+    /// Eine abgebrochene Sprachnachricht zurück in den Entwurf.
+    private func restoreVoice(_ url: URL, durationMs: Int) async {
+        if await voice.restore(url: url, durationMs: durationMs) { return }
+        AttachmentFiles.remove(url)
+        composer.errorText = AttachmentRules.uploadFailedText
     }
 
     private func submit() async {

@@ -32,7 +32,10 @@ struct MessageMediaContent: View {
                              playback: gifPlayback)
             }
             if let attachment = message.voiceAttachment {
-                VoiceMessageView(attachment: attachment, player: voice, foreground: foreground)
+                VoiceMessageView(player: voice,
+                                 foreground: foreground,
+                                 loadData: { try await MediaLoader.shared.fileData(for: attachment, session: session) })
+                    .frame(minWidth: 240, alignment: .leading)
             }
             PhotoGrid(images: message.imageAttachments,
                       allowAutoLoad: allowAutoLoad,

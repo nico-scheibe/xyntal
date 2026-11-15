@@ -38,6 +38,12 @@ final class ChatStore {
         self.session = session
     }
 
+    /// true, sobald der andere in diesem Gespräch geschrieben hat (im geladenen Verlauf). Systemnachrichten zählen nicht.
+    /// Sprachnachrichten in Direktchats gehen erst danach: Eine ungefragte Aufnahme kostet den Empfänger Zeit.
+    var hasOtherWritten: Bool {
+        messages.contains { !isMine($0) && !$0.isSystem }
+    }
+
     func isMine(_ message: Message) -> Bool {
         if let mine = message.mine { return mine }
         guard let currentUserId, let authorId = message.authorId else { return false }

@@ -4,5 +4,7 @@
 <dict>
 	<key>NSCameraUsageDescription</key>
 	<string>Xyntal nutzt die Kamera, damit du Fotos direkt im Chat aufnehmen kannst.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Xyntal nutzt das Mikrofon, um Sprachnachrichten aufzunehmen.</string>
 </dict>
 </plist>

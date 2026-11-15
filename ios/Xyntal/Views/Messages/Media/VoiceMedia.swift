@@ -2,14 +2,17 @@ import SwiftUI
 
 /// Sprachnachricht: Wiedergabe-Kreis, Wellenform mit Fortschritt, Dauer und Geschwindigkeit.
 /// Die Bubble liefert die VoiceOver-Beschriftung; hier ist alles für Sehende.
+/// Dieselbe Ansicht spielt Nachrichten vom Server und das Vorhören vor dem Senden. `loadData` liefert die Aufnahme.
 struct VoiceMessageView: View {
-    @Environment(SessionStore.self) private var session
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @ScaledMetric(relativeTo: .body) private var buttonSize: CGFloat = 40
 
-    let attachment: Attachment
     let player: VoicePlayer
     let foreground: Color
+    /// Liefert die Aufnahme beim ersten Abspielen.
+    let loadData: () async throws -> Data
+    /// Geschwindigkeit nur bei Nachrichten. Beim Vorhören entfällt sie.
+    var showsRate = true
 
     private static let barCount = 40
 
@@ -30,7 +33,9 @@ struct VoiceMessageView: View {
                     HStack {
                         durationText
                         Spacer()
-                        rateChip
+                        if showsRate {
+                            rateChip
+                        }
                     }
                 }
             } else {
@@ -38,15 +43,15 @@ struct VoiceMessageView: View {
                     playButton
                     waveform
                     durationText
-                    rateChip
+                    if showsRate {
+                        rateChip
+                    }
                 }
             }
             if player.loadFailed {
                 Button {
                     Task {
-                        await player.togglePlayback {
-                            try await MediaLoader.shared.fileData(for: attachment, session: session)
-                        }
+                        await player.togglePlayback(loadData: loadData)
                     }
                 } label: {
                     RetryHintText()
@@ -57,15 +62,12 @@ struct VoiceMessageView: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .frame(minWidth: 240, alignment: .leading)
     }
 
     private var playButton: some View {
         Button {
             Task {
-                await player.togglePlayback {
-                    try await MediaLoader.shared.fileData(for: attachment, session: session)
-                }
+                await player.togglePlayback(loadData: loadData)
             }
         } label: {
             ZStack {
