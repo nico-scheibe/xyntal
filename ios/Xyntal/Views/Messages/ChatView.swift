@@ -720,7 +720,7 @@ private struct MessageBubble: View {
                 .accessibilityLabel(gifLabel)
                 .accessibilityValue(gifPlays ? "Wird abgespielt" : "Angehalten")
                 .accessibilityAction(.default) {
-                    gifPlayback.override = !gifPlays
+                    gifPlayback.override = !GIFPolicy.wantsAnimation(gifPlayback, reduceMotion: reduceMotion)
                 }
         } else if message.fileAttachments.isEmpty && !message.imageAttachments.isEmpty {
             content

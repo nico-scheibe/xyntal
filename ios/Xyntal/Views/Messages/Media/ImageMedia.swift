@@ -187,15 +187,24 @@ final class GIFPlayback {
     var override: Bool?
 }
 
-/// Ob ein GIF gerade läuft. Der Tipp des Nutzers gilt immer (Start und Anhalten). Ohne Tipp nur automatisch,
-/// mit allen Bedingungen: Bewegung nicht reduziert, Datenreduzierung aus, Schalter an. In jedem Fall nur,
-/// wenn das GIF zur Hälfte sichtbar und die App aktiv ist.
+/// Zwei getrennte Fragen für ein GIF:
+/// - soll es laufen (wantsAnimation): der Tipp des Nutzers, sonst die drei Bedingungen
+///   (Bewegung nicht reduziert, Datenreduzierung aus, Schalter an);
+/// - darf es gerade laufen (isAllowedNow): zur Hälfte sichtbar und die App ist aktiv.
+/// Der Tipp entscheidet nur über das Soll. Das Dürfen bremst nur das Abspielen.
 @MainActor
 enum GIFPolicy {
-    static func animates(_ playback: GIFPlayback, isActive: Bool, reduceMotion: Bool) -> Bool {
-        guard playback.visible && isActive else { return false }
+    static func wantsAnimation(_ playback: GIFPlayback, reduceMotion: Bool) -> Bool {
         if let override = playback.override { return override }
         return !reduceMotion && !LowDataMonitor.shared.isConstrained && AppAppearance.shared.gifAutoplay
+    }
+
+    static func isAllowedNow(_ playback: GIFPlayback, isActive: Bool) -> Bool {
+        playback.visible && isActive
+    }
+
+    static func animates(_ playback: GIFPlayback, isActive: Bool, reduceMotion: Bool) -> Bool {
+        wantsAnimation(playback, reduceMotion: reduceMotion) && isAllowedNow(playback, isActive: isActive)
     }
 }
 
@@ -293,7 +302,7 @@ struct GIFMediaView: View {
 
     /// Tipp auf ein geladenes GIF: startet oder hält an, unabhängig von den automatischen Bedingungen.
     private func togglePlayback() {
-        playback.override = !GIFPolicy.animates(playback, isActive: scenePhase == .active, reduceMotion: reduceMotion)
+        playback.override = !GIFPolicy.wantsAnimation(playback, reduceMotion: reduceMotion)
     }
 
     private func load() async {
