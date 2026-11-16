@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import UIKit
 
 /// Entwurf einer Schreibzeile für genau einen Kanal: Text und Anhänge. Je Kanal ein eigener, damit nichts in einen
 /// anderen Kanal wandert. Wer den Kanal wechselt und zurückkommt, findet seinen Entwurf wieder.
@@ -27,6 +28,13 @@ final class MemberCommunityStore {
     private(set) var canManage = false
     /// Darf Umfragen starten. Steuert nur den Eintrag „Umfrage“ im „+“-Menü.
     private(set) var canPoll = false
+    /// Logo und Banner als data-URL, oder leer. Das Logo startet mit dem Wert aus dem Verzeichnis und wird beim Laden ersetzt.
+    private(set) var avatar: String?
+    private(set) var banner: String?
+    /// Das Banner, schon dekodiert. Entsteht außerhalb des Haupt-Threads, sobald sich `banner` ändert. Die Ansichten zeichnen nur dieses Bild.
+    private(set) var bannerImage: UIImage?
+    /// Nur der Eigentümer darf Logo und Banner ändern. Steuert das „…“-Menü der Innenansicht.
+    private(set) var canEdit = false
     /// nil, solange keine Kanäle bekannt sind.
     private(set) var selectedChannelId: String?
     /// Alle Beiträge des gewählten Kanals, neueste zuerst.
@@ -51,11 +59,21 @@ final class MemberCommunityStore {
     private var pollBusyIds: Set<String> = []
     /// Entwürfe je Kanal. Angelegt, sobald die Kanäle bekannt sind.
     private var drafts: [String: PostDraft] = [:]
+    /// Zählt jede Banner-Änderung. Ein Dekodier-Ergebnis zählt nur, wenn es zur neuesten Änderung gehört.
+    private var bannerGeneration = 0
+    /// Meldet ein neues Logo (oder nil beim Entfernen) nach außen, damit das Verzeichnis seinen Eintrag mitzieht.
+    private let onAvatarChanged: (String?) -> Void
 
-    init(session: SessionStore, communityId: String, outgoing: OutgoingStore) {
+    init(session: SessionStore,
+         communityId: String,
+         outgoing: OutgoingStore,
+         avatar: String? = nil,
+         onAvatarChanged: @escaping (String?) -> Void = { _ in }) {
         self.session = session
         self.communityId = communityId
         self.outgoing = outgoing
+        self.avatar = avatar
+        self.onAvatarChanged = onAvatarChanged
     }
 
     // MARK: - Abgeleitete Werte
@@ -125,6 +143,9 @@ final class MemberCommunityStore {
             channels = community.channels
             canManage = community.canManage
             canPoll = community.canPoll
+            avatar = community.avatar
+            setBanner(community.banner)
+            canEdit = community.canEdit
             for channel in channels where drafts[channel.id] == nil {
                 drafts[channel.id] = PostDraft(channelId: channel.id)
             }
@@ -140,6 +161,7 @@ final class MemberCommunityStore {
             // Ohne frische Rechte nichts anbieten, das der Server danach ablehnen könnte.
             canManage = false
             canPoll = false
+            canEdit = false
             hasLoaded = true
             return
         }
@@ -336,6 +358,81 @@ final class MemberCommunityStore {
             return
         } catch {
             actionError = AppError.displayText(for: error)
+        }
+    }
+
+    // MARK: - Logo und Banner
+
+    /// Setzt Logo oder Banner aus einem gewählten Foto: vorbereiten (Zuschnitt, Verkleinern, ohne Metadaten), dann hochladen.
+    /// Wirft CommunityImageError. Bei Erfolg zeigt die Innenansicht sofort die neue Fassung.
+    func changeImage(_ kind: CommunityImageKind, from photo: Data) async throws {
+        let dataURL = try await Task.detached(priority: .userInitiated) {
+            try CommunityImagePreparation.dataURL(from: photo, kind: kind)
+        }.value
+        try await uploadImage(kind, value: dataURL)
+    }
+
+    /// Entfernt Logo oder Banner. Danach zeigt die Community die Anfangsbuchstaben bzw. kein Banner.
+    func removeImage(_ kind: CommunityImageKind) async throws {
+        try await uploadImage(kind, value: nil)
+    }
+
+    /// value nil entfernt das Bild. Die Antwort des Servers wird nicht gebraucht: gespeichert wird, was gesendet wurde.
+    private func uploadImage(_ kind: CommunityImageKind, value: String?) async throws {
+        do {
+            try await session.withAccess { token in
+                try await self.session.api.updateCommunityImage(id: self.communityId, kind: kind, value: value ?? "", token: token)
+            }
+        } catch let error as CancellationError {
+            throw error
+        } catch {
+            let failure = CommunityImageError.from(error)
+            // Nicht (mehr) Eigentümer: die Rechte neu laden, damit das Menü verschwindet.
+            if failure == .forbidden {
+                await refreshEditRight()
+            }
+            throw failure
+        }
+        switch kind {
+        case .logo:
+            avatar = value
+            onAvatarChanged(value)
+        case .banner:
+            setBanner(value)
+        }
+    }
+
+    /// Übernimmt das Banner und dekodiert es außerhalb des Haupt-Threads. Ist der Wert derselbe wie vorher, passiert nichts.
+    /// Das alte Bild bleibt stehen, bis das neue fertig ist. Ein Ergebnis einer älteren Änderung wird verworfen.
+    private func setBanner(_ value: String?) {
+        guard value != banner else { return }
+        banner = value
+        bannerGeneration += 1
+        let generation = bannerGeneration
+        guard let value else {
+            bannerImage = nil
+            return
+        }
+        Task {
+            let image = await Task.detached(priority: .userInitiated) {
+                CommunityBannerImage.image(from: value)
+            }.value
+            guard generation == bannerGeneration else { return }
+            bannerImage = image
+        }
+    }
+
+    /// Lädt nur das Eigentümerrecht neu. Schlägt das fehl, bleibt das Menü aus: lieber nichts anbieten als etwas Abgelehntes.
+    private func refreshEditRight() async {
+        do {
+            let community = try await session.withAccess { token in
+                try await self.session.api.memberCommunity(id: self.communityId, token: token)
+            }
+            canEdit = community.canEdit
+        } catch is CancellationError {
+            return
+        } catch {
+            canEdit = false
         }
     }
 }

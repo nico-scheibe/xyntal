@@ -156,6 +156,7 @@ final class ConversationsStore {
         typingCleanupTask?.cancel()
         typingCleanupTask = nil
         AvatarImage.clearCache()
+        CommunityBannerImage.clearCache()
     }
 
     // MARK: - Laden

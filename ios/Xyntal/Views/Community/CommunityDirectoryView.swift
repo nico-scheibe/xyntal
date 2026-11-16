@@ -420,7 +420,9 @@ struct CommunityDetailView: View {
     var body: some View {
         Group {
             if current.isMember {
-                CommunityMemberView(community: current, welcome: welcomeName)
+                CommunityMemberView(community: current, welcome: welcomeName) { avatar in
+                    store.updateAvatar(avatar, communityId: community.id)
+                }
             } else {
                 nonMemberList
             }

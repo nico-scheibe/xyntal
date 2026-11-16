@@ -89,6 +89,13 @@ final class CommunityDirectoryStore {
         }
     }
 
+    /// Trägt das Logo einer Community in ihren Listeneintrag ein, nach einer erfolgreichen Änderung (nil entfernt es).
+    /// Kein Netzaufruf: die Liste hält den Eintrag schon, und die Detailansicht liest ihn aus diesem Store.
+    func updateAvatar(_ avatar: String?, communityId id: String) {
+        guard let index = communities.firstIndex(where: { $0.id == id }) else { return }
+        communities[index].avatar = avatar
+    }
+
     /// Nach dem Arbeitsstil-Test: der Hinweis zum fehlenden Test ist überholt, „Beitreten“ ist wieder frei.
     func assessmentCompleted() {
         joinError = nil

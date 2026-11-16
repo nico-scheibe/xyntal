@@ -50,6 +50,18 @@ extension APIClient {
         return try await send("communities/\(communityId)", token: token, as: MemberCommunity.self)
     }
 
+    /// PATCH /communities/:id (mit Token): setzt Logo (avatar) oder Banner (banner) als data-URL. Ein leerer String entfernt es.
+    /// Weggelassene Felder bleiben unverändert, deshalb geht im Rumpf nur das eine Feld. Der Server schneidet nichts zu.
+    func updateCommunityImage(id: String, kind: CommunityImageKind, value: String, token: String) async throws {
+        let communityId = try Self.validatedPathId(id)
+        _ = try await send("communities/\(communityId)",
+                           method: "PATCH",
+                           token: token,
+                           body: CommunityImageRequest(kind: kind, value: value),
+                           as: CommunityUpdatedResult.self,
+                           mapFailure: Self.communityImageFailure)
+    }
+
     /// GET /channels/:id/posts (mit Token): alle Beiträge des Kanals, neueste zuerst. Der Server blättert nicht.
     func channelPosts(channelId: String, token: String) async throws -> [ChannelPost] {
         let id = try Self.validatedPathId(channelId)
@@ -189,6 +201,20 @@ extension APIClient {
             return nil
         }
     }
+
+    /// Fehler von PATCH /communities/:id für Logo und Banner. Die Texte stehen in CommunityImageError.
+    /// 403 ist .stale, damit die Anzeige die Rechte neu lädt. 413 und 400 heißen „zu groß“: Die Länge ist die einzige
+    /// Grenze, die der Server für das Bild nennt, und das Format stimmt bei unserer JPEG-Ausgabe immer.
+    private static func communityImageFailure(status: Int, code: String, message: String) -> AppError? {
+        switch (status, code) {
+        case (403, "FORBIDDEN"):
+            return .stale(CommunityImageError.forbiddenText)
+        case (413, _), (400, "VALIDATION_FAILED"):
+            return .message(CommunityImageError.tooLargeText)
+        default:
+            return nil
+        }
+    }
 }
 
 private struct ChannelReactionRequest: Encodable {
@@ -240,6 +266,21 @@ struct CreatedCommunity: Decodable {
 private struct CommunityCreatedResult: Decodable {
     let community: CreatedCommunity
 }
+
+/// Rumpf von PATCH /communities/:id für ein Bild. Nur das Feld des gewählten Bildes ist gesetzt. nil fehlt im JSON,
+/// weil die Eigenschaften optional sind und der Encoder nil-Felder nicht schreibt.
+private struct CommunityImageRequest: Encodable {
+    let avatar: String?
+    let banner: String?
+
+    init(kind: CommunityImageKind, value: String) {
+        avatar = kind == .logo ? value : nil
+        banner = kind == .banner ? value : nil
+    }
+}
+
+/// Antwort von PATCH /communities/:id. Der Inhalt wird nicht gebraucht; die App setzt die neue Fassung selbst.
+private struct CommunityUpdatedResult: Decodable {}
 
 private struct ChannelReactionsResult: Decodable {
     let reactions: [ChannelReaction]

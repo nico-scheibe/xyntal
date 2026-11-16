@@ -29,6 +29,12 @@ struct MemberCommunity: Decodable {
     var canPoll: Bool
     /// Kanäle in der Reihenfolge des Servers. Leere Namen fallen weg.
     var channels: [Channel]
+    /// Logo als data:image-Base64-String, oder leer. Die Innenansicht zeigt damit das aktuelle Logo.
+    var avatar: String?
+    /// Banner als data:image-Base64-String, oder leer. Nur in dieser Antwort, das Verzeichnis liefert keines.
+    var banner: String?
+    /// true nur für den Eigentümer. Steuert das „…“-Menü für Logo und Banner. Der Server prüft es bei jeder Änderung noch einmal.
+    var canEdit: Bool
 
     private enum CodingKeys: String, CodingKey {
         case community, channels
@@ -37,12 +43,33 @@ struct MemberCommunity: Decodable {
     private struct Info: Decodable {
         let canManage: Bool?
         let canPoll: Bool?
+        let avatar: String?
+        let banner: String?
+        let canEdit: Bool?
+
+        private enum CodingKeys: String, CodingKey {
+            case canManage, canPoll, avatar, banner, canEdit
+        }
+
+        // Jedes Feld einzeln tolerant: Ein unlesbares Feld kostet nicht die anderen.
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            canManage = container.lenient(Bool.self, .canManage)
+            canPoll = container.lenient(Bool.self, .canPoll)
+            avatar = container.lenient(String.self, .avatar)
+            banner = container.lenient(String.self, .banner)
+            canEdit = container.lenient(Bool.self, .canEdit)
+        }
     }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        canManage = container.lenient(Info.self, .community)?.canManage ?? false
-        canPoll = container.lenient(Info.self, .community)?.canPoll ?? false
+        let info = container.lenient(Info.self, .community)
+        canManage = info?.canManage ?? false
+        canPoll = info?.canPoll ?? false
+        avatar = info?.avatar
+        banner = info?.banner
+        canEdit = info?.canEdit ?? false
         channels = (container.lenient(LossyArray<Channel>.self, .channels)?.elements ?? [])
             .filter { !$0.name.isEmpty }
     }

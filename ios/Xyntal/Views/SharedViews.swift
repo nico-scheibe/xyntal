@@ -148,15 +148,12 @@ struct AvatarView: View {
     }
 }
 
-/// Dekodiert Avatare aus data-URLs ohne UIImage(data:): ImageIO liest erst die Bildmaße und erzeugt dann nur ein
-/// kleines Thumbnail, sodass ein riesiges PNG nie als voller Bitmap im Speicher landet.
-/// Nur JPEG und PNG (Präfix und Magic Bytes müssen zusammenpassen), höchstens 2 MB Rohdaten und 4.096 px je Seite.
-enum AvatarImage {
+/// Dekodiert data-URLs (data:image/(jpeg|png);base64) ohne UIImage(data:): ImageIO liest erst die Bildmaße und erzeugt dann
+/// nur ein kleines Thumbnail, sodass ein riesiges PNG nie als voller Bitmap im Speicher landet.
+/// Nur JPEG und PNG (Präfix und Magic Bytes müssen zusammenpassen), höchstens 2 MB Rohdaten.
+/// Zielgröße und Obergrenze für die Quellpixel bestimmt der Aufrufer. Die Prüfungen gelten für alle Arten von Bildern gleich.
+enum DataURLImage {
     static let maxBytes = 2 * 1024 * 1024
-    /// Größere Quellbilder werden gar nicht erst dekodiert.
-    static let maxSourcePixels = 4_096
-    /// Reicht für alle Avatar-Größen der App mal Bildschirm-Scale.
-    static let thumbnailMaxPixels = 256
 
     private struct Format {
         let prefix: String
@@ -167,20 +164,6 @@ enum AvatarImage {
         Format(prefix: "data:image/jpeg;base64,", magic: [0xFF, 0xD8, 0xFF]),
         Format(prefix: "data:image/png;base64,", magic: [0x89, 0x50, 0x4E, 0x47])
     ]
-
-    /// Ergebnis je Avatar-String, auch Fehlschläge, damit ungültige Daten nicht bei jedem Zeichnen neu geprüft werden.
-    private final class Entry {
-        let image: UIImage?
-        init(image: UIImage?) { self.image = image }
-    }
-
-    /// Schlüssel ist der SHA-256 des Strings; Kosten sind die Thumbnail-Bytes (Breite × Höhe × 4).
-    private static let cache: NSCache<NSString, Entry> = {
-        let cache = NSCache<NSString, Entry>()
-        cache.totalCostLimit = 20 * 1024 * 1024
-        cache.countLimit = 200
-        return cache
-    }()
 
     /// Rohdaten des Bildes, wenn Präfix, Größe und Magic Bytes stimmen.
     static func decode(_ string: String?) -> Data? {
@@ -196,8 +179,9 @@ enum AvatarImage {
         return data
     }
 
-    /// Kleines Thumbnail über ImageIO. nil, wenn das Bild unlesbar oder eine Seite länger als maxSourcePixels ist.
-    static func thumbnail(from data: Data) -> UIImage? {
+    /// Thumbnail über ImageIO, längste Kante höchstens maxPixels. nil, wenn das Bild unlesbar oder eine Seite
+    /// länger als maxSourcePixels ist. Die Prüfung kommt vor dem Dekodieren, damit ein großes Bild nie voll entpackt wird.
+    static func thumbnail(from data: Data, maxPixels: Int, maxSourcePixels: Int) -> UIImage? {
         let sourceOptions = [kCGImageSourceShouldCache: false] as CFDictionary
         guard let source = CGImageSourceCreateWithData(data as CFData, sourceOptions),
               CGImageSourceGetCount(source) >= 1,
@@ -208,29 +192,100 @@ enum AvatarImage {
               width <= maxSourcePixels, height <= maxSourcePixels else { return nil }
         let thumbnailOptions: [CFString: Any] = [
             kCGImageSourceCreateThumbnailFromImageAlways: true,
-            kCGImageSourceThumbnailMaxPixelSize: thumbnailMaxPixels,
+            kCGImageSourceThumbnailMaxPixelSize: maxPixels,
             kCGImageSourceShouldCacheImmediately: true,
             kCGImageSourceCreateThumbnailWithTransform: true
         ]
         guard let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, thumbnailOptions as CFDictionary) else { return nil }
         return UIImage(cgImage: cgImage)
     }
+}
 
-    static func image(from string: String?) -> UIImage? {
+/// Speicher für dekodierte Bilder mit fester Zielgröße und Obergrenze der Quellpixel. Merkt sich auch Fehlschläge,
+/// damit ungültige Daten nicht bei jedem Zeichnen neu geprüft werden. Kosten sind Breite × Höhe × 4.
+final class DataURLImageCache {
+    /// NSCache braucht ein Objekt. Ein Eintrag mit image == nil merkt sich einen Fehlschlag.
+    private final class Entry {
+        let image: UIImage?
+        init(image: UIImage?) { self.image = image }
+    }
+
+    private let maxPixels: Int
+    private let maxSourcePixels: Int
+    private let cache = NSCache<NSString, Entry>()
+
+    init(maxPixels: Int, maxSourcePixels: Int, totalCostLimit: Int, countLimit: Int) {
+        self.maxPixels = maxPixels
+        self.maxSourcePixels = maxSourcePixels
+        cache.totalCostLimit = totalCostLimit
+        cache.countLimit = countLimit
+    }
+
+    /// Dekodiert im Aufrufer-Thread. Für Ansichten nicht aus body aufrufen, sondern einmal außerhalb des Haupt-Threads.
+    func image(from string: String?) -> UIImage? {
         guard let string = string.nonEmptyText else { return nil }
         let key = cacheKey(for: string)
         if let cached = cache.object(forKey: key) { return cached.image }
-        let image = decode(string).flatMap(thumbnail(from:))
+        let image = DataURLImage.decode(string).flatMap {
+            DataURLImage.thumbnail(from: $0, maxPixels: maxPixels, maxSourcePixels: maxSourcePixels)
+        }
         let cost = max(1, (image?.cgImage?.width ?? 0) * (image?.cgImage?.height ?? 0) * 4)
         cache.setObject(Entry(image: image), forKey: key, cost: cost)
         return image
     }
 
-    static func clearCache() {
+    func removeAll() {
         cache.removeAllObjects()
     }
 
-    private static func cacheKey(for string: String) -> NSString {
-        SHA256.hash(data: Data(string.utf8)).map { String(format: "%02x", $0) }.joined() as NSString
+    /// Schlüssel: die beiden Größen plus SHA-256 des Strings. So kann ein Eintrag nie für eine andere Größe gelten.
+    private func cacheKey(for string: String) -> NSString {
+        let hash = SHA256.hash(data: Data(string.utf8)).map { String(format: "%02x", $0) }.joined()
+        return "\(maxPixels)/\(maxSourcePixels)/\(hash)" as NSString
+    }
+}
+
+/// Avatare, höchstens 256 px auf der längsten Kante. Das reicht für die größte Avatar-Fläche der App (64 pt)
+/// bei 4-fachem Scale und ist klein genug, dass der Speicher bei vielen Avataren nicht wächst.
+/// Quellen bis 4.096 px je Seite, wie bisher.
+enum AvatarImage {
+    static let thumbnailMaxPixels = 256
+    static let maxSourcePixels = 4_096
+
+    private static let cache = DataURLImageCache(maxPixels: AvatarImage.thumbnailMaxPixels,
+                                                 maxSourcePixels: AvatarImage.maxSourcePixels,
+                                                 totalCostLimit: 20 * 1024 * 1024,
+                                                 countLimit: 200)
+
+    static func image(from string: String?) -> UIImage? {
+        cache.image(from: string)
+    }
+
+    static func clearCache() {
+        cache.removeAll()
+    }
+}
+
+/// Banner einer Community, höchstens 1.200 px breit. Ein Banner ist die volle Zeilenbreite (auf einem iPhone bis
+/// gut 400 pt) mal 3 für die Pixel, also etwa 1.200 px. Bei 256 px würde es verwaschen aussehen.
+/// Der Upload erzeugt genau diese Größe (CommunityImagePreparation). Die Quelle darf höchstens 2.048 px je Seite haben:
+/// Das ist knapp das Doppelte des Uploads, also Luft für Bilder anderer Herkunft, und begrenzt den Entpack-Spitzenwert
+/// auf etwa 16 MB (2.048² × 4 Byte). 4.096 px wären 67 MB für ein einziges Bild, das nur auf 1.200 px verkleinert wird.
+/// Der Server nimmt Banner bis 600.000 Zeichen von jedem Client an, deshalb gilt die Grenze für alle Quellen.
+enum CommunityBannerImage {
+    static let maxPixels = 1_200
+    static let maxSourcePixels = 2_048
+
+    private static let cache = DataURLImageCache(maxPixels: CommunityBannerImage.maxPixels,
+                                                 maxSourcePixels: CommunityBannerImage.maxSourcePixels,
+                                                 totalCostLimit: 40 * 1024 * 1024,
+                                                 countLimit: 20)
+
+    static func image(from string: String?) -> UIImage? {
+        cache.image(from: string)
+    }
+
+    static func clearCache() {
+        cache.removeAll()
     }
 }

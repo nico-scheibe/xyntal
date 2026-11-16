@@ -68,13 +68,18 @@ enum AttachmentFiles {
             kCGImageSourceThumbnailMaxPixelSize: edge,
         ]
         guard let image = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else { return nil }
+        return jpegData(image, quality: jpegQuality)
+    }
+
+    /// JPEG aus einem fertigen Bild. Ohne Eigenschaften beim Schreiben: die Datei trägt keine Metadaten.
+    /// Gemeinsam genutzt von Chat-Fotos und Community-Bildern (CommunityImagePreparation).
+    static func jpegData(_ image: CGImage, quality: Double) -> Data? {
         let output = NSMutableData()
         guard let destination = CGImageDestinationCreateWithData(output, UTType.jpeg.identifier as CFString, 1, nil) else {
             return nil
         }
-        // Ohne Eigenschaften: das neue Bild trägt keine Metadaten.
         CGImageDestinationAddImage(destination, image,
-                                   [kCGImageDestinationLossyCompressionQuality: jpegQuality] as CFDictionary)
+                                   [kCGImageDestinationLossyCompressionQuality: quality] as CFDictionary)
         guard CGImageDestinationFinalize(destination) else { return nil }
         return output as Data
     }

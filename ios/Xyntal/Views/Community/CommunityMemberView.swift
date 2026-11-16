@@ -11,6 +11,8 @@ struct CommunityMemberView: View {
     let community: DiscoverCommunity
     /// Name für den Hinweis „Willkommen in {Name}“. nil, wenn gerade kein Hinweis gezeigt wird.
     let welcome: String?
+    /// Meldet ein geändertes Logo an den Aufrufer, damit die Liste es ohne neuen Netzaufruf zeigt.
+    var onAvatarChanged: (String?) -> Void = { _ in }
 
     @State private var store: MemberCommunityStore?
 
@@ -25,7 +27,11 @@ struct CommunityMemberView: View {
         }
         .task {
             if store == nil {
-                store = MemberCommunityStore(session: session, communityId: community.id, outgoing: outgoing)
+                store = MemberCommunityStore(session: session,
+                                             communityId: community.id,
+                                             outgoing: outgoing,
+                                             avatar: community.avatar,
+                                             onAvatarChanged: onAvatarChanged)
             }
             if let store, !store.hasLoaded {
                 await store.load()
@@ -44,10 +50,28 @@ private struct MemberFeedContent: View {
 
     /// Der Schreibanstoß im leeren Kanal setzt den Cursor ins Eingabefeld der Schreibzeile.
     @FocusState private var composerFocused: Bool
+    /// Das „…“-Blatt mit Logo und Banner. Nur erreichbar, wenn du Eigentümer bist.
+    @State private var showImages = false
 
     var body: some View {
         List {
-            MemberHeader(community: community)
+            // Das Banner steht als erste Zeile und scrollt mit. Es ist Schmuck, darum nicht antippbar und für VoiceOver ausgeblendet.
+            // Das Bild dekodiert der Store außerhalb des Haupt-Threads. Ohne Bild fällt die Zeile ganz weg.
+            if let bannerImage = store.bannerImage {
+                CommunityBannerFrame {
+                    Image(uiImage: bannerImage)
+                        .resizable()
+                        .scaledToFill()
+                }
+                .accessibilityHidden(true)
+                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 0, trailing: 16))
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+            }
+
+            // Mit Banner 16 pt Abstand zum Kopf, ohne Banner bleibt der Kopf wie bisher.
+            MemberHeader(community: community, avatar: store.avatar)
+                .padding(.top, store.bannerImage == nil ? 0 : 16)
                 .listRowSeparator(.hidden)
                 .listRowBackground(Color.clear)
 
@@ -113,6 +137,24 @@ private struct MemberFeedContent: View {
         }
         .onAppear {
             store.dropDeliveredPosts()
+        }
+        .toolbar {
+            // Nur der Eigentümer sieht das Menü. Der Server prüft jede Änderung trotzdem noch einmal.
+            if store.canEdit {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        Button("Logo und Banner") {
+                            showImages = true
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                    }
+                    .accessibilityLabel("Mehr")
+                }
+            }
+        }
+        .sheet(isPresented: $showImages) {
+            CommunityImagesSheet(store: store, name: community.name.nonEmptyText ?? "Community")
         }
     }
 
@@ -445,13 +487,33 @@ private struct PostComposer: View {
     }
 }
 
+/// Rahmen für ein Banner: Verhältnis 3:1, Ecken 16 pt, Umrandung 1 pt. Die Breite gibt die Zeile vor, die Höhe ist ein Drittel.
+/// Das Bild füllt den Rahmen und wird mittig beschnitten. Der Inhalt kommt von außen, damit Innenansicht und Blatt denselben Rahmen teilen.
+struct CommunityBannerFrame<Content: View>: View {
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        Color.clear
+            .frame(maxWidth: .infinity)
+            .aspectRatio(3, contentMode: .fit)
+            .overlay { content }
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .strokeBorder(Color.primary.opacity(0.18), lineWidth: 1)
+            }
+    }
+}
+
 /// Avatar, Name, Abzeichen „Mitglied“, Kategorie und Mitgliederzahl, Beschreibung.
 private struct MemberHeader: View {
     let community: DiscoverCommunity
+    /// Logo aus der Innenansicht (Store). Das Verzeichnis kann nach einer Änderung noch das alte haben.
+    let avatar: String?
 
     var body: some View {
         CommunityIdentityHeader(name: community.name.nonEmptyText ?? "Community",
-                                avatar: community.avatar,
+                                avatar: avatar,
                                 badge: "Mitglied",
                                 subline: sublineText,
                                 description: community.description.nonEmptyText)
