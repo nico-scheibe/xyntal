@@ -309,8 +309,13 @@
   }
 
   // ---------- Gesprächsliste ----------
+  // Nachrichtenanfragen (Nachrichten von Leuten, die du noch nicht kennst) entscheidet der Server:
+  // messageRequest. Fehlt das Feld, gilt das Gespräch wie bisher als normal.
+  const isRequest = (c) => !!(c && c.messageRequest === true);
   function passes(c) {
     if (S.space !== "all" && spaceOf(c) !== S.space) return false;
+    // Anfragen stehen nur unter „Nachrichtenanfragen“; in allen anderen Ansichten sind sie nicht da.
+    if (S.filter === "msg-requests" ? !isRequest(c) : isRequest(c) && S.filter !== "archived") return false;
     if (S.query) {
       const q = S.query.toLowerCase();
       return [c.title, c.workspaceName, c.projectName, c.description].some((v) => (v || "").toLowerCase().includes(q));
@@ -318,6 +323,7 @@
     switch (S.filter) {
       case "unread": return !c.archived && c.unread > 0;
       case "requests": return !c.archived && c.pendingRequests > 0;
+      case "msg-requests": return !c.archived;
       case "archived": return c.archived;
       default: return !c.archived;
     }
@@ -348,13 +354,16 @@
     let items = "";
     if (pinned.length && !S.query) items += `<p class="xc-label">${esc(t("Angeheftet"))}</p><ul class="xc-items">${pinned.map(itemHtml).join("")}</ul>`;
     if (rest.length) items += `${pinned.length && !S.query ? `<p class="xc-label">${esc(t("Gespräche"))}</p>` : ""}<ul class="xc-items">${rest.map(itemHtml).join("")}</ul>`;
-    // Eigene offene Beitrittsanfragen: sichtbar unter „Anfragen“, bis jemand entscheidet
+    // Eigene offene Beitrittsanfragen: sichtbar unter „Beitrittsanfragen“, bis jemand entscheidet
     const waiting = S.filter === "requests" && !S.query && S.myRequests.length
-      ? `<p class="xc-label">${esc(t("Deine Anfragen"))}</p><ul class="xc-items">${S.myRequests.map((g) => `<li><div class="xc-item is-waiting">${groupAvatar({ id: g.id, title: g.title, emoji: g.emoji, avatar: g.avatar })}<span class="xc-item-main"><span class="xc-item-top"><b data-no-i18n>${esc(g.title)}</b></span><span class="xc-item-sub"><span>${esc(t("Wartet auf Freigabe"))}</span></span></span><button type="button" class="xc-link" data-withdraw="${esc(g.id)}">${esc(t("Zurückziehen"))}</button></div></li>`).join("")}</ul>`
+      ? `<p class="xc-label">${esc(t("Deine Beitrittsanfragen"))}</p><ul class="xc-items">${S.myRequests.map((g) => `<li><div class="xc-item is-waiting">${groupAvatar({ id: g.id, title: g.title, emoji: g.emoji, avatar: g.avatar })}<span class="xc-item-main"><span class="xc-item-top"><b data-no-i18n>${esc(g.title)}</b></span><span class="xc-item-sub"><span>${esc(t("Wartet auf Freigabe"))}</span></span></span><button type="button" class="xc-link" data-withdraw="${esc(g.id)}">${esc(t("Zurückziehen"))}</button></div></li>`).join("")}</ul>`
       : "";
-    const hits = S.query.length >= 2 && S.searchHits.length ? `<p class="xc-label">${esc(t("Nachrichten"))}</p><ul class="xc-hits">${S.searchHits.map((m) => `<li><button type="button" data-open="${esc(m.conversationId)}"><b data-no-i18n>${esc(conv(m.conversationId)?.title || m.author)}</b><span data-no-i18n>${esc(m.author)}: ${esc((m.body || "").slice(0, 90))}</span></button></li>`).join("")}</ul>` : "";
+    // Treffer aus Anfragen gehören nicht in die Suche der normalen Liste (sie stehen unter „Nachrichtenanfragen“)
+    const foundHits = S.searchHits.filter((m) => !isRequest(conv(m.conversationId)));
+    const hits = S.query.length >= 2 && foundHits.length && S.filter !== "msg-requests" ? `<p class="xc-label">${esc(t("Nachrichten"))}</p><ul class="xc-hits">${foundHits.map((m) => `<li><button type="button" data-open="${esc(m.conversationId)}"><b data-no-i18n>${esc(conv(m.conversationId)?.title || m.author)}</b><span data-no-i18n>${esc(m.author)}: ${esc((m.body || "").slice(0, 90))}</span></button></li>`).join("")}</ul>` : "";
     const emptyText = S.query ? "Nichts gefunden."
-      : S.filter === "requests" ? "Keine offenen Anfragen."
+      : S.filter === "requests" ? "Keine offenen Beitrittsanfragen."
+      : S.filter === "msg-requests" ? "Keine Anfragen"
       : S.filter !== "all" ? "Hier ist gerade nichts."
       : { all: "Noch keine Gespräche. Starte eins mit dem Plus oben.", private: "Noch keine privaten Gespräche.",
           teams: "Noch kein Team-Chat. Leg einen für deinen Arbeitsbereich oder ein Projekt an.", groups: "Du bist noch in keiner öffentlichen Gruppe – schau mal unter „Gruppen entdecken“." }[S.space];
@@ -363,13 +372,13 @@
     const itemsEl = listEl.querySelector("[data-items]");
     const nextHtml = items || hits || waiting
       ? `${waiting}${items}${hits}`
-      : `<div class="xc-empty xc-empty-list"><p>${esc(t(emptyText))}</p>${S.space === "teams" ? `<button type="button" class="btn btn-small btn-ghost" data-new-team>${esc(t("Team-Chat anlegen"))}</button>` : S.space === "groups" ? `<button type="button" class="btn btn-small btn-ghost" data-discover>${esc(t("Gruppen entdecken"))}</button>` : ""}</div>`;
+      : `<div class="xc-empty xc-empty-list"><p>${esc(t(emptyText))}</p>${S.filter === "msg-requests" && !S.query ? `<p class="xc-hint">${esc(t("Hier landen erste Nachrichten von Leuten, die du noch nicht kennst."))}</p>` : ""}${S.space === "teams" ? `<button type="button" class="btn btn-small btn-ghost" data-new-team>${esc(t("Team-Chat anlegen"))}</button>` : S.space === "groups" ? `<button type="button" class="btn btn-small btn-ghost" data-discover>${esc(t("Gruppen entdecken"))}</button>` : ""}</div>`;
     if (itemsEl._html !== nextHtml) { itemsEl.innerHTML = nextHtml; itemsEl._html = nextHtml; }
     listEl.querySelectorAll("[data-filter]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.filter === S.filter)));
     listEl.querySelectorAll("[data-space]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.space === S.space)));
     // Ungelesene je Bereich an den Reitern
     for (const sp of ["all", "private", "teams", "groups"]) {
-      const n = S.conversations.filter((c) => !c.archived && (sp === "all" || spaceOf(c) === sp)).reduce((sum, c) => sum + (c.unread || 0), 0);
+      const n = S.conversations.filter((c) => !c.archived && !isRequest(c) && (sp === "all" || spaceOf(c) === sp)).reduce((sum, c) => sum + (c.unread || 0), 0);
       const el = listEl.querySelector(`[data-space-count="${sp}"]`);
       if (el) el.textContent = n ? (n > 99 ? "99+" : String(n)) : "";
     }
@@ -377,7 +386,7 @@
     const reqChip = listEl.querySelector('[data-filter="requests"]');
     if (reqChip) reqChip.dataset.count = reqs ? String(reqs) : "";
     listEl.querySelector("[data-discover]")?.classList.toggle("is-active", S.mode === "discover");
-    const total = S.conversations.filter((c) => !c.archived).reduce((n, c) => n + (c.unread || 0), 0);
+    const total = S.conversations.filter((c) => !c.archived && !isRequest(c)).reduce((n, c) => n + (c.unread || 0), 0);
     const nav = document.querySelector("[data-messages]");
     if (nav) nav.innerHTML = `${esc(t("Nachrichten"))}${total ? ` <span class="badge">${total}</span>` : ""}`;
   }
