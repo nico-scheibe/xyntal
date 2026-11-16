@@ -327,6 +327,23 @@ a { color: inherit; text-decoration: none; }
 .end__wl::after { bottom: 9px; }
 .end__wl[hidden] { display: none; }
 
+/* Download: Karte mit Mono-Label und zwei Plattform-Kacheln (Symbol, Name, Pfeil) */
+.dl { width: 100%; max-width: 720px; display: grid; gap: var(--s-2); padding: var(--s-3); border: 1px solid var(--line-2); border-radius: var(--r-win); background: var(--g-1); }
+.dl__label { display: inline-flex; align-items: center; gap: 10px; margin: 0; font-size: 12px; letter-spacing: .14em; color: var(--t-3); }
+.dl__label::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--bl); box-shadow: 0 0 0 4px rgba(76, 141, 255, .18); }
+.dl .end__note { margin: 0; }
+.dl__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-2); }
+.dl__tile { display: flex; align-items: center; gap: 14px; min-height: 64px; padding: 14px 18px; border: 1px solid var(--line-2); border-radius: var(--r-win); background: var(--g-2); color: var(--t-1); font: 500 1rem/1.25 var(--f-text); text-decoration: none; transition: border-color .3s var(--ease), background .3s var(--ease); }
+.dl__tile:hover, .dl__tile:focus-visible { border-color: var(--t-2); background: var(--g-3); }
+.dl__ico { flex: none; width: 24px; height: 24px; fill: currentColor; }
+.dl__txt { flex: 1; min-width: 0; }
+.dl__tile .pill__arr { color: var(--t-3); }
+.dl__tile:hover .pill__arr { color: var(--t-1); }
+@media (max-width: 560px) {
+  .dl { padding: var(--s-2); }
+  .dl__grid { grid-template-columns: 1fr; }
+}
+
 /* Warteliste (Markup und Klassen wie bisher, damit landing.js und invite.js unverändert greifen) */
 .news { display: grid; gap: var(--s-3); max-width: 32rem; margin-top: var(--s-4); color: var(--t-2); font-size: .97rem; }
 .news > p { max-width: 40ch; }

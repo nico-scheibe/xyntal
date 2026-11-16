@@ -548,6 +548,13 @@ window.XYNTAL_EN = {
   "Mitglieder entdecken": "Discover members",
   "Passende Leute ansehen": "See people who fit",
   "Mitglieder ansehen": "Browse members",
+  // Hero-Button (index.html)
+  "App herunterladen": "Download the app",
+  // Download-Bereich (index.html, #download)
+  "Xyntal-App herunterladen, kostenlos und ohne Bewerbung.": "Download the Xyntal app, free and without an application.",
+  "Für Mac laden": "Download for Mac",
+  "Für Windows laden": "Download for Windows",
+  "Beta-Version. Auf dem Handy geht es noch nicht.": "Beta version. Not on phones yet.",
   "Brief": "Letter",
   "Dein Team finden": "Find your team",
   "Zu deinen Vorschlägen": "To your suggestions",
@@ -2955,6 +2962,7 @@ window.XYNTAL_EN = {
   "Was unterscheidet das von LinkedIn oder Discord?": "How is this different from LinkedIn or Discord?",
   "Worauf läuft es?": "What does it run on?",
   "Wie komme ich rein?": "How do I get in?",
+  "Lade die App für Mac oder Windows direkt herunter. Ohne Bewerbung.": "Download the app for Mac or Windows directly. No application needed.",
   "Die Beta läuft. Zugang per Bewerbung.": "The beta is running. Access by application.",
   // Startseite: Was Xyntal ersetzt (Quittung), Dieselbe Person an drei Orten
   "Wer heute Mitstreiter sucht, springt zwischen fünf Apps hin und her.": "Looking for people to build with today means jumping between five apps.",
