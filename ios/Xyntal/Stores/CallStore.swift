@@ -240,7 +240,8 @@ final class CallStore {
 
     /// Abmelden während eines Anrufs. Läuft vor dem Entfernen des Tokens, damit der Platz noch abgegeben werden kann.
     func releaseForSignOut() async {
-        await finish()
+        // Abmelden darf nicht auf die Beitreten-Leiste warten. Nach dem Abmelden ist sie ohnehin bedeutungslos.
+        await finish(refreshBar: false)
     }
 
     /// Sitzung ist beendet (Abmelden, Kontolöschung, abgelaufenes Token). Läuft synchron, damit Mikrofon und Kamera
@@ -248,8 +249,12 @@ final class CallStore {
     /// Hintergrund abgegeben. Mehrfacher Aufruf ist harmlos.
     func sessionEnded(token: String?) {
         clearIncoming()
-        guard let ended = stopLocally() else { return }
-        guard let token else { return }
+        let ended = stopLocally()
+        // Der Zustand gehört der Sitzung: Beitreten-Leiste, Hinweise und Fehler aus der vorigen Sitzung bleiben nicht stehen.
+        runningCalls.removeAll()
+        held = []
+        errorText = nil
+        guard let ended, let token else { return }
         let api = session.api
         Task { _ = try? await api.leaveCall(callId: ended.callId, token: token) }
     }
@@ -285,11 +290,16 @@ final class CallStore {
 
     /// Beendet den Anruf auf dieser Seite und gibt den Platz beim Server ab (sofern gewünscht und möglich).
     /// releaseSeat false, wenn der Platz schon an ein anderes Gerät gegangen ist ("replaced"): dann nicht abmelden.
-    private func finish(releaseSeat: Bool = true) async {
+    /// refreshBar false nur beim Abmelden: Dort wird die Nachfrage nicht abgewartet.
+    private func finish(releaseSeat: Bool = true, refreshBar: Bool = true) async {
         guard let ended = stopLocally(), releaseSeat else { return }
         let api = session.api
         _ = try? await session.withAccess { token in
             try await api.leaveCall(callId: ended.callId, token: token)
+        }
+        if refreshBar {
+            // Der Anruf kann ohne mich weiterlaufen. Deshalb nachfragen, damit die Beitreten-Leiste wieder erscheint.
+            await refreshRunningCall(conversationId: ended.conversationId)
         }
     }
 
