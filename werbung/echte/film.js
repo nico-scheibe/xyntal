@@ -26,11 +26,13 @@ const HITS = [
   [37.2, 'clapping', 'tick', { gain: 0.15 }], [38.6, 'X clapping', 'click', { gain: 0.35 }],
   [40.6, 'phone', 'pop', { pitch: 'C5', gain: 0.16 }], [42.17, 'phone off', 'click', { gain: 0.3 }],
   ...[42.9, 43.6, 44.2, 44.8].map((b, i) => [b, `block ${i}`, 'thud', { gain: 0.14 }]),
-  ...[47.95, 48.01, 48.07, 48.13, 48.19, 48.25].map((b, i) => [b, `light ${i}`, 'blip', { pitch: ['D#6', 'F#6', 'G#6', 'A#6', 'C#7', 'D#7'][i], gain: 0.06 }]),
-  [49.5, 'pull back', 'whoosh', { len: 1.4, from: 1500, to: 300, gain: 0.12 }],
-  ...[55.1, 55.34, 55.58, 55.82].map((b, i) => [b, `clock ${i}`, 'tick', { gain: 0.08 }]),
+  [47.3, 'out to the globe', 'whoosh', { len: 1.6, from: 300, to: 2400, gain: 0.16 }],
+  ...[50.8, 51.2, 51.6, 52.0, 52.4].map((b, i) => [b, `lights ${i}`, 'blip', { pitch: ['D#6', 'F#6', 'G#6', 'A#6', 'D#7'][i], gain: 0.06 }]),
+  ...Array.from({ length: 15 }, (_, k) => [52.6 + k * 0.62, `open role ${k}`, 'tick', { gain: 0.1 }]),
+  [55.1, 'clock', 'pop', { pitch: 'G#5', gain: 0.14 }],
+  [57.0, 'same hour', 'bell', { pitch: 'D#6', gain: 0.12 }],
   [62.95, 'connected', 'impact', { gain: 0.35 }],
-  [63.2, 'blocks fly', 'whoosh', { len: 1.2, from: 400, to: 2500, gain: 0.16 }],
+  [63.3, 'arcs', 'whoosh', { len: 1.0, from: 400, to: 2500, gain: 0.14 }],
   [64.85, 'app window', 'whoosh', { len: 0.6, from: 600, to: 2400, gain: 0.16 }],
   [65.3, 'window lands', 'thud', { gain: 0.18 }],
   [67.3, 'window falls', 'whoosh', { len: 0.5, from: 1800, to: 400, gain: 0.14 }],
@@ -469,6 +471,160 @@ function sceneFloor(ctx, u) {
   if (dark) { ctx.fillStyle = rgba('#000', 0.35 * bump(u, 47.3, 0.6)); ctx.fillRect(0, 0, W, H); }
 }
 
+
+// ======================================================================= the globe (u 47..67.9)
+// "But you don't have to." pulls out of the floor onto a dotted Earth (assets/world.json). Lights come on all
+// over it, open roles hang on them, and on the drop Xyntal links you to them.
+const WORLD = await (await fetch('assets/world.json')).json();
+const D2R = Math.PI / 180;
+const vec = (lat, lon) => [Math.cos(lat * D2R) * Math.cos(lon * D2R), Math.cos(lat * D2R) * Math.sin(lon * D2R), Math.sin(lat * D2R)];
+const LAND = WORLD.map(([a, b]) => vec(a, b));
+const HOME = [50.1, 8.7];
+const CITY_LL = [[6.5, 3.4], [37.6, 127.0], [-23.5, -46.6], [5.6, -0.2], [-1.3, 36.8], [9.0, 38.7], [-4.3, 15.3], [-26.2, 28.0],
+  [-33.9, 18.4], [30.0, 31.2], [33.6, -7.6], [14.7, -17.4], [-1.9, 30.1], [-15.4, 28.3], [35.7, 139.7], [31.2, 121.5],
+  [22.5, 114.1], [25.0, 121.5], [14.6, 121.0], [-6.2, 106.8], [1.35, 103.8], [13.75, 100.5], [21.0, 105.8], [12.97, 77.6],
+  [19.1, 72.9], [28.6, 77.2], [23.8, 90.4], [24.9, 67.0], [25.2, 55.3], [24.7, 46.7], [41.0, 29.0], [35.7, 51.4], [43.2, 76.9],
+  [52.5, 13.4], [51.5, -0.1], [48.9, 2.35], [40.4, -3.7], [38.7, -9.1], [59.3, 18.1], [52.2, 21.0], [50.45, 30.5], [41.9, 12.5],
+  [-34.6, -58.4], [4.7, -74.1], [-12.0, -77.0], [-33.45, -70.7], [19.4, -99.1], [-22.9, -43.2], [40.7, -74.0], [43.7, -79.4],
+  [37.8, -122.4], [41.9, -87.6], [25.8, -80.2], [30.3, -97.7], [49.3, -123.1], [-33.9, 151.2], [-37.8, 145.0], [-36.85, 174.8],
+  [6.4, 2.4], [12.0, 8.5], [-8.8, 13.2], [33.9, 35.5], [55.75, 37.6], [64.1, -21.9], [-41.3, 174.8], [10.5, -66.9]];
+const angle = (a, b) => Math.acos(clamp(a[0] * b[0] + a[1] * b[1] + a[2] * b[2], -1, 1));
+const HOMEV = vec(...HOME);
+const ROLES = [[6.5, 3.4, 'DESIGNER', 'LAGOS'], [37.6, 127.0, 'CTO', 'SEOUL'], [-23.5, -46.6, 'GROWTH LEAD', 'SÃO PAULO'],
+  [12.97, 77.6, 'BACKEND DEV', 'BANGALORE'], [-1.3, 36.8, 'CO-FOUNDER', 'NAIROBI'], [19.4, -99.1, 'PRODUCT DESIGNER', 'MEXICO CITY'],
+  [43.2, 76.9, 'ML ENGINEER', 'ALMATY'], [43.7, -79.4, 'iOS DEV', 'TORONTO'], [-6.2, 106.8, 'FRONTEND DEV', 'JAKARTA'],
+  [41.0, 29.0, 'MARKETING', 'ISTANBUL'], [-33.9, 151.2, 'SALES', 'SYDNEY'], [30.0, 31.2, 'UX RESEARCH', 'CAIRO'],
+  [40.7, -74.0, 'CO-FOUNDER', 'NEW YORK'], [-34.6, -58.4, 'DATA ENGINEER', 'BUENOS AIRES'], [-33.9, 18.4, 'PRODUCT LEAD', 'CAPE TOWN']]
+  .map(([la, lo, role, city], i) => ({ v: vec(la, lo), role, city, k: i }));
+const LIGHTS = [...CITY_LL.map((ll) => vec(...ll)), ...ROLES.map((r) => r.v)].map((v) => ({ v, d: angle(v, HOMEV) }));
+[...LIGHTS].sort((a, b) => a.d - b.d).forEach((l, k) => { l.on = 50.7 + 1.9 * Math.sqrt(k / LIGHTS.length); });
+const GX = 540, GY = 1170, GR = 450;
+function globeCamE(u) {
+  const lat0 = kf(u, [[47.0, 50.1], [49.4, 50.1], [51.5, 18]], E.inOutSine);
+  const lon0 = 8.7 + (u > 49.4 ? 3.8 * (u - 49.4) : 0) + 70 * E.inOutSine(prog(u, 62.9, 67.9));
+  let lr = kf(u, [[47.0, Math.log(60000)], [49.4, Math.log(GR)]], E.inOutSine);
+  lr += Math.log(1.12) * E.inOutCubic(prog(u, 62.9, 64.6));
+  const R = Math.exp(lr), la = lat0 * D2R, lo = lon0 * D2R;
+  return { R, cx: GX, cy: GY,
+    c: [Math.cos(la) * Math.cos(lo), Math.cos(la) * Math.sin(lo), Math.sin(la)],
+    e: [-Math.sin(lo), Math.cos(lo), 0],
+    n: [-Math.sin(la) * Math.cos(lo), -Math.sin(la) * Math.sin(lo), Math.cos(la)] };
+}
+const dot3 = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+// project a point (unit vector scaled by h) -> [sx, sy, depth, visible]
+function gp(v, g, h = 1) {
+  const x = g.R * h * dot3(v, g.e), y = g.R * h * dot3(v, g.n), z = dot3(v, g.c);
+  const vis = z > 0 || x * x + y * y > g.R * g.R;
+  return [g.cx + x, g.cy - y, z, vis];
+}
+function slerp(a, b, t) {
+  const w = angle(a, b), s0 = Math.sin(w);
+  if (s0 < 1e-6) return a;
+  const k0 = Math.sin((1 - t) * w) / s0, k1 = Math.sin(t * w) / s0;
+  return [a[0] * k0 + b[0] * k1, a[1] * k0 + b[1] * k1, a[2] * k0 + b[2] * k1];
+}
+// a great-circle arc lifted off the surface, drawn up to fraction p; hidden where it passes behind
+function arc(ctx, a, b, g, p, style, lw, dash) {
+  if (p <= 0) return;
+  const w = angle(a, b), n = 40, lift = 0.08 + 0.22 * (w / Math.PI);
+  ctx.strokeStyle = style; ctx.lineWidth = lw; ctx.setLineDash(dash || []);
+  ctx.beginPath();
+  let pen = false;
+  for (let i = 0; i <= n; i++) {
+    const t = (i / n) * p;
+    const q = gp(slerp(a, b, t), g, 1 + lift * Math.sin(Math.PI * t));
+    if (q[3]) { if (pen) ctx.lineTo(q[0], q[1]); else ctx.moveTo(q[0], q[1]); pen = true; } else pen = false;
+  }
+  ctx.stroke(); ctx.setLineDash([]);
+}
+
+function roleChip(ctx, x, y, role, city, k, a) {
+  if (k <= 0.01 || a <= 0.01) return;
+  ctx.save(); ctx.globalAlpha *= a;
+  ctx.font = font(38, 700, DISPLAY); const w1 = ctx.measureText(role).width;
+  ctx.font = font(22, 500, MONO); const w2 = ctx.measureText('OPEN ROLE · ' + city).width;
+  const w = Math.max(w1, w2) + 36, h = 92;
+  let bx = clamp(x - w / 2, 40, W - 40 - w), by = y - 30 - h;
+  ctx.strokeStyle = rgba(C.ink, 0.7); ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x, y - 8); ctx.lineTo(clamp(x, bx + 16, bx + w - 16), by + h); ctx.stroke();
+  ctx.translate(bx + w / 2, by + h); ctx.scale(k, k); ctx.translate(-(bx + w / 2), -(by + h));
+  rrect(ctx, bx, by, w, h, 10); ctx.fillStyle = C.ink; ctx.fill();
+  text(ctx, 'OPEN ROLE · ' + city, bx + 18, by + 31, font(22, 500, MONO), '#4A4A50', 'left', 1);
+  text(ctx, role, bx + 18, by + 74, font(38, 700, DISPLAY), C.bg, 'left', -0.3);
+  ctx.restore();
+}
+function sceneGlobeE(ctx, u, alpha = 1) {
+  const g = globeCamE(u);
+  const A = alpha * clamp(prog(u, 47.2, 48.4));
+  if (A <= 0.003) return;
+  ctx.save();
+  if (g.R < 6000) {
+    const disc = ctx.createRadialGradient(g.cx - g.R * 0.3, g.cy - g.R * 0.35, g.R * 0.1, g.cx, g.cy, g.R);
+    disc.addColorStop(0, rgba('#202024', 0.9 * A)); disc.addColorStop(1, rgba('#161618', 0.9 * A));
+    ctx.fillStyle = disc; ctx.beginPath(); ctx.arc(g.cx, g.cy, g.R, 0, TAU); ctx.fill();
+    ctx.strokeStyle = rgba(C.ink, 0.16 * A); ctx.lineWidth = 2; ctx.stroke();
+  }
+  const r0 = clamp(g.R * 0.0052, 1.3, 4.6), buckets = [[], [], [], []];
+  for (const v of LAND) {
+    const z = dot3(v, g.c);
+    if (z <= 0.02) continue;
+    const x = g.cx + g.R * dot3(v, g.e), y = g.cy - g.R * dot3(v, g.n);
+    if (x < -10 || x > W + 10 || y < -10 || y > H + 10) continue;
+    buckets[Math.min(3, Math.floor(z * 4))].push(x, y);
+  }
+  buckets.forEach((b, k) => {
+    if (!b.length) return;
+    const r = r0 * (0.6 + 0.13 * k);
+    ctx.fillStyle = rgba(C.ink3, (0.22 + 0.17 * k) * A);
+    ctx.beginPath(); for (let i = 0; i < b.length; i += 2) { ctx.moveTo(b[i] + r, b[i + 1]); ctx.arc(b[i], b[i + 1], r, 0, TAU); } ctx.fill();
+  });
+  // the drop: arcs from you to every open role, with packets
+  if (u > 62.85) {
+    ROLES.forEach((r, k) => {
+      const t0 = 62.95 + k * 0.07, q = E.outCubic(prog(u, t0, t0 + 0.45));
+      if (q <= 0) return;
+      const p0 = gp(HOMEV, g), p1 = gp(r.v, g);
+      arc(ctx, HOMEV, r.v, g, q, grad(ctx, p0[0], p0[1], p1[0], p1[1], A), 3.5);
+      if (q >= 1) {
+        const w = angle(HOMEV, r.v), lift = 0.08 + 0.22 * (w / Math.PI), ph = ((u - t0) * 0.7 + k * 0.13) % 1;
+        const pk = gp(slerp(HOMEV, r.v, ph), g, 1 + lift * Math.sin(Math.PI * ph));
+        if (pk[3]) bloom(ctx, pk[0], pk[1], 22, 0.8 * A);
+      }
+    });
+  }
+  // lights; they all pulse together on "awake at the same hour"
+  const sync = bump(u, 57.0, 0.5);
+  for (const l of LIGHTS) {
+    const k = clamp(prog(u, l.on, l.on + 0.15)) * (1 - 0.6 * bump(u, l.on + 0.08, 0.08));
+    if (k <= 0) continue;
+    const q = gp(l.v, g);
+    if (q[2] <= 0.04) continue;
+    const a = k * A * Math.min(1, q[2] * 3), rr = 20 + 18 * sync;
+    const gl = ctx.createRadialGradient(q[0], q[1], 0, q[0], q[1], rr);
+    gl.addColorStop(0, rgba(C.ink, (0.5 + 0.4 * sync) * a)); gl.addColorStop(1, rgba(C.ink, 0));
+    ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(q[0], q[1], rr, 0, TAU); ctx.fill();
+    ctx.fillStyle = rgba(C.ink, a); ctx.beginPath(); ctx.arc(q[0], q[1], 4, 0, TAU); ctx.fill();
+    if (u > 63.0) { ctx.strokeStyle = rgba(gradAt((l.d / Math.PI) % 1), 0.8 * a * clamp(prog(u, 63.0, 63.6))); ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(q[0], q[1], 9, 0, TAU); ctx.stroke(); }
+  }
+  // you
+  const hq = gp(HOMEV, g);
+  if (hq[2] > 0.04) {
+    ctx.save(); ctx.shadowColor = rgba('#FFFFFF', 0.7 * A); ctx.shadowBlur = 30;
+    ctx.fillStyle = rgba(C.ink, A); ctx.beginPath(); ctx.arc(hq[0], hq[1], 7 + 4 * bump(u, 60.4, 0.5), 0, TAU); ctx.fill(); ctx.restore();
+    spark(ctx, hq[0], hq[1] - 24, 9, u, 0, A * Math.min(1, hq[2] * 3));
+    chip(ctx, hq[0], hq[1] - 70, '02:47', clamp(springU(u, 55.1, SPRING.bouncy), 0, 1.1) * (1 - prog(u, 58.0, 58.5)) * A);
+  }
+  // open roles on the lights facing us
+  ROLES.forEach((r, k) => {
+    const t0 = 52.6 + k * 0.62;
+    if (u < t0 || u > 63.2) return;
+    const q = gp(r.v, g);
+    const face = clamp((q[2] - 0.12) * 4);
+    const life = 1 - prog(u, t0 + 4.4, t0 + 5.0);   // a few at a time; the world keeps turning
+    roleChip(ctx, q[0], q[1], r.role, r.city, clamp(springU(u, t0, SPRING.bouncy), 0, 1.1), face * life * A * (1 - prog(u, 62.6, 63.2)));
+  });
+  ctx.restore();
+}
+
 // ======================================================================= end card (logo once, xyntal.com)
 const TE2 = { card: 69.7 };
 function endCard(ctx, u) {
@@ -576,7 +732,8 @@ M.film({
   init() { GRAIN = makeGrain(); },
   draw(ctx, u, t, IMG) {
     if (u < 67.9) {
-      sceneFloor(ctx, u);
+      if (u < 48.4) sceneFloor(ctx, u); else fill(ctx, C.bg);
+      if (u > 47.0) { if (u < 48.4) { ctx.fillStyle = rgba(C.bg, clamp(prog(u, 47.2, 48.4))); ctx.fillRect(0, 0, W, H); } sceneGlobeE(ctx, u); }
       if (u > 64.7) { ctx.fillStyle = rgba(C.bg, 0.75 * clamp(prog(u, 64.7, 65.2)) * (1 - prog(u, 67.3, 67.9))); ctx.fillRect(0, 0, W, H); sceneApp(ctx, u, IMG); }
     } else fill(ctx, C.bg);
     if (u > 67.5) endCard(ctx, u);
