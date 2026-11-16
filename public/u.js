@@ -35,7 +35,7 @@
   const UUID = /^[0-9a-f-]{36}$/;
   const ctas = (primary) => `<div class="profile-actions">${primary}${member
     ? `<a class="btn btn-glass" href="/mitglieder">${esc(t("Mitglieder entdecken"))}</a>`
-    : `<a class="btn btn-glass" href="/beta">${esc(t("Für die Beta bewerben"))}</a>`}</div>`;
+    : `<a class="btn btn-glass" href="/login#registrieren">${esc(t("Konto anlegen"))}</a>`}</div>`;
   const freeLink = (h) => `/?handle=${encodeURIComponent(h)}#karte`;
 
   let shown = null;
@@ -76,7 +76,7 @@
           ${eggHtml(c)}
           ${profileHtml(c)}
           ${me && UUID.test(c.user_id || "") && !own && window.XyntalApp ? `<section class="xm xm-public" aria-label="${esc(t("Eure Passung"))}" data-match hidden></section>` : ""}
-          ${member ? "" : `<div class="pf-join"><p>${esc(t("Auf Xyntal finden Entwickler, Designer und Gründer die richtigen Leute für ihre Idee."))}</p><a class="btn btn-glass btn-sm" href="/beta">${esc(t("Für die Beta bewerben"))}</a></div>`}
+          ${member ? "" : `<div class="pf-join"><p>${esc(t("Auf Xyntal finden Entwickler, Designer und Gründer die richtigen Leute für ihre Idee."))}</p><a class="btn btn-glass btn-sm" href="/login#registrieren">${esc(t("Konto anlegen"))}</a></div>`}
         </div>
       </div>`);
     // Admins bekommen eine eigene, exklusive Profilseite (Aussehen: u.html, Abschnitt „Admin-Profil“)

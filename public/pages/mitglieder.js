@@ -9,7 +9,7 @@
     if (!viewerIsMember) {
       document.getElementById("notice").innerHTML = `
         <div class="notice">Du siehst hier die öffentlichen Profile. Mit Konto siehst du alle und kannst sie direkt anschreiben.
-        <a class="text-link" href="beta#bewerben">Bewirb dich für die Beta</a> oder <a class="text-link" href="login">logg dich ein</a>.</div>`;
+        <a class="text-link" href="login#registrieren">Lege ein Konto an</a> oder <a class="text-link" href="login">logg dich ein</a>.</div>`;
     }
     // Nur Mitglieder mit eingerichteter, öffentlich freigegebener Xyntal-Karte erscheinen hier.
     let cards = new Map();
@@ -31,7 +31,7 @@
       : "";
     grid.innerHTML = members.length && window.XyntalCardHtml
       ? members.map(tile).join("")
-      : `<p class="empty" style="grid-column: 1 / -1">Noch keine Karten.${ownCardHint || ' <a class="text-link" href="beta#bewerben">Sei eines der ersten Mitglieder.</a>'}</p>`;
+      : `<p class="empty" style="grid-column: 1 / -1">Noch keine Karten.${ownCardHint || ' <a class="text-link" href="login#registrieren">Sei eines der ersten Mitglieder.</a>'}</p>`;
     window.XyntalCardHtml?.hydrate?.(grid);
     if (members.length && ownCardHint) {
       document.getElementById("notice").insertAdjacentHTML("beforeend", `<div class="notice">Deine Karte fehlt noch.${ownCardHint}</div>`);

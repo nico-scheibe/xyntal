@@ -453,7 +453,7 @@
     if (p.id === "Ultra") {
       return signedIn
         ? `<a class="xs-tlink" href="/tarif">${esc(T(`${p.name} buchen`, `Get ${p.name}`))}</a>`
-        : `<a class="xs-tlink" href="/beta">${T("Erst für die Beta bewerben", "Apply for the beta first")}</a>`;
+        : `<a class="xs-tlink" href="/login#registrieren">${T("Konto anlegen", "Create an account")}</a>`;
     }
     const buy = signedIn ? `<a class="xs-tlink" href="/tarif">${esc(T(`${p.name} buchen`, `Get ${p.name}`))}</a>` : "";
     return `<a class="xs-tlink" href="#anfrage" data-ask="${esc(p.id)}">${T("30 Tage kostenlos testen", "Try free for 30 days")}</a>${buy}`;

@@ -239,7 +239,7 @@
         <tr data-xp-open="${esc(r.key)}" tabindex="0" class="xa-clickable"><td>${person(r)}</td><td>${statusPills(r)}</td><td class="xp-date">${esc(day(r.v.created))}</td></tr>`).join("")}</tbody></table></div>`
         : `<p class="xa-empty">Noch niemand da.</p>`}
       <div class="row-actions xp-links">
-        ${P.siteAdmin ? `<a class="text-link" href="beta#testen" target="_blank" rel="noopener">Beta-Testablauf ansehen ↗</a><a class="text-link" href="https://app.brevo.com/contact/list-listing/id/3" target="_blank" rel="noopener">Warteliste in Brevo ↗</a>` : ""}
+        ${P.siteAdmin ? `<a class="text-link" href="https://app.brevo.com/contact/list-listing/id/3" target="_blank" rel="noopener">Warteliste in Brevo ↗</a>` : ""}
       </div>`;
     if (P.siteAdmin && typeof refreshConfirmedCount === "function") refreshConfirmedCount();
   }

@@ -1272,10 +1272,10 @@
   const VIEWS = { forme: viewForMe, home: viewHome, focus: viewFocus, workspaces: viewWorkspaces, messages: viewMessages, discover: viewDiscover, communities: viewCommunities, files: viewFiles, "ai-center": viewAi, automation: viewAutomations, calendar: viewCalendar };
   // Download nur für angemeldete Beta-Tester; alle anderen sehen den Weg ins Beta-Programm.
   const ctaLinks = (primary, secondary) => betaTester
-    ? `<a class="${primary}" href="/profil">${icon("download")}${T("App herunterladen", "Download the app")}</a><a class="${secondary}" href="/beta">${T("Zum Beta-Programm", "Beta programme")}</a>`
+    ? `<a class="${primary}" href="/profil">${icon("download")}${T("App herunterladen", "Download the app")}</a><a class="${secondary}" href="/#download">${T("App laden", "Get the app")}</a>`
     : signedIn
-      ? `<a class="${primary}" href="/beta">${T("Zum Beta-Programm", "Beta programme")}</a>`
-      : `<a class="${primary}" href="/beta">${T("Für die Beta bewerben", "Apply for the beta")}</a>`;
+      ? `<a class="${primary}" href="/#download">${T("App laden", "Get the app")}</a>`
+      : `<a class="${primary}" href="/login#registrieren">${T("Konto anlegen", "Create an account")}</a>`;
 
   const NOTIFS = () => [
     { act: "convo", id: "aylin", icon: "message", text: T("Aylin fragt nach dem Design-Review", "Aylin is asking about the design review"), at: "10:02" },

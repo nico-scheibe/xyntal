@@ -141,26 +141,11 @@ function mfaRedirect() {
   return new Promise(() => {});
 }
 
-// Pflicht-Bewerbung: Ein Konto, das über Google & Co. vor der Bewerbung entstanden ist, muss sie nachholen.
-// Die Datenbank entscheidet (beta_application_required, siehe supabase/migrations/…_account_requires_beta_application.sql).
-async function betaApplicationPending() {
-  try {
-    const { data } = await sb.rpc("beta_application_required");
-    return data === true;
-  } catch { return false; }
-}
-// Zur Bewerbung; die Seite bleibt bis zum Wechsel stehen
-function betaRedirect() {
-  location.replace("beta?pflicht=1#bewerben");
-  return new Promise(() => {});
-}
-
-// Eingeloggter Nutzer + Profil (oder null)
+// Eingeloggter Nutzer + Profil (oder null). Konten sind ohne Bewerbung sofort aktiv.
 async function currentMember() {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) return null;
   if (await mfaPending()) return mfaRedirect();
-  if (pageName() !== "beta" && await betaApplicationPending()) return betaRedirect();
   const { data: profile } = await sb.from("profiles").select("*").eq("id", session.user.id).maybeSingle();
   return profile ? { ...profile, email: session.user.email } : null;
 }
@@ -381,7 +366,7 @@ function accessNotice(v, what, { open = false } = {}) {
   if (v.me) {
     return `<div class="notice">Dein Profil wartet noch auf Freigabe. Danach kannst du ${what} und siehst alle Inhalte.</div>`;
   }
-  return `<div class="notice">Du siehst hier, was Mitglieder öffentlich geteilt haben. <a class="text-link" href="beta#bewerben">Bewirb dich für die Beta</a> oder <a class="text-link" href="login">logg dich ein</a>, um ${what}${open ? " zu können" : " und alles zu sehen"}.</div>`;
+  return `<div class="notice">Du siehst hier, was Mitglieder öffentlich geteilt haben. <a class="text-link" href="login#registrieren">Lege ein Konto an</a> oder <a class="text-link" href="login">logg dich ein</a>, um ${what}${open ? " zu können" : " und alles zu sehen"}.</div>`;
 }
 
 // Navigation: Link zu Nachrichten mit Zähler ungelesener Nachrichten

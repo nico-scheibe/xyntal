@@ -61,10 +61,10 @@
   function cta(p) {
     const more = company(p) ? `<a class="xs-tlink" href="/unternehmen">${T("Alles für Firmen", "Everything for companies")}</a>` : "";
     if (p.contactSales) return `<a class="xs-pill" href="mailto:admin@xyntal.com?subject=${encodeURIComponent(`Xyntal ${p.name}`)}">${T("Kontakt aufnehmen", "Get in touch")} <i aria-hidden="true">→</i></a>${more}`;
-    if (p.priceCents === 0) return `<a class="xs-pill" href="/beta">${T("Kostenlos starten", "Start for free")} <i aria-hidden="true">→</i></a>`;
+    if (p.priceCents === 0) return `<a class="xs-pill" href="/login#registrieren">${T("Kostenlos starten", "Start for free")} <i aria-hidden="true">→</i></a>`;
     return (signedIn
       ? `<a class="xs-pill" href="/tarif">${esc(T(`${p.name} wählen`, `Choose ${p.name}`))} <i aria-hidden="true">→</i></a>`
-      : `<a class="xs-pill" href="/beta">${T("Erst für die Beta bewerben", "Apply for the beta first")} <i aria-hidden="true">→</i></a>`) + more;
+      : `<a class="xs-pill" href="/login#registrieren">${T("Konto anlegen", "Create an account")} <i aria-hidden="true">→</i></a>`) + more;
   }
 
   // Kleinste Stufe, in die alle passen – mit KI erst ab der ersten Stufe, die KI hat.
@@ -230,7 +230,7 @@
     $("[data-month-n]").textContent = T(`Monat ${month}`, `Month ${month}`);
     $("[data-credit-cta]").innerHTML = signedIn
       ? `<a class="xs-tlink" href="/tarif">${T("Verbrauch ansehen und aufladen", "See usage and top up")}</a>`
-      : `<a class="xs-tlink" href="/beta">${T("Erst für die Beta bewerben", "Apply for the beta first")}</a>`;
+      : `<a class="xs-tlink" href="/login#registrieren">${T("Konto anlegen", "Create an account")}</a>`;
   }
   $("[data-credit]")?.addEventListener("click", (e) => {
     const a = e.target.closest("[data-ai-plan]");

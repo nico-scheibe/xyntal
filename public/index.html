@@ -72,7 +72,7 @@
   </nav>
   <div class="top__right topbar-inner">
     <a class="top__login" href="/login" data-account>Login</a>
-    <a class="pill pill--sm" href="/beta" data-apply>Bewerben</a>
+    <a class="pill pill--sm" href="/login#registrieren">Konto anlegen</a>
   </div>
 </header>
 
@@ -96,10 +96,8 @@
       <p class="hero__p">Xyntal zeigt dir, wer zu deinem Vorhaben passt – und warum.</p>
       <div class="hero__cta">
         <a class="pill" href="#download">App herunterladen <span class="pill__arr" aria-hidden="true">↓</span></a>
-        <a class="pill" href="/beta" data-apply>Für die Beta bewerben <span class="pill__arr" aria-hidden="true">→</span></a>
-        <!-- Stattdessen, wenn jemand schon dabei ist oder sich beworben hat (js/neu-konto.js) -->
+        <a class="pill" href="/login#registrieren">Konto anlegen <span class="pill__arr" aria-hidden="true">→</span></a>
         <a class="pill" href="/mitglieder" data-if="in">Mitglieder ansehen <span class="pill__arr" aria-hidden="true">→</span></a>
-        <a class="pill" href="/beta" data-if="applied">Stand deiner Bewerbung <span class="pill__arr" aria-hidden="true">→</span></a>
         <a class="tlink" href="/ueber-uns">Mehr über Xyntal</a>
       </div>
     </div>
@@ -188,8 +186,8 @@
     <ol class="how__steps">
       <li class="how__step" data-rv>
         <span class="how__node mono">1</span>
-        <h3 class="how__title">Bewerben</h3>
-        <p class="how__text">Konto anlegen, drei Fragen beantworten. Die Antwort kommt per Mail.</p>
+        <h3 class="how__title">Konto anlegen</h3>
+        <p class="how__text">Konto anlegen, E-Mail bestätigen. Dann bist du drin.</p>
       </li>
       <li class="how__step" data-rv>
         <span class="how__node mono">2</span>
@@ -302,7 +300,7 @@
   </section>
 
   <!-- ============ BEWERBEN ============ -->
-  <section class="end" id="bewerben" aria-labelledby="end-title">
+  <section class="end" id="konto" aria-labelledby="end-title">
     <p class="end__pre">Du hast die Idee.</p>
     <h2 class="end__h" id="end-title">Such dir die Leute dazu.</h2>
     <div class="end__foot">
@@ -312,33 +310,12 @@
         <a class="pill pill--lg" href="https://api.xyntal.de/app/download?platform=windows">Für Windows laden <span class="pill__arr" aria-hidden="true">↓</span></a>
         <p class="end__note">Beta-Version. Auf dem Handy geht es noch nicht.</p>
       </div>
-      <a class="pill pill--lg" href="/beta" data-apply>Für die Beta bewerben <span class="pill__arr" aria-hidden="true">→</span></a>
+      <a class="pill pill--lg" href="/login#registrieren">Konto anlegen <span class="pill__arr" aria-hidden="true">→</span></a>
       <a class="pill pill--lg" href="/mitglieder" data-if="in">Mitglieder ansehen <span class="pill__arr" aria-hidden="true">→</span></a>
-      <a class="pill pill--lg" href="/beta" data-if="applied">Stand deiner Bewerbung <span class="pill__arr" aria-hidden="true">→</span></a>
-      <p class="end__note" data-apply>In der Beta kostet Xyntal nichts.</p>
+      <p class="end__note">Kostenlos. Konto anlegen und loslegen.</p>
       <p class="end__note" data-if="in">Du bist schon dabei. Schön, dass du da bist.</p>
-      <p class="end__note" data-if="applied">Deine Bewerbung ist da. Wir prüfen sie und antworten per Mail.</p>
-      <button class="tlink end__wl" type="button" data-wl-toggle data-wl-closed="Noch nicht bereit? Auf die Warteliste" data-wl-open="Warteliste schließen" aria-expanded="false" aria-controls="warteliste" data-apply>Noch nicht bereit? Auf die Warteliste</button>
     </div>
 
-    <!-- Warteliste: dasselbe Formular wie bisher (landing.js, Brevo, Double-Opt-in). Der Textlink oben klappt es auf. -->
-    <div class="news" id="warteliste" role="group" aria-labelledby="news-title" data-apply hidden>
-      <p id="news-title">Wir melden uns, wenn Xyntal für alle offen ist.</p>
-      <form class="waitlist-form" data-waitlist novalidate>
-        <div class="waitlist-row">
-          <label class="sr-only" for="wl-email">E-Mail-Adresse</label>
-          <input id="wl-email" type="email" name="EMAIL" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" maxlength="254" required placeholder="du@beispiel.de">
-          <button class="button" type="submit">Eintragen</button>
-        </div>
-        <label class="waitlist-check">
-          <input type="checkbox" name="OPT_IN" value="1" required>
-          <span>Ich möchte E-Mails zum Xyntal-Start, zur Beta und zur Entwicklung von Xyntal erhalten. Abmeldung jederzeit. <a href="/datenschutz">Datenschutz</a></span>
-        </label>
-        <div class="waitlist-hp" aria-hidden="true"><input type="text" name="email_address_check" tabindex="-1" autocomplete="off"></div>
-        <p class="waitlist-status" role="status" aria-live="polite"></p>
-        <div class="invite" data-invite hidden></div>
-      </form>
-    </div>
   </section>
 </main>
 <footer class="foot">
@@ -383,6 +360,5 @@
 <script src="invite.js?v=4" defer></script>
 <script src="/account-menu.js?v=23" defer></script>
 <script src="/site-search.js?v=3" defer></script>
-<script src="js/neu-konto.js" defer></script>
 </body>
 </html>
