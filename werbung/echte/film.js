@@ -440,8 +440,9 @@ function sceneFloor(ctx, u) {
         const bk = clamp(springU(u, 52.6 + j * 0.15 + k * 0.25, SPRING.bouncy), 0, 1.05);
         if (bk <= 0.01) continue;
         const sx = b.x + 230, sy = FL - k * 92;
-        const ty = FL - (4 + j * 0.0 + k + BUILDERS.slice(0, j).reduce((a, q) => a + q.tw, 0)) * 92;
-        block(ctx, lerp(sx, 800, tower), lerp(sy, ty, tower), 220, 84, Math.min(1, bk), 0.05);
+        // in the shared tower the blocks pack at half height, so it stays clear of the caption
+        const ty = FL - 4 * 92 - (k + BUILDERS.slice(0, j).reduce((a, q) => a + q.tw, 0)) * 46;
+        block(ctx, lerp(sx, 800, tower), lerp(sy, ty, tower), lerp(220, 200, tower), lerp(84, 40, tower), Math.min(1, bk), 0.05);
       }
       const ck = clamp(springU(u, 55.1 + j * 0.12, SPRING.bouncy), 0, 1.1) * (1 - prog(u, 62.6, 63.0));
       chip(ctx, b.x, FL - HS * 1.95, b.clock, ck);
