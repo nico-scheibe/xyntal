@@ -9,6 +9,7 @@ struct ConversationsListView: View {
         case all = "Alle"
         case unread = "Ungelesen"
         case groups = "Gruppen"
+        case requests = "Anfragen"
 
         var id: String { rawValue }
     }
@@ -19,16 +20,20 @@ struct ConversationsListView: View {
     /// true, während ein Gespräch aus einer Push-Benachrichtigung aufgelöst wird (ggf. mit Neuladen der Liste).
     @State private var isOpeningPendingConversation = false
 
-    /// Archivierte Gespräche bleiben immer ausgeblendet.
+    /// Archivierte Gespräche bleiben immer ausgeblendet. Anfragen erscheinen nur unter „Anfragen“,
+    /// nie in „Alle“, „Ungelesen“ oder „Gruppen“.
     private var visibleConversations: [Conversation] {
         let active = store.conversations.filter { !$0.isArchived }
+        let inbox = active.filter { !$0.isMessageRequest }
         switch filter {
         case .all:
-            return active
+            return inbox
         case .unread:
-            return active.filter { $0.unreadCount > 0 }
+            return inbox.filter { $0.unreadCount > 0 }
         case .groups:
-            return active.filter { $0.isGroup }
+            return inbox.filter { $0.isGroup }
+        case .requests:
+            return active.filter { $0.isMessageRequest }
         }
     }
 
@@ -174,6 +179,12 @@ struct ConversationsListView: View {
             } description: {
                 Text("Wähle beim neuen Gespräch mehrere Personen aus, um eine Gruppe zu starten.")
             }
+        case .requests:
+            ContentUnavailableView {
+                Label("Keine Anfragen", systemImage: "tray")
+            } description: {
+                Text("Hier landen erste Nachrichten von Leuten, die du noch nicht kennst.")
+            }
         }
     }
 }
@@ -237,6 +248,7 @@ private struct ConversationRow: View {
             if let description = conversation.description.nonEmptyText { return description }
             return "Gruppe"
         }
+        if conversation.isMessageRequest { return "Anfrage" }
         return isOnline ? "Online" : "Direktnachricht"
     }
 

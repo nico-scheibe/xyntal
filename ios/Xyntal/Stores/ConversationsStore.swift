@@ -64,10 +64,10 @@ final class ConversationsStore {
 
     // MARK: - Abgeleitete Werte
 
-    /// Summe der ungelesenen Nachrichten in nicht archivierten Gesprächen (für das Tab-Badge).
+    /// Summe der ungelesenen Nachrichten in nicht archivierten Gesprächen (für das Tab-Badge). Anfragen zählen nicht mit.
     /// Jeder Summand und die Summe sind auf 0...1_000_000 geklemmt, damit Serverdaten keinen Überlauf auslösen.
     var unreadTotal: Int {
-        conversations.filter { !$0.isArchived }.reduce(0) { clampedCount($0 + clampedCount($1.unreadCount)) }
+        conversations.filter { !$0.isArchived && !$0.isMessageRequest }.reduce(0) { clampedCount($0 + clampedCount($1.unreadCount)) }
     }
 
     /// Anzeigename: bei DMs der Partner aus dem Profil-Cache, sonst der Titel des Gesprächs.

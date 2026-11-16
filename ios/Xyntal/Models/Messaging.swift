@@ -19,10 +19,12 @@ struct Conversation: Decodable, Identifiable, Hashable {
     var pendingRequests: Int?
     var visibility: String?
     var updatedTs: String?
+    /// true, wenn der Server das Gespräch als Anfrage einer fremden Person führt. Fehlt das Feld, ist es false.
+    var messageRequest: Bool?
 
     private enum CodingKeys: String, CodingKey {
         case id, kind, title, name, description, avatar, emoji, partnerId, unread, mentions, archived
-        case pendingRequests, visibility, updatedTs
+        case pendingRequests, visibility, updatedTs, messageRequest
     }
 
     init(id: String,
@@ -38,7 +40,8 @@ struct Conversation: Decodable, Identifiable, Hashable {
          archived: Bool? = nil,
          pendingRequests: Int? = nil,
          visibility: String? = nil,
-         updatedTs: String? = nil) {
+         updatedTs: String? = nil,
+         messageRequest: Bool? = nil) {
         self.id = id
         self.kind = kind
         self.title = title
@@ -53,6 +56,7 @@ struct Conversation: Decodable, Identifiable, Hashable {
         self.pendingRequests = pendingRequests
         self.visibility = visibility
         self.updatedTs = updatedTs
+        self.messageRequest = messageRequest
     }
 
     init(from decoder: Decoder) throws {
@@ -71,12 +75,15 @@ struct Conversation: Decodable, Identifiable, Hashable {
         pendingRequests = container.lenient(Int.self, .pendingRequests)
         visibility = container.lenient(String.self, .visibility)
         updatedTs = container.lenient(String.self, .updatedTs)
+        messageRequest = container.lenient(Bool.self, .messageRequest)
     }
 
     /// Direktnachricht mit genau einer anderen Person.
     var isDirect: Bool { kind == "dm" && partnerId.nonEmptyText != nil }
     var isGroup: Bool { !isDirect }
     var isArchived: Bool { archived == true }
+    /// Anfrage einer Person, mit der du noch nichts zu tun hattest. Die Entscheidung trifft der Server.
+    var isMessageRequest: Bool { messageRequest == true }
     /// Ungelesen-Zähler, geklemmt auf 0...1_000_000, damit die Summe über alle Gespräche nicht überläuft.
     var unreadCount: Int { clampedCount(unread) }
 
