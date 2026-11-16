@@ -555,6 +555,8 @@ window.XYNTAL_EN = {
   "Für Mac laden": "Download for Mac",
   "Für Windows laden": "Download for Windows",
   "Beta-Version. Auf dem Handy geht es noch nicht.": "Beta version. Not on phones yet.",
+  // Schluss-Bereich unter den Buttons (index.html, .end__note)
+  "Kostenlos. Konto anlegen und loslegen.": "Free. Create an account and get started.",
   "Brief": "Letter",
   "Dein Team finden": "Find your team",
   "Zu deinen Vorschlägen": "To your suggestions",
