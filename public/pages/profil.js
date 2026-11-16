@@ -21,16 +21,6 @@ function birthdateProblem(value) {
 
 function render(m) {
   birthdateForm.hidden = true; // wird in explainReview wieder eingeblendet, wenn das Datum fehlt
-  const betaCard = document.querySelector("[data-beta-download]");
-  betaCard.hidden = m.is_beta_tester !== true;
-  // The download for this computer comes first and stands out.
-  const onWindows = /Windows/i.test(navigator.userAgent);
-  const first = betaCard.querySelector(`[data-download="${onWindows ? "windows" : "mac"}"]`);
-  const second = betaCard.querySelector(`[data-download="${onWindows ? "mac" : "windows"}"]`);
-  first.classList.remove("btn-ghost");
-  second.classList.add("btn-ghost");
-  first.parentNode.insertBefore(first, second);
-  showDownloadVersions(betaCard);
   document.getElementById("hello").innerHTML = `Hallo, <em>${esc((m.name || "du").split(" ")[0])}.</em>`;
   const fresh = new URLSearchParams(location.search).has("neu");
   let notice = "";
@@ -85,26 +75,6 @@ async function explainReview(fresh) {
   } catch {
     // ohne die Migration oder offline bleibt der allgemeine Hinweis stehen
   }
-}
-
-// The version line follows what the API announces (server/release.json in the
-// app repo), so a new desktop release never leaves a stale number here. The
-// static text in profil.html stays as the fallback while the API is unreachable.
-let downloadVersionsShown = false;
-async function showDownloadVersions(betaCard) {
-  if (downloadVersionsShown || betaCard.hidden) return;
-  downloadVersionsShown = true;
-  const line = betaCard.querySelector("[data-download-version]");
-  const platforms = [["macos", "Mac"], ["windows", "Windows"]];
-  const parts = [];
-  for (const [platform, label] of platforms) {
-    try {
-      const r = await fetch(`https://api.xyntal.de/app/update?platform=${platform}&current=0.0.0`);
-      const v = (await r.json())?.data?.latestVersion;
-      if (v) parts.push(`${label} <strong>${esc(v)}</strong>`);
-    } catch {}
-  }
-  if (parts.length) line.innerHTML = `Aktuelle Version: ${parts.join(" · ")}`;
 }
 
 // ---------- Registerkarten: Profil · Matching · Xyntal-Karte · Links · Tarif & Rechnungen · Sicherheit ----------
