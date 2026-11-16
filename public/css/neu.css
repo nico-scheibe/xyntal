@@ -248,6 +248,17 @@ a { color: inherit; text-decoration: none; }
   .cmp__dots i { width: 6px; height: 6px; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--t-3); transition: background-color .3s; }
   .cmp__dots i.is-on { background: var(--t-1); box-shadow: none; }
 }
+/* Desktop: jede Karte spannt drei Zeilen des Listen-Grids, damit die Trennlinien einer Reihe auf gleicher Höhe liegen.
+   Der Abstand zwischen Titel und „stark bei“ sitzt als padding-bottom in der Zeile, nicht als Lücke der Karte. */
+@media (min-width: 861px) {
+  @supports (grid-template-rows: subgrid) {
+    .cmp__list { grid-template-rows: repeat(3, auto); row-gap: 0; }
+    .cmp__card { grid-row: span 3; grid-template-rows: subgrid; row-gap: 0; }
+    .cmp__row { align-content: start; }
+    .cmp__old, .cmp__row--miss { padding-bottom: 22px; }
+    .cmp__card:nth-child(n+4) { margin-top: var(--gap); }
+  }
+}
 
 /* 5.3 Für wen: drei gleich große Karten ohne Rangfolge */
 .who { padding: var(--scene) var(--pad) var(--s-6); }
