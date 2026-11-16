@@ -240,8 +240,7 @@ final class CallStore {
 
     /// Abmelden während eines Anrufs. Läuft vor dem Entfernen des Tokens, damit der Platz noch abgegeben werden kann.
     func releaseForSignOut() async {
-        // Abmelden darf nicht auf die Beitreten-Leiste warten. Nach dem Abmelden ist sie ohnehin bedeutungslos.
-        await finish(refreshBar: false)
+        await finish(signingOut: true)
     }
 
     /// Sitzung ist beendet (Abmelden, Kontolöschung, abgelaufenes Token). Läuft synchron, damit Mikrofon und Kamera
@@ -290,14 +289,15 @@ final class CallStore {
 
     /// Beendet den Anruf auf dieser Seite und gibt den Platz beim Server ab (sofern gewünscht und möglich).
     /// releaseSeat false, wenn der Platz schon an ein anderes Gerät gegangen ist ("replaced"): dann nicht abmelden.
-    /// refreshBar false nur beim Abmelden: Dort wird die Nachfrage nicht abgewartet.
-    private func finish(releaseSeat: Bool = true, refreshBar: Bool = true) async {
+    /// signingOut true nur beim Abmelden: Die Beitreten-Leiste ist danach bedeutungslos, und die Sitzung soll nicht
+    /// auf das Netz warten. Deshalb keine Nachfrage und nur 3 s Zeitgrenze für den Abgabe-Aufruf.
+    private func finish(releaseSeat: Bool = true, signingOut: Bool = false) async {
         guard let ended = stopLocally(), releaseSeat else { return }
         let api = session.api
         _ = try? await session.withAccess { token in
-            try await api.leaveCall(callId: ended.callId, token: token)
+            try await api.leaveCall(callId: ended.callId, token: token, timeout: signingOut ? 3 : 20)
         }
-        if refreshBar {
+        if !signingOut {
             // Der Anruf kann ohne mich weiterlaufen. Deshalb nachfragen, damit die Beitreten-Leiste wieder erscheint.
             await refreshRunningCall(conversationId: ended.conversationId)
         }

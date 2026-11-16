@@ -28,14 +28,15 @@ extension APIClient {
                               mapFailure: Self.callFailure)
     }
 
-    /// POST /calls/:id/leave. Wer als Letzter geht, beendet den Anruf.
-    func leaveCall(callId: String, token: String) async throws {
+    /// POST /calls/:id/leave. Wer als Letzter geht, beendet den Anruf. timeout kürzer setzen, wenn die Sitzung nicht auf das Netz warten soll (Abmelden).
+    func leaveCall(callId: String, token: String, timeout: TimeInterval = 20) async throws {
         let id = try Self.validatedPathId(callId)
         _ = try await send("calls/\(id)/leave",
                            method: "POST",
                            token: token,
                            as: CallAck.self,
-                           mapFailure: Self.callFailure)
+                           mapFailure: Self.callFailure,
+                           timeout: timeout)
     }
 
     /// POST /calls/:id/decline: einen eingehenden Anruf ablehnen. Der Anrufer hört davon nur, was der Server zeigt.
