@@ -13,6 +13,9 @@ extension APIClient {
     /// Kürzerer Timeout, damit das Abmelden beim Logout nicht lange blockiert.
     private static let pushTimeout: TimeInterval = 8
 
+    /// Noch kürzer beim Abmelden: Logout und Kontolöschung warten darauf, bevor die Sitzung lokal endet.
+    private static let pushUnregisterTimeout: TimeInterval = 3
+
     /// POST /devices/push: meldet das APNs-Token für diesen Nutzer an. Idempotent auf Serverseite erwartet.
     /// Wirft AppError.rejected bei 4xx außer 401 und 429: Dann lohnt kein weiterer Versuch in diesem App-Start.
     func registerPushDevice(deviceToken: String, environment: String, token: String) async throws {
@@ -42,7 +45,7 @@ extension APIClient {
                            method: "DELETE",
                            token: token,
                            as: PushDeviceAck.self,
-                           timeout: Self.pushTimeout)
+                           timeout: Self.pushUnregisterTimeout)
     }
 
     /// APNs-Tokens sind Hex-Strings (64 Zeichen). Nur [0-9a-fA-F] gelangt in Body oder Pfad.
