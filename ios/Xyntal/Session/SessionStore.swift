@@ -197,6 +197,8 @@ final class SessionStore {
         }
         setToken(nil)
         KeychainStore.delete()
+        // Geladene Dateien gehören zur Anmeldung: Abmelden und Kontowechsel lassen sie nicht auf dem Gerät.
+        MediaLoader.shared.clear()
     }
 
     /// Einmalig: Sitzungen aus früheren Versionen der App aus dem Schlüsselbund entfernen. Sie passen nicht zum neuen Server.

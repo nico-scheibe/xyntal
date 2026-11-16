@@ -12,6 +12,7 @@ struct XyntalApp: App {
 
     init() {
         AttachmentFiles.removeAllAtLaunch()
+        MediaLoader.removeDownloadedFiles()
         let session = SessionStore()
         _session = State(initialValue: session)
         _conversations = State(initialValue: ConversationsStore(session: session))

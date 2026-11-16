@@ -355,8 +355,8 @@ final class APIClient {
         }
     }
 
-    /// Obergrenze für eine heruntergeladene Datei aus einer Nachricht.
-    private static let maxFileResponseBytes = 100 * 1024 * 1024
+    /// Obergrenze für eine heruntergeladene Datei aus einer Nachricht. Auch MediaLoader prüft sie vor dem Laden.
+    static let maxFileResponseBytes = 100 * 1024 * 1024
 
     /// POST /messages/:id/reactions: setzt oder entfernt die eigene Reaktion mit diesem Emoji.
     func toggleReaction(messageId: String, emoji: String, token: String) async throws {

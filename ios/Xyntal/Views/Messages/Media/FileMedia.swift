@@ -14,6 +14,8 @@ final class AttachmentFileModel {
     var previewURL: URL?
     /// Datei ist da, aber die Schnellansicht kann den Typ nicht zeigen. Dann bleibt nur Teilen.
     private(set) var unpreviewableURL: URL?
+    /// Meldung statt Laden, etwa wenn die Datei zu groß ist. Die Datei wird dann nicht geladen.
+    private(set) var refusal: String?
     private var localURL: URL?
 
     init(attachment: Attachment) {
@@ -27,8 +29,13 @@ final class AttachmentFileModel {
         guard !isLoading else { return }
         failed = false
         unpreviewableURL = nil
+        refusal = nil
         if let localURL {
             present(localURL)
+            return
+        }
+        if let problem = MediaLoader.sizeProblem(for: attachment) {
+            refusal = problem
             return
         }
         progress = 0
@@ -47,12 +54,24 @@ final class AttachmentFileModel {
         }
     }
 
+    /// Vorschau nur für Typen, die die App auch zum Hochladen erlaubt, und nur, wenn der Server genau den MIME-Typ
+    /// meldet, den die App für diese Endung schickt. Fehlt er oder passt er nicht, bleibt nur Teilen.
     private func present(_ url: URL) {
-        if QLPreviewController.canPreview(url as NSURL) {
-            previewURL = url
-        } else {
+        guard Self.hasAllowedType(attachment), QLPreviewController.canPreview(url as NSURL) else {
             unpreviewableURL = url
+            return
         }
+        previewURL = url
+    }
+
+    /// Erlaubte Endung (AttachmentRules, wie beim Hochladen) und MIME-Typ, der zur Endung passt.
+    /// Die App schickt beim Hochladen genau AttachmentRules.mimeType(forName:), also passt der Vergleich für ihre Anhänge.
+    static func hasAllowedType(_ attachment: Attachment) -> Bool {
+        let name = attachment.name ?? ""
+        guard AttachmentRules.kind(forName: name) != nil, let sent = attachment.mimeType else { return false }
+        // Parameter wie "; charset=utf-8" zählen nicht zum Typ.
+        let declared = sent.split(separator: ";").first.map { $0.trimmingCharacters(in: .whitespaces).lowercased() }
+        return declared == AttachmentRules.mimeType(forName: name).lowercased()
     }
 }
 
@@ -84,7 +103,11 @@ struct FileAttachmentRow: View {
                             .font(.body)
                             .lineLimit(nameLines)
                             .multilineTextAlignment(.leading)
-                        if model.failed {
+                        if let refusal = model.refusal {
+                            Text(refusal)
+                                .font(.caption)
+                                .foregroundStyle(foreground.opacity(0.85))
+                        } else if model.failed {
                             RetryHintText()
                         } else {
                             Text(subtitle)

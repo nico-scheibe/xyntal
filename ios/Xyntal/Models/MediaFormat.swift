@@ -15,9 +15,9 @@ enum MediaFormat {
         return String(format: "%d:%02d", total / 60, total % 60)
     }
 
-    /// Dateigröße in der Schreibweise des Geräts, z. B. "2,4 MB".
+    /// Dateigröße in der Schreibweise des Geräts, z. B. "2,4 MB". nil bei 0 oder fehlender Größe: Dann zeigt die Zeile nur die Art.
     static func size(_ bytes: Int?) -> String? {
-        guard let bytes, bytes >= 0 else { return nil }
+        guard let bytes, bytes > 0 else { return nil }
         return ByteCountFormatter.string(fromByteCount: Int64(bytes), countStyle: .file)
     }
 

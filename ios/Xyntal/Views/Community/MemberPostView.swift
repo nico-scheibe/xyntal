@@ -48,6 +48,10 @@ struct MemberPostView: View {
                     viewer = ImageViewerRequest(images: post.images, start: index)
                 }
             }
+            // Die Dateien stehen mit 10 pt Abstand unter dem Bildraster (der Stapel gibt 10 pt).
+            if !post.files.isEmpty {
+                PostFileList(files: post.files)
+            }
             footer
         }
         .padding(.vertical, 14)
@@ -397,6 +401,38 @@ private struct PollBlock: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel(mine ? "\(option.label), deine Stimme" : option.label)
         .accessibilityValue("\(option.votes) Stimmen")
+    }
+}
+
+/// Dateien eines Beitrags: je Datei eine Fläche mit der Zeile aus dem Chat, 6 pt Abstand dazwischen.
+/// Die Modelle halten den Ladezustand über das Neuzeichnen hinweg und entstehen nur einmal (wie MessageBubble im Chat).
+private struct PostFileList: View {
+    @Environment(SessionStore.self) private var session
+    @State private var models: [AttachmentFileModel]
+
+    private static let corner: CGFloat = 12
+
+    init(files: [Attachment]) {
+        _models = State(initialValue: files.map { AttachmentFileModel(attachment: $0) })
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            ForEach(models, id: \.attachment.id) { model in
+                let open: () -> Void = { Task { await model.open(session: session) } }
+                let shape = RoundedRectangle(cornerRadius: Self.corner, style: .continuous)
+                // Die ganze Fläche ist das Tipp-Ziel. Die Zeile selbst öffnet über ihren Knopf, der Rand über die Geste.
+                // Farben: Fläche primary 4 % (hell #F5F5F5, dunkel #0A0A0A), Linie primary 18 % (hell #D1D1D1, dunkel #2E2E2E).
+                // Linie gegen die Seite: 1,53:1 hell (Weiß), 1,55:1 dunkel (Schwarz), Ziel 1,5:1. Die Fläche kommt nur auf
+                // 1,09:1 bzw. 1,06:1, sie trägt die Kante nicht; die Linie tut es. Theme.muted hält auf der Fläche 5,1:1 hell, 5,8:1 dunkel.
+                FileAttachmentRow(model: model, foreground: .primary, onTap: open)
+                    .frame(maxWidth: .infinity, minHeight: 56, alignment: .leading)
+                    .background(Color.primary.opacity(0.04), in: shape)
+                    .overlay { shape.stroke(Color.primary.opacity(0.18), lineWidth: 1) }
+                    .contentShape(shape)
+                    .onTapGesture(perform: open)
+            }
+        }
     }
 }
 

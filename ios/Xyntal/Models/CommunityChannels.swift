@@ -109,6 +109,13 @@ struct ChannelPost: Decodable, Identifiable, Equatable {
     var date: Date? { ISODate.parse(createdAt) }
     var images: [Attachment] { attachments.filter(\.isImage) }
 
+    /// Alle Anhänge, die keine Bilder sind (Videos, Audio, PDFs). Videos stehen vorn, sonst in der Reihenfolge des Servers.
+    var files: [Attachment] {
+        let isVideo: (Attachment) -> Bool = { $0.mimeType?.lowercased().hasPrefix("video/") == true }
+        let others = attachments.filter { !$0.isImage }
+        return others.filter(isVideo) + others.filter { !isVideo($0) }
+    }
+
     private var like: ChannelReaction? {
         reactions.first { $0.emoji == Self.likeEmoji && $0.count > 0 }
     }
