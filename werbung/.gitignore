@@ -14,3 +14,8 @@ weltweit/audio/*.wav
 weltweit/audio/*.mp3
 weltweit/docs/reference/
 weltweit/assets/app/*.png
+weltweit/audio/*.wav
+echte/audio/*.wav
+echte/audio/*.mp3
+echte/docs/reference/
+echte/assets/app/*.png
