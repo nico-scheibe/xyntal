@@ -7,6 +7,7 @@ struct RootView: View {
     @Environment(ConversationsStore.self) private var conversations
     @Environment(SubscriptionStore.self) private var subscription
     @Environment(OutgoingStore.self) private var outgoing
+    @Environment(CallStore.self) private var calls
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -29,6 +30,8 @@ struct RootView: View {
             // Ausstehende Beiträge und Nachrichten gehören zur Anmeldung. Beim Abmelden verschwinden sie samt Dateien.
             if state != .signedIn {
                 outgoing.clear()
+                // Abgemeldet: ein laufender Anruf darf nicht weiter Mikrofon und Kamera nutzen.
+                calls.sessionEnded(token: nil)
             }
         }
         .onChange(of: session.state, initial: true) { _, state in
@@ -52,8 +55,19 @@ enum AppTab: Hashable {
 struct MainTabView: View {
     @Environment(ConversationsStore.self) private var conversations
     @Environment(PushManager.self) private var pushManager
+    @Environment(CallStore.self) private var calls
 
     @State private var selection: AppTab = .messages
+
+    /// Vollbild, solange ein Anruf läuft und nicht minimiert ist. Zuziehen heißt minimieren, nicht auflegen.
+    private var showsCallScreen: Binding<Bool> {
+        Binding(
+            get: { calls.active != nil && !calls.isMinimized },
+            set: { shown in
+                if !shown { calls.minimize() }
+            }
+        )
+    }
 
     var body: some View {
         TabView(selection: $selection) {
@@ -76,6 +90,17 @@ struct MainTabView: View {
             if conversationId != nil {
                 selection = .messages
             }
+        }
+        // Anruf: minimiert oben als Leiste, eingehend als Karte von oben, laufend als Vollbild.
+        .safeAreaInset(edge: .top, spacing: 0) {
+            CallMinimizedBar()
+        }
+        .overlay(alignment: .top) {
+            IncomingCallCard()
+        }
+        .animation(.snappy, value: calls.incoming)
+        .fullScreenCover(isPresented: showsCallScreen) {
+            CallScreenView()
         }
     }
 }

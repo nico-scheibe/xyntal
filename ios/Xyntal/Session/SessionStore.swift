@@ -21,6 +21,14 @@ final class SessionStore {
     /// Dinge auf dem Server aufzuräumen, bevor das Token weg ist.
     var onSessionEnding: (@MainActor (String) -> Void)?
 
+    /// Wird beim Abmelden aufgerufen und abgewartet, solange das Token noch gilt. Für Aufräumen, das Zeit braucht
+    /// (etwa einen laufenden Anruf beim Server verlassen). Die Abmeldung wartet darauf.
+    var onWillSignOut: (@MainActor () async -> Void)?
+
+    /// Wird in jedem Fall aufgerufen, wenn die lokale Sitzung gelöscht wird (Abmelden, Kontolöschung, 401-Antwort).
+    /// Synchron. Das Token ist dann noch da, wenn es vorher vorhanden war (nil, wenn keines war).
+    var onSessionCleared: (@MainActor (String?) -> Void)?
+
     private var token: String?
 
     /// Kennung dieser Anmeldung. Ändert sich bei jedem Anmelden und Abmelden. Ausstehende Nachrichten gehören
@@ -124,6 +132,10 @@ final class SessionStore {
     }
 
     func signOut() async {
+        // Laufende Anrufe verlassen, solange das Sitzungs-Token noch gilt.
+        if token != nil, let onWillSignOut {
+            await onWillSignOut()
+        }
         // Push-Token abmelden, solange das Sitzungs-Token noch gültig ist. Fehler werden still ignoriert.
         if token != nil {
             await PushManager.shared.unregister(session: self)
@@ -195,6 +207,7 @@ final class SessionStore {
         if let token {
             onSessionEnding?(token)
         }
+        onSessionCleared?(token)
         setToken(nil)
         KeychainStore.delete()
         // Geladene Dateien gehören zur Anmeldung: Abmelden und Kontowechsel lassen sie nicht auf dem Gerät.

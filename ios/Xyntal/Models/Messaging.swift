@@ -256,9 +256,11 @@ struct Message: Decodable, Identifiable, Hashable {
     var attachments: [Attachment]
     var gif: Gif?
     var system: SystemInfo?
+    /// Anruf, wenn die Nachricht einen trägt (Anrufzeile im Verlauf). Sonst nil.
+    var call: CallInfo?
 
     private enum CodingKeys: String, CodingKey {
-        case id, kind, body, ts, authorId, author, mine, edited, replyToId, reactions, attachments, gif, system
+        case id, kind, body, ts, authorId, author, mine, edited, replyToId, reactions, attachments, gif, system, call
     }
 
     init(id: String,
@@ -274,9 +276,11 @@ struct Message: Decodable, Identifiable, Hashable {
          hasAttachments: Bool = false,
          attachments: [Attachment] = [],
          gif: Gif? = nil,
-         system: SystemInfo? = nil) {
+         system: SystemInfo? = nil,
+         call: CallInfo? = nil) {
         self.id = id
         self.kind = kind
+        self.call = call
         self.body = body
         self.ts = ts
         self.authorId = authorId
@@ -316,6 +320,7 @@ struct Message: Decodable, Identifiable, Hashable {
         attachments = (try? container.decode(LossyArray<Attachment>.self, forKey: .attachments))?.elements ?? []
         gif = container.lenient(Gif.self, .gif)
         system = container.lenient(SystemInfo.self, .system)
+        call = container.lenient(CallInfo.self, .call)
     }
 
     var date: Date { ISODate.parse(ts) ?? .distantPast }
@@ -466,9 +471,18 @@ struct RealtimeEvent: Decodable, Hashable {
     var online: Bool?
     var status: PresenceStatus?
     var statuses: [String: PresenceStatus]?
+    /// Anruf-Ereignisse (type "call"): Anruf-ID, Aktion ("started", "declined", …) und ob es klingelt.
+    var callId: String?
+    var action: String?
+    var ring: Bool?
+    var kind: String?
+    var callerName: String?
+    var callerHeadline: String?
+    var conversationTitle: String?
 
     private enum CodingKeys: String, CodingKey {
         case type, conversationId, userId, name, online, status, statuses
+        case callId, action, ring, kind, callerName, callerHeadline, conversationTitle
     }
 
     init(type: String? = nil,
@@ -477,7 +491,14 @@ struct RealtimeEvent: Decodable, Hashable {
          name: String? = nil,
          online: Bool? = nil,
          status: PresenceStatus? = nil,
-         statuses: [String: PresenceStatus]? = nil) {
+         statuses: [String: PresenceStatus]? = nil,
+         callId: String? = nil,
+         action: String? = nil,
+         ring: Bool? = nil,
+         kind: String? = nil,
+         callerName: String? = nil,
+         callerHeadline: String? = nil,
+         conversationTitle: String? = nil) {
         self.type = type
         self.conversationId = conversationId
         self.userId = userId
@@ -485,6 +506,13 @@ struct RealtimeEvent: Decodable, Hashable {
         self.online = online
         self.status = status
         self.statuses = statuses
+        self.callId = callId
+        self.action = action
+        self.ring = ring
+        self.kind = kind
+        self.callerName = callerName
+        self.callerHeadline = callerHeadline
+        self.conversationTitle = conversationTitle
     }
 
     init(from decoder: Decoder) throws {
@@ -496,6 +524,13 @@ struct RealtimeEvent: Decodable, Hashable {
         online = container.lenient(Bool.self, .online)
         status = container.lenient(PresenceStatus.self, .status)
         statuses = container.lenient([String: PresenceStatus].self, .statuses)
+        callId = container.lenient(String.self, .callId)
+        action = container.lenient(String.self, .action)
+        ring = container.lenient(Bool.self, .ring)
+        kind = container.lenient(String.self, .kind)
+        callerName = container.lenient(String.self, .callerName)
+        callerHeadline = container.lenient(String.self, .callerHeadline)
+        conversationTitle = container.lenient(String.self, .conversationTitle)
     }
 
     /// Anwesenheit aus einem einzelnen presence-Ereignis: status hat Vorrang, sonst online-Flag.

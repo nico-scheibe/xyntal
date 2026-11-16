@@ -7,6 +7,7 @@ struct ChatView: View {
     @Environment(SessionStore.self) private var session
     @Environment(ConversationsStore.self) private var conversations
     @Environment(PushManager.self) private var push
+    @Environment(CallStore.self) private var calls
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dismiss) private var dismiss
 
@@ -39,6 +40,12 @@ struct ChatView: View {
                 ProgressView()
             }
         }
+        // Beitreten-Leiste, solange hier ein Anruf läuft und ich nicht dabei bin.
+        .safeAreaInset(edge: .top, spacing: 0) {
+            if calls.active == nil, calls.runningCalls[conversation.id] != nil {
+                RunningCallBar(conversationId: conversation.id, title: title)
+            }
+        }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .principal) {
@@ -59,6 +66,24 @@ struct ChatView: View {
                 }
                 .disabled(!current.isGroup)
                 .accessibilityLabel(current.isGroup ? "\(title), Gruppeninfo öffnen" : title)
+            }
+            // Anruf nur, wenn der andere schon geschrieben hat (wie bei der Sprachnachricht). Niemand wird kalt angerufen.
+            // Läuft hier schon ein Anruf, zeigt die Beitreten-Leiste stattdessen.
+            if store?.hasOtherWritten == true, calls.active == nil, calls.runningCalls[conversation.id] == nil {
+                ToolbarItem(placement: .primaryAction) {
+                    Menu {
+                        Button("Sprachanruf", systemImage: "phone") {
+                            Task { await calls.startCall(conversationId: conversation.id, kind: "audio", title: title) }
+                        }
+                        Button("Videoanruf", systemImage: "video") {
+                            Task { await calls.startCall(conversationId: conversation.id, kind: "video", title: title) }
+                        }
+                    } label: {
+                        Image(systemName: "phone")
+                            .frame(width: 44, height: 44)
+                    }
+                    .accessibilityLabel("Anruf starten")
+                }
             }
             // Melden und Sperren im Chat, sonst nur im Mitgliedsprofil. Bei Gruppen gibt es kein Gegenüber.
             if current.isDirect, let partnerId = current.partnerId {
@@ -108,6 +133,10 @@ struct ChatView: View {
             } else {
                 VoiceRecorders.shared.pauseAll(note: .interrupted)
             }
+        }
+        .task(id: conversation.id) {
+            // Läuft in diesem Gespräch schon ein Anruf? Dann erscheint die Beitreten-Leiste.
+            await calls.refreshRunningCall(conversationId: conversation.id)
         }
         .task {
             if store == nil {
@@ -414,7 +443,9 @@ private struct ChatTranscriptView: View {
 
     @ViewBuilder
     private func messageRow(_ message: Message) -> some View {
-        if message.isSystem {
+        if let call = message.call {
+            CallMessageRow(call: call)
+        } else if message.isSystem {
             SystemMessageRow(message: message)
         } else {
             let isMine = store.isMine(message)

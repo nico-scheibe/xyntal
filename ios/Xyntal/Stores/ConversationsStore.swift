@@ -16,6 +16,8 @@ struct RealtimeChanges: Equatable {
     var typing: [Typing] = []
     /// Neue Anwesenheitswerte je Nutzer-ID.
     var presence: [String: PresenceStatus] = [:]
+    /// Anruf-Ereignisse (type "call") in Reihenfolge. Die Auswertung macht CallStore.
+    var calls: [RealtimeEvent] = []
 }
 
 /// Gesprächsliste, Profil-Cache, Anwesenheit und der Long-Poll für Live-Ereignisse.
@@ -27,6 +29,8 @@ final class ConversationsStore {
     /// Profile nach Nutzer-ID, vor allem für die Namen der DM-Partner.
     private(set) var profiles: [String: Profile] = [:]
     private(set) var presence: [String: PresenceStatus] = [:]
+    /// Bekommt jedes Anruf-Ereignis aus dem Long-Poll. Gesetzt von XyntalApp, ausgewertet von CallStore.
+    var onCallEvent: ((RealtimeEvent) -> Void)?
     private(set) var isLoading = false
     private(set) var hasLoaded = false
     private(set) var loadError: String?
@@ -297,6 +301,8 @@ final class ConversationsStore {
                 for (userId, status) in event.statuses ?? [:] {
                     changes.presence[userId] = status
                 }
+            case "call":
+                changes.calls.append(event)
             default:
                 break
             }
@@ -351,6 +357,9 @@ final class ConversationsStore {
     }
 
     private func handle(_ changes: RealtimeChanges) {
+        for event in changes.calls {
+            onCallEvent?(event)
+        }
         if changes.conversationsChanged {
             scheduleReload()
         }
