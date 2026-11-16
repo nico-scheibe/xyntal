@@ -314,8 +314,8 @@
   const isRequest = (c) => !!(c && c.messageRequest === true);
   function passes(c) {
     if (S.space !== "all" && spaceOf(c) !== S.space) return false;
-    // Anfragen stehen nur unter „Nachrichtenanfragen“; in allen anderen Ansichten sind sie nicht da.
-    if (S.filter === "msg-requests" ? !isRequest(c) : isRequest(c) && S.filter !== "archived") return false;
+    // Passive Flächen (Liste, Zähler, Leerzustand): Anfragen nur unter „Anfragen“. Die Suche findet sie.
+    if (!S.query && (S.filter === "msg-requests" ? !isRequest(c) : isRequest(c) && S.filter !== "archived")) return false;
     if (S.query) {
       const q = S.query.toLowerCase();
       return [c.title, c.workspaceName, c.projectName, c.description].some((v) => (v || "").toLowerCase().includes(q));
@@ -339,10 +339,11 @@
     const partner = c.partnerId ? userNow(c.partnerId) : null;
     const av = isGroup(c) ? groupAvatar(c) : avatar(partner || { displayName: c.title });
     const dot = !isGroup(c) ? `<i class="xc-dot xc-${presenceOf(c.partnerId)}"></i>` : "";
+    const reqTag = S.query && isRequest(c) ? `<small>${esc(t("Anfrage"))}</small>` : "";
     const req = c.pendingRequests ? `<em class="xc-badge xc-badge-req" title="${esc(t("Beitrittsanfragen"))}">+${c.pendingRequests}</em>` : "";
     return `<li><button type="button" class="xc-item${c.id === S.active && S.mode === "thread" ? " is-active" : ""}${c.unread ? " is-unread" : ""}" data-open="${esc(c.id)}" aria-current="${c.id === S.active}">
       <span class="xc-av-wrap">${av}${dot}</span>
-      <span class="xc-item-main"><span class="xc-item-top"><b data-no-i18n>${esc(c.title || t("Gespräch"))}</b>${visBadge(c)}<time>${esc(listTime(c.updatedTs))}</time></span>
+      <span class="xc-item-main"><span class="xc-item-top"><b data-no-i18n>${esc(c.title || t("Gespräch"))}</b>${reqTag}${visBadge(c)}<time>${esc(listTime(c.updatedTs))}</time></span>
       <span class="xc-item-sub"><span data-no-i18n>${esc(snippet(c))}</span>${req}${c.mentions ? `<em class="xc-badge xc-badge-at">@</em>` : ""}${c.unread ? `<em class="xc-badge">${c.unread > 99 ? "99+" : c.unread}</em>` : ""}</span></span>
     </button></li>`;
   }
@@ -358,9 +359,8 @@
     const waiting = S.filter === "requests" && !S.query && S.myRequests.length
       ? `<p class="xc-label">${esc(t("Deine Beitrittsanfragen"))}</p><ul class="xc-items">${S.myRequests.map((g) => `<li><div class="xc-item is-waiting">${groupAvatar({ id: g.id, title: g.title, emoji: g.emoji, avatar: g.avatar })}<span class="xc-item-main"><span class="xc-item-top"><b data-no-i18n>${esc(g.title)}</b></span><span class="xc-item-sub"><span>${esc(t("Wartet auf Freigabe"))}</span></span></span><button type="button" class="xc-link" data-withdraw="${esc(g.id)}">${esc(t("Zurückziehen"))}</button></div></li>`).join("")}</ul>`
       : "";
-    // Treffer aus Anfragen gehören nicht in die Suche der normalen Liste (sie stehen unter „Nachrichtenanfragen“)
-    const foundHits = S.searchHits.filter((m) => !isRequest(conv(m.conversationId)));
-    const hits = S.query.length >= 2 && foundHits.length && S.filter !== "msg-requests" ? `<p class="xc-label">${esc(t("Nachrichten"))}</p><ul class="xc-hits">${foundHits.map((m) => `<li><button type="button" data-open="${esc(m.conversationId)}"><b data-no-i18n>${esc(conv(m.conversationId)?.title || m.author)}</b><span data-no-i18n>${esc(m.author)}: ${esc((m.body || "").slice(0, 90))}</span></button></li>`).join("")}</ul>` : "";
+    // Die Suche verbirgt auch Anfragen nicht: Wer einen Namen tippt, soll ihn finden. Treffer aus einer Anfrage sind gekennzeichnet.
+    const hits = S.query.length >= 2 && S.searchHits.length ? `<p class="xc-label">${esc(t("Nachrichten"))}</p><ul class="xc-hits">${S.searchHits.map((m) => `<li><button type="button" data-open="${esc(m.conversationId)}"><b data-no-i18n>${esc(conv(m.conversationId)?.title || m.author)}</b>${isRequest(conv(m.conversationId)) ? `<small>${esc(t("Anfrage"))}</small>` : ""}<span data-no-i18n>${esc(m.author)}: ${esc((m.body || "").slice(0, 90))}</span></button></li>`).join("")}</ul>` : "";
     const emptyText = S.query ? "Nichts gefunden."
       : S.filter === "requests" ? "Keine offenen Beitrittsanfragen."
       : S.filter === "msg-requests" ? "Keine Anfragen"
