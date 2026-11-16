@@ -37,7 +37,7 @@
     active: "", messages: [], hasMore: false, readers: [], members: new Map(), users: new Map(), presence: new Map(),
     insight: new Map(), tagFilter: "", tagFilterName: "", filterTagDropped: false, chatTags: [], replyTo: null, editId: "", pending: [], tag: null,
     mentionIds: new Map(), typing: new Map(), view: "list", infoOpen: true, draft: new Map(), loadingOlder: false,
-    editGroup: false, editEmoji: "", addingPeople: false, confirmDelete: false,
+    editGroup: false, editEmoji: "", addingPeople: false, confirmDelete: false, personAction: "", personNote: null,
   };
   let chatBg = "xyntal";
   try { const saved = localStorage.getItem(BG_KEY); if (CHAT_BGS.some(([k]) => k === saved)) chatBg = saved; } catch { /* Standard */ }
@@ -529,7 +529,7 @@
   // ---------- Gespräch öffnen ----------
   async function open(id, { push = true } = {}) {
     if (S.active && S.active !== id) S.draft.set(S.active, composerText());
-    S.active = id; S.editGroup = false; S.addingPeople = false; S.confirmDelete = false;
+    S.active = id; S.editGroup = false; S.addingPeople = false; S.confirmDelete = false; S.personAction = ""; S.personNote = null;
     S.mode = "thread";
     S.messages = []; S.hasMore = false; S.readers = []; S.replyTo = null; S.editId = ""; S.pending = []; S.tag = null;
     S.mentionIds = new Map(); S.tagFilter = ""; S.tagFilterName = ""; S.filterTagDropped = false; S.chatTags = [];
@@ -856,6 +856,57 @@
       <input data-delete-name autocomplete="off" placeholder="${esc(c.title)}" aria-label="${esc(t("Gruppenname zur Bestätigung"))}">
       <div class="xm-row"><button type="button" class="btn btn-small xc-danger-fill" data-delete-confirm disabled>${esc(t("Endgültig löschen"))}</button><button type="button" class="btn btn-small btn-ghost" data-delete-cancel>${esc(t("Abbrechen"))}</button></div></section>`;
   }
+  // ---------- Person sperren und melden (Direktgespräch, Info-Spalte) ----------
+  // Die festen englischen Werte gehen an den Server; man sieht die deutschen Beschriftungen (wie in der App).
+  const PERSON_REASONS = [["Spam", "Spam"], ["Harassment", "Belästigung"], ["Inappropriate content", "Unangemessene Inhalte"], ["Impersonation", "Identitätsmissbrauch"], ["Other", "Sonstiges"]];
+  function personSafety(name) {
+    const note = S.personNote ? `<p class="xc-hint${S.personNote.kind === "error" ? " xc-warn" : ""}" role="status">${esc(S.personNote.text)}</p>` : "";
+    if (S.personAction === "block") return `<section class="xc-person">${note}<h3>${esc(t("Person sperren?"))}</h3>
+        <p class="xc-hint">${esc(t("Du sperrst"))} <b data-no-i18n>${esc(name)}</b>${esc(t(". Danach kann keiner von euch beiden dem anderen mehr schreiben. Das Gespräch und der bisherige Verlauf bleiben stehen. Du kannst die Sperre jederzeit im Profil unter „Gesperrte Mitglieder“ wieder aufheben."))}</p>
+        <div class="xm-row"><button type="button" class="btn btn-small xc-danger-fill" data-block-confirm>${esc(t("Sperren"))}</button><button type="button" class="btn btn-small btn-ghost" data-person-cancel>${esc(t("Abbrechen"))}</button></div></section>`;
+    if (S.personAction === "report") return `<section class="xc-person"><h3>${esc(t("Person melden"))}</h3>${note}
+        <form class="xc-report" data-report-form novalidate>
+          <fieldset class="xg-seg"><legend>${esc(t("Grund"))}</legend>${PERSON_REASONS.map(([v, l]) => `<label class="xg-opt"><input type="radio" name="reason" value="${v}"><span><b>${esc(t(l))}</b></span></label>`).join("")}</fieldset>
+          <label>${esc(t("Notiz (optional)"))}<textarea name="details" maxlength="500" rows="3"></textarea></label>
+          <p class="xc-hint xc-warn" data-report-error role="status"></p>
+          <div class="xm-row"><button type="submit" class="btn btn-small" disabled>${esc(t("Melden"))}</button><button type="button" class="btn btn-small btn-ghost" data-person-cancel>${esc(t("Abbrechen"))}</button></div>
+        </form></section>`;
+    return `<section class="xc-person">${note}<div class="xm-row"><button type="button" class="btn btn-small btn-ghost" data-report-open>${esc(t("Melden"))}</button><button type="button" class="btn btn-small btn-ghost xc-danger" data-block-open>${esc(t("Person sperren"))}</button></div></section>`;
+  }
+  // POST /users/:id/block – Erfolg oder Fehler landen in der Info-Spalte
+  async function blockPerson(btn) {
+    const c = conv(S.active);
+    if (!c || !c.partnerId) return;
+    btn.disabled = true;
+    try {
+      await X.api("POST", `/users/${encodeURIComponent(c.partnerId)}/block`, {});
+      S.personAction = "";
+      S.personNote = { kind: "ok", text: t("Gesperrt. Die Sperre hebst du im Profil unter „Gesperrte Mitglieder“ wieder auf.") };
+    } catch (err) {
+      S.personNote = { kind: "error", text: fail(err) };
+    }
+    renderInfo();
+  }
+  // POST /reports mit festen Gründen; die Notiz ist optional
+  async function reportPerson(form) {
+    const c = conv(S.active);
+    const reason = form.elements.reason.value;
+    if (!c || !c.partnerId || !reason) return;
+    const body = { targetType: "user", targetId: c.partnerId, reason };
+    const details = form.elements.details.value.trim();
+    if (details) body.details = details;
+    const submit = form.querySelector("[type=submit]"), errEl = form.querySelector("[data-report-error]");
+    submit.disabled = true; errEl.textContent = "";
+    try {
+      await X.api("POST", "/reports", body);
+      S.personAction = "";
+      S.personNote = { kind: "ok", text: t("Danke. Deine Meldung ist bei uns angekommen.") };
+      renderInfo();
+    } catch (err) {
+      submit.disabled = !form.elements.reason.value;
+      errEl.textContent = err.status === 429 ? t("Du hast gerade sehr viele Meldungen geschickt. Warte eine Minute und versuch es dann noch einmal.") : fail(err);
+    }
+  }
   function renderInfo() {
     const c = conv(S.active);
     root.classList.toggle("info-closed", !S.infoOpen);
@@ -939,7 +990,8 @@
       ${p && p.bio ? `<section><h3>${esc(t("Über"))}</h3><p class="xc-about" data-no-i18n>${esc(p.bio)}</p></section>` : ""}
       ${p && (p.skills || []).length ? `<section><h3>Skills</h3><div class="xc-tags">${p.skills.slice(0, 8).map((s) => `<span data-no-i18n>${esc(X.tagLabel("skills", s))}</span>`).join("")}</div></section>` : ""}
       ${projects}
-      <section class="xc-links">${handle ? `<a class="btn btn-small btn-ghost" href="/${esc(handle)}">${esc(t("Profil ansehen"))}</a>` : ""}<a class="btn btn-small btn-ghost" href="/fuer-dich?person=${encodeURIComponent(c.partnerId)}">${esc(t("Eure Passung"))}</a></section>`);
+      <section class="xc-links">${handle ? `<a class="btn btn-small btn-ghost" href="/${esc(handle)}">${esc(t("Profil ansehen"))}</a>` : ""}<a class="btn btn-small btn-ghost" href="/fuer-dich?person=${encodeURIComponent(c.partnerId)}">${esc(t("Eure Passung"))}</a></section>
+      ${personSafety(p ? p.displayName : c.title)}`);
   }
   // ---------- Gruppe verwalten (wie im Gruppen-Dialog der App) ----------
   const base = () => `/conversations/${encodeURIComponent(S.active)}`;
@@ -1055,9 +1107,24 @@
       catch (err) { say(fail(err), "error"); }
     }
   });
+  infoEl.addEventListener("change", (e) => {
+    const form = e.target.closest("[data-report-form]");
+    if (form) form.querySelector("[type=submit]").disabled = !form.elements.reason.value;
+  });
+  infoEl.addEventListener("submit", (e) => {
+    const form = e.target.closest("[data-report-form]");
+    if (!form) return;
+    e.preventDefault();
+    reportPerson(form);
+  });
   infoEl.addEventListener("click", async (e) => {
     const f = e.target.closest("[data-tag-filter]");
     if (f) { setTagFilter(f.dataset.tagFilter, f.dataset.name); return; }
+    if (e.target.closest("[data-report-open]")) { S.personAction = "report"; S.personNote = null; renderInfo(); infoEl.querySelector("[data-report-form] input")?.focus(); return; }
+    if (e.target.closest("[data-block-open]")) { S.personAction = "block"; S.personNote = null; renderInfo(); return; }
+    if (e.target.closest("[data-person-cancel]")) { S.personAction = ""; S.personNote = null; renderInfo(); return; }
+    const blockBtn = e.target.closest("[data-block-confirm]");
+    if (blockBtn) { await blockPerson(blockBtn); return; }
     if (e.target.closest("[data-delete-open]")) { S.confirmDelete = true; renderInfo(); infoEl.querySelector("[data-delete-name]")?.focus(); return; }
     if (e.target.closest("[data-delete-cancel]")) { S.confirmDelete = false; renderInfo(); return; }
     if (e.target.closest("[data-delete-confirm]")) {
