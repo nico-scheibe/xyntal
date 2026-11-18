@@ -230,9 +230,15 @@ create policy "Eigenes Projekt ändern" on public.projects
   with check (owner_id = (select auth.uid()));
 
 -- ---------- Prüfhilfen (Testobjekte, nur in dieser Testdatenbank) ----------
+-- Zusagen "alle Zeilen von X sind true/false": (select count(*) > 0 and count(*) filter (where spalte is true) = count(*) ...).
+--   Die Gesamtzahl muss größer als null sein, sonst besteht eine leere Menge. Eine NULL-Zeile zählt bei filter nicht mit,
+--   der Vergleich schlägt an. "not exists ... and not spalte" bestünde bei NULL still.
+-- "if not ok" besteht bei NULL still: not NULL ist NULL, die IF-Bedingung greift nicht. Deshalb "is not true":
+--   nur ein echtes true besteht. Eine Prüfung, die bei NULL besteht, ist keine Prüfung. Beispiel: Eine nullbare Spalte
+--   author_age_ok hätte jeden neuen Kommentar für alle unsichtbar gemacht, und die Zusage wäre grün geblieben.
 create function public.test_check(ok boolean, msg text) returns void language plpgsql as $$
 begin
-  if not ok then raise exception 'TEST FEHLGESCHLAGEN: %', msg; end if;
+  if ok is not true then raise exception 'TEST FEHLGESCHLAGEN: %', msg; end if;
   raise notice 'OK: %', msg;
 end $$;
 -- Prüft, ob die Kennung der Sitzung genau uid ist. uid = '' heißt: keine Kennung (Gast). Vor jeder Gruppe aufrufen,
@@ -578,9 +584,9 @@ select public.test_check(
 
 -- ---------- A3) Nach der Migration: Konto 61 unter 16 ist für Gast und Mitglied zu ----------
 select public.test_expect_uid('', 'A3: keine Kennung');
-select public.test_check(not exists (select 1 from public.posts where author_id = '00000000-0000-0000-0000-000000000061' and author_age_ok)
-  and not exists (select 1 from public.listings where author_id = '00000000-0000-0000-0000-000000000061' and author_age_ok)
-  and not exists (select 1 from public.projects where owner_id = '00000000-0000-0000-0000-000000000061' and author_age_ok),
+select public.test_check((select count(*) > 0 and count(*) filter (where author_age_ok is false) = count(*) from public.posts where author_id = '00000000-0000-0000-0000-000000000061')
+  and (select count(*) > 0 and count(*) filter (where author_age_ok is false) = count(*) from public.listings where author_id = '00000000-0000-0000-0000-000000000061')
+  and (select count(*) > 0 and count(*) filter (where author_age_ok is false) = count(*) from public.projects where owner_id = '00000000-0000-0000-0000-000000000061'),
   'A3) Nachtrag: author_age_ok ist für alle Zeilen von 61 auf false');
 select public.test_visible_as('authenticated', '00000000-0000-0000-0000-000000000063', 'posts', 1601, 0,
   'A3) Nach der Migration: Mitglied 63 liest den privaten Beitrag von 61 nicht mehr');
@@ -618,9 +624,9 @@ select public.test_visible_as('authenticated', '00000000-0000-0000-0000-00000000
 
 -- ---------- A4) Bestand: Konto 55 (unter 16) per Nachtrag, Konto 56 (über 16) unberührt, Richtungsprobe ----------
 select public.test_expect_uid('', 'A4: keine Kennung');
-select public.test_check(not exists (select 1 from public.posts where author_id = '00000000-0000-0000-0000-000000000055' and author_age_ok)
-  and not exists (select 1 from public.listings where author_id = '00000000-0000-0000-0000-000000000055' and author_age_ok)
-  and not exists (select 1 from public.projects where owner_id = '00000000-0000-0000-0000-000000000055' and author_age_ok),
+select public.test_check((select count(*) > 0 and count(*) filter (where author_age_ok is false) = count(*) from public.posts where author_id = '00000000-0000-0000-0000-000000000055')
+  and (select count(*) > 0 and count(*) filter (where author_age_ok is false) = count(*) from public.listings where author_id = '00000000-0000-0000-0000-000000000055')
+  and (select count(*) > 0 and count(*) filter (where author_age_ok is false) = count(*) from public.projects where owner_id = '00000000-0000-0000-0000-000000000055'),
   'A4) Nachtrag: die Inhalte des Bestandskontos 55 unter 16 haben author_age_ok = false');
 select public.test_visible_as('anon', '', 'posts', 1141, 0,
   'A4) Der Gast liest den öffentlichen Beitrag des Bestandskontos 55 nicht mehr');
@@ -630,9 +636,9 @@ select public.test_visible_as('authenticated', '00000000-0000-0000-0000-00000000
   'A4) Mitglied 63 liest den Börsen-Eintrag des Bestandskontos 55 nicht mehr');
 select public.test_visible_as('authenticated', '00000000-0000-0000-0000-000000000063', 'projects', 1341, 0,
   'A4) Mitglied 63 liest das Projekt des Bestandskontos 55 nicht mehr');
-select public.test_check(not exists (select 1 from public.posts where author_id = '00000000-0000-0000-0000-000000000056' and not author_age_ok)
-  and not exists (select 1 from public.listings where author_id = '00000000-0000-0000-0000-000000000056' and not author_age_ok)
-  and not exists (select 1 from public.projects where owner_id = '00000000-0000-0000-0000-000000000056' and not author_age_ok),
+select public.test_check((select count(*) > 0 and count(*) filter (where author_age_ok is true) = count(*) from public.posts where author_id = '00000000-0000-0000-0000-000000000056')
+  and (select count(*) > 0 and count(*) filter (where author_age_ok is true) = count(*) from public.listings where author_id = '00000000-0000-0000-0000-000000000056')
+  and (select count(*) > 0 and count(*) filter (where author_age_ok is true) = count(*) from public.projects where owner_id = '00000000-0000-0000-0000-000000000056'),
   'A4) Konto 56 über 16: author_age_ok bleibt für alle Zeilen true');
 select public.test_visible_as('anon', '', 'posts', 1151, 1,
   'A4) Gegenprobe: der Gast liest den öffentlichen Beitrag des Kontos 56 über 16 weiter');
@@ -645,12 +651,12 @@ select public.test_visible_as('authenticated', '00000000-0000-0000-0000-00000000
   'A4) Richtungsprobe: der Admin sieht den ausgeblendeten Beitrag 1171 weiter');
 -- Konto 66 vor dem Stichtag ohne Datum (Bestandsschutz): author_age_ok bleibt true, Inhalt bleibt öffentlich.
 select public.test_check(public.age_ok('00000000-0000-0000-0000-000000000066'::uuid)
-  and not exists (select 1 from public.posts where author_id = '00000000-0000-0000-0000-000000000066' and not author_age_ok),
+  and (select count(*) > 0 and count(*) filter (where author_age_ok is true) = count(*) from public.posts where author_id = '00000000-0000-0000-0000-000000000066'),
   'A4) Konto 66 (vor Stichtag, ohne Datum) hat author_age_ok = true und ist vom Nachtrag unberührt');
 select public.test_visible_as('anon', '', 'posts', 1661, 1,
   'A4) Konto 66 (vor Stichtag, ohne Datum): der Gast liest den öffentlichen Beitrag');
 -- Konto 59 nach dem Stichtag ohne Datum: der Nachtrag erfasst es.
-select public.test_check(not exists (select 1 from public.posts where author_id = '00000000-0000-0000-0000-000000000059' and author_age_ok),
+select public.test_check((select count(*) > 0 and count(*) filter (where author_age_ok is false) = count(*) from public.posts where author_id = '00000000-0000-0000-0000-000000000059'),
   'A4) Konto 59 (nach Stichtag, ohne Datum): author_age_ok ist false');
 select public.test_visible_as('anon', '', 'posts', 1591, 0,
   'A4) Konto 59 (nach Stichtag, ohne Datum): der Gast liest den Beitrag nicht');
@@ -746,9 +752,9 @@ select public.test_runs_as('authenticated', $q$select public.set_my_birthdate('2
 select public.test_expect_uid('00000000-0000-0000-0000-000000000068', 'B2: Kennung ist 68 während des Eintragens');
 select set_config('request.jwt.claim.sub', '', false);
 select public.test_expect_uid('', 'B2: keine Kennung nach dem Eintragen');
-select public.test_check(not exists (select 1 from public.posts where author_id = '00000000-0000-0000-0000-000000000068' and author_age_ok)
-  and not exists (select 1 from public.listings where author_id = '00000000-0000-0000-0000-000000000068' and author_age_ok)
-  and not exists (select 1 from public.projects where owner_id = '00000000-0000-0000-0000-000000000068' and author_age_ok),
+select public.test_check((select count(*) > 0 and count(*) filter (where author_age_ok is false) = count(*) from public.posts where author_id = '00000000-0000-0000-0000-000000000068')
+  and (select count(*) > 0 and count(*) filter (where author_age_ok is false) = count(*) from public.listings where author_id = '00000000-0000-0000-0000-000000000068')
+  and (select count(*) > 0 and count(*) filter (where author_age_ok is false) = count(*) from public.projects where owner_id = '00000000-0000-0000-0000-000000000068'),
   'B2) Nach dem Datum: author_age_ok ist für alle Zeilen von 68 auf false');
 select public.test_flag('posts', 1682, true,
   'B2) is_public des öffentlichen Beitrags von 68 bleibt true (nur author_age_ok wird gezogen)');
@@ -858,9 +864,9 @@ select public.test_expect_uid('00000000-0000-0000-0000-000000000059', 'B5: Kennu
 select set_config('request.jwt.claim.sub', '', false);
 select public.test_expect_uid('', 'B5: keine Kennung nach dem Eintragen');
 select public.test_check(public.age_ok('00000000-0000-0000-0000-000000000059'::uuid)
-  and not exists (select 1 from public.posts where author_id = '00000000-0000-0000-0000-000000000059' and not author_age_ok)
-  and not exists (select 1 from public.listings where author_id = '00000000-0000-0000-0000-000000000059' and not author_age_ok)
-  and not exists (select 1 from public.projects where owner_id = '00000000-0000-0000-0000-000000000059' and not author_age_ok),
+  and (select count(*) > 0 and count(*) filter (where author_age_ok is true) = count(*) from public.posts where author_id = '00000000-0000-0000-0000-000000000059')
+  and (select count(*) > 0 and count(*) filter (where author_age_ok is true) = count(*) from public.listings where author_id = '00000000-0000-0000-0000-000000000059')
+  and (select count(*) > 0 and count(*) filter (where author_age_ok is true) = count(*) from public.projects where owner_id = '00000000-0000-0000-0000-000000000059'),
   'B5) Nach dem Datum über 16: author_age_ok ist für alle Zeilen von 59 wieder true');
 select public.test_visible_as('anon', '', 'posts', 1591, 1,
   'B5) Der GAST liest den Beitrag von 59 wieder');
@@ -891,7 +897,7 @@ select public.test_runs_as('authenticated', $q$select public.set_my_birthdate('2
   'C1) Zusage: Mitglied 67 mit altem Beitrag trägt ein Datum unter 16 ein, ohne Fehler');
 select public.test_expect_uid('00000000-0000-0000-0000-000000000067', 'C1: Kennung ist 67 während des Eintragens');
 select set_config('request.jwt.claim.sub', '', false);
-select public.test_check(not exists (select 1 from public.posts where author_id = '00000000-0000-0000-0000-000000000067' and author_age_ok),
+select public.test_check((select count(*) > 0 and count(*) filter (where author_age_ok is false) = count(*) from public.posts where author_id = '00000000-0000-0000-0000-000000000067'),
   'C1) Der alte Beitrag von 67 hat author_age_ok = false');
 select public.test_flag('posts', 1671, true,
   'C1) Der alte Beitrag von 67 bleibt is_public = true (der Trigger wurde nicht ausgelöst)');
@@ -901,7 +907,7 @@ select public.test_runs_as('authenticated', $q$select public.admin_set_birthdate
   'C2) Zusage: Admin 64 trägt für Konto 69 mit altem Beitrag ein Datum unter 16 ein, ohne Fehler');
 select public.test_expect_uid('00000000-0000-0000-0000-000000000064', 'C2: Kennung ist 64 während der Berichtigung');
 select set_config('request.jwt.claim.sub', '', false);
-select public.test_check(not exists (select 1 from public.posts where author_id = '00000000-0000-0000-0000-000000000069' and author_age_ok),
+select public.test_check((select count(*) > 0 and count(*) filter (where author_age_ok is false) = count(*) from public.posts where author_id = '00000000-0000-0000-0000-000000000069'),
   'C2) Der alte Beitrag von 69 hat author_age_ok = false');
 select public.test_flag('posts', 1691, true,
   'C2) Der alte Beitrag von 69 bleibt is_public = true (der Trigger wurde nicht ausgelöst)');

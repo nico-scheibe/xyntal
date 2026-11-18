@@ -110,9 +110,12 @@ returns jsonb language sql stable security definer set search_path = '' as $$
   where not public.ban_active(p.banned, p.banned_until);
 $$;
 
+-- "if not ok" besteht bei NULL still: not NULL ist NULL, die IF-Bedingung greift nicht. Deshalb "is not true":
+--   nur ein echtes true besteht. Eine Prüfung, die bei NULL besteht, ist keine Prüfung. Beispiel: Eine nullbare Spalte
+--   author_age_ok hätte jeden neuen Kommentar für alle unsichtbar gemacht, und die Zusage wäre grün geblieben.
 create function public.test_check(ok boolean, msg text) returns void language plpgsql as $$
 begin
-  if not ok then raise exception 'TEST FEHLGESCHLAGEN: %', msg; end if;
+  if ok is not true then raise exception 'TEST FEHLGESCHLAGEN: %', msg; end if;
   raise notice 'OK: %', msg;
 end $$;
 create function public.test_expect_error(stmt text, pattern text) returns void language plpgsql as $$

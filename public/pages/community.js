@@ -217,8 +217,14 @@ feed.addEventListener("click", async (e) => {
         unwrap(await sb.from("post_likes").delete().eq("post_id", id).eq("user_id", v.me.id));
         liked.delete(id); post.like_count--;
       } else {
-        unwrap(await sb.from("post_likes").insert({ post_id: id }));
-        liked.add(id); post.like_count++;
+        const res = await sb.from("post_likes").insert({ post_id: id });
+        if (res.error?.code === "23505") {
+          unwrap(await sb.from("post_likes").delete().eq("post_id", id).eq("user_id", v.me.id));
+          liked.delete(id); post.like_count--;
+        } else {
+          unwrap(res);
+          liked.add(id); post.like_count++;
+        }
       }
       btn.classList.toggle("active", liked.has(id));
       btn.setAttribute("aria-pressed", liked.has(id));

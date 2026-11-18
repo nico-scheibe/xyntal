@@ -32,6 +32,17 @@
 
 begin;
 
+-- Sicherheitsnetz (siehe 20261118240000_altersgrenze_kommentare_verbergen.sql): Diese Datei erteilt
+--   authenticated tabellenweites INSERT auf post_comment_reactions. Damit wäre author_age_ok für ein Mitglied
+--   setzbar. Liefe sie nach 20261118240000 erneut, stünde die Lücke ohne Fehlermeldung wieder da. Deshalb bricht
+--   sie dann ab. Auf der Produktionsdatenbank ändert das nichts: Die Datei ist dort bereits eingespielt.
+do $$ begin
+  if exists (select 1 from information_schema.columns
+              where table_schema = 'public' and table_name = 'post_comment_reactions' and column_name = 'author_age_ok') then
+    raise exception 'Diese Datei ist aelter als 20261118240000_altersgrenze_kommentare_verbergen.sql und wuerde authenticated tabellenweites INSERT auf post_comment_reactions wieder erteilen (author_age_ok waere faelschbar). Erst 20261118240000 erneut einspielen oder diese Datei auslassen.';
+  end if;
+end $$;
+
 -- ---------- beta_applications ----------
 -- Rechte: lesen und löschen; Status aktualisieren; Notiz und Mail-Spalten nur bedingt.
 -- Soll aus: 20261025210417_beta_admin_workflow.sql:27-29, 20261103140000_beta_status_mail.sql:9.

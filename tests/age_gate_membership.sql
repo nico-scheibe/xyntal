@@ -40,9 +40,12 @@ create function public.ban_active(b boolean, until timestamptz) returns boolean 
 -- Die Beta-Bewerbung ist in diesem Test nie der Grund für eine Ablehnung.
 create function public.beta_application_required() returns boolean language sql stable as $$ select false $$;
 
+-- "if not ok" besteht bei NULL still: not NULL ist NULL, die IF-Bedingung greift nicht. Deshalb "is not true":
+--   nur ein echtes true besteht. Eine Prüfung, die bei NULL besteht, ist keine Prüfung. Beispiel: Eine nullbare Spalte
+--   author_age_ok hätte jeden neuen Kommentar für alle unsichtbar gemacht, und die Zusage wäre grün geblieben.
 create function public.test_check(ok boolean, msg text) returns void language plpgsql as $$
 begin
-  if not ok then raise exception 'TEST FEHLGESCHLAGEN: %', msg; end if;
+  if ok is not true then raise exception 'TEST FEHLGESCHLAGEN: %', msg; end if;
   raise notice 'OK: %', msg;
 end $$;
 -- Prüft is_active_member() aus der Sicht eines bestimmten Kontos.
