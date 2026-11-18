@@ -100,6 +100,11 @@ returns boolean language sql stable security definer set search_path = '' as $$
 $$;
 
 
+-- Hinweis: set_my_birthdate() und admin_set_birthdate() stehen in dieser Datei nicht. Ihre laufenden Fassungen stehen
+-- in 20261118200000_altersgrenze_inhalte_verbergen.sql. Sie gleichen seit dort zusätzlich die Spalte author_age_ok von
+-- Beiträgen, Börsen-Einträgen und Projekten mit dem Alter des Urhebers ab (in beide Richtungen). Die drei Leseregeln
+-- dieser Inhalte prüfen diese Spalte. Ein Neuaufbau allein aus dieser Datei hat das NICHT.
+
 -- Neues Konto -> Profil automatisch anlegen.
 -- Die Profildaten kommen aus signUp({ options: { data: { ... } } }).
 create function public.handle_new_user()
