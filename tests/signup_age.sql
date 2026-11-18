@@ -1,3 +1,6 @@
+-- Diese Datei prüft den Stand bis 20261113120000. Das Verhalten ab 20261118120000 (Datum unter 16 wird
+-- gespeichert, Konto wird ausgesperrt) steht in tests/age_gate_underage.sql. Die Zusagen unten sind für
+-- den alten Stand geschrieben und stimmen dort nicht mehr.
 -- Altersprüfung ab 16 (Migration 20261113120000_signup_birthdate.sql). Nur in einer separaten leeren lokalen Datenbank ausführen.
 -- Start aus dem Projektordner: psql -v ON_ERROR_STOP=1 -d TESTDATENBANK -f tests/signup_age.sql
 \set ON_ERROR_STOP on
