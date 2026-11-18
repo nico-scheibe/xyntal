@@ -1,5 +1,10 @@
--- Sperre wirkt auf Löschen: Ein gesperrtes Mitglied darf im Eimer message-attachments keine eigene Datei mehr entfernen.
--- Gehört zu supabase/migrations/20261118270000_sperre_nichts_loeschen.sql. Warum NUR dieser Eimer, steht im Kopf dieser Migration.
+-- Sperre wirkt auf Löschen: Ein gesperrtes Mitglied darf keine eigene Datei mehr entfernen, AUSSER in den drei Eimern
+--   der FREILISTE avatars, banners, xyntal-app-files.
+-- Gehört zu supabase/migrations/20261118270000_sperre_nichts_loeschen.sql (Sperrliste, eingespielt) UND zu
+--   supabase/migrations/20261118290000_sperre_loeschen_freiliste.sql (Freiliste, ersetzt die Regel). Der Test lädt beide
+--   nacheinander: die alte Regel entsteht zuerst, die neue ersetzt sie. Warum die Richtung umgedreht wurde, steht im Kopf
+--   der Migration 20261118290000.
+-- UMGEDREHTE ZUSAGEN sind im Blocktext mit "UMGEDREHT" gekennzeichnet. Dort steht, was vorher zugesichert wurde.
 --
 -- TRIGGER: GEMESSEN, nicht nachgebaut. Funktion storage.protect_delete() und Trigger protect_objects_delete stehen
 --   wörtlich im Block "Trigger protect_objects_delete" unten. Sie stammen aus der Produktionsdatenbank (vom Koordinator
@@ -35,13 +40,26 @@
 --   a) VORHER: gesperrtes M2 löscht eigene Dateien in avatars, message-attachments und project-images (Lücke belegt).
 --   b) NACHHER: gesperrtes M2 löscht in message-attachments nichts (0 Zeilen, kein Fehler). Gegenprobe: Datei liegt noch.
 --      b3/b4: entsperrt gelingt derselbe Versuch, wieder gesperrt scheitert er. Die Ursache ist die Sperre.
---   c) Gegenprobe, die wichtigste: gesperrtes M2 löscht WEITER in avatars, banners, page-media und project-images.
---      Das schützt den Löschweg des Kontos (siehe Kommentar an Block c).
+--   c) Gegenprobe, die wichtigste: gesperrtes M2 löscht WEITER in avatars und banners (Löschweg des Kontos).
+--      c3/c4 UMGEDREHT: gesperrtes M2 scheitert in page-media und project-images (vorher Gegenteil, siehe Block c).
 --   d) Nicht gesperrtes M1 löscht in allen fünf Eimern, message-attachments eingeschlossen.
 --   e) Abgelaufene Sperre (M4) und banned = false mit Ende in der Zukunft (M5) hindern nicht.
 --   f) Struktur: Regel "Sperre: nichts loeschen" steht in pg_policies, RESTRICTIVE, DELETE, nur {authenticated}.
+--      f1b/f1c: die Bedingung nennt die drei Freiliste-Eimer und keinen gesperrten Eimer.
+--      f1b und f1c sind reine TEXTPRÜFUNGEN auf pg_policies.qual (like). Sie können brechen, wenn Postgres die Bedingung in
+--      anderer Form ausgibt. Bestehen beweist bei ihnen KEIN Verhalten. Die Zusage, die die RICHTUNG der Bedingung
+--      tatsächlich bewacht, ist g2 (zukunft-neuer-eimer), belegt durch die Mutation Sperrliste
+--      "bucket_id not in ('message-attachments', 'page-media', 'project-images') or not me_banned()".
+--      Lauf des Koordinators: 84 Zusagen, Exit 0. Mutationen, alle gefangen: Sperrliste mit einem Eimer (c3), page-media in
+--      der Freiliste (c3), avatars aus der Freiliste (c1, der Löschweg des Kontos ist bewacht), Sperrliste mit allen drei
+--      Eimern (f1b; mit stillgelegtem f1b rot g2).
 --      f4/f5: anon und service_role mit der Kennung des gesperrten M2 löschen in message-attachments. Die Sperre trifft sie nicht.
---   g) Fremde Eimer bleiben frei: xyntal-app-files (zweite Anwendung) und zukunft-neuer-eimer (fail-open, siehe Migration).
+--   g) xyntal-app-files bleibt frei (Freiliste). g2 UMGEDREHT: zukunft-neuer-eimer ist für gesperrtes M2 GESPERRT
+--      (vorher "fail-open, bleibt löschbar"). Das ist der Beleg für die Richtung der Bedingung (siehe Block g).
+--   k) Die Sperre nimmt nur das LÖSCHEN. Gesperrtes M2 liest eigene Dateien und legt neue an. KEINE Zusage über die Regel:
+--      Lesen und Anlegen kommen von Stellvertretern, und durch keine Mutation an der Regel wird k rot. Die echte Upload-Sperre
+--      (20261118260000) ist NICHT geladen; in der Produktion können gesperrte Mitglieder in page-media nicht hochladen.
+--      Die Ausnahme für xyntal-app-files (g1) ist ebenfalls Stellvertreter-gestützt, siehe Block g.
 --   h) Der Trigger ist scharf (gemessener Rumpf): ohne gesetzte Einstellung wirft jedes Löschen mit SQLSTATE 42501 (h1).
 --      Gegenprobe: mit gesetzter Einstellung gelingt es (h3).
 --   i) bucket_id NULL: gesperrtes M2 löscht nicht (ok:0), nicht gesperrtes M1 löscht (ok:1). NULL zählt als nicht erlaubt.
@@ -57,6 +75,10 @@
 -- KULISSE, NICHT GEPRÜFT. Diese Zusagen belegen sie nicht:
 --   "2FA erzwingen" (restriktiv, for all) hängt an keiner Zusage. Der Prüfer hat sie neutralisiert, der Test blieb grün.
 --   mfa_ok() ist in dieser Testsitzung immer wahr (keine Faktoren), eine 2FA-Zusage gibt es also nicht.
+-- NICHT ABGEDECKT, geprüft auf andere Weise: der Abbruchpfad der Eimer-Prüfung in der Migration 20261118290000 (ein in der
+--   Regel genannter Eimer fehlt in storage.buckets, oder die Regel fehlt, oder die Bedingung nennt keinen Eimernamen). Ein
+--   Abbruch in der Migration beendet den ganzen Testlauf, also kann dieser Test ihn nicht als Zusage zeigen. Geprüft wird er
+--   vom Koordinator durch eine Mutation (Freiliste mit einem falsch geschriebenen Eimernamen, Migration muss abbrechen).
 -- UNERREICHBAR, NICHT ENTFERNT. Der Erfolgszweig "return 'ok:' || n" in test_delete_guard ist toter Code. h1 setzt
 --   test_allow(false), also löst jedes Löschen dort die Ausnahme aus. Der Zweig bleibt stehen, weil er nichts kostet.
 --
@@ -133,6 +155,15 @@ alter table storage.objects enable row level security;
 -- Rechte: GEMESSEN, tabellenweit (wie in tests/sperre_uploads.sql).
 grant select, insert, update, delete on storage.objects to anon, authenticated;
 grant select, insert, update, delete, references, trigger, truncate on storage.objects to service_role;
+
+-- ---------- storage.buckets (nachgebildet, nur id und name) ----------
+-- Die Migration 20261118290000 prüft, dass die drei Freiliste-Eimer in storage.buckets existieren. Hier werden sie angelegt.
+--   Eingetragen sind die Eimer, die der Test benutzt. Gesetzt in der Produktion: avatars (005_profile_avatars.sql Zeile 9),
+--   banners (20261107120000_card_banners_premium.sql Zeile 87), xyntal-app-files (Produktion, gemessen).
+create table storage.buckets (id text primary key, name text, public boolean not null default false);
+insert into storage.buckets (id, name) values
+  ('avatars', 'avatars'), ('banners', 'banners'), ('xyntal-app-files', 'xyntal-app-files'),
+  ('message-attachments', 'message-attachments'), ('page-media', 'page-media'), ('project-images', 'project-images');
 
 -- NACHGEBILDET, nicht gemessen: Ordner-Funktion. Die Regeln nutzen nur [1], für 'M2/datei.jpg' also 'M2'.
 create function storage.foldername(name text) returns text[] language sql immutable as $$
@@ -374,6 +405,11 @@ reset role;
 reset role;
 \i supabase/migrations/20261118270000_sperre_nichts_loeschen.sql
 
+-- Neue Fassung: ersetzt die Regel "Sperre: nichts loeschen" durch die Freiliste. Ab hier gilt der Endzustand.
+\echo == Migration 20261118290000_sperre_loeschen_freiliste.sql laden (ersetzt die Regel)
+reset role;
+\i supabase/migrations/20261118290000_sperre_loeschen_freiliste.sql
+
 -- ---------- b) NACHHER: gesperrtes M2 scheitert in message-attachments ----------
 \echo == b) NACHHER
 reset role;
@@ -390,23 +426,28 @@ select public.test_check(public.test_count('message-attachments', :'M2' || '/b-m
 update public.profiles set banned = false, banned_until = null where id = :'M2';
 select public.test_login(:'M2');
 set role authenticated;
+select public.test_expect('authenticated', :'M2', 'b3 Sitzung: gesperrtes M2 als authenticated (entsperrt)');
 select public.test_check(public.test_delete('message-attachments', :'M2' || '/b-ma.pdf') is not distinct from 'ok:1', 'b3 Gegenprobe: entsperrt gelingt derselbe Löschversuch (die Ursache ist die Sperre)');
 reset role;
 update public.profiles set banned = true, banned_until = null where id = :'M2';
 select public.test_seed('message-attachments', :'M2' || '/b-ma2.pdf');
 select public.test_login(:'M2');
 set role authenticated;
+select public.test_expect('authenticated', :'M2', 'b4 Sitzung: gesperrtes M2 als authenticated (wieder gesperrt)');
 select public.test_check(public.test_delete('message-attachments', :'M2' || '/b-ma2.pdf') is not distinct from 'ok:0', 'b4 wieder gesperrt: scheitert erneut');
 reset role;
 
--- ---------- c) Gegenprobe, die wichtigste: gesperrtes M2 löscht WEITER ----------
--- ZUSAGE, DIE DEN LÖSCHWEG DES KONTOS SCHÜTZT. Eine spätere Ausweitung der Sperre auf avatars, banners, page-media oder
---   project-images BRICHT die Kontolöschung. public/pages/profil.js Zeile 371 ruft deleteMemberAvatars() unmittelbar vor
---   delete_my_account() auf, und public/avatars.js Zeile 90-93 entfernt genau avatars und banners. Scheitert das Entfernen,
---   wirft die Funktion, und das Konto bleibt bestehen. Page-media und project-images werden dort nicht abgeräumt, und
---   eine Sperre nähme dem Mitglied die einzige Möglichkeit, eigene Inhalte selbst zu entfernen. Ausweiten nur, nachdem
---   der Löschablauf diese Eimer selbst abräumt.
-\echo == c) Gegenprobe gesperrtes M2
+-- ---------- c) gesperrtes M2: avatars und banners löschen weiter, page-media und project-images nicht ----------
+-- c1/c2 (avatars, banners): UNVERÄNDERT. Zusage: gesperrtes M2 löscht WEITER. Sie schützt den Löschweg des Kontos:
+--   public/pages/profil.js Zeile 371 ruft deleteMemberAvatars() unmittelbar vor delete_my_account() auf, und
+--   public/avatars.js Zeile 90-93 entfernt genau avatars und banners. Scheitert das Entfernen, wirft die Funktion, und das
+--   Konto bleibt bestehen. Deshalb stehen beide in der Freiliste.
+-- c3/c4 (page-media, project-images): UMGEDREHT. Vorher zusichert: "gesperrtes M2 löscht WEITER in page-media" (ok:1) und
+--   "gesperrtes M2 löscht WEITER in project-images" (ok:1). Jetzt ok:0. Grund: Die Freiliste nennt nur avatars, banners und
+--   xyntal-app-files. Die Sperre soll ALLE Löschungen eines gesperrten Mitglieds erfassen, außer den Eimern, die der
+--   Löschweg der Kontolöschung braucht. page-media und project-images werden bei der Kontolöschung nicht abgeräumt, also
+--   bricht ihre Sperre die Kontolöschung nicht.
+\echo == c) gesperrtes M2: avatars und banners weiter, page-media und project-images gesperrt
 reset role;
 select public.test_seed('avatars', :'M2' || '/c-av.jpg');
 select public.test_seed('banners', :'M2' || '/c-ba.jpg');
@@ -419,11 +460,17 @@ select public.test_check(public.test_count('project-images', :'M2' || '/c-pi.jpg
 select public.test_allow(true);
 select public.test_login(:'M2');
 set role authenticated;
+select public.test_expect('authenticated', :'M2', 'c0 Sitzung: gesperrtes M2 als authenticated');
 select public.test_check(public.test_delete('avatars', :'M2' || '/c-av.jpg') is not distinct from 'ok:1', 'c1 Gegenprobe: gesperrtes M2 löscht WEITER in avatars (Löschweg des Kontos)');
 select public.test_check(public.test_delete('banners', :'M2' || '/c-ba.jpg') is not distinct from 'ok:1', 'c2 Gegenprobe: gesperrtes M2 löscht WEITER in banners (Löschweg des Kontos)');
-select public.test_check(public.test_delete('page-media', :'M2' || '/c-sp.jpg') is not distinct from 'ok:1', 'c3 Gegenprobe: gesperrtes M2 löscht WEITER in page-media');
-select public.test_check(public.test_delete('project-images', :'M2' || '/c-pi.jpg') is not distinct from 'ok:1', 'c4 Gegenprobe: gesperrtes M2 löscht WEITER in project-images');
+-- c3 UMGEDREHT (vorher: 'c3 Gegenprobe: gesperrtes M2 löscht WEITER in page-media', ok:1). Jetzt gesperrt, siehe Kopf von Block c.
+select public.test_check(public.test_delete('page-media', :'M2' || '/c-sp.jpg') is not distinct from 'ok:0', 'c3 UMGEDREHT: gesperrtes M2 löscht in page-media NICHTS (vorher WEITER, ok:1)');
+-- c4 UMGEDREHT (vorher: 'c4 Gegenprobe: gesperrtes M2 löscht WEITER in project-images', ok:1). Jetzt gesperrt, siehe Kopf von Block c.
+select public.test_check(public.test_delete('project-images', :'M2' || '/c-pi.jpg') is not distinct from 'ok:0', 'c4 UMGEDREHT: gesperrtes M2 löscht in project-images NICHTS (vorher WEITER, ok:1)');
 reset role;
+-- c5/c6: Gegenprobe zu c3/c4. Die Dateien liegen noch, die Sperre hat sie nicht entfernt.
+select public.test_check(public.test_count('page-media', :'M2' || '/c-sp.jpg') = 1, 'c5 Gegenprobe: Datei in page-media liegt noch (Sperre)');
+select public.test_check(public.test_count('project-images', :'M2' || '/c-pi.jpg') = 1, 'c6 Gegenprobe: Datei in project-images liegt noch (Sperre)');
 
 -- ---------- d) Nicht gesperrtes M1 löscht in allen fünf Eimern ----------
 \echo == d) nicht gesperrtes M1
@@ -470,6 +517,17 @@ reset role;
 reset role;
 select public.test_check((select count(*) from pg_policies where schemaname = 'storage' and tablename = 'objects' and policyname = 'Sperre: nichts loeschen') = 1, 'f0 Vorbedingung: genau eine Regel "Sperre: nichts loeschen" auf storage.objects');
 select public.test_check(exists (select 1 from pg_policies where schemaname = 'storage' and tablename = 'objects' and policyname = 'Sperre: nichts loeschen' and permissive = 'RESTRICTIVE' and cmd = 'DELETE' and roles = array['authenticated']::name[]), 'f1 Regel "Sperre: nichts loeschen" ist RESTRICTIVE, DELETE, nur {authenticated}');
+-- f1b/f1c: Bedingung der Freiliste. Die Regel nennt die drei Eimer avatars, banners, xyntal-app-files und me_banned().
+--   f1c: sie nennt KEINEN der gesperrten Eimer. Die Prüfung über den Text ist grob. Sie fängt aber die alte Sperrliste ab:
+--   deren Bedingung nennt message-attachments, und f1c schlägt dann fehl. f1b schlägt ebenfalls fehl, weil die alte
+--   Bedingung keinen der drei Freiliste-Eimer nennt.
+--   f1b und f1c sind reine TEXTPRÜFUNGEN auf pg_policies.qual (like). Sie können brechen, wenn Postgres denselben Ausdruck
+--   in einer anderen Form ausgibt. Bestehen beweist bei ihnen KEIN Verhalten.
+--   Die Zusage, die die RICHTUNG der Bedingung tatsächlich bewacht, ist g2 (zukunft-neuer-eimer). Belegt durch die Mutation
+--   Sperrliste "bucket_id not in ('message-attachments', 'page-media', 'project-images') or not me_banned()": c3 und c4
+--   bleiben grün, rot wird f1b, und mit stillgelegtem f1b rot wird g2.
+select public.test_check(exists (select 1 from pg_policies where schemaname = 'storage' and tablename = 'objects' and policyname = 'Sperre: nichts loeschen' and qual like '%''avatars''%' and qual like '%''banners''%' and qual like '%''xyntal-app-files''%' and qual like '%me_banned%'), 'f1b Bedingung nennt die drei Freiliste-Eimer avatars, banners, xyntal-app-files und me_banned()');
+select public.test_check(exists (select 1 from pg_policies where schemaname = 'storage' and tablename = 'objects' and policyname = 'Sperre: nichts loeschen' and qual not like '%message-attachments%' and qual not like '%page-media%' and qual not like '%project-images%'), 'f1c Bedingung nennt keinen gesperrten Eimer (message-attachments, page-media, project-images)');
 select public.test_check((select count(*) from pg_policies where schemaname = 'storage' and tablename = 'objects' and cmd = 'DELETE' and policyname in ('Xyntal Profilbilder entfernen', 'Xyntal Banner entfernen', 'Xyntal Seitenbild entfernen', 'Xyntal Nachrichtenanhänge entfernen', 'Xyntal Projektbilder entfernen')) = 5, 'f2 die fünf erlaubenden Löschregeln sind noch vorhanden');
 
 -- STELLVERTRETER für anon und service_role. Ohne sie gäbe es nichts zu löschen, und die Gegenprobe wäre leer.
@@ -495,10 +553,21 @@ reset role;
 drop policy if exists "TEST Stellvertreter lesen (anon, service_role)" on storage.objects;
 drop policy if exists "TEST Stellvertreter entfernen (anon, service_role)" on storage.objects;
 
--- ---------- g) Fremde Eimer bleiben frei (fail-open) ----------
--- xyntal-app-files (zweite Anwendung) und ein künftiger Eimer zukunft-neuer-eimer. Beide sind NICHT in der Sperre genannt.
---   Stellvertreter-Regel nur für diese zwei Eimer, am Ende entfernt.
-\echo == g) fremde Eimer
+-- ---------- g) Freiliste: xyntal-app-files frei, jeder nicht genannte Eimer gesperrt ----------
+-- zukunft-neuer-eimer ist der NEUE Eimer, der in keiner Liste steht. Er ist eigens für diesen Beleg da und wird nur hier
+--   angelegt. Die Stellvertreter-Regel erlaubt das Löschen dort. Was blockiert, ist allein die Sperre.
+-- g1 (xyntal-app-files): UNVERÄNDERTES ERGEBNIS, neue BEGRÜNDUNG. Vorher stand: "zweite Anwendung bleibt unberührt, weil sie
+--   nicht in der Sperrliste steht". Jetzt steht der Eimer in der Freiliste. Das ist der Eimer der nativen App.
+--   KEIN Produktionsverhalten: Die Erlaubnis kommt vom STELLVERTRETER "TEST Stellvertreter entfernen (fremde Eimer)"
+--   (Zeile 551-552). g1 belegt nur, dass die Freiliste den Eimer nicht sperrt. Wird xyntal-app-files aus der Freiliste
+--   genommen, wird g1 rot. Ob die echte Löschregel des Eimers in der Produktion gesperrte Mitglieder zulässt, belegt g1
+--   NICHT. Gemessen (Produktion): Die Regel prüft nur xyntal_app.file_permission(), keine Sperre.
+-- g2 (zukunft-neuer-eimer): UMGEDREHT. Vorher zusichert: "gesperrtes M2 löscht in zukunft-neuer-eimer" (ok:1, fail-open,
+--   "ein künftiger Eimer ist nicht gesperrt"). Jetzt ok:0. Grund: Die Richtung der Bedingung ist umgekehrt. Eine Freiliste
+--   sperrt jeden Eimer, der nicht genannt ist. Ein künftiger Eimer ist damit für ein gesperrtes Mitglied gesperrt, und die
+--   Kontolöschung bricht sichtbar ab, falls der Eimer in ihren Löschweg kommt. Stellvertreter-Regel nur für diese zwei
+--   Eimer, am Ende entfernt.
+\echo == g) Freiliste
 reset role;
 drop policy if exists "TEST Stellvertreter entfernen (fremde Eimer)" on storage.objects;
 create policy "TEST Stellvertreter entfernen (fremde Eimer)" on storage.objects for delete to authenticated
@@ -510,8 +579,11 @@ select public.test_check(public.test_count('zukunft-neuer-eimer', :'M2' || '/g-n
 select public.test_login(:'M2');
 set role authenticated;
 select public.test_expect('authenticated', :'M2', 'g0 Sitzung: gesperrtes M2 als authenticated');
-select public.test_check(public.test_delete('xyntal-app-files', :'M2' || '/g-app.jpg') is not distinct from 'ok:1', 'g1 gesperrtes M2 löscht in xyntal-app-files (zweite Anwendung bleibt unberührt)');
-select public.test_check(public.test_delete('zukunft-neuer-eimer', :'M2' || '/g-neu.jpg') is not distinct from 'ok:1', 'g2 gesperrtes M2 löscht in zukunft-neuer-eimer (fail-open: ein künftiger Eimer ist nicht gesperrt)');
+select public.test_check(public.test_delete('xyntal-app-files', :'M2' || '/g-app.jpg') is not distinct from 'ok:1', 'g1 gesperrtes M2 löscht in xyntal-app-files (Freiliste: nativer Eimer bleibt frei)');
+-- g2 UMGEDREHT (vorher ok:1, "fail-open: ein künftiger Eimer ist nicht gesperrt"). Jetzt ok:0, siehe Kopf von Block g.
+select public.test_check(public.test_delete('zukunft-neuer-eimer', :'M2' || '/g-neu.jpg') is not distinct from 'ok:0', 'g2 UMGEDREHT: gesperrtes M2 löscht in zukunft-neuer-eimer NICHTS (Freiliste: nicht genannter Eimer ist gesperrt)');
+-- g3: Gegenprobe zu g2. Die Datei liegt noch.
+select public.test_check(public.test_count('zukunft-neuer-eimer', :'M2' || '/g-neu.jpg') = 1, 'g3 Gegenprobe: Datei in zukunft-neuer-eimer liegt noch (Sperre)');
 reset role;
 drop policy if exists "TEST Stellvertreter entfernen (fremde Eimer)" on storage.objects;
 
@@ -536,7 +608,9 @@ select public.test_check(public.test_delete('avatars', :'M3' || '/h-av.jpg') is 
 reset role;
 
 -- ---------- i) bucket_id NULL: gesperrt darf nicht löschen, nicht gesperrt darf ----------
--- Die Regel "bucket_id <> 'message-attachments' or not me_banned()" ergibt bei bucket_id NULL NULL. NULL zählt als nicht erlaubt.
+-- Die Freiliste "bucket_id in ('avatars', 'banners', 'xyntal-app-files') or not me_banned()" ergibt bei bucket_id NULL für
+--   gesperrtes M2: NULL in (...) ist NULL, NULL or false ist NULL. NULL zählt als nicht erlaubt. (Vorher stand hier die
+--   Sperrliste "bucket_id <> 'message-attachments' or not me_banned()"; das Ergebnis für NULL ist dasselbe.)
 -- Erlaubt wird hier nur durch einen STELLVERTRETER (bucket_id is null). Er ist NICHT wörtlich und wird am Ende entfernt.
 \echo == i) bucket_id NULL
 reset role;
@@ -591,5 +665,32 @@ select public.test_check(public.is_admin() is false, 'j0 Vorbedingung: is_admin(
 select public.test_check(public.test_delete('message-attachments', :'A2' || '/j-a2.pdf') is not distinct from 'ok:0', 'j2 gesperrter Admin A2 scheitert an der eigenen Datei (nur die Sperre trifft)');
 reset role;
 drop policy if exists "TEST Stellvertreter Admin lesen (storage)" on storage.objects;
+
+-- ---------- k) Die Sperre nimmt nur das LÖSCHEN, nicht das Lesen oder Anlegen ----------
+-- WICHTIG: Dieser Block trägt KEINE Zusage über die Regel "Sperre: nichts loeschen". Er wird durch keine Mutation an ihr rot.
+--   Eine FOR-DELETE-Regel kann SELECT und INSERT konstruktionsbedingt nicht beeinflussen. Die Erlaubnis für Lesen und
+--   Anlegen kommt hier aus STELLVERTRETERN (eigener Ordner). Der Block dokumentiert nur den UMFANG der Regel: sie ist
+--   FOR DELETE und erfasst INSERT nicht. Er ist eine Tautologie und bleibt, weil er den Umfang festhält.
+--   Die echten Lesen- und Upload-Regeln sind hier NICHT geladen.
+\echo == k) Lesen und Anlegen
+reset role;
+drop policy if exists "TEST Stellvertreter anlegen (eigener Ordner)" on storage.objects;
+create policy "TEST Stellvertreter anlegen (eigener Ordner)" on storage.objects for insert to authenticated
+  with check ((storage.foldername(name))[1] = (select auth.uid())::text);
+select public.test_seed('message-attachments', :'M2' || '/k-ma.pdf');
+select public.test_seed('page-media', :'M2' || '/k-sp.jpg');
+select public.test_check(public.test_count('message-attachments', :'M2' || '/k-ma.pdf') = 1, 'k0 Vorbedingung: Datei in message-attachments liegt vor');
+select public.test_login(:'M2');
+set role authenticated;
+select public.test_expect('authenticated', :'M2', 'k0 Sitzung: gesperrtes M2 als authenticated');
+select public.test_check(public.test_count('message-attachments', :'M2' || '/k-ma.pdf') = 1, 'k1 Lesen (nur Stellvertreter): gesperrtes M2 sieht eigene Datei in message-attachments');
+select public.test_check(public.test_count('page-media', :'M2' || '/k-sp.jpg') = 1, 'k2 Lesen (nur Stellvertreter): gesperrtes M2 sieht eigene Datei in page-media');
+-- k3: Anlegen. NUR die Löschsperre (FOR DELETE) ist hier geladen, INSERT ist nicht erfasst. Die echte Upload-Sperre
+--   (20261118260000, Zeile 79) ist in diesem Test NICHT geladen. In der PRODUKTION können gesperrte Mitglieder in page-media
+--   NICHT hochladen. Diese Zeile belegt das nicht.
+insert into storage.objects (bucket_id, name, metadata) values ('page-media', :'M2' || '/k-neu.jpg', jsonb_build_object('size', 1000));
+reset role;
+select public.test_check(public.test_count('page-media', :'M2' || '/k-neu.jpg') = 1, 'k3 Anlegen (nur Stellvertreter, NUR Löschsperre geladen, INSERT nicht erfasst; echte Upload-Sperre 20261118260000 NICHT geladen): Datei in page-media angelegt');
+drop policy if exists "TEST Stellvertreter anlegen (eigener Ordner)" on storage.objects;
 
 \echo == Ende: alle Blöcke durchgelaufen

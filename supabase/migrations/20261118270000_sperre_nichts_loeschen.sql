@@ -1,3 +1,4 @@
+-- ÜBERHOLT: Die fail-open-Begründung in dieser Datei (Zeile 28-34) gilt nicht mehr. 20261118290000_sperre_loeschen_freiliste.sql ersetzt die Regel durch eine Freiliste.
 -- RÜCKWEG: /opt/xyntal/backups/rueckweg-loeschen-20261118.sql auf dem Datenbankserver. VOR dem Einspielen erzeugt und probegelaufen.
 -- Sperre wirkt auf Löschen, aber nur im Eimer message-attachments.
 -- Gemessen auf der Produktion (zurückgerollt, gesperrtes Mitglied, storage.allow_delete_query gesetzt):
