@@ -87,6 +87,13 @@ returns boolean language sql stable security definer set search_path = '' as $$
   select coalesce((select is_admin from public.profiles where id = auth.uid()), false);
 $$;
 
+-- Diese Fassung ist die Grundlage und absichtlich die einfache.
+-- Live ist die Funktion strenger: Dazu kommen zwei Bedingungen aus Migrationen,
+-- `not public.ban_active(banned, banned_until)` aus 20261109120000_security_hardening.sql
+-- und `public.age_ok(id)` aus 20261118120000_altersgrenze_schliessen.sql.
+-- Beide stehen hier nicht, weil ban_active() und age_ok() in dieser Datei nicht angelegt
+-- werden. Wer die Datenbank aus dieser Datei neu aufbaut, hat die Sperrprüfung und die
+-- Altersgrenze 16 NICHT, solange er danach nicht die Migrationen einspielt.
 create function public.is_approved_member()
 returns boolean language sql stable security definer set search_path = '' as $$
   select exists (select 1 from public.profiles where id = auth.uid() and status = 'approved');
@@ -157,6 +164,9 @@ create policy "Profile lesen" on public.profiles
     or (select public.is_admin())
   );
 
+-- Live gibt es zusätzlich die Lesepolicy "Profile lesen (angemeldet)", die Mitgliedern
+-- freigeschaltete Profile zeigt. Sie fehlt in dieser Datei; ihre aktuelle Fassung steht
+-- in 20261118120000_altersgrenze_schliessen.sql.
 create policy "Eigenes Profil bearbeiten" on public.profiles
   for update to authenticated
   using (id = (select auth.uid()))
