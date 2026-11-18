@@ -17,7 +17,11 @@
 --    CLUSTER und REINDEX. Daten ändern kann man damit nicht, aber VACUUM FULL und CLUSTER
 --    nehmen eine ACCESS-EXCLUSIVE-Sperre: die Tabelle stünde für die Dauer still.
 --    Über die REST-Schnittstelle ist das nicht aufrufbar, es gehört aber nicht dorthin.
---    Die Blöcke in 20261117150000 verwenden "revoke all" und sind deshalb nicht betroffen.
+--    Betroffen ist jede Tabelle, deren Rechte von einer anderen Rolle erteilt wurden, egal ob
+--    mit "revoke all" oder einzeln entzogen wird. Ein revoke als postgres entfernt nur, was
+--    postgres oder eine Rolle, deren Mitglied es ist, erteilt hat. Nachgezählt an der
+--    Live-Datenbank ist das nur business_contracts, mit genau den vier Rechten, die diese
+--    Datei wieder erteilt. Es wurde also nichts übersprungen, aber die Regel ist eine andere.
 
 -- ACHTUNG, diese Migration muss als supabase_admin laufen, nicht als postgres --
 -- anders als alle anderen. Grund: PostgreSQL lässt ein Recht nur vom Geber selbst oder
