@@ -8,6 +8,17 @@
 --    womit sich jemand angemeldet hat.
 -- =====================================================================
 
+begin;
+
+-- Sicherheitsnetz (siehe 20261118180000_altersgrenze_sperrliste.sql): Diese Datei setzt handle_new_user() neu, und
+--   zwar ohne die Sperrliste. Liefe sie nach der Sperrlisten-Migration erneut, verschwände der Schutz ohne
+--   Fehlermeldung. Deshalb bricht sie dann ab.
+do $$ begin
+  if to_regclass('public.age_blocks') is not null then
+    raise exception 'Diese Datei ist aelter als 20261118180000_altersgrenze_sperrliste.sql und wuerde handle_new_user() ohne die Sperrliste neu setzen. Erst die Sperrlisten-Migration erneut einspielen oder diese Datei auslassen.';
+  end if;
+end $$;
+
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = '' as $$
 declare
@@ -65,3 +76,5 @@ $$;
 
 revoke execute on function public.admin_members() from public, anon, authenticated;
 grant execute on function public.admin_members() to authenticated;
+
+commit;

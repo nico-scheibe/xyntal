@@ -20,6 +20,15 @@
 --   sowie die Migrationen vom 13.11.). Diese Datei setzt sie voraus.
 -- Läuft als Transaktion. Darf mehrfach laufen. Einmal im Supabase SQL Editor ausführen.
 begin;
+-- Sicherheitsnetz (siehe 20261118180000_altersgrenze_sperrliste.sql): Diese Datei setzt handle_new_user()
+--   ohne die Sperrliste neu. Liefe sie nach der Sperrlisten-Migration erneut, verschwände der Schutz ohne
+--   Fehlermeldung. Deshalb bricht sie dann ab. Auf der Produktionsdatenbank ändert das nichts: Die Datei ist
+--   dort bereits eingespielt, das Netz greift nur bei einem erneuten Lauf.
+do $$ begin
+  if to_regclass('public.age_blocks') is not null then
+    raise exception 'Diese Datei ist aelter als 20261118180000_altersgrenze_sperrliste.sql und wuerde handle_new_user() ohne die Sperrliste neu setzen. Erst die Sperrlisten-Migration erneut einspielen oder diese Datei auslassen.';
+  end if;
+end $$;
 
 -- ---------- 1) Eigene Altersprüfung, aufrufbar aus einer Policy ----------
 -- age_ok(uuid) darf anon und authenticated nicht gegeben werden. Damit könnte jeder zu jeder

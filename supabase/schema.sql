@@ -216,6 +216,10 @@ begin
 end;
 $$;
 
+-- Hinweis: Die laufende Fassung steht in 017_security.sql (mit 2FA-Prüfung). Sie ruft seit
+-- 20261118180000_altersgrenze_sperrliste.sql zusätzlich remember_age_block() auf, bevor das Konto
+-- gelöscht wird. Ein Neuaufbau allein aus dieser Datei hat die Sperrliste NICHT: age_block_key() und
+-- remember_age_block() werden hier nicht angelegt.
 -- Eigenes Konto komplett löschen (Profil wird mitgelöscht)
 create function public.delete_my_account()
 returns void language plpgsql security definer set search_path = '' as $$
@@ -270,6 +274,10 @@ begin
 end;
 $$;
 
+-- Hinweis: Die laufende Fassung steht in 20261118180000_altersgrenze_sperrliste.sql. Sie ruft seit dort
+-- remember_age_block() auf, bevor das Mitglied gelöscht wird. Ohne diesen Aufruf wäre die Admin-Löschung
+-- der offene Nebeneingang. Ein Neuaufbau allein aus dieser Datei hat die Sperrliste NICHT: age_block_key()
+-- und remember_age_block() werden hier nicht angelegt.
 -- Admin: Mitglied endgültig löschen
 create function public.admin_delete_member(p_id uuid)
 returns void language plpgsql security definer set search_path = '' as $$

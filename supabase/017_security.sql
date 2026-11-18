@@ -3,6 +3,15 @@
 -- Wer 2FA eingerichtet hat, kommt ohne Code nur bis zur Code-Abfrage – auch nicht direkt über die API.
 begin;
 
+-- Sicherheitsnetz (siehe 20261118180000_altersgrenze_sperrliste.sql): Diese Datei setzt delete_my_account() neu, und
+--   zwar ohne die Sperrliste. Liefe sie nach der Sperrlisten-Migration erneut, verschwände der Schutz ohne
+--   Fehlermeldung. Deshalb bricht sie dann ab.
+do $$ begin
+  if to_regclass('public.age_blocks') is not null then
+    raise exception 'Diese Datei ist aelter als 20261118180000_altersgrenze_sperrliste.sql und wuerde delete_my_account() ohne die Sperrliste neu setzen. Erst die Sperrlisten-Migration erneut einspielen oder diese Datei auslassen.';
+  end if;
+end $$;
+
 -- 0) Aus 016 (ältere 016-Fassungen hatten das noch nicht): 2FA-Prüfung, auch beim Lesen der eigenen Karte
 -- 2FA: true, wenn die Sitzung den zweiten Faktor bestätigt hat – oder das Konto keine 2FA nutzt
 create or replace function public.mfa_ok()
