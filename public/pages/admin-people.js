@@ -41,6 +41,8 @@
   const siteData = () => (typeof lastData !== "undefined" && lastData) || null;
   const ROLE = { owner: "Inhaber", admin: "Admin", moderator: "Moderator", support: "Support", analyst: "Analyst" };
   const can = (perm) => !!(PLAT && P.staff && PLAT.can(perm));
+  // Fehler, deren Ausgang ungewiss ist: wird ohne das Wort "Nicht geklappt" gemeldet
+  const neutral = (msg) => Object.assign(Error(msg), { neutral: true });
   const failText = (err) => (PLAT && err && (err.status || err.code) ? PLAT.reason(err) : (err && err.message) || "Das hat nicht geklappt.");
 
   // Dialog: der aus admin-platform.js; ohne ihn ein einfaches confirm/prompt
@@ -385,6 +387,112 @@
     </section>`;
   }
 
+  // Seitenbilder eines Mitglieds: ZWEI getrennte Speicher, je mit eigenem Zustand und eigenem Weg zum Entfernen.
+  //   1) Supabase-Speicher (Eimer page-media): Dateien, die das Mitglied über den Editor hochgeladen hat.
+  //   2) Eigener Server-Speicher (Pfad s/<konto>/<datei>, Auslieferung über /media/…): die Dateien, die Admins und
+  //      Mitglieder auf den eigenen Server laden. Die Routen dort prüfen die Admin-Berechtigung in der Datenbank.
+  // Entfernen löscht die Datei nur in dem Speicher, in dem sie liegt. Die Seite des Mitglieds wird NICHT geändert.
+  // Fällt ein Speicher aus, zeigt die Box dieses Speichers den Grund. Der andere Speicher bleibt sichtbar.
+  function pageMediaSection(m) {
+    return `<section class="xp-dsec" data-xp-media-section data-member="${esc(m.id)}"><h3>Seitenbilder</h3>
+      <p class="hint">Die Seitenbilder dieses Mitglieds liegen in zwei getrennten Speichern. Entfernen löscht die Datei nur in dem Speicher, in dem sie liegt. Die Seite des Mitglieds wird dabei nicht geändert. Sie kann danach an dieser Stelle leer sein.</p>
+      <h4>Supabase-Speicher</h4>
+      <div data-xp-media-box><p class="hint">Wird geladen …</p></div>
+      <h4>Eigener Server-Speicher</h4>
+      <div data-xp-media-server><p class="hint">Wird geladen …</p></div>
+    </section>`;
+  }
+  // Einheitlicher Hinweis in einer Box (ohne Löschknöpfe)
+  const setNote = (box, text) => { box.innerHTML = `<p class="notice">${esc(text)}</p>`; };
+  // Anmeldung für die Server-Routen: dasselbe Token wie beim Editor
+  async function authHeaders() {
+    const { data: { session } } = await sb.auth.getSession();
+    return { Authorization: `Bearer ${session ? session.access_token : ""}` };
+  }
+
+  // Liest ALLE Dateien des Mitglieds seitenweise ein (je 100) und zeichnet die Liste in die Box. Ist die Box inzwischen
+  // weg, passiert nichts. Fängt alle Fehler selbst ab: die Box zeigt dann den Fehler, der Aufrufer muss nichts tun.
+  // Seitenwechsel statt limit 1000: Ein fester Grenzwert würde ab 1001 Dateien stillschweigend Dateien verschweigen.
+  // Schutz gegen Endlosschleife: höchstens 100 Seiten (10.000 Dateien). Wird das erreicht, zeigt die Box einen Hinweis.
+  async function loadPageMedia(memberId, box) {
+    try {
+      // Zuerst der SERVER: Die Regel auf storage.objects entscheidet nach is_admin() (Konto nicht gesperrt, zweiter Faktor
+      // in dieser Sitzung). Das kann vom Feld profiles.is_admin abweichen. Dann liefert list() eine LEERE, FEHLERFREIE
+      // Antwort. Eine leere Liste darf deshalb nur dann "nichts vorhanden" heißen, wenn is_admin() wahr ist.
+      const admin = unwrap(await sb.rpc("is_admin"));
+      if (admin !== true) {
+        box.innerHTML = `<p class="notice">Die Seitenbilder sind hier nicht einsehbar: Der Server bestätigt deine Admin-Berechtigung in dieser Sitzung nicht. Das passiert, wenn dein Konto gesperrt ist oder in dieser Sitzung der zweite Faktor fehlt. Ob Seitenbilder vorhanden sind, lässt sich deshalb hier nicht feststellen.</p>`;
+        return;
+      }
+      const PAGE_SIZE = 100, MAX_PAGES = 100;
+      const files = [];
+      let lastFull = false;
+      for (let page = 0; page < MAX_PAGES; page++) {
+        const batch = unwrap(await sb.storage.from("page-media").list(memberId, { limit: PAGE_SIZE, offset: page * PAGE_SIZE })) || [];
+        files.push(...batch.filter((f) => f.id));
+        lastFull = batch.length === PAGE_SIZE;
+        if (!lastFull) break;
+      }
+      // Abgeschnitten ist die Liste nur, wenn an der Stelle nach der letzten Seite noch etwas steht. Genau 10.000 Dateien
+      // sind vollständig; deshalb wird nachgesehen, statt die Grenze allein zu melden.
+      let truncated = false;
+      if (lastFull) {
+        const more = unwrap(await sb.storage.from("page-media").list(memberId, { limit: PAGE_SIZE, offset: MAX_PAGES * PAGE_SIZE })) || [];
+        truncated = more.some((f) => f.id);
+      }
+      if (!box.isConnected) return;
+      if (!files.length) { box.innerHTML = `<p class="hint">Keine Seitenbilder im Supabase-Speicher (geprüft: deine Admin-Berechtigung ist bestätigt).</p>`; return; }
+      const items = files.map((f) => {
+        const path = `${memberId}/${f.name}`;
+        const url = sb.storage.from("page-media").getPublicUrl(path).data.publicUrl;
+        const media = /\.(mp4|webm)$/i.test(f.name)
+          ? `<video src="${esc(url)}" width="160" controls muted preload="metadata"></video>`
+          : `<img src="${esc(url)}" width="160" alt="" loading="lazy">`;
+        return `<div>${media}<div class="row-actions"><span class="hint">${esc(f.name)}</span><button type="button" class="admin-danger" data-xp-act="media-delete" data-path="${esc(path)}">Entfernen</button></div></div>`;
+      }).join("");
+      const hint = truncated ? `<p class="notice">Die Liste ist abgeschnitten: Es gibt mehr als ${MAX_PAGES * PAGE_SIZE} Dateien. Die übrigen sind hier nicht zu sehen.</p>` : "";
+      box.innerHTML = items + hint;
+    } catch (err) {
+      if (box.isConnected) setNote(box, `Die Seitenbilder im Supabase-Speicher konnten nicht geladen werden: ${failText(err)}`);
+    }
+  }
+
+  // Dateien im eigenen Server-Speicher. Eine leere Liste heißt nur dann "keine", wenn der Server 200 geantwortet hat.
+  // 503 (nicht eingerichtet), 403 (Berechtigung in der Datenbank nicht bestätigt) und jeder andere Fehler sind eigene Hinweise.
+  async function loadServerMedia(memberId, box) {
+    try {
+      const r = await fetch(`/api/page-media/${encodeURIComponent(memberId)}`, { headers: await authHeaders() });
+      if (!box.isConnected) return;
+      if (r.status === 503) return setNote(box, "Der eigene Server-Speicher ist auf dem Server nicht eingerichtet (503). Seine Seitenbilder sind hier nicht erreichbar. Ob welche vorhanden sind, lässt sich deshalb nicht feststellen.");
+      if (r.status === 403) return setNote(box, "Die Seitenbilder im eigenen Server-Speicher sind hier nicht einsehbar: Der Server bestätigt deine Admin-Berechtigung in dieser Sitzung nicht. Ob welche vorhanden sind, lässt sich deshalb nicht feststellen.");
+      if (r.status === 401) return setNote(box, "Die Anmeldung ist abgelaufen. Bitte lade die Seite neu.");
+      if (!r.ok) return setNote(box, `Der eigene Server-Speicher ist gerade nicht erreichbar (Status ${r.status}). Ob Seitenbilder vorhanden sind, lässt sich deshalb nicht feststellen.`);
+      const body = await r.json();
+      if (!body || !Array.isArray(body.files)) throw new Error("unerwartete Antwort des Servers");
+      if (!body.files.length) { box.innerHTML = `<p class="hint">Keine Seitenbilder im eigenen Server-Speicher.</p>`; return; }
+      const cut = body.truncated === true ? `<p class="notice">Die Liste ist abgeschnitten: Es gibt mehr Dateien, als der Server auf einmal liefert. Die übrigen sind hier nicht zu sehen.</p>` : "";
+      box.innerHTML = body.files.map((f) => {
+        const url = `/media/${memberId}/${f.name}`;
+        const media = /\.(mp4|webm)$/i.test(f.name)
+          ? `<video src="${esc(url)}" width="160" controls muted preload="metadata"></video>`
+          : `<img src="${esc(url)}" width="160" alt="" loading="lazy">`;
+        return `<div>${media}<div class="row-actions"><span class="hint">${esc(f.name)}</span><button type="button" class="admin-danger" data-xp-act="media-server-delete" data-konto="${esc(memberId)}" data-path="${esc(f.name)}">Entfernen</button></div></div>`;
+      }).join("") + cut;
+    } catch (err) {
+      if (box.isConnected) setNote(box, `Der eigene Server-Speicher ist nicht erreichbar: ${failText(err)}. Ob Seitenbilder vorhanden sind, lässt sich deshalb nicht feststellen.`);
+    }
+  }
+
+  // Beide Speicher neu laden. Beide Loader fangen ihre Fehler selbst ab, diese Funktion wirft nicht.
+  // Schreibt NUR in den Ausklapp dieses Mitglieds. Gehört der offene Ausklapp inzwischen einer anderen Person (oder ist
+  // er zu), passiert nichts: Dateien einer Person dürfen nie unter dem Namen einer anderen erscheinen.
+  async function loadMedia(memberId) {
+    const sec = $("[data-xp-media-section]", drawer);
+    if (!sec || sec.dataset.member !== memberId) return;
+    const b1 = $("[data-xp-media-box]", sec), b2 = $("[data-xp-media-server]", sec);
+    await Promise.all([b1 ? loadPageMedia(memberId, b1) : null, b2 ? loadServerMedia(memberId, b2) : null]);
+  }
+
   function renderDrawer(r) {
     const v = r.v, a = r.app, m = r.site, b = r.beta;
     const link = b && /^https?:\/\//i.test(b.link || "") ? b.link : "";
@@ -428,9 +536,11 @@
       </section>` : ""}
       ${v.alt ? `<p class="notice">Mögliches Zweitkonto: angelegt auf demselben Gerät wie ${esc(v.altOf.map((x) => x.displayName || x.email || "ein älteres Konto").join(", "))}.</p>` : ""}
       ${wishLinkSection(r)}
+      ${m && P.siteAdmin ? pageMediaSection(m) : ""}
       <section class="xp-dsec"><h3>Über die Person</h3><ul class="xa-kv">${facts.map(([k, val]) => `<li><span>${esc(k)}</span><b>${esc(val)}</b></li>`).join("")}</ul></section>
       ${a && can("users.view") ? `<details class="xp-dsec xp-more-details" data-xp-app-details ${P.appDetailsOpen ? "open" : ""}><summary>Mehr zum App-Konto <small>Sitzungen, Verwarnungen, Rolle, KI-Guthaben, Notizen</small></summary><div data-xp-app-box></div></details>` : ""}
       ${danger ? `<details class="xp-dsec xp-danger-zone"><summary>Gefahrenzone <small>Löschen lässt sich nicht rückgängig machen</small></summary><div class="row-actions">${danger}</div></details>` : ""}`;
+    if (m && P.siteAdmin) loadMedia(m.id); // fängt seine Fehler selbst ab, wirft nicht
     const det = $("[data-xp-app-details]", drawer);
     if (det) {
       const show = () => PLAT.showUser(a.id, $("[data-xp-app-box]", drawer), { onChange: () => refresh({ site: false }), notify: drawerMsg });
@@ -461,7 +571,7 @@
   const BAN_TIMES = [["1440", "1 Tag"], ["10080", "7 Tage"], ["43200", "30 Tage"], ["", "Für immer (bis du entsperrst)"]];
 
   // Führt eine Aktion für eine Person aus und gibt den Text für die Erfolgsmeldung zurück (null = abgebrochen)
-  async function act(r, kind) {
+  async function act(r, kind, el) {
     const v = r.v, a = r.app, m = r.site, b = r.beta;
     const appId = a && encodeURIComponent(a.id);
     switch (kind) {
@@ -550,23 +660,106 @@
         if (!gone.length) throw Error("Bewerbung nicht mehr vorhanden oder keine Berechtigung.");
         return "Bewerbung gelöscht.";
       }
+      // Löschen von Seitenbildern. GRENZE DES PROTOKOLLS: Der Eintrag (admin_log_page_media_delete) erfasst nur Löschungen,
+      // die über diese Oberfläche laufen. Eine direkte Löschung über die Storage-Schnittstelle wird nicht protokolliert, weil
+      // die Regel sie erlaubt. Ein echtes Prüfprotokoll bräuchte den Server-Weg. Der Eintrag ist daher kein Prüfprotokoll.
+      // Löschen im eigenen Server-Speicher. Die Löschung protokolliert der SERVER (siehe media-store.cjs). Hier wird nur
+      // das Ergebnis der Anfrage gemeldet. Ein Protokolleintrag der Oberfläche gibt es für diesen Speicher nicht.
+      case "media-server-delete": {
+        const konto = el && el.dataset.konto, datei = el && el.dataset.path;
+        if (!m || konto !== m.id || !/^[0-9a-f-]{36}\.(jpg|png|webp|gif|mp4|webm)$/.test(datei || "")) {
+          throw Error("Die Datei gehört nicht zu diesem Mitglied. Nichts wurde entfernt.");
+        }
+        if (!(await ask({ title: "Seitenbild im eigenen Server-Speicher entfernen?", confirm: "Endgültig entfernen", danger: true,
+          text: "Die Datei wird aus dem eigenen Server-Speicher gelöscht. Das lässt sich nicht rückgängig machen. Der Server schreibt einen Eintrag in sein Prozess-Protokoll. Der liegt nicht in der Datenbank und wird in dieser App NICHT angezeigt; nur Betreiber mit Zugriff auf den Server können ihn lesen, und nur solange das Log erhalten bleibt. Browser, die die Datei schon geladen haben, können sie aus ihrem Zwischenspeicher weiter anzeigen (bis zu ein Jahr). Vor dem Server liegt kein CDN, das ist gemessen; wie lange einzelne Browser halten, haben wir nicht gemessen. Die Seite des Mitglieds wird nicht geändert."}))) return null;
+        let r;
+        try {
+          r = await fetch(`/api/page-media/${encodeURIComponent(konto)}/${encodeURIComponent(datei)}`, { method: "DELETE", headers: await authHeaders() });
+        } catch (err) {
+          await loadMedia(m.id);
+          throw neutral("Ungewiss: Die Verbindung ist beim Entfernen abgebrochen. Ob die Datei gelöscht wurde, ist unklar. Die Liste wurde neu geladen, bitte dort prüfen.");
+        }
+        await loadMedia(m.id);
+        if (r.ok) return `Seitenbild von ${v.name} im eigenen Server-Speicher entfernt. Der Server protokolliert Löschungen in seinem Prozess-Protokoll; diese App zeigt den Eintrag nicht.`;
+        // 401: die Anmeldung ist abgelaufen. Der Server hat VOR jeder Löschung abgelehnt, also ist nichts entfernt.
+        if (r.status === 401) throw Error("Die Anmeldung ist abgelaufen. Nichts wurde entfernt. Bitte lade die Seite neu.");
+        if (r.status === 404) throw Error("Die Datei war nicht mehr vorhanden. Die Liste wurde neu geladen.");
+        if (r.status === 403) throw Error("Das Seitenbild wurde nicht entfernt: Der Server bestätigt deine Admin-Berechtigung in dieser Sitzung nicht.");
+        if (r.status === 503) throw Error("Der eigene Server-Speicher ist nicht eingerichtet. Nichts wurde entfernt.");
+        if (r.status === 400) throw Error("Der Server hat den Dateinamen abgelehnt. Nichts wurde entfernt.");
+        throw neutral(`Ungewiss: Der Server hat den Löschvorgang nicht bestätigt (Status ${r.status}). Ob die Datei gelöscht wurde, ist unklar. Die Liste wurde neu geladen, bitte dort prüfen.`);
+      }
+      case "media-delete": {
+        const path = el && el.dataset.path;
+        if (!m) return null;
+        // Punkt 5: Die Datei muss zu DIESEM Mitglied gehören. Sonst nichts löschen.
+        if (!path || !path.startsWith(m.id + "/")) throw Error("Die Datei gehört nicht zu diesem Mitglied. Nichts wurde entfernt.");
+        // Punkt 6: nur versprechen, was wir halten können. Zwischenspeicher haben wir nicht gemessen.
+        if (!(await ask({ title: "Seitenbild entfernen?", confirm: "Endgültig entfernen", danger: true,
+          text: "Die Datei wird aus dem Speicher gelöscht. Das lässt sich nicht rückgängig machen. Danach schreibt die Oberfläche einen Eintrag in das Serverprotokoll der Datenbank. Diese App zeigt ihn nicht an; nur Betreiber mit Zugriff auf den Datenbankserver können ihn lesen. Der Eintrag erfasst nur Löschungen über diese Oberfläche, nicht direkte Löschungen über die Schnittstelle. Wie lange Zwischenspeicher die Datei noch ausliefern, haben wir nicht gemessen. Die Seite des Mitglieds wird nicht geändert."}))) return null;
+        // Die Liste wird hier selbst neu geladen (nicht über TOUCHES): Ein fehlgeschlagenes Neuladen darf eine gelungene Löschung
+        // nicht als Fehler melden. loadPageMedia wirft nicht, es zeigt Ladefehler in der Box.
+        const reload = () => loadMedia(m.id);
+        let res;
+        try {
+          res = await sb.storage.from("page-media").remove([path]);
+        } catch (err) {
+          // Ausnahme während des Löschens: der Zustand ist UNGEWISS, nicht als Erfolg oder Misserfolg behaupten.
+          await reload();
+          throw neutral("Ungewiss: Die Verbindung ist beim Entfernen abgebrochen. Ob die Datei gelöscht wurde, ist unklar. Die Liste wurde neu geladen, bitte dort prüfen.");
+        }
+        const { data, error } = res || {};
+        if (error) {
+          await reload();
+          // Ein Fehler MIT Statuscode kam vom Server: Dann ist nichts gelöscht worden.
+          if (error.status) throw Error(`Das Seitenbild wurde nicht entfernt: ${failText(error)}`);
+          // Ohne Statuscode (Netzfehler im Client): der Zustand ist ungewiss.
+          throw neutral("Ungewiss: Die Verbindung ist beim Entfernen abgebrochen. Ob die Datei gelöscht wurde, ist unklar. Die Liste wurde neu geladen, bitte dort prüfen.");
+        }
+        // Fehlt die Berechtigung, kommt KEIN Fehler, sondern eine leere Liste. Das ist kein Erfolg.
+        if (!data || !data.length) {
+          await reload();
+          throw Error("Das Seitenbild wurde nicht entfernt. Entweder fehlt dir die Berechtigung, oder die Datei ist schon weg. Die Liste wurde neu geladen.");
+        }
+        // Gelöscht. Jetzt der Protokolleintrag, NICHT vorher: Ein Eintrag vor einer Löschung, die dann scheitert, wäre falsch.
+        // Scheitert der Eintrag, bleibt die Löschung bestehen. Das wird ausdrücklich gemeldet, nicht verschwiegen.
+        let logError = null, logUnclear = false;
+        try {
+          const { error: logErr } = await sb.rpc("admin_log_page_media_delete", { p_path: path });
+          if (logErr) { logError = logErr; logUnclear = !logErr.status; }
+        } catch (err) {
+          logError = err; logUnclear = true;
+        }
+        // Ein Fehler beim Neuladen ändert an der Löschung nichts; er steht dann in der Box.
+        await reload();
+        if (logError) {
+          const why = failText(logError);
+          throw neutral(logUnclear
+            ? `Seitenbild von ${v.name} gelöscht. Ob der Protokolleintrag geschrieben wurde, ist unklar: ${why}.`
+            : `Seitenbild von ${v.name} gelöscht, aber nicht protokolliert: ${why}.`);
+        }
+        return `Seitenbild von ${v.name} gelöscht. Protokolleintrag in der Datenbank geschrieben (in dieser App nicht einsehbar).`;
+      }
       default: return null;
     }
   }
   // Was nach einer Aktion neu geladen werden muss
-  const TOUCHES = { "handle-save": "site", "handle-free": "site", approve: "site", reject: "site", "beta-on": "site", "beta-off": "site", "beta-mail": "site", "beta-note": "none", "delete-site": "site", "delete-beta": "site", mute: "app", unmute: "app", "delete-app": "app", verify: "both", ban: "both", unban: "both" };
+  const TOUCHES = { "handle-save": "site", "handle-free": "site", approve: "site", reject: "site", "beta-on": "site", "beta-off": "site", "beta-mail": "site", "beta-note": "none", "delete-site": "site", "delete-beta": "site", mute: "app", unmute: "app", "delete-app": "app", verify: "both", ban: "both", unban: "both", "media-delete": "none", "media-server-delete": "none" };
   async function runAction(key, kind, button, say) {
     const r = rowByKey(key); if (!r) return;
+    // Medien-Aktionen: Ist der Ausklapp inzwischen einer anderen Person, geht die Meldung in die Liste, nie in den fremden Ausklapp.
+    const media = kind.startsWith("media-");
+    const sayFor = (text, ok) => (media && P.openKey !== key ? listMsg(text, ok) : say(text, ok));
     if (button) button.disabled = true;
     try {
-      const text = await act(r, kind);
+      const text = await act(r, kind, button);
       if (text === null) return;
       const t = TOUCHES[kind] || "both";
       if (t !== "none") await refresh({ app: t !== "site", site: t !== "app" });
       if (kind.startsWith("delete-") && !rowByKey(key)) closeDrawer();
-      say(text);
+      sayFor(text);
       if (PLAT && P.staff) PLAT.refreshCounts();
-    } catch (err) { say(`Nicht geklappt: ${failText(err)}`, false); }
+    } catch (err) { sayFor(err.neutral ? err.message : `Nicht geklappt: ${failText(err)}`, false); }
     finally { if (button && button.isConnected) button.disabled = false; }
   }
 

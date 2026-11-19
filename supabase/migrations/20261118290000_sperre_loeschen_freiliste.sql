@@ -56,14 +56,14 @@
 --   dahin ist die Ausnahme für xyntal-app-files eine BEKANNTE LÜCKE, keine geschlossene Tür.
 --
 -- FOLGEN, ehrlich benannt:
---   1) page-media: Die erlaubende Regel "Xyntal Seitenbild entfernen" (20261108110000, Zeile 92-94) hat NUR den
---      Eigentümer-Zweig, KEINEN Admin-Zweig. Die Admin-Zweige haben avatars, banners, project-images und
---      message-attachments. Die Migration 20261108220000 ändert nur den Upload, nicht das Löschen.
---      Folge: Ein gemeldetes Seitenbild eines gesperrten Mitglieds kann bis zum Ende der Sperre über die
---      Storage-Schnittstelle von NIEMANDEM entfernt werden, auch nicht von einem Admin. Ein Admin konnte es auch vorher
---      nicht entfernen, neu ist, dass der Eigentümer es nicht mehr kann. Das ist beim Beweissichern gewollt, beim Entfernen
---      rechtswidriger Inhalte aber eine Einschränkung. Der Weg führt dann über service_role (umgeht RLS in Supabase)
---      oder über direktes SQL.
+--   1) page-media. NACHTRAG 19.11.2026, ersetzt die frühere Fassung dieses Punkts, die heute überholt ist:
+--      ÜBERHOLT: "Ein Seitenbild eines gesperrten Mitglieds kann von NIEMANDEM entfernt werden, auch nicht von einem
+--      Admin." Das stimmte bis zur Migration 20261119120000_admin_seitenbild.sql. Seit dort hat die erlaubende Regel
+--      "Xyntal Seitenbild entfernen" den Admin-Zweig (is_admin()). Ein nicht gesperrter Admin kann daher das Seitenbild
+--      eines gesperrten Mitglieds entfernen. Die Sperre prüft den handelnden Nutzer, nicht den Eigentümer. Der Admin ist
+--      nicht gesperrt, also passiert er die Sperre. is_admin() schließt gesperrte Admins aus.
+--      Unverändert: Das gesperrte Mitglied selbst kann sein Seitenbild weiterhin nicht entfernen.
+--      Die Grenze der Admin-Migration (die Seite selbst wird nicht mitbearbeitet) steht in 20261119120000.
 --   2) Der Seiten-Editor räumt nicht benutzte page-media-Bilder beim Veröffentlichen auf (public/page-editor.js,
 --      Zeile 920 und 941: cleanupMedia() steht hinter dem Aufruf von save_my_page). Dieser Weg ist für ein gesperrtes
 --      Mitglied NICHT erreichbar: save_my_page ruft page_guard() auf, und page_guard() bricht bei einem gesperrten Profil

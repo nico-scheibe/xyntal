@@ -4,7 +4,23 @@
 //   POST   /api/page-media              Datei hochladen (Body = Datei, Content-Type = Bild/Video)
 //   GET    /api/page-media              eigene Dateien auflisten (Editor räumt damit auf)
 //   DELETE /api/page-media/<datei>      eigene Datei löschen
+//   GET    /api/page-media/<konto>      (Admin) Dateien eines fremden Kontos auflisten
+//   DELETE /api/page-media/<konto>/<datei>  (Admin) Datei eines fremden Kontos löschen
 //   GET    /media/<konto>/<datei>       Datei ausliefern (mit Range für Videos)
+//
+// ZWEI ADMIN-BEGRIFFE, je mit Ort und Grund:
+//   1) Admin-Routen (fremde Konten lesen und löschen): die DATENBANK entscheidet, bei JEDEM Aufruf. Der Server fragt
+//      POST /rest/v1/rpc/is_admin mit dem Token des Nutzers. Dort gelten Sperre, zweiter Faktor (mfa_ok) und Profil.
+//      KEIN Zwischenspeicher: Ein entzogenes Recht wirkt sofort. (Gemessen: Mit gemerkter Antwort blieb ein entzogenes
+//      Recht eine Minute lang wirksam, fremde Dateien ließen sich weiter auflisten und löschen.) Die Abfrage kostet
+//      nichts, was ins Gewicht fällt: Admin-Routen sind selten. Die Antwort zählt nur, wenn sie exakt true ist. Jede
+//      andere Antwort, jede Weiterleitung und jeder Fehler ergibt "kein Admin" (403).
+//      Die Admin-Routen gelten nur auf dem Admin-Host (ADMIN_HOST, dieselbe Vorgabe wie server.cjs): Der Handler wird
+//      vor der Host-Logik aufgerufen, deshalb prüft die Route den Host selbst.
+//   2) Größengrenze beim eigenen Upload (5 GB statt 3/15 MB): user.admin, also profiles.is_admin, ohne Datenbankabfrage.
+//      Eine Abfrage bei jedem Upload wäre der schlechtere Tausch. Folge, ehrlich benannt: Ein Konto, dessen Profil
+//      Admin ist, dessen Sitzung aber die Datenbank verneint (etwa ohne zweiten Faktor), darf eigene Dateien bis 5 GB
+//      hochladen. Die Admin-Routen lassen es dagegen nicht zu. Gesperrte Konten sind beim Upload ohnehin abgewiesen.
 //
 // Anmeldung: Supabase-Token (Authorization: Bearer …). Admins bis 5 GB (größer geht ein einzelner
 // S3-Upload nicht), alle anderen wie bei Supabase: Bilder 3 MB, Videos 15 MB.
@@ -81,13 +97,15 @@ function json(res, code, data) {
   res.end(JSON.stringify(data));
 }
 
-// Wer fragt? Supabase prüft das Token; Profil (Admin, Sperre) mit demselben Token lesen. 60 s gemerkt.
+const bearerOf = (req) => (/^Bearer\s+([A-Za-z0-9._-]{20,4096})$/.exec(req.headers.authorization || '') || [])[1] || null;
+
+// Wer fragt? Supabase prüft das Token; Profil (is_admin für die Upload-Grenze, Sperre) mit demselben Token lesen. 60 s gemerkt.
 const who = new Map();
 async function identify(req, supabase) {
-  const m = /^Bearer\s+([A-Za-z0-9._-]{20,4096})$/.exec(req.headers.authorization || '');
+  const token = bearerOf(req);
   const sb = supabase();
-  if (!m || !sb) return null;
-  const token = m[1], hit = who.get(token);
+  if (!token || !sb) return null;
+  const hit = who.get(token);
   if (hit && hit.until > Date.now()) return hit.user;
   const headers = { apikey: sb.key, Authorization: `Bearer ${token}` };
   const r = await fetch(`${sb.url}/auth/v1/user`, { headers, signal: AbortSignal.timeout(8000) });
@@ -109,6 +127,11 @@ async function identify(req, supabase) {
 
 function createMediaHandler({ supabase, env = process.env }) {
   const cfg = s3Config(env);
+  // Wie server.cjs (Zeile 608): ADMIN_HOST aus der Umgebung, Standard admin.xyntal.de, klein geschrieben.
+  // Die Gleichheit mit server.cjs prüft tests/media-store.cjs gegen den Quelltext.
+  const ADMIN_HOST = String(env.ADMIN_HOST || 'admin.xyntal.de').toLowerCase();
+  // Wie server.cjs requestHost: Host klein geschrieben, Port abgeschnitten
+  const requestHost = (req) => String(req.headers.host || '').toLowerCase().replace(/:\d+$/, '');
   // true, wenn die Anfrage hierher gehört (dann ist sie beantwortet)
   return function handle(req, res, pathname) {
     const api = pathname === '/api/page-media' || pathname.startsWith('/api/page-media/');
@@ -128,6 +151,11 @@ function createMediaHandler({ supabase, env = process.env }) {
     if (/^bytes=\d*-\d*$/.test(req.headers.range || '')) headers.range = req.headers.range;
     const r = await s3Request(cfg, { method: req.method, key: `${PREFIX}/${m[1]}/${m[2]}`, headers });
     if (r.statusCode !== 200 && r.statusCode !== 206) { r.resume(); res.writeHead(r.statusCode === 416 ? 416 : 404); return res.end(); }
+    // GEMESSEN (Agent, Produktion): Vor xyntal.com liegt KEIN CDN (Antwort mit "via: 1.1 Caddy", kein "server: cloudflare").
+    // Die Reichweite dieses Headers ist deshalb auf Browser beschränkt, die die Datei SCHON geladen haben: Sie zeigen
+    // sie aus ihrem Zwischenspeicher weiter, bis zu ein Jahr lang, auch nach einer Löschung. Neue Abrufe bekommen nach
+    // der Löschung 404. Wie lange einzelne Browser halten, ist nicht gemessen. Wer das Entfernen rechtswidriger Inhalte
+    // beurteilt, rechnet mit genau diesen Clients. Wird ein CDN davorgeschaltet, wird diese Aussage FALSCH: dann neu messen.
     const out = { 'Content-Type': MIME[m[3]], 'Accept-Ranges': 'bytes', 'Cache-Control': 'public, max-age=31536000, immutable', 'X-Content-Type-Options': 'nosniff' };
     for (const h of ['content-length', 'content-range', 'etag', 'last-modified']) if (r.headers[h]) out[h] = r.headers[h];
     res.writeHead(r.statusCode, out);
@@ -136,10 +164,85 @@ function createMediaHandler({ supabase, env = process.env }) {
     res.on('close', () => r.destroy());
   }
 
+  // Admin-Entscheidung aus der Datenbank (siehe Kopf). Kein Zwischenspeicher, keine Weiterleitung. Nur exakt true zählt.
+  // Die Entscheidung gilt für dieses Token. Sie wird nicht über Tokens hinweg geteilt, weil mfa_ok() am aal des Tokens hängt.
+  async function dbAdmin(req) {
+    const sb = supabase(), token = bearerOf(req);
+    if (!sb || !token) return false;
+    try {
+      const r = await fetch(`${sb.url}/rest/v1/rpc/is_admin`, {
+        method: 'POST', headers: { apikey: sb.key, Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: '{}', redirect: 'error', signal: AbortSignal.timeout(8000),
+      });
+      if (!r.ok) return false;
+      return (await r.json()) === true;
+    } catch {
+      return false;
+    }
+  }
+
+  // Alle Dateien unter einem Präfix (seitenweise, höchstens 20 Seiten à 1000). null, wenn der Speicher nicht antwortet.
+  // truncated: true, wenn nach der letzten geladenen Seite noch ein Fortsetzungs-Token steht. Dann fehlen Dateien.
+  async function listFiles(prefix) {
+    const files = [];
+    let token = '';
+    for (let i = 0; i < 20; i++) {
+      const query = { 'list-type': 2, prefix, 'max-keys': 1000, ...(token ? { 'continuation-token': token } : {}) };
+      const r = await s3Request(cfg, { method: 'GET', query });
+      const xml = await readAll(r);
+      if (r.statusCode !== 200) return null;
+      for (const c of xml.matchAll(/<Contents>([\s\S]*?)<\/Contents>/g)) {
+        const key = (/<Key>([^<]+)<\/Key>/.exec(c[1]) || [])[1] || '';
+        const name = key.slice(prefix.length);
+        if (FILE.test(name)) files.push({ name, size: Number((/<Size>(\d+)<\/Size>/.exec(c[1]) || [])[1] || 0), created_at: (/<LastModified>([^<]+)<\/LastModified>/.exec(c[1]) || [])[1] || null });
+      }
+      token = (/<NextContinuationToken>([^<]+)<\/NextContinuationToken>/.exec(xml) || [])[1] || '';
+      if (!token) break;
+    }
+    return { files, truncated: !!token };
+  }
+
+  // Admin-Routen auf FREMDE Konten. Der Präfix wird NUR aus dem geprüften Konto gebaut, nie aus dem rohen Pfad.
+  // Reihenfolge: Host, Admin (Datenbank), Kontoform, Dateiform. Ein Mitglied bekommt immer 403, nie 400.
+  // Einschränkung des Nachweises (Kommentar wie gewünscht): Das Protokoll unten erfasst nur Löschungen über diese Route.
+  // Diese Route ist der einzige Weg in dieses Lager, AUSSER über die S3-Zugangsdaten (media.env). Wer dort direkt schreibt
+  // oder löscht, erscheint hier nicht. Die Protokollzeile steht im Prozess-Log des Dienstes (journald), nicht in einer
+  // Datenbanktabelle, und ist nur so lange verfügbar, wie das Log aufbewahrt wird.
+  async function adminRoute(req, res, user, konto, datei) {
+    if (requestHost(req) !== ADMIN_HOST) return json(res, 403, { error: 'admin host only' });
+    if (!(await dbAdmin(req))) return json(res, 403, { error: 'not admin' });
+    if (!UUID.test(konto)) return json(res, 400, { error: 'invalid account' });
+    const prefixK = `${PREFIX}/${konto}/`;
+    if (!datei) {
+      const list = await listFiles(prefixK);
+      if (!list) return json(res, 502, { error: 'list failed' });
+      return json(res, 200, { files: list.files, truncated: list.truncated });
+    }
+    if (!FILE.test(datei)) return json(res, 400, { error: 'invalid file' });
+    const key = prefixK + datei;
+    // Erst prüfen, ob die Datei existiert. Sonst entstünde ein Protokolleintrag für eine Datei, die es nie gab.
+    const head = await s3Request(cfg, { method: 'HEAD', key });
+    head.resume();
+    if (head.statusCode === 404) return json(res, 404, { error: 'not found' });
+    if (head.statusCode !== 200) return json(res, 502, { error: 'storage check failed' });
+    const del = await s3Request(cfg, { method: 'DELETE', key });
+    del.resume();
+    if (del.statusCode !== 204 && del.statusCode !== 200) return json(res, 502, { error: 'delete failed' });
+    // Nachweis im Stil der Admin-Funktionen (raise log): wer, welches Konto, welche Datei, wann.
+    console.log(`admin-media: Seitenbild ${konto}/${datei} entfernt durch ${user.id} um ${new Date().toISOString()}`);
+    return json(res, 200, { ok: true, account: konto, file: datei });
+  }
+
   async function apiRoute(req, res, pathname) {
     const user = await identify(req, supabase);
     if (!user) return json(res, 401, { error: 'not authenticated' });
     if (user.banned) return json(res, 403, { error: 'account banned' });
+    // Admin-Routen: GET /api/page-media/<konto>, DELETE /api/page-media/<konto>/<datei>. Die Routen der eigenen Dateien
+    // unten bleiben unverändert (dort ist nur ein Pfadteil).
+    const adm = /^\/api\/page-media\/([^/]+)(?:\/([^/]+))?$/.exec(pathname);
+    if (adm && ((req.method === 'GET' && !adm[2]) || (req.method === 'DELETE' && adm[2]))) {
+      return adminRoute(req, res, user, adm[1], adm[2]);
+    }
     const prefix = `${PREFIX}/${user.id}/`;
 
     if (req.method === 'POST' && pathname === '/api/page-media') {
@@ -157,22 +260,9 @@ function createMediaHandler({ supabase, env = process.env }) {
       return json(res, 200, { path: `s/${user.id}/${name}`, url: `/media/${user.id}/${name}` });
     }
     if (req.method === 'GET' && pathname === '/api/page-media') {
-      const files = [];
-      let token = '';
-      for (let i = 0; i < 20; i++) {
-        const query = { 'list-type': 2, prefix, 'max-keys': 1000, ...(token ? { 'continuation-token': token } : {}) };
-        const r = await s3Request(cfg, { method: 'GET', query });
-        const xml = await readAll(r);
-        if (r.statusCode !== 200) return json(res, 502, { error: 'list failed' });
-        for (const c of xml.matchAll(/<Contents>([\s\S]*?)<\/Contents>/g)) {
-          const key = (/<Key>([^<]+)<\/Key>/.exec(c[1]) || [])[1] || '';
-          const name = key.slice(prefix.length);
-          if (FILE.test(name)) files.push({ name, size: Number((/<Size>(\d+)<\/Size>/.exec(c[1]) || [])[1] || 0), created_at: (/<LastModified>([^<]+)<\/LastModified>/.exec(c[1]) || [])[1] || null });
-        }
-        token = (/<NextContinuationToken>([^<]+)<\/NextContinuationToken>/.exec(xml) || [])[1] || '';
-        if (!token) break;
-      }
-      return json(res, 200, { files });
+      const list = await listFiles(prefix);
+      if (!list) return json(res, 502, { error: 'list failed' });
+      return json(res, 200, { files: list.files });
     }
     const del = /^\/api\/page-media\/([0-9a-f-]{36}\.(jpg|png|webp|gif|mp4|webm))$/.exec(pathname);
     if (req.method === 'DELETE' && del) {
