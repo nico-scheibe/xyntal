@@ -43,6 +43,8 @@ xyntal.com, www.xyntal.com {
 	handle_path /downloads/* {
 		root * /srv/downloads
 		header Content-Disposition "attachment"
+		header X-Content-Type-Options "nosniff"
+		header Strict-Transport-Security "max-age=31536000"
 		file_server {
 			hide .*
 		}
