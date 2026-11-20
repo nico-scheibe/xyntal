@@ -29,6 +29,45 @@
     list.addEventListener('scroll', sync, { passive: true });
     window.addEventListener('resize', sync);
     sync();
+
+    // Mausrad: ein Dreh blättert ein Bild weiter. Am ersten und letzten Bild scrollt die Seite normal weiter.
+    var acc = 0, lock = 0;
+    list.addEventListener('wheel', function (e) {
+      if (e.ctrlKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return; // Zoom-Geste / seitliches Wischen: Browser
+      var dir = e.deltaY > 0 ? 1 : -1;
+      if (dir > 0 ? next.disabled : prev.disabled) return;
+      e.preventDefault(); e.stopPropagation();
+      var now = Date.now();
+      if (now < lock) return;
+      acc += e.deltaMode ? e.deltaY * 40 : e.deltaY;
+      if (Math.abs(acc) < 40) return;
+      acc = 0; lock = now + 420; go(dir);
+    }, { passive: false });
+
+    // Maus: Bild anfassen und ziehen. Beim Loslassen rastet das nächstgelegene Bild ein.
+    var drag = null;
+    list.addEventListener('pointerdown', function (e) {
+      if (e.pointerType !== 'mouse' || e.button !== 0) return;
+      drag = { x: e.clientX, left: list.scrollLeft, moved: false };
+    });
+    window.addEventListener('pointermove', function (e) {
+      if (!drag) return;
+      var dx = e.clientX - drag.x;
+      if (!drag.moved && Math.abs(dx) < 6) return;
+      if (!drag.moved) { drag.moved = true; list.classList.add('is-drag'); }
+      list.scrollLeft = drag.left - dx;
+    });
+    function drop() {
+      if (!drag) return;
+      var moved = drag.moved; drag = null;
+      if (!moved) return;
+      var s = step(), i = Math.round(list.scrollLeft / s);
+      list.scrollTo({ left: i * s, behavior: calm ? 'auto' : 'smooth' });
+      setTimeout(function () { list.classList.remove('is-drag'); }, calm ? 0 : 450);
+    }
+    window.addEventListener('pointerup', drop);
+    window.addEventListener('pointercancel', drop);
+    list.addEventListener('dragstart', function (e) { e.preventDefault(); });
   })();
   
   var fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;

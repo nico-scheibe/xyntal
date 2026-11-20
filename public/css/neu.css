@@ -392,8 +392,10 @@ a { color: inherit; text-decoration: none; }
 .app__gal { margin-top: var(--s-5); }
 .app__shots { display: flex; gap: var(--gap); overflow-x: auto; scroll-snap-type: x mandatory; margin-inline: calc(var(--pad) * -1); padding-inline: var(--pad); scroll-padding-inline: var(--pad); scrollbar-width: none; overscroll-behavior-x: contain; }
 .app__shots::-webkit-scrollbar { display: none; }
+@media (hover: hover) and (pointer: fine) { .app__shots { cursor: grab; } }
+.app__shots.is-drag { scroll-snap-type: none; cursor: grabbing; user-select: none; }
 .app__shot { flex: 0 0 min(62%, 1040px); scroll-snap-align: start; }
-.js .app__shot[data-rv] { transform: translate3d(40px, 0, 0); }
+.js .app__shot[data-rv] { transform: none; } /* nur einblenden: ein Versatz würde den Einrastpunkt verschieben */
 .js .app__shot[data-rv].is-in { transform: none; }
 .app__fig { margin: 0; }
 .app__fig figcaption { margin-top: 14px; color: var(--t-2); font-size: .75rem; }
