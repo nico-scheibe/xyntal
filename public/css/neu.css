@@ -410,6 +410,30 @@ a { color: inherit; text-decoration: none; }
   .app__shot { flex-basis: 84%; }
 }
 
+/* 5.6b Die App als 3D-Bühne (Desktop, mit JS – Klasse is-3d aus js/neu.js). Jedes Fenster kennt seinen Abstand
+   zum aktiven Bild: --o (mit Vorzeichen), --a (Betrag, höchstens 2), --s (Richtung, -1 bis 1). */
+@media (min-width: 861px) {
+  .app:has(.is-3d) { overflow-x: clip; }
+  .app__gal.is-3d { perspective: 1900px; perspective-origin: 50% 42%; }
+  .is-3d .app__shots { display: block; position: relative; overflow: visible; margin-inline: 0; padding-inline: 0; scroll-snap-type: none; transform-style: preserve-3d; transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transition: transform .6s var(--ease-o); outline-offset: 12px; }
+  .is-3d .app__shot { position: absolute; top: 0; left: 50%; width: min(58%, 1000px); opacity: 1; cursor: pointer;
+    transform: translate3d(calc(-50% + var(--o, 0) * 64%), 0, calc(var(--a, 0) * -300px)) rotateY(calc(var(--s, 0) * -44deg));
+    transition: transform .9s var(--ease-o), opacity .5s var(--ease); }
+  .is-3d .app__shot.is-on { cursor: grab; }
+  .is-3d .app__shot.is-far { opacity: 0; pointer-events: none; }
+  .is-3d .app__shot .win { filter: brightness(calc(1 - var(--a, 0) * .3)); transition: filter .9s var(--ease-o), box-shadow .9s var(--ease-o); }
+  .is-3d .app__shot.is-on .win { box-shadow: 0 40px 90px -30px rgba(0, 0, 0, .8), 0 0 120px -40px rgba(76, 141, 255, .35); }
+  .is-3d .app__fig figcaption { opacity: 0; transition: opacity .4s var(--ease); }
+  .is-3d .app__shot.is-on figcaption { opacity: 1; transition-delay: .25s; }
+  /* Auftritt: erst liegen alle Fenster klein in der Mitte, dann fächern sie sich auf */
+  .js .is-3d:not(.is-live) .app__shot { opacity: 0; transform: translate3d(-50%, 60px, -500px) rotateX(18deg); transition: none; }
+  .js .is-3d.is-live .app__shot { transition-delay: calc(var(--a, 0) * 90ms); }
+  .is-3d .app__shots.is-drag { cursor: grabbing; }
+  .is-3d .app__shots.is-drag .app__shot { transition: none; cursor: grabbing; }
+  .is-3d .app__shots.is-drag .win { transition: none; }
+  .is-3d .app__nav { justify-content: center; position: relative; z-index: 2; }
+}
+
 /* 5.7 Fragen: Akkordeon mit Button. Antworten stehen im HTML; ohne JS sind alle offen. */
 .faq { padding: var(--scene) var(--pad) var(--s-6); }
 .faq__title { margin-top: 0; }

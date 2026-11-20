@@ -13,54 +13,108 @@
   // ---------- 1 Helfer ----------
   var root = document.documentElement;
   var calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  // App-Galerie: Knöpfe blättern ein Bild weiter; am Anfang und Ende wird der passende Knopf stumm.
+  // App-Galerie. Desktop: 3D-Bühne – das aktive Fenster steht vorn in der Mitte, die Nachbarn stehen schräg
+  // dahinter (--o = Abstand zum aktiven Bild, auch gebrochen während des Ziehens). Die Bühne neigt sich leicht
+  // zum Mauszeiger. Handy und ohne JS: seitlicher Scroller mit Einrasten (CSS).
+  // Bedienung in beiden Fällen: Knöpfe, Ziehen, Pfeiltasten; auf der Bühne auch Klick auf ein Nachbarbild.
   (function () {
     var gal = document.querySelector('[data-gal]'); if (!gal) return;
     var list = gal.querySelector('.app__shots'), prev = gal.querySelector('[data-gal-prev]'), next = gal.querySelector('[data-gal-next]');
     if (!list || !prev || !next) return;
-    function step() { var a = list.children[0], b = list.children[1]; return b ? b.offsetLeft - a.offsetLeft : list.clientWidth; }
+    var items = Array.prototype.slice.call(list.children), n = items.length;
+    var mq = window.matchMedia('(min-width: 861px)'), is3d = false, active = 0;
+
+    function step() { var a = items[0], b = items[1]; return b ? b.offsetLeft - a.offsetLeft : list.clientWidth; }
     function sync() {
+      if (is3d) { prev.disabled = active <= 0; next.disabled = active >= n - 1; return; }
       prev.disabled = list.scrollLeft < 4;
       next.disabled = list.scrollLeft > list.scrollWidth - list.clientWidth - 4;
     }
-    function go(dir) { list.scrollBy({ left: dir * step(), behavior: calm ? 'auto' : 'smooth' }); }
+    // pos: Stelle auf der Bühne, an der gerade die Mitte liegt (ganze Zahl = Bild genau vorn)
+    function place(pos) {
+      for (var i = 0; i < n; i++) {
+        var o = i - pos, a = Math.abs(o), st = items[i].style;
+        st.setProperty('--o', o.toFixed(3));
+        st.setProperty('--a', Math.min(a, 2).toFixed(3));
+        st.setProperty('--s', Math.max(-1, Math.min(1, o)).toFixed(3));
+        st.zIndex = String(100 - Math.round(a * 10));
+        items[i].classList.toggle('is-on', a < 0.5);
+        items[i].classList.toggle('is-far', a > 2.4);
+      }
+    }
+    function size() { if (is3d) list.style.height = items[0].offsetHeight + 'px'; }
+    function setActive(i) { active = Math.max(0, Math.min(n - 1, i)); place(active); sync(); }
+    function go(dir) {
+      if (is3d) setActive(active + dir);
+      else list.scrollBy({ left: dir * step(), behavior: calm ? 'auto' : 'smooth' });
+    }
+    function mode() {
+      is3d = mq.matches;
+      gal.classList.toggle('is-3d', is3d);
+      if (is3d) { for (var i = 0; i < n; i++) items[i].removeAttribute('data-rv'); list.scrollLeft = 0; size(); setActive(active); }
+      else {
+        list.style.height = '';
+        for (var j = 0; j < n; j++) { items[j].removeAttribute('style'); items[j].classList.remove('is-on', 'is-far'); }
+        sync();
+      }
+    }
+    mode();
+    if (mq.addEventListener) mq.addEventListener('change', mode);
+    window.addEventListener('resize', function () { size(); sync(); });
+    window.addEventListener('load', size);
+    if (window.ResizeObserver) new ResizeObserver(size).observe(items[0]);
+
+    // Auftritt: die Fenster fächern sich aus der Mitte auf, sobald die Bühne ins Bild kommt.
+    if ('IntersectionObserver' in window && !calm) {
+      var io = new IntersectionObserver(function (es) {
+        if (es[0].isIntersecting) { gal.classList.add('is-live'); io.disconnect(); }
+      }, { threshold: 0.25 });
+      io.observe(list);
+    } else gal.classList.add('is-live');
+
     prev.addEventListener('click', function () { go(-1); });
     next.addEventListener('click', function () { go(1); });
     list.addEventListener('scroll', sync, { passive: true });
-    window.addEventListener('resize', sync);
-    sync();
+    list.addEventListener('keydown', function (e) {
+      if (!is3d) return;
+      if (e.key === 'ArrowRight') { e.preventDefault(); go(1); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1); }
+    });
 
-    // Mausrad: ein Dreh blättert ein Bild weiter. Am ersten und letzten Bild scrollt die Seite normal weiter.
+    // Seitliches Wischen (Trackpad) blättert auf der 3D-Bühne. Das Mausrad bleibt beim Scrollen der Seite.
     var acc = 0, lock = 0;
     list.addEventListener('wheel', function (e) {
-      if (e.ctrlKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return; // Zoom-Geste / seitliches Wischen: Browser
-      var dir = e.deltaY > 0 ? 1 : -1;
-      if (dir > 0 ? next.disabled : prev.disabled) return;
-      e.preventDefault(); e.stopPropagation();
-      var now = Date.now();
-      if (now < lock) return;
-      acc += e.deltaMode ? e.deltaY * 40 : e.deltaY;
+      if (!is3d || e.ctrlKey || Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+      e.preventDefault();
+      var dir = e.deltaX > 0 ? 1 : -1, now = Date.now();
+      if (now < lock || (dir > 0 ? next.disabled : prev.disabled)) return;
+      acc += e.deltaX;
       if (Math.abs(acc) < 40) return;
-      acc = 0; lock = now + 420; go(dir);
+      acc = 0; lock = now + 520; go(dir);
     }, { passive: false });
 
-    // Maus: Bild anfassen und ziehen. Beim Loslassen rastet das nächstgelegene Bild ein.
-    var drag = null;
+    // Maus: anfassen und ziehen. Beim Loslassen rastet das nächstgelegene Bild ein.
+    var drag = null, dragged = false;
     list.addEventListener('pointerdown', function (e) {
       if (e.pointerType !== 'mouse' || e.button !== 0) return;
-      drag = { x: e.clientX, left: list.scrollLeft, moved: false };
+      drag = { x: e.clientX, left: list.scrollLeft, moved: false, pos: active };
+      dragged = false;
     });
     window.addEventListener('pointermove', function (e) {
       if (!drag) return;
       var dx = e.clientX - drag.x;
       if (!drag.moved && Math.abs(dx) < 6) return;
-      if (!drag.moved) { drag.moved = true; list.classList.add('is-drag'); }
-      list.scrollLeft = drag.left - dx;
+      if (!drag.moved) { drag.moved = true; dragged = true; list.classList.add('is-drag'); }
+      if (is3d) {
+        drag.pos = Math.max(-0.35, Math.min(n - 0.65, active - dx / (items[0].offsetWidth * 0.62)));
+        place(drag.pos);
+      } else list.scrollLeft = drag.left - dx;
     });
     function drop() {
       if (!drag) return;
-      var moved = drag.moved; drag = null;
-      if (!moved) return;
+      var d = drag; drag = null;
+      if (!d.moved) return;
+      if (is3d) { list.classList.remove('is-drag'); setActive(Math.round(d.pos)); return; }
       var s = step(), i = Math.round(list.scrollLeft / s);
       list.scrollTo({ left: i * s, behavior: calm ? 'auto' : 'smooth' });
       setTimeout(function () { list.classList.remove('is-drag'); }, calm ? 0 : 450);
@@ -68,8 +122,25 @@
     window.addEventListener('pointerup', drop);
     window.addEventListener('pointercancel', drop);
     list.addEventListener('dragstart', function (e) { e.preventDefault(); });
+    // Klick auf ein Nachbarbild holt es nach vorn (nicht nach einem Ziehen)
+    list.addEventListener('click', function (e) {
+      if (!is3d || dragged) return;
+      var li = e.target.closest ? e.target.closest('.app__shot') : null, i = items.indexOf(li);
+      if (i >= 0 && i !== active) setActive(i);
+    });
+
+    // Die Bühne neigt sich leicht zum Mauszeiger.
+    if (!calm) {
+      gal.addEventListener('pointermove', function (e) {
+        if (!is3d || e.pointerType !== 'mouse' || drag) return;
+        var r = gal.getBoundingClientRect();
+        list.style.setProperty('--ry', (((e.clientX - r.left) / r.width - 0.5) * 7).toFixed(2) + 'deg');
+        list.style.setProperty('--rx', (((e.clientY - r.top) / r.height - 0.5) * -5).toFixed(2) + 'deg');
+      });
+      gal.addEventListener('pointerleave', function () { list.style.setProperty('--ry', '0deg'); list.style.setProperty('--rx', '0deg'); });
+    }
   })();
-  
+
   var fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
   var mqSmall = window.matchMedia('(max-width: 860px)');
 
