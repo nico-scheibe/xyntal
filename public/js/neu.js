@@ -13,6 +13,24 @@
   // ---------- 1 Helfer ----------
   var root = document.documentElement;
   var calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // App-Galerie: Knöpfe blättern ein Bild weiter; am Anfang und Ende wird der passende Knopf stumm.
+  (function () {
+    var gal = document.querySelector('[data-gal]'); if (!gal) return;
+    var list = gal.querySelector('.app__shots'), prev = gal.querySelector('[data-gal-prev]'), next = gal.querySelector('[data-gal-next]');
+    if (!list || !prev || !next) return;
+    function step() { var a = list.children[0], b = list.children[1]; return b ? b.offsetLeft - a.offsetLeft : list.clientWidth; }
+    function sync() {
+      prev.disabled = list.scrollLeft < 4;
+      next.disabled = list.scrollLeft > list.scrollWidth - list.clientWidth - 4;
+    }
+    function go(dir) { list.scrollBy({ left: dir * step(), behavior: calm ? 'auto' : 'smooth' }); }
+    prev.addEventListener('click', function () { go(-1); });
+    next.addEventListener('click', function () { go(1); });
+    list.addEventListener('scroll', sync, { passive: true });
+    window.addEventListener('resize', sync);
+    sync();
+  })();
+  
   var fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
   var mqSmall = window.matchMedia('(max-width: 860px)');
 
@@ -136,13 +154,6 @@
       var el = $('[data-scrub]'); if (!el) return;
       el.classList.add('is-scrub');
       track(el, function (r) { return (vh * 0.9 - r.top) / (vh * 0.35 + r.height); }, setP(el));
-    })();
-
-    // App-Fenster: liegen erst nach hinten gekippt und richten sich beim Hereinscrollen auf (nur Desktop, s. CSS).
-    (function () {
-      var el = $('.app__shots'); if (!el) return;
-      el.classList.add('is-tilt');
-      track(el, function (r) { return (vh - r.top) / (vh * 0.7); }, setP(el));
     })();
 
     // Ablauf: die Farblinie wächst mit dem Scrollen, jede Nummer leuchtet auf, sobald die Linie sie erreicht.

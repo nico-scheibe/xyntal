@@ -26,7 +26,7 @@
   <!-- Schriften liegen lokal. Die zwei, die der erste Bildschirm braucht, werden vorgeladen. -->
   <link rel="preload" href="fonts/archivo-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="fonts/plexsans-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/neu.css?v=10">
+  <link rel="stylesheet" href="css/neu.css?v=11">
   <link rel="stylesheet" href="/site-search.css?v=2">
 
   <!-- Vor dem ersten Zeichnen: JS-Klasse setzen (eigene Datei wegen CSP). -->
@@ -241,43 +241,137 @@
     <header class="sec-head">
       <p class="mono label" data-rv>Die App</p>
       <h2 class="sec-title" data-rv data-words id="app-title">So sieht es aus.</h2>
-      <p class="app__lead" data-rv>Echte App, Beispieldaten.</p>
+      <p class="app__lead" data-rv>Alle Bereiche der App, mit Beispieldaten.</p>
     </header>
-    <ul class="app__shots" data-rv-group>
+    <div class="app__gal" data-gal>
+      <ul class="app__shots" data-rv-group tabindex="0" aria-label="Bilder aus der App">
       <li class="app__shot" data-rv="fade">
         <figure class="app__fig">
           <div class="win">
             <picture>
-              <img src="assets/img/discover-1440.webp?v=2" srcset="assets/img/discover-1440.webp?v=2 1440w, assets/img/discover-2880.webp?v=2 2880w" sizes="(min-width: 860px) 33vw, 82vw" width="1440" height="900" loading="lazy" decoding="async"
-                   alt="Xyntal-App, Bereich Entdecken: zwei Profilkarten mit „Für dich empfohlen“, 89 % und 71 % Passung, Zeit pro Woche und wonach die Person sucht.">
+              <img src="assets/img/app-forme-960.webp" srcset="assets/img/app-forme-960.webp 960w, assets/img/app-forme-1920.webp 1920w" sizes="(min-width: 860px) 60vw, 84vw" width="960" height="614" loading="lazy" decoding="async"
+                   alt="Xyntal-App, Bereich Für mich: Erwähnungen, Aufgaben, Freigaben und Anfragen in einer Liste.">
             </picture>
           </div>
-          <figcaption class="mono">Entdecken: Vorschläge mit Begründung</figcaption>
+          <figcaption class="mono"><span class="app__n" data-no-i18n>01 / 11</span>Für mich: was auf dich wartet</figcaption>
         </figure>
       </li>
       <li class="app__shot" data-rv="fade">
         <figure class="app__fig">
           <div class="win">
             <picture>
-              <img src="assets/img/chat-960.webp?v=2" srcset="assets/img/chat-960.webp?v=2 960w, assets/img/chat-1920.webp?v=2 1920w" sizes="(min-width: 860px) 33vw, 82vw" width="960" height="600" loading="lazy" decoding="async"
-                   alt="Xyntal-App, Nachrichten: Liste der Gespräche links, ein Gruppenchat mit vier Mitgliedern in der Mitte, die Mitgliederliste rechts.">
+              <img src="assets/img/app-home-960.webp" srcset="assets/img/app-home-960.webp 960w, assets/img/app-home-1920.webp 1920w" sizes="(min-width: 860px) 60vw, 84vw" width="960" height="614" loading="lazy" decoding="async"
+                   alt="Xyntal-App, Bereich Start: Begrüßung, Fokus für heute, offene Aufgaben und Projektstand.">
             </picture>
           </div>
-          <figcaption class="mono">Nachrichten: privat und im Team</figcaption>
+          <figcaption class="mono"><span class="app__n" data-no-i18n>02 / 11</span>Start: dein Tag auf einen Blick</figcaption>
         </figure>
       </li>
       <li class="app__shot" data-rv="fade">
         <figure class="app__fig">
           <div class="win">
             <picture>
-              <img src="assets/img/projects-960.webp" srcset="assets/img/projects-960.webp 960w, assets/img/projects-1920.webp 1920w" sizes="(min-width: 860px) 33vw, 82vw" width="960" height="600" loading="lazy" decoding="async"
-                   alt="Xyntal-App, Projekte: drei Projekte mit Fortschritt, offenen Aufgaben und den Leuten, die daran arbeiten.">
+              <img src="assets/img/app-focus-960.webp" srcset="assets/img/app-focus-960.webp 960w, assets/img/app-focus-1920.webp 1920w" sizes="(min-width: 860px) 60vw, 84vw" width="960" height="614" loading="lazy" decoding="async"
+                   alt="Xyntal-App, Bereich Fokus: Timer für eine Aufgabe, daneben was solange stumm bleibt.">
             </picture>
           </div>
-          <figcaption class="mono">Projekte: wer was macht</figcaption>
+          <figcaption class="mono"><span class="app__n" data-no-i18n>03 / 11</span>Fokus: eine Aufgabe, keine Ablenkung</figcaption>
         </figure>
       </li>
-    </ul>
+      <li class="app__shot" data-rv="fade">
+        <figure class="app__fig">
+          <div class="win">
+            <picture>
+              <img src="assets/img/app-workspaces-960.webp" srcset="assets/img/app-workspaces-960.webp 960w, assets/img/app-workspaces-1920.webp 1920w" sizes="(min-width: 860px) 60vw, 84vw" width="960" height="614" loading="lazy" decoding="async"
+                   alt="Xyntal-App, Bereich Arbeitsbereiche: Arbeitsbereiche mit ihren Projekten und dem Fortschritt.">
+            </picture>
+          </div>
+          <figcaption class="mono"><span class="app__n" data-no-i18n>04 / 11</span>Arbeitsbereiche: Projekte und Aufgaben</figcaption>
+        </figure>
+      </li>
+      <li class="app__shot" data-rv="fade">
+        <figure class="app__fig">
+          <div class="win">
+            <picture>
+              <img src="assets/img/app-messages-960.webp" srcset="assets/img/app-messages-960.webp 960w, assets/img/app-messages-1920.webp 1920w" sizes="(min-width: 860px) 60vw, 84vw" width="960" height="614" loading="lazy" decoding="async"
+                   alt="Xyntal-App, Bereich Nachrichten: Liste der Gespräche links, daneben ein Chat.">
+            </picture>
+          </div>
+          <figcaption class="mono"><span class="app__n" data-no-i18n>05 / 11</span>Nachrichten: privat und im Team</figcaption>
+        </figure>
+      </li>
+      <li class="app__shot" data-rv="fade">
+        <figure class="app__fig">
+          <div class="win">
+            <picture>
+              <img src="assets/img/app-discover-960.webp" srcset="assets/img/app-discover-960.webp 960w, assets/img/app-discover-1920.webp 1920w" sizes="(min-width: 860px) 60vw, 84vw" width="960" height="614" loading="lazy" decoding="async"
+                   alt="Xyntal-App, Bereich Entdecken: Profilkarten mit Passung in Prozent und Begründung.">
+            </picture>
+          </div>
+          <figcaption class="mono"><span class="app__n" data-no-i18n>06 / 11</span>Entdecken: Vorschläge mit Begründung</figcaption>
+        </figure>
+      </li>
+      <li class="app__shot" data-rv="fade">
+        <figure class="app__fig">
+          <div class="win">
+            <picture>
+              <img src="assets/img/app-communities-960.webp" srcset="assets/img/app-communities-960.webp 960w, assets/img/app-communities-1920.webp 1920w" sizes="(min-width: 860px) 60vw, 84vw" width="960" height="614" loading="lazy" decoding="async"
+                   alt="Xyntal-App, Bereich Communities: Liste der Communities mit Mitgliedern und Themen.">
+            </picture>
+          </div>
+          <figcaption class="mono"><span class="app__n" data-no-i18n>07 / 11</span>Communities: Leute mit demselben Thema</figcaption>
+        </figure>
+      </li>
+      <li class="app__shot" data-rv="fade">
+        <figure class="app__fig">
+          <div class="win">
+            <picture>
+              <img src="assets/img/app-files-960.webp" srcset="assets/img/app-files-960.webp 960w, assets/img/app-files-1920.webp 1920w" sizes="(min-width: 860px) 60vw, 84vw" width="960" height="614" loading="lazy" decoding="async"
+                   alt="Xyntal-App, Bereich Dateien: Dateiliste mit Typ, Status und Projekt.">
+            </picture>
+          </div>
+          <figcaption class="mono"><span class="app__n" data-no-i18n>08 / 11</span>Dateien: alles zum Projekt an einem Ort</figcaption>
+        </figure>
+      </li>
+      <li class="app__shot" data-rv="fade">
+        <figure class="app__fig">
+          <div class="win">
+            <picture>
+              <img src="assets/img/app-ai-center-960.webp" srcset="assets/img/app-ai-center-960.webp 960w, assets/img/app-ai-center-1920.webp 1920w" sizes="(min-width: 860px) 60vw, 84vw" width="960" height="614" loading="lazy" decoding="async"
+                   alt="Xyntal-App, Bereich KI-Center: Übersicht der KI-Funktionen und was Xyntal sich gemerkt hat.">
+            </picture>
+          </div>
+          <figcaption class="mono"><span class="app__n" data-no-i18n>09 / 11</span>KI-Center: Xyntal fragen</figcaption>
+        </figure>
+      </li>
+      <li class="app__shot" data-rv="fade">
+        <figure class="app__fig">
+          <div class="win">
+            <picture>
+              <img src="assets/img/app-automation-960.webp" srcset="assets/img/app-automation-960.webp 960w, assets/img/app-automation-1920.webp 1920w" sizes="(min-width: 860px) 60vw, 84vw" width="960" height="614" loading="lazy" decoding="async"
+                   alt="Xyntal-App, Bereich Automationen: Vier Automationen mit Schaltern, darunter Vorlagen für den Schnellstart.">
+            </picture>
+          </div>
+          <figcaption class="mono"><span class="app__n" data-no-i18n>10 / 11</span>Automationen: Routine läuft von allein</figcaption>
+        </figure>
+      </li>
+      <li class="app__shot" data-rv="fade">
+        <figure class="app__fig">
+          <div class="win">
+            <picture>
+              <img src="assets/img/app-calendar-960.webp" srcset="assets/img/app-calendar-960.webp 960w, assets/img/app-calendar-1920.webp 1920w" sizes="(min-width: 860px) 60vw, 84vw" width="960" height="614" loading="lazy" decoding="async"
+                   alt="Xyntal-App, Bereich Kalender: Wochenansicht mit Terminen und Fokusblöcken, rechts das Tagesbriefing.">
+            </picture>
+          </div>
+          <figcaption class="mono"><span class="app__n" data-no-i18n>11 / 11</span>Kalender: Termine und Fokusblöcke</figcaption>
+        </figure>
+      </li>
+      </ul>
+      <div class="app__nav">
+        <button class="app__btn" type="button" data-gal-prev aria-label="Vorheriges Bild"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg></button>
+        <button class="app__btn" type="button" data-gal-next aria-label="Nächstes Bild"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></button>
+      </div>
+    </div>
   </section>
 
   <!-- ============ FRAGEN ============ -->
@@ -355,9 +449,9 @@
 
 <script src="js/vendor/lenis.min.js" defer></script>
 <script src="js/hero-gl.js?v=2" defer></script>
-<script src="/i18n-en.js?v=138" defer></script>
-<script src="/i18n.js?v=34" defer></script>
-<script src="js/neu.js?v=6" defer></script>
+<script src="/i18n-en.js?v=140" defer></script>
+<script src="/i18n.js?v=35" defer></script>
+<script src="js/neu.js?v=7" defer></script>
 <!-- Bestehende Funktionen der Website: Newsletter, Einladungslink, Konto-Menü -->
 <script src="landing.js?v=swipe-58" defer></script>
 <script src="invite.js?v=4" defer></script>

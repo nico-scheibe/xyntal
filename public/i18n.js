@@ -9,7 +9,7 @@
   const ATTRS = ["placeholder", "aria-label", "title", "alt"];
   // App-Screenshots mit englischer Oberfläche liegen unter assets/img/en/ (gleicher Dateiname).
   // Die Liste muss zu diesem Ordner passen; der Server übernimmt dieselbe Zuordnung für /en-Adressen.
-  const EN_IMAGES = new Set(["chat-960.webp", "chat-1920.webp", "discover-1440.webp", "discover-2880.webp", "home-960.webp", "home-1920.webp", "profil-1440.webp", "profil-2880.webp", "projects-960.webp", "projects-1920.webp"]);
+  const EN_IMAGES = new Set(["chat-960.webp", "chat-1920.webp", "discover-1440.webp", "discover-2880.webp", "home-960.webp", "home-1920.webp", "profil-1440.webp", "profil-2880.webp", "projects-960.webp", "projects-1920.webp", "app-forme-960.webp", "app-forme-1920.webp", "app-home-960.webp", "app-home-1920.webp", "app-focus-960.webp", "app-focus-1920.webp", "app-workspaces-960.webp", "app-workspaces-1920.webp", "app-messages-960.webp", "app-messages-1920.webp", "app-discover-960.webp", "app-discover-1920.webp", "app-communities-960.webp", "app-communities-1920.webp", "app-files-960.webp", "app-files-1920.webp", "app-ai-center-960.webp", "app-ai-center-1920.webp", "app-automation-960.webp", "app-automation-1920.webp", "app-calendar-960.webp", "app-calendar-1920.webp"]);
   const IMG_RE = /(^|\/)assets\/img\/([a-z0-9-]+\.(?:webp|png|jpg))(\?[^\s,]*)?/gi;
   const origImg = new WeakMap();    // Bild -> { src, srcset } deutsche Originalwerte
   const SKIP = new Set(["SCRIPT", "STYLE", "NOSCRIPT", "TEXTAREA", "CODE"]);

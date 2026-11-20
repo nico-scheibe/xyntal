@@ -153,8 +153,8 @@ a { color: inherit; text-decoration: none; }
 .js [data-rv].is-in .w__i { transform: none; transition: transform 1.1s var(--ease-o); transition-delay: calc(var(--d, 0ms) + var(--i, 0) * 55ms); }
 /* Handy: Karten in seitlichen Scrollern kommen von rechts statt von unten (kein Höhensprung im Scroller) */
 @media (max-width: 860px) {
-  .js .cmp__card[data-rv], .js .app__shot[data-rv] { transform: translate3d(28px, 0, 0); }
-  .js .cmp__card[data-rv].is-in, .js .app__shot[data-rv].is-in { transform: none; }
+  .js .cmp__card[data-rv] { transform: translate3d(28px, 0, 0); }
+  .js .cmp__card[data-rv].is-in { transform: none; }
 }
 /* Die kurze Farblinie vor dem Etikett zeichnet sich */
 .js .label[data-rv]::before { transform: scaleX(0); transform-origin: 0 50%; transition: transform .9s var(--ease-o) .2s; }
@@ -192,16 +192,7 @@ a { color: inherit; text-decoration: none; }
 .js [data-rv] > .cmp__row--new::before { transform: scaleX(0); }
 .js [data-rv].is-in > .cmp__row--new::before { transform: none; transition: transform 1.2s var(--ease-o); transition-delay: calc(var(--d, 0ms) + 350ms); }
 
-/* App-Fenster (Desktop): nach hinten gekippt und kleiner, richten sich mit dem Scrollen auf (--p aus js/neu.js).
-   Die äußeren kommen dabei leicht von der Seite. Danach zieht einmal ein Lichtstreif über jedes Fenster. */
-@media (min-width: 861px) {
-  .js .is-tilt .app__fig {
-    --q: calc(1 - var(--p, 1)); transform-origin: 50% 100%; will-change: transform;
-    transform: perspective(1500px) translate3d(calc(var(--x, 0) * var(--q) * 70px), calc(var(--q) * 90px), 0) rotateX(calc(var(--q) * 26deg)) scale(calc(1 - var(--q) * .12));
-  }
-  .is-tilt .app__shot:first-child { --x: -1; }
-  .is-tilt .app__shot:last-child { --x: 1; }
-}
+/* App-Fenster: nach dem Einblenden zieht einmal ein Lichtstreif über jedes Fenster. */
 .win::after { content: ""; position: absolute; inset: 0; z-index: 4; pointer-events: none; opacity: 0; background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, .16) 50%, transparent 65%); transform: translate3d(-100%, 0, 0); }
 .js .app__shots.is-in .win::after { animation: win-glint 1.5s var(--ease) .7s 1 both; }
 .js .app__shots.is-in .app__shot:nth-child(2) .win::after { animation-delay: .85s; }
@@ -394,16 +385,27 @@ a { color: inherit; text-decoration: none; }
   .fact__t { font-size: .9rem; }
 }
 
-/* 5.6 Die App: drei Fenster. Handy: horizontaler Scroll mit Einrastpunkten. */
+/* 5.6 Die App: ein Bild je Bereich, in der Reihenfolge der App. Seitlich scrollen (Wischen, Trackpad,
+   Pfeiltasten) oder mit den beiden Knöpfen; jedes Bild rastet links ein. */
 .app { padding: var(--scene) var(--pad) var(--s-6); }
 .app__lead { margin-top: 18px; color: var(--t-2); }
-.app__shots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--gap); margin-top: var(--s-5); }
+.app__gal { margin-top: var(--s-5); }
+.app__shots { display: flex; gap: var(--gap); overflow-x: auto; scroll-snap-type: x mandatory; margin-inline: calc(var(--pad) * -1); padding-inline: var(--pad); scroll-padding-inline: var(--pad); scrollbar-width: none; overscroll-behavior-x: contain; }
+.app__shots::-webkit-scrollbar { display: none; }
+.app__shot { flex: 0 0 min(62%, 1040px); scroll-snap-align: start; }
+.js .app__shot[data-rv] { transform: translate3d(40px, 0, 0); }
+.js .app__shot[data-rv].is-in { transform: none; }
 .app__fig { margin: 0; }
 .app__fig figcaption { margin-top: 14px; color: var(--t-2); font-size: .75rem; }
+.app__n { margin-right: 14px; color: var(--t-3); }
+.app__nav { display: flex; gap: 10px; justify-content: flex-end; margin-top: 22px; }
+.app__btn { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 1px solid var(--line-2); border-radius: 999px; background: none; color: var(--t-1); cursor: pointer; transition: background-color .25s var(--ease), border-color .25s var(--ease), opacity .25s var(--ease); }
+.app__btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.app__btn:hover { background: rgba(var(--t-rgb), .08); border-color: var(--t-2); }
+.app__btn:disabled { opacity: .3; cursor: default; background: none; border-color: var(--line-2); }
 @media (max-width: 860px) {
-  .app__shots { display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; margin-inline: calc(var(--pad) * -1); padding-inline: var(--pad); scroll-padding-inline: var(--pad); scrollbar-width: none; overscroll-behavior-x: contain; }
-  .app__shots::-webkit-scrollbar { display: none; }
-  .app__shot { flex: 0 0 82%; scroll-snap-align: start; }
+  .app__shots { gap: 14px; }
+  .app__shot { flex-basis: 84%; }
 }
 
 /* 5.7 Fragen: Akkordeon mit Button. Antworten stehen im HTML; ohne JS sind alle offen. */
