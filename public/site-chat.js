@@ -513,6 +513,18 @@
       case "mic": toggleMic(); break;
     }
   });
+  // Mausrad über dem offenen Fenster gehört dem Chat: Es scrollt den Verlauf (oder ein Feld mit eigenem
+  // Scrollbalken) und reicht nie an die Seite dahinter weiter – auch nicht am Anfang oder Ende des Verlaufs.
+  root.addEventListener("wheel", (e) => {
+    if (e.ctrlKey || !e.target.closest || !e.target.closest(".sc-panel")) return;
+    e.preventDefault(); e.stopPropagation();
+    let el = e.target.closest("textarea, .sc-table, .sc-log");
+    if (!el || el.scrollHeight <= el.clientHeight + 1) el = root.querySelector(".sc-log");
+    if (!el) return;
+    const k = e.deltaMode === 1 ? 32 : e.deltaMode === 2 ? el.clientHeight : 1;
+    el.scrollTop += e.deltaY * k;
+    if (e.deltaX) el.scrollLeft += e.deltaX * k;
+  }, { passive: false });
   root.addEventListener("change", (e) => { if (e.target.classList.contains("sc-file")) { attachFile(e.target.files[0]); e.target.value = ""; } });
   root.addEventListener("submit", (e) => { e.preventDefault(); ask($("#sc-input").value); });
   root.addEventListener("input", (e) => { if (e.target.id === "sc-input") { grow(e.target); composer(); } });
