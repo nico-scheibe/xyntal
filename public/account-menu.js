@@ -329,7 +329,7 @@
     function swapCta() {
       if (!state.session) return;
       const header = host.closest("header") || host;
-      header.querySelectorAll('a.btn[href$="#warteliste"], a.nav-cta[href="/login#registrieren"]').forEach((a) => a.remove());
+      header.querySelectorAll('a.btn[href$="#warteliste"], a[href="/login#registrieren"]').forEach((a) => a.remove());
     }
 
     render();
