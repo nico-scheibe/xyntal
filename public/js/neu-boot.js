@@ -7,11 +7,10 @@
   if (calm) d.classList.add('calm');
   // Logo-Animation (WebGL) nur ab 860 px und ohne reduzierte Bewegung. Sonst steht das SVG (js/hero-gl.js).
   if (calm || !window.matchMedia('(min-width: 860px)').matches) d.classList.add('no-gl');
-  // Schon in der Beta oder beworben? Gemerkten Stand sofort anwenden, damit der
-  // „Bewerben“-Knopf gar nicht erst aufblitzt. Abgeglichen wird in neu-konto.js.
+  // Angemeldet? Dann verschwinden „Konto anlegen“-Knöpfe sofort ([data-apply]) und der Ersatz für Mitglieder
+  // erscheint ([data-if~="in"], s. css/neu.css) – ohne Aufblitzen, weil das hier vor dem ersten Zeichnen läuft.
   try {
     var ses = JSON.parse(localStorage.getItem('sb-db-auth-token') || 'null');
-    var b = JSON.parse(localStorage.getItem('xy-beta') || 'null');
-    if (ses && ses.user && b && b.uid === ses.user.id && (b.s === 'in' || b.s === 'applied')) d.classList.add('beta-' + b.s);
+    if (ses && (ses.user || (ses.currentSession && ses.currentSession.user))) d.classList.add('beta-in');
   } catch (e) {}
 })();

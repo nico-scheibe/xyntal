@@ -30,7 +30,7 @@
   <link rel="stylesheet" href="/site-search.css?v=2">
 
   <!-- Vor dem ersten Zeichnen: JS-Klasse setzen (eigene Datei wegen CSP). -->
-  <script src="js/neu-boot.js"></script>
+  <script src="js/neu-boot.js?v=2"></script>
   <link rel="canonical" href="https://xyntal.com/">
   <link rel="alternate" hreflang="de" href="https://xyntal.com/">
   <link rel="alternate" hreflang="en" href="https://xyntal.com/en">
@@ -72,7 +72,7 @@
   </nav>
   <div class="top__right topbar-inner">
     <a class="top__login" href="/login" data-account>Login</a>
-    <a class="pill pill--sm" href="/login#registrieren">Konto anlegen</a>
+    <a class="pill pill--sm" href="/login#registrieren" data-apply>Konto anlegen</a>
   </div>
 </header>
 
@@ -96,7 +96,7 @@
       <p class="hero__p">Xyntal zeigt dir, wer zu deinem Vorhaben passt – und warum.</p>
       <div class="hero__cta">
         <a class="pill" href="#download">App herunterladen <span class="pill__arr" aria-hidden="true">↓</span></a>
-        <a class="pill" href="/login#registrieren">Konto anlegen <span class="pill__arr" aria-hidden="true">→</span></a>
+        <a class="pill" href="/login#registrieren" data-apply>Konto anlegen <span class="pill__arr" aria-hidden="true">→</span></a>
         <a class="pill" href="/mitglieder" data-if="in">Mitglieder ansehen <span class="pill__arr" aria-hidden="true">→</span></a>
         <a class="tlink" href="/ueber-uns">Mehr über Xyntal</a>
       </div>
@@ -407,9 +407,9 @@
         </div>
         <p class="end__note">Beta-Version. Auf dem Handy geht es noch nicht.</p>
       </div>
-      <a class="pill pill--lg" href="/login#registrieren">Konto anlegen <span class="pill__arr" aria-hidden="true">→</span></a>
+      <a class="pill pill--lg" href="/login#registrieren" data-apply>Konto anlegen <span class="pill__arr" aria-hidden="true">→</span></a>
       <a class="pill pill--lg" href="/mitglieder" data-if="in">Mitglieder ansehen <span class="pill__arr" aria-hidden="true">→</span></a>
-      <p class="end__note">Kostenlos. Konto anlegen und loslegen.</p>
+      <p class="end__note" data-apply>Kostenlos. Konto anlegen und loslegen.</p>
       <p class="end__note" data-if="in">Du bist schon dabei. Schön, dass du da bist.</p>
     </div>
 
