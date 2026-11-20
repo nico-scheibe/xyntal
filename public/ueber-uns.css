@@ -14,7 +14,7 @@
   --rule-2: #4A4A4A;
   --link: #ECEAE4;
 
-  --f-serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --f-serif: "Archivo", "Arial Narrow", Arial, sans-serif;
   --f-sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --f-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
   color-scheme: dark;
@@ -26,7 +26,7 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; background: var(-
 body {
   margin: 0; min-height: 100vh;
   background: var(--paper); color: var(--ink);
-  font: 400 19px/1.6 var(--f-serif);
+  font: 400 19px/1.6 var(--f-sans);
   font-optical-sizing: auto;
   -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
   -webkit-tap-highlight-color: transparent;

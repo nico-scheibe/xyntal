@@ -39,7 +39,7 @@
 .sc-panel { display: flex; padding: 0; flex-direction: column; width: min(400px, calc(100vw - 32px)); height: min(600px, calc(100dvh - 32px)); border: 1px solid var(--sc-line-2); border-radius: 2px; background: var(--sc-bg); box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6); }
 .sc-panel[hidden] { display: none; }
 .sc-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 16px 16px 14px; border-bottom: 1px solid var(--sc-line); }
-.sc-head h2 { margin: 6px 0 0; font: 600 22px/1.1 "Source Serif 4", Georgia, serif; letter-spacing: -0.01em; }
+.sc-head h2 { margin: 6px 0 0; font: 600 22px/1.1 "Archivo", "Arial Narrow", Arial, sans-serif; letter-spacing: -0.01em; }
 .sc-head-act { display: flex; gap: 4px; }
 .sc-icon { display: grid; place-items: center; width: 32px; height: 32px; border: 1px solid transparent; border-radius: 2px; background: none; color: var(--sc-text-2); }
 .sc-icon:hover { border-color: var(--sc-line-2); color: var(--sc-text); }
@@ -56,7 +56,7 @@
 .sc-chips button { padding: 8px 12px; border: 1px solid var(--sc-line-2); border-radius: 2px; background: none; font-size: 14px; text-align: left; }
 .sc-chips button:hover { border-color: var(--sc-text); }
 .sc-plan { display: grid; gap: 4px; margin-top: 8px; padding: 12px; border: 1px solid var(--sc-key); border-radius: 2px; }
-.sc-plan b { font: 600 20px/1.1 "Source Serif 4", Georgia, serif; }
+.sc-plan b { font: 600 20px/1.1 "Archivo", "Arial Narrow", Arial, sans-serif; }
 .sc-plan small { color: var(--sc-text-2); font-size: 13px; }
 .sc-plan a { margin-top: 4px; font-size: 14px; font-weight: 600; text-decoration: none; }
 .sc-plan a:hover { text-decoration: underline; }

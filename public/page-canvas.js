@@ -13,7 +13,7 @@
   const num = (v, lo, hi, d) => { const n = Number(v); return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : d; };
   const round = (n) => Math.round(n * 10) / 10;
   const hex = (v, d) => (/^#[0-9a-f]{6}$/i.test(String(v || "")) ? String(v).toLowerCase() : d);
-  const FONTS = { sans: "var(--f-text, system-ui, sans-serif)", serif: "'Source Serif 4', Georgia, serif", mono: "ui-monospace, 'IBM Plex Mono', monospace" };
+  const FONTS = { sans: "var(--f-text, system-ui, sans-serif)", serif: "Georgia, 'Times New Roman', serif", mono: "ui-monospace, 'IBM Plex Mono', monospace" };
   // Eigene Dateien: Supabase-Bucket page-media (konto/datei) oder eigener Server (s/konto/datei, xyntal.com/media/…)
   const SRC = /^(s\/)?[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp|gif)$/;
   const UUID = /^[0-9a-f-]{36}$/;

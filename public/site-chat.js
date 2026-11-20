@@ -22,7 +22,7 @@
   let busy = false;
 
   const css = document.createElement("link");
-  css.rel = "stylesheet"; css.href = "/site-chat.css?v=4";
+  css.rel = "stylesheet"; css.href = "/site-chat.css?v=5";
   document.head.append(css);
 
   const root = document.createElement("div");

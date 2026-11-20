@@ -55,14 +55,14 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: "IBM Plex Sans", -apple-system, "Segoe UI", Roboto, sans-serif;
   font-size: 15px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
 
 h1, h2, h3 {
-  font-family: "Bricolage Grotesque", "Inter", system-ui, sans-serif;
+  font-family: "Archivo", "Arial Narrow", Arial, sans-serif;
   font-weight: 700;
   line-height: 1.1;
   letter-spacing: -0.025em;
@@ -132,7 +132,7 @@ main > section, .post, .listing, .member, .card, .feature, .plan { animation: ri
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  font-family: "Bricolage Grotesque", sans-serif;
+  font-family: "Archivo", "Arial Narrow", Arial, sans-serif;
   font-weight: 700;
   font-size: 21px;
   letter-spacing: -0.04em;
@@ -281,7 +281,7 @@ main > section, .post, .listing, .member, .card, .feature, .plan { animation: ri
   border-radius: var(--r-ctl);
   background: var(--accent-soft);
   color: var(--accent);
-  font-family: "Bricolage Grotesque", sans-serif;
+  font-family: "Archivo", "Arial Narrow", Arial, sans-serif;
   font-weight: 700;
   margin-bottom: 14px;
 }
@@ -342,7 +342,7 @@ main > section, .post, .listing, .member, .card, .feature, .plan { animation: ri
 .app-side .it.on { background: var(--accent-soft); color: var(--text); }
 .app-side .soon { font-size: 12px; padding: 0 6px; }
 .app-main { padding: 20px; display: grid; gap: 14px; align-content: start; }
-.app-main .greet { font-family: "Bricolage Grotesque", sans-serif; font-size: 20px; font-weight: 700; letter-spacing: -0.025em; }
+.app-main .greet { font-family: "Archivo", "Arial Narrow", Arial, sans-serif; font-size: 20px; font-weight: 700; letter-spacing: -0.025em; }
 .app-main .sub { color: var(--text-3); font-size: 12px; margin-top: -10px; }
 .app-grid { display: grid; gap: 12px; }
 @media (min-width: 560px) { .app-grid { grid-template-columns: 1fr 1fr; } }
@@ -453,7 +453,7 @@ main > section, .post, .listing, .member, .card, .feature, .plan { animation: ri
 @media (min-width: 1040px) { .plans { grid-template-columns: repeat(4, 1fr); } }
 .plan { padding: 24px; display: flex; flex-direction: column; gap: 14px; position: relative; }
 .plan h3 { font-size: 18px; margin: 0; }
-.plan .price { font-family: "Bricolage Grotesque", sans-serif; font-size: 13px; color: var(--text-3); }
+.plan .price { font-family: "Archivo", "Arial Narrow", Arial, sans-serif; font-size: 13px; color: var(--text-3); }
 .plan ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font-size: 14px; color: var(--text-2); flex: 1; }
 .plan li { display: grid; grid-template-columns: 16px 1fr; gap: 8px; }
 .plan li::before { content: "✓"; color: var(--green); font-weight: 700; }
@@ -531,7 +531,7 @@ form .btn { justify-self: start; }
 .form-grid { display: grid; gap: 18px; }
 @media (min-width: 720px) { .form-grid.two { grid-template-columns: 1fr 1fr; } }
 fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: 18px; }
-legend { font-family: "Bricolage Grotesque", sans-serif; font-size: 18px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 4px; padding: 0; }
+legend { font-family: "Archivo", "Arial Narrow", Arial, sans-serif; font-size: 18px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 4px; padding: 0; }
 .form-divider { height: 1px; background: var(--border); margin: 6px 0; }
 .inline-field { display: grid; gap: 12px; }
 @media (min-width: 560px) { .inline-field { grid-template-columns: 1fr auto; align-items: end; } }
@@ -548,7 +548,7 @@ legend { font-family: "Bricolage Grotesque", sans-serif; font-size: 18px; font-w
 }
 .event-info dl { margin: 0; display: grid; gap: 20px; }
 .event-info dt { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
-.event-info dd { margin: 4px 0 0; font-family: "Bricolage Grotesque", sans-serif; font-size: 20px; font-weight: 600; letter-spacing: -0.02em; }
+.event-info dd { margin: 4px 0 0; font-family: "Archivo", "Arial Narrow", Arial, sans-serif; font-size: 20px; font-weight: 600; letter-spacing: -0.02em; }
 .event-info .note { margin: 24px 0 0; padding-top: 20px; border-top: 1px solid var(--border-2); font-size: 14px; color: var(--text-2); }
 
 /* Newsletter */
@@ -565,7 +565,7 @@ legend { font-family: "Bricolage Grotesque", sans-serif; font-size: 18px; font-w
 }
 .quote blockquote {
   margin: 28px 0 0;
-  font-family: "Bricolage Grotesque", sans-serif;
+  font-family: "Archivo", "Arial Narrow", Arial, sans-serif;
   font-size: clamp(1.45rem, 3.2vw, 2.15rem);
   font-weight: 500;
   line-height: 1.28;
@@ -657,7 +657,7 @@ legend { font-family: "Bricolage Grotesque", sans-serif; font-size: 18px; font-w
   gap: 16px;
   padding: 16px 18px;
   border-bottom: 1px solid var(--border);
-  font-family: "Bricolage Grotesque", sans-serif;
+  font-family: "Archivo", "Arial Narrow", Arial, sans-serif;
   font-size: 17px;
   font-weight: 600;
   letter-spacing: -0.02em;

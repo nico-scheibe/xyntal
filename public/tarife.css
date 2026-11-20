@@ -19,7 +19,7 @@
   --f-display: "Archivo", "Arial Narrow", Arial, sans-serif;
   --f-text: "IBM Plex Sans", -apple-system, "Segoe UI", Roboto, sans-serif;
   --f-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
-  --f-serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --f-serif: "Archivo", "Arial Narrow", Arial, sans-serif;
   --pad: clamp(20px, 4.2vw, 76px);
   --gap: clamp(16px, 2vw, 32px);
   --scene: clamp(88px, 14vh, 168px);

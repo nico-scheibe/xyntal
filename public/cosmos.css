@@ -1,6 +1,6 @@
 /* =====================================================================
    Xyntal – gemeinsame Ebene für die Unterseiten (lädt nach style.css)
-   Gleicher Look wie die Startseite („Bauplan“, start.css): Space Grotesk für
+   Gleicher Look wie die Startseite („Bauplan“, start.css): Archivo für
    Überschriften, IBM Plex Sans für Text, Cyan als einzige Signalfarbe, harte Kanten,
    keine Verläufe, kein Glas, keine Effekte im Hintergrund.
    ===================================================================== */
@@ -24,7 +24,7 @@
   --x-violet: #ECEAE4; --x-pink: #ECEAE4; --x-blue: #ECEAE4; --x-cyan: #ECEAE4;
   --x-grad: var(--grad);
   --r-card: 2px; --r-ctl: 2px; --r-modal: 2px;
-  --f: "Source Serif 4", Georgia, "Times New Roman", serif; --f-unused: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --f: "Archivo", "Arial Narrow", Arial, sans-serif;
   --f-text: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, "SF Mono", "Cascadia Code", Consolas, Menlo, monospace;
   --f-hack: var(--f);
