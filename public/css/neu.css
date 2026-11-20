@@ -506,7 +506,9 @@ a { color: inherit; text-decoration: none; }
 .foot__cancel { padding: 8px 14px; border: 1px solid var(--line-2); border-radius: 999px; color: var(--t-2); transition: color .25s, border-color .25s; }
 .foot__cancel:hover { color: var(--t-1); border-color: var(--t-3); }
 /* Großer Schriftzug als weicher Farbschein hinter den Links: unscharf und schwach, damit alles davor klar lesbar bleibt */
-.foot__mark { position: absolute; z-index: 0; left: 0; right: 0; top: 50%; transform: translateY(-60%); margin: 0; font: 800 25.6cqw/1 var(--f-display); font-stretch: 125%; text-align: center; white-space: nowrap; color: transparent; background: var(--grad); -webkit-background-clip: text; background-clip: text; opacity: .16; filter: blur(clamp(6px, 1.3cqw, 18px)); pointer-events: none; user-select: none; }
+.foot__mark { position: absolute; z-index: 0; left: 0; right: 0; top: 50%; transform: translateY(-54%); margin: 0; font: 800 13cqw/1 var(--f-display); font-stretch: 125%; text-align: center; white-space: nowrap; color: transparent; background: var(--grad); -webkit-background-clip: text; background-clip: text; opacity: .16; filter: blur(clamp(6px, 1.3cqw, 18px)); pointer-events: none; user-select: none; }
+/* Handy: der Footer ist hoch genug, dort darf der Schriftzug fast die ganze Breite füllen */
+@media (max-width: 760px) { .foot__mark { font-size: 24cqw; } }
 .foot__main, .foot__base { position: relative; z-index: 1; }
 @media (max-width: 760px) {
   .foot__main { grid-template-columns: 1fr; padding-bottom: var(--s-4); }
