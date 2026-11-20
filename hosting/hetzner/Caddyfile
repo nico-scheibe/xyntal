@@ -60,10 +60,29 @@ xyntal.de, www.xyntal.de {
 	redir https://xyntal.com{uri} 308
 }
 
-# Admin-Bereich: in Cloudflare „Proxied“ (orange Wolke) mit Cloudflare Access davor,
-# SSL-Modus „Strict“ (Configuration Rule nur für diesen Host). Das erste Zertifikat holt Caddy, während
+# Admin-Bereich: in Cloudflare „Proxied“ (orange Wolke), SSL-Modus „Strict“
+# (Configuration Rule nur für diesen Host). Das erste Zertifikat holt Caddy, während
 # der DNS-Eintrag kurz auf „DNS only“ steht; Verlängerungen laufen danach auch über den Proxy.
-# Die Website prüft zusätzlich das Access-Token (hosting/daki/server.cjs), direkte Aufrufe der IP bekommen 403.
+#
+# ACHTUNG, Stand 20.11.2026: VOR dieser Adresse steht KEIN Schutz.
+# Hier stand, Cloudflare Access sitze davor und die Website prüfe zusätzlich das
+# Access-Token, direkte IP-Aufrufe bekämen 403. Beides gab es nie: in hosting/daki/
+# gibt es keine Token-Prüfung (kein Treffer für Cf-Access, CF_ACCESS, JWT), und eine
+# Access-Anwendung ist für den Host nicht eingerichtet — unangemeldet gemessen
+# antworten /, /admin.html und /pages/admin-people.js mit 200 statt mit einer
+# Umleitung auf *.cloudflareaccess.com. Der Proxy-Satz oben stimmt dagegen
+# (cf-ray im Antwortkopf, DNS zeigt in den Cloudflare-Bereich).
+#
+# Was den Admin-Bereich also tatsächlich schließt: allein die Anmeldung in der
+# Anwendung und darunter is_admin() plus mfa_ok() in der Datenbank. Der Quelltext der
+# Oberfläche ist hier öffentlich lesbar (auf xyntal.com sperrt server.cjs ihn, dieser
+# Host hebt die Sperre auf). Jede fehlende is_admin()-Prüfung ist damit auffindbar,
+# nicht verborgen: Wer an Funktionen oder Policies arbeitet, darf sich NICHT darauf
+# berufen, der Admin-Bereich sei ohnehin abgeschottet.
+#
+# Sobald eine Access-Anwendung auf diesem Host läuft, gehört das hier richtiggestellt
+# — und erst dann stimmt es. Gegenprobe dafür: ein unangemeldeter Aufruf von
+# https://admin.xyntal.de/ muss mit 302 auf *.cloudflareaccess.com antworten.
 admin.xyntal.de {
 	encode zstd gzip
 	reverse_proxy website:4129

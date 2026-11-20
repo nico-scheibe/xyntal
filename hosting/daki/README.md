@@ -10,6 +10,8 @@ the website's root Supabase configuration and shared XCard assets.
 
 Every push to `main` is detected within 30 seconds. Other branches do not publish.
 Check `/__deployment` or the `X-Xyntal-Commit` response header for the deployed revision.
+Both only on `xyntal.com`: on the admin host `/__deployment` returns 404 and the header is
+omitted, because nothing guards that host and the revision would be readable without a login.
 
 Daki startup (downloads the server from this repository before starting):
 

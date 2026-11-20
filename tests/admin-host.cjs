@@ -20,12 +20,26 @@ const root = path.resolve(__dirname, '../public');
     }).on('error', reject).end();
   });
   try {
-    for (const url of ['/admin', '/admin.html', '/admin/', '/admin.css', '/admin-contracts.css', '/world-geo.js', '/pages/admin.js', '/pages/admin-platform.js', '/pages/admin-contracts.js', '/pages/admin-people.js', '/pages/admin-support.js', '/admin-support.css', '/pages/../pages/admin.js']) {
+    for (const url of ['/admin', '/admin.html', '/admin/', '/admin.css', '/admin-contracts.css', '/world-geo.js', '/pages/admin.js', '/pages/admin-platform.js', '/pages/admin-contracts.js', '/pages/admin-people.js', '/pages/admin-support.js', '/pages/admin-partners.js', '/pages/admin-vouchers.js', '/admin-support.css', '/pages/../pages/admin.js']) {
       for (const host of ['xyntal.com', 'www.xyntal.com', 'localhost:4129']) {
         const r = await get(host, url);
         // /admin/ fällt wie jeder Wunsch-Link auf die öffentliche Kartenseite – ohne Admin-Inhalt
         if (url !== '/admin/') assert.equal(r.status, 404, host + url);
         assert.doesNotMatch(r.body, /admin-platform|pages\/admin|data-tab=/, host + url);
+      }
+    }
+    // Dieselbe Zusage ohne Aufzählung: Was im Dateibaum nach Admin aussieht, muss auf xyntal.com fehlen.
+    // So fällt die nächste neue Admin-Seite von selbst auf, auch wenn niemand eine Liste pflegt.
+    {
+      const adminFiles = [
+        ...fs.readdirSync(root).filter(name => /^admin.*\.(html|css)$/i.test(name)).map(name => '/' + name),
+        ...fs.readdirSync(path.join(root, 'pages')).filter(name => /^admin.*\.js$/i.test(name)).map(name => '/pages/' + name),
+      ];
+      assert.ok(adminFiles.length >= 11, 'Admin-Dateien gefunden: ' + adminFiles.length);
+      for (const url of adminFiles) {
+        assert.equal((await get('xyntal.com', url)).status, 404, 'xyntal.com' + url + ' muss 404 sein');
+        // Gegenprobe: im Admin-Bereich ist dieselbe Datei erreichbar, die Sperre gilt nur öffentlich
+        assert.equal((await get('admin.xyntal.de', url)).status, 200, 'admin.xyntal.de' + url + ' muss 200 sein');
       }
     }
     assert.equal((await get('xyntal.com', '/admin', 'HEAD')).status, 404);
@@ -82,6 +96,29 @@ const root = path.resolve(__dirname, '../public');
     for (const [url, to] of [['/profil', 'https://xyntal.com/profil'], ['/preise.html', 'https://xyntal.com/preise.html'], ['/nico', 'https://xyntal.com/nico'], ['/nico-xyntal?x=1', 'https://xyntal.com/nico-xyntal?x=1']]) {
       const r = await get('admin.xyntal.de', url);
       assert.equal(r.status, 308, url); assert.equal(r.headers.location, to, url);
+    }
+    // Der ausgerollte Commit ist auf admin.xyntal.de nirgends abzuholen (dort schützt nichts an der Kante):
+    // /__deployment antwortet hart mit 404 – keine Umleitung, die den Endpunkt auf xyntal.com wieder zeigt.
+    {
+      const r = await get('admin.xyntal.de', '/__deployment');
+      assert.equal(r.status, 404, '/__deployment auf admin.xyntal.de');
+      assert.equal(r.headers.location, undefined, '/__deployment darf nicht umleiten');
+      assert.doesNotMatch(r.body, /commit/, '/__deployment darf den Commit nicht nennen');
+      const oeffentlich = await get('xyntal.com', '/__deployment');
+      assert.equal(oeffentlich.status, 200, '/__deployment auf xyntal.com');
+      assert.equal(JSON.parse(oeffentlich.body).branch, 'main');
+      assert.equal(JSON.parse(oeffentlich.body).commit, 'test');
+    }
+    // …und auch nicht als Antwort-Kopfzeile jeder Datei. Auf xyntal.com bleibt die Kopfzeile wie bisher.
+    {
+      const admin = await get('admin.xyntal.de', '/admin.css');
+      assert.equal(admin.status, 200);
+      assert.equal(admin.headers['x-xyntal-commit'], undefined, '/admin.css auf admin.xyntal.de');
+      assert.match(admin.headers.etag, /^W\/"[0-9a-f]+-[0-9a-f]+"$/);
+      assert.equal((await get('admin.xyntal.de', '/style.css')).headers['x-xyntal-commit'], undefined, '/style.css auf admin.xyntal.de');
+      const oeffentlich = await get('xyntal.com', '/style.css');
+      assert.equal(oeffentlich.status, 200);
+      assert.equal(oeffentlich.headers['x-xyntal-commit'], 'test', '/style.css auf xyntal.com');
     }
   } finally { await new Promise(resolve => server.close(resolve)); }
   console.log('PASS: Admin nur auf admin.xyntal.de, 404 auf xyntal.com, Umleitung normaler Seiten');

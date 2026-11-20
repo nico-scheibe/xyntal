@@ -97,6 +97,71 @@ alle anderen Seiten leiten auf `https://xyntal.com` um. Auf xyntal.com antworten
 
 Kein Cloudflare Access davor: die Seite lädt für alle, Inhalte gibt es erst nach der Anmeldung.
 Die Rechte prüfen Supabase (`is_admin` + 2FA) und der App-Server (Staff-Rolle).
+Dieser Satz stimmt — am 20.11.2026 unangemeldet nachgemessen (`/`, `/admin.html`,
+`/pages/admin-people.js` antworten mit 200, keine Umleitung auf `*.cloudflareaccess.com`).
+Das `Caddyfile` behauptete an derselben Stelle jahrelang das Gegenteil (Access davor, Token-Prüfung
+in `server.cjs`, 403 bei direkten IP-Aufrufen); nichts davon gab es. Der Kommentar dort ist seit
+dem 20.11.2026 richtiggestellt. **Wer an Datenbankfunktionen oder Policies arbeitet, darf sich
+nicht darauf berufen, der Admin-Bereich sei abgeschottet** — der Quelltext der Oberfläche ist
+auf `admin.xyntal.de` öffentlich lesbar, und damit ist jeder RPC-, Tabellen- und Spaltenname
+bekannt. `is_admin()` ist die einzige Verteidigung, nicht die zweite.
+
+Nicht öffentlich sind dort seit dem 20.11.2026 nur noch die zwei Dinge, die ohne `is_admin()`
+etwas verrieten: `/__deployment` antwortet auf `admin.xyntal.de` mit 404 (auf `xyntal.com`
+unverändert), und der Antwort-Header `X-Xyntal-Commit` entfällt dort. `/api/waitlist-count`
+antwortet weiter auf beiden Hosts.
+
+### Cloudflare Access einrichten (nur im Dashboard, nicht in diesem Repo)
+
+Nur der Inhaber des Cloudflare-Kontos kann das. `admin.xyntal.de` ist bereits **Proxied**
+(belegt: `cf-ray` im Antwortkopf), also ist **keine DNS-Umstellung nötig**:
+
+1. Zero Trust → Access → Applications → **Add an application** → *Self-hosted*.
+2. Application domain: `admin.xyntal.de`, Pfad leer lassen (der ganze Host).
+3. Session Duration kurz halten (24 h genügt für tägliche Arbeit).
+4. Policy: Action **Allow**, Include → *Emails* → die Admin-Adressen einzeln eintragen.
+   Keine Regel auf die ganze E-Mail-Domain, solange dort auch Nicht-Admins liegen.
+5. Zweiter Faktor im Identitätsanbieter nicht abschalten — die 2FA der Anwendung
+   (`mfa_ok()`) bleibt davon unberührt und ersetzt ihn nicht.
+
+Gegenprobe nach dem Einrichten, unangemeldet und ohne Zugangsdaten:
+
+```
+curl -s -o /dev/null -w '%{http_code} %{redirect_url}\n' https://admin.xyntal.de/
+```
+
+Erwartet ist **302** auf `*.cloudflareaccess.com`. Kommt weiter 200, ist die Anwendung
+nicht aktiv (falscher Host, Pfad gesetzt, oder Policy auf *Bypass*). Danach den Kommentar
+im `Caddyfile` über dem Site-Block `admin.xyntal.de` richtigstellen — erst dann stimmt er.
+
+### ACHTUNG: Access allein reicht nicht (gemessen 20.11.2026)
+
+Access schirmt nur den Weg **über** Cloudflare ab. Der Ursprungsserver ist selbst
+öffentlich erreichbar, und Caddy liefert jeden Host aus, der im `Caddyfile` steht —
+also auch `admin.xyntal.de`, wenn man den Host-Kopf direkt an die IP schickt:
+
+```
+curl -sk --resolve admin.xyntal.de:443:91.98.171.233 https://admin.xyntal.de/admin.html
+```
+
+Das antwortet mit **200 und ohne `cf-ray`**, Cloudflare ist dabei also komplett umgangen.
+Die IP ist leicht zu finden: `api.xyntal.de` steht als „DNS only“ im DNS und zeigt offen
+auf dieselbe Maschine. (Gegenprobe, dass das kein Catch-all ist: derselbe Aufruf mit
+Host `nichtda.xyntal.de` scheitert schon im TLS, Caddy kennt den Host nicht.)
+
+**Wer Access einschaltet, ohne den Ursprung zu sperren, hat genau die Scheinsicherheit,
+die der alte Kommentar behauptet hat.** Die Sperre gehört ins `Caddyfile`, ist also eine
+Änderung in diesem Repo und noch nicht gemacht. Möglichkeiten:
+
+- Site-Block `admin.xyntal.de` auf die Cloudflare-IP-Bereiche begrenzen, sonst 403.
+  Genau das versprochene Verhalten. Nachteil: Die Liste muss gepflegt werden, und ein
+  Fehler darin sperrt den Admin-Bereich für alle aus. Die ACME-Verlängerung läuft über
+  den Proxy und kommt damit aus denselben Bereichen, bricht also nicht.
+- Authenticated Origin Pulls (mTLS): Caddy prüft Cloudflares Client-Zertifikat.
+  Kein IP-Pflegeaufwand, mehr Einrichtung.
+- Das Access-Token `Cf-Access-Jwt-Assertion` gegen die öffentlichen Team-Schlüssel
+  prüfen — das, was der alte Kommentar für `server.cjs` behauptete.
+- Cloudflare Tunnel: kein öffentlicher Ursprung mehr. Größter Umbau.
 Die Anmeldung gilt auf `xyntal.com` und `www.xyntal.com`: `public/session-share.js` legt die Sitzungs-Tokens zusätzlich in ein
 Cookie für `.xyntal.com` (Test `tests/session-share.cjs`). `admin.xyntal.de` hat ein eigenes Cookie für `.xyntal.de`;
 dort meldet man sich einmal neu an (E-Mail, Passwort, 2FA).
