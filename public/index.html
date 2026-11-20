@@ -26,7 +26,7 @@
   <!-- Schriften liegen lokal. Die zwei, die der erste Bildschirm braucht, werden vorgeladen. -->
   <link rel="preload" href="fonts/archivo-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="fonts/plexsans-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/neu.css?v=7">
+  <link rel="stylesheet" href="css/neu.css?v=8">
   <link rel="stylesheet" href="/site-search.css?v=2">
 
   <!-- Vor dem ersten Zeichnen: JS-Klasse setzen (eigene Datei wegen CSP). -->
@@ -112,7 +112,7 @@
   <section class="cmp" id="statt" aria-labelledby="statt-title">
     <header class="sec-head">
       <p class="mono label" data-rv>Der Unterschied</p>
-      <h2 class="sec-title" data-rv id="statt-title">Gute Werkzeuge. Nur für etwas anderes gebaut.</h2>
+      <h2 class="sec-title" data-rv data-words id="statt-title">Gute Werkzeuge. Nur für etwas anderes gebaut.</h2>
       <p class="cmp__lead" data-rv>Du nutzt vermutlich schon vieles davon. Xyntal ergänzt, was zum Finden von Menschen mit gleichem Ziel fehlt.</p>
     </header>
     <div class="cmp__scroller" data-cmp tabindex="0" aria-label="Sechs Vergleiche, seitlich scrollbar">
@@ -156,7 +156,7 @@
   <section class="who" id="fuer-wen" aria-labelledby="who-title">
     <header class="sec-head">
       <p class="mono label" data-rv>Für wen</p>
-      <h2 class="sec-title" data-rv id="who-title">Für alle, die etwas vorhaben.</h2>
+      <h2 class="sec-title" data-rv data-words id="who-title">Für alle, die etwas vorhaben.</h2>
     </header>
     <ul class="who__grid" data-rv-group>
       <li class="who__card" data-rv>
@@ -181,7 +181,7 @@
   <section class="how" id="ablauf" aria-labelledby="how-title">
     <header class="sec-head">
       <p class="mono label" data-rv>So funktioniert es</p>
-      <h2 class="sec-title" data-rv id="how-title">In drei Schritten zum Projekt.</h2>
+      <h2 class="sec-title" data-rv data-words id="how-title">In drei Schritten zum Projekt.</h2>
     </header>
     <ol class="how__steps" data-rv-group>
       <li class="how__step" data-rv>
@@ -206,9 +206,9 @@
   <section class="facts" id="fakten" aria-labelledby="facts-title">
     <header class="sec-head">
       <p class="mono label" data-rv>Vertrauen</p>
-      <h2 class="sec-title" data-rv id="facts-title">Klar auf den Tisch.</h2>
+      <h2 class="sec-title" data-rv data-words id="facts-title">Klar auf den Tisch.</h2>
     </header>
-    <ul class="facts__grid" data-rv-group>
+    <ul class="facts__grid" data-rv-group data-count>
       <li class="fact" data-rv>
         <p class="fact__v">Beta</p>
         <p class="fact__t">Nur per Bewerbung. Antwort per Mail.</p>
@@ -240,11 +240,11 @@
   <section class="app" id="app" aria-labelledby="app-title">
     <header class="sec-head">
       <p class="mono label" data-rv>Die App</p>
-      <h2 class="sec-title" data-rv id="app-title">So sieht es aus.</h2>
+      <h2 class="sec-title" data-rv data-words id="app-title">So sieht es aus.</h2>
       <p class="app__lead" data-rv>Echte App, Beispieldaten.</p>
     </header>
     <ul class="app__shots" data-rv-group>
-      <li class="app__shot" data-rv="zoom">
+      <li class="app__shot" data-rv="fade">
         <figure class="app__fig">
           <div class="win">
             <picture>
@@ -255,7 +255,7 @@
           <figcaption class="mono">Entdecken: Vorschläge mit Begründung</figcaption>
         </figure>
       </li>
-      <li class="app__shot" data-rv="zoom">
+      <li class="app__shot" data-rv="fade">
         <figure class="app__fig">
           <div class="win">
             <picture>
@@ -266,7 +266,7 @@
           <figcaption class="mono">Nachrichten: privat und im Team</figcaption>
         </figure>
       </li>
-      <li class="app__shot" data-rv="zoom">
+      <li class="app__shot" data-rv="fade">
         <figure class="app__fig">
           <div class="win">
             <picture>
@@ -282,7 +282,7 @@
 
   <!-- ============ FRAGEN ============ -->
   <section class="faq" id="fragen" aria-labelledby="faq-title">
-    <h2 class="sec-title faq__title" data-rv id="faq-title">Kurz gefragt.</h2>
+    <h2 class="sec-title faq__title" data-rv data-words id="faq-title">Kurz gefragt.</h2>
     <div class="faq__list" data-rv-group>
       <div class="qa" data-rv>
         <h3 class="qa__q"><button class="qa__btn" type="button" aria-expanded="false" aria-controls="qa-1">Wie komme ich rein?<span class="qa__icon" aria-hidden="true"></span></button></h3>
@@ -302,7 +302,7 @@
   <!-- ============ BEWERBEN ============ -->
   <section class="end" id="konto" aria-labelledby="end-title">
     <p class="end__pre" data-rv>Du hast die Idee.</p>
-    <h2 class="end__h" data-rv id="end-title">Such dir die Leute dazu.</h2>
+    <h2 class="end__h" data-rv data-words id="end-title">Such dir die Leute dazu.</h2>
     <div class="end__foot">
       <div id="download" class="dl" data-rv>
         <p class="dl__label mono">APP · BETA</p>
@@ -357,7 +357,7 @@
 <script src="js/hero-gl.js?v=2" defer></script>
 <script src="/i18n-en.js?v=136" defer></script>
 <script src="/i18n.js?v=34" defer></script>
-<script src="js/neu.js?v=5" defer></script>
+<script src="js/neu.js?v=6" defer></script>
 <!-- Bestehende Funktionen der Website: Newsletter, Einladungslink, Konto-Menü -->
 <script src="landing.js?v=swipe-58" defer></script>
 <script src="invite.js?v=4" defer></script>

@@ -141,8 +141,16 @@ a { color: inherit; text-decoration: none; }
 /* Einblenden beim Eintritt (js/neu.js setzt is-in und den Versatz --d). Lang und weich auslaufend.
    „zoom“ wächst zusätzlich leicht heran (App-Fenster). Nach dem Einblenden nimmt JS data-rv wieder weg. */
 .js [data-rv] { opacity: 0; transform: translate3d(0, 28px, 0); transition: opacity .9s var(--ease-o), transform 1.1s var(--ease-o); transition-delay: var(--d, 0ms); }
-.js [data-rv="zoom"] { transform: translate3d(0, 36px, 0) scale(.94); transform-origin: 50% 100%; }
+.js [data-rv="fade"] { transform: none; }
 .js [data-rv].is-in { opacity: 1; transform: none; }
+
+/* Überschriften in Wörtern (data-words, js/neu.js): jedes Wort steigt aus seinem Fenster auf, eins nach dem anderen.
+   Das Fenster ist etwas größer als das Wort, damit Unterlängen und Umlaute nicht abgeschnitten werden. */
+.w { display: inline-block; overflow: hidden; vertical-align: bottom; padding: .14em .05em; margin: -.14em -.05em; }
+.w__i { display: inline-block; }
+.js [data-words][data-rv] { opacity: 1; transform: none; }
+.js [data-rv] .w__i { transform: translate3d(0, 118%, 0); }
+.js [data-rv].is-in .w__i { transform: none; transition: transform 1.1s var(--ease-o); transition-delay: calc(var(--d, 0ms) + var(--i, 0) * 55ms); }
 /* Handy: Karten in seitlichen Scrollern kommen von rechts statt von unten (kein Höhensprung im Scroller) */
 @media (max-width: 860px) {
   .js .cmp__card[data-rv], .js .app__shot[data-rv] { transform: translate3d(28px, 0, 0); }
@@ -167,6 +175,49 @@ a { color: inherit; text-decoration: none; }
 @media (max-width: 760px) {
   .js .how__steps[data-rv-group]::before { transform: scaleY(0); transform-origin: 50% 0; }
 }
+/* Darüber wächst eine Farblinie mit dem Scrollen (--p aus js/neu.js). Erreicht sie eine Nummer, leuchtet die auf. */
+.how__steps.is-track::after { content: ""; position: absolute; left: 0; right: 0; top: 16px; height: 3px; border-radius: 3px; background: var(--grad); transform: scaleX(var(--p, 0)); transform-origin: 0 50%; }
+.how__node { z-index: 1; transition: background-color .5s ease-out, color .5s ease-out, box-shadow .6s ease-out; }
+.how__step.is-on > .how__node { background: var(--t-1); color: var(--g-0); box-shadow: 0 0 0 6px rgba(76, 141, 255, .16), 0 0 28px rgba(76, 141, 255, .35); }
+.how__title, .how__text { transition: opacity .6s ease-out; }
+.is-track .how__step:not(.is-on) > .how__title, .is-track .how__step:not(.is-on) > .how__text { opacity: .45; }
+@media (max-width: 760px) {
+  .how__steps.is-track::after { left: 16px; right: auto; top: 18px; bottom: 18px; width: 3px; height: auto; transform: scaleY(var(--p, 0)); transform-origin: 50% 0; }
+}
+
+/* Vergleich: die Linie über der Xyntal-Zeile zieht sich in Farbe durch, wenn die Karte da ist */
+.cmp__row--new { position: relative; }
+.cmp__row--new::before { content: ""; position: absolute; left: 0; right: 0; top: -1px; height: 1px; background: var(--grad); opacity: .7; transform-origin: 0 50%; }
+.js [data-rv] > .cmp__row--new::before { transform: scaleX(0); }
+.js [data-rv].is-in > .cmp__row--new::before { transform: none; transition: transform 1.2s var(--ease-o); transition-delay: calc(var(--d, 0ms) + 350ms); }
+
+/* App-Fenster (Desktop): nach hinten gekippt und kleiner, richten sich mit dem Scrollen auf (--p aus js/neu.js).
+   Die äußeren kommen dabei leicht von der Seite. Danach zieht einmal ein Lichtstreif über jedes Fenster. */
+@media (min-width: 861px) {
+  .js .is-tilt .app__fig {
+    --q: calc(1 - var(--p, 1)); transform-origin: 50% 100%; will-change: transform;
+    transform: perspective(1500px) translate3d(calc(var(--x, 0) * var(--q) * 70px), calc(var(--q) * 90px), 0) rotateX(calc(var(--q) * 26deg)) scale(calc(1 - var(--q) * .12));
+  }
+  .is-tilt .app__shot:first-child { --x: -1; }
+  .is-tilt .app__shot:last-child { --x: 1; }
+}
+.win::after { content: ""; position: absolute; inset: 0; z-index: 4; pointer-events: none; opacity: 0; background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, .16) 50%, transparent 65%); transform: translate3d(-100%, 0, 0); }
+.js .app__shots.is-in .win::after { animation: win-glint 1.5s var(--ease) .7s 1 both; }
+.js .app__shots.is-in .app__shot:nth-child(2) .win::after { animation-delay: .85s; }
+.js .app__shots.is-in .app__shot:nth-child(3) .win::after { animation-delay: 1s; }
+@keyframes win-glint { 0% { opacity: 0; transform: translate3d(-100%, 0, 0); } 20% { opacity: 1; } 100% { opacity: 0; transform: translate3d(100%, 0, 0); } }
+
+/* Schluss: weiches Farblicht hinter der großen Zeile, geht mit dem Scrollen auf (--p aus js/neu.js) */
+.end { position: relative; }
+.end.is-glow::before {
+  content: ""; position: absolute; z-index: -1; left: -10%; right: -10%; top: -6%; height: 78%; pointer-events: none;
+  background: radial-gradient(42% 52% at 24% 46%, rgba(179, 107, 255, .2), transparent 72%), radial-gradient(40% 50% at 58% 58%, rgba(76, 141, 255, .2), transparent 72%);
+  opacity: var(--p, 0); transform: scale(calc(.75 + .25 * var(--p, 0))); transform-origin: 30% 50%;
+}
+/* Die beiden Lade-Kacheln kommen nach der Karte, eine nach der anderen */
+.js [data-rv] .dl__tile { opacity: 0; transform: translate3d(0, 14px, 0); }
+.js [data-rv].is-in .dl__tile { opacity: 1; transform: none; transition: opacity .7s var(--ease-o), transform .9s var(--ease-o), border-color .3s var(--ease), background .3s var(--ease); transition-delay: .3s, .3s, 0s, 0s; }
+.js [data-rv].is-in .dl__tile + .dl__tile { transition-delay: .42s, .42s, 0s, 0s; }
 
 /* Fragen: die Antwort gleitet auf und zu (Klasse is-open von js/neu.js). Zu = unsichtbar, auch für Tastatur und Vorleser. */
 .js .qa__a { display: grid; grid-template-rows: 0fr; padding-bottom: 0; opacity: 0; visibility: hidden; transition: grid-template-rows .5s var(--ease-o), padding-bottom .5s var(--ease-o), opacity .35s ease-out, visibility 0s .5s; }
@@ -175,8 +226,11 @@ a { color: inherit; text-decoration: none; }
 
 /* Mit Maus: Karten und App-Fenster heben sich leicht */
 @media (hover: hover) and (pointer: fine) {
-  .cmp__card, .who__card { transition: transform .6s var(--ease-o), box-shadow .4s ease-out; }
+  .cmp__card, .who__card { position: relative; transition: transform .6s var(--ease-o), box-shadow .4s ease-out; }
   .cmp__card:hover, .who__card:hover { transform: translate3d(0, -5px, 0); box-shadow: inset 0 0 0 1px var(--line-2); }
+  /* Lichtfleck, der dem Mauszeiger folgt (--mx, --my aus js/neu.js) */
+  .cmp__card::after, .who__card::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity .5s ease-out; background: radial-gradient(380px circle at var(--mx, 50%) var(--my, 0%), rgba(143, 184, 255, .13), transparent 70%); }
+  .cmp__card:hover::after, .who__card:hover::after { opacity: 1; }
   .app__fig .win { transition: transform .7s var(--ease-o); }
   .app__fig:hover .win { transform: translate3d(0, -6px, 0) scale(1.012); }
 }
