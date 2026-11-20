@@ -182,3 +182,13 @@
 .sc-tmsg.is-mine .sc-bubble { background: var(--sc-text); color: var(--sc-bg); border-color: var(--sc-text); }
 .sc-tmeta { margin: 0 0 4px; color: var(--sc-text-3); font-size: 11px; }
 .sc-tmsg.is-mine .sc-tmeta { text-align: right; }
+
+/* Startknopf: runder Knopf mit dem Kern in der Ecke. Die Beschriftung steht im Knopf (für Screenreader) und
+   erscheint mit Maus oder Tastatur als kleines Schild links daneben – so steht kein drittes Rechteck neben
+   den Knöpfen der Seite. */
+.sc-open { position: relative; width: 56px; height: 56px; padding: 0; gap: 0; justify-content: center; border-radius: 50%; border-color: var(--sc-line-2); background: var(--sc-bg); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55), 0 0 0 6px rgba(76, 141, 255, 0.07); transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s; }
+.sc-open:hover, .sc-open:focus-visible { border-color: var(--sc-key); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55), 0 0 0 8px rgba(76, 141, 255, 0.14); transform: translateY(-2px); }
+.sc-open .sc-core-btn { margin: 0; }
+.sc-open-label { position: absolute; right: calc(100% + 12px); top: 50%; translate: 8px -50%; padding: 8px 14px; border-radius: 999px; background: var(--sc-text); color: var(--sc-bg); font-size: 13px; font-weight: 600; line-height: 1.2; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s, translate 0.2s; }
+.sc-open:hover .sc-open-label, .sc-open:focus-visible .sc-open-label { opacity: 1; translate: 0 -50%; }
+@media (prefers-reduced-motion: reduce) { .sc-open, .sc-open-label { transition: none; } .sc-open:hover, .sc-open:focus-visible { transform: none; } }

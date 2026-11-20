@@ -28,7 +28,7 @@
   let confirmPII = null, confirmClear = false, editId = null, fbOpen = null, att = null, attErr = "", listening = null, speakingId = null;
 
   const css = document.createElement("link");
-  css.rel = "stylesheet"; css.href = "/site-chat.css?v=9";
+  css.rel = "stylesheet"; css.href = "/site-chat.css?v=10";
   document.head.append(css);
 
   const root = document.createElement("div");
@@ -191,7 +191,7 @@
   function renderShell() {
     const draft = $("#sc-input")?.value || "";
     root.innerHTML = `
-      <button type="button" class="sc-open" aria-expanded="false" aria-controls="sc-panel"><span class="sc-core sc-core-btn" data-core="btn">${ORB}</span>${T("Fragen zu Xyntal?", "Questions about Xyntal?")}</button>
+      <button type="button" class="sc-open" aria-expanded="false" aria-controls="sc-panel"><span class="sc-core sc-core-btn" data-core="btn">${ORB}</span><span class="sc-open-label">${T("Fragen zu Xyntal?", "Questions about Xyntal?")}</span></button>
       <section class="sc-panel" id="sc-panel" role="dialog" aria-modal="false" aria-labelledby="sc-title" hidden>
         <header class="sc-head"><div class="sc-id"><span class="sc-core" data-core="head">${ORB}</span><div><p class="sc-mono">${T("KI-Assistent · Beta", "AI assistant · beta")}</p><h2 id="sc-title">Xyntal KI</h2></div></div>
           <div class="sc-head-act"><button type="button" class="sc-icon" data-sc="tickets" aria-label="${T("Support-Tickets", "Support tickets")}" title="${T("Support-Tickets", "Support tickets")}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5V6.5h16v2a3.5 3.5 0 0 0 0 7v2H4v-2a3.5 3.5 0 0 0 0-7zM10 7v10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-dasharray="none"/></svg></button><button type="button" class="sc-icon" data-sc="clear" aria-label="${T("Gespräch löschen", "Clear conversation")}" title="${T("Gespräch löschen", "Clear conversation")}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button><button type="button" class="sc-icon" data-sc="close" aria-label="${T("Schließen", "Close")}" title="${T("Schließen (Esc)", "Close (Esc)")}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div></header>
