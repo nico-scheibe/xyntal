@@ -104,7 +104,7 @@
 .sc-typing span:nth-child(3) { animation-delay: 0.4s; }
 @keyframes sc-blink { 0%, 80%, 100% { opacity: 0.3; } 40% { opacity: 1; } }
 
-.sc-form { display: block; border-radius: 0; background: none; padding: 10px 16px 6px; border-top: 1px solid var(--sc-line); }
+.sc-form { display: block; border-radius: 0; background: none; padding: 10px 16px 12px; border-top: 1px solid var(--sc-line); }
 .sc-row { display: flex; align-items: flex-end; gap: 6px; }
 .sc-row > .sc-tool { height: 40px; min-width: 32px; }
 .sc-mic.is-on { color: #FF6B5B; border-color: #FF6B5B; }

@@ -170,7 +170,8 @@
   // Lenis nur mit Maus/Trackpad auf dem Desktop. Auf dem Handy und bei reduzierter Bewegung bleibt das Scrollen des Systems.
   var lenis = null;
   if (!calm && fine && !mqSmall.matches && window.Lenis) {
-    lenis = new window.Lenis({ lerp: 0.16, wheelMultiplier: 1, smoothWheel: true });
+    // Im Fenster der Xyntal KI scrollt das Mausrad den Chat, nicht die Seite
+    lenis = new window.Lenis({ lerp: 0.16, wheelMultiplier: 1, smoothWheel: true, prevent: function (node) { return !!(node.closest && node.closest('.sc')); } });
   }
 
   // ---------- 3b Überschriften in Wörtern ----------

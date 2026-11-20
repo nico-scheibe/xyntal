@@ -28,7 +28,7 @@
   let confirmPII = null, confirmClear = false, editId = null, fbOpen = null, att = null, attErr = "", listening = null, speakingId = null;
 
   const css = document.createElement("link");
-  css.rel = "stylesheet"; css.href = "/site-chat.css?v=6";
+  css.rel = "stylesheet"; css.href = "/site-chat.css?v=7";
   document.head.append(css);
 
   const root = document.createElement("div");
@@ -212,7 +212,6 @@
           </div>
           <p class="sc-count" id="sc-count" aria-live="polite"></p>
         </form>
-        <p class="sc-note">${T("Antworten kommen von einer KI und können falsch sein. Deine Nachrichten gehen über unseren Server an OpenAI (USA) – bitte keine persönlichen Daten eingeben.", "Answers come from an AI and can be wrong. Your messages go through our server to OpenAI (USA) – please don't enter personal data.")} <a href="/datenschutz#assistent">${T("Datenschutz", "Privacy")}</a></p>
       </section>`;
     const ta = $("#sc-input");
     ta.value = draft; grow(ta);
