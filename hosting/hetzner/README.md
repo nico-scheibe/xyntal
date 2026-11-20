@@ -150,18 +150,69 @@ auf dieselbe Maschine. (Gegenprobe, dass das kein Catch-all ist: derselbe Aufruf
 Host `nichtda.xyntal.de` scheitert schon im TLS, Caddy kennt den Host nicht.)
 
 **Wer Access einschaltet, ohne den Ursprung zu sperren, hat genau die Scheinsicherheit,
-die der alte Kommentar behauptet hat.** Die Sperre gehört ins `Caddyfile`, ist also eine
-Änderung in diesem Repo und noch nicht gemacht. Möglichkeiten:
+die der alte Kommentar behauptet hat.** Darum ist die Sperre seit dem 20.11.2026 im
+`Caddyfile` eingebaut: Der Site-Block `admin.xyntal.de` antwortet mit 403, wenn die Anfrage
+nicht aus einem Cloudflare-IP-Bereich kommt (`@nicht_ueber_cloudflare`, Liste von
+cloudflare.com/ips-v4 und ips-v6, 15 v4 + 7 v6).
 
-- Site-Block `admin.xyntal.de` auf die Cloudflare-IP-Bereiche begrenzen, sonst 403.
-  Genau das versprochene Verhalten. Nachteil: Die Liste muss gepflegt werden, und ein
-  Fehler darin sperrt den Admin-Bereich für alle aus. Die ACME-Verlängerung läuft über
-  den Proxy und kommt damit aus denselben Bereichen, bricht also nicht.
-- Authenticated Origin Pulls (mTLS): Caddy prüft Cloudflares Client-Zertifikat.
-  Kein IP-Pflegeaufwand, mehr Einrichtung.
-- Das Access-Token `Cf-Access-Jwt-Assertion` gegen die öffentlichen Team-Schlüssel
-  prüfen — das, was der alte Kommentar für `server.cjs` behauptete.
-- Cloudflare Tunnel: kein öffentlicher Ursprung mehr. Größter Umbau.
+Belegt am echten `caddy:2` auf dem Server, in einem Wegwerf-Container auf Port 8099 mit
+der echten Liste, während der Live-Caddy unberührt weiterlief: Ein Aufruf von 127.0.0.1
+(also nicht aus einem Cloudflare-Bereich) bekommt 403; derselbe Aufruf unter
+`/.well-known/acme-challenge/…` kommt durch. Gegenprobe, dass der 403 wirklich an der
+IP hängt und nicht einfach alles sperrt: dieselbe Konfiguration mit zusätzlich
+`127.0.0.0/8` lässt denselben Aufruf durch.
+
+### Was die Sperre leistet — und was nicht
+
+**Sie schützt allein nichts.** Ohne Access lässt Cloudflare jeden durch; die Sperre
+verlegt den Weg nur. Ihr Zweck ist, dass ein künftiges Access nicht am Ursprung vorbei
+umgangen werden kann.
+
+**Und sie bindet nicht an die eigene Zone.** Die IP-Bereiche sind von allen
+Cloudflare-Kunden geteilt — Cloudflare schreibt das selbst: die Adressen seien
+„shared by all proxied hostnames“, und zu Authenticated Origin Pulls, globales AOP
+beweise nur, dass eine Anfrage *aus dem Cloudflare-Netz* kommt, *nicht aus dem eigenen
+Konto*. Dieselbe Grenze gilt für eine IP-Freiliste.
+
+Die Latte liegt aber nicht niedrig: Um darüber hineinzukommen, müsste jemand den
+Host-Kopf auf `admin.xyntal.de` umschreiben, und das ist bei Cloudflare laut
+Verfügbarkeitstabelle der Origin Rules **nur auf Enterprise** möglich (Host-, SNI- und
+DNS-Record-Override: Free/Pro/Business „No“). Ohne Host-Umschreibung kommt die Anfrage
+mit fremdem Host und fremdem SNI an, und Caddy hat dafür kein Zertifikat — Abbruch im
+Handshake, wie die Gegenprobe mit `nichtda.xyntal.de` oben zeigt. Der Weg über
+Load-Balancer-Host-Overrides ist zusätzlich verschlossen, weil Cloudflare dort verlangt,
+dass der Host zum eigenen Konto gehört oder öffentlich auf den Endpunkt auflöst; beides
+trifft hier nicht zu.
+
+**Dicht wäre also erst:** zone-level oder per-hostname Authenticated Origin Pulls mit
+**eigenem, selbst hochgeladenem** Zertifikat (AOP gibt es auf allen Plänen, auch Free) —
+*globales* AOP leistet nicht mehr als die IP-Freiliste, das ist der Unterschied, auf den
+es ankommt — oder ein Cloudflare Tunnel, dann gibt es keinen öffentlichen Ursprung mehr.
+Eine dritte Möglichkeit bleibt, das Access-Token `Cf-Access-Jwt-Assertion` gegen die
+öffentlichen Team-Schlüssel zu prüfen — das, was der alte Kommentar für `server.cjs`
+behauptete.
+
+### Wenn der Admin-Bereich plötzlich 403 sagt
+
+Zwei Lagen, in denen das kein Angriff ist, sondern die Sperre:
+
+- Der DNS-Eintrag steht auf „DNS only“ (z. B. um ein erstes Zertifikat zu holen, siehe
+  oben). Dann kommt der eigene Browser direkt am Ursprung an und wird abgewiesen.
+- Cloudflare hat eine Störung, oder Cloudflare hat einen IP-Bereich ergänzt, der hier
+  noch fehlt. Dann ist der Admin-Bereich **ganz** zu, nicht halb.
+
+Weg zurück: im `Caddyfile` die beiden `handle`-Blöcke aus dem Admin-Site-Block entfernen
+und nur `encode zstd gzip` und `reverse_proxy website:4129` stehen lassen, dann ausrollen.
+Die Antwort ist absichtlich ein lesbares `403 Nicht erlaubt.` und kein Verbindungsabbruch,
+damit dieser Fall im Störungsfall von „Server tot“ unterscheidbar bleibt.
+
+Die Liste wird von nichts überwacht. Vor einer Änderung an diesem Block lohnt der
+Abgleich:
+
+```
+diff <(curl -s https://www.cloudflare.com/ips-v4; curl -s https://www.cloudflare.com/ips-v6) \
+     <(sed -n 's/^[[:space:]]*not remote_ip //p' hosting/hetzner/Caddyfile | tr ' ' '\n')
+```
 Die Anmeldung gilt auf `xyntal.com` und `www.xyntal.com`: `public/session-share.js` legt die Sitzungs-Tokens zusätzlich in ein
 Cookie für `.xyntal.com` (Test `tests/session-share.cjs`). `admin.xyntal.de` hat ein eigenes Cookie für `.xyntal.de`;
 dort meldet man sich einmal neu an (E-Mail, Passwort, 2FA).
