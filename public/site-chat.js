@@ -122,7 +122,7 @@
     T("Was ist Xyntal?", "What is Xyntal?"),
     T("Wie funktioniert das Matching?", "How does matching work?"),
     T("Wie komme ich in die Beta?", "How do I get into the beta?"),
-    T("Ich habe ein Problem mit meinem Konto", "I have a problem with my account"),
+    T("Support-Ticket erstellen", "Create a support ticket"), // öffnet das Ticket-Fenster, geht nicht an die KI
   ];
   const ERR = {
     offline: () => T("Keine Verbindung. Prüf dein Internet und versuch es noch mal.", "No connection. Check your internet and try again."),
@@ -269,7 +269,7 @@
     if (!log) return;
     const stick = log.scrollHeight - log.scrollTop - log.clientHeight < 60;
     const intro = `<li class="sc-msg sc-bot"><div class="sc-bubble"><p>${T("Hallo! Ich beantworte Fragen zu Xyntal – was es ist, wie das Matching funktioniert, wie du in die Beta kommst – und sage dir, wo du bei Problemen Hilfe bekommst.", "Hi! I answer questions about Xyntal – what it is, how matching works, how to get into the beta – and tell you where to get help with problems.")}</p></div></li>`;
-    const chips = msgs.length ? "" : `<li class="sc-chips">${SUGGEST().map((q) => `<button type="button" data-sc="ask">${esc(q)}</button>`).join("")}</li>`;
+    const chips = msgs.length ? "" : `<li class="sc-chips">${SUGGEST().map((q, i, all) => `<button type="button" data-sc="${i === all.length - 1 ? "ticket-new" : "ask"}">${esc(q)}</button>`).join("")}</li>`;
     const typing = busy && !streamId ? `<li class="sc-msg sc-bot sc-typing"><span></span><span></span><span></span><em>${T("Xyntal KI denkt nach …", "Xyntal AI is thinking …")}</em></li>` : "";
     const pii = confirmPII ? `<li class="sc-confirm" role="alertdialog" aria-label="${T("Persönliche Daten", "Personal data")}"><p>${T("Das sieht nach persönlichen Daten aus. Trotzdem senden?", "This looks like personal data. Send anyway?")}</p><div><button type="button" class="sc-btn" data-sc="pii-no">${T("Bearbeiten", "Edit")}</button><button type="button" class="sc-btn is-key" data-sc="pii-yes">${T("Trotzdem senden", "Send anyway")}</button></div></li>` : "";
     const clear = confirmClear ? `<li class="sc-confirm" role="alertdialog" aria-label="${T("Gespräch löschen", "Clear conversation")}"><p>${T("Gespräch löschen?", "Clear conversation?")}</p><div><button type="button" class="sc-btn" data-sc="clear-no">${T("Abbrechen", "Cancel")}</button><button type="button" class="sc-btn is-key" data-sc="clear-yes">${T("Löschen", "Delete")}</button></div></li>` : "";
@@ -391,7 +391,7 @@
     }, 1000);
   }
 
-  // ---- Tickets im Chatfenster. Wer ein Problem meldet (Vorschlag „Problem mit meinem Konto“ oder eine Nachricht,
+  // ---- Tickets im Chatfenster. Wer ein Problem meldet (Vorschlag „Support-Ticket erstellen“ oder eine Nachricht,
   // die nach einem Problem klingt), bekommt statt einer KI-Antwort ein Formular. Angemeldet wird daraus ein
   // Support-Ticket auf dem App-Server (app-api.js): anlegen, eigene Tickets auflisten, Verlauf lesen, antworten,
   // schließen und wieder öffnen – dieselben Tickets wie in der App unter Hilfe & Support.
