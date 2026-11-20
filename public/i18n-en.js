@@ -2,6 +2,11 @@
 // Neue deutsche Texte auf der Website hier ergänzen, sonst bleiben sie auf Englisch deutsch.
 window.XYNTAL_EN = {
   // Startseite (neu strukturiert): neue deutsche Texte
+  "Mac": "Mac",
+  "Beta · App für Mac": "Beta · App for Mac",
+  "Kein Windows, kein Linux, kein Handy.": "No Windows, no Linux, no mobile.",
+  "Lade die App für Mac direkt herunter. Ohne Bewerbung.": "Download the Mac app directly. No application needed.",
+  "Bisher nur auf dem Mac. Windows, Linux und Handy gibt es noch nicht.": "Mac only for now. Windows, Linux and mobile aren't available yet.",
   "Mac + Windows": "Mac + Windows",
   "0 €": "€0",
   "Beta · App für Mac und Windows": "Beta · App for Mac and Windows",
