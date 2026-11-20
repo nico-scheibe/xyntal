@@ -146,7 +146,10 @@ git push
 ```
 
 Nach etwa 30 Sekunden plus Übertragungszeit ist die neue Version online.
-Der Endpunkt `/__deployment` zeigt den veröffentlichten Git-Commit.
+Der Endpunkt `/__deployment` zeigt den veröffentlichten Git-Commit — auf `xyntal.com`.
+Auf `admin.xyntal.de` antwortet er mit 404, und auch der Header `X-Xyntal-Commit` entfällt dort:
+Vor dem Admin-Host steht kein Schutz (siehe `hosting/hetzner/README.md`), und der ausgerollte
+Commit verrät unangemeldet, welcher Quelltext gerade läuft.
 Ein Push nach `gh-pages` ist für die Daki-Website nicht erforderlich.
 
 Wenn du `style.css` oder eine `.js`-Datei änderst, erhöhe die Versionsnummer `?v=…` in den HTML-Dateien (z. B. von `?v=3` auf `?v=4`), damit Browser die neue Datei laden statt der zwischengespeicherten.

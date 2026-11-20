@@ -606,8 +606,16 @@ const HEAVY_PATH = /^\/(api\/|[a-z0-9][a-z0-9_-]{2,19}(\/invite)?\/?$)/i;
 // Admin-Bereich nur unter admin.xyntal.de. Auf xyntal.com gibt es Admin-Seite und Admin-Skripte nicht
 // (404); die Rechte prüfen Supabase (is_admin + 2FA) und der App-Server (Staff-Rolle).
 const ADMIN_HOST = (process.env.ADMIN_HOST || 'admin.xyntal.de').toLowerCase();
-const ADMIN_ONLY_FILES = new Set(['admin.html', 'admin.css', 'admin-contracts.css', 'admin-support.css', 'world-geo.js',
-  'pages/admin.js', 'pages/admin-platform.js', 'pages/admin-contracts.js', 'pages/admin-people.js', 'pages/admin-support.js']);
+// Erkannt wird am Namen statt an einer Aufzählung: eine neue Admin-Seite ist damit auf xyntal.com
+// sofort gesperrt, ohne dass hier jemand nachpflegt (pages/admin-partners.js und
+// pages/admin-vouchers.js fehlten in der alten Liste und waren öffentlich abrufbar).
+// Alle vier Regeln bewusst ohne Groß-Klein-Unterschied: Auf einem case-insensitiven Dateisystem
+// (macOS in der Entwicklung) würde /World-Geo.js sonst an der Sperre vorbei ausgeliefert, obwohl
+// die Datei nur klein geschrieben existiert. In der Produktion (Linux) fände sie sich dort nicht.
+const isAdminOnlyFile = (relative) => /^world-geo\.js$/i.test(relative) // Weltkarte: nur admin.html und pages/admin-platform.js laden sie
+  || /^pages\/admin(-[a-z0-9-]+)?\.js$/i.test(relative)
+  || /^admin\.html$/i.test(relative)
+  || /^admin(-[a-z0-9-]+)?\.css$/i.test(relative);
 // Seiten, die auf admin.xyntal.de bleiben (Anmeldung samt 2FA); alle anderen Seiten leiten auf xyntal.com um.
 const ADMIN_HOST_PAGES = new Set(['admin.html', 'login.html', 'passwort-neu.html', '404.html']);
 const MAIN_SITE = (process.env.MAIN_SITE_URL || 'https://xyntal.com').replace(/\/+$/, '');
@@ -632,6 +640,13 @@ function serve(req, res) {
   if (pathname === '/api/beta-status-mail') { handleBetaStatusMail(req, res); return; }
   if (!['GET','HEAD'].includes(req.method)) { res.writeHead(405); return res.end(); }
   if (pathname === '/__deployment') {
+    // Der ausgerollte Commit ist eine Auskunft über den Server; auf admin.xyntal.de gibt es sie nicht
+    // (dort schützt nichts an der Kante). Harter 404 schon hier, sonst macht die Seitenregel weiter
+    // unten daraus eine Umleitung auf xyntal.com/__deployment und der Commit wäre wieder abholbar.
+    if (requestHost(req) === ADMIN_HOST) {
+      res.writeHead(404, {'Content-Type':'text/plain; charset=utf-8','Cache-Control':'no-store'});
+      return res.end(req.method === 'HEAD' ? undefined : 'Nicht gefunden');
+    }
     res.writeHead(root ? 200 : 503, {'Content-Type':'application/json','Cache-Control':'no-store'});
     return res.end(JSON.stringify({commit, branch:'main', updating}));
   }
@@ -704,7 +719,7 @@ function serve(req, res) {
       res.writeHead(308, { Location: MAIN_SITE + new URL(req.url, 'http://localhost').pathname + new URL(req.url, 'http://localhost').search });
       return res.end();
     }
-  } else if (ADMIN_ONLY_FILES.has(relative)) {
+  } else if (isAdminOnlyFile(relative)) {
     res.writeHead(404, {'Content-Type':'text/html; charset=utf-8'});
     return res.end(req.method === 'HEAD' ? undefined : fs.readFileSync(path.join(currentRoot,'404.html')));
   }
@@ -755,7 +770,13 @@ function serve(req, res) {
   // noch einmal (304). Schriften ändern sich praktisch nie und dürfen 30 Tage ohne Nachfrage bleiben.
   const stat = fs.statSync(file);
   const etag = 'W/"' + stat.size.toString(16) + '-' + Math.floor(stat.mtimeMs).toString(16) + '"';
-  const headers = {'Content-Type':types[path.extname(file)] || 'application/octet-stream', 'Cache-Control': /\.woff2?$/.test(file) ? 'public, max-age=2592000' : 'no-cache', 'ETag': etag, 'X-Content-Type-Options':'nosniff', 'X-Xyntal-Commit':commit};
+  const headers = {'Content-Type':types[path.extname(file)] || 'application/octet-stream', 'Cache-Control': /\.woff2?$/.test(file) ? 'public, max-age=2592000' : 'no-cache', 'ETag': etag, 'X-Content-Type-Options':'nosniff'};
+  // Auf admin.xyntal.de bleibt der ausgerollte Commit aus jeder Antwort. Das verengt, schließt aber
+  // nicht: Der ETag unten trägt Größe und Änderungszeit, und weil dieser Host den ganzen Quelltext
+  // ausliefert, ist der Stand ohnehin durch Vergleich bestimmbar. Weg ist nur die bequeme Abkürzung –
+  // die fertige Commit-Kennung, mit der man im öffentlichen Repo direkt den passenden Quelltext zieht.
+  // Auf xyntal.com bleibt der Hinweis wie bisher.
+  if (!onAdminHost) headers['X-Xyntal-Commit'] = commit;
   if (String(req.headers['if-none-match'] || '').split(',').some((tag) => tag.trim() === etag)) { res.writeHead(304, headers); return res.end(); }
   res.writeHead(200, headers);
   if (req.method === 'HEAD') return res.end();
