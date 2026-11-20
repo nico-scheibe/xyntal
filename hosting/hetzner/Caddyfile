@@ -36,7 +36,21 @@
 
 xyntal.com, www.xyntal.com {
 	encode zstd gzip
-	reverse_proxy website:4129
+
+	# Downloads (z. B. die macOS-App). Die Dateien liegen auf dem Host unter
+	# /opt/xyntal/downloads und sind nur lesend in den Caddy-Container gemountet.
+	# Nur Dateien, kein Verzeichnislisting.
+	handle_path /downloads/* {
+		root * /srv/downloads
+		header Content-Disposition "attachment"
+		file_server {
+			hide .*
+		}
+	}
+
+	handle {
+		reverse_proxy website:4129
+	}
 }
 
 # Die alte Adresse leitet dauerhaft auf xyntal.com weiter. 308 statt 301, damit POST-Anfragen erhalten bleiben.

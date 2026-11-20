@@ -16,6 +16,7 @@ services:
       ACME_EMAIL: ${ACME_EMAIL:-admin@xyntal.com}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - /opt/xyntal/downloads:/srv/downloads:ro
       - caddy_data:/data
       - caddy_config:/config
     # Bewusst kein depends_on: sonst startet Compose Caddy bei jedem neuen
