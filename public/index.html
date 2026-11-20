@@ -26,7 +26,7 @@
   <!-- Schriften liegen lokal. Die zwei, die der erste Bildschirm braucht, werden vorgeladen. -->
   <link rel="preload" href="fonts/archivo-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="fonts/plexsans-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/neu.css?v=6">
+  <link rel="stylesheet" href="css/neu.css?v=7">
   <link rel="stylesheet" href="/site-search.css?v=2">
 
   <!-- Vor dem ersten Zeichnen: JS-Klasse setzen (eigene Datei wegen CSP). -->
@@ -105,44 +105,44 @@
 
   <!-- ============ PROBLEM ============ -->
   <section class="problem" id="problem">
-    <p class="problem__text" data-rv>Gute Ideen scheitern selten an der Idee, sondern an den <span class="problem__hi">fehlenden Menschen</span>.</p>
+    <p class="problem__text" data-scrub>Gute Ideen scheitern selten an der Idee, sondern an den <span class="problem__hi">fehlenden Menschen</span>.</p>
   </section>
 
   <!-- ============ STATT ============ -->
   <section class="cmp" id="statt" aria-labelledby="statt-title">
     <header class="sec-head">
-      <p class="mono label">Der Unterschied</p>
-      <h2 class="sec-title" id="statt-title">Gute Werkzeuge. Nur für etwas anderes gebaut.</h2>
-      <p class="cmp__lead">Du nutzt vermutlich schon vieles davon. Xyntal ergänzt, was zum Finden von Menschen mit gleichem Ziel fehlt.</p>
+      <p class="mono label" data-rv>Der Unterschied</p>
+      <h2 class="sec-title" data-rv id="statt-title">Gute Werkzeuge. Nur für etwas anderes gebaut.</h2>
+      <p class="cmp__lead" data-rv>Du nutzt vermutlich schon vieles davon. Xyntal ergänzt, was zum Finden von Menschen mit gleichem Ziel fehlt.</p>
     </header>
     <div class="cmp__scroller" data-cmp tabindex="0" aria-label="Sechs Vergleiche, seitlich scrollbar">
-      <ol class="cmp__list">
-        <li class="cmp__card">
+      <ol class="cmp__list" data-rv-group>
+        <li class="cmp__card" data-rv>
           <h3 class="cmp__old">LinkedIn</h3>
           <p class="cmp__row cmp__row--miss"><span class="mono">stark bei</span> Zeigt deinen beruflichen Werdegang und hält Kontakte zusammen.</p>
           <p class="cmp__row cmp__row--new"><span class="mono">Xyntal</span> Profile mit Zeit und Bedingungen: wann du verfügbar bist und was du suchst.</p>
         </li>
-        <li class="cmp__card">
+        <li class="cmp__card" data-rv>
           <h3 class="cmp__old">Discord</h3>
           <p class="cmp__row cmp__row--miss"><span class="mono">stark bei</span> Communitys mit Chat- und Sprachkanälen rund um ein Thema.</p>
           <p class="cmp__row cmp__row--new"><span class="mono">Xyntal</span> Vorschläge ab 65 Punkten, statt in die Runde zu fragen.</p>
         </li>
-        <li class="cmp__card">
+        <li class="cmp__card" data-rv>
           <h3 class="cmp__old">Notion</h3>
           <p class="cmp__row cmp__row--miss"><span class="mono">stark bei</span> Notizen, Dokumente und Projekte an einem Ort organisieren.</p>
           <p class="cmp__row cmp__row--new"><span class="mono">Xyntal</span> Hilft dir zuerst, die Menschen zu finden, mit denen du ein Projekt angehst. Das Matching läuft über zehn gewichtete Bereiche.</p>
         </li>
-        <li class="cmp__card">
+        <li class="cmp__card" data-rv>
           <h3 class="cmp__old">Microsoft Teams</h3>
           <p class="cmp__row cmp__row--miss"><span class="mono">stark bei</span> Chat, Meetings und Zusammenarbeit, meist innerhalb einer Organisation.</p>
           <p class="cmp__row cmp__row--new"><span class="mono">Xyntal</span> Für Menschen, die du erst finden willst: für Mitgründung, Aufgabe oder Nebenprojekt.</p>
         </li>
-        <li class="cmp__card">
+        <li class="cmp__card" data-rv>
           <h3 class="cmp__old">WhatsApp</h3>
           <p class="cmp__row cmp__row--miss"><span class="mono">stark bei</span> Nachrichten und Gruppenchats, meist mit Menschen aus dem eigenen Umfeld.</p>
           <p class="cmp__row cmp__row--new"><span class="mono">Xyntal</span> Du triffst Leute, die zu deinem Ziel passen, auch wenn sie nicht in deinem Umfeld sind.</p>
         </li>
-        <li class="cmp__card">
+        <li class="cmp__card" data-rv>
           <h3 class="cmp__old">Upwork</h3>
           <p class="cmp__row cmp__row--miss"><span class="mono">stark bei</span> Aufträge an Freelancer vergeben und Aufträge finden.</p>
           <p class="cmp__row cmp__row--new"><span class="mono">Xyntal</span> Neben Aufgaben auch Mitgründung und Nebenprojekte als Ziel.</p>
@@ -155,10 +155,10 @@
   <!-- ============ FÜR WEN ============ -->
   <section class="who" id="fuer-wen" aria-labelledby="who-title">
     <header class="sec-head">
-      <p class="mono label">Für wen</p>
-      <h2 class="sec-title" id="who-title">Für alle, die etwas vorhaben.</h2>
+      <p class="mono label" data-rv>Für wen</p>
+      <h2 class="sec-title" data-rv id="who-title">Für alle, die etwas vorhaben.</h2>
     </header>
-    <ul class="who__grid">
+    <ul class="who__grid" data-rv-group>
       <li class="who__card" data-rv>
         <h3 class="who__name">Der junge Hungrige</h3>
         <p class="mono who__age">16–21</p>
@@ -180,10 +180,10 @@
   <!-- ============ ABLAUF ============ -->
   <section class="how" id="ablauf" aria-labelledby="how-title">
     <header class="sec-head">
-      <p class="mono label">So funktioniert es</p>
-      <h2 class="sec-title" id="how-title">In drei Schritten zum Projekt.</h2>
+      <p class="mono label" data-rv>So funktioniert es</p>
+      <h2 class="sec-title" data-rv id="how-title">In drei Schritten zum Projekt.</h2>
     </header>
-    <ol class="how__steps">
+    <ol class="how__steps" data-rv-group>
       <li class="how__step" data-rv>
         <span class="how__node mono">1</span>
         <h3 class="how__title">Konto anlegen</h3>
@@ -205,10 +205,10 @@
   <!-- ============ VERTRAUEN ============ -->
   <section class="facts" id="fakten" aria-labelledby="facts-title">
     <header class="sec-head">
-      <p class="mono label">Vertrauen</p>
-      <h2 class="sec-title" id="facts-title">Klar auf den Tisch.</h2>
+      <p class="mono label" data-rv>Vertrauen</p>
+      <h2 class="sec-title" data-rv id="facts-title">Klar auf den Tisch.</h2>
     </header>
-    <ul class="facts__grid">
+    <ul class="facts__grid" data-rv-group>
       <li class="fact" data-rv>
         <p class="fact__v">Beta</p>
         <p class="fact__t">Nur per Bewerbung. Antwort per Mail.</p>
@@ -239,12 +239,12 @@
   <!-- ============ DIE APP ============ -->
   <section class="app" id="app" aria-labelledby="app-title">
     <header class="sec-head">
-      <p class="mono label">Die App</p>
-      <h2 class="sec-title" id="app-title">So sieht es aus.</h2>
-      <p class="app__lead">Echte App, Beispieldaten.</p>
+      <p class="mono label" data-rv>Die App</p>
+      <h2 class="sec-title" data-rv id="app-title">So sieht es aus.</h2>
+      <p class="app__lead" data-rv>Echte App, Beispieldaten.</p>
     </header>
-    <ul class="app__shots">
-      <li class="app__shot">
+    <ul class="app__shots" data-rv-group>
+      <li class="app__shot" data-rv="zoom">
         <figure class="app__fig">
           <div class="win">
             <picture>
@@ -255,7 +255,7 @@
           <figcaption class="mono">Entdecken: Vorschläge mit Begründung</figcaption>
         </figure>
       </li>
-      <li class="app__shot">
+      <li class="app__shot" data-rv="zoom">
         <figure class="app__fig">
           <div class="win">
             <picture>
@@ -266,7 +266,7 @@
           <figcaption class="mono">Nachrichten: privat und im Team</figcaption>
         </figure>
       </li>
-      <li class="app__shot">
+      <li class="app__shot" data-rv="zoom">
         <figure class="app__fig">
           <div class="win">
             <picture>
@@ -282,17 +282,17 @@
 
   <!-- ============ FRAGEN ============ -->
   <section class="faq" id="fragen" aria-labelledby="faq-title">
-    <h2 class="sec-title faq__title" id="faq-title">Kurz gefragt.</h2>
-    <div class="faq__list">
-      <div class="qa">
+    <h2 class="sec-title faq__title" data-rv id="faq-title">Kurz gefragt.</h2>
+    <div class="faq__list" data-rv-group>
+      <div class="qa" data-rv>
         <h3 class="qa__q"><button class="qa__btn" type="button" aria-expanded="false" aria-controls="qa-1">Wie komme ich rein?<span class="qa__icon" aria-hidden="true"></span></button></h3>
         <div class="qa__a" id="qa-1"><p>Lade die App für Mac oder Windows direkt herunter. Ohne Bewerbung.</p></div>
       </div>
-      <div class="qa">
+      <div class="qa" data-rv>
         <h3 class="qa__q"><button class="qa__btn" type="button" aria-expanded="false" aria-controls="qa-2">Worauf läuft es?<span class="qa__icon" aria-hidden="true"></span></button></h3>
         <div class="qa__a" id="qa-2"><p>Auf Mac und Windows. Linux und Handy gibt es noch nicht.</p></div>
       </div>
-      <div class="qa">
+      <div class="qa" data-rv>
         <h3 class="qa__q"><button class="qa__btn" type="button" aria-expanded="false" aria-controls="qa-3">Was kostet das?<span class="qa__icon" aria-hidden="true"></span></button></h3>
         <div class="qa__a" id="qa-3"><p>In der Beta nichts. Danach: siehe <a href="/preise">Preise</a>.</p></div>
       </div>
@@ -301,8 +301,8 @@
 
   <!-- ============ BEWERBEN ============ -->
   <section class="end" id="konto" aria-labelledby="end-title">
-    <p class="end__pre">Du hast die Idee.</p>
-    <h2 class="end__h" id="end-title">Such dir die Leute dazu.</h2>
+    <p class="end__pre" data-rv>Du hast die Idee.</p>
+    <h2 class="end__h" data-rv id="end-title">Such dir die Leute dazu.</h2>
     <div class="end__foot">
       <div id="download" class="dl" data-rv>
         <p class="dl__label mono">APP · BETA</p>
@@ -357,7 +357,7 @@
 <script src="js/hero-gl.js?v=2" defer></script>
 <script src="/i18n-en.js?v=136" defer></script>
 <script src="/i18n.js?v=34" defer></script>
-<script src="js/neu.js?v=4" defer></script>
+<script src="js/neu.js?v=5" defer></script>
 <!-- Bestehende Funktionen der Website: Newsletter, Einladungslink, Konto-Menü -->
 <script src="landing.js?v=swipe-58" defer></script>
 <script src="invite.js?v=4" defer></script>

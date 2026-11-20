@@ -44,6 +44,7 @@
   --scene: clamp(96px, 16vh, 180px);
   /* Bewegung */
   --ease: cubic-bezier(.2, .8, .2, 1);
+  --ease-o: cubic-bezier(.16, 1, .3, 1);   /* Einblenden: schnell los, lang auslaufend */
   --r-win: 12px;
 }
 
@@ -137,9 +138,48 @@ a { color: inherit; text-decoration: none; }
 [data-strike].is-in { background-size: 100% 2px; }
 .no-js [data-strike] { background-size: 100% 2px; }
 
-/* Einblenden beim Eintritt (js/neu.js setzt is-in, ca. 20 % sichtbar). Versatz je Gruppe höchstens 80 ms. */
-.js [data-rv] { opacity: 0; transform: translate3d(0, 18px, 0); transition: opacity .6s ease-out, transform .6s ease-out; transition-delay: var(--d, 0ms); }
+/* Einblenden beim Eintritt (js/neu.js setzt is-in und den Versatz --d). Lang und weich auslaufend.
+   „zoom“ wächst zusätzlich leicht heran (App-Fenster). Nach dem Einblenden nimmt JS data-rv wieder weg. */
+.js [data-rv] { opacity: 0; transform: translate3d(0, 28px, 0); transition: opacity .9s var(--ease-o), transform 1.1s var(--ease-o); transition-delay: var(--d, 0ms); }
+.js [data-rv="zoom"] { transform: translate3d(0, 36px, 0) scale(.94); transform-origin: 50% 100%; }
 .js [data-rv].is-in { opacity: 1; transform: none; }
+/* Handy: Karten in seitlichen Scrollern kommen von rechts statt von unten (kein Höhensprung im Scroller) */
+@media (max-width: 860px) {
+  .js .cmp__card[data-rv], .js .app__shot[data-rv] { transform: translate3d(28px, 0, 0); }
+  .js .cmp__card[data-rv].is-in, .js .app__shot[data-rv].is-in { transform: none; }
+}
+/* Die kurze Farblinie vor dem Etikett zeichnet sich */
+.js .label[data-rv]::before { transform: scaleX(0); transform-origin: 0 50%; transition: transform .9s var(--ease-o) .2s; }
+.js .label[data-rv].is-in::before { transform: none; }
+
+/* Der große Satz: hellt sich beim Scrollen zeilenweise auf. --p (0 bis 1) kommt aus js/neu.js. */
+.js .problem__text.is-scrub {
+  color: transparent; -webkit-background-clip: text; background-clip: text;
+  background-image: linear-gradient(180deg, var(--t-1) calc(var(--p, 0) * 140% - 40%), rgba(var(--t-rgb), .2) calc(var(--p, 0) * 140%));
+}
+.js .is-scrub .problem__hi { opacity: clamp(.2, calc((var(--p, 0) - .62) * 4), 1); }
+
+/* Ablauf: die Linie zieht sich durch, die Nummern setzen sich nacheinander darauf */
+.js .how__steps[data-rv-group]::before { transform: scaleX(0); transform-origin: 0 50%; transition: transform 1.5s var(--ease-o) .1s; }
+.js .how__steps.is-in::before { transform: none; }
+.js [data-rv] > .how__node { opacity: 0; transform: scale(.5); transition: opacity .5s var(--ease-o), transform .8s var(--ease-o); transition-delay: calc(var(--d, 0ms) + 200ms); }
+.js [data-rv].is-in > .how__node { opacity: 1; transform: none; }
+@media (max-width: 760px) {
+  .js .how__steps[data-rv-group]::before { transform: scaleY(0); transform-origin: 50% 0; }
+}
+
+/* Fragen: die Antwort gleitet auf und zu (Klasse is-open von js/neu.js). Zu = unsichtbar, auch für Tastatur und Vorleser. */
+.js .qa__a { display: grid; grid-template-rows: 0fr; padding-bottom: 0; opacity: 0; visibility: hidden; transition: grid-template-rows .5s var(--ease-o), padding-bottom .5s var(--ease-o), opacity .35s ease-out, visibility 0s .5s; }
+.js .qa__a > * { overflow: hidden; min-height: 0; }
+.js .qa__a.is-open { grid-template-rows: 1fr; padding-bottom: 26px; opacity: 1; visibility: visible; transition-delay: 0s; }
+
+/* Mit Maus: Karten und App-Fenster heben sich leicht */
+@media (hover: hover) and (pointer: fine) {
+  .cmp__card, .who__card { transition: transform .6s var(--ease-o), box-shadow .4s ease-out; }
+  .cmp__card:hover, .who__card:hover { transform: translate3d(0, -5px, 0); box-shadow: inset 0 0 0 1px var(--line-2); }
+  .app__fig .win { transition: transform .7s var(--ease-o); }
+  .app__fig:hover .win { transform: translate3d(0, -6px, 0) scale(1.012); }
+}
 
 /* Schon in der Beta oder beworben (Klasse von js/neu-boot.js und js/neu-konto.js):
    „Bewerben“ verschwindet, der passende Ersatz erscheint. */

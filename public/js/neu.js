@@ -46,20 +46,53 @@
   }
 
   // ---------- 4 Einblenden ----------
-  // Einmal beim Eintritt: Ein Element blendet ein, sobald etwa 20 % davon sichtbar sind.
-  // Geschwister mit data-rv starten gestaffelt, höchstens 80 ms Versatz.
+  // Einmal beim Eintritt. Einzelne Elemente (data-rv) blenden ein, sobald etwa 20 % sichtbar sind;
+  // Geschwister starten gestaffelt. Eine Gruppe (data-rv-group) startet alle ihre Elemente zusammen,
+  // gestaffelt der Reihe nach: so sind auch Karten da, die auf dem Handy seitlich außerhalb liegen.
+  // Nach dem Einblenden fällt data-rv weg, damit Hover-Übergänge nicht den Versatz erben.
   (function () {
-    var items = $$('[data-rv]'); if (!items.length) return;
-    items.forEach(function (it) {
+    var groups = $$('[data-rv-group]'), items = $$('[data-rv]');
+    if (!items.length && !groups.length) return;
+    var solo = items.filter(function (it) { return !it.closest('[data-rv-group]'); });
+    solo.forEach(function (it) {
       var idx = 0, s = it;
       while ((s = s.previousElementSibling) && s.hasAttribute('data-rv')) idx++;
-      it.style.setProperty('--d', Math.min(idx, 2) * 40 + 'ms');
+      it.style.setProperty('--d', Math.min(idx, 3) * 90 + 'ms');
     });
-    if (!('IntersectionObserver' in window) || calm) { items.forEach(function (it) { it.classList.add('is-in'); }); return; }
+    groups.forEach(function (g) {
+      $$('[data-rv]', g).forEach(function (it, i) { it.style.setProperty('--d', Math.min(i, 5) * 80 + 'ms'); });
+    });
+    var still = calm || !('IntersectionObserver' in window);
+    function show(el) {
+      el.classList.add('is-in');
+      if (still || !el.hasAttribute('data-rv')) return;
+      var d = parseInt(el.style.getPropertyValue('--d'), 10) || 0;
+      setTimeout(function () { el.removeAttribute('data-rv'); el.classList.remove('is-in'); }, d + 1400);
+    }
+    function showGroup(g) { g.classList.add('is-in'); $$('[data-rv]', g).forEach(show); }
+    if (still) { solo.forEach(show); groups.forEach(showGroup); return; }
     var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } });
-    }, { threshold: 0.2 });
-    items.forEach(function (it) { io.observe(it); });
+      entries.forEach(function (e) { if (e.isIntersecting) { show(e.target); io.unobserve(e.target); } });
+    }, { threshold: 0.2, rootMargin: '0px 0px -6% 0px' });
+    solo.forEach(function (it) { io.observe(it); });
+    var gio = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { if (e.isIntersecting) { showGroup(e.target); gio.unobserve(e.target); } });
+    }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+    groups.forEach(function (g) { gio.observe(g); });
+  })();
+
+  // Der große Satz hellt sich beim Scrollen von oben nach unten auf (--p von 0 bis 1).
+  (function () {
+    var el = $('[data-scrub]'); if (!el || calm) return;
+    el.classList.add('is-scrub');
+    var last = -1;
+    tickers.push(function () {
+      var r = el.getBoundingClientRect();
+      if (r.top > vh || r.bottom < 0) return;
+      var p = clamp((vh * 0.9 - r.top) / (vh * 0.35 + r.height), 0, 1);
+      p = Math.round(p * 500) / 500;
+      if (p !== last) { last = p; el.style.setProperty('--p', p); }
+    });
   })();
 
   // ---------- 5 Durchstreichen ----------
@@ -98,14 +131,15 @@
 
   // ---------- 7 Fragen: Akkordeon ----------
   // Jede Frage ist ein Button mit aria-expanded. Die Antwort bleibt im HTML; zu ist sie erst, wenn JS läuft.
+  // Auf und zu macht die Klasse is-open (css/neu.css): die Höhe gleitet, zu heißt visibility: hidden.
   $$('.qa__btn').forEach(function (b) {
     var panel = document.getElementById(b.getAttribute('aria-controls') || '');
     if (!panel) return;
-    panel.hidden = b.getAttribute('aria-expanded') !== 'true';
+    panel.classList.toggle('is-open', b.getAttribute('aria-expanded') === 'true');
     b.addEventListener('click', function () {
       var open = b.getAttribute('aria-expanded') !== 'true';
       b.setAttribute('aria-expanded', String(open));
-      panel.hidden = !open;
+      panel.classList.toggle('is-open', open);
     });
   });
 
