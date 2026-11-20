@@ -1,0 +1,15 @@
+/* =====================================================================
+   Xyntal – Download (/download)
+   Baut auf ueber-uns.css auf: gleiche Textspalte, gleiche Schriften.
+   Hier steht nur, was die Download-Seite zusätzlich braucht.
+   ===================================================================== */
+.dl-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; }
+.dl-file { font: 500 12.5px/1.6 var(--f-mono); letter-spacing: 0.04em; color: var(--ink-3); }
+.dl-name { font: 500 0.88em/1.4 var(--f-mono); overflow-wrap: anywhere; }
+
+.about-page ol { margin: 0; padding: 0; list-style: none; }
+.dl-steps { display: grid; gap: 0.6em; counter-reset: dl-step; }
+.dl-steps li { padding-left: 2.2em; counter-increment: dl-step; }
+.dl-steps li::before { content: counter(dl-step, decimal-leading-zero); left: 0; top: 0.42em; font: 500 12.5px/1.6 var(--f-mono); color: var(--ink-3); }
+
+@media (max-width: 420px) { .dl-cta .button { width: 100%; } }
