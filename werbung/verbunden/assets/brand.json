@@ -1,0 +1,169 @@
+{
+ "url": "https://xyntal.de",
+ "title": "Mitgründer und Projektpartner finden – Xyntal",
+ "description": "Du hast die Idee, dir fehlen die Leute? Xyntal zeigt dir Mitgründer und Projektpartner, die zu deinem Vorhaben passen – und warum. In der Beta kostenlos.",
+ "themeColor": [
+  "#1F1F21"
+ ],
+ "text_colors": [
+  [
+   "#eceae4",
+   135
+  ],
+  [
+   "#b9b7b0",
+   79
+  ],
+  [
+   "#918f89",
+   28
+  ],
+  [
+   "#151516",
+   12
+  ],
+  [
+   "#3fe0f0",
+   3
+  ],
+  [
+   "#e4e4e7",
+   1
+  ],
+  [
+   "#a1a1aa",
+   1
+  ],
+  [
+   "#06181b",
+   1
+  ]
+ ],
+ "background_colors": [
+  [
+   "#0b0e16",
+   77
+  ],
+  [
+   "#1a1a1c",
+   49
+  ],
+  [
+   "#eceae4",
+   5
+  ],
+  [
+   "#3b3b3b",
+   0
+  ],
+  [
+   "#3fe0f0",
+   0
+  ]
+ ],
+ "font_families": [
+  [
+   "Archivo",
+   155
+  ],
+  [
+   "IBM Plex Sans",
+   76
+  ],
+  [
+   "JetBrains Mono",
+   35
+  ]
+ ],
+ "font_weights": [
+  [
+   "IBM Plex Sans 400",
+   65
+  ],
+  [
+   "Archivo 500",
+   43
+  ],
+  [
+   "JetBrains Mono 400",
+   29
+  ],
+  [
+   "Archivo 600",
+   24
+  ],
+  [
+   "Archivo 700",
+   24
+  ],
+  [
+   "Archivo 800",
+   21
+  ],
+  [
+   "Archivo 400",
+   15
+  ],
+  [
+   "IBM Plex Sans 500",
+   10
+  ],
+  [
+   "JetBrains Mono 500",
+   6
+  ],
+  [
+   "Archivo 200",
+   3
+  ],
+  [
+   "Archivo 630",
+   2
+  ],
+  [
+   "Archivo 510",
+   2
+  ]
+ ],
+ "css_vars": {
+  "--g-0": "#151516",
+  "--g-1": "#1A1A1C",
+  "--g-2": "#1F1F21",
+  "--g-3": "#262629",
+  "--g-4": "#2E2E32",
+  "--g-5": "#3A3A3F",
+  "--t-1": "#ECEAE4",
+  "--t-2": "#B9B7B0",
+  "--t-3": "#918F89",
+  "--t-rgb": "236, 234, 228",
+  "--line": "rgba(var(--t-rgb), .10)",
+  "--line-2": "rgba(var(--t-rgb), .22)",
+  "--pu": "#B36BFF",
+  "--bl": "#3A8AFF",
+  "--cy": "#3FE0F0",
+  "--grad": "linear-gradient(90deg, var(--pu), var(--bl) 50%, var(--cy))",
+  "--f-display": "\"Archivo\", \"Arial Narrow\", Arial, sans-serif",
+  "--f-text": "\"IBM Plex Sans\", -apple-system, \"Segoe UI\", Roboto, sans-serif",
+  "--f-mono": "\"JetBrains Mono\", ui-monospace, Menlo, Consolas, monospace",
+  "--pad": "clamp(20px, 4.2vw, 76px)",
+  "--gap": "clamp(16px, 2vw, 32px)",
+  "--s-1": "8px",
+  "--s-2": "16px",
+  "--s-3": "24px",
+  "--s-4": "40px",
+  "--s-5": "64px",
+  "--s-6": "104px",
+  "--s-7": "168px",
+  "--scene": "clamp(96px, 16vh, 200px)",
+  "--ease": "cubic-bezier(.2, .8, .2, 1)",
+  "--ease-io": "cubic-bezier(.65, 0, .35, 1)",
+  "--r-win": "12px"
+ },
+ "wordmark": {
+  "text": "xyntal",
+  "font": "Archivo, \"Arial Narrow\", Arial, sans-serif",
+  "weight": "600",
+  "tracking": "-0.184px",
+  "html": "\n    <svg width=\"22\" height=\"22\" aria-hidden=\"true\"><use href=\"#mark\"></use></svg><span>xyntal</span>\n  "
+ }
+}
