@@ -368,7 +368,10 @@ del.addEventListener("click", async () => {
     return;
   }
   try {
-    await deleteMemberAvatars(me.id);
+    // Erst ALLE Uploads (vier Eimer plus eigenes Server-Lager), dann das Konto. Wirft einer der
+    // Schritte, bleibt das Konto bestehen und die Meldung unten sagt, was schiefging — besser als
+    // ein gelöschtes Konto, dessen Dateien weiterliegen. Gesperrte Konten: siehe avatars.js.
+    await deleteMemberUploads(me.id);
     unwrap(await sb.rpc("delete_my_account"));
     await sb.auth.signOut();
     location.href = "./";

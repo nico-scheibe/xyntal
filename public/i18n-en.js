@@ -1171,7 +1171,7 @@ window.XYNTAL_EN = {
   "Geräte": "Devices",
   "Auf einem fremden Gerät angemeldet oder Handy verloren? Melde dich überall ab – auch hier.": "Logged in on someone else's device or lost your phone? Log out everywhere – including here.",
   "Auf allen Geräten abmelden": "Log out on all devices",
-  "Löscht dein Profil, dein Profilbild und deine Anmeldung endgültig. Das lässt sich nicht rückgängig machen.": "Permanently deletes your profile, your profile picture and your login. This can't be undone.",
+  "Löscht dein Profil, deine Anmeldung und alle deine Bilder endgültig — Profilbild, Bilder deiner Karte, Seitenbilder und Projektbilder. Das lässt sich nicht rückgängig machen.": "Permanently deletes your profile, your login and all of your images — profile picture, card images, page images and project images. This can't be undone.",
   "Bestätigungscode": "Confirmation code",
   "Dein Konto ist mit Zwei-Faktor-Anmeldung geschützt. Öffne deine Authenticator-App und gib den 6-stelligen Code für Xyntal ein.": "Your account is protected with two-factor authentication. Open your authenticator app and enter the 6-digit code for Xyntal.",
   "Bestätigen": "Confirm",

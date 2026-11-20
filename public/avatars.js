@@ -85,24 +85,217 @@ window.addEventListener('pageshow', event => { if (event.persisted) {
   hydrateAvatars();
 } });
 
-// Vor Kontolöschung alle eigenen Uploads über die Storage-API entfernen.
-// SQL-DELETE auf storage.objects würde die eigentlichen Dateien nicht löschen.
-async function deleteMemberAvatars(memberId) {
-  await deleteMemberFiles('avatars', memberId);
-  await deleteMemberFiles('banners', memberId); // eigene Kartenbanner (Paid)
+// Vor Kontolöschung ALLE Uploads des Mitglieds entfernen: vier Supabase-Eimer und das eigene
+// Server-Lager. Vorher waren es nur avatars und banners; Seitenbilder und Projektbilder blieben
+// liegen. Gemessen am 20.11.2026: Nach einer Kontolöschung antwortete eine Seitenbild-Datei im
+// eigenen Lager weiter mit 200, obwohl das Konto in auth.users und profiles weg war — und sie war
+// über die Oberfläche nicht mehr auffindbar, weil die Admin-Liste des Lagers die Kontokennung
+// braucht. Grundlage ist nicht ein falsches Versprechen im Dialog, sondern Art. 17 DSGVO: Was zum
+// Konto gehört, muss mit dem Konto gehen.
+//
+// WARUM IM BROWSER und nicht auf dem Server: Der Website-Server und der Mediendienst halten nur den
+// anon-Schlüssel (hosting/daki/server.cjs, supabaseConfig()). Ein bevorrechtigter Serverweg bräuchte
+// den service_role-Schlüssel neu auf der Maschine — einen Schlüssel, der jede Zeilenregel der ganzen
+// Datenbank aushebelt, für eine Aufräumarbeit. Und ein SECURITY DEFINER in SQL hilft nicht: Ein
+// DELETE auf storage.objects löscht nur die Zeile, nicht die Datei, und genau das verhindert der
+// Trigger protect_objects_delete ("prevents accidental data loss from orphaned objects").
+//
+// GRENZE, BEWUSST OFFEN, und die Durchsetzung liegt NUR HIER: Auf der Produktion gemessen am 20.11.2026
+// prüft public.delete_my_account() nur auth.uid() und mfa_ok(), KEINE Sperre. Ein gesperrtes Mitglied kann die
+// Funktion also in der Browser-Konsole aufrufen und sein Konto löschen, ohne diesen Weg zu nehmen — die
+// Dateien blieben dann als Waisen liegen. Dass Beweise eine Sperre überleben, ist damit heute eine Zusage der
+// Oberfläche, nicht der Datenbank. Ob die Datenbank sie durchsetzen soll, ist eine Entscheidung über Art. 17
+// gegen Art. 17 Abs. 3 und steht als offener Punkt in DATENSCHUTZ-STATUS.md.
+//
+// Ein GESPERRTES Mitglied kann in page-media und project-images nichts
+// löschen. Die beschränkende Regel "Sperre: nichts loeschen" hat die Freiliste avatars, banners,
+// xyntal-app-files; in den anderen Eimern scheitert das Löschen, solange die Sperre läuft. Für ein
+// gesperrtes Konto bleiben diese Dateien deshalb liegen, und das Löschen des Kontos bricht ab
+// (siehe unten: jeder Fehlschlag wirft). Das ist Absicht — Beweise sollen eine Sperre überleben,
+// Art. 17 Abs. 3 DSGVO trägt das. Ein Admin ist davon NICHT betroffen: me_banned() fragt die
+// handelnde Person, nicht das Konto, dessen Dateien weggehen.
+//
+// asAdmin: true, wenn ein Admin ein fremdes Konto löscht. Dann läuft das eigene Server-Lager über die
+// Admin-Route, und JEDE dortige Löschung schreibt eine Zeile in public.admin_media_log — so wie jede
+// andere Admin-Löschung eines Seitenbildes auch. Rückgabe sagt, wie viele Dateien im eigenen Lager
+// weggingen und wie viele davon ohne Protokolleintrag blieben.
+// Reihenfolge mit Absicht: Zuerst wird das eigene Server-Lager nur GELESEN, dann kommen die Eimer, in denen
+// eine Sperre das Löschen verbietet, und erst zuletzt die, in denen sie es erlaubt. Die erste Fassung hatte
+// avatars und banners vorn: Ein gesperrtes Mitglied verlor dort Profilbild und Banner und bekam danach einen
+// Fehler, weil page-media für es gesperrt ist — Dateien weg, Konto noch da. Von der Sicherheitsprüfung
+// gefunden (hoch), hier behoben.
+//
+// WAS DIE REIHENFOLGE LEISTET, genau und nicht mehr: Der Fall der Sperre ist zerstörungsfrei, weil er am
+// ersten Schritt scheitert. Sie macht den Vorgang NICHT unteilbar. Scheitert ein späterer Schritt (5xx, Netz,
+// Ratengrenze), sind die vorherigen Eimer schon leer und das Konto besteht weiter. Was davor schützt, ist die
+// Wiederholbarkeit: Ein erneuter Lauf setzt dort fort, wo es abbrach, und jede Meldung nennt, wie viel schon
+// weg ist. Zweite Sicherheitsprüfung, mittel: Der frühere Kommentar behauptete hier zu viel.
+const BUCKETS_SPERRE_GREIFT = ['page-media', 'project-images'];
+const BUCKETS_SPERRE_FREI = ['avatars', 'banners'];
+const LOG_DATEINAME = /^[0-9a-f-]{36}\.(jpg|png|webp|gif|mp4|webm)$/;
+
+async function deleteMemberUploads(memberId, { asAdmin = false } = {}) {
+  // 1) Nur lesen. Wirft, wenn das Lager nicht sicher geprüft werden kann — BEVOR irgendetwas weg ist.
+  let imLager = await serverLagerListe(memberId, asAdmin);
+  let entfernt = 0, ohneProtokoll = 0;
+  // 2) Eimer, in denen eine Sperre greift.
+  for (const bucket of BUCKETS_SPERRE_GREIFT) {
+    // Ein Admin, der fremde Seitenbilder im Supabase-Lager entfernt, muss das protokollieren — sonst wäre das
+    // Prüfprotokoll genau für den häufigeren Weg blind. Protokolliert wird nach JEDER Runde, damit ein
+    // Abbruch später die schon gelöschten Dateien nicht aus dem Nachweis fallen lässt.
+    // project-images bleibt draußen: admin_media_log kennt nur die Lager "supabase" und "eigener-server" und
+    // keine Spalte für den Eimer, eine Zeile dafür wäre nicht von einem Seitenbild zu unterscheiden.
+    const nachRunde = asAdmin && bucket === 'page-media'
+      ? async (namen) => { ohneProtokoll += await protokolliereSupabase(memberId, namen); }
+      : null;
+    await deleteMemberFiles(bucket, memberId, { asAdmin, nachRunde });
+  }
+  // 3) Eimer, in denen sie nicht greift.
+  for (const bucket of BUCKETS_SPERRE_FREI) await deleteMemberFiles(bucket, memberId, { asAdmin });
+  // 4) Das eigene Lager.
+  for (let runde = 0; runde < 100; runde++) {
+    if (!imLager.length) return { entfernt, ohneProtokoll };
+    for (const name of imLager) {
+      const pfad = asAdmin
+        ? `/api/page-media/${encodeURIComponent(memberId)}/${encodeURIComponent(name)}`
+        : `/api/page-media/${encodeURIComponent(name)}`;
+      const antwort = await fetchGeduldig(pfad, { method: 'DELETE' });
+      if (!antwort.ok) {
+        const inhalt = await antwort.json().catch(() => null);
+        throw lagerFehler(antwort.status, asAdmin, entfernt, inhalt && inhalt.error);
+      }
+      entfernt++;
+      // Die Admin-Route meldet mit "logged", ob der Nachweis in der Datenbank ankam. Die Datei ist in jedem
+      // Fall weg; ein fehlender Nachweis hält das Löschen NICHT auf, wird aber gezählt und gemeldet. Ein
+      // Abbruch hier hieße: Konto nicht löschbar, solange das Protokoll klemmt.
+      if (asAdmin) {
+        const inhalt = await antwort.json().catch(() => ({}));
+        if (inhalt && inhalt.logged === false) ohneProtokoll++;
+      }
+    }
+    // Die Admin-Liste kann abgeschnitten sein ("truncated"), deshalb neu lesen, bis sie leer ist.
+    imLager = await serverLagerListe(memberId, asAdmin);
+  }
+  throw new Error('Im eigenen Server-Speicher bleiben Dateien übrig, die sich nicht entfernen lassen. Das Konto bleibt bestehen.');
 }
-async function deleteMemberFiles(bucket, memberId) {
-  for (;;) {
+
+// Liest die Dateinamen im eigenen Server-Lager. Wirft bei JEDEM Status, der nicht 200 ist — auch bei 503 und
+// 404. Grund: Beide heißen "ich kann es nicht prüfen", nicht "dort liegt nichts". Würden wir hier
+// weitermachen, wäre das Konto gelöscht und die Dateien lägen weiter im Speicher, auffindbar über keine
+// Oberfläche mehr, weil die Admin-Liste die Kontokennung braucht. Genau das sollte dieser Umbau beseitigen.
+// Preis dieser Entscheidung, ausdrücklich: Auf einer Installation OHNE eigenes Lager (Dienst antwortet 503
+// "not configured") ist die Kontolöschung blockiert, bis das Lager erreichbar ist. Auf der Produktion ist es
+// eingerichtet. Von der Sicherheitsprüfung als stiller Fail-open gemeldet (mittel), hier geschlossen.
+async function serverLagerListe(memberId, asAdmin) {
+  const pfad = asAdmin ? `/api/page-media/${encodeURIComponent(memberId)}` : '/api/page-media';
+  const antwort = await fetchGeduldig(pfad, { cache: 'no-store' });
+  const inhalt = (await antwort.json().catch(() => null));
+  if (!antwort.ok) throw lagerFehler(antwort.status, asAdmin, 0, inhalt && inhalt.error);
+  // Status 200 ohne Dateiliste ist KEIN leeres Lager, sondern eine Antwort, die wir nicht verstehen (etwa von
+  // einem Proxy oder einer Zwischenseite). Sie als "nichts da" zu lesen wäre derselbe Fail-open, den die
+  // Strenge oben beseitigt. Zweite Sicherheitsprüfung, niedrig.
+  if (!inhalt || !Array.isArray(inhalt.files)) throw lagerFehler(antwort.status, asAdmin, 0, 'keine Dateiliste');
+  return inhalt.files.map((datei) => datei && datei.name).filter((name) => typeof name === 'string' && name);
+}
+
+// Fehlertext für das eigene Lager. Einem MITGLIED wird kein Eimername und kein Statuscode gezeigt (das sagt
+// ihm nichts und verrät Interna); die Einzelheiten gehen in die Konsole. Für ein Mitglied ist 403 eindeutig:
+// Auf dem eigenen Weg prüft der Dienst nur die Sperre (media-store.cjs, apiRoute), Adminrechte erst danach.
+function lagerFehler(status, asAdmin, bereitsEntfernt, grund) {
+  console.error('Kontolöschung: eigener Server-Speicher antwortet', status, grund || '', asAdmin ? '(Admin-Weg)' : '(eigener Weg)');
+  const dazu = bereitsEntfernt ? ` ${bereitsEntfernt} Datei(en) wurden dort vorher bereits entfernt; ein erneuter Versuch macht weiter.` : '';
+  if (asAdmin) return new Error(`Der eigene Server-Speicher antwortet mit ${status}. Es wurde dort nichts weiter gelöscht und das Konto bleibt bestehen.${dazu}`);
+  // Die Sperre wird am RUMPF erkannt, nicht am Status: Auf dem eigenen Weg ist 403 heute eindeutig die Sperre
+  // (media-store.cjs, apiRoute prüft sie vor der Admin-Verzweigung), aber käme je eine Schutzschicht vor die
+  // Hauptdomain, bekäme jedes Mitglied fälschlich "dein Konto ist gesperrt" zu lesen. Zweite Prüfung, niedrig.
+  if (status === 403 && grund === 'account banned') {
+    return new Error('Dein Konto ist gesperrt. Solange die Sperre läuft, lässt sich das Konto nicht löschen, weil deine Dateien nicht entfernt werden dürfen. Bitte wende dich an den Support.');
+  }
+  return new Error(`Deine Bilder konnten gerade nicht entfernt werden, deshalb wurde das Konto nicht gelöscht. Bitte versuch es später noch einmal.${dazu}`);
+}
+
+// Wie fetch, aber wartet bei 429 die vom Server genannte Zeit ab und versucht es erneut. Der Website-Server
+// lässt unter /api/ nur 60 Anfragen je Minute und IP durch (server.cjs, SITE_RATE_LIMIT_HEAVY) und schickt
+// Retry-After mit. Ohne das bricht die Löschung eines Kontos mit vielen Dateien mitten im Lauf ab: Eimer
+// geleert, Dateien teils weg, Konto noch da. Von der Sicherheitsprüfung gefunden (mittel).
+async function fetchGeduldig(pfad, opts = {}) {
+  for (let versuch = 0; versuch < 10; versuch++) {
+    // Der Kopf wird in JEDER Runde neu geholt: Zehn Wiederholungen mit je bis zu 65 Sekunden sind gut elf
+    // Minuten, in denen ein Zugangstoken ablaufen kann. getSession() erneuert es dabei selbst.
+    const kopf = await authKopf();
+    const antwort = await fetch(pfad, { ...opts, headers: { ...kopf, ...(opts.headers || {}) } });
+    if (antwort.status !== 429) return antwort;
+    const genannt = Number(antwort.headers && antwort.headers.get ? antwort.headers.get('Retry-After') : 0);
+    const warten = Math.min(Math.max(Number.isFinite(genannt) && genannt > 0 ? genannt : 2, 1), 65) * 1000;
+    await new Promise((fertig) => setTimeout(fertig, warten));
+  }
+  return { ok: false, status: 429, json: async () => ({}) };
+}
+async function authKopf() {
+  const { data: { session } } = await sb.auth.getSession();
+  return { Authorization: `Bearer ${session ? session.access_token : ''}` };
+}
+
+// Schreibt für jede im Supabase-Lager entfernte Seitenbild-Datei eine Zeile in das Prüfprotokoll. Gibt die
+// Zahl der Dateien zurück, für die das NICHT gelang. Kein Abbruch: Die Dateien sind weg, und ein klemmendes
+// Protokoll darf die Kontolöschung nicht verhindern — gemeldet wird es trotzdem.
+async function protokolliereSupabase(memberId, namen) {
+  let ohne = 0;
+  for (const name of namen) {
+    if (!LOG_DATEINAME.test(name)) { ohne++; console.error('Kontolöschung: Dateiname passt nicht in das Prüfprotokoll', name); continue; }
+    const { error } = await sb.rpc('admin_media_log_write',
+      { p_account: memberId, p_file: name, p_store: 'supabase', p_result: 'geloescht' });
+    if (error) { ohne++; console.error('Kontolöschung: Protokolleintrag fehlgeschlagen', error); }
+  }
+  return ohne;
+}
+
+// Leert einen Eimer im Ordner des Kontos. `nachRunde` wird nach JEDER erfolgreichen Runde mit den wirklich
+// entfernten Dateinamen aufgerufen — nicht erst am Ende. Die erste Fassung gab die Namen zurück und der
+// Aufrufer protokollierte danach; warf eine spätere Runde, war der Rückgabewert verloren und 100 bereits
+// gelöschte fremde Seitenbilder standen in keinem Protokoll, während die Meldung "nichts gelöscht" behauptete.
+// Von der zweiten Sicherheitsprüfung mit einer eigenen Attrappe belegt (hoch), hier behoben.
+//
+// Welche Namen als entfernt gelten, entscheidet die ANTWORT von remove(), nicht die Liste davor: Supabase
+// meldet nur die Objekte, die wirklich weg sind. Sonst entstünde eine Protokollzeile für eine Datei, die noch
+// liegt — genau die Behauptung, die das Prüfprotokoll nie enthalten darf (zweite Prüfung, mittel).
+//
+// Die Rundenbegrenzung ist eine Vorsichtsmaßnahme: Sollte remove() je Erfolg melden, ohne zu löschen, drehte
+// die Schleife sonst endlos, ohne Fehler und ohne Anzeige.
+async function deleteMemberFiles(bucket, memberId, { asAdmin = false, nachRunde = null } = {}) {
+  let entferntGesamt = 0;
+  for (let runde = 0; runde < 100; runde++) {
     const { data, error } = await sb.storage.from(bucket).list(memberId, { limit: 100 });
     if (error) {
-      if (/bucket not found/i.test(error.message)) return; // Vor Migration weiterhin nutzbar.
-      throw error;
+      if (/bucket not found/i.test(error.message)) return entferntGesamt; // Vor Migration weiterhin nutzbar.
+      throw eimerFehler(bucket, asAdmin, entferntGesamt, error.message);
     }
-    const paths = data.filter(file => file.id).map(file => `${memberId}/${file.name}`);
-    if (!paths.length) return;
-    const removed = unwrap(await sb.storage.from(bucket).remove(paths));
-    if (!removed?.length) throw new Error('Die Profilbilder konnten nicht entfernt werden. Bitte versuch es erneut.');
+    const dateien = data.filter((file) => file.id).map((file) => file.name);
+    if (!dateien.length) return entferntGesamt;
+    const weg = unwrap(await sb.storage.from(bucket).remove(dateien.map((name) => `${memberId}/${name}`)));
+    // Namen aus der Antwort, auf den Dateinamen gekürzt (Supabase gibt den vollen Pfad), und auf die
+    // angefragten Dateien beschnitten.
+    const bestaetigt = (weg || [])
+      .map((eintrag) => String((eintrag && eintrag.name) || '').split('/').pop())
+      .filter((name) => dateien.includes(name));
+    if (nachRunde && bestaetigt.length) await nachRunde(bestaetigt);
+    entferntGesamt += bestaetigt.length;
+    // Keine bestätigte Löschung, obwohl Dateien gelistet waren: fehlende Berechtigung (etwa die Sperre).
+    // Darf NICHT als Erfolg durchgehen, sonst verschwindet das Konto, während die Dateien bleiben.
+    if (!bestaetigt.length) throw eimerFehler(bucket, asAdmin, entferntGesamt, 'keine Datei bestätigt');
   }
+  throw eimerFehler(bucket, asAdmin, entferntGesamt, 'Rundenbegrenzung erreicht');
+}
+
+// Fehlertext für einen Eimer. Nennt die Zahl der bereits entfernten Dateien — "nichts gelöscht" wäre nach
+// einer teilweise gelaufenen Löschung falsch, und zwar an der empfindlichsten Stelle: im Prüfkontext.
+function eimerFehler(bucket, asAdmin, bereitsEntfernt, grund) {
+  console.error('Kontolöschung: Eimer', bucket, '—', grund, '| bereits entfernt:', bereitsEntfernt);
+  const dazu = bereitsEntfernt
+    ? ` ${bereitsEntfernt} Datei(en) in diesem Speicher wurden dabei schon entfernt; ein erneuter Versuch macht dort weiter.`
+    : ' In diesem Speicher wurde nichts entfernt.';
+  if (asAdmin) return new Error(`Die Dateien im Speicher "${bucket}" konnten nicht vollständig entfernt werden, das Konto bleibt bestehen.${dazu}`);
+  return new Error('Deine Bilder konnten nicht vollständig entfernt werden, deshalb wurde das Konto nicht gelöscht. Ist dein Konto gesperrt, wende dich bitte an den Support. Sonst versuch es bitte später noch einmal.');
 }
 
 // Ein Video so lesen, wie der Browser es sieht (Dauer und Maße): kaputte Dateien und

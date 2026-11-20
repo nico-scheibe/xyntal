@@ -642,9 +642,17 @@
         Object.assign(b, changed[0]); return "Notiz gespeichert.";
       }
       case "delete-site": {
-        if (!(await ask({ title: `Website-Konto von ${v.name} löschen?`, text: "Profil, Karte und Bilder werden endgültig entfernt. Das lässt sich nicht rückgängig machen. Ein App-Konto bleibt bestehen.", confirm: "Endgültig löschen", danger: true }))) return null;
-        await deleteMemberAvatars(m.id); await rpc("admin_delete_member", { p_id: m.id });
-        return `Website-Konto von ${v.name} gelöscht.`;
+        if (!(await ask({ title: `Website-Konto von ${v.name} löschen?`, text: "Profil, Karte, Profilbilder, Seitenbilder und Projektbilder werden endgültig entfernt, auch die im eigenen Server-Speicher. Das lässt sich nicht rückgängig machen. Ein App-Konto bleibt bestehen.", confirm: "Endgültig löschen", danger: true }))) return null;
+        // Erst die Dateien, dann das Konto: Danach wäre die Kontokennung nirgends mehr zu finden und
+        // niemand käme an die Dateien. Jede Löschung im eigenen Server-Speicher schreibt eine Zeile in
+        // admin_media_log, wie jede andere Admin-Löschung eines Seitenbildes.
+        const weg = await deleteMemberUploads(m.id, { asAdmin: true });
+        await rpc("admin_delete_member", { p_id: m.id });
+        return `Website-Konto von ${v.name} gelöscht.`
+          + (weg && weg.entfernt ? ` ${weg.entfernt} Datei(en) im eigenen Server-Speicher entfernt.` : "")
+          // "ohneProtokoll" zählt BEIDE Lager (Supabase-Seitenbilder und eigener Server), deshalb hier kein
+          // "davon" — das würde die Zahl auf das eigene Lager beziehen und wäre im Prüfkontext falsch.
+          + (weg && weg.ohneProtokoll ? ` ${weg.ohneProtokoll} Löschung(en) stehen ohne Protokolleintrag da — die Dateien sind weg, der Nachweis fehlt.` : "");
       }
       case "delete-app": {
         const x = await ask({ title: `App-Konto von ${v.name} löschen?`, danger: true, confirm: "Endgültig löschen",
