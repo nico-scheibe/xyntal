@@ -340,8 +340,7 @@ a { color: inherit; text-decoration: none; }
 
 /* Download: Karte mit Mono-Label und zwei Plattform-Kacheln (Symbol, Name, Pfeil) */
 .dl { width: 100%; max-width: 720px; display: grid; gap: var(--s-2); padding: var(--s-3); border: 1px solid var(--line-2); border-radius: var(--r-win); background: var(--g-1); }
-.dl__label { display: inline-flex; align-items: center; gap: 10px; margin: 0; font-size: 12px; letter-spacing: .14em; color: var(--t-3); }
-.dl__label::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--bl); box-shadow: 0 0 0 4px rgba(76, 141, 255, .18); }
+.dl__label { margin: 0; font-size: 12px; letter-spacing: .14em; color: var(--t-3); }
 .dl .end__note { margin: 0; }
 .dl__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-2); }
 .dl__tile { display: flex; align-items: center; gap: 14px; min-height: 64px; padding: 14px 18px; border: 1px solid var(--line-2); border-radius: var(--r-win); background: var(--g-2); color: var(--t-1); font: 500 1rem/1.25 var(--f-text); text-decoration: none; transition: border-color .3s var(--ease), background .3s var(--ease); }
