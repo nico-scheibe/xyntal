@@ -21,6 +21,14 @@ const CFG = {
 };
 const tokens = Object.fromEntries(Object.entries(CFG).map(([k, v]) => [k.repeat(30), v]));
 const rpcCalls = new Map();
+// Das Prüfprotokoll (public.admin_media_log_write). logCalls hält jeden Aufruf mit Token und Inhalt, damit der Test
+// belegen kann, WAS der Dienst schreibt und MIT WESSEN Token. logMode steuert die Antwort der nachgebauten Datenbank:
+//   'ok'      -> eine Kennung (so wie die echte Funktion)
+//   'error'   -> 500 (Datenbank antwortet, aber nicht gut)
+//   'keineId' -> 200 mit true statt einer Kennung (dann ist NICHT belegt, dass eine Zeile entstanden ist)
+//   'textId'  -> 200 mit "4711" als Zeichenkette (bigint kann so serialisiert werden; muss als Kennung gelten)
+const logCalls = [];
+let logMode = 'ok';
 let s3Hits = 0; // zählt jede Anfrage, die den S3-Speicher erreicht
 const objects = new Map();
 const listen = (srv) => new Promise((ok) => srv.listen(0, '127.0.0.1', () => ok(srv.address().port)));
@@ -61,6 +69,19 @@ const listen = (srv) => new Promise((ok) => srv.listen(0, '127.0.0.1', () => ok(
     const tok = (req.headers.authorization || '').replace('Bearer ', ''), c = tokens[tok];
     if (!c) { res.writeHead(401); return res.end('{}'); }
     if (req.url.startsWith('/rest/v1/rpc/ja')) { res.writeHead(200, { 'content-type': 'application/json' }); return res.end('true'); }
+    if (req.url.startsWith('/rest/v1/rpc/admin_media_log_write')) {
+      const chunks = [];
+      req.on('data', (x) => chunks.push(x));
+      req.on('end', () => {
+        let body = null;
+        try { body = JSON.parse(Buffer.concat(chunks).toString()); } catch { body = null; }
+        logCalls.push({ tok, body });
+        if (logMode === 'error') { res.writeHead(500); return res.end('{}'); }
+        res.writeHead(200, { 'content-type': 'application/json' });
+        res.end(logMode === 'keineId' ? 'true' : logMode === 'textId' ? '"4711"' : '4711');
+      });
+      return;
+    }
     if (req.url.startsWith('/rest/v1/rpc/is_admin')) {
       rpcCalls.set(tok, (rpcCalls.get(tok) || 0) + 1);
       if (c.rpc === 'error') { res.writeHead(500); return res.end('{}'); }
@@ -163,12 +184,52 @@ const listen = (srv) => new Promise((ok) => srv.listen(0, '127.0.0.1', () => ok(
   assert.equal(s3Hits, hitsBefore, 'Pfadtrick beim Löschen: S3 wird NICHT erreicht');
   r = await fetch(`${base}/api/page-media/${USER}/nicht-datei.exe`, { method: 'DELETE', headers: as('a') });
   assert.equal(r.status, 400, 'Dateiname außerhalb der Form wird abgewiesen');
+  // ---- Prüfprotokoll in der Datenbank (public.admin_media_log) ----
+  // Vor dem Löschen darf nichts geschrieben sein: Ein Eintrag entsteht NACH der bestätigten Löschung, nie vorher.
+  // Die abgewiesenen Versuche oben (403, 400, 405, Pfadtricks) haben nichts gelöscht und dürfen nichts geschrieben haben.
+  assert.equal(logCalls.length, 0, 'bis hierher wurde nichts protokolliert: kein Versuch hat gelöscht');
   // Admin löscht fremd; zweiter Versuch: Datei nicht mehr da (404), kein zweiter Protokolleintrag
   r = await fetch(`${base}/api/page-media/${USER}/${uname}`, { method: 'DELETE', headers: as('a') });
   assert.equal(r.status, 200, await r.clone().text());
   assert.equal(objects.has(`page-media/${USER}/${uname}`), false, 'Admin hat die fremde Datei entfernt');
+  // Der Nachweis steht in der Datenbank, nicht im Prozess-Log, und trägt genau die Angaben der Tabelle.
+  assert.equal(logCalls.length, 1, 'die Löschung hat GENAU EINEN Eintrag geschrieben');
+  assert.deepEqual(logCalls[0].body, { p_account: USER, p_file: uname, p_store: 'eigener-server', p_result: 'geloescht' },
+    'der Eintrag nennt Konto, Datei, Lager "eigener-server" und Ergebnis "geloescht"');
+  assert.equal(logCalls[0].tok, 'a'.repeat(30),
+    'geschrieben wird mit dem Token des ADMINS (nicht mit dem Dienstschlüssel): nur so setzt die Datenbank auth.uid()');
+  assert.deepEqual(await r.json(), { ok: true, account: USER, file: uname, logged: true, log_id: 4711 },
+    'die Antwort sagt der Oberfläche, DASS protokolliert wurde, und nennt die Kennung des Eintrags');
   r = await fetch(`${base}/api/page-media/${USER}/${uname}`, { method: 'DELETE', headers: as('a') });
   assert.equal(r.status, 404, 'Gegenprobe: zweites Löschen findet nichts mehr (404)');
+  assert.equal(logCalls.length, 1, 'Gegenprobe: das erfolglose zweite Löschen schreibt KEINEN Eintrag');
+  // Scheitert der Eintrag, ist die Datei TROTZDEM weg. Das darf nicht verschwiegen und nicht als Fehlschlag der
+  // Löschung gemeldet werden: Status bleibt 200, die Antwort trägt logged:false und den Grund.
+  for (const [modus, grund] of [['error', 'Datenbank antwortet 500'], ['keineId', 'keine Eintragskennung']]) {
+    logMode = modus;
+    r = await fetch(`${base}/api/page-media`, { method: 'POST', headers: { ...as('b'), 'Content-Type': 'image/png' }, body: Buffer.alloc(300) });
+    assert.equal(r.status, 200, `Vorbedingung (${modus}): Mitglied hat wieder eine Datei`);
+    const n2 = (await r.json()).path.split('/').pop();
+    const vorher = logCalls.length;
+    r = await fetch(`${base}/api/page-media/${USER}/${n2}`, { method: 'DELETE', headers: as('a') });
+    assert.equal(r.status, 200, `${modus}: die Löschung gilt, der Status bleibt 200`);
+    assert.deepEqual(await r.json(), { ok: true, account: USER, file: n2, logged: false, log_error: grund },
+      `${modus}: die Antwort meldet den fehlenden Nachweis mit Grund "${grund}"`);
+    assert.equal(objects.has(`page-media/${USER}/${n2}`), false,
+      `${modus}: die Datei ist weg — ein fehlender Nachweis nimmt die Löschung NICHT zurück`);
+    assert.equal(logCalls.length, vorher + 1, `${modus}: der Schreibversuch wurde unternommen`);
+  }
+  // Gegenprobe zu beiden Fällen oben: Eine Kennung als Zeichenkette ("4711") ist eine GÜLTIGE Kennung. Würde sie als
+  // fehlend gelten, bekäme der Admin bei jedem erfolgreichen Eintrag "nicht protokolliert" zu lesen, obwohl die Zeile steht.
+  logMode = 'textId';
+  r = await fetch(`${base}/api/page-media`, { method: 'POST', headers: { ...as('b'), 'Content-Type': 'image/png' }, body: Buffer.alloc(300) });
+  assert.equal(r.status, 200, 'Vorbedingung (textId): Mitglied hat wieder eine Datei');
+  const n3 = (await r.json()).path.split('/').pop();
+  r = await fetch(`${base}/api/page-media/${USER}/${n3}`, { method: 'DELETE', headers: as('a') });
+  assert.equal(r.status, 200, 'textId: Status 200');
+  assert.deepEqual(await r.json(), { ok: true, account: USER, file: n3, logged: true, log_id: 4711 },
+    'textId: eine Kennung als Zeichenkette gilt als Nachweis, und log_id ist eine Zahl');
+  logMode = 'ok';
   // Kein Zwischenspeicher für die Admin-Entscheidung: jeder Admin-Aufruf fragt die Datenbank neu
   const rpcA = rpcCalls.get('a'.repeat(30)) || 0;
   r = await fetch(`${base}/api/page-media/${USER}`, { headers: as('a') });

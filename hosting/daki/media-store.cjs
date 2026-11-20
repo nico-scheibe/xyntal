@@ -202,12 +202,59 @@ function createMediaHandler({ supabase, env = process.env }) {
     return { files, truncated: !!token };
   }
 
+  // Schreibt den Nachweis einer Löschung in die DATENBANK, in public.admin_media_log, über dieselbe Funktion, die auch
+  // die Oberfläche für das Supabase-Lager benutzt (Migration 20261120120000_admin_media_log.sql). Vorher stand die Zeile
+  // nur im Prozess-Log dieses Dienstes (journald): flüchtig, an die Serverkonfiguration gebunden, nicht mit dem anderen
+  // Löschweg zusammenführbar und in der App nicht einsehbar. Jetzt landen beide Wege in einer Tabelle.
+  //
+  // MIT DEM TOKEN DES ADMINS, nicht mit dem Dienstschlüssel. Zwei Gründe: Die Funktion setzt die handelnde Person aus
+  //   auth.uid(), und mit dem Dienstschlüssel wäre die null — die Zeile hätte niemanden, der gehandelt hat. Und
+  //   service_role hat auf der Tabelle und der Funktion absichtlich kein Recht, damit ein abgeflossener Dienstschlüssel
+  //   keine Zeilen fälschen kann.
+  //
+  // EINSCHRÄNKUNG, die der neue Weg mitbringt: Der Nachweis hängt jetzt daran, dass dieser Dienst die DATENBANK erreicht.
+  //   Vorher brauchte die Protokollzeile nichts außer dem eigenen Prozess. Fällt Supabase aus oder ist das Token abgelaufen,
+  //   während der S3-Speicher antwortet, dann ist die Datei gelöscht und der Nachweis fehlt.
+  // WAS DANN PASSIERT, ausdrücklich entschieden: Die Löschung wird NICHT zurückgenommen (sie ist bei S3 nicht umkehrbar,
+  //   und bei einer gemeldeten rechtswidrigen Datei ist "gelöscht ohne Nachweis" das kleinere Übel als "wieder da").
+  //   Die Route antwortet weiter mit 200, denn die Datei IST weg — ein 502 würde der Oberfläche "nicht gelöscht" sagen,
+  //   und das wäre falsch. Stattdessen trägt die Antwort "logged": false und den Grund. Die Oberfläche meldet das dem
+  //   Admin sichtbar als "gelöscht, aber nicht protokolliert", so wie sie es beim Supabase-Lager schon tut.
+  //   Zusätzlich geht eine Zeile per console.error ins Prozess-Log. Die ist NICHT der Nachweis, sondern nur eine letzte
+  //   Spur für den Betreiber; sie hat genau die Schwächen, wegen derer dieser Umbau nötig war.
+  async function protokoll(req, konto, datei) {
+    const sb = supabase(), token = bearerOf(req);
+    if (!sb || !token) return { ok: false, grund: 'keine Sitzung' };
+    try {
+      const r = await fetch(`${sb.url}/rest/v1/rpc/admin_media_log_write`, {
+        method: 'POST',
+        headers: { apikey: sb.key, Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_account: konto, p_file: datei, p_store: 'eigener-server', p_result: 'geloescht' }),
+        redirect: 'error', signal: AbortSignal.timeout(8000),
+      });
+      if (!r.ok) return { ok: false, grund: `Datenbank antwortet ${r.status}` };
+      // Die Funktion gibt die Kennung der geschriebenen Zeile zurück. Ohne eine Kennung ist nicht belegt, dass eine
+      // Zeile entstanden ist; dann gilt der Nachweis als gescheitert, statt dem Ausbleiben eines Fehlers zu vertrauen.
+      // ZWEI FORMEN WERDEN AKZEPTIERT, und zwar mit Grund: Die Spalte ist ein bigint. Ob PostgREST den Rückgabewert als
+      //   JSON-Zahl (4711) oder als Zeichenkette ("4711") ausgibt, ist hier NICHT gegen das echte PostgREST der
+      //   Produktion gemessen — der Test nebenan prüft nur den Nachbau. Würde nur die Zahl akzeptiert und PostgREST
+      //   lieferte die Zeichenkette, dann wäre JEDER erfolgreiche Eintrag als "keine Eintragskennung" gemeldet: Die
+      //   Zeile stünde in der Tabelle, und der Admin bekäme "gelöscht, aber nicht protokolliert" zu lesen. Eine
+      //   Falschmeldung über den Nachweis ist genau das, was dieser Umbau abstellen soll. Deshalb beide Formen.
+      const rohe = await r.json();
+      const id = typeof rohe === 'string' && /^[0-9]+$/.test(rohe) ? Number(rohe) : rohe;
+      if (!Number.isSafeInteger(id) || id <= 0) return { ok: false, grund: 'keine Eintragskennung' };
+      return { ok: true, id };
+    } catch {
+      return { ok: false, grund: 'Datenbank nicht erreichbar' };
+    }
+  }
+
   // Admin-Routen auf FREMDE Konten. Der Präfix wird NUR aus dem geprüften Konto gebaut, nie aus dem rohen Pfad.
   // Reihenfolge: Host, Admin (Datenbank), Kontoform, Dateiform. Ein Mitglied bekommt immer 403, nie 400.
-  // Einschränkung des Nachweises (Kommentar wie gewünscht): Das Protokoll unten erfasst nur Löschungen über diese Route.
-  // Diese Route ist der einzige Weg in dieses Lager, AUSSER über die S3-Zugangsdaten (media.env). Wer dort direkt schreibt
-  // oder löscht, erscheint hier nicht. Die Protokollzeile steht im Prozess-Log des Dienstes (journald), nicht in einer
-  // Datenbanktabelle, und ist nur so lange verfügbar, wie das Log aufbewahrt wird.
+  // Einschränkung des Nachweises, ehrlich benannt: Das Protokoll erfasst nur Löschungen über diese Route. Diese Route ist
+  // der einzige Weg in dieses Lager, AUSSER über die S3-Zugangsdaten (media.env). Wer dort direkt löscht, erscheint nicht
+  // im Protokoll. Ein vollständiger Nachweis wäre nur zu haben, wenn es keinen zweiten Weg in den Speicher gäbe.
   async function adminRoute(req, res, user, konto, datei) {
     if (requestHost(req) !== ADMIN_HOST) return json(res, 403, { error: 'admin host only' });
     if (!(await dbAdmin(req))) return json(res, 403, { error: 'not admin' });
@@ -228,9 +275,15 @@ function createMediaHandler({ supabase, env = process.env }) {
     const del = await s3Request(cfg, { method: 'DELETE', key });
     del.resume();
     if (del.statusCode !== 204 && del.statusCode !== 200) return json(res, 502, { error: 'delete failed' });
-    // Nachweis im Stil der Admin-Funktionen (raise log): wer, welches Konto, welche Datei, wann.
-    console.log(`admin-media: Seitenbild ${konto}/${datei} entfernt durch ${user.id} um ${new Date().toISOString()}`);
-    return json(res, 200, { ok: true, account: konto, file: datei });
+    // Nachweis in die Datenbank, NACH der bestätigten Löschung, nicht vorher: Ein Eintrag vor einer Löschung, die dann
+    // scheitert, wäre eine Behauptung über etwas, das nicht stattgefunden hat.
+    const log = await protokoll(req, konto, datei);
+    if (!log.ok) {
+      // Die Datei ist weg, der Nachweis fehlt. Das wird nicht verschwiegen (siehe Kommentar an protokoll()).
+      console.error(`admin-media: Seitenbild ${konto}/${datei} entfernt durch ${user.id} um ${new Date().toISOString()} — NICHT protokolliert (${log.grund})`);
+      return json(res, 200, { ok: true, account: konto, file: datei, logged: false, log_error: log.grund });
+    }
+    return json(res, 200, { ok: true, account: konto, file: datei, logged: true, log_id: log.id });
   }
 
   async function apiRoute(req, res, pathname) {

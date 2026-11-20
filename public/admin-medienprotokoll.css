@@ -1,0 +1,4 @@
+/* Admin → Medien-Protokoll (nur lesend): Hervorhebung für Ergebnis "ungewiss" und Kopierknopf für Kennungen. */
+.admin-app .mp-ungewiss { color:#E0705F; font-weight:600; }
+.admin-app .mp-copy { padding:2px 6px; border:1px solid var(--admin-line); border-radius:2px; background:transparent; color:#ECEAE4; font:12px/1.4 var(--f-mono,monospace); cursor:pointer; }
+.admin-app .mp-copy:hover { border-color:#ECEAE4; }

@@ -660,18 +660,25 @@
         if (!gone.length) throw Error("Bewerbung nicht mehr vorhanden oder keine Berechtigung.");
         return "Bewerbung gelöscht.";
       }
-      // Löschen von Seitenbildern. GRENZE DES PROTOKOLLS: Der Eintrag (admin_log_page_media_delete) erfasst nur Löschungen,
-      // die über diese Oberfläche laufen. Eine direkte Löschung über die Storage-Schnittstelle wird nicht protokolliert, weil
-      // die Regel sie erlaubt. Ein echtes Prüfprotokoll bräuchte den Server-Weg. Der Eintrag ist daher kein Prüfprotokoll.
-      // Löschen im eigenen Server-Speicher. Die Löschung protokolliert der SERVER (siehe media-store.cjs). Hier wird nur
-      // das Ergebnis der Anfrage gemeldet. Ein Protokolleintrag der Oberfläche gibt es für diesen Speicher nicht.
+      // Löschen von Seitenbildern. Beide Lager schreiben ihren Nachweis in DIESELBE Tabelle, public.admin_media_log
+      // (Migration 20261120120000_admin_media_log.sql). Vorher waren es zwei flüchtige Spuren: eine Zeile im
+      // Serverprotokoll der Datenbank und eine im Prozess-Log des Mediendienstes.
+      // GENAU EIN SCHREIBER JE WEG, damit keine Zeile doppelt entsteht:
+      //   Supabase-Lager (case "media-delete"): die OBERFLÄCHE schreibt, weil sie allein das Ergebnis des Löschens kennt.
+      //   Eigener Server (case "media-server-delete"): der SERVER schreibt (media-store.cjs), weil er allein weiß, ob die
+      //     Datei im S3-Speicher wirklich weg ist. Die Oberfläche schreibt dort NICHTS; sie meldet nur, was der Server
+      //     über den Nachweis sagt (Feld "logged" in der Antwort).
+      // GRENZE DES PROTOKOLLS, unverändert und ausdrücklich: Es erfasst nur Löschungen über diese beiden Wege. Die Regel
+      //   "Xyntal Seitenbild entfernen" erlaubt einem Admin dasselbe Löschen direkt über die Storage-Schnittstelle, und
+      //   wer die S3-Zugangsdaten hat, löscht im eigenen Lager direkt vorbei. Davon erfährt die Tabelle nichts. Sie belegt,
+      //   WAS über diese Wege gelöscht wurde, nicht, dass nichts anderes gelöscht wurde.
       case "media-server-delete": {
         const konto = el && el.dataset.konto, datei = el && el.dataset.path;
         if (!m || konto !== m.id || !/^[0-9a-f-]{36}\.(jpg|png|webp|gif|mp4|webm)$/.test(datei || "")) {
           throw Error("Die Datei gehört nicht zu diesem Mitglied. Nichts wurde entfernt.");
         }
         if (!(await ask({ title: "Seitenbild im eigenen Server-Speicher entfernen?", confirm: "Endgültig entfernen", danger: true,
-          text: "Die Datei wird aus dem eigenen Server-Speicher gelöscht. Das lässt sich nicht rückgängig machen. Der Server schreibt einen Eintrag in sein Prozess-Protokoll. Der liegt nicht in der Datenbank und wird in dieser App NICHT angezeigt; nur Betreiber mit Zugriff auf den Server können ihn lesen, und nur solange das Log erhalten bleibt. Browser, die die Datei schon geladen haben, können sie aus ihrem Zwischenspeicher weiter anzeigen (bis zu ein Jahr). Vor dem Server liegt kein CDN, das ist gemessen; wie lange einzelne Browser halten, haben wir nicht gemessen. Die Seite des Mitglieds wird nicht geändert."}))) return null;
+          text: "Die Datei wird aus dem eigenen Server-Speicher gelöscht. Das lässt sich nicht rückgängig machen. Der Server schreibt danach einen Eintrag in das Prüfprotokoll in der Datenbank: wer, welches Konto, welche Datei, wann. Erreicht der Server die Datenbank in diesem Moment nicht, ist die Datei trotzdem weg und der Eintrag fehlt — das wird dir dann ausdrücklich gemeldet. Das Protokoll erfasst nur Löschungen über diese Oberfläche, nicht Löschungen direkt über die Schnittstelle oder über die S3-Zugangsdaten. Browser, die die Datei schon geladen haben, können sie aus ihrem Zwischenspeicher weiter anzeigen (bis zu ein Jahr). Vor dem Server liegt kein CDN, das ist gemessen; wie lange einzelne Browser halten, haben wir nicht gemessen. Die Seite des Mitglieds wird nicht geändert."}))) return null;
         let r;
         try {
           r = await fetch(`/api/page-media/${encodeURIComponent(konto)}/${encodeURIComponent(datei)}`, { method: "DELETE", headers: await authHeaders() });
@@ -680,7 +687,23 @@
           throw neutral("Ungewiss: Die Verbindung ist beim Entfernen abgebrochen. Ob die Datei gelöscht wurde, ist unklar. Die Liste wurde neu geladen, bitte dort prüfen.");
         }
         await loadMedia(m.id);
-        if (r.ok) return `Seitenbild von ${v.name} im eigenen Server-Speicher entfernt. Der Server protokolliert Löschungen in seinem Prozess-Protokoll; diese App zeigt den Eintrag nicht.`;
+        if (r.ok) {
+          // Der Server sagt in der Antwort, ob der Nachweis in der Datenbank steht. Ein fehlender Nachweis wird gemeldet,
+          // nicht verschwiegen: Die Datei ist weg, aber es gibt keinen Beleg dafür, wer sie entfernt hat.
+          let logged = null, grund = "";
+          try {
+            const body = await r.json();
+            if (body && typeof body === "object") { logged = body.logged === true; grund = String(body.log_error || ""); }
+          } catch (err) {
+            // Antwort ohne lesbaren Inhalt: Die Löschung ist bestätigt (r.ok), über den Nachweis wissen wir nichts.
+            logged = null;
+          }
+          if (logged === true) return `Seitenbild von ${v.name} im eigenen Server-Speicher entfernt. Eintrag im Prüfprotokoll der Datenbank geschrieben.`;
+          if (logged === false) {
+            throw neutral(`Seitenbild von ${v.name} im eigenen Server-Speicher gelöscht, aber NICHT protokolliert${grund ? `: ${grund}` : ""}. Die Datei ist weg; es gibt keinen Eintrag darüber, wer sie entfernt hat.`);
+          }
+          throw neutral(`Seitenbild von ${v.name} im eigenen Server-Speicher entfernt. Ob der Eintrag im Prüfprotokoll geschrieben wurde, ist unklar: Der Server hat es nicht mitgeteilt.`);
+        }
         // 401: die Anmeldung ist abgelaufen. Der Server hat VOR jeder Löschung abgelehnt, also ist nichts entfernt.
         if (r.status === 401) throw Error("Die Anmeldung ist abgelaufen. Nichts wurde entfernt. Bitte lade die Seite neu.");
         if (r.status === 404) throw Error("Die Datei war nicht mehr vorhanden. Die Liste wurde neu geladen.");
@@ -694,27 +717,57 @@
         if (!m) return null;
         // Punkt 5: Die Datei muss zu DIESEM Mitglied gehören. Sonst nichts löschen.
         if (!path || !path.startsWith(m.id + "/")) throw Error("Die Datei gehört nicht zu diesem Mitglied. Nichts wurde entfernt.");
+        // Und sie muss die Form haben, die das Prüfprotokoll annimmt — GEPRÜFT VOR dem Löschen, nicht danach.
+        // Sonst gäbe es einen Fall, in dem gelöscht wird und der Nachweis unmöglich ist: Ein Objekt mit Unterordner
+        // (<konto>/unter/bild.jpg) käme durch das startsWith, die Löschung liefe, und admin_media_log_write würde den
+        // Namen danach ablehnen. Der Admin läse "gelöscht, aber NICHT protokolliert", ohne dass es dafür einen Grund
+        // gäbe, den er abstellen kann. Dieselbe Prüfung macht der Weg für das eigene Lager oben schon.
+        if (!/^[0-9a-f-]{36}\.(jpg|png|webp|gif|mp4|webm)$/.test(path.slice(m.id.length + 1))) {
+          throw Error("Der Dateiname hat nicht die erwartete Form. Nichts wurde entfernt, weil die Löschung dann nicht protokolliert werden könnte.");
+        }
         // Punkt 6: nur versprechen, was wir halten können. Zwischenspeicher haben wir nicht gemessen.
         if (!(await ask({ title: "Seitenbild entfernen?", confirm: "Endgültig entfernen", danger: true,
-          text: "Die Datei wird aus dem Speicher gelöscht. Das lässt sich nicht rückgängig machen. Danach schreibt die Oberfläche einen Eintrag in das Serverprotokoll der Datenbank. Diese App zeigt ihn nicht an; nur Betreiber mit Zugriff auf den Datenbankserver können ihn lesen. Der Eintrag erfasst nur Löschungen über diese Oberfläche, nicht direkte Löschungen über die Schnittstelle. Wie lange Zwischenspeicher die Datei noch ausliefern, haben wir nicht gemessen. Die Seite des Mitglieds wird nicht geändert."}))) return null;
+          text: "Die Datei wird aus dem Speicher gelöscht. Das lässt sich nicht rückgängig machen. Danach schreibt die Oberfläche einen Eintrag in das Prüfprotokoll in der Datenbank: wer, welches Konto, welche Datei, wann. Scheitert der Eintrag, ist die Datei trotzdem weg — das wird dir dann ausdrücklich gemeldet. Der Eintrag erfasst nur Löschungen über diese Oberfläche, nicht direkte Löschungen über die Schnittstelle. Wie lange Zwischenspeicher die Datei noch ausliefern, haben wir nicht gemessen. Die Seite des Mitglieds wird nicht geändert."}))) return null;
         // Die Liste wird hier selbst neu geladen (nicht über TOUCHES): Ein fehlgeschlagenes Neuladen darf eine gelungene Löschung
         // nicht als Fehler melden. loadPageMedia wirft nicht, es zeigt Ladefehler in der Box.
         const reload = () => loadMedia(m.id);
+        // Der Dateiname ohne den Kontoordner. Oben ist geprüft, dass path mit m.id + "/" beginnt.
+        const datei = path.slice(m.id.length + 1);
+        // Schreibt eine Zeile ins Prüfprotokoll. Ergebnis: { ok } oder { ok: false, why, unclear }.
+        // ergebnis ist "geloescht" (bestätigt) oder "ungewiss" (Ausgang der Löschung unklar) — beides sind Zustände, die
+        // hinterher jemand wissen muss. "nicht geloescht" wird nicht protokolliert: Dann ist nichts entfernt worden.
+        const protokoll = async (ergebnis) => {
+          try {
+            const { error: logErr } = await sb.rpc("admin_media_log_write",
+              { p_account: m.id, p_file: datei, p_store: "supabase", p_result: ergebnis });
+            if (logErr) return { ok: false, why: failText(logErr), unclear: !logErr.status };
+            return { ok: true };
+          } catch (err) {
+            return { ok: false, why: failText(err), unclear: true };
+          }
+        };
         let res;
         try {
           res = await sb.storage.from("page-media").remove([path]);
         } catch (err) {
           // Ausnahme während des Löschens: der Zustand ist UNGEWISS, nicht als Erfolg oder Misserfolg behaupten.
+          // Eine Löschung mit unklarem Ausgang gehört ins Protokoll, genau deshalb kennt es den Wert "ungewiss".
+          const log = await protokoll("ungewiss");
           await reload();
-          throw neutral("Ungewiss: Die Verbindung ist beim Entfernen abgebrochen. Ob die Datei gelöscht wurde, ist unklar. Die Liste wurde neu geladen, bitte dort prüfen.");
+          throw neutral("Ungewiss: Die Verbindung ist beim Entfernen abgebrochen. Ob die Datei gelöscht wurde, ist unklar. Die Liste wurde neu geladen, bitte dort prüfen."
+            + (log.ok ? " Der unklare Ausgang ist im Prüfprotokoll vermerkt." : ` Auch der Vermerk im Prüfprotokoll ist nicht gelungen: ${log.why}.`));
         }
         const { data, error } = res || {};
         if (error) {
+          // Ein Fehler MIT Statuscode kam vom Server: Dann ist nichts gelöscht worden. Nichts zu protokollieren — ein
+          // Eintrag über eine Löschung, die nicht stattgefunden hat, wäre genau der Fehler, der im alten Serverprotokoll
+          // drei erfundene Zeilen hinterlassen hat.
+          if (error.status) { await reload(); throw Error(`Das Seitenbild wurde nicht entfernt: ${failText(error)}`); }
+          // Ohne Statuscode (Netzfehler im Client): der Zustand ist ungewiss, und das gehört ins Protokoll.
+          const log = await protokoll("ungewiss");
           await reload();
-          // Ein Fehler MIT Statuscode kam vom Server: Dann ist nichts gelöscht worden.
-          if (error.status) throw Error(`Das Seitenbild wurde nicht entfernt: ${failText(error)}`);
-          // Ohne Statuscode (Netzfehler im Client): der Zustand ist ungewiss.
-          throw neutral("Ungewiss: Die Verbindung ist beim Entfernen abgebrochen. Ob die Datei gelöscht wurde, ist unklar. Die Liste wurde neu geladen, bitte dort prüfen.");
+          throw neutral("Ungewiss: Die Verbindung ist beim Entfernen abgebrochen. Ob die Datei gelöscht wurde, ist unklar. Die Liste wurde neu geladen, bitte dort prüfen."
+            + (log.ok ? " Der unklare Ausgang ist im Prüfprotokoll vermerkt." : ` Auch der Vermerk im Prüfprotokoll ist nicht gelungen: ${log.why}.`));
         }
         // Fehlt die Berechtigung, kommt KEIN Fehler, sondern eine leere Liste. Das ist kein Erfolg.
         if (!data || !data.length) {
@@ -723,22 +776,15 @@
         }
         // Gelöscht. Jetzt der Protokolleintrag, NICHT vorher: Ein Eintrag vor einer Löschung, die dann scheitert, wäre falsch.
         // Scheitert der Eintrag, bleibt die Löschung bestehen. Das wird ausdrücklich gemeldet, nicht verschwiegen.
-        let logError = null, logUnclear = false;
-        try {
-          const { error: logErr } = await sb.rpc("admin_log_page_media_delete", { p_path: path });
-          if (logErr) { logError = logErr; logUnclear = !logErr.status; }
-        } catch (err) {
-          logError = err; logUnclear = true;
-        }
+        const log = await protokoll("geloescht");
         // Ein Fehler beim Neuladen ändert an der Löschung nichts; er steht dann in der Box.
         await reload();
-        if (logError) {
-          const why = failText(logError);
-          throw neutral(logUnclear
-            ? `Seitenbild von ${v.name} gelöscht. Ob der Protokolleintrag geschrieben wurde, ist unklar: ${why}.`
-            : `Seitenbild von ${v.name} gelöscht, aber nicht protokolliert: ${why}.`);
+        if (!log.ok) {
+          throw neutral(log.unclear
+            ? `Seitenbild von ${v.name} gelöscht. Ob der Eintrag im Prüfprotokoll geschrieben wurde, ist unklar: ${log.why}.`
+            : `Seitenbild von ${v.name} gelöscht, aber NICHT protokolliert: ${log.why}. Die Datei ist weg; es gibt keinen Eintrag darüber, wer sie entfernt hat.`);
         }
-        return `Seitenbild von ${v.name} gelöscht. Protokolleintrag in der Datenbank geschrieben (in dieser App nicht einsehbar).`;
+        return `Seitenbild von ${v.name} gelöscht. Eintrag im Prüfprotokoll der Datenbank geschrieben.`;
       }
       default: return null;
     }

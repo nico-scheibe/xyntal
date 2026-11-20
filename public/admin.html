@@ -38,6 +38,7 @@
   <link rel="stylesheet" href="admin.css?v=16">
   <link rel="stylesheet" href="admin-support.css?v=1">
   <link rel="stylesheet" href="admin-contracts.css?v=1">
+  <link rel="stylesheet" href="admin-medienprotokoll.css?v=1">
   <link rel="stylesheet" href="/backdrop.css?v=7">
   <link rel="stylesheet" href="/site-header.css?v=12">
   <link rel="stylesheet" href="/site-search.css?v=2">
@@ -98,6 +99,7 @@
         <button role="tab" data-tab="security" data-group="system" data-platform data-perm="security.view" aria-selected="false"><i class="xa-ico" data-ico="alert"></i><span>Sicherheit</span></button>
         <button role="tab" data-tab="access" data-group="system" data-platform data-perm="audit.view" aria-selected="false"><i class="xa-ico" data-ico="eye"></i><span>Nachrichtenzugriff</span></button>
         <button role="tab" data-tab="audit" data-group="system" data-platform data-perm="audit.view" aria-selected="false"><i class="xa-ico" data-ico="file"></i><span>Audit-Log</span></button>
+        <button role="tab" data-tab="medienprotokoll" data-group="system" data-site aria-selected="false"><i class="xa-ico" data-ico="file"></i><span>Medien-Protokoll</span></button>
         <button role="tab" data-tab="console" data-group="system" data-platform data-perm="users.view" aria-selected="false"><i class="xa-ico" data-ico="terminal"></i><span>Konsole</span></button>
         <button role="tab" data-tab="newsletter" data-group="system" data-site aria-selected="false"><i class="xa-ico" data-ico="mail"></i><span>Newsletter &amp; Brevo</span> <em id="c-newsletter"></em></button>
         <button role="tab" data-tab="signups" data-group="system" data-site aria-selected="false"><i class="xa-ico" data-ico="archive"></i><span>Archiv: Anmeldungen</span> <em id="c-signups"></em></button>
@@ -136,6 +138,9 @@
 
       <!-- Firmenverträge (Tabelle business_contracts, nur Website-Admins); Vertragstext bleibt deutsch -->
       <div data-panel="contracts" data-no-i18n hidden></div>
+
+      <!-- Medien-Protokoll (Tabelle admin_media_log, nur Website-Admins, nur lesend); Prüfung der Berechtigung im Skript -->
+      <div data-panel="medienprotokoll" data-no-i18n hidden></div>
     </div>
   </div>
 </main>
@@ -151,10 +156,11 @@
 <script src="/pages/admin-platform.js?v=13"></script>
 <script src="/pages/admin-support.js?v=1"></script>
 <script src="/pages/admin-contracts.js?v=1"></script>
+<script src="/pages/admin-medienprotokoll.js?v=1"></script>
 <script src="/pages/admin-vouchers.js?v=1"></script>
 <script src="/pages/admin-partners.js?v=1"></script>
 <script src="/pages/admin.js?v=11"></script>
-<script src="/pages/admin-people.js?v=6"></script>
+<script src="/pages/admin-people.js?v=7"></script>
 <script src="/account-menu.js?v=23" defer></script>
 <script src="/site-search.js?v=3" defer></script>
 </body>
