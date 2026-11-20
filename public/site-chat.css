@@ -145,3 +145,21 @@
 .sc-core-btn { width: 52px; height: 52px; margin: -14px -10px -14px -16px; }
 .sc-core-btn .sc-orb { width: 22px; height: 22px; margin: 15px; }
 .sc-open { overflow: visible; }
+
+/* Ticket-Fenster: liegt über dem Chat, solange jemand ein Problem meldet */
+.sc-ticket { position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; background: var(--sc-bg); }
+.sc-ticket[hidden] { display: none; }
+.sc-ticket-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 16px 16px 14px; border-bottom: 1px solid var(--sc-line); }
+.sc-ticket-head h3 { margin: 6px 0 0; font-size: 18px; line-height: 1.2; }
+.sc-ticket-body { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 16px; scrollbar-width: thin; }
+.sc-ticket-body label { font-size: 13px; font-weight: 600; color: var(--sc-text-2); }
+.sc-ticket-body input, .sc-ticket-body textarea { width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid var(--sc-line-2); border-radius: 2px; background: var(--sc-bg-2); color: var(--sc-text); font: inherit; font-size: 14px; }
+.sc-ticket-body textarea { resize: vertical; min-height: 120px; margin-bottom: 4px; }
+.sc-ticket-body input { margin-bottom: 6px; }
+.sc-ticket-body input:focus-visible, .sc-ticket-body textarea:focus-visible { outline: 2px solid var(--sc-text); outline-offset: 2px; }
+.sc-ticket-note { margin: 0; color: var(--sc-text-3); font-size: 12px; line-height: 1.45; }
+.sc-ticket-ok { margin: 0; font-size: 16px; font-weight: 600; }
+.sc-ticket-err { margin: 0; padding: 8px 10px; border: 1px solid #E05E6D; border-radius: 2px; font-size: 13px; }
+.sc-ticket-act { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+.sc-ticket-alt { height: 40px; padding: 0 14px; border: 1px solid var(--sc-line-2); border-radius: 2px; background: none; font-size: 14px; }
+.sc-ticket-alt:hover:not(:disabled) { border-color: var(--sc-text); }
