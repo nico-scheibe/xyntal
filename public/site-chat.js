@@ -28,7 +28,7 @@
   let confirmPII = null, confirmClear = false, editId = null, fbOpen = null, att = null, attErr = "", listening = null, speakingId = null;
 
   const css = document.createElement("link");
-  css.rel = "stylesheet"; css.href = "/site-chat.css?v=8";
+  css.rel = "stylesheet"; css.href = "/site-chat.css?v=9";
   document.head.append(css);
 
   const root = document.createElement("div");
@@ -194,7 +194,7 @@
       <button type="button" class="sc-open" aria-expanded="false" aria-controls="sc-panel"><span class="sc-core sc-core-btn" data-core="btn">${ORB}</span>${T("Fragen zu Xyntal?", "Questions about Xyntal?")}</button>
       <section class="sc-panel" id="sc-panel" role="dialog" aria-modal="false" aria-labelledby="sc-title" hidden>
         <header class="sc-head"><div class="sc-id"><span class="sc-core" data-core="head">${ORB}</span><div><p class="sc-mono">${T("KI-Assistent · Beta", "AI assistant · beta")}</p><h2 id="sc-title">Xyntal KI</h2></div></div>
-          <div class="sc-head-act"><button type="button" class="sc-icon" data-sc="clear" aria-label="${T("Gespräch löschen", "Clear conversation")}" title="${T("Gespräch löschen", "Clear conversation")}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button><button type="button" class="sc-icon" data-sc="close" aria-label="${T("Schließen", "Close")}" title="${T("Schließen (Esc)", "Close (Esc)")}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div></header>
+          <div class="sc-head-act"><button type="button" class="sc-icon" data-sc="tickets" aria-label="${T("Support-Tickets", "Support tickets")}" title="${T("Support-Tickets", "Support tickets")}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5V6.5h16v2a3.5 3.5 0 0 0 0 7v2H4v-2a3.5 3.5 0 0 0 0-7zM10 7v10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-dasharray="none"/></svg></button><button type="button" class="sc-icon" data-sc="clear" aria-label="${T("Gespräch löschen", "Clear conversation")}" title="${T("Gespräch löschen", "Clear conversation")}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button><button type="button" class="sc-icon" data-sc="close" aria-label="${T("Schließen", "Close")}" title="${T("Schließen (Esc)", "Close (Esc)")}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div></header>
         <ol class="sc-log" aria-label="${T("Gesprächsverlauf", "Conversation")}"></ol>
         <p class="sc-status sc-sr" role="status" aria-live="polite"></p>
         <p class="sc-toast" role="presentation" hidden></p>
@@ -391,73 +391,185 @@
     }, 1000);
   }
 
-  // ---- Ticket-Fenster: Wer ein Problem meldet (Vorschlag „Problem mit meinem Konto“ oder eine Nachricht, die
-  // nach einem Problem klingt), bekommt statt einer KI-Antwort ein Formular. Angemeldet wird daraus ein
-  // Support-Ticket auf dem App-Server (POST /support/tickets über app-api.js) – die Antwort steht dann in der
-  // App unter Hilfe & Support. Ohne Anmeldung öffnet das Formular eine fertige E-Mail an den Support.
+  // ---- Tickets im Chatfenster. Wer ein Problem meldet (Vorschlag „Problem mit meinem Konto“ oder eine Nachricht,
+  // die nach einem Problem klingt), bekommt statt einer KI-Antwort ein Formular. Angemeldet wird daraus ein
+  // Support-Ticket auf dem App-Server (app-api.js): anlegen, eigene Tickets auflisten, Verlauf lesen, antworten,
+  // schließen und wieder öffnen – dieselben Tickets wie in der App unter Hilfe & Support.
+  // Ohne Anmeldung nimmt der Server keine Tickets an; dann öffnet das Formular eine fertige E-Mail an den Support.
   const SUPPORT_MAIL = "admin@xyntal.com";
   const PROBLEM = /(^|[^\p{L}])(probleme?|fehler\w*|bug|ticket|support|kaputt|funktioniert nicht|geht nicht|klappt nicht|kann mich nicht (?:anmelden|einloggen)|errors?|issues?|broken|not working|doesn'?t work|can(?:'|no)?t (?:log ?in|sign ?in))(?![\p{L}])/iu;
-  let ticket = null; // { subject, desc, from, state: "form" | "sending" | "done", err }
+  // view: "new" (Formular) | "list" (eigene Tickets) | "thread" (ein Ticket mit Verlauf)
+  let ticket = null, ticketPoll = 0;
   const signedIn = () => {
     try { const v = JSON.parse(localStorage.getItem("sb-db-auth-token") || "null"); return !!(v && (v.user || (v.currentSession && v.currentSession.user))); } catch { return false; }
   };
-  function openTicket(text = "", typed = false) {
-    ticket = { subject: "", desc: text, from: typed ? text : "", state: "form", err: "" };
-    renderTicket();
-    ($(text ? "#sc-ticket-subject" : "#sc-ticket-subject") || root).focus?.();
+  const STATUS = { Open: ["Offen", "Open"], Closed: ["Geschlossen", "Closed"], "In Progress": ["In Arbeit", "In progress"], Pending: ["Wartet auf dich", "Waiting for you"], Waiting: ["Wartet auf dich", "Waiting for you"], Resolved: ["Gelöst", "Resolved"] };
+  const statusLabel = (st) => (STATUS[st] ? STATUS[st][en() ? 1 : 0] : String(st || ""));
+  const when = (iso) => { const d = new Date(iso); return isNaN(d) ? "" : d.toLocaleString(en() ? "en-GB" : "de-DE", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }); };
+  const ticketFail = (e) => (e && e.message) || T("Das hat nicht geklappt. Versuch es gleich noch einmal oder schreib an ", "That did not work. Try again in a moment or write to ") + SUPPORT_MAIL;
+  async function supportApi(method, path, body) {
+    if (!window.XyntalApp) {
+      await new Promise((ok, no) => { const sc = document.createElement("script"); sc.src = "/app-api.js?v=8"; sc.onload = ok; sc.onerror = no; document.head.append(sc); });
+    }
+    return window.XyntalApp.api(method, path, body, { silent: true });
   }
-  function closeTicket() { ticket = null; renderTicket(); $("#sc-input")?.focus(); }
+
+  function openTicket(text = "", typed = false) {
+    ticket = { view: "new", subject: "", desc: text, from: typed ? text : "", busy: false, err: "" };
+    renderTicket();
+    $("#sc-ticket-subject")?.focus();
+  }
+  function openTickets() {
+    if (!signedIn()) { openTicket(); return; }
+    ticket = { view: "list", archived: false, rows: null, busy: false, err: "" };
+    renderTicket(); loadTickets();
+  }
+  function closeTicket() { clearInterval(ticketPoll); ticket = null; renderTicket(); $("#sc-input")?.focus(); }
+  async function loadTickets() {
+    const t = ticket;
+    if (!t || t.view !== "list") return;
+    try {
+      const d = await supportApi("GET", "/support/tickets" + (t.archived ? "?archived=1" : ""));
+      if (ticket !== t) return;
+      t.rows = (d && d.tickets) || []; t.err = "";
+    } catch (e) { if (ticket !== t) return; t.rows = t.rows || []; t.err = ticketFail(e); }
+    renderTicket();
+  }
+  function openThread(id, note = "") {
+    clearInterval(ticketPoll);
+    ticket = { view: "thread", id, data: null, msgs: null, reply: "", note, busy: false, err: "" };
+    renderTicket(); loadThread(true);
+    // Neue Antworten vom Support erscheinen von allein, solange das Ticket offen im Fenster steht
+    ticketPoll = setInterval(() => { if (ticket && ticket.view === "thread" && isOpen() && !document.hidden) loadThread(false); }, 20000);
+  }
+  async function loadThread(full) {
+    const t = ticket;
+    if (!t || t.view !== "thread") return;
+    try {
+      const d = await supportApi("GET", `/support/tickets/${encodeURIComponent(t.id)}`);
+      if (ticket !== t) return;
+      const before = t.msgs ? t.msgs.length : -1, status = t.data && t.data.status;
+      t.data = d.ticket; t.msgs = d.messages || []; t.err = "";
+      if (full || before < 0 || status !== t.data.status) renderTicket();
+      else if (before !== t.msgs.length) paintThread(true);
+    } catch (e) {
+      if (ticket !== t) return;
+      if (full || !t.data) { t.err = ticketFail(e); t.msgs = t.msgs || []; renderTicket(); }
+    }
+  }
+  const threadHtml = (t) => (t.msgs || []).map((m) => `<li class="sc-tmsg${m.mine ? " is-mine" : ""}">
+      <p class="sc-tmeta">${m.mine ? T("Du", "You") : esc(m.author || "Support") + (m.isStaff ? " · Support" : "")} · ${esc(when(m.createdAt))}</p>
+      <div class="sc-bubble">${esc(m.body).replace(/\n/g, "<br>")}</div></li>`).join("")
+    || `<li class="sc-ticket-note">${T("Noch keine Nachrichten.", "No messages yet.")}</li>`;
+  function paintThread(toEnd) {
+    const ol = $(".sc-tmsgs"); if (!ol || !ticket) return;
+    ol.innerHTML = threadHtml(ticket);
+    if (toEnd) { const body = $(".sc-ticket-body"); if (body) body.scrollTop = body.scrollHeight; }
+  }
+
   function renderTicket() {
     const box = $(".sc-ticket");
     if (!box) return;
     if (!ticket) { box.hidden = true; box.innerHTML = ""; return; }
     box.hidden = false;
-    const head = `<header class="sc-ticket-head"><div><p class="sc-mono">Support</p><h3 id="sc-ticket-title">${T("Ticket erstellen", "Create a ticket")}</h3></div>
-      <button type="button" class="sc-icon" data-sc="ticket-close" aria-label="${T("Ticket-Fenster schließen", "Close ticket window")}" title="${T("Schließen", "Close")}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button></header>`;
-    if (ticket.state === "done") {
-      box.innerHTML = `${head}<div class="sc-ticket-body"><p class="sc-ticket-ok">${T("Dein Ticket ist angekommen.", "Your ticket has arrived.")}</p>
-        <p class="sc-ticket-note">${T("Die Antwort findest du in der Xyntal-App unter Hilfe & Support.", "You will find the reply in the Xyntal app under Help & Support.")}</p>
-        <div class="sc-ticket-act"><button type="button" class="sc-send" data-sc="ticket-close">${T("Zurück zum Chat", "Back to chat")}</button></div></div>`;
-      box.querySelector(".sc-send").focus();
+    const t = ticket, inAcc = signedIn();
+    const x = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
+    const back = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    const title = t.view === "list" ? T("Deine Tickets", "Your tickets") : t.view === "thread" ? esc((t.data && t.data.subject) || "Ticket") : T("Ticket erstellen", "Create a ticket");
+    const head = `<header class="sc-ticket-head">
+      ${t.view !== "list" && inAcc ? `<button type="button" class="sc-icon" data-sc="tickets" aria-label="${T("Zu deinen Tickets", "To your tickets")}" title="${T("Deine Tickets", "Your tickets")}">${back}</button>` : ""}
+      <div class="sc-ticket-ttl"><p class="sc-mono">Support${t.view === "thread" && t.data ? " · " + esc(statusLabel(t.data.status)) : ""}</p><h3 id="sc-ticket-title">${title}</h3></div>
+      <button type="button" class="sc-icon" data-sc="ticket-close" aria-label="${T("Zurück zum Chat", "Back to chat")}" title="${T("Zurück zum Chat", "Back to chat")}">${x}</button></header>`;
+    const err = t.err ? `<p class="sc-ticket-err" role="alert">${esc(t.err)}</p>` : "";
+
+    if (t.view === "list") {
+      const rows = t.rows === null ? `<p class="sc-ticket-note">${T("Tickets werden geladen …", "Loading tickets …")}</p>`
+        : t.rows.length ? `<ul class="sc-tlist">${t.rows.map((r) => `<li><button type="button" data-sc="ticket-open" data-id="${esc(r.id)}">
+            <b>${esc(r.subject)}</b><span>${esc(statusLabel(r.status))} · ${esc(when(r.updatedAt))} · ${Number(r.messageCount) || 0} ${T("Nachrichten", "messages")}</span></button></li>`).join("")}</ul>`
+        : `<p class="sc-ticket-note">${t.archived ? T("Keine geschlossenen Tickets.", "No closed tickets.") : T("Du hast gerade kein offenes Ticket.", "You have no open ticket right now.")}</p>`;
+      box.innerHTML = `${head}<div class="sc-ticket-body">${err}${rows}</div>
+        <div class="sc-ticket-foot"><button type="button" class="sc-send" data-sc="ticket-new">${T("Neues Ticket", "New ticket")}</button>
+          <button type="button" class="sc-ticket-alt" data-sc="ticket-archived">${t.archived ? T("Offene anzeigen", "Show open") : T("Geschlossene anzeigen", "Show closed")}</button></div>`;
       return;
     }
-    const inAcc = signedIn(), sending = ticket.state === "sending";
+
+    if (t.view === "thread") {
+      const closed = t.data && t.data.status === "Closed";
+      box.innerHTML = `${head}<div class="sc-ticket-body">
+          ${t.note ? `<p class="sc-ticket-ok">${esc(t.note)}</p>` : ""}${err}
+          ${t.msgs === null ? `<p class="sc-ticket-note">${T("Ticket wird geladen …", "Loading ticket …")}</p>` : `<ol class="sc-tmsgs" aria-label="${T("Verlauf des Tickets", "Ticket history")}">${threadHtml(t)}</ol>`}
+        </div>
+        ${t.data ? `<form class="sc-ticket-reply sc-ticket-foot">
+          ${closed ? `<p class="sc-ticket-note">${T("Dieses Ticket ist geschlossen.", "This ticket is closed.")}</p>`
+            : `<label class="sc-sr" for="sc-ticket-reply">${T("Deine Antwort", "Your reply")}</label>
+               <textarea id="sc-ticket-reply" rows="2" maxlength="4000" placeholder="${T("Antwort schreiben …", "Write a reply …")}" ${t.busy ? "disabled" : ""}>${esc(t.reply)}</textarea>`}
+          <div class="sc-ticket-act">
+            ${closed ? "" : `<button type="submit" class="sc-send" ${t.busy ? "disabled" : ""}>${t.busy ? T("Wird gesendet …", "Sending …") : T("Antworten", "Reply")}</button>`}
+            <button type="button" class="sc-ticket-alt" data-sc="ticket-status" ${t.busy ? "disabled" : ""}>${closed ? T("Wieder öffnen", "Reopen") : T("Ticket schließen", "Close ticket")}</button>
+          </div></form>` : ""}`;
+      const body = $(".sc-ticket-body"); if (body) body.scrollTop = body.scrollHeight;
+      return;
+    }
+
     box.innerHTML = `${head}<form class="sc-ticket-form sc-ticket-body" novalidate>
         <label for="sc-ticket-subject">${T("Betreff", "Subject")}</label>
-        <input id="sc-ticket-subject" type="text" maxlength="200" required value="${esc(ticket.subject)}" placeholder="${T("Worum geht es?", "What is it about?")}" ${sending ? "disabled" : ""}>
+        <input id="sc-ticket-subject" type="text" maxlength="200" required value="${esc(t.subject)}" placeholder="${T("Worum geht es?", "What is it about?")}" ${t.busy ? "disabled" : ""}>
         <label for="sc-ticket-desc">${T("Beschreibung", "Description")}</label>
-        <textarea id="sc-ticket-desc" rows="6" maxlength="4000" required placeholder="${T("Was hast du gemacht, was ist passiert, was hast du erwartet?", "What did you do, what happened, what did you expect?")}" ${sending ? "disabled" : ""}>${esc(ticket.desc)}</textarea>
+        <textarea id="sc-ticket-desc" rows="6" maxlength="4000" required placeholder="${T("Was hast du gemacht, was ist passiert, was hast du erwartet?", "What did you do, what happened, what did you expect?")}" ${t.busy ? "disabled" : ""}>${esc(t.desc)}</textarea>
         <p class="sc-ticket-note">${inAcc
-          ? T("Das Ticket geht an den Xyntal-Support. Die Antwort steht in der App unter Hilfe & Support. Bitte kein Passwort eintragen.", "The ticket goes to Xyntal support. The reply appears in the app under Help & Support. Please do not enter a password.")
-          : T(`Du bist nicht angemeldet: Das Ticket öffnet sich als E-Mail an ${SUPPORT_MAIL}. <a href="/login">Anmelden</a>, um es direkt zu senden. Bitte kein Passwort eintragen.`, `You are not signed in: the ticket opens as an email to ${SUPPORT_MAIL}. <a href="/login">Sign in</a> to send it directly. Please do not enter a password.`)}</p>
-        ${ticket.err ? `<p class="sc-ticket-err" role="alert">${esc(ticket.err)}</p>` : ""}
+          ? T("Das Ticket geht an den Xyntal-Support. Die Antwort siehst du hier und in der App unter Hilfe & Support. Bitte kein Passwort eintragen.", "The ticket goes to Xyntal support. You will see the reply here and in the app under Help & Support. Please do not enter a password.")
+          : T(`Du bist nicht angemeldet: Das Ticket öffnet sich als E-Mail an ${SUPPORT_MAIL}. <a href="/login">Anmelden</a>, um es direkt zu senden und Antworten hier zu lesen. Bitte kein Passwort eintragen.`, `You are not signed in: the ticket opens as an email to ${SUPPORT_MAIL}. <a href="/login">Sign in</a> to send it directly and read replies here. Please do not enter a password.`)}</p>
+        ${err}
         <div class="sc-ticket-act">
-          <button type="submit" class="sc-send" ${sending ? "disabled" : ""}>${sending ? T("Wird gesendet …", "Sending …") : inAcc ? T("Ticket senden", "Send ticket") : T("E-Mail öffnen", "Open email")}</button>
-          ${ticket.from ? `<button type="button" class="sc-ticket-alt" data-sc="ticket-ai" ${sending ? "disabled" : ""}>${T("Lieber die KI fragen", "Ask the AI instead")}</button>` : ""}
+          <button type="submit" class="sc-send" ${t.busy ? "disabled" : ""}>${t.busy ? T("Wird gesendet …", "Sending …") : inAcc ? T("Ticket senden", "Send ticket") : T("E-Mail öffnen", "Open email")}</button>
+          ${t.from ? `<button type="button" class="sc-ticket-alt" data-sc="ticket-ai" ${t.busy ? "disabled" : ""}>${T("Lieber die KI fragen", "Ask the AI instead")}</button>` : ""}
         </div>
       </form>`;
   }
+
   async function sendTicket() {
-    if (!ticket || ticket.state !== "form") return;
-    const subject = ticket.subject.trim(), desc = ticket.desc.trim();
-    if (!subject || !desc) { ticket.err = T("Bitte Betreff und Beschreibung ausfüllen.", "Please fill in subject and description."); renderTicket(); $(subject ? "#sc-ticket-desc" : "#sc-ticket-subject")?.focus(); return; }
+    const t = ticket;
+    if (!t || t.view !== "new" || t.busy) return;
+    const subject = t.subject.trim(), desc = t.desc.trim();
+    if (!subject || !desc) { t.err = T("Bitte Betreff und Beschreibung ausfüllen.", "Please fill in subject and description."); renderTicket(); $(subject ? "#sc-ticket-desc" : "#sc-ticket-subject")?.focus(); return; }
     if (!signedIn()) {
       location.href = `mailto:${SUPPORT_MAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(desc + "\n\n" + location.href)}`;
       return;
     }
-    ticket.err = ""; ticket.state = "sending"; renderTicket();
+    t.err = ""; t.busy = true; renderTicket();
     try {
-      if (!window.XyntalApp) {
-        await new Promise((ok, no) => { const sc = document.createElement("script"); sc.src = "/app-api.js?v=8"; sc.onload = ok; sc.onerror = no; document.head.append(sc); });
-      }
-      await window.XyntalApp.api("POST", "/support/tickets", { subject, description: desc + "\n\n" + T("Gesendet von der Website: ", "Sent from the website: ") + location.pathname, category: "Website" }, { silent: true });
-      if (ticket) ticket.state = "done";
-    } catch (e) {
-      if (ticket) { ticket.state = "form"; ticket.err = (e && e.message) || T("Das Ticket konnte nicht gesendet werden. Versuch es gleich noch einmal oder schreib an ", "The ticket could not be sent. Try again in a moment or write to ") + SUPPORT_MAIL; }
-    }
-    renderTicket();
+      const d = await supportApi("POST", "/support/tickets", { subject, description: desc + "\n\n" + T("Gesendet von der Website: ", "Sent from the website: ") + location.pathname, category: "Website" });
+      if (ticket !== t) return;
+      const id = d && d.ticket && d.ticket.id;
+      if (id) openThread(id, T("Dein Ticket ist angekommen. Antworten erscheinen hier.", "Your ticket has arrived. Replies will appear here."));
+      else openTickets();
+    } catch (e) { if (ticket !== t) return; t.busy = false; t.err = ticketFail(e); renderTicket(); }
   }
-
+  async function sendReply() {
+    const t = ticket;
+    if (!t || t.view !== "thread" || t.busy) return;
+    const body = t.reply.trim();
+    if (!body) { $("#sc-ticket-reply")?.focus(); return; }
+    t.busy = true; t.err = ""; renderTicket();
+    try {
+      await supportApi("POST", `/support/tickets/${encodeURIComponent(t.id)}/messages`, { body });
+      if (ticket !== t) return;
+      t.reply = ""; t.note = ""; t.busy = false;
+      await loadThread(true);
+      $("#sc-ticket-reply")?.focus();
+    } catch (e) { if (ticket !== t) return; t.busy = false; t.err = ticketFail(e); renderTicket(); }
+  }
+  async function toggleTicketStatus() {
+    const t = ticket;
+    if (!t || t.view !== "thread" || t.busy || !t.data) return;
+    t.busy = true; t.err = ""; renderTicket();
+    try {
+      await supportApi("POST", `/support/tickets/${encodeURIComponent(t.id)}/status`, { status: t.data.status === "Closed" ? "Open" : "Closed" });
+      if (ticket !== t) return;
+      t.busy = false; t.note = "";
+      await loadThread(true);
+    } catch (e) { if (ticket !== t) return; t.busy = false; t.err = ticketFail(e); renderTicket(); }
+  }
 
   function ask(text, { force = false, noTicket = false } = {}) {
     const q = String(text).trim();
@@ -551,6 +663,11 @@
       case "close": setOpen(false); break;
       case "ask": ask(b.textContent); break; // B12
       case "ticket-close": closeTicket(); break;
+      case "tickets": openTickets(); break;
+      case "ticket-new": openTicket(); break;
+      case "ticket-open": openThread(b.dataset.id); break;
+      case "ticket-archived": if (ticket && ticket.view === "list") { ticket.archived = !ticket.archived; ticket.rows = null; renderTicket(); loadTickets(); } break;
+      case "ticket-status": toggleTicketStatus(); break;
       case "ticket-ai": { const q = ticket && ticket.from; closeTicket(); if (q) ask(q, { noTicket: true }); break; }
       case "stop": stop(); break;
       case "clear": if (msgs.length) { confirmClear = true; renderLog(); } break; // D12
@@ -604,16 +721,20 @@
   root.addEventListener("change", (e) => { if (e.target.classList.contains("sc-file")) { attachFile(e.target.files[0]); e.target.value = ""; } });
   root.addEventListener("submit", (e) => {
     e.preventDefault();
-    if (e.target.classList.contains("sc-ticket-form")) sendTicket(); else ask($("#sc-input").value);
+    if (e.target.classList.contains("sc-ticket-form")) sendTicket();
+    else if (e.target.classList.contains("sc-ticket-reply")) sendReply();
+    else ask($("#sc-input").value);
   });
   root.addEventListener("input", (e) => {
     if (e.target.id === "sc-input") { grow(e.target); composer(); }
     if (ticket && e.target.id === "sc-ticket-subject") ticket.subject = e.target.value;
     if (ticket && e.target.id === "sc-ticket-desc") ticket.desc = e.target.value;
+    if (ticket && e.target.id === "sc-ticket-reply") ticket.reply = e.target.value;
   });
   root.addEventListener("keydown", (e) => {
     const enter = e.key === "Enter" && !e.shiftKey && !e.isComposing; // B2: Shift+Enter = neue Zeile
     if (e.target.id === "sc-input" && enter) { e.preventDefault(); ask(e.target.value); return; }
+    if (e.target.id === "sc-ticket-reply" && enter) { e.preventDefault(); sendReply(); return; }
     if (e.target.classList.contains("sc-edit") && enter) { e.preventDefault(); root.querySelector("[data-sc=edit-save]")?.click(); return; }
     if (e.key === "Escape" && isOpen()) { // B14
       e.preventDefault();

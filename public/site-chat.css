@@ -163,3 +163,22 @@
 .sc-ticket-act { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
 .sc-ticket-alt { height: 40px; padding: 0 14px; border: 1px solid var(--sc-line-2); border-radius: 2px; background: none; font-size: 14px; }
 .sc-ticket-alt:hover:not(:disabled) { border-color: var(--sc-text); }
+.sc-ticket-head { align-items: center; }
+.sc-ticket-ttl { flex: 1; min-width: 0; }
+.sc-ticket-ttl h3 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sc-ticket-foot { display: flex; flex-wrap: wrap; gap: 10px; padding: 12px 16px; border-top: 1px solid var(--sc-line); }
+.sc-ticket-reply { flex-direction: column; flex-wrap: nowrap; margin: 0; }
+.sc-ticket-reply textarea { width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid var(--sc-line-2); border-radius: 2px; background: var(--sc-bg-2); color: var(--sc-text); font: inherit; font-size: 14px; resize: none; }
+.sc-ticket-reply .sc-ticket-act { margin-top: 0; }
+.sc-tlist { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.sc-tlist button { display: grid; gap: 4px; width: 100%; padding: 10px 12px; border: 1px solid var(--sc-line-2); border-radius: 2px; background: var(--sc-bg-2); text-align: left; }
+.sc-tlist button:hover { border-color: var(--sc-text); }
+.sc-tlist b { font-size: 14px; overflow-wrap: anywhere; }
+.sc-tlist span { color: var(--sc-text-3); font-size: 12px; }
+.sc-tmsgs { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.sc-tmsg { max-width: 88%; align-self: flex-start; }
+.sc-tmsg.is-mine { align-self: flex-end; }
+.sc-tmsg .sc-bubble { border: 1px solid var(--sc-line); background: var(--sc-bg-2); font-size: 14px; }
+.sc-tmsg.is-mine .sc-bubble { background: var(--sc-text); color: var(--sc-bg); border-color: var(--sc-text); }
+.sc-tmeta { margin: 0 0 4px; color: var(--sc-text-3); font-size: 11px; }
+.sc-tmsg.is-mine .sc-tmeta { text-align: right; }
