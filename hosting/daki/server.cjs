@@ -427,7 +427,7 @@ const types = { '.html':'text/html; charset=utf-8', '.css':'text/css; charset=ut
 // (plus demo-i18n.js, beta-i18n.js) übersetzt – damit Suchmaschinen und Vorschauen englischen Text unter einer
 // eigenen Adresse bekommen, ohne dass es zwei Fassungen jeder Seite zu pflegen gibt. Was im Wörterbuch fehlt,
 // bleibt deutsch stehen. AGB und Widerruf gibt es bewusst nur auf Deutsch (nicht übersetzt).
-const EN_PAGES = new Set(['index', 'matching', 'demo', 'preise', 'unternehmen', 'beta', 'ueber-uns', 'community', 'mitglieder', 'community-richtlinien', 'kuendigen']);
+const EN_PAGES = new Set(['index', 'matching', 'demo', 'preise', 'unternehmen', 'beta', 'ueber-uns', 'community', 'mitglieder', 'community-richtlinien', 'kuendigen', 'xchange']);
 // Umgezogene Seiten: alte Adresse -> neue (dauerhaft). /brief war bis November 2026 der Brief, heute „Über uns“.
 const MOVED_PAGES = new Map([['/brief', '/ueber-uns'], ['/en/brief', '/en/ueber-uns']]);
 const enCache = new Map(); // "commit:seite" -> HTML

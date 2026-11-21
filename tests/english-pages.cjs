@@ -19,7 +19,7 @@ const root = path.resolve(__dirname, '../public');
     }).on('error', reject).end();
   });
   try {
-    const pages = ['index', 'matching', 'demo', 'preise', 'unternehmen', 'beta', 'ueber-uns', 'community', 'mitglieder', 'community-richtlinien', 'kuendigen'];
+    const pages = ['index', 'matching', 'demo', 'preise', 'unternehmen', 'beta', 'ueber-uns', 'community', 'mitglieder', 'community-richtlinien', 'kuendigen', 'xchange'];
     const en = (p) => (p === 'index' ? '/en' : '/en/' + p), de = (p) => (p === 'index' ? '/' : '/' + p);
     const sitemap = fs.readFileSync(path.join(root, 'sitemap.xml'), 'utf8');
     for (const p of pages) {
