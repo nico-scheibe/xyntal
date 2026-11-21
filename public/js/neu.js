@@ -279,22 +279,6 @@
         steps.forEach(function (s, i) { s.classList.toggle('is-on', p >= i / steps.length + 0.04); });
       });
     })();
-
-    // Schluss: ein weiches Farblicht geht hinter der großen Zeile auf.
-    (function () {
-      var el = $('.end'); if (!el) return;
-      el.classList.add('is-glow');
-      track(el, function (r) { return (vh - r.top) / (vh * 0.85); }, setP(el));
-    })();
-
-    // Karten: ein Lichtfleck folgt dem Mauszeiger.
-    if (fine) $$('.cmp__card, .who__card').forEach(function (c) {
-      c.addEventListener('pointermove', function (e) {
-        var r = c.getBoundingClientRect();
-        c.style.setProperty('--mx', (e.clientX - r.left) + 'px');
-        c.style.setProperty('--my', (e.clientY - r.top) + 'px');
-      });
-    });
   }
 
   // ---------- 5 Durchstreichen ----------

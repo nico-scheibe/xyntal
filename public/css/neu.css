@@ -179,7 +179,7 @@ a { color: inherit; text-decoration: none; }
 .how__steps.is-track::after { content: ""; position: absolute; left: 0; right: 0; top: 16px; height: 3px; border-radius: 3px; background: var(--grad); transform: scaleX(var(--p, 0)); transform-origin: 0 50%; }
 .how__step { z-index: 1; }   /* Schritte samt Nummern liegen über beiden Linien */
 .how__node { transition: background-color .5s ease-out, color .5s ease-out, box-shadow .6s ease-out; }
-.how__step.is-on > .how__node { background: var(--t-1); color: var(--g-0); box-shadow: 0 0 0 6px rgba(76, 141, 255, .16), 0 0 28px rgba(76, 141, 255, .35); }
+.how__step.is-on > .how__node { background: var(--t-1); color: var(--g-0); box-shadow: 0 0 0 6px rgba(76, 141, 255, .16); }
 .how__title, .how__text { transition: opacity .6s ease-out; }
 .is-track .how__step:not(.is-on) > .how__title, .is-track .how__step:not(.is-on) > .how__text { opacity: .45; }
 @media (max-width: 760px) {
@@ -199,13 +199,7 @@ a { color: inherit; text-decoration: none; }
 .js .app__shots.is-in .app__shot:nth-child(3) .win::after { animation-delay: 1s; }
 @keyframes win-glint { 0% { opacity: 0; transform: translate3d(-100%, 0, 0); } 20% { opacity: 1; } 100% { opacity: 0; transform: translate3d(100%, 0, 0); } }
 
-/* Schluss: weiches Farblicht hinter der großen Zeile, geht mit dem Scrollen auf (--p aus js/neu.js) */
 .end { position: relative; }
-.end.is-glow::before {
-  content: ""; position: absolute; z-index: -1; left: -10%; right: -10%; top: -6%; height: 78%; pointer-events: none;
-  background: radial-gradient(42% 52% at 24% 46%, rgba(179, 107, 255, .2), transparent 72%), radial-gradient(40% 50% at 58% 58%, rgba(76, 141, 255, .2), transparent 72%);
-  opacity: var(--p, 0); transform: scale(calc(.75 + .25 * var(--p, 0))); transform-origin: 30% 50%;
-}
 /* Die beiden Lade-Kacheln kommen nach der Karte, eine nach der anderen */
 .js [data-rv] .dl__tile { opacity: 0; transform: translate3d(0, 14px, 0); }
 .js [data-rv].is-in .dl__tile { opacity: 1; transform: none; transition: opacity .7s var(--ease-o), transform .9s var(--ease-o), border-color .3s var(--ease), background .3s var(--ease); transition-delay: .3s, .3s, 0s, 0s; }
@@ -216,13 +210,8 @@ a { color: inherit; text-decoration: none; }
 .js .qa__a > * { overflow: hidden; min-height: 0; }
 .js .qa__a.is-open { grid-template-rows: 1fr; padding-bottom: 26px; opacity: 1; visibility: visible; transition-delay: 0s; }
 
-/* Mit Maus: Karten und App-Fenster heben sich leicht */
+/* Mit Maus: das App-Fenster hebt sich leicht. Die Spalten darüber sind kein Bedienelement und bleiben ruhig. */
 @media (hover: hover) and (pointer: fine) {
-  .cmp__card, .who__card { position: relative; transition: transform .6s var(--ease-o), box-shadow .4s ease-out; }
-  .cmp__card:hover, .who__card:hover { transform: translate3d(0, -5px, 0); box-shadow: inset 0 0 0 1px var(--line-2); }
-  /* Lichtfleck, der dem Mauszeiger folgt (--mx, --my aus js/neu.js) */
-  .cmp__card::after, .who__card::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity .5s ease-out; background: radial-gradient(380px circle at var(--mx, 50%) var(--my, 0%), rgba(143, 184, 255, .13), transparent 70%); }
-  .cmp__card:hover::after, .who__card:hover::after { opacity: 1; }
   .app__fig .win { transition: transform .7s var(--ease-o); }
   .app__fig:hover .win { transform: translate3d(0, -6px, 0) scale(1.012); }
 }
@@ -313,12 +302,12 @@ a { color: inherit; text-decoration: none; }
 .problem__hi { color: var(--soft); }
 @media (max-width: 760px) { .problem__text { font-size: clamp(1.75rem, 8vw, 2.6rem); } }
 
-/* 5.2 Statt: sechs Karten. Desktop 3×2, Handy horizontaler Scroll mit Einrastpunkten. */
+/* 5.2 Statt: sechs Spalten an Haarlinien, ohne Kartenfläche. Desktop 3×2, Handy horizontaler Scroll mit Einrastpunkten. */
 .cmp { padding: var(--scene) var(--pad) var(--s-6); }
 .cmp__lead { margin-top: 18px; color: var(--t-2); }
 .cmp__scroller { position: relative; margin-top: var(--s-5); }
 .cmp__list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--gap); }
-.cmp__card { display: grid; gap: 22px; align-content: start; padding: clamp(22px, 2.4vw, 36px); border-radius: 16px; background: var(--g-1); box-shadow: inset 0 0 0 1px var(--line); }
+.cmp__card { display: grid; gap: 22px; align-content: start; padding: 24px 0 clamp(20px, 2.4vw, 36px); border-top: 1px solid var(--line-2); }
 .cmp__old { font: 700 clamp(1.5rem, 2.4vw, 2.2rem)/1.05 var(--f-display); font-stretch: 70%; letter-spacing: -.005em; color: var(--t-2); }
 .cmp__row { display: grid; gap: 6px; font-size: .97rem; line-height: 1.5; }
 .cmp__row .mono { font-size: .66rem; }
@@ -346,10 +335,10 @@ a { color: inherit; text-decoration: none; }
   }
 }
 
-/* 5.3 Für wen: drei gleich große Karten ohne Rangfolge */
+/* 5.3 Für wen: drei gleich große Spalten ohne Rangfolge */
 .who { padding: var(--scene) var(--pad) var(--s-6); }
 .who__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--gap); margin-top: var(--s-5); }
-.who__card { display: grid; gap: 14px; align-content: start; padding: clamp(24px, 2.6vw, 40px); border-radius: 16px; background: var(--g-1); box-shadow: inset 0 0 0 1px var(--line); }
+.who__card { display: grid; gap: 14px; align-content: start; padding: 24px 0 clamp(12px, 2vw, 28px); border-top: 1px solid var(--line-2); }
 .who__name { font: 700 clamp(1.5rem, 2.4vw, 2.3rem)/1.05 var(--f-display); font-stretch: 80%; letter-spacing: -.01em; }
 .who__age { color: var(--t-3); }
 .who__say { color: var(--t-1); font-size: 1.05rem; line-height: 1.5; margin-top: 8px; }
@@ -533,8 +522,8 @@ a { color: inherit; text-decoration: none; }
 .foot__base { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px 28px; padding-top: 20px; border-top: 1px solid var(--line); }
 .foot__cancel { padding: 8px 14px; border: 1px solid var(--line-2); border-radius: 999px; color: var(--t-2); transition: color .25s, border-color .25s; }
 .foot__cancel:hover { color: var(--t-1); border-color: var(--t-3); }
-/* Großer Schriftzug als weicher Farbschein hinter den Links: unscharf und schwach, damit alles davor klar lesbar bleibt */
-.foot__mark { position: absolute; z-index: 0; left: 0; right: 0; top: 50%; transform: translateY(-54%); margin: 0; font: 800 13cqw/1 var(--f-display); font-stretch: 125%; text-align: center; white-space: nowrap; color: transparent; background: var(--grad); -webkit-background-clip: text; background-clip: text; opacity: .16; filter: blur(clamp(6px, 1.3cqw, 18px)); pointer-events: none; user-select: none; }
+/* Großer Schriftzug hinter den Links: scharf, einfarbig und sehr schwach, damit alles davor klar lesbar bleibt */
+.foot__mark { position: absolute; z-index: 0; left: 0; right: 0; top: 50%; transform: translateY(-54%); margin: 0; font: 800 13cqw/1 var(--f-display); font-stretch: 125%; text-align: center; white-space: nowrap; color: rgba(var(--t-rgb), .05); pointer-events: none; user-select: none; }
 /* Handy: der Footer ist hoch genug, dort darf der Schriftzug fast die ganze Breite füllen */
 @media (max-width: 760px) { .foot__mark { font-size: 24cqw; } }
 .foot__main, .foot__base { position: relative; z-index: 1; }

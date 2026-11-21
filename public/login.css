@@ -3,16 +3,17 @@
    site-header.css). Dieselben Farben wie die Startseite: dunkles Grau,
    Off-White, Off-White als Akzent, das Logo-Blau nur im Overlay.
    ===================================================================== */
-/* Neumorphes Login im Xyntal-Schema: dunkle Fläche, weiche Licht-/Schattenkanten, Off-White als Akzent */
+/* Flaches Login im Xyntal-Schema: dunkle Fläche, Haarlinien statt Licht- und Schattenkanten, Off-White als Akzent.
+   Die drei Schatten-Variablen bleiben als Schalter bestehen und sind auf „kein Schatten“ gestellt. */
 .auth-panel {
   --nm-base: #212121;
   --nm-well: #181818;
   --nm-key: #2a2a2a;
   --nm-line: rgba(255, 255, 255, 0.07);
   --nm-line-strong: rgba(255, 255, 255, 0.14);
-  --nm-edge: inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  --nm-raise-sm: var(--nm-edge), 0 1px 2px rgba(0, 0, 0, 0.5), 0 6px 14px -8px rgba(0, 0, 0, 0.7);
-  --nm-inset: inset 0 1px 3px rgba(0, 0, 0, 0.55), 0 1px 0 rgba(255, 255, 255, 0.04);
+  --nm-edge: 0 0 0 0 transparent;
+  --nm-raise-sm: 0 0 0 0 transparent;
+  --nm-inset: 0 0 0 0 transparent;
   --nm-ease: cubic-bezier(0.65, 0, 0.35, 1);
 }
 .auth-main {
@@ -25,16 +26,16 @@
   width: min(100%, 460px);
   display: grid; gap: 22px;
   padding: 36px 34px 30px;
-  border: 1px solid var(--nm-line); border-radius: 24px;
-  background: linear-gradient(180deg, #252525 0%, var(--nm-base) 40%);
-  box-shadow: var(--nm-edge), 0 2px 6px rgba(0, 0, 0, 0.35), 0 40px 80px -32px rgba(0, 0, 0, 0.85);
+  border: 1px solid var(--nm-line-strong); border-radius: 12px;
+  background: var(--nm-base);
+  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.55);
 }
 .auth-pane { display: contents; }
 .auth-stack { display: grid; gap: 22px; }
 .auth-stack[hidden] { display: none; }
 .auth-head { display: grid; gap: 8px; text-align: center; }
 .auth-head h1 { margin: 0; font-size: clamp(1.9rem, 5vw, 2.4rem) !important; letter-spacing: -0.02em !important; }
-.auth-head h1 em { font-style: italic; color: #A09E98; }
+.auth-head h1 em { font-style: normal; color: #A09E98; }
 .auth-head p { margin: 0; color: #A09E98; font-size: 15px; }
 .auth-overlay, .auth-form-title { display: none; }
 
@@ -144,12 +145,12 @@
   width: 100%; min-height: 50px; margin-top: 4px;
   border: 0 !important; border-radius: 999px !important;
   background: var(--accent) !important; color: var(--on-accent) !important; letter-spacing: 0.04em;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 1px 2px rgba(0, 0, 0, 0.5), 0 10px 22px -12px rgba(0, 0, 0, 0.9) !important;
+  box-shadow: none !important;
   transition: transform 0.15s, box-shadow 0.2s, filter 0.2s; font-size: 16px !important;
   font-family: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
 }
 .auth-panel .btn.auth-submit:hover { filter: brightness(1.08); }
-.auth-panel .btn.auth-submit:active { transform: translateY(1px) scale(0.99); box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3) !important; }
+.auth-panel .btn.auth-submit:active { transform: translateY(1px) scale(0.99); box-shadow: none !important; }
 .auth-panel .btn.auth-submit:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 3px; }
 .auth-panel .form-status { text-align: center; }
 .auth-panel .form-status:empty { display: none; }
@@ -163,19 +164,19 @@
 .auth-legal a:hover { text-decoration: underline; }
 
 .auth-ghost {
-  min-height: 46px; padding: 0 34px; border: 1.5px solid rgba(255, 255, 255, 0.85); border-radius: 999px;
-  background: transparent; color: #fff; cursor: pointer;
-  font: 700 13px/1 "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; letter-spacing: 0.08em; text-transform: uppercase;
-  transition: background 0.2s, color 0.2s, transform 0.15s;
+  min-height: 48px; padding: 0 26px; border: 0; border-radius: 999px;
+  background: transparent; color: #ECEAE4; cursor: pointer; box-shadow: inset 0 0 0 1px rgba(236, 234, 228, 0.22);
+  font: 500 15px/1 "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  transition: box-shadow 0.2s, transform 0.15s;
 }
-.auth-ghost:hover { background: #fff; color: #101820; }
+.auth-ghost:hover { box-shadow: inset 0 0 0 1px #ECEAE4; }
 .auth-ghost:active { transform: scale(0.97); }
-.auth-ghost:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.auth-ghost:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
 /* Ab Tablet-Breite: zwei Formulare nebeneinander, dazwischen rutscht das Overlay */
 @media (min-width: 860px) {
   .auth-panel[data-mode="login"], .auth-panel[data-mode="signup"] {
-    width: min(100%, 940px); min-height: 640px; padding: 0; gap: 0; border-radius: 28px;
+    width: min(100%, 940px); min-height: 640px; padding: 0; gap: 0; border-radius: 12px;
     grid-template-columns: 1fr; grid-template-rows: 1fr;
   }
   .auth-panel[data-mode="done"], .auth-panel[data-mode="mfa"] { width: min(100%, 520px); }
@@ -210,48 +211,37 @@
 
   .auth-overlay {
     display: block; position: absolute; z-index: 2; top: 0; bottom: 0; left: 0; width: 40%;
-    overflow: hidden; border-radius: 28px 0 0 28px;
-    background:
-      radial-gradient(120% 80% at 20% 0%, rgba(76, 141, 255, 0.26), transparent 60%),
-      linear-gradient(160deg, #10213F 0%, #0C131F 55%, #101010 100%);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    overflow: hidden; border-radius: 11px 0 0 11px;
+    background: #151516;
+    box-shadow: inset -1px 0 0 var(--nm-line-strong);
     transition: transform 0.8s var(--nm-ease), border-radius 0.8s var(--nm-ease), box-shadow 0.8s var(--nm-ease);
   }
-  .auth-panel[data-mode="signup"] .auth-overlay { transform: translateX(150%); border-radius: 0 28px 28px 0; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06); }
+  .auth-panel[data-mode="signup"] .auth-overlay { transform: translateX(150%); border-radius: 0 11px 11px 0; box-shadow: inset 1px 0 0 var(--nm-line-strong); }
   .auth-panel[data-mode="done"] .auth-overlay, .auth-panel[data-mode="mfa"] .auth-overlay { display: none; }
   .auth-panel[data-mode="done"] .auth-pane, .auth-panel[data-mode="mfa"] .auth-pane { display: none; }
-  .auth-panel[data-mode="done"], .auth-panel[data-mode="mfa"] { padding: 40px 36px; border-radius: 28px; }
+  .auth-panel[data-mode="done"], .auth-panel[data-mode="mfa"] { padding: 40px 36px; border-radius: 12px; }
 
-  /* weiche, runde Formen im Overlay – wandern beim Wechsel mit */
-  .auth-overlay::before, .auth-overlay::after {
-    content: ""; position: absolute; border-radius: 50%; pointer-events: none;
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    background: radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.05), transparent 65%);
-    transition: transform 1s var(--nm-ease);
-  }
-  .auth-overlay::before { width: 320px; height: 320px; left: -120px; bottom: -110px; }
-  .auth-overlay::after { width: 200px; height: 200px; right: -70px; top: -60px; }
-  .auth-panel[data-mode="signup"] .auth-overlay::before { transform: translate(60px, -30px) scale(1.12); }
-  .auth-panel[data-mode="signup"] .auth-overlay::after { transform: translate(-40px, 40px) scale(0.9); }
+  /* Lichtkante oben in Logo-Farben, wie an den App-Fenstern der Startseite */
+  .auth-overlay::before { content: ""; position: absolute; left: 12%; right: 12%; top: 0; height: 1px; background: linear-gradient(90deg, #B36BFF, #4C8DFF 50%); opacity: .85; }
 
   .auth-overlay-copy {
     position: absolute; inset: 0; z-index: 1; display: grid; align-content: center; justify-items: center; gap: 16px;
-    padding: 40px clamp(24px, 3.4vw, 44px); text-align: center; color: #fff;
+    padding: 40px clamp(24px, 3.4vw, 44px); text-align: center; color: #ECEAE4;
     opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0s linear 0.3s;
   }
   .auth-panel[data-mode="login"] .auth-overlay-copy[data-for="login"],
   .auth-panel[data-mode="signup"] .auth-overlay-copy[data-for="signup"] { opacity: 1; visibility: visible; transition: opacity 0.4s ease 0.4s, visibility 0s; }
   .auth-overlay-copy h2 { margin: 0; font-size: clamp(1.7rem, 2.6vw, 2.2rem); line-height: 1.15; letter-spacing: -0.02em; }
-  .auth-overlay-copy h2 em { font-style: italic; color: #4C8DFF; }
-  .auth-overlay-copy p { margin: 0 0 8px; color: rgba(255, 255, 255, 0.72); font-size: 15px; line-height: 1.55; }
+  .auth-overlay-copy h2 em { font-style: normal; color: #8FB8FF; }
+  .auth-overlay-copy p { margin: 0 0 8px; color: #B9B7B0; font-size: 15px; line-height: 1.55; }
 }
 
 @media (max-width: 480px) {
-  .auth-panel { padding: 28px 18px 24px; border-radius: 20px; }
+  .auth-panel { padding: 28px 18px 24px; border-radius: 12px; }
   .field-box { grid-template-columns: 40px 1fr auto; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .auth-switch button, .auth-panel .oauth-btn, .field-box, .pw-bars i, .auth-pane, .auth-overlay, .auth-overlay::before, .auth-overlay::after, .auth-overlay-copy { transition: none !important; }
+  .auth-switch button, .auth-panel .oauth-btn, .field-box, .pw-bars i, .auth-pane, .auth-overlay, .auth-overlay-copy { transition: none !important; }
 }
 @media (forced-colors: active) {
   .auth-switch button[aria-selected="true"] { outline: 2px solid Highlight; }
