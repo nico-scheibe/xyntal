@@ -40,6 +40,8 @@ services:
       # Adresse; die Funktion prüft jede Anfrage per Signatur (SEND_EMAIL_HOOK_SECRET).
       GOTRUE_HOOK_SEND_EMAIL_URI: "${SUPABASE_PUBLIC_URL}/functions/v1/send-auth-email"
       GOTRUE_HOOK_SEND_EMAIL_SECRETS: ${SEND_EMAIL_HOOK_SECRET}
+      # Im Profil lässt sich Discord nachträglich verknüpfen (Xchange-Rollen nach Tarif).
+      GOTRUE_SECURITY_MANUAL_LINKING_ENABLED: "true"
       # Login-Anbieter: in .env eintragen (GOOGLE_*, LINKEDIN_*, APPLE_*, DISCORD_*), siehe README.
       GOTRUE_EXTERNAL_DISCORD_ENABLED: ${DISCORD_ENABLED:-false}
       GOTRUE_EXTERNAL_DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}

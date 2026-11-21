@@ -130,6 +130,7 @@ setTimeout(async () => {
   setupAvatarEditor(me, updated => { me = updated; render(me); });
   renderXcard();
   fromHash();
+  discordReturn();
 }, 300);
 
 // ---------- Xyntal-Karte ----------
@@ -210,7 +211,7 @@ document.getElementById("logout").addEventListener("click", async () => {
 
 // ---------- Sicherheit ----------
 const statusOf = (root) => root.querySelector(".form-status");
-const PROVIDERS = { email: "E-Mail und Passwort", google: "Google", apple: "Apple", linkedin_oidc: "LinkedIn", linkedin: "LinkedIn", phone: "Handynummer (SMS)" };
+const PROVIDERS = { email: "E-Mail und Passwort", google: "Google", apple: "Apple", linkedin_oidc: "LinkedIn", linkedin: "LinkedIn", discord: "Discord", phone: "Handynummer (SMS)" };
 let secUser = null;
 
 async function renderSecurity() {
@@ -229,7 +230,53 @@ async function renderSecurity() {
   document.querySelector("[data-pw-current]").hidden = !hasPw;
   document.querySelector("[data-sec-methods]").innerHTML = (providers.length ? providers : ["email"]).map((p) =>
     `<li><span class="sec-dot" aria-hidden="true"></span>${esc(PROVIDERS[p] || p)}${p === "email" && user.email ? ` <span class="hint" data-no-i18n>· ${esc(user.email)}</span>` : ""}${p === "phone" && user.phone ? ` <span class="hint" data-no-i18n>· +${esc(user.phone)}</span>` : ""}</li>`).join("");
+  renderDiscordLink(user);
   renderMfa();
+}
+
+// Discord verknüpfen: Daran erkennt der Xchange-Discord den Tarif (Abfrage xchange_plans,
+// Migration 20261121120000) und vergibt die Rollen. Braucht im Konto-Server
+// GOTRUE_SECURITY_MANUAL_LINKING_ENABLED.
+const discordStatus = document.querySelector("[data-discord-status]");
+const discordLinkBtn = document.querySelector("[data-discord-link]");
+const discordUnlinkBtn = document.querySelector("[data-discord-unlink]");
+async function renderDiscordLink(user) {
+  const identities = user.identities || [];
+  const linked = identities.some((i) => i.provider === "discord");
+  const offered = linked || !!(await authSettings()).discord;
+  document.querySelector("[data-discord-row]").hidden = !offered || (linked && identities.length < 2);
+  document.querySelector("[data-discord-hint]").hidden = !offered || linked;
+  discordLinkBtn.hidden = linked;
+  // Die letzte Anmeldemethode lässt sich nicht trennen.
+  discordUnlinkBtn.hidden = !linked || identities.length < 2;
+}
+discordLinkBtn.addEventListener("click", async () => {
+  try {
+    setStatus(discordStatus, "Du wirst zu Discord weitergeleitet …");
+    unwrap(await sb.auth.linkIdentity({ provider: "discord", options: { redirectTo: new URL("profil?discord=1#sicherheit", location.href).href } }));
+  } catch (err) { setStatus(discordStatus, friendlyError(err), "error"); }
+});
+discordUnlinkBtn.addEventListener("click", async () => {
+  try {
+    const identity = ((secUser && secUser.identities) || []).find((i) => i.provider === "discord");
+    if (!identity) return;
+    unwrap(await sb.auth.unlinkIdentity(identity));
+    await renderSecurity();
+    setStatus(discordStatus, "Discord ist getrennt. Deine Rollen auf dem Xchange-Server fallen beim nächsten Abgleich weg.", "ok");
+  } catch (err) { setStatus(discordStatus, friendlyError(err), "error"); }
+});
+// Zurück von Discord: Sicherheit öffnen und sagen, ob es geklappt hat.
+function discordReturn() {
+  const query = new URLSearchParams(location.search);
+  if (!query.has("discord")) return;
+  const failed = query.get("error_description") || new URLSearchParams(location.hash.slice(1)).get("error_description");
+  selectTab("sicherheit", { push: false });
+  if (failed) {
+    history.replaceState(null, "", "profil#sicherheit");
+    setStatus(discordStatus, friendlyError({ message: failed }), "error");
+  } else {
+    setStatus(discordStatus, "Discord ist verknüpft. Tippe auf dem Xchange-Server /lounge, dann bekommst du deine Rollen sofort.", "ok");
+  }
 }
 
 // E-Mail ändern (Bestätigungslink an die neue Adresse)

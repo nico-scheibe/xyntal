@@ -46,6 +46,8 @@ function friendlyError(err) {
     [/token has expired|invalid.*(otp|token)|otp.*(expired|invalid)/i, "Der Code ist falsch oder abgelaufen. Fordere einen neuen an."],
     [/unsupported phone provider|phone.*provider.*(disabled|not enabled)/i, "Die Anmeldung per SMS ist noch nicht eingerichtet."],
     [/provider is not enabled|unsupported provider/i, "Diese Anmeldung ist noch nicht eingerichtet."],
+    [/manual linking is disabled/i, "Das Verknüpfen ist noch nicht eingerichtet."],
+    [/identity is already linked/i, "Dieses Konto ist schon mit einem anderen Xyntal-Konto verknüpft."],
     [/sms|phone.*(invalid|not)/i, "Die SMS konnte nicht gesendet werden. Prüfe die Nummer."],
   ];
   for (const [re, text] of map) if (re.test(msg)) return text;
