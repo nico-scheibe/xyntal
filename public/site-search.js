@@ -19,6 +19,7 @@
     { label: "Matching", href: "/matching", keys: "passung punkte rechnung gewichte arbeitsstil vorschläge" },
     { label: "Preise", href: "/preise", keys: "tarife kosten plan free pro business abo" },
     { label: "Für Firmen", href: "/unternehmen", keys: "unternehmen firma business festpreis team" },
+    { label: "Xchange – Discord-Community", href: "/xchange", keys: "xchange discord community server builder founder lounge inner circle feedback pitch" },
     { label: "Über uns", href: "/ueber-uns", keys: "über uns xyntal warum idee mission kontakt" },
     { label: "Konto anlegen", href: "/login#registrieren", keys: "konto anmelden registrieren account beitreten" },
     { label: "Mitglieder", href: "/mitglieder", keys: "profile menschen leute suchen finden team" },
