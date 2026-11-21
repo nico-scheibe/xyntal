@@ -469,16 +469,16 @@ body.messages-page .site-footer { display: none; }
 
 /* =====================================================================
    Gruppen, Teams, Entdecken – und Feinschliff des ganzen Bereichs.
-   Gleiche Farben wie bisher (Grau-Flächen, Blau für „meine“, der
-   Logo-Verlauf Lila → Blau → Cyan nur als kleiner Akzent).
+   Grau-Flächen und Blau als einziger Akzent: keine Verläufe, kein Leuchten.
+   Die Variablen --xc-grad und --xc-grad-soft heißen noch so, enthalten aber feste Farben.
    ===================================================================== */
 .xc {
-  --xc-grad: linear-gradient(135deg, #B36BFF 0%, #4C8DFF 55%, #4C8DFF 100%);
-  --xc-grad-soft: linear-gradient(135deg, rgba(179, 107, 255, .16), rgba(76, 141, 255, .14) 55%, rgba(76, 141, 255, .12));
-  --xc-mine-grad: linear-gradient(140deg, #4C8DFF 0%, #2F6FFF 55%, #4B62FF 100%);
+  --xc-grad: #4C8DFF;
+  --xc-grad-soft: rgba(76, 141, 255, .1);
+  --xc-mine-grad: #2F6FFF;
   --xc-ok: #3CCF8E;
   --xc-miss: #FF8597;
-  --xc-violet: #B36BFF;
+  --xc-violet: #4C8DFF;
   --xc-shadow: 0 1px 0 rgba(255, 255, 255, .03) inset, 0 10px 30px -18px rgba(0, 0, 0, .8);
   grid-template-columns: 328px minmax(0, 1fr) 304px;
 }
@@ -487,7 +487,7 @@ body.messages-page .site-footer { display: none; }
 /* Liste: Kopf mit Plus, Bereiche als Segment-Steuerung, Entdecken-Eintrag */
 .xc-list-head { align-items: center; padding: 18px 14px 12px 16px; }
 .xc-list-head h1 { font-size: 21px; }
-.xc-list-head .xc-new-btn { width: 38px; height: 38px; border-radius: 12px; background: var(--xc-grad); box-shadow: 0 8px 22px -8px rgba(76, 141, 255, .7); }
+.xc-list-head .xc-new-btn { width: 38px; height: 38px; border-radius: 12px; background: var(--xc-grad); }
 .xc-list-head .xc-new-btn svg { width: 18px; height: 18px; stroke-width: 2.2; }
 .xc-spaces { position: relative; display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; margin: 0 12px 10px; padding: 3px; border: 1px solid var(--xc-line); border-radius: 12px; background: var(--xc-wash); }
 .xc-spaces button { position: relative; display: inline-flex; justify-content: center; align-items: center; gap: 5px; min-height: 30px; padding: 0 6px; border: 0; border-radius: 9px; background: none; color: var(--xc-text-3); font-size: 12.5px; font-weight: 600; cursor: pointer; transition: background var(--xc-ease), color var(--xc-ease), box-shadow var(--xc-ease); }
@@ -547,7 +547,7 @@ body.messages-page .site-footer { display: none; }
 .xc-bubble { padding: 9px 13px 7px; border-radius: 18px; box-shadow: var(--xc-shadow); }
 .xc-msg:not(.is-mine):not(.is-grouped) .xc-bubble { border-bottom-left-radius: 7px; }
 .xc-msg.is-mine:not(.is-grouped) .xc-bubble { border-bottom-right-radius: 7px; }
-.xc-msg.is-mine .xc-bubble { background: var(--xc-mine-grad); box-shadow: 0 10px 26px -16px rgba(47, 111, 255, .9); }
+.xc-msg.is-mine .xc-bubble { background: var(--xc-mine-grad); }
 .xc-msg { animation: xc-in 220ms cubic-bezier(.2, .7, .2, 1) both; }
 @keyframes xc-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .xc-system { padding: 4px 12px; border: 1px solid var(--xc-line); border-radius: 99px; background: var(--xc-panel); }
@@ -556,14 +556,14 @@ body.messages-page .site-footer { display: none; }
 .xc-day::after { background: linear-gradient(90deg, var(--xc-line-2), transparent); }
 .xc-composer { border-radius: 18px; background: var(--xc-panel-2); box-shadow: 0 16px 40px -24px rgba(0, 0, 0, .9); }
 .xc-composer:focus-within { border-color: rgba(76, 141, 255, .55); box-shadow: 0 0 0 4px rgba(76, 141, 255, .10), 0 16px 40px -20px rgba(76, 141, 255, .35); }
-.xc-send { background: var(--xc-grad); box-shadow: 0 6px 16px -6px rgba(76, 141, 255, .8); }
+.xc-send { background: var(--xc-grad); }
 .xc-tools { border-radius: 12px; }
 
 /* Leerer Zustand: kleine Startseite mit vier Wegen */
 .xc-placeholder { display: grid; place-content: center; justify-items: center; gap: 10px; padding: 32px 24px; }
 .xc-placeholder h2 { margin: 6px 0 0; color: var(--xc-text); font-size: 22px; letter-spacing: -.02em; }
 .xc-placeholder > p { max-width: 440px; margin: 0; color: var(--xc-text-2); line-height: 1.55; }
-.xc-ph-mark { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 20px; background: var(--xc-grad); color: #fff; box-shadow: 0 18px 40px -16px rgba(76, 141, 255, .8); }
+.xc-ph-mark { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 20px; background: var(--xc-grad); color: #fff; }
 .xc-ph-mark svg { width: 30px; height: 30px; stroke-width: 1.8; }
 .xc-ph-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 220px)); gap: 10px; margin-top: 14px; }
 .xc-ph-actions button { display: flex; align-items: flex-start; gap: 10px; padding: 12px; border: 1px solid var(--xc-line-2); border-radius: 14px; background: var(--xc-panel); color: var(--xc-text); text-align: left; cursor: pointer; transition: border-color var(--xc-ease), transform var(--xc-ease), background var(--xc-ease); }
@@ -590,7 +590,7 @@ body.messages-page .site-footer { display: none; }
 .xc-criteria li.is-miss svg { color: var(--xc-miss); stroke-width: 2.4; }
 .xc-criteria b { color: var(--xc-text); font-weight: 600; }
 .xc-requests ul { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
-.xc-requests li { display: grid; gap: 8px; padding: 11px; border: 1px solid rgba(179, 107, 255, .3); border-radius: 13px; background: rgba(179, 107, 255, .06); }
+.xc-requests li { display: grid; gap: 8px; padding: 11px; border: 1px solid rgba(76, 141, 255, .3); border-radius: 13px; background: rgba(76, 141, 255, .06); }
 .xc-requests h3 { display: flex; align-items: center; gap: 6px; }
 .xc-req-top { display: flex; align-items: center; gap: 9px; }
 .xc-req-top span { display: grid; min-width: 0; }
@@ -613,9 +613,7 @@ body.messages-page .site-footer { display: none; }
 
 /* ---------- Entdecken ---------- */
 .xd { flex: 1; min-height: 0; overflow-y: auto; padding: 0 0 32px; }
-.xd-hero { position: relative; display: flex; align-items: flex-end; gap: 16px; padding: 30px 28px 22px; border-bottom: 1px solid var(--xc-line); background:
-    radial-gradient(60% 120% at 0% 0%, rgba(179, 107, 255, .16), transparent 60%),
-    radial-gradient(50% 120% at 100% 0%, rgba(76, 141, 255, .12), transparent 60%), var(--xc-panel); }
+.xd-hero { position: relative; display: flex; align-items: flex-end; gap: 16px; padding: 30px 28px 22px; border-bottom: 1px solid var(--xc-line); background: var(--xc-panel); }
 .xd-hero .xc-back { position: absolute; top: 12px; left: 10px; }
 .xd-hero-text { flex: 1; min-width: 0; }
 .xd-kicker { display: inline-flex; align-items: center; gap: 6px; margin: 0 0 6px; color: #8FB8FF; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
@@ -703,7 +701,7 @@ body.messages-page .site-footer { display: none; }
 .xg-crit[open] { padding-bottom: 12px; }
 .xg-crit summary { display: flex; align-items: center; gap: 10px; padding: 12px 0; cursor: pointer; list-style: none; }
 .xg-crit summary::-webkit-details-marker { display: none; }
-.xg-crit summary svg { width: 18px; height: 18px; fill: none; stroke: #B36BFF; stroke-width: 1.7; stroke-linejoin: round; }
+.xg-crit summary svg { width: 18px; height: 18px; fill: none; stroke: #4C8DFF; stroke-width: 1.7; stroke-linejoin: round; }
 .xg-crit summary span { display: grid; }
 .xg-crit summary b { font-size: 13.5px; }
 .xg-crit summary small { color: var(--xm-text-3); font-size: 12px; font-weight: 400; }
