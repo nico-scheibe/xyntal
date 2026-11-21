@@ -247,3 +247,19 @@ body.xc .cmdk-item[aria-selected="true"] { background: var(--paper-2); color: va
   .js-reveal [data-reveal] { opacity: 1; transform: none; transition: none; }
 }
 @media (forced-colors: active) { .xc-btn { border: 1px solid ButtonText; } .xc-grad { color: CanvasText; background: none; } }
+
+/* ---------- Hinweis: Xchange-Stufen = Xyntal-Abos ---------- */
+.xc-plans {
+  display: grid; gap: 24px; align-items: center;
+  padding: clamp(22px, 3vw, 30px); border-radius: var(--r);
+  background: linear-gradient(var(--paper-2), var(--paper-2)) padding-box, var(--grad) border-box; border: 1px solid transparent;
+}
+@media (min-width: 900px) { .xc-plans { grid-template-columns: 1fr 1.1fr; gap: 40px; } }
+.xc-plans__text { display: grid; gap: 8px; }
+.xc-plans h3 { font: 600 clamp(20px, 2.2vw, 24px)/1.25 var(--f-serif); }
+.xc-plans p { color: var(--ink-2); font-size: 15.5px; }
+.xc-plans__map { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.xc-plans__map li { display: grid; gap: 2px; padding: 12px 14px; border-radius: 10px; background: var(--paper-3); border: 1px solid var(--rule); }
+.xc-plans__map span { font: 500 11.5px/1.4 var(--f-mono); letter-spacing: .04em; text-transform: uppercase; color: var(--ink-3); }
+.xc-plans__map b { font: 600 16px/1.3 var(--f-serif); }
+.xc-plans__map b::before { content: "→ "; color: var(--ink-3); font-weight: 400; }

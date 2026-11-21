@@ -3958,6 +3958,12 @@ window.XYNTAL_EN = {
   "Die sind schon da.": "They're already here.",
   "Komm rein, stell dich vor und schau dir an, woran die anderen bauen.": "Come in, introduce yourself and see what the others are building.",
   "Xyntal-Konto anlegen": "Create a Xyntal account",
+  "Dein Xyntal-Abo ist dein Xchange-Zugang.": "Your Xyntal subscription is your Xchange access.",
+  "Die Stufen in Xchange sind direkt mit den Xyntal-Abos verbunden. Du schließt nichts extra ab: Mit deinem Abo bekommst du die App und die passende Rolle auf dem Discord-Server.": "The tiers in Xchange are directly linked to the Xyntal subscriptions. There's nothing extra to sign up for: your subscription gets you the app and the matching role on the Discord server.",
+  "Welches Abo zu welcher Stufe gehört": "Which subscription unlocks which tier",
+  "Xyntal Free": "Xyntal Free",
+  "Muss ich für Xchange ein eigenes Abo abschließen?": "Do I need a separate subscription for Xchange?",
+  "Nein. Die Xchange-Stufen sind mit den Xyntal-Abos verbunden: Plus schaltet Builder frei, Pro die Founder Lounge und Ultra (nach Zusage) den Inner Circle. Du zahlst einmal für Xyntal und bekommst beides, die App und die Community.": "No. The Xchange tiers are linked to the Xyntal subscriptions: Plus unlocks Builder, Pro the Founder Lounge and Ultra (once accepted) the Inner Circle. You pay once for Xyntal and get both, the app and the community.",
 };
 
 // Texte mit eingesetzten Werten (Zahlen, Namen). Gruppen werden selbst wieder übersetzt.
