@@ -38,7 +38,7 @@
   const $ = (s) => root.querySelector(s);
 
   // ---- Links (D14): nur echte Seiten der Website, die Support-Adresse und der App Store; alles andere fliegt raus.
-  const PAGES = new Set(["agb", "app", "app-anmeldung", "arbeitsstil", "beta", "boerse", "community", "community-richtlinien", "datenschutz", "demo", "fuer-dich", "impressum", "invite", "koppeln", "kuendigen", "login", "matching", "meine-karte", "meine-seite", "mitglied-werden", "mitglieder", "nachrichten", "partner", "preise", "profil", "projekte", "tarif", "ueber-uns", "unternehmen", "widerruf"]);
+  const PAGES = new Set(["agb", "xchange", "app", "app-anmeldung", "arbeitsstil", "beta", "boerse", "community", "community-richtlinien", "datenschutz", "demo", "fuer-dich", "impressum", "invite", "koppeln", "kuendigen", "login", "matching", "meine-karte", "meine-seite", "mitglied-werden", "mitglieder", "nachrichten", "partner", "preise", "profil", "projekte", "tarif", "ueber-uns", "unternehmen", "widerruf"]);
   const pageOk = (path) => { const p = path.split(/[?#]/)[0].replace(/^\/+|\/+$/g, "").replace(/\.html$/, ""); return p === "" || PAGES.has(p); };
   function safeHref(url) {
     if (url.startsWith("/")) return pageOk(url) ? url : null;

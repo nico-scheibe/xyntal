@@ -4,4 +4,6 @@
 window.XYNTAL_CONFIG = {
   supabaseUrl: "https://db.xyntal.de",
   supabaseKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzk0MTc3MzEwLCJleHAiOjE5NTE4NTczMTB9.1H1nAG_eqZLMIsCvkNDqdCGDluTM0p3zhdx5aWLvToQ",
+  // Einladungslink zum Xchange-Discord, z. B. "https://discord.gg/abc123". Leer = Hinweis auf /xchange.
+  xchangeInvite: "https://discord.gg/wybE6Sc4q6",
 };

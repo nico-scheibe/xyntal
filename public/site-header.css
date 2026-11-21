@@ -72,6 +72,7 @@
      Die Links lösen sich dafür aus ihrem Kasten, damit „Bewerben“ hinter die Suche rücken kann. */
   .nav .nav-links { display: contents; }
   .nav .nav-links .nav-main + .nav-main { margin-left: clamp(18px, 2.4vw, 40px); }
+  .nav .wrap > .logo { margin-right: 20px; }
   .nav .nav-links .nav-cta { order: 7; margin-left: 22px; }
   .nav .wrap > .site-search.site-search { margin-left: 0; }
   /* Glocke: rechts neben der Lupe und rund wie sie, nicht vorn am Logo */
@@ -165,3 +166,8 @@
 .nav .nav-links .notification-panel a.notification-item:hover { color: #ECEAE4; background: #2A2A2A; }
 .nav .nav-links .notification-panel a.notification-item.unread { background: rgba(236, 234, 228, .10); }
 .nav .nav-links .notification-panel a.notification-item small { color: #A09E98; font-size: 12px; }
+/* Sechs Hauptlinks (seit /xchange): zwischen 1001 und 1180 px enger setzen, damit nichts ans Logo stößt */
+@media (min-width: 1001px) and (max-width: 1180px) {
+  .nav .nav-links .nav-main + .nav-main { margin-left: 16px; }
+  .nav .nav-links a.nav-main { font-size: 14.4px; }
+}
