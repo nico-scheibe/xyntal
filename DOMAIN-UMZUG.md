@@ -53,7 +53,7 @@ Der Login-Dienst auf `db.xyntal.de` bleibt. Die Website nutzt ihn weiter (`supab
 Auf dem DB-Server die `.env` des Supabase-Stacks in `/opt/xyntal/supabase/.env` (siehe `hosting/hetzner/supabase/install.sh`) anpassen:
 
 - `SITE_URL=https://xyntal.com`
-- `ADDITIONAL_REDIRECT_URLS=https://xyntal.com/**,https://www.xyntal.com/**,https://xyntal.de/**,https://www.xyntal.de/**,https://admin.xyntal.de/**`
+- `ADDITIONAL_REDIRECT_URLS=https://xyntal.com/**,https://www.xyntal.com/**,https://xyntal.de/**,https://www.xyntal.de/**,https://admin.xyntal.de/**,http://127.0.0.1:*/supabase/callback`
 
 Danach den Auth-Dienst neu starten. Ein bloßes `docker compose restart auth` lädt die `.env` nicht neu, daher:
 

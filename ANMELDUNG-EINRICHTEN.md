@@ -7,7 +7,7 @@ jeweiligen Anbieter anlegen und in Supabase eintragen.
 **Diese Adresse brauchst du bei Google, Apple, Discord und LinkedIn als „Redirect URL“ / „Callback URL“:**
 
 ```
-https://rralgrlujoupprwlvoyo.supabase.co/auth/v1/callback
+https://db.xyntal.de/auth/v1/callback
 ```
 
 Eingetragen wird alles in Supabase unter
