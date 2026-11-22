@@ -1191,6 +1191,7 @@ window.XYNTAL_EN = {
   "Du wirst zu Discord weitergeleitet …": "Redirecting you to Discord …",
   "Discord ist getrennt. Deine Rollen auf dem Xchange-Server fallen beim nächsten Abgleich weg.": "Discord is unlinked. Your roles on the Xchange server are removed at the next sync.",
   "Discord ist verknüpft. Tippe auf dem Xchange-Server /lounge, dann bekommst du deine Rollen sofort.": "Discord is linked. Type /lounge on the Xchange server to get your roles right away.",
+  "Discord ist schon verknüpft. Drück auf dem Xchange-Server auf „Check again“, dann bekommst du deine Rollen.": "Discord is already linked. Press “Check again” on the Xchange server to get your roles.",
   "Das Verknüpfen ist noch nicht eingerichtet.": "Linking isn't set up yet.",
   "Dieses Konto ist schon mit einem anderen Xyntal-Konto verknüpft.": "This account is already linked to another Xyntal account.",
   "E-Mail und Passwort": "Email and password",
