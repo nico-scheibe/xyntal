@@ -121,6 +121,16 @@ function fromHash() {
 }
 window.addEventListener("hashchange", fromHash);
 
+// Aus Discord („Connect Xyntal“ des Bots): profil?verbinden=discord. Der Wunsch übersteht die
+// Anmeldung (login führt zurück auf profil) und startet dort die Verknüpfung (connectFromDiscord),
+// höchstens 30 Minuten lang.
+const CONNECT_KEY = "xyntal-verbinden";
+const CONNECT_MAX_MS = 30 * 60 * 1000;
+if (new URLSearchParams(location.search).get("verbinden") === "discord") {
+  try { sessionStorage.setItem(CONNECT_KEY, String(Date.now())); } catch {}
+  history.replaceState(null, "", "profil#sicherheit");
+}
+
 // Nach dem Bestätigungslink kann die Sitzung einen Moment brauchen
 setTimeout(async () => {
   me = await currentMember();
@@ -131,6 +141,7 @@ setTimeout(async () => {
   renderXcard();
   fromHash();
   discordReturn();
+  connectFromDiscord();
 }, 300);
 
 // ---------- Xyntal-Karte ----------
@@ -265,6 +276,26 @@ discordUnlinkBtn.addEventListener("click", async () => {
     setStatus(discordStatus, "Discord ist getrennt. Deine Rollen auf dem Xchange-Server fallen beim nächsten Abgleich weg.", "ok");
   } catch (err) { setStatus(discordStatus, friendlyError(err), "error"); }
 });
+// Aus Discord gekommen: Sicherheit öffnen und die Verknüpfung von selbst starten. Ist Discord
+// schon verknüpft, sagt der Status das; bietet der Konto-Server Discord nicht an, bleibt der Hinweis.
+async function connectFromDiscord() {
+  let wanted = false;
+  try {
+    const since = Number(sessionStorage.getItem(CONNECT_KEY));
+    wanted = since > 0 && Date.now() - since < CONNECT_MAX_MS;
+    sessionStorage.removeItem(CONNECT_KEY);
+  } catch {}
+  if (!wanted) return;
+  selectTab("sicherheit", { push: false });
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) return;
+  if ((user.identities || []).some((i) => i.provider === "discord")) {
+    setStatus(discordStatus, "Discord ist schon verknüpft. Drück auf dem Xchange-Server auf „Check again“, dann bekommst du deine Rollen.", "ok");
+  } else if ((await authSettings()).discord) {
+    discordLinkBtn.click();
+  }
+}
+
 // Zurück von Discord: Sicherheit öffnen und sagen, ob es geklappt hat.
 function discordReturn() {
   const query = new URLSearchParams(location.search);
