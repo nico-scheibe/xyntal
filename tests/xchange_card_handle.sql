@@ -20,8 +20,9 @@ returns boolean language sql stable set search_path = '' as $$
   select coalesce(p_banned, false) and (p_until is null or p_until > now());
 $$;
 
--- Schlüsseltabelle aus der Tarifabfrage, dann die neue Funktion
+-- Schlüsseltabelle und App-Verknüpfungen aus der Tarifabfrage, dann die neue Funktion
 \i supabase/migrations/20261121120000_xchange_plans.sql
+\i supabase/migrations/20261122120000_xchange_app_links.sql
 \i supabase/migrations/20261123120000_xchange_card_handle.sql
 
 insert into public.profiles (id, status, banned, banned_until) values
@@ -33,7 +34,10 @@ insert into public.profiles (id, status, banned, banned_until) values
   ('00000000-0000-0000-0000-000000000006', 'approved', true,  now() - interval '1 day'), -- Sperre abgelaufen
   ('00000000-0000-0000-0000-000000000007', 'approved', false, null),               -- Karte ohne handle
   ('00000000-0000-0000-0000-000000000008', 'approved', false, null),               -- keine Karte
-  ('00000000-0000-0000-0000-000000000009', 'approved', false, null);               -- nur Google
+  ('00000000-0000-0000-0000-000000000009', 'approved', false, null),               -- nur Google
+  ('00000000-0000-0000-0000-000000000010', 'approved', false, null),               -- nur App-Verknüpfung
+  ('00000000-0000-0000-0000-000000000011', 'approved', false, null),               -- App, Karte ausgeblendet
+  ('00000000-0000-0000-0000-000000000012', 'approved', false, null);               -- App, Kennung hat auch Website
 insert into public.waitlist_cards (user_id, handle, name, email, is_public) values
   ('00000000-0000-0000-0000-000000000001', 'anna',   'Anna A.',   'anna@example.org',   true),
   ('00000000-0000-0000-0000-000000000002', 'bernd',  'Bernd B.',  'bernd@example.org',  false),
@@ -42,7 +46,14 @@ insert into public.waitlist_cards (user_id, handle, name, email, is_public) valu
   ('00000000-0000-0000-0000-000000000005', 'emil',   'Emil E.',   'emil@example.org',   true),
   ('00000000-0000-0000-0000-000000000006', 'frieda', 'Frieda F.', 'frieda@example.org', true),
   ('00000000-0000-0000-0000-000000000007', null,     'Gustav G.', 'gustav@example.org', true),
-  ('00000000-0000-0000-0000-000000000009', 'ida',    'Ida I.',    'ida@example.org',    true);
+  ('00000000-0000-0000-0000-000000000009', 'ida',    'Ida I.',    'ida@example.org',    true),
+  ('00000000-0000-0000-0000-000000000010', 'jonas',  'Jonas J.',  'jonas@example.org',  true),
+  ('00000000-0000-0000-0000-000000000011', 'kim',    'Kim K.',    'kim@example.org',    false),
+  ('00000000-0000-0000-0000-000000000012', 'lena',   'Lena L.',   'lena@example.org',   true);
+insert into public.xchange_app_links (profile_id, discord_id) values
+  ('00000000-0000-0000-0000-000000000010', '101010101010101010'),
+  ('00000000-0000-0000-0000-000000000011', '111111111111111110'),
+  ('00000000-0000-0000-0000-000000000012', '222222222222222222');
 insert into auth.identities values
   ('discord', '111111111111111111', '00000000-0000-0000-0000-000000000001'),
   ('discord', '222222222222222222', '00000000-0000-0000-0000-000000000002'),
@@ -76,6 +87,9 @@ begin
       ('777777777777777777', null),     -- kein handle
       ('888888888888888888', null),     -- keine Karte
       ('999999999999999999', null),     -- nur Google-Identität
+      ('101010101010101010', 'jonas'),  -- Treffer nur über die App-Verknüpfung
+      ('111111111111111110', null),     -- App-Verknüpfung, Karte nicht öffentlich
+      -- 222222222222222222 oben: Website (bernd, ausgeblendet) geht vor App (lena) – kein Ausweichen
       ('000000000000000000', null),     -- unbekannt
       ('1234', null),                   -- zu kurz, obwohl als Identität vorhanden
       ('111111111111111111x', null),    -- keine reine Ziffernfolge
