@@ -388,11 +388,14 @@ final class APIClient {
 
     // MARK: - Matching („Für dich“)
 
-    /// GET /matches/people?limit=: Vorschläge, beste Passung zuerst. Ausgeblendete Personen fehlen schon in der Antwort.
+    /// GET /matches/people?limit=&excludeSaved=1: Vorschläge für den Stapel, beste Passung zuerst.
+    /// Ausgeblendete und schon gespeicherte („Kennenlernen“) Personen fehlen schon in der Antwort,
+    /// damit niemand nach dem Neuladen ein zweites Mal im Stapel liegt.
     func matches(limit: Int, token: String) async throws -> [MatchPerson] {
         let result = try await send("matches/people",
                                     token: token,
-                                    query: [URLQueryItem(name: "limit", value: String(limit))],
+                                    query: [URLQueryItem(name: "limit", value: String(limit)),
+                                            URLQueryItem(name: "excludeSaved", value: "1")],
                                     as: MatchPeopleResult.self,
                                     maxBytes: Self.maxListResponseBytes)
         return result.people?.elements ?? []
