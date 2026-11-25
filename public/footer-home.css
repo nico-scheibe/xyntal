@@ -10,11 +10,11 @@
 .foot {
   --g-2: #0F1620;
   --t-1: #ECEAE4;
-  --t-2: #B9B7B0;
-  --t-3: #918F89;
+  --t-2: #D3CFC5;
+  --t-3: #A9A7A0;
   --t-rgb: 236, 234, 228;
-  --line: rgba(var(--t-rgb), .10);
-  --line-2: rgba(var(--t-rgb), .22);
+  --line: rgba(var(--t-rgb), .15);
+  --line-2: rgba(var(--t-rgb), .32);
   --pu: #B36BFF;
   --bl: #FF5A1F;
   --cy: #FF5A1F;

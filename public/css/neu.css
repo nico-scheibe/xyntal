@@ -23,8 +23,8 @@
   --g-4: #22303F;
   --g-5: #2F4052;
   --t-1: #EDE8DD;   /* Text */
-  --t-2: #B8B6AE;   /* Text gedämpft */
-  --t-3: #8E929A;   /* Etiketten, Nebensätze */
+  --t-2: #D3CFC5;   /* Text gedämpft (heller für mehr Kontrast) */
+  --t-3: #A7ABB3;   /* Etiketten, Nebensätze */
   --t-rgb: 237, 232, 221;
   --ac: #FF5A1F;    /* Signalorange */
   --ac-2: #FF7A47;  /* Signalorange, heller (Hover) */
@@ -32,12 +32,12 @@
   --ink: #0F1620;   /* Text auf Orange */
   --bl: #4C8DFF;    /* nur noch im Logo */
   --cy: var(--ac);
-  --soft: #8FB8FF;  /* heller Akzent: „fehlenden Menschen“ */
+  --soft: var(--ac); /* Hervorhebung im großen Satz: „fehlenden Menschen“ */
   --pu: #B36BFF;    /* nur noch im Logo */
   --grad: linear-gradient(var(--ac), var(--ac));
   /* Haarlinien */
-  --line: rgba(var(--t-rgb), .10);
-  --line-2: rgba(var(--t-rgb), .22);
+  --line: rgba(var(--t-rgb), .15);
+  --line-2: rgba(var(--t-rgb), .32);
   /* Schriften: Archivo für Überschriften, IBM Plex Sans für Fließtext, JetBrains Mono für Labels */
   --f-display: "Archivo", "Arial Narrow", Arial, sans-serif;
   --f-text: "IBM Plex Sans", -apple-system, "Segoe UI", Roboto, sans-serif;
