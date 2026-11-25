@@ -1,6 +1,6 @@
 /* Xyntal-Assistent (site-chat.js). Eigenständig, damit er auf allen Seiten gleich aussieht –
    Farben, Schrift und eckige Formen wie die Website (front.css, site-header.css). */
-.sc { --sc-bg: #1C1C1C; --sc-bg-2: #242424; --sc-text: #ECEAE4; --sc-text-2: #A09E98; --sc-text-3: #73716B; --sc-line: #333333; --sc-line-2: #4A4A4A; --sc-key: #4C8DFF;
+.sc { --sc-bg: #131B26; --sc-bg-2: #141D28; --sc-text: #ECEAE4; --sc-text-2: #A09E98; --sc-text-3: #73716B; --sc-line: #253445; --sc-line-2: #3A4D63; --sc-key: #4C8DFF;
   position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 60;
   font: 400 15px/1.5 "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: var(--sc-text); }
 .sc *, .sc *::before, .sc *::after { box-sizing: border-box; }

@@ -5,22 +5,22 @@
    keine Verläufe, kein Glas, keine Effekte im Hintergrund.
    ===================================================================== */
 :root {
-  --bg: #1F1F21;
-  --panel: #242424;
-  --panel-2: #2A2A2A;
-  --panel-3: #303030;
-  --border: #333333;
-  --border-2: #4A4A4A;
+  --bg: #0F1620;
+  --panel: #141D28;
+  --panel-2: #182330;
+  --panel-3: #1D2836;
+  --border: #253445;
+  --border-2: #3A4D63;
   --text: #ECEAE4;
   --text-2: #A09E98;
   --text-3: #8A8882;
-  --accent: #ECEAE4;
-  --accent-2: #ECEAE4;
-  --accent-soft: rgba(236, 234, 228, 0.1);
-  --cyan: #ECEAE4;
-  --grad: #ECEAE4;
-  --grad-btn: #ECEAE4;
-  --on-accent: #1C1C1C;
+  --accent: #FF5A1F;
+  --accent-2: #FF7A47;
+  --accent-soft: rgba(255, 90, 31, 0.12);
+  --cyan: #FF5A1F;
+  --grad: #FF5A1F;
+  --grad-btn: #FF5A1F;
+  --on-accent: #0F1620;
   --x-violet: #ECEAE4; --x-pink: #ECEAE4; --x-blue: #ECEAE4; --x-cyan: #ECEAE4;
   --x-grad: var(--grad);
   --r-card: 2px; --r-ctl: 2px; --r-modal: 2px;
@@ -29,7 +29,7 @@
   --mono: "JetBrains Mono", ui-monospace, "SF Mono", "Cascadia Code", Consolas, Menlo, monospace;
   --f-hack: var(--f);
 }
-html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scrollbar-color: #4A4A4A transparent; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scrollbar-color: #3A4D63 transparent; }
 body {
   background: var(--bg);
   font-family: var(--f-text);
@@ -73,10 +73,10 @@ h1 em, h2 em, .grad-text, .page-head h1 em {
 .btn, .btn-small {
   border-radius: 2px !important;
   font-family: var(--f) !important; font-weight: 600 !important; letter-spacing: 0;
-  background: var(--text) !important; color: var(--bg) !important; border: 1px solid var(--text) !important;
+  background: var(--accent) !important; color: var(--on-accent) !important; border: 1px solid var(--accent) !important;
   box-shadow: none;
 }
-.btn:hover { background: transparent !important; color: var(--text) !important; filter: none; }
+.btn:hover { background: var(--accent-2) !important; color: var(--on-accent) !important; border-color: var(--accent-2) !important; filter: none; }
 .btn-ghost, .btn.btn-ghost, .btn-quiet {
   background: transparent !important; color: var(--text) !important; border-color: var(--border-2) !important; box-shadow: none;
 }

@@ -81,7 +81,7 @@
 
 /* Der Punkt: da stehst du */
 .xp-you { position: absolute; left: 0; top: 0; z-index: 2; width: 0; height: 0; pointer-events: none; transform: translate(var(--x, 0px), var(--y, 0px)); transition: transform .9s var(--spring); will-change: transform; }
-.xp-you i { position: absolute; left: -6px; top: -6px; width: 12px; height: 12px; border-radius: 50%; background: var(--cy); box-shadow: 0 0 16px 3px rgba(76, 141, 255, .55), 0 0 0 4px rgba(31, 31, 33, .9); }
+.xp-you i { position: absolute; left: -6px; top: -6px; width: 12px; height: 12px; border-radius: 50%; background: var(--cy); box-shadow: 0 0 16px 3px rgba(76, 141, 255, .55), 0 0 0 4px rgba(15, 22, 32, .9); }
 .xp-you b { position: absolute; left: -40px; width: 80px; bottom: 14px; text-align: center; font-weight: 400; color: var(--t-1); }
 .xp-you:not(.is-set) { transition: none; }
 

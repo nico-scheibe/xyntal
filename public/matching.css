@@ -3,10 +3,10 @@
 .xm, .xm-dialog, .xc {
   --xm-accent: var(--accent, var(--c, #ECEAE4));
   --xm-soft: var(--accent-soft, rgba(236, 234, 228, 0.12));
-  --xm-line: var(--border, var(--line, #333333));
-  --xm-line-2: var(--border-2, var(--line-2, #4A4A4A));
-  --xm-panel: var(--panel, var(--surface-solid, #242424));
-  --xm-panel-2: var(--panel-2, var(--surface-2, #2A2A2A));
+  --xm-line: var(--border, var(--line, #253445));
+  --xm-line-2: var(--border-2, var(--line-2, #3A4D63));
+  --xm-panel: var(--panel, var(--surface-solid, #141D28));
+  --xm-panel-2: var(--panel-2, var(--surface-2, #182330));
   --xm-text-2: var(--text-2, #A09E98);
   --xm-text-3: var(--text-3, #73716B);
   --xm-high: var(--green, var(--ok, #3CCF8E));

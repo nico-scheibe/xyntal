@@ -10,7 +10,7 @@
 
 /* ---------- 1 Variablen ---------- */
 .xs {
-  --g-0: #151516; --g-1: #1A1A1C; --g-2: #1F1F21; --g-3: #262629; --g-4: #2E2E32; --g-5: #3A3A3F;
+  --g-0: #0A1018; --g-1: #0C131C; --g-2: #0F1620; --g-3: #182330; --g-4: #22303F; --g-5: #2F4052;
   --t-1: #ECEAE4; --t-2: #B9B7B0; --t-3: #918F89; --t-rgb: 236, 234, 228;
   --line: rgba(var(--t-rgb), .10); --line-2: rgba(var(--t-rgb), .22);
   --pu: #B36BFF; --bl: #4C8DFF; --cy: #4C8DFF;
@@ -76,7 +76,7 @@
 /* Die Fußzeile schließt ohne Lücke an die letzte Szene an */
 .xs + .site-footer { margin-top: 0; }
 
-.xs-skip { position: absolute; left: 20px; top: -80px; z-index: 300; padding: 10px 16px; border-radius: 999px; background: #ECEAE4; color: #151516; font: 500 14px/1 "IBM Plex Sans", sans-serif; text-decoration: none; }
+.xs-skip { position: absolute; left: 20px; top: -80px; z-index: 300; padding: 10px 16px; border-radius: 999px; background: #ECEAE4; color: #0A1018; font: 500 14px/1 "IBM Plex Sans", sans-serif; text-decoration: none; }
 .xs-skip:focus { top: 12px; }
 
 /* ---------- 3 Bausteine ---------- */
@@ -215,7 +215,7 @@
 @media (max-width: 900px) {
   .xs-cmp__jump {
     position: sticky; top: var(--top); z-index: 4; display: flex; gap: 6px; margin: 0 calc(-1 * var(--pad)); padding: 10px var(--pad);
-    overflow-x: auto; scrollbar-width: none; background: rgba(31, 31, 33, .94); box-shadow: 0 1px 0 var(--line-2);
+    overflow-x: auto; scrollbar-width: none; background: rgba(15, 22, 32, .94); box-shadow: 0 1px 0 var(--line-2);
   }
   .xs-cmp__jump::-webkit-scrollbar { display: none; }
   .xs-cmp__jump button { flex: none; min-height: 36px; padding: 0 14px; border-radius: 999px; box-shadow: inset 0 0 0 1px var(--line-2); color: var(--t-2); font: 500 .86rem/1 var(--f-text); transition: background .25s, color .25s; }

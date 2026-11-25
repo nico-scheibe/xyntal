@@ -107,7 +107,7 @@
 .pair-num:hover,
 .pair-num:focus-visible {
   transform: translateY(-3px);
-  background: #333333;
+  background: #253445;
   outline: none;
 }
 .pair-num:hover::before,

@@ -6,9 +6,9 @@
 /* Flaches Login im Xyntal-Schema: dunkle Fläche, Haarlinien statt Licht- und Schattenkanten, Off-White als Akzent.
    Die drei Schatten-Variablen bleiben als Schalter bestehen und sind auf „kein Schatten“ gestellt. */
 .auth-panel {
-  --nm-base: #212121;
-  --nm-well: #181818;
-  --nm-key: #2a2a2a;
+  --nm-base: #162030;
+  --nm-well: #121A24;
+  --nm-key: #182330;
   --nm-line: rgba(255, 255, 255, 0.07);
   --nm-line-strong: rgba(255, 255, 255, 0.14);
   --nm-edge: 0 0 0 0 transparent;
@@ -62,7 +62,7 @@
   background: var(--nm-key); border-color: var(--nm-line); color: #ECEAE4; box-shadow: var(--nm-raise-sm);
   transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
 }
-.auth-panel .oauth-btn:hover { background: #313131; border-color: var(--nm-line-strong); }
+.auth-panel .oauth-btn:hover { background: #22303F; border-color: var(--nm-line-strong); }
 .auth-panel .oauth-btn:active { background: var(--nm-well); box-shadow: var(--nm-inset); }
 .auth-panel .oauth-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .auth-panel .phone-login { border-radius: 16px; }
@@ -101,7 +101,7 @@
 .field-box input:-webkit-autofill:hover,
 .field-box input:-webkit-autofill:focus {
   -webkit-text-fill-color: #ECEAE4; caret-color: #ECEAE4;
-  -webkit-box-shadow: 0 0 0 1000px #181818 inset !important; box-shadow: 0 0 0 1000px #181818 inset !important;
+  -webkit-box-shadow: 0 0 0 1000px #121A24 inset !important; box-shadow: 0 0 0 1000px #121A24 inset !important;
   transition: background-color 9999s ease-out 0s;
 }
 .field-box input:autofill { background: transparent !important; }
@@ -121,7 +121,7 @@
 /* Passwortstärke */
 .pw-meter { display: grid; gap: 8px; margin-top: -6px; }
 .pw-bars { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-.pw-bars i { height: 5px; border-radius: 4px; background: #333333; transition: background 0.2s; }
+.pw-bars i { height: 5px; border-radius: 4px; background: #253445; transition: background 0.2s; }
 .pw-label { font-size: 12.5px; color: #73716B; }
 .pw-meter[data-level="1"] .pw-bars i:nth-child(-n+1) { background: #E0705F; }
 .pw-meter[data-level="2"] .pw-bars i:nth-child(-n+2) { background: #D9B25F; }
@@ -212,7 +212,7 @@
   .auth-overlay {
     display: block; position: absolute; z-index: 2; top: 0; bottom: 0; left: 0; width: 40%;
     overflow: hidden; border-radius: 11px 0 0 11px;
-    background: #151516;
+    background: #0A1018;
     box-shadow: inset -1px 0 0 var(--nm-line-strong);
     transition: transform 0.8s var(--nm-ease), border-radius 0.8s var(--nm-ease), box-shadow 0.8s var(--nm-ease);
   }

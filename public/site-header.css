@@ -6,7 +6,7 @@
   --nh-bg: 31, 31, 33; --nh-1: #ECEAE4; --nh-2: #B9B7B0; --nh-3: #918F89;
   --nh-line: rgba(236, 234, 228, .10); --nh-line-2: rgba(236, 234, 228, .22);
   --nh-pad: clamp(20px, 4.2vw, 76px); --nh-h: 76px;
-  --nh-grad: linear-gradient(90deg, #B36BFF, #4C8DFF 50%, #4C8DFF);
+  --nh-grad: linear-gradient(#FF5A1F, #FF5A1F);
   position: sticky; top: 0; z-index: 50;
   padding-top: env(safe-area-inset-top);
   background: transparent !important; border-bottom: 0 !important;
@@ -50,18 +50,18 @@
 .nav .nav-links a.nav-main:first-of-type { margin-left: auto; }
 .nav .nav-links .nav-end { margin-right: auto; }
 /* Pillen-Knopf wie auf der Startseite: helle Fläche, das Farblicht liegt als Linie darunter */
-.nav .nav-links .nav-cta {
+/* Pillen-Knopf wie auf der Startseite: Fläche in Signalorange */
   display: inline-flex; align-items: center; margin: 0; padding: .7em 1.15em; border: 0; border-radius: 999px;
   font: 500 14.4px/1 "IBM Plex Sans", -apple-system, "Segoe UI", Roboto, sans-serif; white-space: nowrap;
-  color: #151516 !important; background: var(--nh-1) !important; box-shadow: none;
+  color: #0F1620 !important; background: #FF5A1F !important; box-shadow: none; font-weight: 600;
   transition: background .3s cubic-bezier(.2, .8, .2, 1);
 }
 .nav .nav-links .nav-cta::after {
   content: ""; position: absolute; left: 18%; right: 18%; bottom: -7px; height: 2px; border-radius: 2px;
-  background: var(--nh-grad); filter: blur(1.5px); opacity: .9; transform: scaleX(.55);
+  background: var(--nh-grad); display: none; transform: scaleX(.55);
   transition: transform .5s cubic-bezier(.2, .8, .2, 1);
 }
-.nav .nav-links .nav-cta:hover { background: #fff !important; color: #151516 !important; }
+.nav .nav-links .nav-cta:hover { background: #FF7A47 !important; color: #0A1018 !important; }
 .nav .nav-links .nav-cta:hover::after, .nav .nav-links .nav-cta:focus-visible::after { transform: scaleX(1.25); }
 .nav .nav-links [hidden] { display: none !important; }
 .nav .nav-links .hide-sm { display: none; }
@@ -82,14 +82,14 @@
     border-radius: 50%; background: rgba(236, 234, 228, .08); color: var(--nh-1); transition: background-color .3s ease;
   }
   .nav .nav-links .notifications summary:hover, .nav .nav-links .notifications[open] summary { background: rgba(236, 234, 228, .18); }
-  .nav .nav-links .notifications summary:focus-visible { outline: 2px solid #4C8DFF; outline-offset: 4px; }
+  .nav .nav-links .notifications summary:focus-visible { outline: 2px solid #FF5A1F; outline-offset: 4px; }
   .nav .nav-links .notifications summary svg { width: 18px; height: 18px; }
   .nav .nav-links .notifications .badge { position: absolute; top: -5px; right: -7px; margin: 0; min-width: 16px; height: 16px; padding: 0 4px; font-size: 10px; }
   .nav .nav-links .notification-panel { left: auto; right: 0; }
 }
 /* Login steckt im Konto-Symbol; als Text nur im ausgeklappten Menü */
 .nav .nav-links:not(.open) [data-account] { display: none; }
-.nav a:focus-visible, .nav button:focus-visible { outline: 2px solid #4C8DFF; outline-offset: 4px; border-radius: 4px; }
+.nav a:focus-visible, .nav button:focus-visible { outline: 2px solid #FF5A1F; outline-offset: 4px; border-radius: 4px; }
 .nav .nav-cta:focus-visible, .nav .nav-toggle:focus-visible { border-radius: 999px; }
 
 /* Menü-Knopf (bis 1000 px) */
@@ -117,7 +117,7 @@
   .nav .nav-links.open a.nav-main[aria-current="page"]::after { display: none; }
   .nav .nav-links.open .nav-main, .nav .nav-links.open .hide-sm { display: block; }
   .nav .nav-links.open a.nav-main:first-of-type, .nav .nav-links.open .nav-end { margin: 0; }
-  .nav .nav-links.open .nav-cta { margin: 20px 0 0; padding: 1em 1.4em; justify-content: center; border-bottom: 0; font-size: 15px; color: #151516 !important; }
+  .nav .nav-links.open .nav-cta { margin: 20px 0 0; padding: 1em 1.4em; justify-content: center; border-bottom: 0; font-size: 15px; color: #0A1018 !important; }
 }
 @media (max-width: 640px) { .nav .nav-links:not(.open) .nav-cta { display: none; } }
 
@@ -142,7 +142,7 @@
 @media (max-width: 480px) { .nav .lang-switch button { width: 36px; height: 36px; } }
 .nav .wrap > .acct { order: 8; margin-left: 16px !important; }
 @media (min-width: 1001px) { .nav .wrap > .acct { margin-left: 22px !important; } }
-.nav .badge { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 4px; border-radius: 999px; background: var(--nh-1); color: #151516; font-size: 12px; font-weight: 700; }
+.nav .badge { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 4px; border-radius: 999px; background: var(--nh-1); color: #0A1018; font-size: 12px; font-weight: 700; }
 
 @media (prefers-reduced-motion: reduce) { .nav::before, .nav .nav-links a, .nav .nav-links .nav-cta, .nav .nav-links .nav-cta::after { transition: none; } }
 
@@ -163,7 +163,7 @@
   display: grid; gap: 4px; padding: 12px; margin: 4px 0 0; white-space: normal; overflow-wrap: anywhere;
   font-size: 14px; line-height: 1.45; color: #ECEAE4; box-shadow: none; border-radius: 2px; border-bottom: 0;
 }
-.nav .nav-links .notification-panel a.notification-item:hover { color: #ECEAE4; background: #2A2A2A; }
+.nav .nav-links .notification-panel a.notification-item:hover { color: #ECEAE4; background: #182330; }
 .nav .nav-links .notification-panel a.notification-item.unread { background: rgba(236, 234, 228, .10); }
 .nav .nav-links .notification-panel a.notification-item small { color: #A09E98; font-size: 12px; }
 /* Sechs Hauptlinks (seit /xchange): zwischen 1001 und 1180 px enger setzen, damit nichts ans Logo stößt */

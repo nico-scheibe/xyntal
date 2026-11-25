@@ -7,14 +7,14 @@
    Beispiel-Karten im Einstieg tragen die Farben, die Mitglieder selbst wählen.
    ===================================================================== */
 :root {
-  --bg: #1F1F21;
-  --bg-2: #242424;
-  --bg-3: #2A2A2A;
+  --bg: #0F1620;
+  --bg-2: #141D28;
+  --bg-3: #182330;
   --text: #ECEAE4;
   --text-2: #A09E98;
   --text-3: #8A8882;
-  --line: #333333;
-  --line-2: #4A4A4A;
+  --line: #253445;
+  --line-2: #3A4D63;
   --key: #4C8DFF;
   --key-glow: rgba(76, 141, 255, 0.35);
   --key-soft: rgba(76, 141, 255, 0.14);

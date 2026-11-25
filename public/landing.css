@@ -5,21 +5,21 @@
    ===================================================================== */
 :root {
   /* Flächen */
-  --bg: #1F1F21;
-  --s1: #242424;
-  --s2: #2A2A2A;
-  --s3: #2A2A2A;
-  --line: #333333;
-  --line-2: #4A4A4A;
+  --bg: #0F1620;
+  --s1: #141D28;
+  --s2: #182330;
+  --s3: #182330;
+  --line: #253445;
+  --line-2: #3A4D63;
 
   /* Text */
   --text: #ECEAE4;
   --text-2: #A09E98;
 
   /* Türkis */
-  --ice: #4C8DFF;
-  --ice-hi: #8FB8FF;
-  --ice-ink: #03050F;
+  --ice: #FF5A1F;
+  --ice-hi: #FF7A47;
+  --ice-ink: #0F1620;
   --ice-soft: rgba(236, 234, 228, 0.09);
   --ice-line: rgba(236, 234, 228, 0.38);
 
@@ -178,7 +178,7 @@ button { font: inherit; color: inherit; }
 }
 .brand-mark { width: 22px; height: 22px; fill: none; stroke-width: 2.6; stroke-linecap: round; }
 .brand-mark .bm-a { stroke: var(--text); }
-.brand-mark .bm-b { stroke: var(--ice); }
+.brand-mark .bm-b { stroke: #4C8DFF; }
 
 .mainnav { display: flex; align-items: center; gap: 4px; }
 .mainnav a:not(.btn) {
