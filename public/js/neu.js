@@ -133,7 +133,7 @@
     // Pause, solange die Galerie nicht zu sehen ist, die Maus darüber steht oder sie den Fokus hat,
     // und eine Weile nach jeder Bedienung. Bei reduzierter Bewegung gar nicht.
     if (!calm) {
-      var seen = false, hover = false, focus = false, touched = 0, EVERY = 4500, AFTER_USE = 9000;
+      var seen = false, hover = false, focus = false, touched = 0, EVERY = 2600, AFTER_USE = 6000;
       function advance() {
         if (is3d) { setActive(active >= n - 1 ? 0 : active + 1); return; }
         if (list.scrollLeft > list.scrollWidth - list.clientWidth - 4) list.scrollTo({ left: 0, behavior: 'smooth' });
