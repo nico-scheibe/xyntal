@@ -94,7 +94,7 @@
 .sp.is-focus { border-color: var(--text-2); box-shadow: 0 0 0 3px rgba(236, 234, 228, 0.06); }
 .sp.is-failed { border-color: rgba(224, 112, 95, 0.35); }
 .sp.is-failed > * { opacity: 0.6; }
-.sp.is-out { border-color: #2A2A2A; }
+.sp.is-out { border-color: #182330; }
 .sp.is-out > * { opacity: 0.2; }
 .sp.is-match { border-color: rgba(76, 141, 255, 0.5); }
 .sp.is-match .st-av { background: var(--key); color: var(--bg); }

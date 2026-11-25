@@ -5,13 +5,13 @@
    der Logo-Verlauf nur als Akzent.
    ===================================================================== */
 :root {
-  --bg: #1F1F21;
+  --bg: #0F1620;
   --surface: rgba(255, 255, 255, 0.04);
   --surface-2: rgba(255, 255, 255, 0.07);
-  --surface-solid: #242424;
-  --card: #242424;
-  --line: #333333;
-  --line-2: #4A4A4A;
+  --surface-solid: #141D28;
+  --card: #141D28;
+  --line: #253445;
+  --line-2: #3A4D63;
   --text: #ECEAE4;
   --text-2: #A09E98;
   --text-3: #8A8882;
@@ -54,7 +54,7 @@ a { color: inherit; }
 button, input { font: inherit; color: inherit; }
 button { -webkit-appearance: none; appearance: none; }
 img, svg { display: block; }
-::selection { background: #ECEAE4; color: #1C1C1C; }
+::selection { background: #ECEAE4; color: #131B26; }
 :focus-visible { outline: 2px solid var(--text); outline-offset: 3px; border-radius: 8px; }
 html { scrollbar-color: #2A2A33 transparent; }
 
@@ -108,7 +108,7 @@ html { scrollbar-color: #2A2A33 transparent; }
 .btn-sm { --h: 36px; padding: 0 16px; font-size: 14px; }
 .btn-lg { --h: 54px; padding: 0 28px; font-size: 16px; }
 .btn-block { width: 100%; }
-.btn-primary { background: var(--grad-btn); color: #1C1C1C; box-shadow: none; }
+.btn-primary { background: var(--grad-btn); color: #131B26; box-shadow: none; }
 @media (hover: hover) { .btn-primary:hover:not(:disabled) { background: transparent; color: var(--text); box-shadow: inset 0 0 0 1px var(--text); } }
 .btn-primary:disabled { background: var(--surface-2); color: var(--text-3); box-shadow: none; cursor: not-allowed; border-color: var(--line); }
 .btn-glass { background: var(--surface-2); border-color: var(--line); color: var(--text); }
@@ -632,7 +632,7 @@ html { scrollbar-color: #2A2A33 transparent; }
 .bf-group:first-child { padding-top: 4px; }
 .bf-group:last-child { border-bottom: 0; padding-bottom: 4px; }
 .bf-step { display: flex; align-items: center; gap: 10px; font: 600 12.5px/1 var(--f-text); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-2); }
-.bf-step span { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--grad-btn); color: var(--on-accent, #1C1C1C); font-size: 12px; font-weight: 700; letter-spacing: 0; }
+.bf-step span { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--grad-btn); color: var(--on-accent, #131B26); font-size: 12px; font-weight: 700; letter-spacing: 0; }
 .bf-two { display: grid; gap: 14px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (max-width: 420px) { .bf-two { grid-template-columns: minmax(0, 1fr); } }
 .bf-field { display: grid; gap: 10px; margin: 0; padding: 0; border: 0; min-width: 0; }
@@ -684,8 +684,8 @@ html { scrollbar-color: #2A2A33 transparent; }
 .bf-suggest button { height: 30px; padding: 0 12px; border-radius: 999px; border: 1px dashed rgba(255, 255, 255, 0.22); background: transparent; color: var(--text-2); font: 500 13px/1 var(--f-text); cursor: pointer; }
 @media (hover: hover) { .bf-suggest button:hover { color: var(--text); border-style: solid; } }
 .bf-field input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 28px; background: transparent; cursor: pointer; }
-.bf-field input[type="range"]::-webkit-slider-runnable-track { height: 6px; border-radius: 6px; background: #4A4A4A; }
-.bf-field input[type="range"]::-moz-range-track { height: 6px; border-radius: 6px; background: #4A4A4A; }
+.bf-field input[type="range"]::-webkit-slider-runnable-track { height: 6px; border-radius: 6px; background: #3A4D63; }
+.bf-field input[type="range"]::-moz-range-track { height: 6px; border-radius: 6px; background: #3A4D63; }
 .bf-field input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 26px; height: 26px; margin-top: -10px; border-radius: 50%; background: #fff; border: 0; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); }
 .bf-field input[type="range"]::-moz-range-thumb { width: 26px; height: 26px; border-radius: 50%; background: #fff; border: 0; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); }
 

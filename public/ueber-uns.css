@@ -5,13 +5,13 @@
    Effekte. Das Logo bleibt das einzige bunte Element.
    ===================================================================== */
 :root {
-  --paper: #1F1F21;
-  --paper-2: #262626;
+  --paper: #0F1620;
+  --paper-2: #162030;
   --ink: #ECEAE4;
   --ink-2: #A09E98;
   --ink-3: #73716B;
-  --rule: #333333;
-  --rule-2: #4A4A4A;
+  --rule: #253445;
+  --rule-2: #3A4D63;
   --link: #ECEAE4;
 
   --f-serif: "Archivo", "Arial Narrow", Arial, sans-serif;

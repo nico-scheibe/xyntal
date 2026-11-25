@@ -8,7 +8,7 @@
 /* Farben, Abstände und Schriften innerhalb der Fußzeile (Werte wie auf der Startseite).
    Sie stehen hier fest, damit die Fußzeile auf jeder Seite gleich aussieht. */
 .foot {
-  --g-2: #1F1F21;
+  --g-2: #0F1620;
   --t-1: #ECEAE4;
   --t-2: #B9B7B0;
   --t-3: #918F89;
@@ -16,9 +16,9 @@
   --line: rgba(var(--t-rgb), .10);
   --line-2: rgba(var(--t-rgb), .22);
   --pu: #B36BFF;
-  --bl: #4C8DFF;
-  --cy: #4C8DFF;
-  --grad: linear-gradient(90deg, var(--pu), var(--bl) 50%, var(--cy));
+  --bl: #FF5A1F;
+  --cy: #FF5A1F;
+  --grad: linear-gradient(var(--bl), var(--bl));
   --f-display: "Archivo", "Arial Narrow", Arial, sans-serif;
   --f-text: "IBM Plex Sans", -apple-system, "Segoe UI", Roboto, sans-serif;
   --f-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
