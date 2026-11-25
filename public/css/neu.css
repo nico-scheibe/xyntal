@@ -63,12 +63,6 @@ body {
   -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
   overflow-x: clip;
 }
-/* Raster: feine Spaltenlinien hinter allem. Die Außenlinien liegen im Rand. */
-body::before {
-  content: ""; position: fixed; inset: 0 calc(var(--pad) * .45); z-index: 0; pointer-events: none;
-  background: linear-gradient(90deg, var(--line) 1px, transparent 1px) 0 0 / 25% 100%;
-  border-right: 1px solid var(--line); opacity: .45;
-}
 /* Korn über dem Dunkel */
 body::after {
   content: ""; position: fixed; inset: 0; z-index: 90; pointer-events: none; opacity: .09;
