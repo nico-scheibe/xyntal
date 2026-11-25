@@ -129,6 +129,33 @@
       if (i >= 0 && i !== active) setActive(i);
     });
 
+    // Von selbst weiter: alle paar Sekunden das nächste Bild, nach dem letzten wieder das erste.
+    // Pause, solange die Galerie nicht zu sehen ist, die Maus darüber steht oder sie den Fokus hat,
+    // und eine Weile nach jeder Bedienung. Bei reduzierter Bewegung gar nicht.
+    if (!calm) {
+      var seen = false, hover = false, focus = false, touched = 0, EVERY = 4500, AFTER_USE = 9000;
+      function advance() {
+        if (is3d) { setActive(active >= n - 1 ? 0 : active + 1); return; }
+        if (list.scrollLeft > list.scrollWidth - list.clientWidth - 4) list.scrollTo({ left: 0, behavior: 'smooth' });
+        else go(1);
+      }
+      function used() { touched = Date.now(); }
+      ['pointerdown', 'wheel', 'keydown', 'touchstart'].forEach(function (t) { list.addEventListener(t, used, { passive: true }); });
+      prev.addEventListener('click', used);
+      next.addEventListener('click', used);
+      gal.addEventListener('pointerenter', function (e) { if (e.pointerType === 'mouse') hover = true; });
+      gal.addEventListener('pointerleave', function () { hover = false; used(); });
+      gal.addEventListener('focusin', function () { focus = true; });
+      gal.addEventListener('focusout', function () { focus = false; });
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (es) { seen = es[0].isIntersecting; }, { threshold: 0.4 }).observe(list);
+      } else seen = true;
+      setInterval(function () {
+        if (!seen || hover || focus || drag || document.hidden || Date.now() - touched < AFTER_USE) return;
+        advance();
+      }, EVERY);
+    }
+
     // Die Bühne neigt sich leicht zum Mauszeiger.
     if (!calm) {
       gal.addEventListener('pointermove', function (e) {
