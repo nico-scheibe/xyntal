@@ -22,9 +22,10 @@ window.XYNTAL_EN = {
   "Neben Aufgaben auch Mitgründung und Nebenprojekte, auf Augenhöhe.": "Besides tasks, co-founding and side projects too, as equals.",
   "Wichtig": "Important",
   "Ohne Xyntal-Karte schlägt dich niemand vor.": "Without a Xyntal card, nobody gets you suggested.",
-  "Vorschläge entstehen nur aus Xyntal-Karten. Wer keine hat, taucht bei anderen nicht auf und bekommt selbst keine passenden Leute. Deine Karte steht in ein paar Minuten: dein Vorhaben, deine Skills, deine Zeit.": "Suggestions are built from Xyntal cards only. Without one, you do not show up for others and get no matches yourself. Your card takes a few minutes: your plan, your skills, your time.",
+  "Vorschläge entstehen nur aus Xyntal-Karten. Wer keine hat, taucht bei anderen nicht auf und bekommt selbst keine passenden Leute. Deine Karte steht in ein paar Minuten, auf der Website oder in der App: dein Vorhaben, deine Skills, deine Zeit.": "Suggestions are built from Xyntal cards only. Without one, you do not show up for others and get no matches yourself. Your card takes a few minutes, on the website or in the app: your plan, your skills, your time.",
+  "Karte jetzt erstellen": "Create your card now",
+  "Geht direkt hier auf der Website oder in der App.": "Works right here on the website or in the app.",
   "Konto anlegen und Karte erstellen": "Create account and card",
-  "In der App Karte erstellen": "Create your card in the app",
   "Xyntal-Karte erstellen": "Create your Xyntal card",
   "Dein Vorhaben, deine Zeit, deine Art zu arbeiten. Ohne Karte keine Vorschläge.": "Your plan, your time, your way of working. No card, no suggestions.",
   // Startseite (neu strukturiert): neue deutsche Texte

@@ -26,7 +26,7 @@
   <!-- Schriften liegen lokal. Die zwei, die der erste Bildschirm braucht, werden vorgeladen. -->
   <link rel="preload" href="fonts/archivo-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="fonts/plexsans-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/neu.css?v=18">
+  <link rel="stylesheet" href="css/neu.css?v=19">
   <link rel="stylesheet" href="/site-search.css?v=2">
 
   <!-- Vor dem ersten Zeichnen: JS-Klasse setzen (eigene Datei wegen CSP). -->
@@ -164,10 +164,11 @@
     <aside class="gate" data-rv aria-labelledby="gate-title">
       <p class="mono gate__tag">Wichtig</p>
       <h3 class="gate__h" id="gate-title">Ohne Xyntal-Karte schlägt dich niemand vor.</h3>
-      <p class="gate__p">Vorschläge entstehen nur aus Xyntal-Karten. Wer keine hat, taucht bei anderen nicht auf und bekommt selbst keine passenden Leute. Deine Karte steht in ein paar Minuten: dein Vorhaben, deine Skills, deine Zeit.</p>
+      <p class="gate__p">Vorschläge entstehen nur aus Xyntal-Karten. Wer keine hat, taucht bei anderen nicht auf und bekommt selbst keine passenden Leute. Deine Karte steht in ein paar Minuten, auf der Website oder in der App: dein Vorhaben, deine Skills, deine Zeit.</p>
       <div class="gate__cta">
         <a class="pill" href="/login#registrieren" data-apply>Konto anlegen und Karte erstellen <span class="pill__arr" aria-hidden="true">→</span></a>
-        <a class="pill" href="#download" data-if="in">In der App Karte erstellen <span class="pill__arr" aria-hidden="true">↓</span></a>
+        <a class="pill" href="/meine-karte" data-if="in">Karte jetzt erstellen <span class="pill__arr" aria-hidden="true">→</span></a>
+        <p class="gate__alt">Geht direkt hier auf der Website oder in der App.</p>
       </div>
     </aside>
   </section>
@@ -469,7 +470,7 @@
 
 <script src="js/vendor/lenis.min.js" defer></script>
 <script src="js/hero-gl.js?v=3" defer></script>
-<script src="/i18n-en.js?v=146" defer></script>
+<script src="/i18n-en.js?v=147" defer></script>
 <script src="/i18n.js?v=35" defer></script>
 <script src="js/neu.js?v=14" defer></script>
 <script src="/site-chat.js?v=14" defer></script>
