@@ -103,8 +103,8 @@
   // Linie B: lila → blau (liegt oben).  Linie A: blau → cyan (hat die Lücke, wo B kreuzt).
   var CURVE_B = [[140, 372], [212, 212], [372, 140]];
   var CURVE_A = [[140, 140], [300, 212], [372, 372]];
-  // Farben „Tinte & Signal“: Linie B Signalorange (#E8441A → #FF7A47), Linie A Papier → helles Blau (#EDE8DD → #8FB8FF)
-  var OR1 = [0.91, 0.27, 0.10], OR2 = [1.0, 0.48, 0.28], PA = [0.93, 0.91, 0.87], SB = [0.56, 0.72, 1.0];
+  // Farben „Tinte & Signal“: Linie B Signalorange (#E8441A → #FF7A47), Linie A Weiß → Papier (#FFFFFF → #EDE8DD)
+  var OR1 = [0.91, 0.27, 0.10], OR2 = [1.0, 0.48, 0.28], PA = [1.0, 1.0, 1.0], SB = [0.93, 0.91, 0.87];
 
   function bez(c, t) {
     var u = 1 - t;
