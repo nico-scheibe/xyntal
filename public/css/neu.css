@@ -307,6 +307,28 @@ a { color: inherit; text-decoration: none; }
 .cmp__row--miss { color: var(--t-3); }
 .cmp__row--new { color: var(--t-1); padding-top: 18px; border-top: 1px solid var(--line); }
 .cmp__dots { display: none; }
+/* Karten-Fläche: ruhig, beim Überfahren hebt sie sich mit orangem Rand. translate statt transform, damit die Einblendung nicht kollidiert. */
+.cmp__card { padding: clamp(22px, 2.2vw, 32px); border: 1px solid var(--line); border-radius: 14px; background: linear-gradient(180deg, rgba(var(--t-rgb), .04), rgba(var(--t-rgb), .01)); transition: border-color .4s var(--ease), box-shadow .5s var(--ease), translate .5s var(--ease-o); }
+.cmp__old { font-size: clamp(1.15rem, 1.6vw, 1.5rem); color: var(--t-3); }
+.cmp__row--new { color: var(--t-2); }
+.cmp__row--new .mono { color: var(--ac); }
+.cmp__punch { display: block; margin-bottom: 4px; font: 700 clamp(1.45rem, 2.1vw, 2rem)/1.06 var(--f-display); font-stretch: 78%; letter-spacing: -.01em; color: var(--t-1); text-wrap: balance; }
+@media (hover: hover) and (pointer: fine) {
+  .cmp__card:hover { translate: 0 -4px; border-color: rgba(var(--ac-rgb), .55); box-shadow: 0 24px 60px -34px rgba(var(--ac-rgb), .7); }
+  .cmp__card:hover .cmp__punch { color: var(--ac); }
+  .cmp__punch { transition: color .3s; }
+}
+/* Hinweis unter dem Vergleich: ohne Xyntal-Karte keine Vorschläge */
+.gate { position: relative; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px clamp(24px, 4vw, 64px); align-items: end; margin-top: var(--s-5); padding: clamp(26px, 3.4vw, 52px); border: 1px solid rgba(var(--ac-rgb), .5); border-radius: 18px; background: radial-gradient(120% 140% at 100% 0%, rgba(var(--ac-rgb), .22), transparent 55%), rgba(var(--ac-rgb), .05); }
+.gate__tag { grid-column: 1 / -1; font-size: .7rem; color: var(--ac); }
+.gate__h { font: 800 clamp(1.8rem, 4vw, 3.6rem)/1 var(--f-display); font-stretch: 72%; letter-spacing: -.015em; max-width: 20ch; text-wrap: balance; }
+.gate__p { grid-column: 1; color: var(--t-2); max-width: 62ch; line-height: 1.55; }
+.gate__cta { grid-column: 2; grid-row: 2 / span 2; align-self: end; }
+@media (max-width: 860px) {
+  .gate { grid-template-columns: minmax(0, 1fr); }
+  .gate__cta .pill { white-space: normal; text-align: left; }
+  .gate__cta { grid-column: 1; grid-row: auto; margin-top: 10px; }
+}
 @media (max-width: 860px) {
   .cmp__scroller { overflow-x: auto; scroll-snap-type: x mandatory; margin-inline: calc(var(--pad) * -1); padding-inline: var(--pad); scroll-padding-inline: var(--pad); scrollbar-width: none; overscroll-behavior-x: contain; }
   .cmp__scroller::-webkit-scrollbar { display: none; }
@@ -324,6 +346,7 @@ a { color: inherit; text-decoration: none; }
     .cmp__card { grid-row: span 3; grid-template-rows: subgrid; row-gap: 0; }
     .cmp__row { align-content: start; }
     .cmp__old, .cmp__row--miss { padding-bottom: 22px; }
+    .cmp__card { row-gap: 0; }
     .cmp__card:nth-child(n+4) { margin-top: var(--gap); }
   }
 }

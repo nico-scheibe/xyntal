@@ -26,7 +26,7 @@
   <!-- Schriften liegen lokal. Die zwei, die der erste Bildschirm braucht, werden vorgeladen. -->
   <link rel="preload" href="fonts/archivo-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="fonts/plexsans-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/neu.css?v=17">
+  <link rel="stylesheet" href="css/neu.css?v=18">
   <link rel="stylesheet" href="/site-search.css?v=2">
 
   <!-- Vor dem ersten Zeichnen: JS-Klasse setzen (eigene Datei wegen CSP). -->
@@ -122,44 +122,54 @@
   <section class="cmp" id="statt" aria-labelledby="statt-title">
     <header class="sec-head">
       <p class="mono label" data-rv>Der Unterschied</p>
-      <h2 class="sec-title" data-rv data-words id="statt-title">Gute Werkzeuge. Nur für etwas anderes gebaut.</h2>
-      <p class="cmp__lead" data-rv>Du nutzt vermutlich schon vieles davon. Xyntal ergänzt, was zum Finden von Menschen mit gleichem Ziel fehlt.</p>
+      <h2 class="sec-title" data-rv data-words id="statt-title">Deine Tools verwalten Kontakte. Xyntal findet neue.</h2>
+      <p class="cmp__lead" data-rv>LinkedIn, Discord und Co. sind stark, für das, wofür sie gebaut wurden. Keins davon zeigt dir, wer dein Vorhaben mit dir umsetzt. Genau dafür gibt es Xyntal.</p>
     </header>
     <div class="cmp__scroller" data-cmp tabindex="0" aria-label="Sechs Vergleiche, seitlich scrollbar">
       <ol class="cmp__list" data-rv-group>
         <li class="cmp__card" data-rv>
           <h3 class="cmp__old">LinkedIn</h3>
-          <p class="cmp__row cmp__row--miss"><span class="mono">stark bei</span> Zeigt deinen beruflichen Werdegang und hält Kontakte zusammen.</p>
-          <p class="cmp__row cmp__row--new"><span class="mono">Xyntal</span> Profile mit Zeit und Bedingungen: wann du verfügbar bist und was du suchst.</p>
+          <p class="cmp__row cmp__row--miss"><span class="mono">stark bei</span> Werdegang zeigen, Kontakte sammeln.</p>
+          <p class="cmp__row cmp__row--new"><span class="mono">Xyntal</span> <strong class="cmp__punch">Zeigt, wer jetzt Zeit hat.</strong> Profile mit Verfügbarkeit und dem, was du suchst, nicht nur, was du mal gemacht hast.</p>
         </li>
         <li class="cmp__card" data-rv>
           <h3 class="cmp__old">Discord</h3>
-          <p class="cmp__row cmp__row--miss"><span class="mono">stark bei</span> Communitys mit Chat- und Sprachkanälen rund um ein Thema.</p>
-          <p class="cmp__row cmp__row--new"><span class="mono">Xyntal</span> Vorschläge ab 65 Punkten, statt in die Runde zu fragen.</p>
+          <p class="cmp__row cmp__row--miss"><span class="mono">stark bei</span> Communitys mit Chat und Voice rund um ein Thema.</p>
+          <p class="cmp__row cmp__row--new"><span class="mono">Xyntal</span> <strong class="cmp__punch">Schluss mit „Sucht wer …?“</strong> Du bekommst Vorschläge ab 65 Punkten Passung, statt in die Runde zu fragen.</p>
         </li>
         <li class="cmp__card" data-rv>
           <h3 class="cmp__old">Notion</h3>
-          <p class="cmp__row cmp__row--miss"><span class="mono">stark bei</span> Notizen, Dokumente und Projekte an einem Ort organisieren.</p>
-          <p class="cmp__row cmp__row--new"><span class="mono">Xyntal</span> Hilft dir zuerst, die Menschen zu finden, mit denen du ein Projekt angehst. Das Matching läuft über zehn gewichtete Bereiche.</p>
+          <p class="cmp__row cmp__row--miss"><span class="mono">stark bei</span> Notizen, Docs und Projekte organisieren.</p>
+          <p class="cmp__row cmp__row--new"><span class="mono">Xyntal</span> <strong class="cmp__punch">Erst das Team, dann das Board.</strong> Matching über zehn gewichtete Bereiche, damit dein Projekt die richtigen Leute hat.</p>
         </li>
         <li class="cmp__card" data-rv>
           <h3 class="cmp__old">Microsoft Teams</h3>
-          <p class="cmp__row cmp__row--miss"><span class="mono">stark bei</span> Chat, Meetings und Zusammenarbeit, meist innerhalb einer Organisation.</p>
-          <p class="cmp__row cmp__row--new"><span class="mono">Xyntal</span> Für Menschen, die du erst finden willst: für Mitgründung, Aufgabe oder Nebenprojekt.</p>
+          <p class="cmp__row cmp__row--miss"><span class="mono">stark bei</span> Zusammenarbeit innerhalb einer Organisation.</p>
+          <p class="cmp__row cmp__row--new"><span class="mono">Xyntal</span> <strong class="cmp__punch">Für Leute, die du noch nicht kennst.</strong> Für Mitgründung, Aufgabe oder Nebenprojekt, über dein Team hinaus.</p>
         </li>
         <li class="cmp__card" data-rv>
           <h3 class="cmp__old">WhatsApp</h3>
-          <p class="cmp__row cmp__row--miss"><span class="mono">stark bei</span> Nachrichten und Gruppenchats, meist mit Menschen aus dem eigenen Umfeld.</p>
-          <p class="cmp__row cmp__row--new"><span class="mono">Xyntal</span> Du triffst Leute, die zu deinem Ziel passen, auch wenn sie nicht in deinem Umfeld sind.</p>
+          <p class="cmp__row cmp__row--miss"><span class="mono">stark bei</span> Chats mit Menschen, die du schon kennst.</p>
+          <p class="cmp__row cmp__row--new"><span class="mono">Xyntal</span> <strong class="cmp__punch">Raus aus der eigenen Blase.</strong> Du triffst Leute, die zu deinem Ziel passen, auch wenn sie nicht in deinem Umfeld sind.</p>
         </li>
         <li class="cmp__card" data-rv>
           <h3 class="cmp__old">Upwork</h3>
-          <p class="cmp__row cmp__row--miss"><span class="mono">stark bei</span> Aufträge an Freelancer vergeben und Aufträge finden.</p>
-          <p class="cmp__row cmp__row--new"><span class="mono">Xyntal</span> Neben Aufgaben auch Mitgründung und Nebenprojekte als Ziel.</p>
+          <p class="cmp__row cmp__row--miss"><span class="mono">stark bei</span> Freelancer bezahlen, Aufträge finden.</p>
+          <p class="cmp__row cmp__row--new"><span class="mono">Xyntal</span> <strong class="cmp__punch">Partner statt Auftragnehmer.</strong> Neben Aufgaben auch Mitgründung und Nebenprojekte, auf Augenhöhe.</p>
         </li>
       </ol>
     </div>
     <div class="cmp__dots" data-cmp-dots aria-hidden="true"><i class="is-on"></i><i></i><i></i><i></i><i></i><i></i></div>
+
+    <aside class="gate" data-rv aria-labelledby="gate-title">
+      <p class="mono gate__tag">Wichtig</p>
+      <h3 class="gate__h" id="gate-title">Ohne Xyntal-Karte schlägt dich niemand vor.</h3>
+      <p class="gate__p">Vorschläge entstehen nur aus Xyntal-Karten. Wer keine hat, taucht bei anderen nicht auf und bekommt selbst keine passenden Leute. Deine Karte steht in ein paar Minuten: dein Vorhaben, deine Skills, deine Zeit.</p>
+      <div class="gate__cta">
+        <a class="pill" href="/login#registrieren" data-apply>Konto anlegen und Karte erstellen <span class="pill__arr" aria-hidden="true">→</span></a>
+        <a class="pill" href="#download" data-if="in">In der App Karte erstellen <span class="pill__arr" aria-hidden="true">↓</span></a>
+      </div>
+    </aside>
   </section>
 
   <!-- ============ FÜR WEN ============ -->
@@ -201,8 +211,8 @@
       </li>
       <li class="how__step" data-rv>
         <span class="how__node mono">2</span>
-        <h3 class="how__title">Profil und Arbeitsstil</h3>
-        <p class="how__text">Dein Vorhaben, deine Zeit, deine Art zu arbeiten.</p>
+        <h3 class="how__title">Xyntal-Karte erstellen</h3>
+        <p class="how__text">Dein Vorhaben, deine Zeit, deine Art zu arbeiten. Ohne Karte keine Vorschläge.</p>
       </li>
       <li class="how__step" data-rv>
         <span class="how__node mono">3</span>
@@ -459,7 +469,7 @@
 
 <script src="js/vendor/lenis.min.js" defer></script>
 <script src="js/hero-gl.js?v=3" defer></script>
-<script src="/i18n-en.js?v=145" defer></script>
+<script src="/i18n-en.js?v=146" defer></script>
 <script src="/i18n.js?v=35" defer></script>
 <script src="js/neu.js?v=14" defer></script>
 <script src="/site-chat.js?v=14" defer></script>
