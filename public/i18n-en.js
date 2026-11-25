@@ -1,6 +1,13 @@
 // Xyntal – englische Texte. Schlüssel = deutscher Originaltext (Leerzeichen zusammengefasst).
 // Neue deutsche Texte auf der Website hier ergänzen, sonst bleiben sie auf Englisch deutsch.
 window.XYNTAL_EN = {
+  "Zu sehen, wer gerade Zeit hat und mitmachen will.": "Seeing who has time right now and wants to join in.",
+  "Gezielt die eine Person zu finden, die zu dir passt.": "Finding the one person who fits you.",
+  "Die Leute zu finden, bevor das Projekt startet.": "Finding the people before the project starts.",
+  "Menschen außerhalb der eigenen Organisation.": "People outside your own organization.",
+  "Leute kennenzulernen, die du noch nicht kennst.": "Meeting people you do not know yet.",
+  "Mitgründer:innen, die mit dir gemeinsam etwas aufbauen.": "Co-founders who build something with you.",
+  "nicht gebaut für": "not built for",
   "Deine Tools verwalten Kontakte. Xyntal findet neue.": "Your tools manage contacts. Xyntal finds new ones.",
   "LinkedIn, Discord und Co. sind stark, für das, wofür sie gebaut wurden. Keins davon zeigt dir, wer dein Vorhaben mit dir umsetzt. Genau dafür gibt es Xyntal.": "LinkedIn, Discord and the rest are great at what they were built for. None of them shows you who will build your plan with you. That is exactly what Xyntal is for.",
   "Werdegang zeigen, Kontakte sammeln.": "Showing your career, collecting contacts.",
