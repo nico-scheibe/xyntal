@@ -56,6 +56,15 @@
         <path d="M140 372 Q 212 212 372 140" stroke="url(#xa)"/>
       </g>
     </symbol>
+    <!-- Großes X im Hero (Ersatz ohne WebGL): Farben „Tinte & Signal“ wie in js/hero-gl.js -->
+    <linearGradient id="xha" x1="140" y1="372" x2="372" y2="140" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#E8441A"/><stop offset="1" stop-color="#FF7A47"/></linearGradient>
+    <linearGradient id="xhb" x1="140" y1="140" x2="372" y2="372" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#EDE8DD"/><stop offset="1" stop-color="#8FB8FF"/></linearGradient>
+    <symbol id="mark-hero" viewBox="100 100 312 312">
+      <g fill="none" stroke-linecap="round" stroke-width="60">
+        <path d="M140 140 Q 300 212 372 372" stroke="url(#xhb)" mask="url(#xgap)"/>
+        <path d="M140 372 Q 212 212 372 140" stroke="url(#xha)"/>
+      </g>
+    </symbol>
   </defs>
 </svg>
 
@@ -83,7 +92,7 @@
   <section class="hero" data-hero aria-labelledby="hero-title">
     <canvas class="hero__gl" data-hero-gl aria-hidden="true"></canvas>
     <!-- Ersatz ohne WebGL (Handy, schmale Fenster, reduzierte Bewegung): das Logo als SVG -->
-    <svg class="hero__fallback" aria-hidden="true"><use href="#mark"/></svg>
+    <svg class="hero__fallback" aria-hidden="true"><use href="#mark-hero"/></svg>
 
     <p class="mono label hero__tag">Beta · App für Mac und Windows</p>
     <h1 class="hero__h" id="hero-title">
@@ -449,7 +458,7 @@
 </footer>
 
 <script src="js/vendor/lenis.min.js" defer></script>
-<script src="js/hero-gl.js?v=2" defer></script>
+<script src="js/hero-gl.js?v=3" defer></script>
 <script src="/i18n-en.js?v=145" defer></script>
 <script src="/i18n.js?v=35" defer></script>
 <script src="js/neu.js?v=11" defer></script>

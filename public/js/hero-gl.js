@@ -103,7 +103,8 @@
   // Linie B: lila → blau (liegt oben).  Linie A: blau → cyan (hat die Lücke, wo B kreuzt).
   var CURVE_B = [[140, 372], [212, 212], [372, 140]];
   var CURVE_A = [[140, 140], [300, 212], [372, 372]];
-  var PU = [0.70, 0.42, 1.0], BL = [0.23, 0.54, 1.0], CY = [0.25, 0.88, 0.94];
+  // Farben „Tinte & Signal“: Linie B Signalorange (#E8441A → #FF7A47), Linie A Papier → helles Blau (#EDE8DD → #8FB8FF)
+  var OR1 = [0.91, 0.27, 0.10], OR2 = [1.0, 0.48, 0.28], PA = [0.93, 0.91, 0.87], SB = [0.56, 0.72, 1.0];
 
   function bez(c, t) {
     var u = 1 - t;
@@ -143,7 +144,7 @@
       var x = p[0] + n[0] * off, y = p[1] + n[1] * off;
       if (!onB && !halo && distToB(x, y) < 48) continue;  // Lücke in Linie A
       unit[i * 2] = (x - 256) / 312; unit[i * 2 + 1] = (y - 256) / 312;
-      var cc = onB ? mix3(PU, BL, t) : mix3(BL, CY, t);
+      var cc = onB ? mix3(OR1, OR2, t) : mix3(PA, SB, t);
       col[i * 3] = cc[0]; col[i * 3 + 1] = cc[1]; col[i * 3 + 2] = cc[2];
       meta[i * 2] = halo ? 1.2 + Math.random() * 1.0 : 1.3 + Math.random() * 1.9;
       meta[i * 2 + 1] = halo ? Math.random() * 0.3 : 0.3 + Math.random() * 0.7;
