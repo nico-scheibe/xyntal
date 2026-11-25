@@ -195,6 +195,40 @@ a:hover { text-decoration-color: var(--t-1); }
 .xc-tier li::before { content: ""; position: absolute; left: 2px; top: .42em; width: 11px; height: 6px; border-left: 1.5px solid var(--t-3); border-bottom: 1.5px solid var(--t-3); transform: rotate(-45deg); }
 .xc-tier--featured li::before { border-color: var(--bl); }
 
+/* ---------- Was drin ist: je Stufe links das Versprechen, rechts die Angebote an Haarlinien ---------- */
+.xc-offer { display: grid; border-top: 1px solid var(--line-2); }
+.xc-offer__tier { display: grid; gap: 24px var(--gap); padding: clamp(28px, 3.6vw, 48px) 0; border-bottom: 1px solid var(--line-2); }
+@media (min-width: 900px) {
+  .xc-offer__tier { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); }
+  .xc-offer__head { position: sticky; top: 96px; align-self: start; }
+}
+.xc-offer__tier--featured { box-shadow: inset 0 2px 0 0 var(--bl); }
+.xc-offer__head { display: grid; align-content: start; gap: 12px; }
+.xc-offer__price { font: 400 .7rem/1.4 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--t-3); }
+.xc-offer__tier--featured .xc-offer__price { color: var(--t-1); }
+.xc-offer__head h3 { font: 800 clamp(1.8rem, 2.8vw, 2.7rem)/.98 var(--f-display); font-stretch: 64%; letter-spacing: -.01em; text-wrap: balance; }
+.xc-offer__head > p:last-child { color: var(--t-2); font-size: .97rem; line-height: 1.5; max-width: 40ch; }
+.xc-offer__list { display: grid; }
+.xc-offer__list li { display: grid; gap: 8px; padding: 20px 0; border-top: 1px solid var(--line); }
+.xc-offer__list li:first-child { padding-top: 0; border-top: 0; }
+.xc-offer__row { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; }
+.xc-offer__row h4 { margin: 0; font: 700 clamp(1.15rem, 1.5vw, 1.4rem)/1.1 var(--f-display); font-stretch: 78%; letter-spacing: -.005em; }
+.xc-offer__list p { color: var(--t-2); font-size: .97rem; line-height: 1.5; max-width: 64ch; }
+.xc-offer__list .xc-offer__gain { display: grid; gap: 4px; margin-top: 6px; color: var(--t-1); }
+.xc-offer__gain span { font: 400 .66rem/1.4 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--t-3); }
+.xc-status { flex: none; font: 400 .62rem/1 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; padding: 5px 7px; border-radius: 4px; color: var(--t-3); box-shadow: inset 0 0 0 1px var(--line-2); }
+.xc-status--live { color: var(--bl); box-shadow: inset 0 0 0 1px rgba(76, 141, 255, .45); }
+
+/* ---------- Bibliothek ---------- */
+.xc-lib { display: grid; gap: 0 var(--gap); }
+@media (min-width: 820px) { .xc-lib { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.xc-lib__group { display: grid; align-content: start; gap: 10px; padding: 22px 0 clamp(24px, 3vw, 40px); border-top: 1px solid var(--line-2); }
+.xc-lib__tier { font: 400 .7rem/1.4 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--t-3); }
+.xc-lib__group h3 { margin-bottom: 8px; font: 700 clamp(1.4rem, 2vw, 1.8rem)/1.05 var(--f-display); font-stretch: 72%; letter-spacing: -.005em; }
+.xc-lib__group li { display: grid; gap: 4px; padding: 14px 0; border-top: 1px solid var(--line); }
+.xc-lib__group b { color: var(--t-1); font-weight: 600; font-size: .97rem; }
+.xc-lib__group li span { color: var(--t-2); font-size: .94rem; line-height: 1.5; }
+
 /* ---------- Formate ---------- */
 .xc-formats { display: grid; border-top: 1px solid var(--line-2); }
 .xc-formats li { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 8fr) minmax(0, 2fr); gap: 8px var(--gap); align-items: baseline; padding: 22px 0; border-bottom: 1px solid var(--line); }
