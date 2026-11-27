@@ -95,7 +95,7 @@ function fillForm(form, data) {
 // Nur die Profilfelder, Links normalisiert
 function profileFrom(data) {
   const p = {};
-  for (const k of PROFILE_FIELDS) p[k] = data[k] ?? (k === "is_public" ? false : "");
+  for (const k of PROFILE_FIELDS) p[k] = k === "is_public" ? true : data[k] ?? "";
   for (const k of ["linkedin", "instagram", "website"]) p[k] = normalizeUrl(p[k]);
   if (!p.phase) p.phase = null;
   return p;

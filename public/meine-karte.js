@@ -278,6 +278,11 @@
       else say(t("Gespeichert."), "ok");
       // eingebettet im Profilbereich: Übersicht oben aktualisieren
       if (window.parent !== window) window.parent.postMessage({ type: "xyntal-card-saved" }, location.origin);
+      // Link gespeichert und Karte öffentlich: direkt zur eigenen Profilseite xyntal.com/name
+      if (fresh && fresh.is_public && fresh.handle && res !== "taken" && res !== "invalid") {
+        const target = `/${encodeURIComponent(fresh.handle)}`;
+        setTimeout(() => { try { window.top.location.href = target; } catch { location.href = target; } }, 900);
+      }
     } catch (err) {
       say(friendlyError(err), "error");
     } finally { saveBtn.disabled = false; }
