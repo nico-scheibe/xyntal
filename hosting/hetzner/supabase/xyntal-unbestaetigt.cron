@@ -1,0 +1,7 @@
+# Unbestätigte Konten aufräumen (supabase/migrations/20261127120000_unbestaetigte_konten.sql).
+# Löscht täglich um 04:10 Konten, die ihre Adresse seit über 24 Stunden nicht bestätigt und sich nie angemeldet
+# haben. Ergebnis im Systemprotokoll: journalctl -t xyntal-unbestaetigt
+# Installiert von install.sh nach /etc/cron.d/xyntal-unbestaetigt.
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+10 4 * * * root docker exec supabase-db psql -U supabase_admin -d postgres -XAtq -c "select 'gelöscht: ' || public.purge_unconfirmed_accounts();" 2>&1 | logger -t xyntal-unbestaetigt

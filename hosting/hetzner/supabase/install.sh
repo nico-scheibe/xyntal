@@ -8,7 +8,8 @@
 #      /opt/xyntal/supabase (setup.sh von Supabase erzeugt alle Passwörter und Schlüssel).
 #   2. Adressen, Mail-Versand, Dateien im Hetzner-Bucket und Xyntals Anpassungen
 #      (docker-compose.xyntal.yml) eintragen.
-#   3. Die Edge Function send-auth-email aus diesem Repo übernehmen.
+#   3. Die Edge Function send-auth-email aus diesem Repo übernehmen und den täglichen
+#      Aufräum-Job für unbestätigte Konten nach /etc/cron.d legen.
 #   4. Supabase starten. Daten zieht danach migrate.sh um.
 #
 # Läuft das Skript ein zweites Mal, bleibt eine vorhandene Einrichtung samt
@@ -98,6 +99,9 @@ esac
 echo "→ Edge Function send-auth-email"
 mkdir -p volumes/functions/send-auth-email
 cp "$HERE/../../../supabase/functions/send-auth-email/"* volumes/functions/send-auth-email/
+
+# Täglich unbestätigte Konten aufräumen (die Funktion legt die Migration 20261127120000 an).
+install -m 644 "$HERE/xyntal-unbestaetigt.cron" /etc/cron.d/xyntal-unbestaetigt
 
 # 4. Starten
 echo "→ Supabase starten (der erste Start lädt die Images, das dauert ein paar Minuten)"
