@@ -27,7 +27,8 @@
       const okPhoto = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|gif|webp)$/.test(m.avatar_path || "") && (/\.jpg$/.test(m.avatar_path) || c.is_premium === true);
       const photo = okPhoto ? `data-avatar-path="${esc(m.avatar_path)}"` : "";
       const canMessage = viewerIsMember && m.id !== me.id;
-      return `<div class="member-xcard xcard-host"><div class="member-xcard-link" data-profile-url="/${esc(c.handle)}" role="group" tabindex="0" aria-label="${esc(c.name || m.name)} – Profil öffnen">${window.XyntalCardHtml({ ...c, is_verified: m.is_verified === true, is_admin: m.is_admin === true }, { avatarAttrs: photo, messageUrl: canMessage ? `/nachrichten?an=${encodeURIComponent(m.id)}` : "" })}</div></div>`;
+      const open = c.handle ? ` data-profile-url="/${esc(c.handle)}" tabindex="0" aria-label="${esc(c.name || m.name)} – Profil öffnen"` : ` aria-label="${esc(c.name || m.name)}"`;
+      return `<div class="member-xcard xcard-host"><div class="member-xcard-link"${open} role="group">${window.XyntalCardHtml({ ...c, is_verified: m.is_verified === true, is_admin: m.is_admin === true }, { avatarAttrs: photo, messageUrl: canMessage ? `/nachrichten?an=${encodeURIComponent(m.id)}` : "" })}</div></div>`;
     };
     const ownCardHint = viewerIsMember && !cards.has(me.id)
       ? ` <a class="text-link" href="meine-karte">Richte deine Karte ein</a>, dann erscheinst du hier.`
