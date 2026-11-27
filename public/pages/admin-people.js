@@ -92,12 +92,18 @@
     const a = r.app, m = r.site, b = r.beta;
     const appMuted = !!a && a.mutedUntil !== null && a.mutedUntil !== undefined;
     const dates = [a && a.createdAt, m && m.created_at, b && b.created_at].filter((d) => time(d));
+    const unconfirmed = !!m && m.confirmed === false;
     return {
       name: (a && a.displayName) || (m && m.name) || (b && b.name) || "(noch kein Name)",
       email: (a && a.email) || (m && (m.email || m.phone)) || (b && b.email) || "",
       handle: (a && a.handle) || "",
       created: dates.sort((x, y) => time(x) - time(y))[0] || null,
-      pending: !!m && m.status === "pending",
+      // Adresse nie bestätigt (admin_members().confirmed). Ältere Datenbank ohne die Spalte: gilt als bestätigt.
+      unconfirmed,
+      // Nur ein unbestätigtes Website-Konto, sonst nichts: meist Tests oder Skripte. Zählt nirgends mit und steht
+      //   nur unter „Unbestätigt“; die Datenbank löscht es nach 24 Stunden (purge_unconfirmed_accounts).
+      ghost: unconfirmed && !a && !b,
+      pending: !!m && m.status === "pending" && !unconfirmed,
       rejected: !!m && m.status === "rejected",
       betaOn: !!(m && m.is_beta_tester) || (!!b && b.status === "angenommen"),
       betaWaiting: !!b && (b.status === "neu" || b.status === "in_pruefung"),
@@ -111,14 +117,17 @@
   }
 
   const FILTERS = [
-    ["all", "Alle", () => true],
+    ["all", "Alle", (r) => !r.v.ghost],
     ["todo", "Warten auf dich", (r) => r.v.pending || r.v.betaWaiting],
     ["beta", "Beta-Tester", (r) => r.v.betaOn],
     ["applied", "Beta-Bewerbungen", (r) => !!r.beta],
     ["banned", "Gesperrt", (r) => r.v.banned],
     ["team", "Team", (r) => !!r.v.team],
     ["alt", "Mögliche Zweitkonten", (r) => !!r.v.alt],
+    ["unconfirmed", "Unbestätigt", (r) => r.v.unconfirmed],
   ];
+  // Alle außer reinen unbestätigten Konten: Grundlage für jede Zahl auf „Start“
+  const realRows = () => P.rows.filter((r) => !r.v.ghost);
   const filterFn = (key) => (FILTERS.find((f) => f[0] === key) || FILTERS[0])[2];
   function matches(r, q) {
     if (!q) return true;
@@ -197,8 +206,8 @@
     const since = P.lastVisit || Date.now() - 7 * 86400000;
     const week = Date.now() - 7 * 86400000;
     const isNew = (r, t) => time(r.v.created) > t;
-    const real = (t) => P.rows.filter((r) => isNew(r, t) && !r.v.alt);
-    const alts = P.rows.filter((r) => isNew(r, week) && r.v.alt);
+    const real = (t) => realRows().filter((r) => isNew(r, t) && !r.v.alt);
+    const alts = realRows().filter((r) => isNew(r, week) && r.v.alt);
     const sinceVisit = real(since), inWeek = real(week);
     const list = [...inWeek].sort((x, y) => time(y.v.created) - time(x.v.created)).slice(0, 12);
     const label = P.lastVisit ? `seit deinem letzten Besuch (${when(new Date(P.lastVisit).toISOString())})` : "in den letzten 7 Tagen";
@@ -215,7 +224,7 @@
   function renderStart() {
     const t = todos(), s = P.stats || {};
     const week = Date.now() - 7 * 86400000;
-    const recent = [...P.rows].sort((x, y) => time(y.v.created) - time(x.v.created)).slice(0, 8);
+    const recent = realRows().sort((x, y) => time(y.v.created) - time(x.v.created)).slice(0, 8);
     const confirmed = document.getElementById("overview-confirmed");
     startPanel.innerHTML = `
       <div class="xp-hello"><h1>Hallo! Das steht gerade an.</h1>
@@ -228,9 +237,9 @@
       ${newcomers()}
       <h2 class="xp-h2">Auf einen Blick</h2>
       <div class="xp-numbers">
-        ${num("Nutzer insgesamt", P.rows.length, "App und Website zusammen", "people", "all")}
+        ${num("Nutzer insgesamt", realRows().length, "App und Website zusammen", "people", "all")}
         ${num("Beta-Tester", P.rows.filter((r) => r.v.betaOn).length, "dürfen die Beta nutzen", "people", "beta")}
-        ${num("Neu in 7 Tagen", P.rows.filter((r) => time(r.v.created) > week && !r.v.alt).length, "ohne mögliche Zweitkonten", "people", "all")}
+        ${num("Neu in 7 Tagen", realRows().filter((r) => time(r.v.created) > week && !r.v.alt).length, "ohne mögliche Zweitkonten", "people", "all")}
         ${num("Gesperrt", P.rows.filter((r) => r.v.banned).length, "können sich nicht anmelden", "people", "banned")}
         ${P.siteAdmin ? `<article class="xp-num"><b id="overview-confirmed">${confirmed ? esc(confirmed.textContent) : "–"}</b><span>Bestätigte Warteliste</span><small>aus Brevo</small></article>` : ""}
         ${P.staff ? `<article class="xp-num"><b>${Number(s.activeSessions || 0).toLocaleString("de-DE")}</b><span>Gerade angemeldet</span><small>aktive Sitzungen in der App</small></article>` : ""}
@@ -252,6 +261,7 @@
   }
   function statusPills(r) {
     const v = r.v, out = [];
+    if (v.unconfirmed) out.push(pill("E-Mail nicht bestätigt"));
     if (v.pending) out.push(pill("Wartet auf Freischaltung", "warn"));
     if (v.rejected) out.push(pill("Abgelehnt", "danger"));
     if (v.banned) out.push(pill(v.bannedUntil ? `Gesperrt bis ${day(v.bannedUntil)}` : "Gesperrt", "danger"));
@@ -303,7 +313,10 @@
     if (!P.appOk && P.siteAdmin) notes.push("App-Konten fehlen in der Liste, weil dein Konto auf dem App-Server keine Staff-Rolle mit Nutzerrechten hat.");
     if (!P.siteAdmin && P.staff) notes.push("Website-Konten und Beta-Bewerbungen fehlen, weil dein Website-Konto keine Admin-Rechte hat.");
     if (P.appLimited && !P.q) notes.push("Es werden die neuesten 300 App-Konten gezeigt. Die Suche findet auch ältere.");
-    $("[data-xp-notes]", peoplePanel).innerHTML = notes.map((t) => `<p class="notice">${esc(t)}</p>`).join("");
+    const purge = P.filter === "unconfirmed" && P.siteAdmin
+      ? `<p class="notice">Diese Konten haben ihre E-Mail-Adresse nie bestätigt und können sich nicht anmelden – meist Tests oder Skripte. Sie zählen nirgends mit. Nach 24 Stunden löscht die Datenbank sie jede Nacht von selbst. <button type="button" data-xp-purge>Ältere als 24 Stunden jetzt löschen</button></p>`
+      : "";
+    $("[data-xp-notes]", peoplePanel).innerHTML = notes.map((t) => `<p class="notice">${esc(t)}</p>`).join("") + purge;
 
     const list = visibleRows(), shown = list.slice(0, P.shown);
     const box = $("[data-xp-list]", peoplePanel);
@@ -849,7 +862,7 @@
   }
   function csv(rows, file) {
     downloadCsv(file, ["Name", "E-Mail", "Handle", "Status", "Beta", "App-Konto", "Website-Konto", "Dabei seit"],
-      rows.map((r) => [r.v.name, r.v.email, r.v.handle ? `@${r.v.handle}` : "", [r.v.pending && "wartet", r.v.rejected && "abgelehnt", r.v.banned && "gesperrt", r.v.muted && "stumm", r.v.verified && "verifiziert", r.v.team].filter(Boolean).join(", ") || "aktiv",
+      rows.map((r) => [r.v.name, r.v.email, r.v.handle ? `@${r.v.handle}` : "", [r.v.unconfirmed && "unbestätigt", r.v.pending && "wartet", r.v.rejected && "abgelehnt", r.v.banned && "gesperrt", r.v.muted && "stumm", r.v.verified && "verifiziert", r.v.team].filter(Boolean).join(", ") || "aktiv",
         r.v.betaOn ? "freigeschaltet" : r.beta ? `Bewerbung: ${BETA_STATUS[r.beta.status] || r.beta.status}` : "", r.app ? "ja" : "nein", r.site ? "ja" : "nein", day(r.v.created)]));
   }
 
@@ -865,6 +878,19 @@
     }
     renderAll();
     msg(`${plural(sent, "Status-Mail", "Status-Mails")} gesendet.${failed.length ? ` NICHT gesendet: ${failed.join(" · ")}` : ""}`, !failed.length);
+  }
+
+  // Unbestätigte Konten älter als 24 Stunden sofort löschen (dieselbe Regel wie der nächtliche Lauf)
+  async function purgeUnconfirmed(button) {
+    const ok = await ask({ title: "Unbestätigte Konten löschen?", text: "Gelöscht werden nur Konten, die ihre E-Mail-Adresse seit über 24 Stunden nicht bestätigt und sich nie angemeldet haben. Freigeschaltete, abgelehnte und Admin-Konten bleiben.", confirm: "Löschen", danger: true });
+    if (!ok) return;
+    button.disabled = true;
+    try {
+      const n = unwrap(await sb.rpc("admin_purge_unconfirmed"));
+      await refresh({ app: false });
+      listMsg(n ? `${plural(n, "unbestätigtes Konto", "unbestätigte Konten")} gelöscht.` : "Nichts zu löschen – die übrigen sind jünger als 24 Stunden.");
+    } catch (err) { listMsg(`Nicht gelöscht: ${failText(err)}`, false); }
+    finally { if (button.isConnected) button.disabled = false; }
   }
 
   // ---------- Ereignisse ----------
@@ -884,6 +910,7 @@
     if (e.target.closest("[data-xp-more]")) { P.shown += PAGE; renderList(); return; }
     if (e.target.closest("[data-xp-refresh]")) { const b = e.target.closest("button"); b.disabled = true; refresh().then(() => listMsg("Liste ist aktuell.")).finally(() => { b.disabled = false; }); return; }
     if (e.target.closest("[data-xp-csv]")) { csv(visibleRows(), "xyntal-nutzer.csv"); return; }
+    if (e.target.closest("[data-xp-purge]")) { purgeUnconfirmed(e.target.closest("button")); return; }
     const bk = e.target.closest("[data-xp-bulk]"); if (bk) { bulk(bk.dataset.xpBulk, bk); return; }
     const quick = e.target.closest("[data-xp-quick]");
     if (quick) {

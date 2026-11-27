@@ -209,6 +209,9 @@ Einrichtung als root auf `xyntal-db` (Docker, 2 GB Swap und ufw vorher installie
 Seit der Umstellung (9.11.2026) nutzen Website, API und App nur noch `db.xyntal.de`; Supabase-Cloud ist abgekoppelt.
 Backup: `/usr/local/bin/xyntal-db-backup` (cron täglich 03:30, `/etc/cron.d/xyntal-db-backup`) schreibt
 `pg_dumpall` nach `/opt/xyntal/backups/supabase-JJJJ-MM-TT.sql.gz`, 14 Tage. Zusätzlich auf einen zweiten Ort kopieren.
+Aufräumen: `/etc/cron.d/xyntal-unbestaetigt` (täglich 04:10, legt `install.sh` an) löscht Konten, die ihre
+Adresse seit über 24 Stunden nicht bestätigt und sich nie angemeldet haben (`public.purge_unconfirmed_accounts()`,
+Migration `20261127120000_unbestaetigte_konten.sql`). Ergebnis: `journalctl -t xyntal-unbestaetigt`.
 
 Der Login-Mail-Hook geht über `https://db.xyntal.de/functions/v1/send-auth-email`, weil GoTrue für Hooks
 nur https annimmt; die Funktion prüft jede Anfrage per Signatur.

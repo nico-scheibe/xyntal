@@ -38,3 +38,17 @@ assert.deepEqual({ todo: count('todo'), beta: count('beta'), applied: count('app
 assert(matches(lena, 'nachbarschaft'), 'Suche findet das Projekt aus der Bewerbung');
 assert(matches(tom, '@tom') && !matches(tom, 'zzz'));
 console.log('PASS: Zusammenführen per E-Mail, neueste Bewerbung, Zeilen ohne Konto, Filterzahlen, Suche');
+
+// Unbestätigte Konten (admin_members().confirmed = false)
+const ghostRows = buildRows([
+  { id: 'g1', email: 'otp-test1@example.com', name: null, status: 'pending', confirmed: false, created_at: '2026-11-25' },
+  { id: 'g2', email: 'echt@example.invalid', name: 'Echt', status: 'pending', confirmed: false, created_at: '2026-11-25' },
+  { id: 'g3', email: 'alt@example.invalid', name: 'Alt', status: 'pending', created_at: '2026-11-25' },
+], [], [{ id: 30, user_id: 'g2', email: 'echt@example.invalid', name: 'Echt', status: 'neu', created_at: '2026-11-25' }]);
+const gcount = (key) => ghostRows.filter(FILTERS.find((f) => f[0] === key)[2]).length;
+const g = (email) => ghostRows.find((r) => r.key === `e:${email}`);
+assert(g('otp-test1@example.com').v.ghost && !g('otp-test1@example.com').v.pending, 'nur unbestätigtes Konto: ausgeblendet, keine Aufgabe');
+assert(!g('echt@example.invalid').v.ghost && g('echt@example.invalid').v.unconfirmed, 'mit Bewerbung bleibt die Person sichtbar');
+assert(g('alt@example.invalid').v.pending && !g('alt@example.invalid').v.unconfirmed, 'ohne Spalte confirmed (alte Datenbank): wie bisher');
+assert.deepEqual({ all: gcount('all'), unconfirmed: gcount('unconfirmed'), todo: gcount('todo') }, { all: 2, unconfirmed: 2, todo: 2 });
+console.log('PASS: Unbestätigte Konten zählen nicht mit und stehen unter „Unbestätigt“');
