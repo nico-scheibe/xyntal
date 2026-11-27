@@ -2062,7 +2062,7 @@ window.XYNTAL_EN = {
   "/ mitglieder": "/ members",
   "Die Leute hinter": "The people behind",
   "Xyntal.": "Xyntal.",
-  "Hier erscheinen Profile, wenn jemand freigeschaltet ist. Eine Liste voller Leute gibt es noch nicht.": "Profiles appear here once someone is activated. There isn't a long list of people yet.",
+  "Hier erscheint jede Xyntal-Karte, sobald sie erstellt ist.": "Every Xyntal card appears here as soon as it is created.",
   "Die Mitglieder von Xyntal – Gründer, Selbstständige und Macher und woran sie arbeiten.": "The members of Xyntal – founders, freelancers and makers, and what they're working on.",
   "Du siehst hier die öffentlichen Profile. Freigeschaltete Mitglieder sehen alle.": "You're seeing public profiles. Activated members see everyone.",
   "Die ersten Profile entstehen gerade.": "The first profiles are being created.",
