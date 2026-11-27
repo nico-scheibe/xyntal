@@ -30,7 +30,7 @@ function postHtml(p) {
       <header class="post-head">
         ${avatar(author.name, "", author.avatar_path)}
         <div class="post-meta">
-          <strong>${esc(author.name)}</strong>
+          <strong>${nameLink(p.author_id, author.name)}</strong>
           <span>${esc(author.headline || "")}</span>
         </div>
         <span class="tag tag-${p.kind}">${KIND[p.kind]}</span>
@@ -59,8 +59,24 @@ function render() {
 }
 
 let linkedPostOpened = false;
+// Wunsch-Links der öffentlichen Karten: Namen führen zur Profilseite xyntal.com/name
+let handles = new Map();
+let handlesLoaded = null;
+function loadHandles() {
+  handlesLoaded ||= sb.rpc("get_member_cards").then(({ data }) => {
+    if (Array.isArray(data)) handles = new Map(data.filter((c) => c.handle).map((c) => [c.user_id, c.handle]));
+  }).catch(() => {});
+  return handlesLoaded;
+}
+function nameLink(id, name, cls = "") {
+  const h = handles.get(id);
+  const label = esc(name || "Mitglied");
+  return h ? `<a class="${cls}" href="/${esc(h)}">${label}</a>` : label;
+}
+
 async function load() {
   try {
+    await loadHandles();
     posts = await queryPosts();
     const target = new URLSearchParams(location.search).get("beitrag");
     if (target && /^\d+$/.test(target) && !posts.some(p => String(p.id) === target)) {
@@ -117,7 +133,7 @@ function commentHtml(c, reactions, depth = 0) {
       ${avatar(c.author?.name, "avatar-sm", c.author?.avatar_path)}
       <div class="comment-main">
         <header class="comment-head">
-          <strong class="comment-author">${esc(c.author?.name || "Mitglied")}</strong>
+          <strong class="comment-author">${nameLink(c.author_id, c.author?.name)}</strong>
           <time class="comment-time">${timeAgo(c.created_at)}${c.edited_at ? " · bearbeitet" : ""}</time>
         </header>
         <div class="comment-body" data-comment-body>${richText(c.body)}</div>

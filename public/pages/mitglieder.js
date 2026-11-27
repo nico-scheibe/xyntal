@@ -17,7 +17,10 @@
       const { data } = await sb.rpc("get_member_cards");
       if (Array.isArray(data)) cards = new Map(data.map((c) => [c.user_id, c]));
     } catch { /* ohne Funktion: keine Karten */ }
-    members = members.filter((m) => cards.has(m.id));
+    // Jede öffentliche Karte erscheint – auch wenn die Profilzeile für diesen Besucher nicht lesbar ist.
+    const known = new Set(members.map((m) => m.id));
+    members = [...members.filter((m) => cards.has(m.id)), ...[...cards.values()].filter((c) => !known.has(c.user_id))
+      .map((c) => ({ id: c.user_id, name: c.name, avatar_path: c.avatar_path, is_verified: c.is_verified, is_admin: c.is_admin }))];
     const tile = (m) => {
       const c = cards.get(m.id);
       // Animierte Profilbilder (GIF/WebP) nur, solange das Mitglied einen Paid-Tarif hat
