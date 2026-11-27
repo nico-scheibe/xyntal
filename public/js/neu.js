@@ -324,25 +324,7 @@
     targets.forEach(function (t) { io.observe(t); });
   })();
 
-  // ---------- 6 Vergleich (Handy): der Punkt zeigt die Karte, die gerade ganz sichtbar ist ----------
-  (function () {
-    var sc = $('[data-cmp]'), dots = $$('[data-cmp-dots] i');
-    if (!sc || !dots.length) return;
-    var list = $('.cmp__list', sc), cards = list ? $$('.cmp__card', list) : [];
-    if (!cards.length) return;
-    var cur = -1;
-    function update() {
-      var best = 0, bd = Infinity;
-      cards.forEach(function (c, i) { var d = Math.abs(c.offsetLeft - sc.scrollLeft); if (d < bd) { bd = d; best = i; } });
-      if (best === cur) return;
-      cur = best;
-      dots.forEach(function (d, i) { d.classList.toggle('is-on', i === best); });
-    }
-    sc.addEventListener('scroll', update, { passive: true });
-    update();
-  })();
-
-  // ---------- 7 Fragen: Akkordeon ----------
+  // ---------- 6 Fragen: Akkordeon ----------
   // Jede Frage ist ein Button mit aria-expanded. Die Antwort bleibt im HTML; zu ist sie erst, wenn JS läuft.
   // Auf und zu macht die Klasse is-open (css/neu.css): die Höhe gleitet, zu heißt visibility: hidden.
   $$('.qa__btn').forEach(function (b) {
@@ -356,7 +338,7 @@
     });
   });
 
-  // ---------- 8 Warteliste: der Textlink klappt das Formular auf und wieder zu ----------
+  // ---------- 7 Warteliste: der Textlink klappt das Formular auf und wieder zu ----------
   (function () {
     var btn = $('[data-wl-toggle]'), box = document.getElementById('warteliste');
     if (!btn || !box) return;
@@ -378,7 +360,7 @@
     });
   })();
 
-  // ---------- 9 Kopfzeile: bekommt Grund nach dem ersten Stück, verschwindet beim Runterscrollen ----------
+  // ---------- 8 Kopfzeile: bekommt Grund nach dem ersten Stück, verschwindet beim Runterscrollen ----------
   (function () {
     var top = $('[data-top]'); if (!top) return;
     var acc = 0;
@@ -391,7 +373,7 @@
     top.addEventListener('focusin', function () { top.classList.remove('is-away'); acc = 0; });
   })();
 
-  // ---------- 10 Schleife: eine für alles ----------
+  // ---------- 9 Schleife: eine für alles ----------
   var rz;
   window.addEventListener('resize', function () {
     clearTimeout(rz);
